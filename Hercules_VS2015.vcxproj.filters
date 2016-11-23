@@ -6,210 +6,216 @@
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Source Files\Utilities">
-      <UniqueIdentifier>{0fc31e5b-e6f5-41e6-872c-c33b7b0817b4}</UniqueIdentifier>
+      <UniqueIdentifier>{f31b8889-ce34-4c2e-8d17-83c928c012b7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Utilities\disk">
-      <UniqueIdentifier>{373246e2-3001-4432-8c99-44d4a19cb1c9}</UniqueIdentifier>
+      <UniqueIdentifier>{f2ab6a83-c9cd-4c3b-aac4-7197dfccc385}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Utilities\tape">
-      <UniqueIdentifier>{51e78224-1c45-41e7-acd5-44d5a619b240}</UniqueIdentifier>
+      <UniqueIdentifier>{bcd2c54e-f7bb-4a31-8c61-5345246957ac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Utilities\other">
-      <UniqueIdentifier>{5cd6ef8e-69db-49ae-ab77-8a1bcbf163bb}</UniqueIdentifier>
+      <UniqueIdentifier>{eaced0d0-2b95-4955-8fd9-83508f934372}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules">
-      <UniqueIdentifier>{fc2b0852-0b12-4abd-9c46-ad230e42be3a}</UniqueIdentifier>
+      <UniqueIdentifier>{c020b304-3066-488c-aea1-9f30223c312a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Crypto">
-      <UniqueIdentifier>{b917617b-b284-4cf2-95d8-f76b30b4d507}</UniqueIdentifier>
+      <UniqueIdentifier>{4653e16b-d033-47f4-b003-b9fbb97274ab}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Crypto\Header Files">
-      <UniqueIdentifier>{45db3321-3d5b-473c-9a80-e1b58be9e83f}</UniqueIdentifier>
+      <UniqueIdentifier>{b5b5a601-14fd-4393-8599-bf81ca3e50cc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Crypto\Source Files">
-      <UniqueIdentifier>{28e3aad5-fe4b-4abc-8693-33a80fad34d8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber">
-      <UniqueIdentifier>{2b2f3a65-83a0-4ffb-addc-c04b4856151b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber\Header Files">
-      <UniqueIdentifier>{a5e74dde-ae66-4234-9f1f-4f44ed834ea4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber\Source Files">
-      <UniqueIdentifier>{e9622012-c9ae-441a-a2be-94977ee0da11}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber\Resource Files">
-      <UniqueIdentifier>{9875238c-1322-4bfa-ad3d-01af2710c1cd}</UniqueIdentifier>
+      <UniqueIdentifier>{07be66ad-c4b3-4579-914d-d5f2695ed7c9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices">
-      <UniqueIdentifier>{e95728ae-cb1e-4f1f-bbf9-8896c27d953a}</UniqueIdentifier>
+      <UniqueIdentifier>{5b6be5ce-c818-43d9-a3bd-39b41776792e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Con/Disp/Term">
-      <UniqueIdentifier>{a15ed64d-2bb5-47c9-a87e-b8aec94d10f6}</UniqueIdentifier>
+      <UniqueIdentifier>{bc30db16-4e9d-44bf-8539-d65e1bb0837d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Con/Disp/Term\Header Files">
-      <UniqueIdentifier>{6b0313b9-b876-43ca-b682-e4162cf83846}</UniqueIdentifier>
+      <UniqueIdentifier>{85c6accc-c9a1-442e-ad28-121b5802c7e5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Con/Disp/Term\Source Files">
-      <UniqueIdentifier>{714e3222-849f-4304-b257-ea2f677db8e5}</UniqueIdentifier>
+      <UniqueIdentifier>{60c92cd7-fa16-4f2b-add5-d1eb893a2009}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\CTC">
-      <UniqueIdentifier>{dee7b66e-2275-4023-a2ea-c9ccf379842b}</UniqueIdentifier>
+      <UniqueIdentifier>{df76e136-09e0-4cce-a29e-783960249630}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\CTC\Header Files">
-      <UniqueIdentifier>{08f33fc4-df31-4603-80c8-4371314e9730}</UniqueIdentifier>
+      <UniqueIdentifier>{d45fe6e8-7550-4d1c-b039-f7a0018d851d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\CTC\Source Files">
-      <UniqueIdentifier>{3d4bb809-d661-4447-b1a2-88534a7b10f8}</UniqueIdentifier>
+      <UniqueIdentifier>{6531ee0b-36b2-409b-9ef8-e187ba35ad56}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Dasd">
-      <UniqueIdentifier>{5f087b00-2731-42fa-a26a-e20560a24880}</UniqueIdentifier>
+      <UniqueIdentifier>{88d65600-9d9e-40a3-941f-b4667c2795b1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Dasd\Header Files">
-      <UniqueIdentifier>{95f1ac2a-74bc-4890-af69-642c34fab2f0}</UniqueIdentifier>
+      <UniqueIdentifier>{680c16c3-eb25-4f28-89c3-6c87c3b53ae1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Dasd\Source Files">
-      <UniqueIdentifier>{9d70799e-01d9-44b0-8ed7-5e5cd1a4e656}</UniqueIdentifier>
+      <UniqueIdentifier>{64c7f38a-270f-4d9d-ba91-78716e8ed3b8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Tape">
-      <UniqueIdentifier>{e949987d-f785-495e-8e66-f5c04284ffb7}</UniqueIdentifier>
+      <UniqueIdentifier>{2cc07780-d5a8-4568-a426-fc96f6fc8994}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Tape\Header Files">
-      <UniqueIdentifier>{9a6bb237-e89b-4df8-9fb1-94582f259938}</UniqueIdentifier>
+      <UniqueIdentifier>{d37faa94-5448-4c8c-a41b-92527dfbe912}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Tape\Source Files">
-      <UniqueIdentifier>{042a9f26-bff4-427d-9fd8-398cbdd3eacd}</UniqueIdentifier>
+      <UniqueIdentifier>{8864ee23-8d65-411e-b4f1-3611d995ab69}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Unit Record">
-      <UniqueIdentifier>{364ffe0b-233f-4ed8-a3ba-3e9c58f697ab}</UniqueIdentifier>
+      <UniqueIdentifier>{83ef8a9d-bf82-4cfb-abef-cf6c85fca91c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Unit Record\Header Files">
-      <UniqueIdentifier>{663ead4e-43d6-47ef-ac77-56171de77df9}</UniqueIdentifier>
+      <UniqueIdentifier>{d1d8b488-0438-456e-8339-5f68c23cc545}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\Unit Record\Source Files">
-      <UniqueIdentifier>{474ffa35-c243-4783-9a7d-8adc3465349b}</UniqueIdentifier>
+      <UniqueIdentifier>{062ec29e-ffbb-4147-af6f-ba46a902019c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Devices\zFCP">
-      <UniqueIdentifier>{281957bc-e704-42eb-80ed-de95c51f6f4e}</UniqueIdentifier>
+      <UniqueIdentifier>{2ad8985d-733a-4b3b-ac11-4a24cf7f14c7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Emulation">
-      <UniqueIdentifier>{36ebf356-fe5b-4848-a95d-0d16c82b6a56}</UniqueIdentifier>
+      <UniqueIdentifier>{3dc07aa0-612d-4368-8ce0-d8d10ebb1c90}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Emulation\Source Files">
-      <UniqueIdentifier>{e9a9e0ff-3d4e-41ff-8177-376b875c8299}</UniqueIdentifier>
+      <UniqueIdentifier>{d18bdaba-5247-4acd-bb43-f7c090e45a68}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\Emulation\Header Files">
-      <UniqueIdentifier>{f51d88c3-27d4-412c-90ad-6ff18fab795f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\Original SoftFloat-2b">
-      <UniqueIdentifier>{9b5df174-4266-4323-9811-35ca1d6404bd}</UniqueIdentifier>
+      <UniqueIdentifier>{ab161548-c943-44f0-8d63-aba7f82ec735}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Hercules\altcmpsc">
-      <UniqueIdentifier>{4cde36cf-d727-4a00-9669-231a6357136d}</UniqueIdentifier>
+      <UniqueIdentifier>{47c98659-eae7-4643-b9ed-40cefe55e3b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\decNumber">
+      <UniqueIdentifier>{0d3e0ef3-cda1-4750-ade8-298488709fa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\decNumber\Include">
+      <UniqueIdentifier>{71207f0b-bcaa-45ed-8f25-a19e44617899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\decNumber\Lib">
+      <UniqueIdentifier>{ae985d69-6d37-4f13-8e97-3eede9beb92e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\decNumber\Lib\pkgconfig">
+      <UniqueIdentifier>{4ecdd442-dc9f-4ad6-b2a3-9942a0d2e994}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\SoftFloat">
+      <UniqueIdentifier>{ae8c97c2-b99e-4278-8133-84ce76e383bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\SoftFloat\Include">
+      <UniqueIdentifier>{5f24ada2-815a-48ed-8e4f-4b3d32516b62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\SoftFloat\Lib">
+      <UniqueIdentifier>{082567a4-eda5-4b90-b8fe-c933fdf8c036}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\SoftFloat\Lib\pkgconfig">
+      <UniqueIdentifier>{781f9d1c-3a41-4382-aed1-542b0c6b510b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\SoftFloat\Doc">
+      <UniqueIdentifier>{30692132-b2a1-4703-8b95-c538fa9065d2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{dda135d7-8ea4-4f93-84cc-3fc197eda05c}</UniqueIdentifier>
+      <UniqueIdentifier>{e43a3a50-9486-4c11-87cf-f6deefff2a82}</UniqueIdentifier>
       <Extensions>.rc</Extensions>
       <ParseFiles>false</ParseFiles>
     </Filter>
     <Filter Include="Other Files">
-      <UniqueIdentifier>{f2a28cf5-390c-44c0-9c91-d48da86621dc}</UniqueIdentifier>
+      <UniqueIdentifier>{b531e542-cec0-458d-b7da-ef5721c624bb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC">
-      <UniqueIdentifier>{4122383e-5cf4-4fa8-8198-7562c0ef830a}</UniqueIdentifier>
+      <UniqueIdentifier>{6d51c8d8-cb19-4c0c-a632-3253c6d028ff}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\README">
-      <UniqueIdentifier>{571b3903-571b-4727-8bcf-1aeb2488c989}</UniqueIdentifier>
+      <UniqueIdentifier>{ba190095-ce33-4351-a3f3-87fd243b6e80}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\html">
-      <UniqueIdentifier>{e8993b52-f9bd-40dc-82e5-f638dccd2541}</UniqueIdentifier>
+      <UniqueIdentifier>{4f3c1281-ad70-4204-8774-4976eb3d5b75}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\html\herc">
-      <UniqueIdentifier>{b3d10906-6e34-4503-931b-415c7afa7819}</UniqueIdentifier>
+      <UniqueIdentifier>{083fe1c5-bf72-4898-942a-e434ff10fcb9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\html\msgs">
-      <UniqueIdentifier>{d1578663-c954-4cee-8dc9-f56173264b8d}</UniqueIdentifier>
+      <UniqueIdentifier>{f72196d3-f302-443a-bf58-09a5d25a9fb3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\html\images">
-      <UniqueIdentifier>{22d2a984-5bc9-431a-a939-91e67a65c350}</UniqueIdentifier>
+      <UniqueIdentifier>{06c278ef-d211-4f38-a966-ddeec761905d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\html\include">
-      <UniqueIdentifier>{7c57002f-9fcf-4864-bd16-7149faafe2d8}</UniqueIdentifier>
+      <UniqueIdentifier>{688d28fd-0a15-4d19-b5c0-20d1b814ec38}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\DOC\man">
-      <UniqueIdentifier>{fca822d9-2a88-43c9-916e-837b83a401c8}</UniqueIdentifier>
+      <UniqueIdentifier>{0d1d21bd-bcdc-4567-ba4b-1af9100580a8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build">
-      <UniqueIdentifier>{8450a7ad-03a3-4f46-9acb-282d416e6e6f}</UniqueIdentifier>
+      <UniqueIdentifier>{709cdf75-bf77-47af-812a-c9e909dd34cd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\msvc">
-      <UniqueIdentifier>{be1108a7-d47c-417a-aa36-f67c34f278ea}</UniqueIdentifier>
+      <UniqueIdentifier>{11c22256-26c0-4020-983c-dc0d92c880ad}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\msvc\makefile includes">
-      <UniqueIdentifier>{968642fe-2f29-4364-9866-efdffd4627cc}</UniqueIdentifier>
+      <UniqueIdentifier>{7a84ae0f-b578-4465-bb74-2f3ca7ed5d59}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\msvc\runjobs.jobs">
-      <UniqueIdentifier>{7f1ee795-0496-4a38-8b9e-cd114babdd58}</UniqueIdentifier>
+      <UniqueIdentifier>{bfe19107-b9e1-4f58-9cf2-9b904663d2e4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\msvc\VS2008">
-      <UniqueIdentifier>{BFEC2449-AE62-4214-951C-C95A4C3772D3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Other Files\Build\msvc\VS2010">
-      <UniqueIdentifier>{d4229dc5-a55f-413f-b4ed-5dab284353bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Other Files\Build\msvc\VS2012">
-      <UniqueIdentifier>{9001ffc3-2e15-45f5-8347-e9130575cc79}</UniqueIdentifier>
+      <UniqueIdentifier>{5387271f-51d6-4a79-960c-92afe3620329}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\msvc\VS2015">
-      <UniqueIdentifier>{C0FEAE32-8D79-417b-A574-0E003746C168}</UniqueIdentifier>
+      <UniqueIdentifier>{65d8ee88-988d-40e5-b27a-a183326d9749}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\other">
-      <UniqueIdentifier>{ed8ca01e-c1ff-4b4e-a39e-fc0d70b7ed77}</UniqueIdentifier>
+      <UniqueIdentifier>{3bffa35c-5784-4032-bad4-aa9ce018456b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\other\autoconf">
-      <UniqueIdentifier>{47d1e7d3-2ff8-4d6f-9722-812e1f9386d1}</UniqueIdentifier>
+      <UniqueIdentifier>{8afc3b31-b0cc-490f-94dc-c294d68df654}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Build\other\m4">
-      <UniqueIdentifier>{ed505b7c-56d1-4f32-9967-bb472d84e955}</UniqueIdentifier>
+      <UniqueIdentifier>{b4d3323e-b676-410e-9f2d-4a19b5365a0b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\Utilities">
-      <UniqueIdentifier>{277414b5-0c67-4bc1-8ac6-c94efceb35fb}</UniqueIdentifier>
+      <UniqueIdentifier>{bc87fd6c-cfd8-46c8-b4d7-2f87a5f3e36c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests">
-      <UniqueIdentifier>{dd28d74f-170f-4e67-80df-5997130fd390}</UniqueIdentifier>
+      <UniqueIdentifier>{62bb9ddf-17a6-43ff-9082-21e9dc0b0d2e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\core">
-      <UniqueIdentifier>{a6e6c7f7-508b-4903-8f9c-6475305f7f5a}</UniqueIdentifier>
+      <UniqueIdentifier>{d999b6e2-9004-4026-8de8-3ca90af984f9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts">
-      <UniqueIdentifier>{65ba0a0e-2801-42b7-a9ef-487ca7cf2aca}</UniqueIdentifier>
+      <UniqueIdentifier>{ca8f4eed-4753-41ef-96d6-84c609718a46}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\txt">
-      <UniqueIdentifier>{43f26724-8be0-4c55-8a59-7f9ce0f1b0d0}</UniqueIdentifier>
+      <UniqueIdentifier>{8db4040b-6e69-424d-8104-ed4281e7fced}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\assemble">
-      <UniqueIdentifier>{85b0c175-8fe6-4623-b8e9-d02524552f22}</UniqueIdentifier>
+      <UniqueIdentifier>{2cdba3ce-5d7c-4446-b76d-22ffd6b1c4cd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\assemble\listing">
-      <UniqueIdentifier>{5294a6c7-a74d-4e7d-b4aa-4801d1dd3b62}</UniqueIdentifier>
+      <UniqueIdentifier>{bc5d652a-ff25-4baf-8229-3316ea980baa}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\tst">
-      <UniqueIdentifier>{2b9022fe-0332-4c8a-b0a8-63f7bc246955}</UniqueIdentifier>
+      <UniqueIdentifier>{34c6e388-b1b3-4904-acc2-f36a12d86ad9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\tst\subtst">
-      <UniqueIdentifier>{9c7712c7-866b-4915-8e3c-3275dd73cd30}</UniqueIdentifier>
+      <UniqueIdentifier>{824efe30-2700-40e8-bca7-6822842b6ef9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\asm">
-      <UniqueIdentifier>{538b7b86-4ac7-49bf-9349-bb43ff49c054}</UniqueIdentifier>
+      <UniqueIdentifier>{213a2d59-6e3c-43be-b9b0-b28475feb188}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\tests\scripts\asm\list">
-      <UniqueIdentifier>{3e2424ad-f3a5-4c1d-8efd-18beb5a8d5a3}</UniqueIdentifier>
+      <UniqueIdentifier>{30b3c114-48e7-40a3-a24f-7f7eec6ad6a7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\misc">
-      <UniqueIdentifier>{9569f70b-29fd-4bbe-afac-8938a820106f}</UniqueIdentifier>
+      <UniqueIdentifier>{1666044c-d104-4917-9e91-4c658c351342}</UniqueIdentifier>
     </Filter>
     <Filter Include="Other Files\scripts">
-      <UniqueIdentifier>{eed96bc0-8d07-4775-a989-2f02ba0808aa}</UniqueIdentifier>
+      <UniqueIdentifier>{30b441cd-d7f4-4ae7-95f1-24489de483b6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -299,57 +305,6 @@
     </ClCompile>
     <ClCompile Include="crypto\sha256.c">
       <Filter>Source Files\Hercules\Crypto\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decContext.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decDouble.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decimal128.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decimal32.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decimal64.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decNumber.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decPacked.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decQuad.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\decSingle.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example1.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example2.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example3.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example4.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example5.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example6.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example7.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="decNumber\example8.c">
-      <Filter>Source Files\Hercules\decNumber\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="telnet.c">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term</Filter>
@@ -462,10 +417,10 @@
     <ClCompile Include="zfcp.c">
       <Filter>Source Files\Hercules\Devices\zFCP</Filter>
     </ClCompile>
-    <ClCompile Include="archlvl.c">
+    <ClCompile Include="_archdep_templ.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="_archdep_templ.c">
+    <ClCompile Include="archlvl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="assist.c">
@@ -744,12 +699,6 @@
     <ClCompile Include="sie.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SoftFloat-specialise.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SoftFloat.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sr.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -797,17 +746,47 @@
     <None Include="decNumber\decnumber.pdf">
       <Filter>Source Files\Hercules\decNumber</Filter>
     </None>
+    <None Include="decNumber\ERRATA">
+      <Filter>Source Files\Hercules\decNumber</Filter>
+    </None>
     <None Include="decNumber\ICU-license.html">
       <Filter>Source Files\Hercules\decNumber</Filter>
     </None>
-    <None Include="decNumber\Makefile.am">
-      <Filter>Source Files\Hercules\decNumber</Filter>
+    <None Include="decNumber\lib\decNumber32.pdb">
+      <Filter>Source Files\Hercules\decNumber\Lib</Filter>
     </None>
-    <None Include="decNumber\decNumber.def">
-      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
+    <None Include="decNumber\lib\decNumber64.pdb">
+      <Filter>Source Files\Hercules\decNumber\Lib</Filter>
     </None>
-    <None Include="SoftFloat-2b.zip">
-      <Filter>Source Files\Hercules\Original SoftFloat-2b</Filter>
+    <None Include="decNumber\lib\pkgconfig\decNumber32.pc">
+      <Filter>Source Files\Hercules\decNumber\Lib\pkgconfig</Filter>
+    </None>
+    <None Include="decNumber\lib\pkgconfig\decNumber64.pc">
+      <Filter>Source Files\Hercules\decNumber\Lib\pkgconfig</Filter>
+    </None>
+    <None Include="SoftFloat\README.html">
+      <Filter>Source Files\Hercules\SoftFloat</Filter>
+    </None>
+    <None Include="SoftFloat\lib\SoftFloat32.pdb">
+      <Filter>Source Files\Hercules\SoftFloat\Lib</Filter>
+    </None>
+    <None Include="SoftFloat\lib\SoftFloat64.pdb">
+      <Filter>Source Files\Hercules\SoftFloat\Lib</Filter>
+    </None>
+    <None Include="SoftFloat\lib\pkgconfig\SoftFloat32.pc">
+      <Filter>Source Files\Hercules\SoftFloat\Lib\pkgconfig</Filter>
+    </None>
+    <None Include="SoftFloat\lib\pkgconfig\SoftFloat64.pc">
+      <Filter>Source Files\Hercules\SoftFloat\Lib\pkgconfig</Filter>
+    </None>
+    <None Include="SoftFloat\doc\SoftFloat-history.html">
+      <Filter>Source Files\Hercules\SoftFloat\Doc</Filter>
+    </None>
+    <None Include="SoftFloat\doc\SoftFloat-source.html">
+      <Filter>Source Files\Hercules\SoftFloat\Doc</Filter>
+    </None>
+    <None Include="SoftFloat\doc\SoftFloat.html">
+      <Filter>Source Files\Hercules\SoftFloat\Doc</Filter>
     </None>
     <None Include=".gitattributes">
       <Filter>Resource Files</Filter>
@@ -855,6 +834,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.ECPSVM">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="README.EXTPKG">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.HAO">
@@ -1148,6 +1130,9 @@
     <None Include="msvc.makefile.includes\DEBUG_RETAIL.msvc">
       <Filter>Other Files\Build\msvc\makefile includes</Filter>
     </None>
+    <None Include="msvc.makefile.includes\EXT_PKGS.msvc">
+      <Filter>Other Files\Build\msvc\makefile includes</Filter>
+    </None>
     <None Include="msvc.makefile.includes\HERC_FLAGS.msvc">
       <Filter>Other Files\Build\msvc\makefile includes</Filter>
     </None>
@@ -1223,21 +1208,6 @@
     <None Include="Hercules.vcproj">
       <Filter>Other Files\Build\msvc\VS2008</Filter>
     </None>
-    <None Include="Hercules.vcxproj">
-      <Filter>Other Files\Build\msvc\VS2010</Filter>
-    </None>
-    <None Include="Hercules.vcxproj.filters">
-      <Filter>Other Files\Build\msvc\VS2010</Filter>
-    </None>
-    <None Include="Hercules_VS2010.sln">
-      <Filter>Other Files\Build\msvc\VS2010</Filter>
-    </None>
-    <None Include="Hercules_VS2012.sln">
-      <Filter>Other Files\Build\msvc\VS2012</Filter>
-    </None>
-    <None Include="Hercules_VS2012.vcxproj">
-      <Filter>Other Files\Build\msvc\VS2012</Filter>
-    </None>
     <None Include="Hercules_VS2015.sln">
       <Filter>Other Files\Build\msvc\VS2015</Filter>
     </None>
@@ -1247,7 +1217,7 @@
     <None Include="Hercules_VS2015.vcxproj.filters">
       <Filter>Other Files\Build\msvc\VS2015</Filter>
     </None>
-      <None Include="_build">
+    <None Include="_build">
       <Filter>Other Files\Build\other</Filter>
     </None>
     <None Include="_build.bat">
@@ -1448,6 +1418,12 @@
     <None Include="tests\bldhtc.exec">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="tests\bldhtc.rexx">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\cvttst.rexx">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\hetbsf.het">
       <Filter>Other Files\tests</Filter>
     </None>
@@ -1481,28 +1457,76 @@
     <None Include="tests\bctr.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\bfp-001-divtoint.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\cpu0off.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-adds.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-comps.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-divs.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-mults.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-subs.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\l.core">
@@ -1515,6 +1539,9 @@
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\mvc.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\pfpo.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\sieve.core">
@@ -1616,6 +1643,75 @@
     <None Include="tests\awsbsf.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\bfp-001-divtoint.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.sptst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\cipher.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -1632,27 +1728,6 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\hetbsf.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-adds.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-comps.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-divs.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-mults.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-subs.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\ilc.tst">
@@ -1676,14 +1751,11 @@
     <None Include="tests\mvcle.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\pfpo-esa.tst">
+    <None Include="tests\pfpo.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\pr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\pr.subtst">
-      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\runtest0.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
@@ -1727,55 +1799,160 @@
     <None Include="tests\cmd-rv-4K-64.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
+    <None Include="tests\pr.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
     <None Include="tests\runtest.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\tapebsf.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
+    <None Include="tests\bfp-001-divtoint.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
-    <None Include="tests\ieee-adds.asm">
+    <None Include="tests\pfpo.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
-    <None Include="tests\ieee-comps.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-divs.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-mults.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-subs.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-adds.list">
+    <None Include="tests\bfp-001-divtoint.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-comps.list">
+    <None Include="tests\bfp-002-loadr.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-div-nans.list">
+    <None Include="tests\bfp-003-loadfpi.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-divs.list">
+    <None Include="tests\bfp-004-cvttolog.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-mults.list">
+    <None Include="tests\bfp-005-cvttolog64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-sqrts.list">
+    <None Include="tests\bfp-006-cvttofix.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
-    <None Include="tests\ieee-subs.list">
+    <None Include="tests\bfp-007-cvttofix64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\pfpo.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">
@@ -1833,45 +2010,6 @@
     </ClInclude>
     <ClInclude Include="crypto\sha256.h">
       <Filter>Source Files\Hercules\Crypto\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decBasic.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decCommon.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decContext.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decDouble.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decDPD.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decimal128.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decimal32.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decimal64.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decNumber.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decNumberLocal.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decPacked.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decQuad.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="decNumber\decSingle.h">
-      <Filter>Source Files\Hercules\decNumber\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="telnet.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term</Filter>
@@ -2128,9 +2266,6 @@
     <ClInclude Include="hstdinc.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hstdint.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hstructs.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2188,21 +2323,6 @@
     <ClInclude Include="service.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SoftFloat-macros.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-milieu.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-specialise.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-types.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sr.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2224,10 +2344,43 @@
     <ClInclude Include="w32util.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="decNumber\include\decContext.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decimal128.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decimal32.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decimal64.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decNumber.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decPacked.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="decNumber\include\decQuad.h">
+      <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="SoftFloat\include\softfloat.h">
+      <Filter>Source Files\Hercules\SoftFloat\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="SoftFloat\include\softfloat_types.h">
+      <Filter>Source Files\Hercules\SoftFloat\Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="decNumber\readme.txt">
       <Filter>Source Files\Hercules\decNumber</Filter>
+    </Text>
+    <Text Include="SoftFloat\COPYING.txt">
+      <Filter>Source Files\Hercules\SoftFloat</Filter>
+    </Text>
+    <Text Include="SoftFloat\README.txt">
+      <Filter>Source Files\Hercules\SoftFloat</Filter>
     </Text>
     <Text Include="_TODO.txt">
       <Filter>Other Files\DOC</Filter>
@@ -2711,21 +2864,18 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="decNumber\decNumber.rc">
-      <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="hercdasd.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="hercmisc.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="hercprod.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="herctape.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <Library Include="decNumber\lib\decNumber32.lib">
+      <Filter>Source Files\Hercules\decNumber\Lib</Filter>
+    </Library>
+    <Library Include="decNumber\lib\decNumber64.lib">
+      <Filter>Source Files\Hercules\decNumber\Lib</Filter>
+    </Library>
+    <Library Include="SoftFloat\lib\SoftFloat32.lib">
+      <Filter>Source Files\Hercules\SoftFloat\Lib</Filter>
+    </Library>
+    <Library Include="SoftFloat\lib\SoftFloat64.lib">
+      <Filter>Source Files\Hercules\SoftFloat\Lib</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <Image Include="hercdasd.ico">
@@ -2896,5 +3046,19 @@
     <Image Include="html\images\waitonu.gif">
       <Filter>Other Files\DOC\html\images</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="hercdasd.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="hercmisc.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="hercprod.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="herctape.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

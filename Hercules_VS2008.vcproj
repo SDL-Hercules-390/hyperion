@@ -33,7 +33,7 @@
 				CleanCommandLine="makefile.bat DEBUG makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -54,7 +54,7 @@
 				CleanCommandLine="makefile.bat DEBUG-X64 makefile.msvc 64 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -75,7 +75,7 @@
 				CleanCommandLine="makefile.bat RETAIL makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -96,7 +96,7 @@
 				CleanCommandLine="makefile.bat RETAIL-X64 makefile.msvc 64 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -117,7 +117,7 @@
 				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -138,7 +138,7 @@
 				CleanCommandLine="makefile.bat DEBUG-ALL makefile.msvc 64 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -159,7 +159,7 @@
 				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -180,7 +180,7 @@
 				CleanCommandLine="makefile.bat RETAIL-ALL makefile.msvc 64 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -201,7 +201,7 @@
 				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 32 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -222,7 +222,7 @@
 				CleanCommandLine="makefile.bat ALL-ALL makefile.msvc 64 clean &quot;$(SolutionDir)&quot;"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL"
-				IncludeSearchPath="crypto;decNumber;$(ProjectDir)"
+				IncludeSearchPath="crypto;decNumber\include;SoftFloat\include;&quot;$(ProjectDir)&quot;"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -401,167 +401,6 @@
 						</File>
 						<File
 							RelativePath=".\crypto\sha256.c"
-							>
-						</File>
-					</Filter>
-				</Filter>
-				<Filter
-					Name="decNumber"
-					>
-					<File
-						RelativePath=".\decNumber\decnumber.pdf"
-						SubType="Code"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\ICU-license.html"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\Makefile.am"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\readme.txt"
-						>
-					</File>
-					<Filter
-						Name="Header Files"
-						>
-						<File
-							RelativePath=".\decNumber\decBasic.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decCommon.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decContext.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decDouble.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decDPD.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal128.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal32.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal64.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decNumber.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decNumberLocal.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decPacked.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decQuad.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decSingle.h"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="Source Files"
-						>
-						<File
-							RelativePath=".\decNumber\decContext.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decDouble.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal128.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal32.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decimal64.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decNumber.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decPacked.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decQuad.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decSingle.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example1.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example2.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example3.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example4.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example5.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example6.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example7.c"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\example8.c"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="Resource Files"
-						>
-						<File
-							RelativePath=".\decNumber\decNumber.def"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\decNumber.rc"
 							>
 						</File>
 					</Filter>
@@ -1269,14 +1108,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-specialise.c"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat.c"
-							>
-						</File>
-						<File
 							RelativePath=".\sr.c"
 							>
 						</File>
@@ -1565,10 +1396,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\hstdint.h"
-							>
-						</File>
-						<File
 							RelativePath=".\hstructs.h"
 							>
 						</File>
@@ -1645,26 +1472,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-macros.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat-milieu.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat-specialise.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat-types.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat.h"
-							>
-						</File>
-						<File
 							RelativePath=".\sr.h"
 							>
 						</File>
@@ -1695,20 +1502,172 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="Original SoftFloat-2b"
-					>
-					<File
-						RelativePath=".\SoftFloat-2b.zip"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="altcmpsc"
 					>
 					<File
 						RelativePath=".\cmpsc.c"
 						>
 					</File>
+				</Filter>
+				<Filter
+					Name="decNumber"
+					>
+					<File
+						RelativePath=".\decNumber\decnumber.pdf"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\ERRATA"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\ICU-license.html"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\readme.txt"
+						>
+					</File>
+					<Filter
+						Name="Include"
+						>
+						<File
+							RelativePath=".\decNumber\include\decContext.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decimal128.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decimal32.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decimal64.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decNumber.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decPacked.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\include\decQuad.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Lib"
+						>
+						<File
+							RelativePath=".\decNumber\lib\decNumber32.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\lib\decNumber32.pdb"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\lib\decNumber64.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\lib\decNumber64.pdb"
+							>
+						</File>
+						<Filter
+							Name="pkgconfig"
+							>
+							<File
+								RelativePath=".\decNumber\lib\pkgconfig\decNumber32.pc"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\pkgconfig\decNumber64.pc"
+								>
+							</File>
+						</Filter>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="SoftFloat"
+					>
+					<File
+						RelativePath=".\SoftFloat\COPYING.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\SoftFloat\README.html"
+						>
+					</File>
+					<File
+						RelativePath=".\SoftFloat\README.txt"
+						>
+					</File>
+					<Filter
+						Name="Include"
+						>
+						<File
+							RelativePath=".\SoftFloat\include\softfloat.h"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\include\softfloat_types.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Lib"
+						>
+						<File
+							RelativePath=".\SoftFloat\lib\SoftFloat32.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\lib\SoftFloat32.pdb"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\lib\SoftFloat64.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\lib\SoftFloat64.pdb"
+							>
+						</File>
+						<Filter
+							Name="pkgconfig"
+							>
+							<File
+								RelativePath=".\SoftFloat\lib\pkgconfig\SoftFloat32.pc"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\pkgconfig\SoftFloat64.pc"
+								>
+							</File>
+						</Filter>
+					</Filter>
+					<Filter
+						Name="Doc"
+						>
+						<File
+							RelativePath=".\SoftFloat\doc\SoftFloat-history.html"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\doc\SoftFloat-source.html"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\doc\SoftFloat.html"
+							>
+						</File>
+					</Filter>
 				</Filter>
 			</Filter>
 		</Filter>
@@ -1829,6 +1788,10 @@
 					</File>
 					<File
 						RelativePath=".\README.ECPSVM"
+						>
+					</File>
+					<File
+						RelativePath=".\README.EXTPKG"
 						>
 					</File>
 					<File
@@ -2463,6 +2426,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\msvc.makefile.includes\EXT_PKGS.msvc"
+							>
+						</File>
+						<File
 							RelativePath=".\msvc.makefile.includes\HERC_FLAGS.msvc"
 							>
 						</File>
@@ -2568,34 +2535,6 @@
 						</File>
 						<File
 							RelativePath=".\Hercules.vcproj"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="VS2010"
-						>
-						<File
-							RelativePath=".\Hercules.vcxproj"
-							>
-						</File>
-						<File
-							RelativePath=".\Hercules.vcxproj.filters"
-							>
-						</File>
-						<File
-							RelativePath=".\Hercules_VS2010.sln"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="VS2012"
-						>
-						<File
-							RelativePath=".\Hercules_VS2012.sln"
-							>
-						</File>
-						<File
-							RelativePath=".\Hercules_VS2012.vcxproj"
 							>
 						</File>
 					</Filter>
@@ -2968,35 +2907,99 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\bfp-001-divtoint.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-002-loadr.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-003-loadfpi.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-004-cvttolog.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-005-cvttolog64.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-006-cvttofix.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-007-cvttofix64.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-008-cvtfrlog.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-009-cvtfrlog64.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-010-cvtfrfix.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-011-cvtfrfix64.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-012-loadtest.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-013-comps.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-014-divide.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-015-sqrt.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-016-add.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-017-loadl.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-018-subtract.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-019-multiply.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-020-multlonger.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-021-multadd.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-022-multsub.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bfp-023-threads.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\cpu0off.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-adds.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-comps.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-div-nans.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-divs.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-mults.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-sqrts.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-subs.core"
 						>
 					</File>
 					<File
@@ -3013,6 +3016,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\mvc.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\pfpo.core"
 						>
 					</File>
 					<File
@@ -3787,6 +3794,98 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\bfp-001-divtoint.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-002-loadr.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-003-loadfpi.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-004-cvttolog.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-005-cvttolog64.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-006-cvttofix.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-007-cvttofix64.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-008-cvtfrlog.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-009-cvtfrlog64.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-010-cvtfrfix.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-011-cvtfrfix64.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-012-loadtest.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-013-comps.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-014-divide.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-015-sqrt.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-016-add.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-017-loadl.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-018-subtract.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-019-multiply.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-020-multlonger.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-021-multadd.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-022-multsub.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-023-threads.sptst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cipher.tst"
 							>
 						</File>
@@ -3808,34 +3907,6 @@
 						</File>
 						<File
 							RelativePath=".\tests\hetbsf.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-adds.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-div-nans.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-mults.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-sqrts.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.tst"
 							>
 						</File>
 						<File
@@ -3867,7 +3938,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\pfpo-esa.tst"
+							RelativePath=".\tests\pfpo.tst"
 							>
 						</File>
 						<File
@@ -3951,66 +4022,202 @@
 						Name="asm"
 						>
 						<File
+							RelativePath=".\tests\bfp-001-divtoint.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-002-loadr.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-003-loadfpi.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-004-cvttolog.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-005-cvttolog64.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-006-cvttofix.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-007-cvttofix64.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-008-cvtfrlog.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-009-cvtfrlog64.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-010-cvtfrfix.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-011-cvtfrfix64.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-012-loadtest.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-013-comps.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-014-divide.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-015-sqrt.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-016-add.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-017-loadl.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-018-subtract.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-019-multiply.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-020-multlonger.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-021-multadd.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-022-multsub.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\bfp-023-threads.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ieee-adds.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-div-nans.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-mults.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-sqrts.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.asm"
+							RelativePath=".\tests\pfpo.asm"
 							>
 						</File>
 						<Filter
 							Name="list"
 							>
 							<File
-								RelativePath=".\tests\ieee-adds.list"
+								RelativePath=".\tests\bfp-001-divtoint.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-comps.list"
+								RelativePath=".\tests\bfp-002-loadr.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-div-nans.list"
+								RelativePath=".\tests\bfp-003-loadfpi.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-divs.list"
+								RelativePath=".\tests\bfp-004-cvttolog.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-mults.list"
+								RelativePath=".\tests\bfp-005-cvttolog64.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-sqrts.list"
+								RelativePath=".\tests\bfp-006-cvttofix.list"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-subs.list"
+								RelativePath=".\tests\bfp-007-cvttofix64.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-008-cvtfrlog.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-009-cvtfrlog64.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-010-cvtfrfix.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-011-cvtfrfix64.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-012-loadtest.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-013-comps.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-014-divide.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-015-sqrt.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-016-add.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-017-loadl.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-018-subtract.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-019-multiply.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-020-multlonger.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-021-multadd.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-022-multsub.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bfp-023-threads.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\pfpo.list"
 								>
 							</File>
 						</Filter>
