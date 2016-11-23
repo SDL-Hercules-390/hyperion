@@ -1,13 +1,15 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2012                */
+/* HSTDINC.H    (C) Copyright Roger Bowler, 1999-2016                */
 /*              Hercules precompilation-eligible Header Files        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
 /* This file contains #include statements for all of the header      */
 /* files which are not dependent on the mainframe architectural      */
 /* features selected and thus are eligible for precompilation        */
+/*-------------------------------------------------------------------*/
 
 #ifndef _HSTDINC_H
 #define _HSTDINC_H
@@ -23,10 +25,6 @@
   #include "targetver.h" // Earliest/Oldest Windows platform supported
 #endif
 
-/*-------------------------------------------------------------------*/
-/* Required and optional SYSTEM headers...                           */
-/*-------------------------------------------------------------------*/
-
 #if !defined(_REENTRANT)
 /* Jan should have specified -pthread for linking.  jph              */
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
@@ -37,7 +35,9 @@
   #define _GNU_SOURCE                 /* required by strsignal() *JJ */
 #endif
 
-/* Required headers  --  These we ALWAYS need to have... */
+/*-------------------------------------------------------------------*/
+/* Required system headers...           (these we must ALWAYS have)  */
+/*-------------------------------------------------------------------*/
 
 #include "ccnowarn.h"           /* suppress compiler warning support */
 
@@ -97,11 +97,13 @@
 #endif
 #include <sys/types.h>
 
-/* Optional headers  --  These we can live without */
-
-/* PROGRAMMING NOTE: On Darwin, <sys/socket.h> must be included before
-   <net/if.h>, and on older Darwin systems, before <net/route.h> and
-   <netinet/in.h> */
+/*-------------------------------------------------------------------*/
+/* Optional system headers...           (these we can live without)  */
+/*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE:
+   On Darwin, <sys/socket.h> must be included before <net/if.h> and
+   on older Darwin systems, before <net/route.h> and <netinet/in.h>.
+*/
 #ifdef HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
 #endif
@@ -189,9 +191,6 @@
 #ifdef HAVE_FENV_H
   #include <fenv.h>
 #endif
-#ifdef HAVE_INTTYPES_H
-  #include <inttypes.h>
-#endif
 #ifdef HAVE_MALLOC_H
   #include <malloc.h>
 #endif
@@ -226,7 +225,12 @@
   #include <sys/prctl.h>
 #endif
 
-// Some Hercules specific files, NOT guest arch dependent
+/*-------------------------------------------------------------------*/
+/* Hercules standard headers...           (common Hercules headers)  */
+/*-------------------------------------------------------------------*/
+
+//    NOTE:   none of these headers should be arch dependent!
+
 #if defined(_MSVC_)
   #include "hercwind.h"         // Hercules definitions for Windows
 #else
