@@ -41,7 +41,7 @@
     DISABLE_MSVC_WARNING( 4142 ) // "benign redefinition of type"
     DISABLE_MSVC_WARNING( 4146 ) // "unary minus operator applied to unsigned type, result still unsigned"
     DISABLE_MSVC_WARNING( 4200 ) // "nonstandard extension used : zero-sized array in struct/union"
-    DISABLE_MSVC_WARNING( 4244 ) // (floating-point only?) "conversion from 'x' to 'y', possible loss of data"
+    DISABLE_MSVC_WARNING( 4244 ) // "conversion from 'x' to 'y', possible loss of data"
     DISABLE_MSVC_WARNING( 4267 ) // "conversion from size_t to int possible loss of data"
     DISABLE_MSVC_WARNING( 4748 ) // "/GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function"
 

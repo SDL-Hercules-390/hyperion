@@ -42,7 +42,7 @@ typedef U64     TOD;                            // one microsecond = Bit 51
 #define ETOD_1970   0x007D91048BCA0000ULL       // Extended TOD base for host epoch of 1970
 
 
-#if __BIG_ENDIAN__
+#ifdef WORDS_BIGENDIAN
 typedef struct ETOD { U64 high, low; } ETOD;
 #define ETOD_init(_high,_low) \
         {_high,_low}

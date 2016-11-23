@@ -1,3 +1,15 @@
+
+-------------------------------------------------------------------------------
+
+                              **  NOTE  **
+
+          This document is no longer maintained. Refer instead
+          to the Hercules Hyperion git repository's commit log
+          at: https://github.com/hercules-390/hyperion/commits
+
+-------------------------------------------------------------------------------
+
+
 29 Dec 2014 New 2012 CMPSC instruction implementation is now the default.
             Original/legacy implementation moved to altcmpsc.dll module.
 28 Jul 2013 COMMADPT driver mods for APL\360 - Max Parke <ikj1234i@yahoo.com> by Fish
