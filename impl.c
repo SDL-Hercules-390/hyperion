@@ -35,7 +35,7 @@ static char shortopts[] =
 #if defined( EXTERNALGUI )
     "e"
 #endif
-   "hf:r:db:vt::"
+   "h::f:r:db:vt::"
 #if defined(ENABLE_BUILTIN_SYMBOLS)
    "s:"
 #endif
@@ -48,7 +48,7 @@ static char shortopts[] =
 static struct option longopts[] =
 {
     { "test",     optional_argument, NULL, 't' },
-    { "help",     no_argument,       NULL, 'h' },
+    { "help",     optional_argument, NULL, 'h' },
     { "config",   required_argument, NULL, 'f' },
     { "rcfile",   required_argument, NULL, 'r' },
     { "daemon",   no_argument,       NULL, 'd' },
@@ -561,6 +561,7 @@ int     rc;
 
         memcpy(sysblk.blkend, buf, sizeof(sysblk.blkend));
     }
+    sysblk.msglvl = DEFAULT_MLVL;
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -636,7 +637,6 @@ int     rc;
 #endif
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
-    sysblk.msglvl   = DEFAULT_MLVL;                 /* Defaults to TERSE and DEVICES */
 
     /* set default console port address */
     sysblk.cnslport = strdup("3270");
@@ -1282,9 +1282,47 @@ int     c = 0;                        /* Next option flag            */
             break;
         case 0:         /* getopt_long() set a variable; keep going */
             break;
-        case 'h':
-            arg_error++;
+        case 'h':       /* -h[=type] or --help[=type] */
+
+            if (optarg) /* help type specified? */
+            {
+                if (0
+                    || strcasecmp( optarg, "short"  ) == 0
+                )
+                {
+                    ;   // (do nothing)
+                }
+                else if (0
+                    || strcasecmp( optarg, "version" ) == 0
+                )
+                {
+                    display_version( stdout, 0, "Hercules" );
+                }
+                else if (0
+                    || strcasecmp( optarg, "build"   ) == 0
+                )
+                {
+                    display_build_options( stdout, 0 );
+                }
+                else if (0
+                    || strcasecmp( optarg, "all"  ) == 0
+                    || strcasecmp( optarg, "long" ) == 0
+                    || strcasecmp( optarg, "full" ) == 0
+                )
+                {
+                    display_version( stdout, 0, "Hercules" );
+                    display_build_options( stdout, 0 );
+                }
+                else
+                {
+                    // "Invalid help option argument: %s"
+                    WRMSG( HHC00025, "E", optarg );
+                }
+            }
+
+            arg_error++;  // (forced by help option)
             break;
+
         case 'f':
             cfgorrc[want_cfg].filename = optarg;
             break;
@@ -1313,9 +1351,11 @@ int     c = 0;                        /* Next option flag            */
                         set_symbol(sym, value);
                     }
                     else
+                        // "Symbol and/or Value is invalid; ignored"
                         WRMSG(HHC01419, "E" );
                 }
                 else
+                    // "Symbol and/or Value is invalid; ignored"
                     WRMSG(HHC01419, "E");
             }
             break;
@@ -1337,6 +1377,7 @@ int     c = 0;                        /* Next option flag            */
                         dll_load[++dll_count] = strdup(dllname);
                     else
                     {
+                        // "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
                         WRMSG(HHC01406, "W", MAX_DLL_TO_LOAD);
                         break;
                     }
@@ -1395,6 +1436,7 @@ int     c = 0;                        /* Next option flag            */
                 WRMSG( HHC00023, "S", buf );
                 arg_error++;
             }
+            break;
 
         } /* end switch(c) */
     } /* end while */
@@ -1428,10 +1470,8 @@ error:
 
         /* Show them all of our command-line arguments... */
         strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
-        /* "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"*/
-        WRMSG (HHC01414, "S", "");   // (blank line)
+        // "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
         WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), symsub, dlsub);
-        WRMSG (HHC01414, "S", "");   // (blank line)
 
     }
     else             /* Check for config and rc file, but don't open */

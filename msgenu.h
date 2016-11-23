@@ -188,6 +188,7 @@ Examples:
 //efine HHC00022 (available)
 #define HHC00023 "Invalid/unsupported option: %s"
 #define HHC00024 "Unrecognized option: %s"
+#define HHC00025 "Invalid help option argument: %s"
 
 // range 00040 - 00068 available
 
@@ -903,7 +904,7 @@ Examples:
 #define HHC01404 "Cannot create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
+#define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
