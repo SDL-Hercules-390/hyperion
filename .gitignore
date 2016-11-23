@@ -6,7 +6,6 @@
 
 # The only thing you need to add is an executable without extension.
 
-*.bin
 .DS_Store
 .deps/
 .libs/
@@ -112,10 +111,6 @@ autoconf/compile
 *.la
 *.loT
 *.o
-
-# GIT Generics - Libraries
-*.lib
-*.a
 
 # GIT Generics - Shared Objects (including Windows DLLs)
 *.dll
