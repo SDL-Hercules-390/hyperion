@@ -1,0 +1,1781 @@
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE DIVIDE TO INTEGER
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise. Test results, FPCR flags, and any DXC are saved for all
+                                                                             7 *  tests.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following three conversion instructions
+                                                                            14 *   DIVIDE TO INTEGER (short BFP, RRE)
+                                                                            15 *   DIVIDE TO INTEGER (long BFP, RRE)
+                                                                            16 *
+                                                                            17 * Test data is compiled into this program.  The test script that runs
+                                                                            18 * this program can provide alternative test data through Hercules R
+                                                                            19 * commands.
+                                                                            20 *
+                                                                            21 * Test Case Order
+                                                                            22 * 1) Short BFP basic tests, including traps and NaN propagation
+                                                                            23 * 2) Short BFP finite number tests, incl. partial and final results
+                                                                            24 * 3) Short BFP rounding, tests of quotient and remainder rounding
+                                                                            25 * 4) Long BFP basic tests, including traps and NaN propagation
+                                                                            26 * 5) Long BFP finite number tests, incl. partial and final results
+                                                                            27 * 6) Short BFP rounding, tests of quotient and remainder rounding
+                                                                            28 *
+                                                                            29 * Three input test sets are provided each for short and long
+                                                                            30 *   BFP inputs.  Test values are conceptually the same for each
+                                                                            31 *   precision, but the values differ between precisions.  Overflow,
+                                                                            32 *   for example, is triggered by different values in short and long,
+                                                                            33 *   but each test set includes overflow tests.
+                                                                            34 *
+                                                                            35 * Also tests the following floating point support instructions
+                                                                            36 *   LOAD  (Short)
+                                                                            37 *   LOAD  (Long)
+                                                                            38 *   LFPC  (Load Floating Point Control Register)
+                                                                            39 *   SRNMB (Set BFP Rounding Mode 2-bit)
+                                                                            40 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                            41 *   STORE (Short)
+                                                                            42 *   STORE (Long)
+                                                                            43 *   STFPC (Store Floating Point Control Register)
+                                                                            44 *
+                                                                            45 ***********************************************************************
+
+
+                                                                            47          MACRO
+                                                                            48          PADCSECT &ENDLABL
+                                                                            49 .*
+                                                                            50 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            51 .*  program is not being assembled using asma.  asma generates a core
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52 .*  image that is loaded by the loadcore command, and because the
+                                                                            53 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            54 .*  this small effort to keep the core image small.
+                                                                            55 .*
+                                                                            56          AIF   (D'&ENDLABL).GOODPAD
+                                                                            57          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            58          MNOTE *,'No CSECT padding performed'
+                                                                            59          MEXIT
+                                                                            60 .*
+                                                                            61 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            62          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            63          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            64          MEXIT
+                                                                            65 .*
+                                                                            66 .NOPAD   ANOP
+                                                                            67          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            68          MEND
+                                                                            69 *
+                                                                            70 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            71 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            72 *
+                                      0000000000000000  0000000000000F13    73 BFPDV2NT START 0
+                                      0000000000000000  0000000000000001    74 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    75 R1       EQU   1
+                                      0000000000000002  0000000000000001    76 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    77 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    78 R4       EQU   4                   Rounding tests inner loop control
+                                      0000000000000005  0000000000000001    79 R5       EQU   5                   Rounding tests outer loop control
+                                      0000000000000006  0000000000000001    80 R6       EQU   6                   Rounding tests top of inner loop
+                                      0000000000000007  0000000000000001    81 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    82 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    83 R9       EQU   9                   Rounding tests top of outer loop
+                                      000000000000000A  0000000000000001    84 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    85 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    86 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001    87 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    88 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    89 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            90 *
+                                                                            91 * Floating Point Register equates to keep the cross reference clean
+                                                                            92 *
+                                      0000000000000000  0000000000000001    93 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    94 FPR1     EQU   1
+                                      0000000000000002  0000000000000001    95 FPR2     EQU   2
+                                      0000000000000003  0000000000000001    96 FPR3     EQU   3
+                                      0000000000000004  0000000000000001    97 FPR4     EQU   4
+                                      0000000000000005  0000000000000001    98 FPR5     EQU   5
+                                      0000000000000006  0000000000000001    99 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   100 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   101 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   102 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   103 FPR10    EQU   10
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000000B  0000000000000001   104 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   105 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   106 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   107 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   108 FPR15    EQU   15
+                                                                           109 *
+0000000000000000                      0000000000000000                     110          USING *,R15
+                                                                           111 *
+                                                                           112 * Above works on real iron (R15=0 after sysclear)
+                                                                           113 * and in z/CMS (R15 points to start of load module)
+                                                                           114 *
+
+
+                                                                           116 ***********************************************************************
+                                                                           117 *
+                                                                           118 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           119 *
+                                                                           120 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   122          ORG   BFPDV2NT+X'8E'      Program check interrution code
+000000000000008E  0000                                                     123 PCINTCD  DS    H
+                                                                           124 *
+                                      0000000000000150  0000000000000000   125 PCOLDPSW EQU   BFPDV2NT+X'150'     z/Arch Program check old PSW
+                                                                           126 *
+0000000000000090                      0000000000000090  00000000000001A0   127          ORG   BFPDV2NT+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        128          DC    X'0000000180000000',AD(START)
+                                                                           129 *
+00000000000001B0                      00000000000001B0  00000000000001D0   130          ORG   BFPDV2NT+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        131          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           132 *
+                                                                           133 * Program check routine.  If Data Exception, continue execution at
+                                                                           134 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           135 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           136 * in the FPCR.
+                                                                           137 *
+00000000000001E0                      00000000000001E0  0000000000000200   138          ORG   BFPDV2NT+X'200'
+0000000000000200                                                           139 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   140          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   141          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   142          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           143 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     144          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     145          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F268                             0000000000000268   146          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           148 ***********************************************************************
+                                                                           149 *
+                                                                           150 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           151 *
+                                                                           152 ***********************************************************************
+
+
+0000000000000214                                                           154 START    DS    0H
+0000000000000214  B600 F278                             0000000000000278   155          STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F279                             0000000000000279   156          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F278                             0000000000000278   157          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           158 *
+0000000000000220  41A0 F300                             0000000000000300   159          LA    R10,SHORTNF    Point to short BFP non-finite inputs
+0000000000000224  4DD0 F360                             0000000000000360   160          BAS   R13,DIEBRNF    Divide to Integer short BFP non-finite
+0000000000000228  41A0 F310                             0000000000000310   161          LA    R10,SHORTF     Point to short BFP finite inputs
+000000000000022C  4DD0 F3D6                             00000000000003D6   162          BAS   R13,DIEBRF     Divide to Integer short BFP finites
+0000000000000230  41A0 F320                             0000000000000320   163          LA    R10,RMSHORTS   Point to short BFP rounding mode tests
+0000000000000234  4DD0 F484                             0000000000000484   164          BAS   R13,DIEBRRM    Convert using all rounding mode options
+                                                                           165 *
+0000000000000238  41A0 F330                             0000000000000330   166          LA    R10,LONGNF     Point to long BFP non-finite inputs
+000000000000023C  4DD0 F528                             0000000000000528   167          BAS   R13,DIDBRNF    Divide to Integer long BFP basic
+0000000000000240  41A0 F340                             0000000000000340   168          LA    R10,LONGF      Point to long BFP finite inputs
+0000000000000244  4DD0 F59E                             000000000000059E   169          BAS   R13,DIDBRF     Divide to Integer long BFP basic
+0000000000000248  41A0 F350                             0000000000000350   170          LA    R10,RMLONGS    Point to long  BFP rounding mode tests
+000000000000024C  4DD0 F64C                             000000000000064C   171          BAS   R13,DIDBRRM    Convert using all rounding mode options
+                                                                           172 *
+0000000000000250  12EE                                                     173          LTR   R14,R14        Return address provided?
+0000000000000252  077E                                                     174          BNZR  R14            ..Yes, return to z/CMS test rig.
+0000000000000254  B2B2 F258                             0000000000000258   175          LPSWE WAITPSW        All done
+                                                                           176 *
+0000000000000258                                                           177          DS    0D             Ensure correct alignment for psw
+0000000000000258  00020000 00000000                                        178 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000268  00020000 00000000                                        179 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           180 *
+0000000000000278  00000000                                                 181 CTLR0    DS    F
+000000000000027C  00000000                                                 182 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000280  F8000000                                                 183 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           184 *
+                                                                           185 * Input values parameter list, four fullwords for each test data set
+                                                                           186 *      1) Count,
+                                                                           187 *      2) Address of inputs,
+                                                                           188 *      3) Address to place results, and
+                                                                           189 *      4) Address to place DXC/Flags/cc values.
+                                                                           190 *
+0000000000000284                      0000000000000284  0000000000000300   191          ORG   BFPDV2NT+X'300'  Enable run-time replacement
+0000000000000300                                                           192 SHORTNF  DS    0F           Input pairs for short BFP non-finite tests
+0000000000000300  00000020                                                 193          DC    A(SBFPNFCT/4/2)
+0000000000000304  0000073C                                                 194          DC    A(SBFPNFIN)
+0000000000000308  00001000                                                 195          DC    A(SBFPNFOT)
+000000000000030C  00001200                                                 196          DC    A(SBFPNFFL)
+                                                                           197 *
+0000000000000310                                                           198 SHORTF   DS    0F           Input pairs for short BFP finite tests
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000310  0000002B                                                 199          DC    A(SBFPCT/4/2)
+0000000000000314  0000083C                                                 200          DC    A(SBFPIN)
+0000000000000318  0000A000                                                 201          DC    A(SBFPOUT)
+000000000000031C  0000A800                                                 202          DC    A(SBFPFLGS)
+                                                                           203 *
+0000000000000320                                                           204 RMSHORTS DS    0F           Input pairs for short BFP finite testing
+0000000000000320  0000000C                                                 205          DC    A(SBFPRMCT/4/2)
+0000000000000324  00000994                                                 206          DC    A(SBFPINRM)
+0000000000000328  00002000                                                 207          DC    A(SBFPRMO)
+000000000000032C  00004000                                                 208          DC    A(SBFPRMOF)
+                                                                           209 *
+0000000000000330                                                           210 LONGNF   DS    0F           Input pairs for long BFP non-finite testing
+0000000000000330  00000020                                                 211          DC    A(LBFPNFCT/8/2)
+0000000000000334  000009F4                                                 212          DC    A(LBFPNFIN)
+0000000000000338  00001300                                                 213          DC    A(LBFPNFOT)
+000000000000033C  00001700                                                 214          DC    A(LBFPNFFL)
+                                                                           215 *
+0000000000000340                                                           216 LONGF    DS    0F           Input pairs for long BFP finite testing
+0000000000000340  00000026                                                 217          DC    A(LBFPCT/8/2)
+0000000000000344  00000BF4                                                 218          DC    A(LBFPIN)
+0000000000000348  0000B000                                                 219          DC    A(LBFPOUT)
+000000000000034C  0000AC00                                                 220          DC    A(LBFPFLGS)
+                                                                           221 *
+0000000000000350                                                           222 RMLONGS  DS    0F           Input pairs for long  BFP finite testing
+0000000000000350  0000000C                                                 223          DC    A(LBFPRMCT/8/2)
+0000000000000354  00000E54                                                 224          DC    A(LBFPINRM)
+0000000000000358  00005000                                                 225          DC    A(LBFPRMO)
+000000000000035C  00009000                                                 226          DC    A(LBFPRMOF)
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           228 ***********************************************************************
+                                                                           229 *
+                                                                           230 * Perform Divide to Integer using provided short BFP input pairs.  This
+                                                                           231 * set of tests checks NaN propagation and operations on values that are
+                                                                           232 * not finite numbers.
+                                                                           233 *
+                                                                           234 * A pair of results is generated for each input: one with all
+                                                                           235 * exceptions non-trappable, and the second with all exceptions
+                                                                           236 * trappable.   The FPCR and condition code is stored for each result.
+                                                                           237 *
+                                                                           238 ***********************************************************************
+
+
+0000000000000360                                                           240 DIEBRNF  DS    0H            BFP Short non-finite values tests
+0000000000000360  9823 A000                             0000000000000000   241          LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000364  9878 A008                             0000000000000008   242          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000368  1222                                                     243          LTR   R2,R2         Any test cases?
+000000000000036A  078D                                                     244          BZR   R13           ..No, return to caller
+000000000000036C  0DC0                                                     245          BASR  R12,0         Set top of loop
+                                                                           246 *
+000000000000036E  B29D F27C                             000000000000027C   247          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000372  7800 3000                             0000000000000000   248          LE    FPR0,0(,R3)   Get short BFP dividend
+0000000000000376  7810 3004                             0000000000000004   249          LE    FPR1,4(,R3)   Get short BFP divisor
+000000000000037A  B374 0020                                                250          LZER  FPR2          Zero remainder register
+000000000000037E  B353 2001                                                251          DIEBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           252 *                            Quotient in FPR2, remainder in FPR0
+0000000000000382  7000 7000                             0000000000000000   253          STE   FPR0,0(,R7)   Store short BFP remainder
+0000000000000386  7020 7004                             0000000000000004   254          STE   FPR2,4(,R7)   Store short BFP quotient
+000000000000038A  B29C 8000                             0000000000000000   255          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000038E  B222 0000                                                256          IPM   R0            Retrieve condition code
+0000000000000392  8800 001C                             000000000000001C   257          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000396  4200 8003                             0000000000000003   258          STC   R0,3(0,R8)    Store in last byte of FPCR
+                                                                           259 *
+000000000000039A  B29D F280                             0000000000000280   260          LFPC  FPCREGTR      Set exceptions trappable
+000000000000039E  7800 3000                             0000000000000000   261          LE    FPR0,0(,R3)   Get short BFP dividend
+00000000000003A2  7810 3004                             0000000000000004   262          LE    FPR1,4(,R3)   Get short BFP divisor
+00000000000003A6  B374 0020                                                263          LZER  FPR2          Zero remainder register
+00000000000003AA  B353 2001                                                264          DIEBR FPR0,FPR2,FPR1,0  Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           265 *                            Quotient in FPR2, remainder in FPR0
+00000000000003AE  7000 7008                             0000000000000008   266          STE   FPR0,8(,R7)   Store short BFP remainder
+00000000000003B2  7020 700C                             000000000000000C   267          STE   FPR2,12(,R7)  Store short BFP quotient
+00000000000003B6  B29C 8004                             0000000000000004   268          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000003BA  B222 0000                                                269          IPM   R0            Retrieve condition code
+00000000000003BE  8800 001C                             000000000000001C   270          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000003C2  4200 8007                             0000000000000007   271          STC   R0,7(,R8)     Store in last byte of FPCR
+                                                                           272 *
+00000000000003C6  4130 3008                             0000000000000008   273          LA    R3,8(,R3)     Point to next input value pair
+00000000000003CA  4170 7010                             0000000000000010   274          LA    R7,16(,R7)    Point to next quo&rem result value pair
+00000000000003CE  4180 8008                             0000000000000008   275          LA    R8,8(,R8)     Point to next FPCR result area
+00000000000003D2  062C                                                     276          BCTR  R2,R12        Convert next input value.
+00000000000003D4  07FD                                                     277          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           279 ***********************************************************************
+                                                                           280 *
+                                                                           281 * Perform Divide to Integer using provided short BFP input pairs.  This
+                                                                           282 * set of tests performs basic checks of Divide To Integer emulation
+                                                                           283 * where both inputs are finite non-zero numbers.
+                                                                           284 *
+                                                                           285 * Four results (six values) are generated for each input:
+                                                                           286 *  1) Divide to integer with all exceptions non-trappable (two values)
+                                                                           287 *  2) Multiply integer quotient by divisor, add remainder (one value)
+                                                                           288 *  3) Divide to integerwith all exceptions trappable (two values)
+                                                                           289 *  4) Multiply integer quotient by divisor, add remainder (one value)
+                                                                           290 *
+                                                                           291 * The FPCR and condition code is stored for each result.  Note: the
+                                                                           292 * Multiply and Add instruction does not set the condition code.
+                                                                           293 *
+                                                                           294 * Results two and four (multiply and add) validate the calculation
+                                                                           295 * of the integer quotient and remainder.
+                                                                           296 *
+                                                                           297 ***********************************************************************
+
+
+00000000000003D6  9823 A000                             0000000000000000   299 DIEBRF   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000003DA  9878 A008                             0000000000000008   300          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000003DE  1222                                                     301          LTR   R2,R2         Any test cases?
+00000000000003E0  078D                                                     302          BZR   R13           ..No, return to caller
+00000000000003E2  0DC0                                                     303          BASR  R12,0         Set top of loop
+                                                                           304 *
+00000000000003E4  B29D F27C                             000000000000027C   305          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003E8  7800 3000                             0000000000000000   306          LE    FPR0,0(,R3)   Get short BFP dividend
+00000000000003EC  7810 3004                             0000000000000004   307          LE    FPR1,4(,R3)   Get short BFP divisor
+00000000000003F0  B374 0020                                                308          LZER  FPR2          Zero remainder register
+00000000000003F4  B353 2001                                                309          DIEBR FPR0,FPR2,FPR1,0  Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           310 *                            Quotient in FPR2, remainder in FPR0
+00000000000003F8  7000 7000                             0000000000000000   311          STE   FPR0,0(,R7)   Store short BFP remainder
+00000000000003FC  7020 7004                             0000000000000004   312          STE   FPR2,4(,R7)   Store short BFP quotient
+0000000000000400  B29C 8000                             0000000000000000   313          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000404  B222 0000                                                314          IPM   R0            Retrieve condition code
+0000000000000408  8800 001C                             000000000000001C   315          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000040C  4200 8003                             0000000000000003   316          STC   R0,3(,R8)     Store in last byte of FPCR
+                                                                           317 *
+                                                                           318 * FPR1 still has divisor, FPR0 has remainder, FPR2 has integer quotient
+                                                                           319 *
+0000000000000410  B29D F27C                             000000000000027C   320          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000414  B30E 0021                                                321          MAEBR FPR0,FPR2,FPR1 Multiply and add to recreate inputs
+                                                                           322 *                            Sum of product and remainder in FPR0
+0000000000000418  7000 7008                             0000000000000008   323          STE   FPR0,8(,R7)   Store short BFP product-sum
+000000000000041C  B29C 8004                             0000000000000004   324          STFPC 4(R8)         Store resulting FPCR flags and DXC
+0000000000000420  B222 0000                                                325          IPM   R0            Retrieve condition code
+0000000000000424  8800 001C                             000000000000001C   326          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000428  4200 8007                             0000000000000007   327          STC   R0,7(,R8)     Store in last byte of FPCR
+                                                                           328 *
+000000000000042C  B29D F280                             0000000000000280   329          LFPC  FPCREGTR      Set exceptions trappable
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000430  7800 3000                             0000000000000000   330          LE    FPR0,0(,R3)   Get short BFP dividend
+0000000000000434  7810 3004                             0000000000000004   331          LE    FPR1,4(,R3)   Get short BFP divisor
+0000000000000438  B374 0020                                                332          LZER  FPR2          Zero remainder register
+000000000000043C  B353 2001                                                333          DIEBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           334 *                            Quotient in FPR2, remainder in FPR0
+0000000000000440  7000 7010                             0000000000000010   335          STE   FPR0,16(,R7)  Store short BFP remainder
+0000000000000444  7020 7014                             0000000000000014   336          STE   FPR2,20(,R7)  Store short BFP quotient
+0000000000000448  B29C 8008                             0000000000000008   337          STFPC 8(R8)         Store resulting FPCR flags and DXC
+000000000000044C  B222 0000                                                338          IPM   R0            Retrieve condition code
+0000000000000450  8800 001C                             000000000000001C   339          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000454  4200 800B                             000000000000000B   340          STC   R0,11(,R8)    Store in last byte of FPCR
+                                                                           341 *
+                                                                           342 * FPR1 still has divisor, FPR0 has remainder, FPR2 has integer quotient
+                                                                           343 *
+0000000000000458  B29D F27C                             000000000000027C   344          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000045C  B30E 0021                                                345          MAEBR FPR0,FPR2,FPR1 Multiply and add to recreate inputs
+                                                                           346 *                            Sum of product and remainder in FPR0
+0000000000000460  7000 7018                             0000000000000018   347          STE   FPR0,24(,R7)  Store short BFP remainder
+0000000000000464  B29C 800C                             000000000000000C   348          STFPC 12(R8)        Store resulting FPCR flags and DXC
+0000000000000468  B222 0000                                                349          IPM   R0            Retrieve condition code
+000000000000046C  8800 001C                             000000000000001C   350          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000470  4200 800F                             000000000000000F   351          STC   R0,15(,R8)    Store in last byte of FPCR
+                                                                           352
+                                                                           353 *
+0000000000000474  4130 3008                             0000000000000008   354          LA    R3,8(,R3)     Point to next input value pair
+0000000000000478  4170 7020                             0000000000000020   355          LA    R7,32(,R7)    Point to next quo&rem result value pair
+000000000000047C  4180 8010                             0000000000000010   356          LA    R8,16(,R8)    Point to next FPCR result area
+0000000000000480  062C                                                     357          BCTR  R2,R12        Convert next input value.
+0000000000000482  07FD                                                     358          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           360 ***********************************************************************
+                                                                           361 *
+                                                                           362 * The next tests operate on finite number input pairs and exhastively
+                                                                           363 * test rounding modes and partial and final results.
+                                                                           364 *
+                                                                           365 * Two rounding modes can be specified for each operation: one for the
+                                                                           366 * quotient, specified in the M4 field, and the second for the
+                                                                           367 * remainder, specified in the FPCR.
+                                                                           368 *
+                                                                           369 * Because six unique rounding modes can be specified in for the
+                                                                           370 * quotient and four for the remainder, there are a lot of results that
+                                                                           371 * need to be evaluated.  Note: M4 rounding mode zero, use FPCR rounding
+                                                                           372 * mode, is not tested because it duplicates one of the six explicit
+                                                                           373 * M4 rounding modes.  Which one depends on the current FPCR setting.
+                                                                           374 *
+                                                                           375 * The M4 rounding mode is assembled into the instruction.  Back in the
+                                                                           376 * day, this would be a perfect candidate for an Execute instructoin.
+                                                                           377 * But the M4 field is not located such that it can be modified by
+                                                                           378 * an Execute instruction.  So we will still use Execute, but only to
+                                                                           379 * select one of six DIEBR instructions for execution.  That way we can
+                                                                           380 * build an outer loop to iterate through the four FPCR modes, and an
+                                                                           381 * inner loop to use each of the six M4-specified rounding modes.
+                                                                           382 *
+                                                                           383 ***********************************************************************
+
+
+0000000000000484  9823 A000                             0000000000000000   385 DIEBRRM  LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000488  9878 A008                             0000000000000008   386          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000048C  1222                                                     387          LTR   R2,R2         Any test cases?
+000000000000048E  078D                                                     388          BZR   R13           ..No, return to caller
+0000000000000490  1711                                                     389          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+0000000000000492  0DC0                                                     390          BASR  R12,0         Set top of test case loop
+                                                                           391
+0000000000000494  4150 0004                             0000000000000004   392          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000498  0D90                                                     393          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           394 *
+                                                                           395 * Update model FPC register settings with the BFP rounding mode for
+                                                                           396 * this iteration of the loop.
+                                                                           397 *
+000000000000049A  4315 F6F7                             00000000000006F7   398          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           399 *
+000000000000049E  4140 0006                             0000000000000006   400          LA    R4,D2IMCT     Get count of M4 modes to be tested
+00000000000004A2  0D60                                                     401          BASR  R6,0          Set top of rounding mode inner loop
+                                                                           402 *
+                                                                           403 * Non-trap execution of the instruction.
+                                                                           404 *
+00000000000004A4  B29D F27C                             000000000000027C   405          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004A8  4315 F6F7                             00000000000006F7   406          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+00000000000004AC  B2B8 1000                             0000000000000000   407          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004B0  7800 3000                             0000000000000000   408          LE    FPR0,0(,R3)   Get short BFP dividend
+00000000000004B4  7810 3004                             0000000000000004   409          LE    FPR1,4(,R3)   Get short BFP divisor
+00000000000004B8  B374 0020                                                410          LZER  FPR2          Zero remainder register
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004BC  4314 F6FB                             00000000000006FB   411          IC    R1,D2IMODES-L'D2IMODES(R4)  Get index DIEBR inst table
+00000000000004C0  4401 F704                             0000000000000704   412          EX    0,DIEBRTAB(R1) Execute Divide to Integer
+00000000000004C4  7000 7000                             0000000000000000   413          STE   FPR0,0(,R7)   Store short BFP remainder
+00000000000004C8  7020 7004                             0000000000000004   414          STE   FPR2,4(,R7)   Store short BFP quotient
+00000000000004CC  B29C 8000                             0000000000000000   415          STFPC 0(R8)         Store resulting FPCR flags and DXC
+00000000000004D0  B222 0000                                                416          IPM   R0            Retrieve condition code
+00000000000004D4  8800 001C                             000000000000001C   417          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000004D8  4200 8003                             0000000000000003   418          STC   R0,3(,R8)     Store in last byte of FPCR
+                                                                           419 *
+                                                                           420 * Trap-enabled execution of the instruction.
+                                                                           421 *
+00000000000004DC  B29D F280                             0000000000000280   422          LFPC  FPCREGTR      Set exceptions trappable, clear flags
+00000000000004E0  4315 F6F7                             00000000000006F7   423          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+00000000000004E4  B2B8 1000                             0000000000000000   424          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004E8  7800 3000                             0000000000000000   425          LE    FPR0,0(,R3)   Get short BFP dividend
+00000000000004EC  7810 3004                             0000000000000004   426          LE    FPR1,4(,R3)   Get short BFP divisor
+00000000000004F0  B374 0020                                                427          LZER  FPR2          Zero remainder register
+00000000000004F4  4314 F6FB                             00000000000006FB   428          IC    R1,D2IMODES-L'D2IMODES(R4)  Get index DIEBR inst table
+00000000000004F8  4401 F704                             0000000000000704   429          EX    0,DIEBRTAB(R1) Execute Divide to Integer
+00000000000004FC  7000 7008                             0000000000000008   430          STE   FPR0,8(,R7)   Store short BFP remainder
+0000000000000500  7020 700C                             000000000000000C   431          STE   FPR2,12(,R7)  Store short BFP quotient
+0000000000000504  B29C 8004                             0000000000000004   432          STFPC 4(R8)         Store resulting FPCR flags and DXC
+0000000000000508  B222 0000                                                433          IPM   R0            Retrieve condition code
+000000000000050C  8800 001C                             000000000000001C   434          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000510  4200 8007                             0000000000000007   435          STC   R0,7(,R8)     Store in last byte of FPCR
+                                                                           436 *
+0000000000000514  4170 7010                             0000000000000010   437          LA    R7,16(,R7)    Point to next quo&rem result value pair
+0000000000000518  4180 8008                             0000000000000008   438          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           439 *
+000000000000051C  0646                                                     440          BCTR  R4,R6         Iterate inner loop
+                                                                           441 *
+                                                                           442 * End of M4 modes to be tested.
+                                                                           443 *
+000000000000051E  0659                                                     444          BCTR  R5,R9         Iterate outer loop
+                                                                           445 *
+                                                                           446 * End of FPC modes to be tested with each M4 mode.  Advance to
+                                                                           447 * next test case.
+                                                                           448 *
+0000000000000520  4130 3008                             0000000000000008   449          LA    R3,8(,R3)     Point to next input value pair
+0000000000000524  062C                                                     450          BCTR  R2,R12        Divide next input value lots of times
+                                                                           451 *
+0000000000000526  07FD                                                     452          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           454 ***********************************************************************
+                                                                           455 *
+                                                                           456 * Perform Divide to Integer using provided long BFP input pairs.  This
+                                                                           457 * set of tests checks NaN propagation and operations on values that are
+                                                                           458 * not finite numbers.
+                                                                           459 *
+                                                                           460 * A pair of results is generated for each input: one with all
+                                                                           461 * exceptions non-trappable, and the second with all exceptions
+                                                                           462 * trappable.   The FPCR and condition code is stored for each result.
+                                                                           463 *
+                                                                           464 ***********************************************************************
+
+
+0000000000000528  9823 A000                             0000000000000000   466 DIDBRNF  LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000052C  9878 A008                             0000000000000008   467          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000530  1222                                                     468          LTR   R2,R2         Any test cases?
+0000000000000532  078D                                                     469          BZR   R13           ..No, return to caller
+0000000000000534  0DC0                                                     470          BASR  R12,0         Set top of loop
+                                                                           471 *
+0000000000000536  B29D F27C                             000000000000027C   472          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000053A  6800 3000                             0000000000000000   473          LD    FPR0,0(,R3)   Get long BFP dividend
+000000000000053E  6810 3008                             0000000000000008   474          LD    FPR1,8(,R3)   Get long BFP divisor
+0000000000000542  B375 0020                                                475          LZDR  FPR2          Zero remainder register
+0000000000000546  B35B 2001                                                476          DIDBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           477 *                            Quotient in FPR2, remainder in FPR0
+000000000000054A  6000 7000                             0000000000000000   478          STD   FPR0,0(,R7)   Store long BFP remainder
+000000000000054E  6020 7008                             0000000000000008   479          STD   FPR2,8(,R7)   Store long BFP quotient
+0000000000000552  B29C 8000                             0000000000000000   480          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000556  B222 0000                                                481          IPM   R0            Retrieve condition code
+000000000000055A  8800 001C                             000000000000001C   482          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000055E  4200 8003                             0000000000000003   483          STC   R0,3(,R8)     Store in last byte of FPCR
+                                                                           484 *
+0000000000000562  B29D F280                             0000000000000280   485          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000566  6800 3000                             0000000000000000   486          LD    FPR0,0(,R3)   Get long BFP dividend
+000000000000056A  6810 3008                             0000000000000008   487          LD    FPR1,8(,R3)   Get long BFP divisor
+000000000000056E  B375 0020                                                488          LZDR  FPR2          Zero remainder register
+0000000000000572  B35B 2001                                                489          DIDBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           490 *                            Quotient in FPR2, remainder in FPR0
+0000000000000576  6000 7010                             0000000000000010   491          STD   FPR0,16(,R7)  Store long BFP remainder
+000000000000057A  6020 7018                             0000000000000018   492          STD   FPR2,24(,R7)  Store long BFP quotient
+000000000000057E  B29C 8004                             0000000000000004   493          STFPC 4(R8)         Store resulting FPCR flags and DXC
+0000000000000582  B222 0000                                                494          IPM   R0            Retrieve condition code
+0000000000000586  8800 001C                             000000000000001C   495          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000058A  4200 8007                             0000000000000007   496          STC   R0,7(,R8)     Store in last byte of FPCR
+                                                                           497 *
+000000000000058E  4130 3010                             0000000000000010   498          LA    R3,16(,R3)    Point to next input value pair
+0000000000000592  4170 7020                             0000000000000020   499          LA    R7,32(,R7)    Point to next quo&rem result value pair
+0000000000000596  4180 8008                             0000000000000008   500          LA    R8,8(,R8)     Point to next FPCR result area
+000000000000059A  062C                                                     501          BCTR  R2,R12        Convert next input value.
+000000000000059C  07FD                                                     502          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           504 ***********************************************************************
+                                                                           505 *
+                                                                           506 * Perform Divide to Integer using provided long BFP input pairs.  This
+                                                                           507 * set of tests performs basic checks of Divide To Integer emulation
+                                                                           508 * where both inputs are finite non-zero numbers.
+                                                                           509 *
+                                                                           510 * Four results (six values) are generated for each input:
+                                                                           511 *  1) Divide to integer with all exceptions non-trappable (two values)
+                                                                           512 *  2) Multiply integer quotient by divisor, add remainder (one value)
+                                                                           513 *  3) Divide to integerwith all exceptions trappable (two values)
+                                                                           514 *  4) Multiply integer quotient by divisor, add remainder (one value)
+                                                                           515 *
+                                                                           516 * The FPCR and condition code is stored for each result.  Note: the
+                                                                           517 * Multiply and Add instruction does not set the condition code.
+                                                                           518 *
+                                                                           519 * Results two and four (multiply and add) validate the calculation
+                                                                           520 * of the integer quotient and remainder.
+                                                                           521 *
+                                                                           522 ***********************************************************************
+
+
+000000000000059E  9823 A000                             0000000000000000   524 DIDBRF   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000005A2  9878 A008                             0000000000000008   525          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000005A6  1222                                                     526          LTR   R2,R2         Any test cases?
+00000000000005A8  078D                                                     527          BZR   R13           ..No, return to caller
+00000000000005AA  0DC0                                                     528          BASR  R12,0         Set top of loop
+                                                                           529 *
+00000000000005AC  B29D F27C                             000000000000027C   530          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000005B0  6800 3000                             0000000000000000   531          LD    FPR0,0*32+0(,R3) Get long BFP dividend
+00000000000005B4  6810 3008                             0000000000000008   532          LD    FPR1,0*32+8(,R3) Get long BFP divisor
+00000000000005B8  B375 0020                                                533          LZDR  FPR2            Zero remainder register
+00000000000005BC  B35B 2001                                                534          DIDBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           535 *                            Quotient in FPR2, remainder in FPR0
+00000000000005C0  6000 7000                             0000000000000000   536          STD   FPR0,0*32+0(,R7) Store long BFP remainder
+00000000000005C4  6020 7008                             0000000000000008   537          STD   FPR2,0*32+8(,R7) Store long BFP quotient
+00000000000005C8  B29C 8000                             0000000000000000   538          STFPC 0*4(R8)       Store resulting FPCR flags and DXC
+00000000000005CC  B222 0000                                                539          IPM   R0            Retrieve condition code
+00000000000005D0  8800 001C                             000000000000001C   540          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000005D4  4200 8003                             0000000000000003   541          STC   R0,0*4+3(,R8) Store in last byte of FPCR
+                                                                           542 *
+                                                                           543 * FPR1 still has divisor, FPR0 has remainder, FPR2 has integer quotient
+                                                                           544 *
+00000000000005D8  B29D F27C                             000000000000027C   545          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000005DC  B31E 0021                                                546          MADBR FPR0,FPR2,FPR1 Multiply and add to recreate inputs
+                                                                           547 *                            Sum of product and remainder in FPR0
+00000000000005E0  6000 7010                             0000000000000010   548          STD   FPR0,0*32+16(,R7) Store short BFP product-sum
+00000000000005E4  B29C 8004                             0000000000000004   549          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+00000000000005E8  B222 0000                                                550          IPM   R0            Retrieve condition code
+00000000000005EC  8800 001C                             000000000000001C   551          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000005F0  4200 8007                             0000000000000007   552          STC   R0,1*4+3(,R8) Store in last byte of FPCR
+                                                                           553 *
+00000000000005F4  B29D F280                             0000000000000280   554          LFPC  FPCREGTR      Set exceptions trappable
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005F8  6800 3000                             0000000000000000   555          LD    FPR0,0(,R3)   Get long BFP dividend
+00000000000005FC  6810 3008                             0000000000000008   556          LD    FPR1,8(,R3)   Get long BFP divisor
+0000000000000600  B375 0020                                                557          LZDR  FPR2          Zero remainder register
+0000000000000604  B35B 2001                                                558          DIDBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           559 *                            Quotient in FPR2, remainder in FPR0
+0000000000000608  6000 7020                             0000000000000020   560          STD   FPR0,1*32+0(,R7) Store long BFP remainder
+000000000000060C  6020 7028                             0000000000000028   561          STD   FPR2,1*32+8(,R7) Store long BFP quotient
+0000000000000610  B29C 8008                             0000000000000008   562          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+0000000000000614  B222 0000                                                563          IPM   R0            Retrieve condition code
+0000000000000618  8800 001C                             000000000000001C   564          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000061C  4200 800B                             000000000000000B   565          STC   R0,2*4+3(,R8) Store in last byte of FPCR
+                                                                           566 *
+                                                                           567 * FPR1 still has divisor, FPR0 has remainder, FPR2 has integer quotient
+                                                                           568 *
+0000000000000620  B29D F27C                             000000000000027C   569          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000624  B31E 0021                                                570          MADBR FPR0,FPR2,FPR1 Multiply and add to recreate inputs
+                                                                           571 *                            Sum of product and remainder in FPR0
+0000000000000628  6000 7030                             0000000000000030   572          STD   FPR0,1*32+16(,R7) Store short BFP product-sum
+000000000000062C  B29C 800C                             000000000000000C   573          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+0000000000000630  B222 0000                                                574          IPM   R0            Retrieve condition code
+0000000000000634  8800 001C                             000000000000001C   575          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000638  4200 800F                             000000000000000F   576          STC   R0,3*4+3(,R8) Store in last byte of FPCR
+                                                                           577 *
+000000000000063C  4130 3010                             0000000000000010   578          LA    R3,16(,R3)    Point to next input value pair
+0000000000000640  4170 7040                             0000000000000040   579          LA    R7,64(,R7)    Point to next quo&rem result value pair
+0000000000000644  4180 8010                             0000000000000010   580          LA    R8,16(,R8)    Point to next FPCR result area
+0000000000000648  062C                                                     581          BCTR  R2,R12        Convert next input value.
+000000000000064A  07FD                                                     582          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           584 ***********************************************************************
+                                                                           585 *
+                                                                           586 * The next tests operate on finite number input pairs and exhastively
+                                                                           587 * test rounding modes and partial and final results.
+                                                                           588 *
+                                                                           589 * Two rounding modes can be specified for each operation: one for the
+                                                                           590 * quotient, specified in the M4 field, and the second for the
+                                                                           591 * remainder, specified in the FPCR.
+                                                                           592 *
+                                                                           593 * Because six unique rounding modes can be specified in for the
+                                                                           594 * quotient and four for the remainder, there are a lot of results that
+                                                                           595 * need to be evaluated.  Note: M4 rounding mode zero, use FPCR rounding
+                                                                           596 * mode, is not tested because it duplicates one of the six explicit
+                                                                           597 * M4 rounding modes.  Which one depends on the current FPCR setting.
+                                                                           598 *
+                                                                           599 * The M4 rounding mode is assembled into the instruction.  Back in the
+                                                                           600 * day, this would be a perfect candidate for an Execute instructoin.
+                                                                           601 * But the M4 field is not located such that it can be modified by
+                                                                           602 * an Execute instruction.  So we will still use Execute, but only to
+                                                                           603 * select one of six DIEBR instructions for execution.  That way we can
+                                                                           604 * build an outer loop to iterate through the four FPCR modes, and an
+                                                                           605 * inner loop to use each of the six M4-specified rounding modes.
+                                                                           606 *
+                                                                           607 ***********************************************************************
+
+
+000000000000064C  9823 A000                             0000000000000000   609 DIDBRRM  LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000650  9878 A008                             0000000000000008   610          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000654  1222                                                     611          LTR   R2,R2         Any test cases?
+0000000000000656  078D                                                     612          BZR   R13           ..No, return to caller
+0000000000000658  1711                                                     613          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+000000000000065A  0DC0                                                     614          BASR  R12,0         Set top of test case loop
+                                                                           615
+000000000000065C  4150 0004                             0000000000000004   616          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000660  0D90                                                     617          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           618 *
+                                                                           619 * Update model FPC register settings with the BFP rounding mode for
+                                                                           620 * this iteration of the loop.
+                                                                           621 *
+0000000000000662  4315 F6F7                             00000000000006F7   622          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+0000000000000666  4210 F27F                             000000000000027F   623          STC   R1,FPCREGNT+3 Update non-trap register settings
+000000000000066A  4210 F283                             0000000000000283   624          STC   R1,FPCREGTR+3 Update trap-enabled register settings
+                                                                           625 *
+000000000000066E  4140 0006                             0000000000000006   626          LA    R4,D2IMCT     Get count of M4 modes to be tested
+0000000000000672  0D60                                                     627          BASR  R6,0          Set top of rounding mode inner loop
+                                                                           628 *
+                                                                           629 * Non-trap execution of the instruction.
+                                                                           630 *
+0000000000000674  B29D F27C                             000000000000027C   631          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000678  4315 F6F7                             00000000000006F7   632          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+000000000000067C  B2B8 1000                             0000000000000000   633          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000680  6800 3000                             0000000000000000   634          LD    FPR0,0(,R3)   Get short BFP dividend
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000684  6810 3008                             0000000000000008   635          LD    FPR1,8(,R3)   Get short BFP divisor
+0000000000000688  B375 0020                                                636          LZDR  FPR2          Zero remainder register
+000000000000068C  4314 F6FB                             00000000000006FB   637          IC    R1,D2IMODES-L'D2IMODES(R4)  Get index DIEBR inst table
+0000000000000690  4401 F720                             0000000000000720   638          EX    0,DIDBRTAB(R1) Execute Divide to Integer
+0000000000000694  6000 7000                             0000000000000000   639          STD   FPR0,0(,R7)   Store short BFP remainder
+0000000000000698  6020 7008                             0000000000000008   640          STD   FPR2,8(,R7)   Store short BFP quotient
+000000000000069C  B29C 8000                             0000000000000000   641          STFPC 0(R8)         Store resulting FPCR flags and DXC
+00000000000006A0  B222 0000                                                642          IPM   R0            Retrieve condition code
+00000000000006A4  8800 001C                             000000000000001C   643          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000006A8  4200 8003                             0000000000000003   644          STC   R0,3(,R8)     Store in last byte of FPCR
+                                                                           645 *
+                                                                           646 * Trap-enabled execution of the instruction.
+                                                                           647 *
+00000000000006AC  B29D F280                             0000000000000280   648          LFPC  FPCREGTR      Set exceptions trappable, clear flags
+00000000000006B0  4315 F6F7                             00000000000006F7   649          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+00000000000006B4  B2B8 1000                             0000000000000000   650          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000006B8  6800 3000                             0000000000000000   651          LD    FPR0,0(,R3)   Get short BFP dividend
+00000000000006BC  6810 3008                             0000000000000008   652          LD    FPR1,8(,R3)   Get short BFP divisor
+00000000000006C0  B374 0020                                                653          LZER  FPR2          Zero remainder register
+00000000000006C4  4314 F6FB                             00000000000006FB   654          IC    R1,D2IMODES-L'D2IMODES(R4)  Get index DIEBR inst table
+00000000000006C8  4401 F720                             0000000000000720   655          EX    0,DIDBRTAB(R1) Execute Divide to Integer
+00000000000006CC  6000 7010                             0000000000000010   656          STD   FPR0,16(,R7)  Store short BFP remainder
+00000000000006D0  6020 7018                             0000000000000018   657          STD   FPR2,24(,R7)  Store short BFP quotient
+00000000000006D4  B29C 8004                             0000000000000004   658          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000006D8  B222 0000                                                659          IPM   R0            Retrieve condition code
+00000000000006DC  8800 001C                             000000000000001C   660          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000006E0  4200 8007                             0000000000000007   661          STC   R0,7(,R8)     Store in last byte of FPCR
+                                                                           662 *
+00000000000006E4  4170 7020                             0000000000000020   663          LA    R7,32(,R7)    Point to next quo&rem result value pair
+00000000000006E8  4180 8008                             0000000000000008   664          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           665 *
+00000000000006EC  0646                                                     666          BCTR  R4,R6         Iterate inner loop
+                                                                           667 *
+                                                                           668 * End of M4 modes to be tested.
+                                                                           669 *
+00000000000006EE  0659                                                     670          BCTR  R5,R9         Iterate outer loop
+                                                                           671 *
+                                                                           672 * End of FPC modes to be tested with each M4 mode.  Advance to
+                                                                           673 * next test case.
+                                                                           674 *
+00000000000006F0  4130 3010                             0000000000000010   675          LA    R3,16(,R3)     Point to next input value pair
+00000000000006F4  062C                                                     676          BCTR  R2,R12        Divide next input value lots of times
+                                                                           677 *
+00000000000006F6  07FD                                                     678          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           680 ***********************************************************************
+                                                                           681 *
+                                                                           682 * Tables and indices used to exhaustively test remainder and quotient
+                                                                           683 * rounding modes.
+                                                                           684 *
+                                                                           685 * The Execute instruction with an appropriate index * is used to
+                                                                           686 * execute the correct DIEBR/DIDBR instruction.  Because * the quotient
+                                                                           687 * rounding mode is encoded in the DIxBR instruction in the wrong place
+                                                                           688 * to use Execute to dynamically modify the rounding mode, we will just
+                                                                           689 * use it to select the correct instruction.
+                                                                           690 *
+                                                                           691 * The Set BFP Rounding Mode does allow specification of the FPC
+                                                                           692 * rounding mode as an address, so we shall index into a table of
+                                                                           693 * BFP rounding modes without bothering with Execute.
+                                                                           694 *
+                                                                           695 ***********************************************************************
+
+
+                                                                           697 *
+                                                                           698 * Rounding modes that may be set in the FPCR.  The FPCR controls
+                                                                           699 * rounding of the quotient.  The same table is used for both DIEBR
+                                                                           700 * and DIDBR instruction testing.
+                                                                           701 *
+                                                                           702 * These are indexed directly by the loop counter, which counts down.
+                                                                           703 * So the modes are listed in reverse order here.
+                                                                           704 *
+00000000000006F8                                                           705 FPCMODES DS    0C
+00000000000006F8  07                                                       706          DC    AL1(7)              RFS, Round for shorter precision
+00000000000006F9  03                                                       707          DC    AL1(3)              RM, Round to -infinity
+00000000000006FA  02                                                       708          DC    AL1(2)              RP, Round to +infinity
+00000000000006FB  01                                                       709          DC    AL1(1)              RZ, Round to zero
+                                                                           710 ***      DC    AL1(0)              RNTE, Round to Nearest, ties to even
+                                      0000000000000004  0000000000000001   711 FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
+                                                                           712 *
+                                                                           713 * Table of indices into table of DIDBR/DIEBR instructions.  The table
+                                                                           714 * is used for both DIDBR and DIEBR, with the table value being used
+                                                                           715 * as the index register of an Execute instruction that points to
+                                                                           716 * either the DIDBR or DIEBR instruction list.
+                                                                           717 *
+                                                                           718 * These are indexed directly by the loop counter, which counts down.
+                                                                           719 * So the instruction indices are listed in reverse order here.
+                                                                           720 *
+00000000000006FC                                                           721 D2IMODES DS    0C
+00000000000006FC  18                                                       722          DC    AL1(6*4)            RM, Round to -infinity
+00000000000006FD  14                                                       723          DC    AL1(5*4)            RP, Round to +infinity
+00000000000006FE  10                                                       724          DC    AL1(4*4)            RZ, Round to zero
+00000000000006FF  0C                                                       725          DC    AL1(3*4)            RNTE, Round to Nearest, ties to even
+0000000000000700  08                                                       726          DC    AL1(2*4)            RFS, Round for Shorter Precision
+0000000000000701  04                                                       727          DC    AL1(1*4)            RNTA, Round to Nearest, ties away
+                                                                           728 ***      DC    AL1(0*4)            Use FPCR rounding mode
+                                      0000000000000006  0000000000000001   729 D2IMCT   EQU   *-D2IMODES          Count of M4 Modes to be tested
+                                                                           730 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           731 * List of DIEBR instructions, each with a different rounding mode.
+                                                                           732 * These are Execute'd by the rounding mode test routing using an index
+                                                                           733 * obtained from the D2IMODES table above.
+                                                                           734 *
+                                                                           735 * This table and the DIDBRTAB table below should remain in the same
+                                                                           736 * sequence, or you'll be scratching your head keeping the result order
+                                                                           737 * straight between short and long results.
+                                                                           738 *
+0000000000000704                                                           739 DIEBRTAB DS    0F                  Table of DIEBR instructions
+0000000000000704  B353 2001                                                740          DIEBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           741 * Above is not used
+0000000000000708  B353 2101                                                742          DIEBR FPR0,FPR2,FPR1,1 Div to Int FPR0/FPR1, M4=RNTA
+000000000000070C  B353 2301                                                743          DIEBR FPR0,FPR2,FPR1,3 Div to Int FPR0/FPR1, M4=RFS
+0000000000000710  B353 2401                                                744          DIEBR FPR0,FPR2,FPR1,4 Div to Int FPR0/FPR1, M4=RNTE
+0000000000000714  B353 2501                                                745          DIEBR FPR0,FPR2,FPR1,5 Div to Int FPR0/FPR1, M4=RZ
+0000000000000718  B353 2601                                                746          DIEBR FPR0,FPR2,FPR1,6 Div to Int FPR0/FPR1, M4=RP
+000000000000071C  B353 2701                                                747          DIEBR FPR0,FPR2,FPR1,7 Div to Int FPR0/FPR1, M4=RM
+                                                                           748 *
+                                                                           749 * List of DIDBR instructions, each with a different rounding mode.
+                                                                           750 * These are Execute'd by the rounding mode test routing using an index
+                                                                           751 * obtained from the D2IMODES table above.
+                                                                           752 *
+                                                                           753 * This table and the DIEBRTAB table above should remain in the same
+                                                                           754 * sequence, or you'll be scratching your head keeping the result order
+                                                                           755 * straight between short and long results.
+                                                                           756 *
+0000000000000720                                                           757 DIDBRTAB DS    0F                  Table of DIDBR instructions
+0000000000000720  B35B 2001                                                758          DIDBR FPR0,FPR2,FPR1,0 Div to Int FPR0/FPR1, M4=use FPCR
+                                                                           759 * Above is not used
+0000000000000724  B35B 2101                                                760          DIDBR FPR0,FPR2,FPR1,1 Div to Int FPR0/FPR1, M4=RNTA
+0000000000000728  B35B 2301                                                761          DIDBR FPR0,FPR2,FPR1,3 Div to Int FPR0/FPR1, M4=RFS
+000000000000072C  B35B 2401                                                762          DIDBR FPR0,FPR2,FPR1,4 Div to Int FPR0/FPR1, M4=RNTE
+0000000000000730  B35B 2501                                                763          DIDBR FPR0,FPR2,FPR1,5 Div to Int FPR0/FPR1, M4=RZ
+0000000000000734  B35B 2601                                                764          DIDBR FPR0,FPR2,FPR1,6 Div to Int FPR0/FPR1, M4=RP
+0000000000000738  B35B 2701                                                765          DIDBR FPR0,FPR2,FPR1,7 Div to Int FPR0/FPR1, M4=RM
+                                                                           766 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           768 ***********************************************************************
+                                                                           769 *
+                                                                           770 * Short integer test data sets for Divide to Integer testing.
+                                                                           771 *
+                                                                           772 * Each test data set member consists of two values, the dividend and
+                                                                           773 * the divisor, in that order.
+                                                                           774 *
+                                                                           775 * The first test data set is used for tests of basic functionality,
+                                                                           776 * NaN propagation, and results from operations involving other than
+                                                                           777 * finite numbers.
+                                                                           778 *
+                                                                           779 * The secondd test data set is used for testing boundary conditions
+                                                                           780 * using two finite non-zero values.  Each possible condition code
+                                                                           781 * and type of result (normal, scaled, etc) is created by members of
+                                                                           782 * this test data set.
+                                                                           783 *
+                                                                           784 * The third test data set is used for exhaustive testing of final
+                                                                           785 * results across the panoply of rounding mode combinations available
+                                                                           786 * for Divide to Integer (five for the remainder, seven for the
+                                                                           787 * quotient).
+                                                                           788 *
+                                                                           789 ***********************************************************************
+
+
+                                                                           791 *
+                                                                           792 * First input test data set, to test operations using non-finite or
+                                                                           793 * zero inputs.  Member values chosen to validate part 1 of Figure 19-21
+                                                                           794 * on page 19-29 of SA22-7832-10.
+                                                                           795 *
+000000000000073C                                                           796 SBFPNFIN DS    0F                Inputs for short BFP non-finite tests
+                                                                           797 *
+                                                                           798 * NaN propagation tests  (Tests 1-4)
+                                                                           799 *
+000000000000073C  7F8A0000                                                 800          DC    X'7F8A0000'         SNaN
+0000000000000740  7F8B0000                                                 801          DC    X'7F8B0000'         SNaN
+                                                                           802 *
+0000000000000744  7FCA0000                                                 803          DC    X'7FCA0000'         QNaN
+0000000000000748  7FCB0000                                                 804          DC    X'7FCB0000'         QNaN
+                                                                           805 *
+000000000000074C  40000000                                                 806          DC    X'40000000'         Finite number
+0000000000000750  7FCB0000                                                 807          DC    X'7FCB0000'         QNaN
+                                                                           808 *
+0000000000000754  7FCA0000                                                 809          DC    X'7FCA0000'         QNaN
+0000000000000758  7F8B0000                                                 810          DC    X'7F8B0000'         SNaN
+                                                                           811 *
+                                                                           812 * Dividend is -inf  (Tests 5-10)
+                                                                           813 *
+000000000000075C  FF800000                                                 814          DC    X'FF800000'         -inf
+0000000000000760  FF800000                                                 815          DC    X'FF800000'         -inf
+                                                                           816 *
+0000000000000764  FF800000                                                 817          DC    X'FF800000'         -inf
+0000000000000768  C0000000                                                 818          DC    X'C0000000'         -2.0
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           819 *
+000000000000076C  FF800000                                                 820          DC    X'FF800000'         -inf
+0000000000000770  80000000                                                 821          DC    X'80000000'         -0
+                                                                           822 *
+0000000000000774  FF800000                                                 823          DC    X'FF800000'         -inf
+0000000000000778  00000000                                                 824          DC    X'00000000'         +0
+                                                                           825 *
+000000000000077C  FF800000                                                 826          DC    X'FF800000'         -inf
+0000000000000780  40000000                                                 827          DC    X'40000000'         +2.0
+                                                                           828 *
+0000000000000784  FF800000                                                 829          DC    X'FF800000'         -inf
+0000000000000788  7F800000                                                 830          DC    X'7F800000'         +inf
+                                                                           831 *
+                                                                           832 * Dividend is +inf  (Tests 11-16)
+                                                                           833 *
+000000000000078C  7F800000                                                 834          DC    X'7F800000'         +inf
+0000000000000790  FF800000                                                 835          DC    X'FF800000'         -inf
+                                                                           836 *
+0000000000000794  7F800000                                                 837          DC    X'7F800000'         +inf
+0000000000000798  C0000000                                                 838          DC    X'C0000000'         -2.0
+                                                                           839 *
+000000000000079C  7F800000                                                 840          DC    X'7F800000'         +inf
+00000000000007A0  80000000                                                 841          DC    X'80000000'         -0
+                                                                           842 *
+00000000000007A4  7F800000                                                 843          DC    X'7F800000'         +inf
+00000000000007A8  00000000                                                 844          DC    X'00000000'         +0
+                                                                           845 *
+00000000000007AC  7F800000                                                 846          DC    X'7F800000'         +inf
+00000000000007B0  40000000                                                 847          DC    X'40000000'         +2.0
+                                                                           848 *
+00000000000007B4  7F800000                                                 849          DC    X'7F800000'         +inf
+00000000000007B8  7F800000                                                 850          DC    X'7F800000'         +inf
+                                                                           851 *
+                                                                           852 * Divisor is -0.  (+/-inf dividend tested above)
+                                                                           853 *                 (Tests 17-20)
+                                                                           854 *
+00000000000007BC  C0000000                                                 855          DC    X'C0000000'         -2.0
+00000000000007C0  80000000                                                 856          DC    X'80000000'         -0
+                                                                           857 *
+00000000000007C4  80000000                                                 858          DC    X'80000000'         -0
+00000000000007C8  80000000                                                 859          DC    X'80000000'         -0
+                                                                           860 *
+00000000000007CC  00000000                                                 861          DC    X'00000000'         +0
+00000000000007D0  80000000                                                 862          DC    X'80000000'         -0
+                                                                           863 *
+00000000000007D4  40000000                                                 864          DC    X'40000000'         +2.0
+00000000000007D8  80000000                                                 865          DC    X'80000000'         -0
+                                                                           866 *
+                                                                           867 * Divisor is +0.  (+/-inf dividend tested above)
+                                                                           868 *                 (Tests 21-24)
+                                                                           869 *
+00000000000007DC  C0000000                                                 870          DC    X'C0000000'         -2.0
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000007E0  00000000                                                 871          DC    X'00000000'         +0
+                                                                           872 *
+00000000000007E4  80000000                                                 873          DC    X'80000000'         -0
+00000000000007E8  00000000                                                 874          DC    X'00000000'         +0
+                                                                           875 *
+00000000000007EC  00000000                                                 876          DC    X'00000000'         +0
+00000000000007F0  00000000                                                 877          DC    X'00000000'         +0
+                                                                           878 *
+00000000000007F4  40000000                                                 879          DC    X'40000000'         +2.0
+00000000000007F8  00000000                                                 880          DC    X'00000000'         +0
+                                                                           881 *
+                                                                           882 * Divisor is -inf.  (+/-inf dividend tested above)
+                                                                           883 *                 (Tests 25-28)
+                                                                           884 *
+00000000000007FC  C0000000                                                 885          DC    X'C0000000'         -2.0
+0000000000000800  FF800000                                                 886          DC    X'FF800000'         -inf
+                                                                           887 *
+0000000000000804  80000000                                                 888          DC    X'80000000'         -0
+0000000000000808  FF800000                                                 889          DC    X'FF800000'         -inf
+                                                                           890 *
+000000000000080C  00000000                                                 891          DC    X'00000000'         +0
+0000000000000810  FF800000                                                 892          DC    X'FF800000'         -inf
+                                                                           893 *
+0000000000000814  40000000                                                 894          DC    X'40000000'         +2.0
+0000000000000818  FF800000                                                 895          DC    X'FF800000'         -inf
+                                                                           896 *
+                                                                           897 * Divisor is +inf.  (+/-inf dividend tested above)
+                                                                           898 *                 (Tests 29-32)
+                                                                           899 *
+000000000000081C  C0000000                                                 900          DC    X'C0000000'         -2.0
+0000000000000820  7F800000                                                 901          DC    X'7F800000'         +inf
+                                                                           902 *
+0000000000000824  80000000                                                 903          DC    X'80000000'         -0
+0000000000000828  7F800000                                                 904          DC    X'7F800000'         +inf
+                                                                           905 *
+000000000000082C  00000000                                                 906          DC    X'00000000'         +0
+0000000000000830  7F800000                                                 907          DC    X'7F800000'         +inf
+                                                                           908 *
+0000000000000834  40000000                                                 909          DC    X'40000000'         +2.0
+0000000000000838  7F800000                                                 910          DC    X'7F800000'         +inf
+                                                                           911 *
+                                      0000000000000100  0000000000000001   912 SBFPNFCT EQU   *-SBFPNFIN     Count of short BFP in list * 4
+
+
+
+                                                                           914 ***********************************************************************
+                                                                           915 *
+                                                                           916 * Second input test data set.  These are finite pairs intended to
+                                                                           917 * test all combinations of finite values and results (final
+                                                                           918 * results due to remainder zero, final results due to quotient
+                                                                           919 * within range, and partial results.
+                                                                           920 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           921 ***********************************************************************
+
+
+000000000000083C                                                           923 SBFPIN   DS    0F                Inputs for short BFP finite tests
+                                                                           924 *
+                                                                           925 * Dividend and Divisor are both finite numbers.
+                                                                           926 *
+                                                                           927 * Remainder tests from SA22-7832-10, Figure 19-7 on page 19-6
+                                                                           928 * (Finite tests 1-16; negative divisor)
+                                                                           929 *
+000000000000083C  C1000000                                                 930          DC    X'C1000000'         -8
+0000000000000840  C0800000                                                 931          DC    X'C0800000'         -4
+                                                                           932 *
+0000000000000844  C0E00000                                                 933          DC    X'C0E00000'         -7
+0000000000000848  C0800000                                                 934          DC    X'C0800000'         -4
+                                                                           935 *
+000000000000084C  C0C00000                                                 936          DC    X'C0C00000'         -6
+0000000000000850  C0800000                                                 937          DC    X'C0800000'         -4
+                                                                           938 *
+0000000000000854  C0A00000                                                 939          DC    X'C0A00000'         -5
+0000000000000858  C0800000                                                 940          DC    X'C0800000'         -4
+                                                                           941 *
+000000000000085C  C0800000                                                 942          DC    X'C0800000'         -4
+0000000000000860  C0800000                                                 943          DC    X'C0800000'         -4
+                                                                           944 *
+0000000000000864  C0400000                                                 945          DC    X'C0400000'         -3
+0000000000000868  C0800000                                                 946          DC    X'C0800000'         -4
+                                                                           947 *
+000000000000086C  C0000000                                                 948          DC    X'C0000000'         -2
+0000000000000870  C0800000                                                 949          DC    X'C0800000'         -4
+                                                                           950 *
+0000000000000874  BF800000                                                 951          DC    X'BF800000'         -1
+0000000000000878  C0800000                                                 952          DC    X'C0800000'         -4
+                                                                           953 *
+                                                                           954 *  The +/- zero - +/- zero cases are handled above and skipped here
+                                                                           955 *
+000000000000087C  3F800000                                                 956          DC    X'3F800000'         +1
+0000000000000880  C0800000                                                 957          DC    X'C0800000'         -4
+                                                                           958 *
+0000000000000884  40000000                                                 959          DC    X'40000000'         +2
+0000000000000888  C0800000                                                 960          DC    X'C0800000'         -4
+                                                                           961 *
+000000000000088C  40400000                                                 962          DC    X'40400000'         +3
+0000000000000890  C0800000                                                 963          DC    X'C0800000'         -4
+                                                                           964 *
+0000000000000894  40800000                                                 965          DC    X'40800000'         +4
+0000000000000898  C0800000                                                 966          DC    X'C0800000'         -4
+                                                                           967 *
+000000000000089C  40A00000                                                 968          DC    X'40A00000'         +5
+00000000000008A0  C0800000                                                 969          DC    X'C0800000'         -4
+                                                                           970 *
+00000000000008A4  40C00000                                                 971          DC    X'40C00000'         +6
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    22
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000008A8  C0800000                                                 972          DC    X'C0800000'         -4
+                                                                           973 *
+00000000000008AC  40E00000                                                 974          DC    X'40E00000'         +7
+00000000000008B0  C0800000                                                 975          DC    X'C0800000'         -4
+                                                                           976 *
+00000000000008B4  41000000                                                 977          DC    X'41000000'         +8
+00000000000008B8  C0800000                                                 978          DC    X'C0800000'         -4
+                                                                           979 *
+                                                                           980 * Finite tests 17-32; positive divisor
+                                                                           981 *
+00000000000008BC  C1000000                                                 982          DC    X'C1000000'         -8
+00000000000008C0  40800000                                                 983          DC    X'40800000'         +4
+                                                                           984 *
+00000000000008C4  C0E00000                                                 985          DC    X'C0E00000'         -7
+00000000000008C8  40800000                                                 986          DC    X'40800000'         +4
+                                                                           987 *
+00000000000008CC  C0C00000                                                 988          DC    X'C0C00000'         -6
+00000000000008D0  40800000                                                 989          DC    X'40800000'         +4
+                                                                           990 *
+00000000000008D4  C0A00000                                                 991          DC    X'C0A00000'         -5
+00000000000008D8  40800000                                                 992          DC    X'40800000'         +4
+                                                                           993 *
+00000000000008DC  C0800000                                                 994          DC    X'C0800000'         -4
+00000000000008E0  40800000                                                 995          DC    X'40800000'         +4
+                                                                           996 *
+00000000000008E4  C0400000                                                 997          DC    X'C0400000'         -3
+00000000000008E8  40800000                                                 998          DC    X'40800000'         +4
+                                                                           999 *
+00000000000008EC  C0000000                                                1000          DC    X'C0000000'         -2
+00000000000008F0  40800000                                                1001          DC    X'40800000'         +4
+                                                                          1002 *
+00000000000008F4  3F800000                                                1003          DC    X'3F800000'         -1
+00000000000008F8  40800000                                                1004          DC    X'40800000'         +4
+                                                                          1005 *
+00000000000008FC  3F800000                                                1006          DC    X'3F800000'         +1
+0000000000000900  40800000                                                1007          DC    X'40800000'         +4
+                                                                          1008 *
+0000000000000904  40000000                                                1009          DC    X'40000000'         +2
+0000000000000908  40800000                                                1010          DC    X'40800000'         +4
+                                                                          1011 *
+000000000000090C  40400000                                                1012          DC    X'40400000'         +3
+0000000000000910  40800000                                                1013          DC    X'40800000'         +4
+                                                                          1014 *
+0000000000000914  40800000                                                1015          DC    X'40800000'         +4
+0000000000000918  40800000                                                1016          DC    X'40800000'         +4
+                                                                          1017 *
+000000000000091C  40A00000                                                1018          DC    X'40A00000'         +5
+0000000000000920  40800000                                                1019          DC    X'40800000'         +4
+                                                                          1020 *
+0000000000000924  40C00000                                                1021          DC    X'40C00000'         +6
+0000000000000928  40800000                                                1022          DC    X'40800000'         +4
+                                                                          1023 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    23
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000092C  40E00000                                                1024          DC    X'40E00000'         +7
+0000000000000930  40800000                                                1025          DC    X'40800000'         +4
+                                                                          1026 *
+0000000000000934  41000000                                                1027          DC    X'41000000'         +8
+0000000000000938  40800000                                                1028          DC    X'40800000'         +4
+                                                                          1029 *
+                                                                          1030 * Finite value boundary condition tests
+                                                                          1031 *  Tests 17-22
+                                                                          1032 *
+000000000000093C  42200000                                                1033          DC    X'42200000'         +40.0
+0000000000000940  C1100000                                                1034          DC    X'C1100000'         -9.0
+                                                                          1035 *
+                                                                          1036 * Following forces quotient overflow, remainder zero.
+                                                                          1037 * Final result, scaled quotient, cc1
+0000000000000944  7F7FFFFF                                                1038          DC    X'7F7FFFFF'         +maxvalue
+0000000000000948  00000001                                                1039          DC    X'00000001'         +minvalue (tiny)
+                                                                          1040 *
+000000000000094C  00FFFFFF                                                1041          DC    X'00FFFFFF'         near +minvalue normal
+0000000000000950  00FFFFFE                                                1042          DC    X'00FFFFFE'         almost above
+                                                                          1043 *
+                                                                          1044 * Following forces partial results without quotient overflow
+                                                                          1045 * Partial result, scaled quotient, normal remainder, cc2
+0000000000000954  4C800000                                                1046          DC    X'4C800000'         +2^26th
+0000000000000958  40400000                                                1047          DC    X'40400000'         +3.0
+                                                                          1048 * Expected results from above case:  remainder < 3, quotient mismatch
+                                                                          1049 * z12 actual results: remainder 4, quotient match.
+                                                                          1050 *
+                                                                          1051 * Following forces zero quotient, remainder = divisor.
+                                                                          1052 *
+000000000000095C  40100000                                                1053          DC    X'40100000'         +2.25
+0000000000000960  41200000                                                1054          DC    X'41200000'         +10
+                                                                          1055 *
+                                                                          1056 * Following five tests force quotient overflow.  Four have non-zero
+                                                                          1057 * Remainder.  All five return partial results.
+                                                                          1058 *
+                                                                          1059 * Note: +minvalue+11 is the smallest divisor that generates a
+                                                                          1060 * remainder.
+                                                                          1061 *
+0000000000000964  7F7FFFFF                                                1062          DC    X'7F7FFFFF'         +maxvalue
+0000000000000968  0000000B                                                1063          DC    X'0000000B'         +minvalue + 11 (tiny)
+                                                                          1064 *
+000000000000096C  7F7FFFFE                                                1065          DC    X'7F7FFFFE'         +maxvalue
+0000000000000970  0000000A                                                1066          DC    X'0000000A'         +minvalue + 11 (tiny)
+                                                                          1067 *
+0000000000000974  7F7FFFFF                                                1068          DC    X'7F7FFFFF'         +maxvalue
+0000000000000978  0000000C                                                1069          DC    X'0000000C'         +minvalue + 11 (tiny)
+                                                                          1070 *
+000000000000097C  7F7FFFFF                                                1071          DC    X'7F7FFFFF'         +maxvalue
+0000000000000980  00000013                                                1072          DC    X'00000013'         +minvalue + 11 (tiny)
+                                                                          1073 *
+0000000000000984  7F7FFFFF                                                1074          DC    X'7F7FFFFF'         +maxvalue
+0000000000000988  3F000000                                                1075          DC    X'3F000000'         +0.5
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    24
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1076 *
+000000000000098C  40400000                                                1077          DC    X'40400000'         +3
+0000000000000990  40000000                                                1078          DC    X'40000000'         +2
+                                                                          1079 *
+                                      0000000000000158  0000000000000001  1080 SBFPCT   EQU   *-SBFPIN     Count of short BFP in list * 4
+
+
+
+                                                                          1082 ***********************************************************************
+                                                                          1083 *
+                                                                          1084 * Third input test data set.  These are finite pairs intended to
+                                                                          1085 * test all combinations of rounding mode for the quotient and the
+                                                                          1086 * remainder.
+                                                                          1087 *
+                                                                          1088 * The quotient/remainder pairs are for Round to Nearest, Ties to Even.
+                                                                          1089 * Other rounding modes have different results.
+                                                                          1090 *
+                                                                          1091 ***********************************************************************
+
+
+0000000000000994                                                          1093 SBFPINRM DS    0F                Inputs for short BFP rounding testing
+0000000000000994  C1980000                                                1094          DC    X'C1980000'         -19 / 0.5 = -9.5, -9 rem +1
+0000000000000998  40000000                                                1095          DC    X'40000000'         ...+2.0
+000000000000099C  C1300000                                                1096          DC    X'C1300000'         -11 / 0.5 = -5.5, -5 rem +1
+00000000000009A0  40000000                                                1097          DC    X'40000000'         ...+2.0
+00000000000009A4  C0A00000                                                1098          DC    X'C0A00000'         -5 / 0.5 = -2.5
+00000000000009A8  40000000                                                1099          DC    X'40000000'         ...+2.0
+00000000000009AC  C0400000                                                1100          DC    X'C0400000'         -3 / 0.5 = -1.5
+00000000000009B0  40000000                                                1101          DC    X'40000000'         ...+2.0
+00000000000009B4  BF800000                                                1102          DC    X'BF800000'         -1 / 0.5 = -0.5
+00000000000009B8  40000000                                                1103          DC    X'40000000'         ...+2.0
+00000000000009BC  3F800000                                                1104          DC    X'3F800000'         +1 / 0.5 = +0.5
+00000000000009C0  40000000                                                1105          DC    X'40000000'         ...+2.0
+00000000000009C4  40400000                                                1106          DC    X'40400000'         +3 / 0.5 = +1.5
+00000000000009C8  40000000                                                1107          DC    X'40000000'         ...+2.0
+00000000000009CC  40A00000                                                1108          DC    X'40A00000'         +5 / 0.5 = +2.5
+00000000000009D0  40000000                                                1109          DC    X'40000000'         ...+2.0
+00000000000009D4  41300000                                                1110          DC    X'41300000'         +11 / 0.5 = +5.5
+00000000000009D8  40000000                                                1111          DC    X'40000000'         ...+2.0
+00000000000009DC  41980000                                                1112          DC    X'41980000'         +19 / 0.5 = +9.5
+00000000000009E0  40000000                                                1113          DC    X'40000000'         ...+2.0
+00000000000009E4  40000000                                                1114          DC    X'40000000'         2 / 2 = 1
+00000000000009E8  40000000                                                1115          DC    X'40000000'         ...+2.0
+00000000000009EC  40400000                                                1116          DC    X'40400000'         +3 / 5 = +0.6, 0 rem 3
+00000000000009F0  40A00000                                                1117          DC    X'40A00000'         ...+5.0
+                                      0000000000000060  0000000000000001  1118 SBFPRMCT EQU   *-SBFPINRM   Count of short BFP rounding tests * 4
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    25
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1120 ***********************************************************************
+                                                                          1121 *
+                                                                          1122 * Long integer test data sets for Divide to Integer testing.
+                                                                          1123 *
+                                                                          1124 * Each test data set member consists of two values, the dividend and
+                                                                          1125 * the divisor, in that order.
+                                                                          1126 *
+                                                                          1127 * The first test data set is used for tests of basic functionality,
+                                                                          1128 * NaN propagation, and results from operations involving other than
+                                                                          1129 * finite numbers.
+                                                                          1130 *
+                                                                          1131 * The secondd test data set is used for testing boundary conditions
+                                                                          1132 * using two finite non-zero values.  Each possible condition code
+                                                                          1133 * and type of result (normal, scaled, etc) is created by members of
+                                                                          1134 * this test data set.
+                                                                          1135 *
+                                                                          1136 * The third test data set is used for exhaustive testing of final
+                                                                          1137 * results across the panoply of rounding mode combinations available
+                                                                          1138 * for Divide to Integer (five for the remainder, seven for the
+                                                                          1139 * quotient).
+                                                                          1140 *
+                                                                          1141 ***********************************************************************
+                                                                          1142 *
+00000000000009F4                                                          1143 LBFPNFIN DS    0F                Inputs for long BFP testing
+                                                                          1144 *
+                                                                          1145 * NaN propagation tests
+                                                                          1146 *
+00000000000009F4  7FF0A000 00000000                                       1147          DC    X'7FF0A00000000000'         SNaN
+00000000000009FC  7FF0B000 00000000                                       1148          DC    X'7FF0B00000000000'         SNaN
+                                                                          1149 *
+0000000000000A04  7FF8A000 00000000                                       1150          DC    X'7FF8A00000000000'         QNaN
+0000000000000A0C  7FF8B000 00000000                                       1151          DC    X'7FF8B00000000000'         QNaN
+                                                                          1152 *
+0000000000000A14  40000000 00000000                                       1153          DC    X'4000000000000000'         Finite number
+0000000000000A1C  7FF8B000 00000000                                       1154          DC    X'7FF8B00000000000'         QNaN
+                                                                          1155 *
+0000000000000A24  7FF8A000 00000000                                       1156          DC    X'7FF8A00000000000'         QNaN
+0000000000000A2C  7FF0B000 00000000                                       1157          DC    X'7FF0B00000000000'         SNaN
+                                                                          1158 *
+                                                                          1159 * Dividend is -inf
+                                                                          1160 *
+0000000000000A34  FFF00000 00000000                                       1161          DC    X'FFF0000000000000'         -inf
+0000000000000A3C  FFF00000 00000000                                       1162          DC    X'FFF0000000000000'         -inf
+                                                                          1163 *
+0000000000000A44  FFF00000 00000000                                       1164          DC    X'FFF0000000000000'         -inf
+0000000000000A4C  C0000000 00000000                                       1165          DC    X'C000000000000000'         -2.0
+                                                                          1166 *
+0000000000000A54  FFF00000 00000000                                       1167          DC    X'FFF0000000000000'         -inf
+0000000000000A5C  80000000 00000000                                       1168          DC    X'8000000000000000'         -0
+                                                                          1169 *
+0000000000000A64  FFF00000 00000000                                       1170          DC    X'FFF0000000000000'         -inf
+0000000000000A6C  00000000 00000000                                       1171          DC    X'0000000000000000'         +0
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    26
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1172 *
+0000000000000A74  FFF00000 00000000                                       1173          DC    X'FFF0000000000000'         -inf
+0000000000000A7C  40000000 00000000                                       1174          DC    X'4000000000000000'         +2.0
+                                                                          1175 *
+0000000000000A84  FFF00000 00000000                                       1176          DC    X'FFF0000000000000'         -inf
+0000000000000A8C  7FF00000 00000000                                       1177          DC    X'7FF0000000000000'         +inf
+                                                                          1178 *
+                                                                          1179 * Dividend is +inf
+                                                                          1180 *
+0000000000000A94  7FF00000 00000000                                       1181          DC    X'7FF0000000000000'         +inf
+0000000000000A9C  FFF00000 00000000                                       1182          DC    X'FFF0000000000000'         -inf
+                                                                          1183 *
+0000000000000AA4  7FF00000 00000000                                       1184          DC    X'7FF0000000000000'         +inf
+0000000000000AAC  C0000000 00000000                                       1185          DC    X'C000000000000000'         -2.0
+                                                                          1186 *
+0000000000000AB4  7FF00000 00000000                                       1187          DC    X'7FF0000000000000'         +inf
+0000000000000ABC  80000000 00000000                                       1188          DC    X'8000000000000000'         -0
+                                                                          1189 *
+0000000000000AC4  7FF00000 00000000                                       1190          DC    X'7FF0000000000000'         +inf
+0000000000000ACC  00000000 00000000                                       1191          DC    X'0000000000000000'         +0
+                                                                          1192 *
+0000000000000AD4  7FF00000 00000000                                       1193          DC    X'7FF0000000000000'         +inf
+0000000000000ADC  40000000 00000000                                       1194          DC    X'4000000000000000'         +2.0
+                                                                          1195 *
+0000000000000AE4  7FF00000 00000000                                       1196          DC    X'7FF0000000000000'         +inf
+0000000000000AEC  7FF00000 00000000                                       1197          DC    X'7FF0000000000000'         +inf
+                                                                          1198 *
+                                                                          1199 * Divisor is -0.  (+/-inf dividend tested above)
+                                                                          1200 *
+0000000000000AF4  C0000000 00000000                                       1201          DC    X'C000000000000000'         -2.0
+0000000000000AFC  80000000 00000000                                       1202          DC    X'8000000000000000'         -0
+                                                                          1203 *
+0000000000000B04  80000000 00000000                                       1204          DC    X'8000000000000000'         -0
+0000000000000B0C  80000000 00000000                                       1205          DC    X'8000000000000000'         -0
+                                                                          1206 *
+0000000000000B14  00000000 00000000                                       1207          DC    X'0000000000000000'         +0
+0000000000000B1C  80000000 00000000                                       1208          DC    X'8000000000000000'         -0
+                                                                          1209 *
+0000000000000B24  40000000 00000000                                       1210          DC    X'4000000000000000'         +2.0
+0000000000000B2C  80000000 00000000                                       1211          DC    X'8000000000000000'         -0
+                                                                          1212 *
+                                                                          1213 * Divisor is +0.  (+/-inf dividend tested above)
+                                                                          1214 *
+0000000000000B34  C0000000 00000000                                       1215          DC    X'C000000000000000'         -2.0
+0000000000000B3C  00000000 00000000                                       1216          DC    X'0000000000000000'         +0
+                                                                          1217 *
+0000000000000B44  80000000 00000000                                       1218          DC    X'8000000000000000'         -0
+0000000000000B4C  00000000 00000000                                       1219          DC    X'0000000000000000'         +0
+                                                                          1220 *
+0000000000000B54  00000000 00000000                                       1221          DC    X'0000000000000000'         +0
+0000000000000B5C  00000000 00000000                                       1222          DC    X'0000000000000000'         +0
+                                                                          1223 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    27
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000B64  40000000 00000000                                       1224          DC    X'4000000000000000'         +2.0
+0000000000000B6C  00000000 00000000                                       1225          DC    X'0000000000000000'         +0
+                                                                          1226 *
+                                                                          1227 * Divisor is -inf.  (+/-inf dividend tested above)
+                                                                          1228 *
+0000000000000B74  C0000000 00000000                                       1229          DC    X'C000000000000000'         -2.0
+0000000000000B7C  FFF00000 00000000                                       1230          DC    X'FFF0000000000000'         -inf
+                                                                          1231 *
+0000000000000B84  80000000 00000000                                       1232          DC    X'8000000000000000'         -0
+0000000000000B8C  FFF00000 00000000                                       1233          DC    X'FFF0000000000000'         -inf
+                                                                          1234 *
+0000000000000B94  00000000 00000000                                       1235          DC    X'0000000000000000'         +0
+0000000000000B9C  FFF00000 00000000                                       1236          DC    X'FFF0000000000000'         -inf
+                                                                          1237 *
+0000000000000BA4  40000000 00000000                                       1238          DC    X'4000000000000000'         +2.0
+0000000000000BAC  FFF00000 00000000                                       1239          DC    X'FFF0000000000000'         -inf
+                                                                          1240 *
+                                                                          1241 * Divisor is +inf.  (+/-inf dividend tested above)
+                                                                          1242 *
+0000000000000BB4  C0000000 00000000                                       1243          DC    X'C000000000000000'         -2.0
+0000000000000BBC  7FF00000 00000000                                       1244          DC    X'7FF0000000000000'         +inf
+                                                                          1245 *
+0000000000000BC4  80000000 00000000                                       1246          DC    X'8000000000000000'         -0
+0000000000000BCC  7FF00000 00000000                                       1247          DC    X'7FF0000000000000'         +inf
+                                                                          1248 *
+0000000000000BD4  00000000 00000000                                       1249          DC    X'0000000000000000'         +0
+0000000000000BDC  7FF00000 00000000                                       1250          DC    X'7FF0000000000000'         +inf
+                                                                          1251 *
+0000000000000BE4  40000000 00000000                                       1252          DC    X'4000000000000000'         +2.0
+0000000000000BEC  7FF00000 00000000                                       1253          DC    X'7FF0000000000000'         +inf
+                                      0000000000000200  0000000000000001  1254 LBFPNFCT EQU   *-LBFPNFIN     Count of long BFP in list * 8
+
+
+
+                                                                          1256 ***********************************************************************
+                                                                          1257 *
+                                                                          1258 * Second set of test inputs.  These are finite pairs intended to
+                                                                          1259 * test all combinations of finite values and results (final
+                                                                          1260 * results due to remainder zero, final results due to quotient
+                                                                          1261 * within range, and partial results.
+                                                                          1262 *
+                                                                          1263 ***********************************************************************
+
+
+0000000000000BF4                                                          1265 LBFPIN   DS    0F                Inputs for long BFP finite tests
+                                                                          1266 *
+                                                                          1267 * Dividend and Divisor are both finite numbers.
+                                                                          1268 *
+                                                                          1269 * Remainder tests from SA22-7832-10, Figure 19-7 on page 19-6
+                                                                          1270 *                 (Finite tests 1-32)
+                                                                          1271 *
+0000000000000BF4  C0200000 00000000                                       1272          DC    X'C020000000000000'         -8
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    28
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000BFC  C0100000 00000000                                       1273          DC    X'C010000000000000'         -4
+                                                                          1274 *
+0000000000000C04  C01C0000 00000000                                       1275          DC    X'C01C000000000000'         -7
+0000000000000C0C  C0100000 00000000                                       1276          DC    X'C010000000000000'         -4
+                                                                          1277 *
+0000000000000C14  C0180000 00000000                                       1278          DC    X'C018000000000000'         -6
+0000000000000C1C  C0100000 00000000                                       1279          DC    X'C010000000000000'         -4
+                                                                          1280 *
+0000000000000C24  C0140000 00000000                                       1281          DC    X'C014000000000000'         -5
+0000000000000C2C  C0100000 00000000                                       1282          DC    X'C010000000000000'         -4
+                                                                          1283 *
+0000000000000C34  C0100000 00000000                                       1284          DC    X'C010000000000000'         -4
+0000000000000C3C  C0100000 00000000                                       1285          DC    X'C010000000000000'         -4
+                                                                          1286 *
+0000000000000C44  C0080000 00000000                                       1287          DC    X'C008000000000000'         -3
+0000000000000C4C  C0100000 00000000                                       1288          DC    X'C010000000000000'         -4
+                                                                          1289 *
+0000000000000C54  C0000000 00000000                                       1290          DC    X'C000000000000000'         -2
+0000000000000C5C  C0100000 00000000                                       1291          DC    X'C010000000000000'         -4
+                                                                          1292 *
+0000000000000C64  BFF00000 00000000                                       1293          DC    X'BFF0000000000000'         -1
+0000000000000C6C  C0100000 00000000                                       1294          DC    X'C010000000000000'         -4
+                                                                          1295 *
+                                                                          1296 *  The +/- zero - +/- zero cases are handled above and skipped here
+                                                                          1297 *
+0000000000000C74  3FF00000 00000000                                       1298          DC    X'3FF0000000000000'         +1
+0000000000000C7C  C0100000 00000000                                       1299          DC    X'C010000000000000'         -4
+                                                                          1300 *
+0000000000000C84  40000000 00000000                                       1301          DC    X'4000000000000000'         +2
+0000000000000C8C  C0100000 00000000                                       1302          DC    X'C010000000000000'         -4
+                                                                          1303 *
+0000000000000C94  40080000 00000000                                       1304          DC    X'4008000000000000'         +3
+0000000000000C9C  C0100000 00000000                                       1305          DC    X'C010000000000000'         -4
+                                                                          1306 *
+0000000000000CA4  40100000 00000000                                       1307          DC    X'4010000000000000'         +4
+0000000000000CAC  C0100000 00000000                                       1308          DC    X'C010000000000000'         -4
+                                                                          1309 *
+0000000000000CB4  40140000 00000000                                       1310          DC    X'4014000000000000'         +5
+0000000000000CBC  C0100000 00000000                                       1311          DC    X'C010000000000000'         -4
+                                                                          1312 *
+0000000000000CC4  40180000 00000000                                       1313          DC    X'4018000000000000'         +6
+0000000000000CCC  C0100000 00000000                                       1314          DC    X'C010000000000000'         -4
+                                                                          1315 *
+0000000000000CD4  401C0000 00000000                                       1316          DC    X'401C000000000000'         +7
+0000000000000CDC  C0100000 00000000                                       1317          DC    X'C010000000000000'         -4
+                                                                          1318 *
+0000000000000CE4  40200000 00000000                                       1319          DC    X'4020000000000000'         +8
+0000000000000CEC  C0100000 00000000                                       1320          DC    X'C010000000000000'         -4
+                                                                          1321 *
+0000000000000CF4  C0200000 00000000                                       1322          DC    X'C020000000000000'         -8
+0000000000000CFC  40100000 00000000                                       1323          DC    X'4010000000000000'         +4
+                                                                          1324 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    29
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000D04  C01C0000 00000000                                       1325          DC    X'C01C000000000000'         -7
+0000000000000D0C  40100000 00000000                                       1326          DC    X'4010000000000000'         +4
+                                                                          1327 *
+0000000000000D14  C0180000 00000000                                       1328          DC    X'C018000000000000'         -6
+0000000000000D1C  40100000 00000000                                       1329          DC    X'4010000000000000'         +4
+                                                                          1330 *
+0000000000000D24  C0140000 00000000                                       1331          DC    X'C014000000000000'         -5
+0000000000000D2C  40100000 00000000                                       1332          DC    X'4010000000000000'         +4
+                                                                          1333 *
+0000000000000D34  C0100000 00000000                                       1334          DC    X'C010000000000000'         -4
+0000000000000D3C  40100000 00000000                                       1335          DC    X'4010000000000000'         +4
+                                                                          1336 *
+0000000000000D44  C0080000 00000000                                       1337          DC    X'C008000000000000'         -3
+0000000000000D4C  40100000 00000000                                       1338          DC    X'4010000000000000'         +4
+                                                                          1339 *
+0000000000000D54  C0000000 00000000                                       1340          DC    X'C000000000000000'         -2
+0000000000000D5C  40100000 00000000                                       1341          DC    X'4010000000000000'         +4
+                                                                          1342 *
+0000000000000D64  3FF00000 00000000                                       1343          DC    X'3FF0000000000000'         -1
+0000000000000D6C  40100000 00000000                                       1344          DC    X'4010000000000000'         +4
+                                                                          1345 *
+0000000000000D74  3FF00000 00000000                                       1346          DC    X'3FF0000000000000'         +1
+0000000000000D7C  40100000 00000000                                       1347          DC    X'4010000000000000'         +4
+                                                                          1348 *
+0000000000000D84  40000000 00000000                                       1349          DC    X'4000000000000000'         +2
+0000000000000D8C  40100000 00000000                                       1350          DC    X'4010000000000000'         +4
+                                                                          1351 *
+0000000000000D94  40080000 00000000                                       1352          DC    X'4008000000000000'         +3
+0000000000000D9C  40100000 00000000                                       1353          DC    X'4010000000000000'         +4
+                                                                          1354 *
+0000000000000DA4  40100000 00000000                                       1355          DC    X'4010000000000000'         +4
+0000000000000DAC  40100000 00000000                                       1356          DC    X'4010000000000000'         +4
+                                                                          1357 *
+0000000000000DB4  40140000 00000000                                       1358          DC    X'4014000000000000'         +5
+0000000000000DBC  40100000 00000000                                       1359          DC    X'4010000000000000'         +4
+                                                                          1360 *
+0000000000000DC4  40180000 00000000                                       1361          DC    X'4018000000000000'         +6
+0000000000000DCC  40100000 00000000                                       1362          DC    X'4010000000000000'         +4
+                                                                          1363 *
+0000000000000DD4  401C0000 00000000                                       1364          DC    X'401C000000000000'         +7
+0000000000000DDC  40100000 00000000                                       1365          DC    X'4010000000000000'         +4
+                                                                          1366 *
+0000000000000DE4  40200000 00000000                                       1367          DC    X'4020000000000000'         +8
+0000000000000DEC  40100000 00000000                                       1368          DC    X'4010000000000000'         +4
+                                                                          1369 **
+                                                                          1370 * Dividend and Divisor are both finite numbers.
+                                                                          1371 *                 (Tests 33-38)
+                                                                          1372 *
+0000000000000DF4  40440000 00000000                                       1373          DC    X'4044000000000000'         +40.0
+0000000000000DFC  C0220000 00000000                                       1374          DC    X'C022000000000000'         -9.0
+                                                                          1375 *
+                                                                          1376 * Following forces quotient overflow, remainder zero.
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    30
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1377 * Final result, scaled quotient, cc1
+0000000000000E04  7FEFFFFF FFFFFFFF                                       1378          DC    X'7FEFFFFFFFFFFFFF'         +maxvalue
+0000000000000E0C  00000000 00000001                                       1379          DC    X'0000000000000001'         +minvalue (tiny)
+                                                                          1380 *
+                                                                          1381 * Following forces quotient overflow, remainder non-zero.
+                                                                          1382 * Partial result, scaled quotient, tiny remainder, cc3
+                                                                          1383 * Note: +minvalue+2 is the smallest divisor that
+                                                                          1384 * generates a non-zero remainder.
+0000000000000E14  7FEFFFFF FFFFFFFF                                       1385          DC    X'7FEFFFFFFFFFFFFF'         +maxvalue
+0000000000000E1C  00000000 00000003                                       1386          DC    X'0000000000000003'         +minvalue (tiny)
+                                                                          1387 *
+0000000000000E24  000FFFFF FFFFFFFF                                       1388          DC    X'000FFFFFFFFFFFFF' near +minvalue normal
+0000000000000E2C  000FFFFF FFFFFFFE                                       1389          DC    X'000FFFFFFFFFFFFE' almost above
+                                                                          1390 *
+                                                                          1391 * Following forces partial results without quotient overflow
+                                                                          1392 * Partial result, scaled quotient, normal remainder, cc2
+0000000000000E34  43700000 00000000                                       1393          DC    X'4370000000000000'         +2^56th
+0000000000000E3C  40080000 00000000                                       1394          DC    X'4008000000000000'         +3.0
+                                                                          1395 * Expected results from above case:  remainder < 3, quotient mismatch
+                                                                          1396 * z12 actual results: remainder 4, quotient match.
+                                                                          1397 *
+                                                                          1398 * Following forces zero quotient, remainder = divisor.
+                                                                          1399 *
+0000000000000E44  40020000 00000000                                       1400          DC    X'4002000000000000'         +2.25
+0000000000000E4C  40240000 00000000                                       1401          DC    X'4024000000000000'         +10
+                                                                          1402 *
+                                      0000000000000260  0000000000000001  1403 LBFPCT   EQU   *-LBFPIN     Count of long BFP in list * 8
+
+
+
+                                                                          1405 ***********************************************************************
+                                                                          1406 *
+                                                                          1407 * Third input test data set.  These are finite pairs intended to
+                                                                          1408 * test all combinations of rounding mode for the quotient and the
+                                                                          1409 * remainder.
+                                                                          1410 *
+                                                                          1411 * The quotient/remainder pairs are for Round to Nearest, Ties to Even.
+                                                                          1412 * Other rounding modes have different results.
+                                                                          1413 *
+                                                                          1414 ***********************************************************************
+
+
+0000000000000E54                                                          1416 LBFPINRM DS    0F
+0000000000000E54  C0230000 00000000                                       1417          DC    X'C023000000000000'         -9.5, -9 rem 1
+0000000000000E5C  40000000 00000000                                       1418          DC    X'4000000000000000'         +2
+                                                                          1419 *
+0000000000000E64  C0160000 00000000                                       1420          DC    X'C016000000000000'         -5.5
+0000000000000E6C  40000000 00000000                                       1421          DC    X'4000000000000000'         +2
+                                                                          1422 *
+0000000000000E74  C0040000 00000000                                       1423          DC    X'C004000000000000'         -2.5
+0000000000000E7C  40000000 00000000                                       1424          DC    X'4000000000000000'         +2
+                                                                          1425 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    31
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000E84  BFF80000 00000000                                       1426          DC    X'BFF8000000000000'         -1.5
+0000000000000E8C  40000000 00000000                                       1427          DC    X'4000000000000000'         +2
+                                                                          1428 *
+0000000000000E94  BFE00000 00000000                                       1429          DC    X'BFE0000000000000'         -0.5
+0000000000000E9C  40000000 00000000                                       1430          DC    X'4000000000000000'         +2
+                                                                          1431 *
+0000000000000EA4  3FE00000 00000000                                       1432          DC    X'3FE0000000000000'         +0.5
+0000000000000EAC  40000000 00000000                                       1433          DC    X'4000000000000000'         +2
+                                                                          1434 *
+0000000000000EB4  3FF80000 00000000                                       1435          DC    X'3FF8000000000000'         +1.5
+0000000000000EBC  40000000 00000000                                       1436          DC    X'4000000000000000'         +2
+                                                                          1437 *
+0000000000000EC4  40040000 00000000                                       1438          DC    X'4004000000000000'         +2.5
+0000000000000ECC  40000000 00000000                                       1439          DC    X'4000000000000000'         +2
+                                                                          1440 *
+0000000000000ED4  40160000 00000000                                       1441          DC    X'4016000000000000'         +5.5
+0000000000000EDC  40000000 00000000                                       1442          DC    X'4000000000000000'         +2
+                                                                          1443 *
+0000000000000EE4  40230000 00000000                                       1444          DC    X'4023000000000000'         +9.5
+0000000000000EEC  40000000 00000000                                       1445          DC    X'4000000000000000'         +2
+                                                                          1446 *
+0000000000000EF4  40000000 00000000                                       1447          DC    X'4000000000000000'         +2
+0000000000000EFC  40000000 00000000                                       1448          DC    X'4000000000000000'         +2
+                                                                          1449 *
+0000000000000F04  40080000 00000000                                       1450          DC    X'4008000000000000'         +3
+0000000000000F0C  40140000 00000000                                       1451          DC    X'4014000000000000'         +5
+                                                                          1452 *
+                                      00000000000000C0  0000000000000001  1453 LBFPRMCT EQU   *-LBFPINRM   Count of long BFP rounding tests * 8
+                                                                          1454 *
+                                                                          1455 *
+                                                                          1456 *  Locations for results
+                                                                          1457 *
+                                      0000000000001000  0000000000000000  1458 SBFPNFOT EQU   BFPDV2NT+X'1000'    Integer short non-finite BFP results
+                                                                          1459 *                                  ..room for 32 tests, 32 used
+                                      0000000000001200  0000000000000000  1460 SBFPNFFL EQU   BFPDV2NT+X'1200'    FPCR flags and DXC from short BFP
+                                                                          1461 *                                  ..room for 32 tests, 32 used
+                                                                          1462 *
+                                      0000000000001300  0000000000000000  1463 LBFPNFOT EQU   BFPDV2NT+X'1300'    Integer long non-finite BFP results
+                                                                          1464 *                                  ..room for 32 tests, 32 used
+                                      0000000000001700  0000000000000000  1465 LBFPNFFL EQU   BFPDV2NT+X'1700'    FPCR flags and DXC from long BFP
+                                                                          1466 *                                  ..room for 32 tests, 32 used
+                                                                          1467 *
+                                      0000000000002000  0000000000000000  1468 SBFPRMO  EQU   BFPDV2NT+X'2000'    Short BFP rounding mode test results
+                                                                          1469 *                                  ..Room for 20, 10 used.
+                                      0000000000004000  0000000000000000  1470 SBFPRMOF EQU   BFPDV2NT+X'4000'    Short BFP rounding mode FPCR results
+                                                                          1471 *                                  ..Room for 20, 10 used.
+                                                                          1472 *
+                                      0000000000005000  0000000000000000  1473 LBFPRMO  EQU   BFPDV2NT+X'5000'    Long BFP rounding mode test results
+                                                                          1474 *                                  ..Room for 20, 10 used.
+                                      0000000000009000  0000000000000000  1475 LBFPRMOF EQU   BFPDV2NT+X'9000'    Long BFP rounding mode FPCR results
+                                                                          1476 *                                  ..Room for 20, 10 used.
+                                                                          1477 *
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    32
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000A000  0000000000000000  1478 SBFPOUT  EQU   BFPDV2NT+X'A000'    Integer short BFP finite results
+                                                                          1479 *                                  ..room for 64 tests, 38 used
+                                      000000000000A800  0000000000000000  1480 SBFPFLGS EQU   BFPDV2NT+X'A800'    FPCR flags and DXC from short BFP
+                                                                          1481 *                                  ..room for 64 tests, 6 used
+                                                                          1482 *
+                                      000000000000B000  0000000000000000  1483 LBFPOUT  EQU   BFPDV2NT+X'B000'    Integer long BFP finite results
+                                                                          1484 *                                  ..room for 64 tests, 6 used
+                                      000000000000AC00  0000000000000000  1485 LBFPFLGS EQU   BFPDV2NT+X'AC00'    FPCR flags and DXC from long BFP
+                                                                          1486 *                                  ..room for 64 tests, 6 used
+                                                                          1487 *
+                                                                          1488 *
+                                      000000000000C000  0000000000000000  1489 ENDLABL  EQU   BFPDV2NT+X'C000'
+                                                                          1490          PADCSECT ENDLABL
+                                                                          1491+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000F14                                                          1492          END
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    33
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPDV2NT            J    000000    3860    73   122   125   127   130   138   191  1458  1460  1463  1465  1468  1470  1473  1475
+                                               1478  1480  1483  1485  1489
+CTLR0               F    000278       4   181   155   156   157
+D2IMCT              U    000006       1   729   400   626
+D2IMODES            C    0006FC       1   721   729   411   428   637   654
+DIDBRF              I    00059E       4   524   169
+DIDBRNF             I    000528       4   466   167
+DIDBRRM             I    00064C       4   609   171
+DIDBRTAB            F    000720       4   757   638   655
+DIEBRF              I    0003D6       4   299   162
+DIEBRNF             H    000360       2   240   160
+DIEBRRM             I    000484       4   385   164
+DIEBRTAB            F    000704       4   739   412   429
+ENDLABL             U    00C000       0  1489
+FPCMCT              U    000004       1   711   392   616
+FPCMODES            C    0006F8       1   705   711   398   406   423   622   632   649
+FPCREGNT            X    00027C       4   182   247   305   320   344   405   472   530   545   569   623   631
+FPCREGTR            X    000280       4   183   260   329   422   485   554   624   648
+FPR0                U    000000       1    93   248   251   253   261   264   266   306   309   311   321   323   330   333   335
+                                                345   347   408   413   425   430   473   476   478   486   489   491   531   534
+                                                536   546   548   555   558   560   570   572   634   639   651   656   740   742
+                                                743   744   745   746   747   758   760   761   762   763   764   765
+FPR1                U    000001       1    94   249   251   262   264   307   309   321   331   333   345   409   426   474   476
+                                                487   489   532   534   546   556   558   570   635   652   740   742   743   744
+                                                745   746   747   758   760   761   762   763   764   765
+FPR10               U    00000A       1   103
+FPR11               U    00000B       1   104
+FPR12               U    00000C       1   105
+FPR13               U    00000D       1   106
+FPR14               U    00000E       1   107
+FPR15               U    00000F       1   108
+FPR2                U    000002       1    95   250   251   254   263   264   267   308   309   312   321   332   333   336   345
+                                                410   414   427   431   475   476   479   488   489   492   533   534   537   546
+                                                557   558   561   570   636   640   653   657   740   742   743   744   745   746
+                                                747   758   760   761   762   763   764   765
+FPR3                U    000003       1    96
+FPR4                U    000004       1    97
+FPR5                U    000005       1    98
+FPR6                U    000006       1    99
+FPR7                U    000007       1   100
+FPR8                U    000008       1   101
+FPR9                U    000009       1   102
+HARDWAIT            X    000268       8   179   146
+IMAGE               1    000000    3860     0
+LBFPCT              U    000260       1  1403   217
+LBFPFLGS            U    00AC00       0  1485   220
+LBFPIN              F    000BF4       4  1265  1403   218
+LBFPINRM            F    000E54       4  1416  1453   224
+LBFPNFCT            U    000200       1  1254   211
+LBFPNFFL            U    001700       0  1465   214
+LBFPNFIN            F    0009F4       4  1143  1254   212
+LBFPNFOT            U    001300       0  1463   213
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    34
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+LBFPOUT             U    00B000       0  1483   219
+LBFPRMCT            U    0000C0       1  1453   223
+LBFPRMO             U    005000       0  1473   225
+LBFPRMOF            U    009000       0  1475   226
+LONGF               F    000340       4   216   168
+LONGNF              F    000330       4   210   166
+PCINTCD             H    00008E       2   123   140
+PCNOTDTA            H    00020C       2   143   141
+PCOLDPSW            U    000150       0   125   142
+PROGCHK             H    000200       2   139   131
+R0                  U    000000       1    74   155   157   256   257   258   269   270   271   314   315   316   325   326   327
+                                                338   339   340   349   350   351   416   417   418   433   434   435   481   482
+                                                483   494   495   496   539   540   541   550   551   552   563   564   565   574
+                                                575   576   642   643   644   659   660   661
+R1                  U    000001       1    75   389   398   406   407   411   412   423   424   428   429   613   622   623   624
+                                                632   633   637   638   649   650   654   655
+R10                 U    00000A       1    84   159   161   163   166   168   170   241   242   299   300   385   386   466   467
+                                                524   525   609   610
+R11                 U    00000B       1    85
+R12                 U    00000C       1    86   245   276   303   357   390   450   470   501   528   581   614   676
+R13                 U    00000D       1    87   160   162   164   167   169   171   244   277   302   358   388   452   469   502
+                                                527   582   612   678
+R14                 U    00000E       1    88   144   145   173   174
+R15                 U    00000F       1    89   110
+R2                  U    000002       1    76   241   243   276   299   301   357   385   387   450   466   468   501   524   526
+                                                581   609   611   676
+R3                  U    000003       1    77   241   248   249   261   262   273   299   306   307   330   331   354   385   408
+                                                409   425   426   449   466   473   474   486   487   498   524   531   532   555
+                                                556   578   609   634   635   651   652   675
+R4                  U    000004       1    78   400   411   428   440   626   637   654   666
+R5                  U    000005       1    79   392   398   406   423   444   616   622   632   649   670
+R6                  U    000006       1    80   401   440   627   666
+R7                  U    000007       1    81   242   253   254   266   267   274   300   311   312   323   335   336   347   355
+                                                386   413   414   430   431   437   467   478   479   491   492   499   525   536
+                                                537   548   560   561   572   579   610   639   640   656   657   663
+R8                  U    000008       1    82   242   255   258   268   271   275   300   313   316   324   327   337   340   348
+                                                351   356   386   415   418   432   435   438   467   480   483   493   496   500
+                                                525   538   541   549   552   562   565   573   576   580   610   641   644   658
+                                                661   664
+R9                  U    000009       1    83   393   444   617   670
+RMLONGS             F    000350       4   222   170
+RMSHORTS            F    000320       4   204   163
+SBFPCT              U    000158       1  1080   199
+SBFPFLGS            U    00A800       0  1480   202
+SBFPIN              F    00083C       4   923  1080   200
+SBFPINRM            F    000994       4  1093  1118   206
+SBFPNFCT            U    000100       1   912   193
+SBFPNFFL            U    001200       0  1460   196
+SBFPNFIN            F    00073C       4   796   912   194
+SBFPNFOT            U    001000       0  1458   195
+SBFPOUT             U    00A000       0  1478   201
+SBFPRMCT            U    000060       1  1118   205
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    35
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SBFPRMO             U    002000       0  1468   207
+SBFPRMOF            U    004000       0  1470   208
+SHORTF              F    000310       4   198   161
+SHORTNF             F    000300       4   192   159
+START               H    000214       2   154   128
+WAITPSW             X    000258       8   178   175
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    36
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     48   1490
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    37
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     3860  000-F13  000-F13
+  Region             3860  000-F13  000-F13
+    CSECT  BFPDV2NT  3860  000-F13  000-F13
+ASMA Ver. 0.2.0  ieee-divtoint.asm: Test IEEE Divide To Integer                                     31 Aug 2016 07:04:20  Page    38
+
+   STMT                               FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-001-divtoint.asm
+
+
+** NO ERRORS FOUND **
+
+[1491] MNOTE *,asma detected; no CSECT padding performed
+

@@ -1,4 +1,4 @@
-/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2012                */
+/* HERCWIND.H   (C) Copyright Roger Bowler, 2005-2016                */
 /*              MSVC Environment Specific Definitions                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -46,36 +46,6 @@ struct dirent
     char    d_name[FILENAME_MAX + 1];
 };
 
-typedef unsigned char       u_char;
-typedef unsigned int        u_int;
-typedef unsigned long       u_long;
-
-typedef unsigned __int8     u_int8_t;
-typedef   signed __int8       int8_t;
-
-typedef unsigned __int16    u_int16_t;
-typedef   signed __int16      int16_t;
-
-typedef unsigned __int32    u_int32_t;
-typedef   signed __int32      int32_t;
-
-typedef unsigned __int64    u_int64_t;
-typedef   signed __int64      int64_t;
-
-typedef   int32_t           pid_t;
-typedef   int32_t           mode_t;
-typedef u_int32_t           in_addr_t;
-
-#if defined( _WIN64 )
-  #define  SIZEOF_INT_P     8
-  #define  SIZEOF_SIZE_T    8
-  typedef  int64_t          ssize_t;
-#else
-  #define  SIZEOF_INT_P     4
-  #define  SIZEOF_SIZE_T    4
-  typedef  int32_t          ssize_t;
-#endif
-
 #include <io.h>
 #include <share.h>
 #include <process.h>
@@ -121,11 +91,20 @@ typedef u_int32_t           in_addr_t;
 #define __inline__      __inline
 
 #define HAVE_STRUCT_IN_ADDR_S_ADDR
-#define HAVE_U_INT
-#define HAVE_U_INT8_T
-#define HAVE_LIBMSVCRT
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
 #define HAVE_ASSERT_H
+#if _MSC_VER >= VS2013
+#define HAVE_INTTYPES_H
+#define HAVE_STDINT_H
+#define HAVE_STDBOOL_H
+#endif
+#if defined( _WIN64 )
+#define  SIZEOF_INT_P   8
+#define  SIZEOF_SIZE_T  8
+#else
+#define  SIZEOF_INT_P   4
+#define  SIZEOF_SIZE_T  4
+#endif
 
 #if !defined(ENABLE_CONFIG_INCLUDE) && !defined(NO_CONFIG_INCLUDE)
 #define  ENABLE_CONFIG_INCLUDE          /* enable config file includes */

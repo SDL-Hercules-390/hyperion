@@ -1,0 +1,38 @@
+-------------------------------------------------------------------------------
+                    HERCULES "External Packages" README
+-------------------------------------------------------------------------------
+
+                              OVERVIEW
+
+Hercules 4.0 Hyperion links with several "external package" static libraries.
+
+Each package is maintained in its own unique source code repository separate
+from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
+hosts the package's static library (along with a few accompanying files) in
+a separate "external package subdirectory". All of the package's source code
+is kept in its own separate source code repository.  The Hercules repository
+no longer contains any source code for these external packages; only their
+static link libraries and whatever header files may be needed to call into
+the package's functions.
+
+Each external package is built separately from the Hercules emulator and then
+"installed" into the appropriate Hercules repository subdirectory.  Building
+Hercules itself should not change.
+
+At present, the only external packages that Hercules 4.0 Hyperion links with
+are the "decNumber" and "SoftFloat" packages.  Over time additional Hercules
+functionality will be moved out of the emulator into their own separately
+maintained and built external package repositories, eventually reducing the
+Hercules emulator itself to just its core function: accurate emulation of
+the System/370, ESA/390, and z architectures.
+
+If you wish to build a non-Intel x86 architecture version of Hercules, you
+will need to build and install all external packages for your architecture
+first, before building Hercules. For instructions on how to do this, refer
+to the BUILDING document in each package's source code repository.
+
+For more information on each external package please refer to each of their
+README.XXXXX documents as well as the detailed documentation contained in
+each of their repositories. The URL for each is each README.XXXX document.
+
+-------------------------------------------------------------------------------

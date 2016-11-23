@@ -4,10 +4,8 @@
                     HERCULES FOR WIN64 README FILE
 
 
-There are two 64-bit architectures supported by 64-bit Windows:
-- x64 also known as x86_64 (for AMD64 processors)
-
-This section of the document covers only the x64 architecture.
+There is only one 64-bit architecture supported by 64-bit Windows: the
+x64 architecture also known as x86_64 (for AMD64 processors).
 
 HOW TO COMPILE HERCULES FOR AMD64
 
@@ -30,8 +28,9 @@ HOW TO COMPILE HERCULES FOR AMD64
    require PCRE for the Hercules Automatic Operator facility, you should
    install the AMD64 versions of these programs in winbuild\zlib\x64
    winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory. 
-   You may override these default directory locations by setting
-   environment variables, for example:
+
+   You can override these default directory locations by simply setting
+   the following environment variables:
 
      SET ZLIB_DIR=c:\packages\zlib
      SET BZIP2_DIR=c:\packages\bzip2

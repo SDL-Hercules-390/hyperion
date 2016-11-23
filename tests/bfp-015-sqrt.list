@@ -1,0 +1,1039 @@
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE SQUARE ROOT
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise. Test results, FPCR flags, and any DXC are saved for all
+                                                                             7 *  tests.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 *
+                                                                            14 * Tests five square root instructions:
+                                                                            15 *   SQUARE ROOT (extended BFP, RRE)
+                                                                            16 *   SQUARE ROOT (long BFP, RRE)
+                                                                            17 *   SQUARE ROOT (long BFP, RXE)
+                                                                            18 *   SQUARE ROOT (short BFP, RRE)
+                                                                            19 *   SQUARE ROOT (short BFP, RXE)
+                                                                            20 *
+                                                                            21 * Test data is compiled into this program.  The test script that runs
+                                                                            22 * this program can provide alternative test data through Hercules R
+                                                                            23 * commands.
+                                                                            24 *
+                                                                            25 * Test Case Order
+                                                                            26 * 1) Short BFP basic tests, including traps and NaN propagation
+                                                                            27 * 2) Short BFP FPC-controlled rounding mode exhaustive tests
+                                                                            28 * 3) Long BFP basic tests, including traps and NaN propagation
+                                                                            29 * 4) Long BFP FPC-controlled rounding mode exhaustive tests
+                                                                            30 * 5) Extended BFP basic tests, including traps and NaN propagation
+                                                                            31 * 6) Extended BFP FPC-controlled rounding mode exhaustive tests
+                                                                            32 *
+                                                                            33 * Two input test sets are provided each for short, long, and extended
+                                                                            34 * BFP inputs.  The first set covers non-finites, negatives, NaNs, and
+                                                                            35 * traps on inexact and inexact-incremented.  The second more limited
+                                                                            36 * set exhaustively tests Square Root with each rounding mode that can
+                                                                            37 * be specified in the FPC.  Test values are the same for each
+                                                                            38 * precision.  Interestingly, the square root of 3 is nearer to a lower
+                                                                            39 * magnitude for all three precisions, while the square root of 5 is
+                                                                            40 * nearer to a larger magnitude for all three precisions.  The square
+                                                                            41 * root of 2 does not have this property.
+                                                                            42 *
+                                                                            43 * Note: Square Root recognizes only the IEEE exceptions Invalid and
+                                                                            44 * Inexact.  Neither overflow nor underflow can occur with Square Root.
+                                                                            45 * For values greater than 1, the result from Square Root is smaller
+                                                                            46 * than the input.  For values less than 1 and greater than zero, the
+                                                                            47 * result from square root is larger than the input value.
+                                                                            48 *
+                                                                            49 * Also tests the following floating point support instructions
+                                                                            50 *   LOAD  (Short)
+                                                                            51 *   LOAD  (Long)
+                                                                            52 *   LFPC  (Load Floating Point Control Register)
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            53 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                            54 *   STORE (Short)
+                                                                            55 *   STORE (Long)
+                                                                            56 *   STFPC (Store Floating Point Control Register)
+                                                                            57 *
+                                                                            58 *
+                                                                            59 ***********************************************************************
+
+
+                                                                            61          MACRO
+                                                                            62          PADCSECT &ENDLABL
+                                                                            63 .*
+                                                                            64 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            65 .*  program is not being assembled using asma.  asma generates a core
+                                                                            66 .*  image that is loaded by the loadcore command, and because the
+                                                                            67 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            68 .*  this small effort to keep the core image small.
+                                                                            69 .*
+                                                                            70          AIF   (D'&ENDLABL).GOODPAD
+                                                                            71          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            72          MNOTE *,'No CSECT padding performed'
+                                                                            73          MEXIT
+                                                                            74 .*
+                                                                            75 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            76          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            77          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            78          MEXIT
+                                                                            79 .*
+                                                                            80 .NOPAD   ANOP
+                                                                            81          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            82          MEND
+                                                                            83 *
+                                                                            84 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            85 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            86 *
+                                      0000000000000000  0000000000000727    87 BFPSQRTS START 0
+                                      0000000000000000  0000000000000001    88 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    89 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    90 R1       EQU   1
+                                      0000000000000002  0000000000000001    91 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    92 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    93 R4       EQU   4                   Rounding tests inner loop control
+                                      0000000000000005  0000000000000001    94 R5       EQU   5                   Rounding tests outer loop control
+                                      0000000000000006  0000000000000001    95 R6       EQU   6                   Rounding tests top of inner loop
+                                      0000000000000007  0000000000000001    96 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    97 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    98 R9       EQU   9                   Rounding tests top of inner loop
+                                      000000000000000A  0000000000000001    99 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001   100 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001   101 R12      EQU   12                  Top of outer loop address in tests
+                                      000000000000000D  0000000000000001   102 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001   103 R14      EQU   14                  **Return address for z/CMS test rig
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000000F  0000000000000001   104 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                           105 *
+                                                                           106 * Floating Point Register equates to keep the cross reference clean
+                                                                           107 *
+                                      0000000000000000  0000000000000001   108 FPR0     EQU   0
+                                      0000000000000001  0000000000000001   109 FPR1     EQU   1             Input value for RRE instructions
+                                      0000000000000002  0000000000000001   110 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   111 FPR3     EQU   3             ..Paired with FPR1 for RRE extended
+                                      0000000000000004  0000000000000001   112 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   113 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   114 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   115 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   116 FPR8     EQU   8             Result value from Square Root
+                                      0000000000000009  0000000000000001   117 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   118 FPR10    EQU   10            ..Paired with FPR8 for RRE extended
+                                      000000000000000B  0000000000000001   119 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   120 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   121 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   122 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   123 FPR15    EQU   15
+                                                                           124 *
+0000000000000000                      0000000000000000                     125          USING *,R15
+                                                                           126 *
+                                                                           127 * Above works on real iron (R15=0 after sysclear)
+                                                                           128 * and in z/CMS (R15 points to start of load module)
+                                                                           129 *
+
+
+                                                                           131 ***********************************************************************
+                                                                           132 *
+                                                                           133 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           134 *
+                                                                           135 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   137          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     138 PCINTCD  DS    H
+                                                                           139 *
+                                      0000000000000150  0000000000000001   140 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           141 *
+0000000000000090                      0000000000000090  00000000000001A0   142          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        143          DC    X'0000000180000000',AD(START)
+                                                                           144 *
+00000000000001B0                      00000000000001B0  00000000000001D0   145          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        146          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           147 *
+                                                                           148 * Program check routine.  If Data Exception, continue execution at
+                                                                           149 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           150 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           151 * in the FPCR.
+                                                                           152 *
+00000000000001E0                      00000000000001E0  0000000000000200   153          ORG   STRTLABL+X'200'
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000200                                                           154 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   155          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   156          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   157          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           158 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     159          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     160          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F268                             0000000000000268   161          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           163 ***********************************************************************
+                                                                           164 *
+                                                                           165 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           166 *
+                                                                           167 ***********************************************************************
+
+
+0000000000000214                                                           169 START    DS    0H
+0000000000000214  B600 F278                             0000000000000278   170          STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F279                             0000000000000279   171          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F278                             0000000000000278   172          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           173 *
+0000000000000220  41A0 F300                             0000000000000300   174          LA    R10,SHORTB    Point to short BFP inputs
+0000000000000224  4DD0 F360                             0000000000000360   175          BAS   R13,SBFPB     Take square root of short BFP values
+0000000000000228  41A0 F310                             0000000000000310   176          LA    R10,RMSHORTS  Point to short BFP rounding mode tests
+000000000000022C  4DD0 F3D6                             00000000000003D6   177          BAS   R13,SBFPRM    Take sqrt of short BFP for rounding tests
+                                                                           178 *
+0000000000000230  41A0 F320                             0000000000000320   179          LA    R10,LONGB     Point to long BFP inputs
+0000000000000234  4DD0 F438                             0000000000000438   180          BAS   R13,LBFPB     Take square root of long BFP values
+0000000000000238  41A0 F330                             0000000000000330   181          LA    R10,RMLONGS   Point to long  BFP rounding mode tests
+000000000000023C  4DD0 F4AE                             00000000000004AE   182          BAS   R13,LBFPRM    Take sqrt of long BFP for rounding tests
+                                                                           183 *
+0000000000000240  41A0 F340                             0000000000000340   184          LA    R10,XTNDB     Point to extended BFP inputs
+0000000000000244  4DD0 F50C                             000000000000050C   185          BAS   R13,XBFPB    Take square root of extended BFP values
+0000000000000248  41A0 F350                             0000000000000350   186          LA    R10,RMXTNDS   Point to ext'd BFP rounding mode tests
+000000000000024C  4DD0 F562                             0000000000000562   187          BAS   R13,XBFPRM    Take sqrt of ext'd BFP for rounding tests
+                                                                           188 *
+0000000000000250  12EE                                                     189          LTR   R14,R14       Return address provided?
+0000000000000252  077E                                                     190          BNZR  R14           ..Yes, return to z/CMS test rig.
+0000000000000254  B2B2 F258                             0000000000000258   191          LPSWE WAITPSW        All done, load enabled wait PSW
+                                                                           192 *
+                                                                           193 *
+0000000000000258                                                           194          DS    0D            Ensure correct alignment for PSW
+0000000000000258  00020000 00000000                                        195 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000268  00020000 00000000                                        196 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           197 *
+0000000000000278  00000000                                                 198 CTLR0    DS    F
+000000000000027C  00000000                                                 199 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000280  F8000000                                                 200 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           201 *
+                                                                           202 * Input values parameter list, four fullwords for each test data set
+                                                                           203 *      1) Count,
+                                                                           204 *      2) Address of inputs,
+                                                                           205 *      3) Address to place results, and
+                                                                           206 *      4) Address to place DXC/Flags/cc values.
+                                                                           207 *
+0000000000000284                      0000000000000284  0000000000000480   208          ORG   BFPSQRTS+X'480'
+0000000000000480                      0000000000000480  0000000000000300   209          ORG   STRTLABL+X'300'  Enable run-time replacement
+0000000000000300                                                           210 SHORTB   DS    0F           Input pairs for short BFP basic tests
+0000000000000300  0000000B                                                 211          DC    A(SBFPBCT)
+0000000000000304  000005B8                                                 212          DC    A(SBFPBIN)
+0000000000000308  00001000                                                 213          DC    A(SBFPBOT)
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000030C  00001100                                                 214          DC    A(SBFPBFL)
+                                                                           215 *
+0000000000000310                                                           216 RMSHORTS DS    0F           Input pairs for short BFP rounding testing
+0000000000000310  00000002                                                 217          DC    A(SBFPRMCT)
+0000000000000314  000005E4                                                 218          DC    A(SBFPINRM)
+0000000000000318  00001200                                                 219          DC    A(SBFPRMO)
+000000000000031C  00001400                                                 220          DC    A(SBFPRMOF)
+                                                                           221 *
+0000000000000320                                                           222 LONGB    DS    0F           Input pairs for long BFP basic testing
+0000000000000320  0000000B                                                 223          DC    A(LBFPBCT)
+0000000000000324  000005F0                                                 224          DC    A(LBFPBIN)
+0000000000000328  00003000                                                 225          DC    A(LBFPBOT)
+000000000000032C  00003200                                                 226          DC    A(LBFPBFL)
+                                                                           227 *
+0000000000000330                                                           228 RMLONGS  DS    0F           Input pairs for long BFP rounding testing
+0000000000000330  00000002                                                 229          DC    A(LBFPRMCT)
+0000000000000334  00000648                                                 230          DC    A(LBFPINRM)
+0000000000000338  00003400                                                 231          DC    A(LBFPRMO)
+000000000000033C  00003700                                                 232          DC    A(LBFPRMOF)
+                                                                           233 *
+0000000000000340                                                           234 XTNDB    DS    0F           Inputs for extended BFP basic testing
+0000000000000340  0000000B                                                 235          DC    A(XBFPBCT)
+0000000000000344  00000658                                                 236          DC    A(XBFPBIN)
+0000000000000348  00005000                                                 237          DC    A(XBFPBOT)
+000000000000034C  00005400                                                 238          DC    A(XBFPBFL)
+                                                                           239 *
+0000000000000350                                                           240 RMXTNDS  DS    0F           Inputs for ext'd BFP non-finite testing
+0000000000000350  00000002                                                 241          DC    A(XBFPRMCT)
+0000000000000354  00000708                                                 242          DC    A(XBFPINRM)
+0000000000000358  00005500                                                 243          DC    A(XBFPRMO)
+000000000000035C  00005A00                                                 244          DC    A(XBFPRMOF)
+                                                                           245 *
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           247 ***********************************************************************
+                                                                           248 *
+                                                                           249 * Take square roots using provided short BFP inputs.  This set of tests
+                                                                           250 * checks NaN propagation, operations on values that are not finite
+                                                                           251 * numbers, and other basic tests.  This set generates results that can
+                                                                           252 * be validated against Figure 19-17 on page 19-21 of SA22-7832-10.
+                                                                           253 *
+                                                                           254 * Four results are generated for each input: one RRE with all
+                                                                           255 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           256 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           257 * exceptions trappable,
+                                                                           258 *
+                                                                           259 * The square root and FPCR are stored for each result.
+                                                                           260 *
+                                                                           261 ***********************************************************************
+
+
+0000000000000360                                                           263 SBFPB    DS    0H            BFP Short basic tests
+0000000000000360  9823 A000                             0000000000000000   264          LM    R2,R3,0(R10)  Get count and address of dividendd values
+0000000000000364  9878 A008                             0000000000000008   265          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000368  1222                                                     266          LTR   R2,R2         Any test cases?
+000000000000036A  078D                                                     267          BZR   R13           ..No, return to caller
+000000000000036C  0DC0                                                     268          BASR  R12,0         Set top of loop
+                                                                           269 *
+000000000000036E  B374 0080                                                270          LZER  FPR8          Zero result register
+0000000000000372  7810 3000                             0000000000000000   271          LE    FPR1,0(,R3)   Get short BFP input
+0000000000000376  B29D F27C                             000000000000027C   272          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000037A  B314 0081                                                273          SQEBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+000000000000037E  7080 7000                             0000000000000000   274          STE   FPR8,0(,R7)   Store short BFP square root
+0000000000000382  B29C 8000                             0000000000000000   275          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           276 *
+0000000000000386  B374 0080                                                277          LZER  FPR8          Zero result register
+000000000000038A  B29D F280                             0000000000000280   278          LFPC  FPCREGTR      Set exceptions trappable
+000000000000038E  B314 0081                                                279          SQEBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+0000000000000392  7080 7004                             0000000000000004   280          STE   FPR8,4(,R7)   Store short BFP square root
+0000000000000396  B29C 8004                             0000000000000004   281          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           282 *
+000000000000039A  B374 0080                                                283          LZER  FPR8          Zero result register
+000000000000039E  B29D F27C                             000000000000027C   284          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003A2  ED80 3000 0014                        0000000000000000   285          SQEB  FPR8,0(,R3)   Take square root, place in FPR8 RXE
+00000000000003A8  7080 7008                             0000000000000008   286          STE   FPR8,8(,R7)   Store short BFP square root
+00000000000003AC  B29C 8008                             0000000000000008   287          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           288 *
+00000000000003B0  B374 0080                                                289          LZER  FPR8          Zero result register
+00000000000003B4  B29D F280                             0000000000000280   290          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003B8  ED80 3000 0014                        0000000000000000   291          SQEB  FPR8,0(,R3)   Take square root, place in FPR8 RXE
+00000000000003BE  7080 700C                             000000000000000C   292          STE   FPR8,12(,R7)  Store short BFP square root
+00000000000003C2  B29C 800C                             000000000000000C   293          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           294 *
+00000000000003C6  4170 7010                             0000000000000010   295          LA    R7,16(,R7)    Point to next Square Root result area
+00000000000003CA  4180 8010                             0000000000000010   296          LA    R8,16(,R8)    Point to next Square Root FPCR area
+00000000000003CE  4130 3004                             0000000000000004   297          LA    R3,4(,R3)     Point to next input value
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000003D2  062C                                                     298          BCTR  R2,R12        Convert next input value.
+                                                                           299 *
+00000000000003D4  07FD                                                     300          BR    R13           All converted; return.
+                                                                           301 *
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           303 ***********************************************************************
+                                                                           304 *
+                                                                           305 * Perform Square Root using provided short BFP inputs.  This set of
+                                                                           306 * tests exhaustively tests all rounding modes available for Square
+                                                                           307 * Root. The rounding mode can only be specified in the FPC.
+                                                                           308 *
+                                                                           309 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           310 * using rounding mode RNTE, do not often create results that require
+                                                                           311 * rounding.
+                                                                           312 *
+                                                                           313 * Two results are generated for each input and rounding mode: one RRE
+                                                                           314 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           315 *
+                                                                           316 * The quotient and FPCR contents are stored for each test.
+                                                                           317 *
+                                                                           318 ***********************************************************************
+
+
+00000000000003D6  9823 A000                             0000000000000000   320 SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000003DA  9878 A008                             0000000000000008   321          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000003DE  1222                                                     322          LTR   R2,R2         Any test cases?
+00000000000003E0  078D                                                     323          BZR   R13           ..No, return to caller
+00000000000003E2  1711                                                     324          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+00000000000003E4  0DC0                                                     325          BASR  R12,0         Set top of test case loop
+                                                                           326
+00000000000003E6  4150 0005                             0000000000000005   327          LA    R5,FPCMCT     Get count of FPC modes to be tested
+00000000000003EA  0D90                                                     328          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           329 *
+00000000000003EC  4315 F5B1                             00000000000005B1   330          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           331 *
+00000000000003F0  B29D F27C                             000000000000027C   332          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003F4  B2B8 1000                             0000000000000000   333          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000003F8  7810 3000                             0000000000000000   334          LE    FPR1,0(,R3)   Get short BFP input value
+00000000000003FC  B314 0081                                                335          SQEBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+0000000000000400  7080 7000                             0000000000000000   336          STE   FPR8,0(,R7)   Store short BFP quotient
+0000000000000404  B29C 8000                             0000000000000000   337          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           338 *
+0000000000000408  B29D F27C                             000000000000027C   339          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000040C  B2B8 1000                             0000000000000000   340          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000410  ED80 3000 0014                        0000000000000000   341          SQEB  FPR8,0(,R3)   Take square root of value into FPR8 RXE
+0000000000000416  7080 7004                             0000000000000004   342          STE   FPR8,4(,R7)   Store short BFP quotient
+000000000000041A  B29C 8004                             0000000000000004   343          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           344 *
+000000000000041E  4170 7008                             0000000000000008   345          LA    R7,8(,R7)     Point to next square root result
+0000000000000422  4180 8008                             0000000000000008   346          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           347 *
+0000000000000426  0659                                                     348          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           349 *
+                                                                           350 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           351 *
+0000000000000428  4130 3004                             0000000000000004   352          LA    R3,4(,R3)     Point to next input value
+000000000000042C  4170 7008                             0000000000000008   353          LA    R7,8(,R7)     Skip to start of next result area
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000430  4180 8008                             0000000000000008   354          LA    R8,8(,R8)     Skip to start of next FPCR result area
+0000000000000434  062C                                                     355          BCTR  R2,R12        Divide next input value lots of times
+                                                                           356 *
+0000000000000436  07FD                                                     357          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           359 ***********************************************************************
+                                                                           360 *
+                                                                           361 * Take square roots using provided long BFP inputs.  This set of tests
+                                                                           362 * checks NaN propagation, operations on values that are not finite
+                                                                           363 * numbers, and other basic tests.  This set generates results that can
+                                                                           364 * be validated against Figure 19-17 on page 19-21 of SA22-7832-10.
+                                                                           365 *
+                                                                           366 * Four results are generated for each input: one RRE with all
+                                                                           367 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           368 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           369 * exceptions trappable,
+                                                                           370 *
+                                                                           371 * The square root and FPCR are stored for each result.
+                                                                           372 *
+                                                                           373 ***********************************************************************
+
+
+0000000000000438                                                           375 LBFPB    DS    0H            BFP long basic tests
+0000000000000438  9823 A000                             0000000000000000   376          LM    R2,R3,0(R10)  Get count and address of dividendd values
+000000000000043C  9878 A008                             0000000000000008   377          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000440  1222                                                     378          LTR   R2,R2         Any test cases?
+0000000000000442  078D                                                     379          BZR   R13           ..No, return to caller
+0000000000000444  0DC0                                                     380          BASR  R12,0         Set top of loop
+                                                                           381 *
+0000000000000446  B375 0080                                                382          LZDR  FPR8          Zero result register
+000000000000044A  6810 3000                             0000000000000000   383          LD    FPR1,0(,R3)   Get long BFP input
+000000000000044E  B29D F27C                             000000000000027C   384          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000452  B315 0081                                                385          SQDBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+0000000000000456  6080 7000                             0000000000000000   386          STD   FPR8,0(,R7)   Store long BFP square root
+000000000000045A  B29C 8000                             0000000000000000   387          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           388 *
+000000000000045E  B375 0080                                                389          LZDR  FPR8          Zero result register
+0000000000000462  B29D F280                             0000000000000280   390          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000466  B315 0081                                                391          SQDBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+000000000000046A  6080 7008                             0000000000000008   392          STD   FPR8,8(,R7)   Store long BFP square root
+000000000000046E  B29C 8004                             0000000000000004   393          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           394 *
+0000000000000472  B375 0080                                                395          LZDR  FPR8          Zero result register
+0000000000000476  B29D F27C                             000000000000027C   396          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000047A  ED80 3000 0015                        0000000000000000   397          SQDB  FPR8,0(,R3)   Take square root, place in FPR8 RXE
+0000000000000480  6080 7010                             0000000000000010   398          STD   FPR8,16(,R7)  Store long BFP square root
+0000000000000484  B29C 8008                             0000000000000008   399          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           400 *
+0000000000000488  B375 0080                                                401          LZDR  FPR8          Zero result register
+000000000000048C  B29D F280                             0000000000000280   402          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000490  ED80 3000 0015                        0000000000000000   403          SQDB  FPR8,0(,R3)   Take square root, place in FPR8 RXE
+0000000000000496  6080 7018                             0000000000000018   404          STD   FPR8,24(,R7)  Store short BFP square root
+000000000000049A  B29C 800C                             000000000000000C   405          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           406 *
+000000000000049E  4170 7020                             0000000000000020   407          LA    R7,32(,R7)    Point to next Square Root result area
+00000000000004A2  4180 8010                             0000000000000010   408          LA    R8,16(,R8)    Point to next Square Root FPCR area
+00000000000004A6  4130 3008                             0000000000000008   409          LA    R3,8(,R3)     Point to next input value
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004AA  062C                                                     410          BCTR  R2,R12        Convert next input value.
+                                                                           411 *
+00000000000004AC  07FD                                                     412          BR    R13           All converted; return.
+                                                                           413 *
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           415 ***********************************************************************
+                                                                           416 *
+                                                                           417 * Perform Square Root using provided long BFP inputs.  This set of
+                                                                           418 * tests exhaustively tests all rounding modes available for Square
+                                                                           419 * Root. The rounding mode can only be specified in the FPC.
+                                                                           420 *
+                                                                           421 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           422 * using rounding mode RNTE, do not often create results that require
+                                                                           423 * rounding.
+                                                                           424 *
+                                                                           425 * Two results are generated for each input and rounding mode: one RRE
+                                                                           426 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           427 *
+                                                                           428 * The quotient and FPCR contents are stored for each test.
+                                                                           429 *
+                                                                           430 ***********************************************************************
+
+
+00000000000004AE  9823 A000                             0000000000000000   432 LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000004B2  9878 A008                             0000000000000008   433          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000004B6  1222                                                     434          LTR   R2,R2         Any test cases?
+00000000000004B8  078D                                                     435          BZR   R13           ..No, return to caller
+00000000000004BA  1711                                                     436          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+00000000000004BC  0DC0                                                     437          BASR  R12,0         Set top of test case loop
+                                                                           438
+00000000000004BE  4150 0005                             0000000000000005   439          LA    R5,FPCMCT     Get count of FPC modes to be tested
+00000000000004C2  0D90                                                     440          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           441 *
+00000000000004C4  4315 F5B1                             00000000000005B1   442          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           443 *
+00000000000004C8  B29D F27C                             000000000000027C   444          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004CC  B2B8 1000                             0000000000000000   445          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004D0  6810 3000                             0000000000000000   446          LD    FPR1,0(,R3)   Get long BFP input value
+00000000000004D4  B315 0081                                                447          SQDBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+00000000000004D8  6080 7000                             0000000000000000   448          STD   FPR8,0(,R7)   Store long BFP quotient
+00000000000004DC  B29C 8000                             0000000000000000   449          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           450 *
+00000000000004E0  B29D F27C                             000000000000027C   451          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004E4  B2B8 1000                             0000000000000000   452          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004E8  ED80 3000 0015                        0000000000000000   453          SQDB  FPR8,0(,R3)   Take square root of value into FPR8 RXE
+00000000000004EE  6080 7008                             0000000000000008   454          STD   FPR8,8(,R7)   Store short BFP quotient
+00000000000004F2  B29C 8004                             0000000000000004   455          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           456 *
+00000000000004F6  4170 7010                             0000000000000010   457          LA    R7,16(,R7)    Point to next square root result
+00000000000004FA  4180 8008                             0000000000000008   458          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           459 *
+00000000000004FE  0659                                                     460          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           461 *
+                                                                           462 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           463 *
+0000000000000500  4130 3008                             0000000000000008   464          LA    R3,8(,R3)     Point to next input value
+0000000000000504  4180 8008                             0000000000000008   465          LA    R8,8(,R8)     Skip to start of next FPCR result area
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000508  062C                                                     466          BCTR  R2,R12        Divide next input value lots of times
+                                                                           467 *
+000000000000050A  07FD                                                     468          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           470 ***********************************************************************
+                                                                           471 *
+                                                                           472 * Take square roots using provided extended BFP inputs.  This set of
+                                                                           473 * tests checks NaN propagation, operations on values that are not
+                                                                           474 * finite numbers, and other basic tests.  This set generates results
+                                                                           475 * that can be validated against Figure 19-17 on page 19-21 of
+                                                                           476 *  SA22-7832-10.
+                                                                           477 *
+                                                                           478 * Four results are generated for each input: one RRE with all
+                                                                           479 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           480 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           481 * exceptions trappable,
+                                                                           482 *
+                                                                           483 * The square root and FPCR are stored for each result.
+                                                                           484 *
+                                                                           485 ***********************************************************************
+
+
+000000000000050C                                                           487 XBFPB    DS    0H            BFP extended basic tests
+000000000000050C  9823 A000                             0000000000000000   488          LM    R2,R3,0(R10)  Get count and address of dividendd values
+0000000000000510  9878 A008                             0000000000000008   489          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000514  1222                                                     490          LTR   R2,R2         Any test cases?
+0000000000000516  078D                                                     491          BZR   R13           ..No, return to caller
+0000000000000518  0DC0                                                     492          BASR  R12,0         Set top of loop
+                                                                           493 *
+000000000000051A  B376 0080                                                494          LZXR  FPR8          Zero result register
+000000000000051E  6810 3000                             0000000000000000   495          LD    FPR1,0(,R3)   Get extended BFP input part 1
+0000000000000522  6830 3008                             0000000000000008   496          LD    FPR3,8(,R3)   Get extended BFP input part 2
+0000000000000526  B29D F27C                             000000000000027C   497          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000052A  B316 0081                                                498          SQXBR FPR8,FPR1     Take square root of FPR1 into FPR8-10 RRE
+000000000000052E  6080 7000                             0000000000000000   499          STD   FPR8,0(,R7)   Store extended BFP square root part 1
+0000000000000532  60A0 7008                             0000000000000008   500          STD   FPR10,8(,R7)  Store extended BFP square root part 2
+0000000000000536  B29C 8000                             0000000000000000   501          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           502 *
+000000000000053A  B376 0080                                                503          LZXR  FPR8          Zero result register
+000000000000053E  B29D F280                             0000000000000280   504          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000542  B316 0081                                                505          SQXBR FPR8,FPR1     Take square root of FPR1 into FPR8-10 RRE
+0000000000000546  6080 7010                             0000000000000010   506          STD   FPR8,16(,R7)  Store extended BFP square root part 1
+000000000000054A  60A0 7018                             0000000000000018   507          STD   FPR10,24(,R7) Store extended BFP square root part 2
+000000000000054E  B29C 8004                             0000000000000004   508          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           509 *
+0000000000000552  4170 7020                             0000000000000020   510          LA    R7,32(,R7)    Point to next Square Root result area
+0000000000000556  4180 8010                             0000000000000010   511          LA    R8,16(,R8)    Point to next Square Root FPCR area
+000000000000055A  4130 3010                             0000000000000010   512          LA    R3,16(,R3)    Point to next input value
+000000000000055E  062C                                                     513          BCTR  R2,R12        Convert next input value.
+                                                                           514 *
+0000000000000560  07FD                                                     515          BR    R13           All converted; return.
+                                                                           516 *
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           518 ***********************************************************************
+                                                                           519 *
+                                                                           520 * Perform Square Root using provided extended BFP inputs.  This set of
+                                                                           521 * tests exhaustively tests all rounding modes available for Square
+                                                                           522 * Root. The rounding mode can only be specified in the FPC.
+                                                                           523 *
+                                                                           524 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           525 * using rounding mode RNTE, do not often create results that require
+                                                                           526 * rounding.
+                                                                           527 *
+                                                                           528 * Two results are generated for each input and rounding mode: one RRE
+                                                                           529 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           530 *
+                                                                           531 * The quotient and FPCR contents are stored for each test.
+                                                                           532 *
+                                                                           533 ***********************************************************************
+
+
+0000000000000562  9823 A000                             0000000000000000   535 XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000566  9878 A008                             0000000000000008   536          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000056A  1222                                                     537          LTR   R2,R2         Any test cases?
+000000000000056C  078D                                                     538          BZR   R13           ..No, return to caller
+000000000000056E  1711                                                     539          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+0000000000000570  0DC0                                                     540          BASR  R12,0         Set top of test case loop
+                                                                           541
+0000000000000572  4150 0005                             0000000000000005   542          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000576  0D90                                                     543          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           544 *
+0000000000000578  4315 F5B1                             00000000000005B1   545          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           546 *
+000000000000057C  B29D F27C                             000000000000027C   547          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000580  B2B8 1000                             0000000000000000   548          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000584  6810 3000                             0000000000000000   549          LD    FPR1,0(,R3)   Get long BFP input value part 1
+0000000000000588  6830 3008                             0000000000000008   550          LD    FPR3,8(,R3)   Get long BFP input value part 2
+000000000000058C  B316 0081                                                551          SQXBR FPR8,FPR1     Take square root of FPR1 into FPR8 RRE
+0000000000000590  6080 7000                             0000000000000000   552          STD   FPR8,0(,R7)   Store extended BFP root part 1
+0000000000000594  60A0 7008                             0000000000000008   553          STD   FPR10,8(,R7)  Store extended BFP root part 2
+0000000000000598  B29C 8000                             0000000000000000   554          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           555 *
+000000000000059C  4170 7010                             0000000000000010   556          LA    R7,16(,R7)    Point to next square root result
+00000000000005A0  4180 8004                             0000000000000004   557          LA    R8,4(,R8)     Point to next FPCR result area
+                                                                           558 *
+00000000000005A4  0659                                                     559          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           560 *
+                                                                           561 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           562 *
+00000000000005A6  4130 3010                             0000000000000010   563          LA    R3,16(,R3)     Point to next input value
+00000000000005AA  4180 800C                             000000000000000C   564          LA    R8,12(,R8)    Skip to start of next FPCR result area
+00000000000005AE  062C                                                     565          BCTR  R2,R12        Divide next input value lots of times
+                                                                           566 *
+00000000000005B0  07FD                                                     567          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           569 ***********************************************************************
+                                                                           570 *
+                                                                           571 * Table of FPC rounding modes to test quotient rounding modes.
+                                                                           572 *
+                                                                           573 * The Set BFP Rounding Mode does allow specification of the FPC
+                                                                           574 * rounding mode as an address, so we shall index into a table of
+                                                                           575 * BFP rounding modes without bothering with Execute.
+                                                                           576 *
+                                                                           577 ***********************************************************************
+
+
+                                                                           579 *
+                                                                           580 * Rounding modes that may be set in the FPCR.  The FPCR controls
+                                                                           581 * rounding of the quotient.
+                                                                           582 *
+                                                                           583 * These are indexed directly by the loop counter, which counts down.
+                                                                           584 * So the modes are listed in reverse order here.
+                                                                           585 *
+00000000000005B2                                                           586 FPCMODES DS    0C
+00000000000005B2  07                                                       587          DC    AL1(7)              RFS, Round for shorter precision
+00000000000005B3  03                                                       588          DC    AL1(3)              RM, Round to -infinity
+00000000000005B4  02                                                       589          DC    AL1(2)              RP, Round to +infinity
+00000000000005B5  01                                                       590          DC    AL1(1)              RZ, Round to zero
+00000000000005B6  00                                                       591          DC    AL1(0)              RNTE, Round to Nearest, ties to even
+                                      0000000000000005  0000000000000001   592 FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
+                                                                           593 *
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           595 ***********************************************************************
+                                                                           596 *
+                                                                           597 * Short BFP test data sets for Square Root testing.
+                                                                           598 *
+                                                                           599 * The first test data set is used for tests of basic functionality,
+                                                                           600 * NaN propagation, and results from operations involving other than
+                                                                           601 * finite numbers.
+                                                                           602 *
+                                                                           603 * The second test data set is used for testing boundary conditions
+                                                                           604 * using finite non-zero values.  Each possible type of result (normal,
+                                                                           605 * scaled, etc) is created by members of this test data set.
+                                                                           606 *
+                                                                           607 * The third test data set is used for exhaustive testing of final
+                                                                           608 * results across the five rounding modes available for the Square Root
+                                                                           609 * instruction.
+                                                                           610 *
+                                                                           611 ***********************************************************************
+
+
+                                                                           613 ***********************************************************************
+                                                                           614 *
+                                                                           615 * First input test data set, to test operations using non-finite or
+                                                                           616 * zero inputs.  Member values chosen to validate part 1 of Figure 19-17
+                                                                           617 * on page 19-21 of SA22-7832-10.
+                                                                           618 *
+                                                                           619 ***********************************************************************
+
+
+00000000000005B8                                                           621 SBFPBIN  DS    0F                Inputs for short BFP basic tests
+00000000000005B8  FF800000                                                 622          DC    X'FF800000'         -inf
+00000000000005BC  C0800000                                                 623          DC    X'C0800000'         -4.0
+00000000000005C0  80000000                                                 624          DC    X'80000000'         -0
+00000000000005C4  00000000                                                 625          DC    X'00000000'         +0
+00000000000005C8  40800000                                                 626          DC    X'40800000'         +4.0
+00000000000005CC  7F800000                                                 627          DC    X'7F800000'         +inf
+00000000000005D0  FFCB0000                                                 628          DC    X'FFCB0000'         -QNaN
+00000000000005D4  7F8A0000                                                 629          DC    X'7F8A0000'         +SNaN
+00000000000005D8  40400000                                                 630          DC    X'40400000'         +3.0    Inexact, truncated
+00000000000005DC  40A00000                                                 631          DC    X'40A00000'         +5.0    Inexact, incremented
+00000000000005E0  3D800000                                                 632          DC    X'3D800000'         +0.0625 exact, expect 0.25
+                                      000000000000000B  0000000000000001   633 SBFPBCT  EQU   (*-SBFPBIN)/4     Count of short BFP in list
+
+
+
+                                                                           635 ***********************************************************************
+                                                                           636 *
+                                                                           637 * Second input test data set.  These are finite positive values
+                                                                           638 * intended to test all combinations of rounding mode for a given
+                                                                           639 * result.  Values are chosen to create a requirement to round to the
+                                                                           640 * target precision after the computation
+                                                                           641 *
+                                                                           642 ***********************************************************************
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+00000000000005E4                                                           644 SBFPINRM DS    0F                Inputs for short BFP rounding testing
+                                                                           645 *
+00000000000005E4  40400000                                                 646          DC    X'40400000'         +3.0    Inexact, truncated
+00000000000005E8  40A00000                                                 647          DC    X'40A00000'         +5.0    Inexact, incremented
+                                                                           648 *
+                                      0000000000000002  0000000000000001   649 SBFPRMCT EQU   (*-SBFPINRM)/4    Count of short BFP rounding tests
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           651 ***********************************************************************
+                                                                           652 *
+                                                                           653 * Long BFP test data sets for Divide testing.
+                                                                           654 *
+                                                                           655 * The first test data set is used for tests of basic functionality,
+                                                                           656 * NaN propagation, and results from operations involving other than
+                                                                           657 * finite numbers.
+                                                                           658 *
+                                                                           659 * The second test data set is used for testing boundary conditions
+                                                                           660 * using finite non-zero values.  Each possible type of result (normal,
+                                                                           661 * scaled, etc) is created by members of this test data set.
+                                                                           662 *
+                                                                           663 * The third test data set is used for exhaustive testing of final
+                                                                           664 * results across the five rounding modes available for the Square Root
+                                                                           665 * instruction.
+                                                                           666 *
+                                                                           667 ***********************************************************************
+
+
+                                                                           669 ***********************************************************************
+                                                                           670 *
+                                                                           671 * First input test data set, to test operations using non-finite or
+                                                                           672 * zero inputs.  Member values chosen to validate part 1 of Figure 19-17
+                                                                           673 * on page 19-21 of SA22-7832-10.
+                                                                           674 *
+                                                                           675 ***********************************************************************
+
+
+00000000000005F0                                                           677 LBFPBIN  DS    0D                   Inputs for long BFP testing
+00000000000005F0  FFF00000 00000000                                        678          DC    X'FFF0000000000000'         -inf
+00000000000005F8  C0100000 00000000                                        679          DC    X'C010000000000000'         -4.0
+0000000000000600  80000000 00000000                                        680          DC    X'8000000000000000'         -0
+0000000000000608  00000000 00000000                                        681          DC    X'0000000000000000'         +0
+0000000000000610  40100000 00000000                                        682          DC    X'4010000000000000'         +4.0
+0000000000000618  7FF00000 00000000                                        683          DC    X'7FF0000000000000'         +inf
+0000000000000620  FFF8B000 00000000                                        684          DC    X'FFF8B00000000000'         -QNaN
+0000000000000628  7FF0A000 00000000                                        685          DC    X'7FF0A00000000000'         +SNaN
+0000000000000630  40080000 00000000                                        686          DC    X'4008000000000000'         +3.0 Inexact, truncated
+0000000000000638  40140000 00000000                                        687          DC    X'4014000000000000'         +5.0 Inexact, incremented
+0000000000000640  3FB00000 00000000                                        688          DC    X'3FB0000000000000'         +0.0625 exact, expect 0.25
+                                      000000000000000B  0000000000000001   689 LBFPBCT  EQU   (*-LBFPBIN)/8        Count of long BFP in list
+
+
+
+                                                                           691 ***********************************************************************
+                                                                           692 *
+                                                                           693 * Second input test data set.  These are finite positive values
+                                                                           694 * intended to test all combinations of rounding mode for a given
+                                                                           695 * result.  Values are chosen to create a requirement to round to the
+                                                                           696 * target precision after the computation
+                                                                           697 *
+                                                                           698 ***********************************************************************
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+0000000000000648                                                           700 LBFPINRM DS    0F
+                                                                           701 *
+0000000000000648  40080000 00000000                                        702          DC    X'4008000000000000'         +3.0 Inexact, truncated
+0000000000000650  40140000 00000000                                        703          DC    X'4014000000000000'         +5.0 Inexact, incremented
+                                                                           704 *
+                                      0000000000000002  0000000000000001   705 LBFPRMCT EQU   (*-LBFPINRM)/8    Count of long BFP rounding tests * 8
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    22
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           707 ***********************************************************************
+                                                                           708 *
+                                                                           709 * Extended BFP test data sets for Divide testing.
+                                                                           710 *
+                                                                           711 * The first test data set is used for tests of basic functionality,
+                                                                           712 * NaN propagation, and results from operations involving other than
+                                                                           713 * finite numbers.
+                                                                           714 *
+                                                                           715 * The second test data set is used for testing boundary conditions
+                                                                           716 * using finite non-zero values.  Each possible type of result (normal,
+                                                                           717 * scaled, etc) is created by members of this test data set.
+                                                                           718 *
+                                                                           719 * The third test data set is used for exhaustive testing of final
+                                                                           720 * results across the five rounding modes available for the Square Root
+                                                                           721 * instruction.
+                                                                           722 *
+                                                                           723 ***********************************************************************
+
+
+                                                                           725 ***********************************************************************
+                                                                           726 *
+                                                                           727 * First input test data set, to test operations using non-finite or
+                                                                           728 * zero inputs.  Member values chosen to validate part 1 of Figure 19-17
+                                                                           729 * on page 19-21 of SA22-7832-10.
+                                                                           730 *
+                                                                           731 ***********************************************************************
+
+
+0000000000000658                                                           733 XBFPBIN  DS    0D               Inputs for extended BFP testing
+0000000000000658  FFFF0000 00000000                                        734          DC    X'FFFF0000000000000000000000000000' -inf
+0000000000000668  C0010000 00000000                                        735          DC    X'C0010000000000000000000000000000' -4.0
+0000000000000678  80000000 00000000                                        736          DC    X'80000000000000000000000000000000' -0
+0000000000000688  00000000 00000000                                        737          DC    X'00000000000000000000000000000000' +0
+0000000000000698  40010000 00000000                                        738          DC    X'40010000000000000000000000000000' +4.0
+00000000000006A8  7FFF0000 00000000                                        739          DC    X'7FFF0000000000000000000000000000' +inf
+00000000000006B8  FFFF8B00 00000000                                        740          DC    X'FFFF8B00000000000000000000000000' -QNaN
+00000000000006C8  7FFF0A00 00000000                                        741          DC    X'7FFF0A00000000000000000000000000' +SNaN
+00000000000006D8  40008000 00000000                                        742          DC    X'40008000000000000000000000000000' +3.0 Inexact, trunc.
+00000000000006E8  40014000 00000000                                        743          DC    X'40014000000000000000000000000000' +5.0 Inexact, incre.
+00000000000006F8  3FFB0000 00000000                                        744          DC    X'3FFB0000000000000000000000000000' +0.0625 expect 0.25
+                                      000000000000000B  0000000000000001   745 XBFPBCT  EQU   (*-XBFPBIN)/16   Count of extended BFP in list
+
+
+
+                                                                           747 ***********************************************************************
+                                                                           748 *
+                                                                           749 * Second input test data set.  These are finite positive values
+                                                                           750 * intended to test all combinations of rounding mode for a given
+                                                                           751 * result.  Values are chosen to create a requirement to round to the
+                                                                           752 * target precision after the computation
+                                                                           753 *
+                                                                           754 ***********************************************************************
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    23
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+0000000000000708                                                           756 XBFPINRM DS    0D
+                                                                           757 *
+0000000000000708  40008000 00000000                                        758          DC    X'40008000000000000000000000000000' +3.0 Inexact, trunc.
+0000000000000718  40014000 00000000                                        759          DC    X'40014000000000000000000000000000' +5.0 Inexact, incre.
+                                                                           760 *
+                                      0000000000000002  0000000000000001   761 XBFPRMCT EQU   (*-XBFPINRM)/16    Count of long BFP rounding tests
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    24
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           763 *
+                                                                           764 *  Locations for results
+                                                                           765 *
+                                      0000000000001000  0000000000000001   766 SBFPBOT  EQU   STRTLABL+X'1000'    Integer short non-finite BFP results
+                                                                           767 *                                  ..room for 16 tests, 8 used
+                                      0000000000001100  0000000000000001   768 SBFPBFL  EQU   STRTLABL+X'1100'    FPCR flags and DXC from short BFP
+                                                                           769 *                                  ..room for 16 tests, 8 used
+                                                                           770 *
+                                      0000000000001200  0000000000000001   771 SBFPRMO  EQU   STRTLABL+X'1200'    Short BFP rounding mode test results
+                                                                           772 *                                  ..Room for 16, 2 used.
+                                      0000000000001400  0000000000000001   773 SBFPRMOF EQU   STRTLABL+X'1400'    Short BFP rounding mode FPCR results
+                                                                           774 *                                  ..Room for 16, 2 used.
+                                                                           775 *                                  ..next location starts at X'1600'
+                                                                           776 *
+                                      0000000000003000  0000000000000001   777 LBFPBOT  EQU   STRTLABL+X'3000'    Integer long non-finite BFP results
+                                                                           778 *                                  ..room for 16 tests, 8 used
+                                      0000000000003200  0000000000000001   779 LBFPBFL  EQU   STRTLABL+X'3200'    FPCR flags and DXC from long BFP
+                                                                           780 *                                  ..room for 16 tests, 8 used
+                                                                           781 *
+                                      0000000000003400  0000000000000001   782 LBFPRMO  EQU   STRTLABL+X'3400'    Long BFP rounding mode test results
+                                                                           783 *                                  ..Room for 16, 4 used.
+                                      0000000000003700  0000000000000001   784 LBFPRMOF EQU   STRTLABL+X'3700'    Long BFP rounding mode FPCR results
+                                                                           785 *                                  ..Room for 16, 4 used.
+                                                                           786 *                                  ..next location starts at X'3800'
+                                                                           787 *
+                                      0000000000005000  0000000000000001   788 XBFPBOT  EQU   STRTLABL+X'5000'    Integer ext'd non-finite BFP results
+                                                                           789 *                                  ..room for 16 tests, 8 used
+                                      0000000000005400  0000000000000001   790 XBFPBFL  EQU   STRTLABL+X'5400'    FPCR flags and DXC from ext'd BFP
+                                                                           791 *                                  ..room for 16 tests, 8 used
+                                                                           792 *
+                                      0000000000005500  0000000000000001   793 XBFPRMO  EQU   STRTLABL+X'5500'    Ext'd BFP rounding mode test results
+                                                                           794 *                                  ..Room for 16, 4 used.
+                                      0000000000005A00  0000000000000001   795 XBFPRMOF EQU   STRTLABL+X'5A00'    Ext'd BFP rounding mode FPCR results
+                                                                           796 *                                  ..Room for 16, 4 used.
+                                                                           797 *                                  ..next location starts at X'5B00'
+                                                                           798 *
+                                      0000000000005B00  0000000000000001   799 ENDLABL  EQU   STRTLABL+X'5B00'
+                                                                           800          PADCSECT ENDLABL
+                                                                           801+         MNOTE *,'asma detected; no CSECT padding performed'
+                                                                           802 *
+0000000000000728                                                           803          END
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPSQRTS            J    000000    1832    87  208
+CTLR0               F    000278       4   198  170  171  172
+ENDLABL             U    005B00       1   799
+FPCMCT              U    000005       1   592  327  439  542
+FPCMODES            C    0005B2       1   586  592  330  442  545
+FPCREGNT            X    00027C       4   199  272  284  332  339  384  396  444  451  497  547
+FPCREGTR            X    000280       4   200  278  290  390  402  504
+FPR0                U    000000       1   108
+FPR1                U    000001       1   109  271  273  279  334  335  383  385  391  446  447  495  498  505  549  551
+FPR10               U    00000A       1   118  500  507  553
+FPR11               U    00000B       1   119
+FPR12               U    00000C       1   120
+FPR13               U    00000D       1   121
+FPR14               U    00000E       1   122
+FPR15               U    00000F       1   123
+FPR2                U    000002       1   110
+FPR3                U    000003       1   111  496  550
+FPR4                U    000004       1   112
+FPR5                U    000005       1   113
+FPR6                U    000006       1   114
+FPR7                U    000007       1   115
+FPR8                U    000008       1   116  270  273  274  277  279  280  283  285  286  289  291  292  335  336  341  342  382
+                                               385  386  389  391  392  395  397  398  401  403  404  447  448  453  454  494  498
+                                               499  503  505  506  551  552
+FPR9                U    000009       1   117
+HARDWAIT            X    000268       8   196  161
+IMAGE               1    000000    1832     0
+LBFPB               H    000438       2   375  180
+LBFPBCT             U    00000B       1   689  223
+LBFPBFL             U    003200       1   779  226
+LBFPBIN             D    0005F0       8   677  689  224
+LBFPBOT             U    003000       1   777  225
+LBFPINRM            F    000648       4   700  705  230
+LBFPRM              I    0004AE       4   432  182
+LBFPRMCT            U    000002       1   705  229
+LBFPRMO             U    003400       1   782  231
+LBFPRMOF            U    003700       1   784  232
+LONGB               F    000320       4   222  179
+PCINTCD             H    00008E       2   138  155
+PCNOTDTA            H    00020C       2   158  156
+PCOLDPSW            U    000150       1   140  157
+PROGCHK             H    000200       2   154  146
+R0                  U    000000       1    89  170  172
+R1                  U    000001       1    90  324  330  333  340  436  442  445  452  539  545  548
+R10                 U    00000A       1    99  174  176  179  181  184  186  264  265  320  321  376  377  432  433  488  489  535
+                                               536
+R11                 U    00000B       1   100
+R12                 U    00000C       1   101  268  298  325  355  380  410  437  466  492  513  540  565
+R13                 U    00000D       1   102  175  177  180  182  185  187  267  300  323  357  379  412  435  468  491  515  538
+                                               567
+R14                 U    00000E       1   103  159  160  189  190
+R15                 U    00000F       1   104  125
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    26
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R2                  U    000002       1    91  264  266  298  320  322  355  376  378  410  432  434  466  488  490  513  535  537
+                                               565
+R3                  U    000003       1    92  264  271  285  291  297  320  334  341  352  376  383  397  403  409  432  446  453
+                                               464  488  495  496  512  535  549  550  563
+R4                  U    000004       1    93
+R5                  U    000005       1    94  327  330  348  439  442  460  542  545  559
+R6                  U    000006       1    95
+R7                  U    000007       1    96  265  274  280  286  292  295  321  336  342  345  353  377  386  392  398  404  407
+                                               433  448  454  457  489  499  500  506  507  510  536  552  553  556
+R8                  U    000008       1    97  265  275  281  287  293  296  321  337  343  346  354  377  387  393  399  405  408
+                                               433  449  455  458  465  489  501  508  511  536  554  557  564
+R9                  U    000009       1    98  328  348  440  460  543  559
+RMLONGS             F    000330       4   228  181
+RMSHORTS            F    000310       4   216  176
+RMXTNDS             F    000350       4   240  186
+SBFPB               H    000360       2   263  175
+SBFPBCT             U    00000B       1   633  211
+SBFPBFL             U    001100       1   768  214
+SBFPBIN             F    0005B8       4   621  633  212
+SBFPBOT             U    001000       1   766  213
+SBFPINRM            F    0005E4       4   644  649  218
+SBFPRM              I    0003D6       4   320  177
+SBFPRMCT            U    000002       1   649  217
+SBFPRMO             U    001200       1   771  219
+SBFPRMOF            U    001400       1   773  220
+SHORTB              F    000300       4   210  174
+START               H    000214       2   169  143
+STRTLABL            U    000000       1    88  137  140  142  145  153  209  766  768  771  773  777  779  782  784  788  790  793
+                                               795  799
+WAITPSW             X    000258       8   195  191
+XBFPB               H    00050C       2   487  185
+XBFPBCT             U    00000B       1   745  235
+XBFPBFL             U    005400       1   790  238
+XBFPBIN             D    000658       8   733  745  236
+XBFPBOT             U    005000       1   788  237
+XBFPINRM            D    000708       8   756  761  242
+XBFPRM              I    000562       4   535  187
+XBFPRMCT            U    000002       1   761  241
+XBFPRMO             U    005500       1   793  243
+XBFPRMOF            U    005A00       1   795  244
+XTNDB               F    000340       4   234  184
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    27
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     62   800
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    28
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1832  000-727  000-727
+  Region             1832  000-727  000-727
+    CSECT  BFPSQRTS  1832  000-727  000-727
+ASMA Ver. 0.2.0  bfp-015-sqrt.asm: Test IEEE Square Root                                            23 Sep 2016 12:38:52  Page    29
+
+   STMT                             FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-015-sqrt.asm
+
+
+** NO ERRORS FOUND **
+
+[801] MNOTE *,asma detected; no CSECT padding performed
+

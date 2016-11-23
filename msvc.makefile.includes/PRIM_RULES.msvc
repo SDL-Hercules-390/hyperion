@@ -42,14 +42,16 @@ clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
 MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
 MT_DLL_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;2 -manifest $@.manifest
 
-linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_EXE_CMD)
-linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
+linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
 
 {$(OBJDIR)}.obj{$(EXEDIR)}.exe:
     $(linkexe)
+    $(MT_EXE_CMD)
 
 {$(OBJDIR)}.obj{$(EXEDIR)}.dll:
     $(linkdll)
+    $(MT_DLL_CMD)
 
 # Dummy target entry: Since the primary target is .DLL
 # and .LIB is generated in the same step.. And .LIB

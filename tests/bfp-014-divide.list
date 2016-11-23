@@ -1,0 +1,1560 @@
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE DIVIDE
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise. Test results, FPCR flags, and any DXC are saved for all
+                                                                             7 *  tests.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following three conversion instructions
+                                                                            14 *   DIVIDE (short BFP, RRE)
+                                                                            15 *   DIVIDE (long BFP, RRE)
+                                                                            16 *   DIVIDE (extended BFP, RRE)
+                                                                            17 *   DIVIDE (short BFP, RXE)
+                                                                            18 *   DIVIDE (long BFP, RXE)
+                                                                            19 *
+                                                                            20 * Test data is compiled into this program.  The test script that runs
+                                                                            21 * this program can provide alternative test data through Hercules R
+                                                                            22 * commands.
+                                                                            23 *
+                                                                            24 * Test Case Order
+                                                                            25 * 1) Short BFP basic tests, including traps and NaN propagation
+                                                                            26 * 2) Short BFP finite number tests, incl. traps and scaling
+                                                                            27 * 3) Short BFP FPC-controlled rounding mode exhaustive tests
+                                                                            28 * 4) Long BFP basic tests, including traps and NaN propagation
+                                                                            29 * 5) Long BFP finite number tests, incl. traps and scaling
+                                                                            30 * 6) Long BFP FPC-controlled rounding mode exhaustive tests
+                                                                            31 * 7) Extended BFP basic tests, including traps and NaN propagation
+                                                                            32 * 8) Extended BFP finite number tests, incl. traps and scaling
+                                                                            33 * 9) Extended BFP FPC-controlled rounding mode exhaustive tests
+                                                                            34 *
+                                                                            35 * Three input test sets are provided each for short, long, and
+                                                                            36 *   extended BFP inputs.  Test values are the same for each precision
+                                                                            37 *   for most tests.  Overflow and underflow each require precision-
+                                                                            38 *   dependent test values.
+                                                                            39 *
+                                                                            40 * Also tests the following floating point support instructions
+                                                                            41 *   LOAD  (Short)
+                                                                            42 *   LOAD  (Long)
+                                                                            43 *   LFPC  (Load Floating Point Control Register)
+                                                                            44 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                            45 *   STORE (Short)
+                                                                            46 *   STORE (Long)
+                                                                            47 *   STFPC (Store Floating Point Control Register)
+                                                                            48 *
+                                                                            49 ***********************************************************************
+
+
+                                                                            51          MACRO
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52          PADCSECT &ENDLABL
+                                                                            53 .*
+                                                                            54 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            55 .*  program is not being assembled using asma.  asma generates a core
+                                                                            56 .*  image that is loaded by the loadcore command, and because the
+                                                                            57 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            58 .*  this small effort to keep the core image small.
+                                                                            59 .*
+                                                                            60          AIF   (D'&ENDLABL).GOODPAD
+                                                                            61          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            62          MNOTE *,'No CSECT padding performed'
+                                                                            63          MEXIT
+                                                                            64 .*
+                                                                            65 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            66          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            67          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            68          MEXIT
+                                                                            69 .*
+                                                                            70 .NOPAD   ANOP
+                                                                            71          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            72          MEND
+                                                                            73 *
+                                                                            74 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            75 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            76 *
+                                      0000000000000000  0000000000000A9F    77 BFPDIV   START 0
+                                      0000000000000000  0000000000000001    78 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    79 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    80 R1       EQU   1
+                                      0000000000000002  0000000000000001    81 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    82 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    83 R4       EQU   4                   Rounding tests inner loop control
+                                      0000000000000005  0000000000000001    84 R5       EQU   5                   Rounding tests outer loop control
+                                      0000000000000006  0000000000000001    85 R6       EQU   6                   Rounding tests top of inner loop
+                                      0000000000000007  0000000000000001    86 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    87 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    88 R9       EQU   9                   Rounding tests top of outer loop
+                                      000000000000000A  0000000000000001    89 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    90 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    91 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001    92 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    93 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    94 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            95 *
+                                                                            96 * Floating Point Register equates to keep the cross reference clean
+                                                                            97 *
+                                      0000000000000000  0000000000000001    98 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    99 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   100 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   101 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   102 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   103 FPR5     EQU   5
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000000006  0000000000000001   104 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   105 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   106 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   107 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   108 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   109 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   110 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   111 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   112 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   113 FPR15    EQU   15
+                                                                           114 *
+0000000000000000                      0000000000000000                     115          USING *,R15
+                                                                           116 *
+                                                                           117 * Above works on real iron (R15=0 after sysclear)
+                                                                           118 * and in z/CMS (R15 points to start of load module)
+                                                                           119 *
+
+
+                                                                           121 ***********************************************************************
+                                                                           122 *
+                                                                           123 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           124 *
+                                                                           125 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   127          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     128 PCINTCD  DS    H
+                                                                           129 *
+                                      0000000000000150  0000000000000001   130 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           131 *
+0000000000000090                      0000000000000090  00000000000001A0   132          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        133          DC    X'0000000180000000',AD(START)
+                                                                           134 *
+00000000000001B0                      00000000000001B0  00000000000001D0   135          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        136          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           137 *
+                                                                           138 * Program check routine.  If Data Exception, continue execution at
+                                                                           139 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           140 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           141 * in the FPCR.
+                                                                           142 *
+00000000000001E0                      00000000000001E0  0000000000000200   143          ORG   STRTLABL+X'200'
+0000000000000200                                                           144 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   145          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   146          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   147          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           148 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     149          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     150          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F280                             0000000000000280   151          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           153 ***********************************************************************
+                                                                           154 *
+                                                                           155 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           156 *
+                                                                           157 ***********************************************************************
+
+
+0000000000000214                                                           159 START    DS    0H
+0000000000000214  B600 F290                             0000000000000290   160          STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F291                             0000000000000291   161          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F290                             0000000000000290   162          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           163 *
+0000000000000220  41A0 F300                             0000000000000300   164          LA    R10,SHORTNF   Point to short BFP non-finite inputs
+0000000000000224  4DD0 F390                             0000000000000390   165          BAS   R13,SBFPNF    Divide short BFP non-finites
+0000000000000228  41A0 F310                             0000000000000310   166          LA    R10,SHORTF    Point to short BFP finite inputs
+000000000000022C  4DD0 F41A                             000000000000041A   167          BAS   R13,SBFPF     Divide short BFP finites
+0000000000000230  41A0 F320                             0000000000000320   168          LA    R10,RMSHORTS  Point to short BFP rounding mode tests
+0000000000000234  4DD0 F490                             0000000000000490   169          BAS   R13,SBFPRM    Divide short BFP for rounding tests
+                                                                           170 *
+0000000000000238  41A0 F330                             0000000000000330   171          LA    R10,LONGNF    Point to long BFP non-finite inputs
+000000000000023C  4DD0 F4FA                             00000000000004FA   172          BAS   R13,LBFPNF    Divide long BFP non-finites
+0000000000000240  41A0 F340                             0000000000000340   173          LA    R10,LONGF     Point to long BFP finite inputs
+0000000000000244  4DD0 F580                             0000000000000580   174          BAS   R13,LBFPF     Divide long BFP finites
+0000000000000248  41A0 F350                             0000000000000350   175          LA    R10,RMLONGS   Point to long  BFP rounding mode tests
+000000000000024C  4DD0 F5F6                             00000000000005F6   176          BAS   R13,LBFPRM    Divide long BFP for rounding tests
+                                                                           177 *
+0000000000000250  41A0 F360                             0000000000000360   178          LA    R10,XTNDNF    Point to extended BFP non-finite inputs
+0000000000000254  4DD0 F65C                             000000000000065C   179          BAS   R13,XBFPNF    Divide extended BFP non-finites
+0000000000000258  41A0 F370                             0000000000000370   180          LA    R10,XTNDF     Point to ext'd BFP finite inputs
+000000000000025C  4DD0 F6CE                             00000000000006CE   181          BAS   R13,XBFPF     Divide ext'd BFP finites
+0000000000000260  41A0 F380                             0000000000000380   182          LA    R10,RMXTNDS   Point to ext'd BFP rounding mode tests
+0000000000000264  4DD0 F72C                             000000000000072C   183          BAS   R13,XBFPRM    Divide ext'd BFP for rounding tests
+                                                                           184 *
+0000000000000268  12EE                                                     185          LTR   R14,R14       Return address provided?
+000000000000026A  077E                                                     186          BNZR  R14           ..Yes, return to z/CMS test rig.
+000000000000026C  B2B2 F270                             0000000000000270   187          LPSWE WAITPSW       All done
+                                                                           188 *
+0000000000000270                                                           189          DS    0D            Ensure correct alignment for psw
+0000000000000270  00020000 00000000                                        190 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000280  00020000 00000000                                        191 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           192 *
+0000000000000290  00000000                                                 193 CTLR0    DS    F
+0000000000000294  00000000                                                 194 FPCREGNT DC    X'00000000'  FPCR, trap no IEEE exceptions, zero flags
+0000000000000298  F8000000                                                 195 FPCREGTR DC    X'F8000000'  FPCR, trap all IEEE exceptions, zero flags
+                                                                           196 *
+                                                                           197 * Input values parameter list, four fullwords for each test data set
+                                                                           198 *      1) Count,
+                                                                           199 *      2) Address of inputs,
+                                                                           200 *      3) Address to place results, and
+                                                                           201 *      4) Address to place DXC/Flags/cc values.
+                                                                           202 *
+000000000000029C                      000000000000029C  0000000000000300   203          ORG   STRTLABL+X'300'  Enable run-time replacement
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000300                                                           204 SHORTNF  DS    0F           Input pairs for short BFP non-finite tests
+0000000000000300  00000008                                                 205          DC    A(SBFPNFCT)
+0000000000000304  0000078C                                                 206          DC    A(SBFPNFIN)
+0000000000000308  00001000                                                 207          DC    A(SBFPNFOT)
+000000000000030C  00001400                                                 208          DC    A(SBFPNFFL)
+                                                                           209 *
+0000000000000310                                                           210 SHORTF   DS    0F           Input pairs for short BFP finite tests
+0000000000000310  00000006                                                 211          DC    A(SBFPCT)
+0000000000000314  000007AC                                                 212          DC    A(SBFPIN)
+0000000000000318  00001800                                                 213          DC    A(SBFPOUT)
+000000000000031C  00001900                                                 214          DC    A(SBFPFLGS)
+                                                                           215 *
+0000000000000320                                                           216 RMSHORTS DS    0F           Input pairs for short BFP rounding testing
+0000000000000320  00000004                                                 217          DC    A(SBFPRMCT)
+0000000000000324  000007DC                                                 218          DC    A(SBFPINRM)
+0000000000000328  00001A00                                                 219          DC    A(SBFPRMO)
+000000000000032C  00001D00                                                 220          DC    A(SBFPRMOF)
+                                                                           221 *
+0000000000000330                                                           222 LONGNF   DS    0F           Input pairs for long BFP non-finite testing
+0000000000000330  00000008                                                 223          DC    A(LBFPNFCT)
+0000000000000334  000007FC                                                 224          DC    A(LBFPNFIN)
+0000000000000338  00003000                                                 225          DC    A(LBFPNFOT)
+000000000000033C  00003800                                                 226          DC    A(LBFPNFFL)
+                                                                           227 *
+0000000000000340                                                           228 LONGF    DS    0F           Input pairs for long BFP finite testing
+0000000000000340  00000006                                                 229          DC    A(LBFPCT)
+0000000000000344  00000840                                                 230          DC    A(LBFPIN)
+0000000000000348  00003C00                                                 231          DC    A(LBFPOUT)
+000000000000034C  00003E00                                                 232          DC    A(LBFPFLGS)
+                                                                           233 *
+0000000000000350                                                           234 RMLONGS  DS    0F           Input pairs for long BFP rounding testing
+0000000000000350  00000004                                                 235          DC    A(LBFPRMCT)
+0000000000000354  000008A0                                                 236          DC    A(LBFPINRM)
+0000000000000358  00004000                                                 237          DC    A(LBFPRMO)
+000000000000035C  00004500                                                 238          DC    A(LBFPRMOF)
+                                                                           239 *
+0000000000000360                                                           240 XTNDNF   DS    0F           Inputs for ext'd BFP non-finite testing
+0000000000000360  00000008                                                 241          DC    A(XBFPNFCT)
+0000000000000364  000008E0                                                 242          DC    A(XBFPNFIN)
+0000000000000368  00005000                                                 243          DC    A(XBFPNFOT)
+000000000000036C  00005800                                                 244          DC    A(XBFPNFFL)
+                                                                           245 *
+0000000000000370                                                           246 XTNDF    DS    0F           Inputs for ext'd BFP finite testing
+0000000000000370  00000006                                                 247          DC    A(XBFPCT)
+0000000000000374  00000960                                                 248          DC    A(XBFPIN)
+0000000000000378  00005C00                                                 249          DC    A(XBFPOUT)
+000000000000037C  00005E00                                                 250          DC    A(XBFPFLGS)
+                                                                           251 *
+0000000000000380                                                           252 RMXTNDS  DS    0F           Inputs for ext'd BFP non-finite testing
+0000000000000380  00000004                                                 253          DC    A(XBFPRMCT)
+0000000000000384  00000A20                                                 254          DC    A(XBFPINRM)
+0000000000000388  00006000                                                 255          DC    A(XBFPRMO)
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000038C  00006A00                                                 256          DC    A(XBFPRMOF)
+                                                                           257 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           259 ***********************************************************************
+                                                                           260 *
+                                                                           261 * Perform Divide using provided short BFP inputs.  This set of tests
+                                                                           262 * checks NaN propagation, operations on values that are not finite
+                                                                           263 * numbers, and other basic tests.  This set generates results that can
+                                                                           264 * be validated against Figure 19-20 on page 19-27 of SA22-7832-10.
+                                                                           265 *
+                                                                           266 * Four results are generated for each input: one RRE with all
+                                                                           267 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           268 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           269 * exceptions trappable,
+                                                                           270 *
+                                                                           271 * The quotient and FPCR are stored for each result.
+                                                                           272 *
+                                                                           273 ***********************************************************************
+
+
+0000000000000390                                                           275 SBFPNF   DS    0H            BFP Short non-finite values tests
+0000000000000390  9823 A000                             0000000000000000   276          LM    R2,R3,0(R10)  Get count and address of divide values
+0000000000000394  9878 A008                             0000000000000008   277          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000398  1222                                                     278          LTR   R2,R2         Any test cases?
+000000000000039A  078D                                                     279          BZR   R13           ..No, return to caller
+000000000000039C  0DC0                                                     280          BASR  R12,0         Set top of loop
+                                                                           281 *
+000000000000039E  9845 A000                             0000000000000000   282          LM    R4,R5,0(R10)  Get count and start of divisor values
+                                                                           283 *                            ..which are the same as the dividends
+00000000000003A2  0D60                                                     284          BASR  R6,0          Set top of inner loop
+                                                                           285 *
+00000000000003A4  7880 3000                             0000000000000000   286          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000003A8  7810 5000                             0000000000000000   287          LE    FPR1,0(,R5)   Get short BFP divisor
+00000000000003AC  B29D F294                             0000000000000294   288          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003B0  B30D 0081                                                289          DEBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+00000000000003B4  7080 7000                             0000000000000000   290          STE   FPR8,0(,R7)   Store short BFP quotient
+00000000000003B8  B29C 8000                             0000000000000000   291          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           292 *
+00000000000003BC  7880 3000                             0000000000000000   293          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000003C0  7810 5000                             0000000000000000   294          LE    FPR1,0(,R5)   Get short BFP divisor
+00000000000003C4  B29D F298                             0000000000000298   295          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003C8  B30D 0081                                                296          DEBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+00000000000003CC  7080 7004                             0000000000000004   297          STE   FPR8,4(,R7)   Store short BFP quotient
+00000000000003D0  B29C 8004                             0000000000000004   298          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           299 *
+00000000000003D4  7880 3000                             0000000000000000   300          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000003D8  7810 5000                             0000000000000000   301          LE    FPR1,0(,R5)   Get short BFP divisor
+00000000000003DC  B29D F294                             0000000000000294   302          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003E0  ED80 5000 000D                        0000000000000000   303          DEB   FPR8,0(,R5)   Divide FPR0/FPR1 RXE
+00000000000003E6  7080 7008                             0000000000000008   304          STE   FPR8,8(,R7)   Store short BFP quotient
+00000000000003EA  B29C 8008                             0000000000000008   305          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           306 *
+00000000000003EE  7880 3000                             0000000000000000   307          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000003F2  B29D F298                             0000000000000298   308          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003F6  ED80 5000 000D                        0000000000000000   309          DEB   FPR8,0(,R5)   Divide FPR0/FPR1 RXE
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000003FC  7080 700C                             000000000000000C   310          STE   FPR8,12(,R7)  Store short BFP quotient
+0000000000000400  B29C 800C                             000000000000000C   311          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           312 *
+0000000000000404  4150 5004                             0000000000000004   313          LA    R5,4(,R5)     Point to next divisor value
+0000000000000408  4170 7010                             0000000000000010   314          LA    R7,16(,R7)    Point to next Divide result area
+000000000000040C  4180 8010                             0000000000000010   315          LA    R8,16(,R8)    Point to next Divide FPCR area
+0000000000000410  0646                                                     316          BCTR  R4,R6         Loop through right-hand values
+                                                                           317 *
+0000000000000412  4130 3004                             0000000000000004   318          LA    R3,4(,R3)     Point to next input dividend
+0000000000000416  062C                                                     319          BCTR  R2,R12        Convert next input value.
+0000000000000418  07FD                                                     320          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           322 ***********************************************************************
+                                                                           323 *
+                                                                           324 * Perform Divide using provided short BFP input pairs.  This set of
+                                                                           325 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           326 * collects results when the exceptions do not result in a trap and when
+                                                                           327 * they do.
+                                                                           328 *
+                                                                           329 * Four results are generated for each input: one RRE with all
+                                                                           330 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           331 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           332 * exceptions trappable,
+                                                                           333 *
+                                                                           334 * The quotient and FPCR are stored for each result.
+                                                                           335 *
+                                                                           336 ***********************************************************************
+
+
+000000000000041A  9823 A000                             0000000000000000   338 SBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000041E  9878 A008                             0000000000000008   339          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000422  1222                                                     340          LTR   R2,R2         Any test cases?
+0000000000000424  078D                                                     341          BZR   R13           ..No, return to caller
+0000000000000426  0DC0                                                     342          BASR  R12,0         Set top of loop
+                                                                           343 *
+0000000000000428  B29D F294                             0000000000000294   344          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000042C  7880 3000                             0000000000000000   345          LE    FPR8,0(,R3)   Get short BFP dividend
+0000000000000430  7810 3004                             0000000000000004   346          LE    FPR1,4(,R3)   Get short BFP divisor
+0000000000000434  B30D 0081                                                347          DEBR  FPR8,FPR1     Divide FPR8/FPR1 RRE non-trappable
+0000000000000438  7080 7000                             0000000000000000   348          STE   FPR8,0(,R7)   Store short BFP quotient
+000000000000043C  B29C 8000                             0000000000000000   349          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           350 *
+0000000000000440  B29D F298                             0000000000000298   351          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000444  7880 3000                             0000000000000000   352          LE    FPR8,0(,R3)   Reload short BFP dividend
+                                                                           353 *                            ..divisor is still in FPR1
+0000000000000448  B30D 0081                                                354          DEBR  FPR8,FPR1     Divide FPR8/FPR1 RRE trappable
+000000000000044C  7080 7004                             0000000000000004   355          STE   FPR8,4(,R7)   Store short BFP quotient
+0000000000000450  B29C 8004                             0000000000000004   356          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           357 *
+0000000000000454  B29D F294                             0000000000000294   358          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000458  7880 3000                             0000000000000000   359          LE    FPR8,0(,R3)   Reload short BFP dividend
+000000000000045C  ED80 3004 000D                        0000000000000004   360          DEB   FPR8,4(,R3)   Divide FPR8 by divisor RXE non-trappable
+0000000000000462  7080 7008                             0000000000000008   361          STE   FPR8,8(,R7)   Store short BFP quotient
+0000000000000466  B29C 8008                             0000000000000008   362          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           363 *
+000000000000046A  B29D F298                             0000000000000298   364          LFPC  FPCREGTR      Set exceptions trappable
+000000000000046E  7880 3000                             0000000000000000   365          LE    FPR8,0(,R3)   Reload short BFP dividend
+0000000000000472  ED80 3004 000D                        0000000000000004   366          DEB   FPR8,4(,R3)   Divide FPR8 by divisor RXE trappable
+0000000000000478  7080 700C                             000000000000000C   367          STE   FPR8,12(,R7)  Store short BFP quotient
+000000000000047C  B29C 800C                             000000000000000C   368          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           369 *
+0000000000000480  4130 3008                             0000000000000008   370          LA    R3,8(,R3)     Point to next input value pair
+0000000000000484  4170 7010                             0000000000000010   371          LA    R7,16(,R7)    Point to next quotient pair
+0000000000000488  4180 8010                             0000000000000010   372          LA    R8,16(,R8)    Point to next FPCR result area
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000048C  062C                                                     373          BCTR  R2,R12        Convert next input value.
+000000000000048E  07FD                                                     374          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           376 ***********************************************************************
+                                                                           377 *
+                                                                           378 * Perform Divide using provided short BFP input pairs.  This set of
+                                                                           379 * tests exhaustively tests all rounding modes available for Divide.
+                                                                           380 * The rounding mode can only be specified in the FPC.
+                                                                           381 *
+                                                                           382 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           383 * using rounding mode RNTE, do not often create results that require
+                                                                           384 * rounding.
+                                                                           385 *
+                                                                           386 * Two results are generated for each input and rounding mode: one RRE
+                                                                           387 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           388 *
+                                                                           389 * The quotient and FPCR contents are stored for each test.
+                                                                           390 *
+                                                                           391 ***********************************************************************
+
+
+0000000000000490  9823 A000                             0000000000000000   393 SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000494  9878 A008                             0000000000000008   394          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000498  1222                                                     395          LTR   R2,R2         Any test cases?
+000000000000049A  078D                                                     396          BZR   R13           ..No, return to caller
+000000000000049C  1711                                                     397          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+000000000000049E  0DC0                                                     398          BASR  R12,0         Set top of test case loop
+                                                                           399
+00000000000004A0  4150 0005                             0000000000000005   400          LA    R5,FPCMCT     Get count of FPC modes to be tested
+00000000000004A4  0D90                                                     401          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           402 *
+00000000000004A6  4315 F783                             0000000000000783   403          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           404 *
+00000000000004AA  B29D F294                             0000000000000294   405          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004AE  B2B8 1000                             0000000000000000   406          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004B2  7880 3000                             0000000000000000   407          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000004B6  7810 3004                             0000000000000004   408          LE    FPR1,4(,R3)   Get short BFP divisor
+00000000000004BA  B30D 0081                                                409          DEBR  FPR8,FPR1     Divide RRE FPR8/FPR1 non-trappable
+00000000000004BE  7080 7000                             0000000000000000   410          STE   FPR8,0(,R7)   Store short BFP quotient
+00000000000004C2  B29C 8000                             0000000000000000   411          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           412 *
+00000000000004C6  B29D F294                             0000000000000294   413          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004CA  B2B8 1000                             0000000000000000   414          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000004CE  7880 3000                             0000000000000000   415          LE    FPR8,0(,R3)   Get short BFP dividend
+00000000000004D2  ED80 3004 000D                        0000000000000004   416          DEB   FPR8,4(,R3)   Divide RXE FPR8 by divisor non-trappable
+00000000000004D8  7080 7004                             0000000000000004   417          STE   FPR8,4(,R7)   Store short BFP quotient
+00000000000004DC  B29C 8004                             0000000000000004   418          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           419 *
+00000000000004E0  4170 7008                             0000000000000008   420          LA    R7,8(,R7)     Point to next quotient result set
+00000000000004E4  4180 8008                             0000000000000008   421          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           422 *
+00000000000004E8  0659                                                     423          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           424 *
+                                                                           425 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           426 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004EA  4130 3008                             0000000000000008   427          LA    R3,8(,R3)     Point to next input value pair
+00000000000004EE  4170 7008                             0000000000000008   428          LA    R7,8(,R7)     Skip to start of next result area
+00000000000004F2  4180 8008                             0000000000000008   429          LA    R8,8(,R8)     Skip to start of next FPCR result area
+00000000000004F6  062C                                                     430          BCTR  R2,R12        Divide next input value lots of times
+                                                                           431 *
+00000000000004F8  07FD                                                     432          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           434 ***********************************************************************
+                                                                           435 *
+                                                                           436 * Perform Divide using provided long BFP inputs.  This set of tests
+                                                                           437 * checks NaN propagation, operations on values that are not finite
+                                                                           438 * numbers, and other basic tests.  This set generates results that can
+                                                                           439 * be validated against Figure 19-20 on page 19-27 of SA22-7832-10.
+                                                                           440 *
+                                                                           441 * Four results are generated for each input: one RRE with all
+                                                                           442 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           443 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           444 * exceptions trappable,
+                                                                           445 *
+                                                                           446 * The quotient and FPCR are stored for each result.
+                                                                           447 *
+                                                                           448 ***********************************************************************
+
+
+00000000000004FA                                                           450 LBFPNF   DS    0H            BFP long non-finite values tests
+00000000000004FA  9823 A000                             0000000000000000   451          LM    R2,R3,0(R10)  Get count and address of dividend values
+00000000000004FE  9878 A008                             0000000000000008   452          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000502  1222                                                     453          LTR   R2,R2         Any test cases?
+0000000000000504  078D                                                     454          BZR   R13           ..No, return to caller
+0000000000000506  0DC0                                                     455          BASR  R12,0         Set top of loop
+                                                                           456 *
+0000000000000508  9845 A000                             0000000000000000   457          LM    R4,R5,0(R10)  Get count and start of divisor values
+                                                                           458 *                            ..which are the same as the dividends
+000000000000050C  0D60                                                     459          BASR  R6,0          Set top of inner loop
+                                                                           460 *
+000000000000050E  6880 3000                             0000000000000000   461          LD    FPR8,0(,R3)   Get long BFP dividend
+0000000000000512  6810 5000                             0000000000000000   462          LD    FPR1,0(,R5)   Get long BFP divisor
+0000000000000516  B29D F294                             0000000000000294   463          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000051A  B31D 0081                                                464          DDBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+000000000000051E  6080 7000                             0000000000000000   465          STD   FPR8,0(,R7)   Store long BFP quotient
+0000000000000522  B29C 8000                             0000000000000000   466          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           467 *
+0000000000000526  6880 3000                             0000000000000000   468          LD    FPR8,0(,R3)   Get long BFP dividend
+000000000000052A  6810 5000                             0000000000000000   469          LD    FPR1,0(,R5)   Get long BFP divisor
+000000000000052E  B29D F298                             0000000000000298   470          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000532  B31D 0081                                                471          DDBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+0000000000000536  6080 7008                             0000000000000008   472          STD   FPR8,8(,R7)   Store long BFP remainder
+000000000000053A  B29C 8004                             0000000000000004   473          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           474 *
+000000000000053E  6880 3000                             0000000000000000   475          LD    FPR8,0(,R3)   Get long BFP dividend
+0000000000000542  B29D F294                             0000000000000294   476          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000546  ED80 5000 001D                        0000000000000000   477          DDB   FPR8,0(,R5)   Divide FPR0/FPR1 RXE
+000000000000054C  6080 7010                             0000000000000010   478          STD   FPR8,16(,R7)  Store long BFP quotient
+0000000000000550  B29C 8008                             0000000000000008   479          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           480 *
+0000000000000554  6880 3000                             0000000000000000   481          LD    FPR8,0(,R3)   Get long BFP dividend
+0000000000000558  B29D F298                             0000000000000298   482          LFPC  FPCREGTR      Set exceptions trappable
+000000000000055C  ED80 5000 001D                        0000000000000000   483          DDB   FPR8,0(,R5)   Divide FPR0/FPR1 RXE
+0000000000000562  6080 7018                             0000000000000018   484          STD   FPR8,24(,R7)  Store long BFP remainder
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000566  B29C 800C                             000000000000000C   485          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           486 *
+000000000000056A  4150 5008                             0000000000000008   487          LA    R5,8(,R5)     Point to next divisor value
+000000000000056E  4170 7020                             0000000000000020   488          LA    R7,32(,R7)    Point to next Divide result area
+0000000000000572  4180 8010                             0000000000000010   489          LA    R8,16(,R8)    Point to next Divide FPCR area
+0000000000000576  0646                                                     490          BCTR  R4,R6         Loop through right-hand values
+                                                                           491 *
+0000000000000578  4130 3008                             0000000000000008   492          LA    R3,8(,R3)     Point to next dividend value
+000000000000057C  062C                                                     493          BCTR  R2,R12        Divide until all cases tested
+000000000000057E  07FD                                                     494          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           496 ***********************************************************************
+                                                                           497 *
+                                                                           498 * Perform Divide using provided long BFP input pairs.  This set of
+                                                                           499 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           500 * collects results when the exceptions do not result in a trap and when
+                                                                           501 * they do.
+                                                                           502 *
+                                                                           503 * Four results are generated for each input: one RRE with all
+                                                                           504 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           505 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           506 * exceptions trappable,
+                                                                           507 *
+                                                                           508 * The result and FPCR are stored for each result.
+                                                                           509 *
+                                                                           510 ***********************************************************************
+
+
+0000000000000580  9823 A000                             0000000000000000   512 LBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000584  9878 A008                             0000000000000008   513          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000588  1222                                                     514          LTR   R2,R2         Any test cases?
+000000000000058A  078D                                                     515          BZR   R13           ..No, return to caller
+000000000000058C  0DC0                                                     516          BASR  R12,0         Set top of loop
+                                                                           517 *
+000000000000058E  B29D F294                             0000000000000294   518          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000592  6880 3000                             0000000000000000   519          LD    FPR8,0(,R3)   Get short BFP dividend
+0000000000000596  6810 3008                             0000000000000008   520          LD    FPR1,8(,R3)   Get short BFP divisor
+000000000000059A  B31D 0081                                                521          DDBR  FPR8,FPR1     Divide FPR8/FPR1 RRE non-trappable
+000000000000059E  6080 7000                             0000000000000000   522          STD   FPR8,0(,R7)   Store short BFP quotient
+00000000000005A2  B29C 8000                             0000000000000000   523          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           524 *
+00000000000005A6  B29D F298                             0000000000000298   525          LFPC  FPCREGTR      Set exceptions trappable
+00000000000005AA  6880 3000                             0000000000000000   526          LD    FPR8,0(,R3)   Reload short BFP dividend
+                                                                           527 *                            ..divisor is still in FPR1
+00000000000005AE  B31D 0081                                                528          DDBR  FPR8,FPR1     Divide FPR8/FPR1 RRE trappable
+00000000000005B2  6080 7008                             0000000000000008   529          STD   FPR8,8(,R7)   Store short BFP quotient
+00000000000005B6  B29C 8004                             0000000000000004   530          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           531 *
+00000000000005BA  B29D F294                             0000000000000294   532          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000005BE  6880 3000                             0000000000000000   533          LD    FPR8,0(,R3)   Reload short BFP dividend
+00000000000005C2  ED80 3008 001D                        0000000000000008   534          DDB   FPR8,8(,R3)   Divide FPR8/FPR1 RXE non-trappable
+00000000000005C8  6080 7010                             0000000000000010   535          STD   FPR8,16(,R7)  Store short BFP quotient
+00000000000005CC  B29C 8008                             0000000000000008   536          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           537 *
+00000000000005D0  B29D F298                             0000000000000298   538          LFPC  FPCREGTR      Set exceptions trappable
+00000000000005D4  6880 3000                             0000000000000000   539          LD    FPR8,0(,R3)   Reload short BFP dividend
+00000000000005D8  ED80 3008 001D                        0000000000000008   540          DDB   FPR8,8(,R3)   Divide FPR8/FPR1 RXE trappable
+00000000000005DE  6080 7018                             0000000000000018   541          STD   FPR8,24(,R7)  Store short BFP quotient
+00000000000005E2  B29C 800C                             000000000000000C   542          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           543 *
+00000000000005E6  4130 3010                             0000000000000010   544          LA    R3,16(,R3)    Point to next input value pair
+00000000000005EA  4170 7020                             0000000000000020   545          LA    R7,32(,R7)    Point to next quotent result pair
+00000000000005EE  4180 8010                             0000000000000010   546          LA    R8,16(,R8)    Point to next FPCR result area
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005F2  062C                                                     547          BCTR  R2,R12        Convert next input value.
+00000000000005F4  07FD                                                     548          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           550 ***********************************************************************
+                                                                           551 *
+                                                                           552 * Perform Divide using provided long BFP input pairs.  This set of
+                                                                           553 * tests exhaustively tests all rounding modes available for Divide.
+                                                                           554 * The rounding mode can only be specified in the FPC.
+                                                                           555 *
+                                                                           556 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           557 * using rounding mode RNTE, do not often create results that require
+                                                                           558 * rounding.
+                                                                           559 *
+                                                                           560 * Two results are generated for each input and rounding mode: one RRE
+                                                                           561 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           562 *
+                                                                           563 * The quotient and FPCR contents are stored for each test.
+                                                                           564 *
+                                                                           565 ***********************************************************************
+
+
+00000000000005F6  9823 A000                             0000000000000000   567 LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000005FA  9878 A008                             0000000000000008   568          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000005FE  1222                                                     569          LTR   R2,R2         Any test cases?
+0000000000000600  078D                                                     570          BZR   R13           ..No, return to caller
+0000000000000602  1711                                                     571          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+0000000000000604  0DC0                                                     572          BASR  R12,0         Set top of test case loop
+                                                                           573
+0000000000000606  4150 0005                             0000000000000005   574          LA    R5,FPCMCT     Get count of FPC modes to be tested
+000000000000060A  0D90                                                     575          BASR  R9,0          Set top of rounding mode loop
+                                                                           576 *
+000000000000060C  4315 F783                             0000000000000783   577          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           578 *
+0000000000000610  B29D F294                             0000000000000294   579          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000614  B2B8 1000                             0000000000000000   580          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000618  6880 3000                             0000000000000000   581          LD    FPR8,0(,R3)   Get long BFP dividend
+000000000000061C  6810 3008                             0000000000000008   582          LD    FPR1,8(,R3)   Get long BFP divisor
+0000000000000620  B31D 0081                                                583          DDBR  FPR8,FPR1     Divide RRE FPR8/FPR1 non-trappable
+0000000000000624  6080 7000                             0000000000000000   584          STD   FPR8,0(,R7)   Store long BFP quotient
+0000000000000628  B29C 8000                             0000000000000000   585          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           586 *
+000000000000062C  B29D F294                             0000000000000294   587          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000630  B2B8 1000                             0000000000000000   588          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000634  6880 3000                             0000000000000000   589          LD    FPR8,0(,R3)   Reload long BFP dividend
+0000000000000638  ED80 3008 001D                        0000000000000008   590          DDB   FPR8,8(,R3)   Divide RXE FPR8 by divisor non-trappable
+000000000000063E  6080 7008                             0000000000000008   591          STD   FPR8,8(,R7)   Store long BFP quotient
+0000000000000642  B29C 8004                             0000000000000004   592          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           593 *
+0000000000000646  4170 7010                             0000000000000010   594          LA    R7,16(,R7)    Point to next quotient result set
+000000000000064A  4180 8008                             0000000000000008   595          LA    R8,8(,R8)     Point to next FPCR result area
+                                                                           596 *
+000000000000064E  0659                                                     597          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           598 *
+                                                                           599 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           600 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000650  4130 3010                             0000000000000010   601          LA    R3,16(,R3)    Point to next input value pair
+0000000000000654  4180 8008                             0000000000000008   602          LA    R8,8(,R8)     Skip to start of next FPCR result area
+0000000000000658  062C                                                     603          BCTR  R2,R12        Divide next input value lots of times
+                                                                           604 *
+000000000000065A  07FD                                                     605          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           607 ***********************************************************************
+                                                                           608 *
+                                                                           609 * Perform Divide using provided extended BFP inputs.  This set of tests
+                                                                           610 * checks NaN propagation, operations on values that are not finite
+                                                                           611 * numbers, and other basic tests.  This set generates results that can
+                                                                           612 * be validated against Figure 19-20 on page 19-27 of SA22-7832-10.
+                                                                           613 *
+                                                                           614 * Two results are generated for each input: one RRE with all
+                                                                           615 * exceptions non-trappable, and a second RRE with all exceptions
+                                                                           616 * trappable.  Extended BFP Divide does not have an RXE format.
+                                                                           617 *
+                                                                           618 * The quotient and FPCR are stored for each result.
+                                                                           619 *
+                                                                           620 ***********************************************************************
+
+
+000000000000065C                                                           622 XBFPNF   DS    0H            BFP extended non-finite values tests
+000000000000065C  9823 A000                             0000000000000000   623          LM    R2,R3,0(R10)  Get count and address of dividend values
+0000000000000660  9878 A008                             0000000000000008   624          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000664  1222                                                     625          LTR   R2,R2         Any test cases?
+0000000000000666  078D                                                     626          BZR   R13           ..No, return to caller
+0000000000000668  0DC0                                                     627          BASR  R12,0         Set top of loop
+                                                                           628 *
+000000000000066A  9845 A000                             0000000000000000   629          LM    R4,R5,0(R10)  Get count and start of divisor values
+                                                                           630 *                            ..which are the same as the dividends
+000000000000066E  0D60                                                     631          BASR  R6,0          Set top of inner loop
+                                                                           632 *
+0000000000000670  6880 3000                             0000000000000000   633          LD    FPR8,0(,R3)   Get extended BFP dividend part 1
+0000000000000674  68A0 3008                             0000000000000008   634          LD    FPR10,8(,R3)  Get extended BFP dividend part 2
+0000000000000678  6810 5000                             0000000000000000   635          LD    FPR1,0(,R5)   Get extended BFP divisor part 1
+000000000000067C  6830 5008                             0000000000000008   636          LD    FPR3,8(,R5)   Get extended BFP divisor part 2
+0000000000000680  B29D F294                             0000000000000294   637          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000684  B34D 0081                                                638          DXBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+0000000000000688  6080 7000                             0000000000000000   639          STD   FPR8,0(,R7)   Store extended BFP quotient part 1
+000000000000068C  60A0 7008                             0000000000000008   640          STD   FPR10,8(,R7)  Store extended BFP quotient part 2
+0000000000000690  B29C 8000                             0000000000000000   641          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           642 *
+0000000000000694  6880 3000                             0000000000000000   643          LD    FPR8,0(,R3)   Get extended BFP dividend part 1
+0000000000000698  68A0 3008                             0000000000000008   644          LD    FPR10,8(,R3)  Get extended BFP dividend part 2
+000000000000069C  6810 5000                             0000000000000000   645          LD    FPR1,0(,R5)   Get extended BFP divisor part 1
+00000000000006A0  6830 5008                             0000000000000008   646          LD    FPR3,8(,R5)   Get extended BFP divisor part 2
+00000000000006A4  B29D F298                             0000000000000298   647          LFPC  FPCREGTR      Set exceptions trappable
+00000000000006A8  B34D 0081                                                648          DXBR  FPR8,FPR1     Divide FPR0/FPR1 RRE
+00000000000006AC  6080 7010                             0000000000000010   649          STD   FPR8,16(,R7)  Store extended BFP quotient part 1
+00000000000006B0  60A0 7018                             0000000000000018   650          STD   FPR10,24(,R7) Store extended BFP quotient part 2
+00000000000006B4  B29C 8004                             0000000000000004   651          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           652 *
+00000000000006B8  4150 5010                             0000000000000010   653          LA    R5,16(,R5)    Point to next divisor value
+00000000000006BC  4170 7020                             0000000000000020   654          LA    R7,32(,R7)    Point to next Divide result area
+00000000000006C0  4180 8010                             0000000000000010   655          LA    R8,16(,R8)    Point to next Divide FPCR area
+00000000000006C4  0646                                                     656          BCTR  R4,R6         Loop through right-hand values
+                                                                           657 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000006C6  4130 3010                             0000000000000010   658          LA    R3,16(,R3)    Point to next dividend value
+00000000000006CA  062C                                                     659          BCTR  R2,R12        Divide until all cases tested
+00000000000006CC  07FD                                                     660          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           662 ***********************************************************************
+                                                                           663 *
+                                                                           664 * Perform Divide using provided extended BFP input pairs.  This set of
+                                                                           665 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           666 * collects results when the exceptions do not result in a trap and when
+                                                                           667 * they do.
+                                                                           668 *
+                                                                           669 * Two results are generated for each input: one RRE with all
+                                                                           670 * exceptions non-trappable and a second RRE with all exceptions
+                                                                           671 * trappable.  There is no RXE format for Divide in extended precision.
+                                                                           672 *
+                                                                           673 * The result and FPCR are stored for each result.
+                                                                           674 *
+                                                                           675 ***********************************************************************
+
+
+00000000000006CE  9823 A000                             0000000000000000   677 XBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000006D2  9878 A008                             0000000000000008   678          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000006D6  1222                                                     679          LTR   R2,R2         Any test cases?
+00000000000006D8  078D                                                     680          BZR   R13           ..No, return to caller
+00000000000006DA  0DC0                                                     681          BASR  R12,0         Set top of loop
+                                                                           682 *
+00000000000006DC  B29D F294                             0000000000000294   683          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000006E0  68D0 3000                             0000000000000000   684          LD    FPR13,0(,R3)  Get extended BFP dividend part 1
+00000000000006E4  68F0 3008                             0000000000000008   685          LD    FPR15,8(,R3)  Get extended BFP dividend part 2
+00000000000006E8  6810 3010                             0000000000000010   686          LD    FPR1,16(,R3)  Get extended BFP divisor part 1
+00000000000006EC  6830 3018                             0000000000000018   687          LD    FPR3,24(,R3)  Get extended BFP divisor part 2
+00000000000006F0  B34D 00D1                                                688          DXBR  FPR13,FPR1    Divide FPR8-10/FPR1-3 RRE non-trappable
+00000000000006F4  60D0 7000                             0000000000000000   689          STD   FPR13,0(,R7)  Store extended BFP quotient part 1
+00000000000006F8  60F0 7008                             0000000000000008   690          STD   FPR15,8(,R7)  Store extended BFP quotient part 2
+00000000000006FC  B29C 8000                             0000000000000000   691          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           692 *
+0000000000000700  B29D F298                             0000000000000298   693          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000704  68D0 3000                             0000000000000000   694          LD    FPR13,0(,R3)  Reload extended BFP dividend part 1
+0000000000000708  68F0 3008                             0000000000000008   695          LD    FPR15,8(,R3)  Reload extended BFP dividend part 2
+                                                                           696 *                            ..divisor is still in FPR1-FPR3
+000000000000070C  B34D 00D1                                                697          DXBR  FPR13,FPR1    Divide FPR13-15/FPR1-3 RRE trappable
+0000000000000710  60D0 7010                             0000000000000010   698          STD   FPR13,16(,R7) Store extended BFP quotient part 1
+0000000000000714  60F0 7018                             0000000000000018   699          STD   FPR15,24(,R7) Store extended BFP quotient part 2
+0000000000000718  B29C 8004                             0000000000000004   700          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           701 *
+000000000000071C  4130 3020                             0000000000000020   702          LA    R3,32(,R3)    Point to next input value pair
+0000000000000720  4170 7020                             0000000000000020   703          LA    R7,32(,R7)    Point to next quotent result pair
+0000000000000724  4180 8010                             0000000000000010   704          LA    R8,16(,R8)    Point to next FPCR result area
+0000000000000728  062C                                                     705          BCTR  R2,R12        Convert next input value.
+                                                                           706 *
+000000000000072A  07FD                                                     707          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    22
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           709 ***********************************************************************
+                                                                           710 *
+                                                                           711 * Perform Divide using provided long BFP input pairs.  This set of
+                                                                           712 * tests exhaustively tests all rounding modes available for Divide.
+                                                                           713 * The rounding mode can only be specified in the FPC.
+                                                                           714 *
+                                                                           715 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           716 * using rounding mode RNTE, do not often create results that require
+                                                                           717 * rounding.
+                                                                           718 *
+                                                                           719 * Two results are generated for each input and rounding mode: one RRE
+                                                                           720 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           721 *
+                                                                           722 * The quotient and FPCR contents are stored for each test.
+                                                                           723 *
+                                                                           724 ***********************************************************************
+
+
+000000000000072C  9823 A000                             0000000000000000   726 XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000730  9878 A008                             0000000000000008   727          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000734  1222                                                     728          LTR   R2,R2         Any test cases?
+0000000000000736  078D                                                     729          BZR   R13           ..No, return to caller
+0000000000000738  1711                                                     730          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+000000000000073A  0DC0                                                     731          BASR  R12,0         Set top of test case loop
+                                                                           732
+000000000000073C  4150 0005                             0000000000000005   733          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000740  0D90                                                     734          BASR  R9,0          Set top of rounding mode loop
+                                                                           735 *
+0000000000000742  4315 F783                             0000000000000783   736          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           737 *
+0000000000000746  B29D F294                             0000000000000294   738          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000074A  B2B8 1000                             0000000000000000   739          SRNMB 0(R1)         Set FPC Rounding Mode
+000000000000074E  6880 3000                             0000000000000000   740          LD    FPR8,0(,R3)   Get extended BFP dividend part 1
+0000000000000752  68A0 3008                             0000000000000008   741          LD    FPR10,8(,R3)  Get extended BFP dividend part 2
+0000000000000756  6810 3010                             0000000000000010   742          LD    FPR1,16(,R3)  Get extended BFP divisor part 1
+000000000000075A  6830 3018                             0000000000000018   743          LD    FPR3,24(,R3)  Get extended BFP divisor part 2
+000000000000075E  B34D 0081                                                744          DXBR  FPR8,FPR1     Divide RRE FPR8/FPR1 non-trappable
+0000000000000762  6080 7000                             0000000000000000   745          STD   FPR8,0(,R7)   Store extended BFP quotient part 1
+0000000000000766  60A0 7008                             0000000000000008   746          STD   FPR10,8(,R7)  Store extended BFP quotient part 2
+000000000000076A  B29C 8000                             0000000000000000   747          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           748 *
+000000000000076E  4170 7010                             0000000000000010   749          LA    R7,16(,R7)    Point to next quotient result set
+0000000000000772  4180 8004                             0000000000000004   750          LA    R8,4(,R8)     Point to next FPCR result area
+                                                                           751 *
+0000000000000776  0659                                                     752          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           753 *
+                                                                           754 * End of FPC modes to be tested.  Advance to next test case.
+                                                                           755 *
+0000000000000778  4130 3020                             0000000000000020   756          LA    R3,32(,R3)    Point to next input value pair
+000000000000077C  4180 800C                             000000000000000C   757          LA    R8,12(,R8)    Skip to start of next FPCR result area
+0000000000000780  062C                                                     758          BCTR  R2,R12        Divide next input value lots of times
+                                                                           759 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    23
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000782  07FD                                                     760          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    24
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           762 ***********************************************************************
+                                                                           763 *
+                                                                           764 * Table of FPC rounding modes to test quotient rounding modes.
+                                                                           765 *
+                                                                           766 * The Set BFP Rounding Mode does allow specification of the FPC
+                                                                           767 * rounding mode as an address, so we shall index into a table of
+                                                                           768 * BFP rounding modes without bothering with Execute.
+                                                                           769 *
+                                                                           770 ***********************************************************************
+
+
+                                                                           772 *
+                                                                           773 * Rounding modes that may be set in the FPCR.  The FPCR controls
+                                                                           774 * rounding of the quotient.
+                                                                           775 *
+                                                                           776 * These are indexed directly by the loop counter, which counts down.
+                                                                           777 * So the modes are listed in reverse order here.
+                                                                           778 *
+0000000000000784                                                           779 FPCMODES DS    0C
+0000000000000784  07                                                       780          DC    AL1(7)              RFS, Round for shorter precision
+0000000000000785  03                                                       781          DC    AL1(3)              RM, Round to -infinity
+0000000000000786  02                                                       782          DC    AL1(2)              RP, Round to +infinity
+0000000000000787  01                                                       783          DC    AL1(1)              RZ, Round to zero
+0000000000000788  00                                                       784          DC    AL1(0)              RNTE, Round to Nearest, ties to even
+                                      0000000000000005  0000000000000001   785 FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
+                                                                           786 *
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    25
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           788 ***********************************************************************
+                                                                           789 *
+                                                                           790 * Short BFP test data sets for Divide testing.
+                                                                           791 *
+                                                                           792 * The first test data set is used for tests of basic functionality,
+                                                                           793 * NaN propagation, and results from operations involving other than
+                                                                           794 * finite numbers.
+                                                                           795 *
+                                                                           796 * The second test data set is used for testing boundary conditions
+                                                                           797 * using two finite non-zero values.  Each possible condition code
+                                                                           798 * and type of result (normal, scaled, etc) is created by members of
+                                                                           799 * this test data set.
+                                                                           800 *
+                                                                           801 * The third test data set is used for exhaustive testing of final
+                                                                           802 * results across the five rounding modes available for the Divide
+                                                                           803 * instruction.
+                                                                           804 *
+                                                                           805 ***********************************************************************
+
+
+                                                                           807 ***********************************************************************
+                                                                           808 *
+                                                                           809 * First input test data set, to test operations using non-finite or
+                                                                           810 * zero inputs.  Member values chosen to validate part 1 of Figure 19-21
+                                                                           811 * on page 19-29 of SA22-7832-10.  Each value in this table is tested
+                                                                           812 * against every other value in the table.
+                                                                           813 *
+                                                                           814 ***********************************************************************
+
+
+000000000000078C                                                           816 SBFPNFIN DS    0F                Inputs for short BFP non-finite tests
+000000000000078C  FF800000                                                 817          DC    X'FF800000'         -inf
+0000000000000790  C0000000                                                 818          DC    X'C0000000'         -2.0
+0000000000000794  80000000                                                 819          DC    X'80000000'         -0
+0000000000000798  00000000                                                 820          DC    X'00000000'         +0
+000000000000079C  40000000                                                 821          DC    X'40000000'         +2.0
+00000000000007A0  7F800000                                                 822          DC    X'7F800000'         +inf
+00000000000007A4  FFCB0000                                                 823          DC    X'FFCB0000'         -QNaN
+00000000000007A8  7F8A0000                                                 824          DC    X'7F8A0000'         +SNaN
+                                      0000000000000008  0000000000000001   825 SBFPNFCT EQU   (*-SBFPNFIN)/4    Count of short BFP in list
+
+
+
+                                                                           827 ***********************************************************************
+                                                                           828 *
+                                                                           829 * Second input test data set.  These are finite pairs intended to
+                                                                           830 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                           831 * divided twice, once non-trappable and once trappable.  Trappable
+                                                                           832 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                           833 * will show whether the Incremented DXC code is returned.
+                                                                           834 *
+                                                                           835 * The following test cases are required:
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    26
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           836 * 1. Overflow
+                                                                           837 * 2. Underflow
+                                                                           838 * 3. Inexact - incremented
+                                                                           839 * 4. Inexact - truncated
+                                                                           840 *
+                                                                           841 ***********************************************************************
+
+
+00000000000007AC                                                           843 SBFPIN   DS    0F                Inputs for short BFP finite tests
+                                                                           844 *
+                                                                           845 * Following forces quotient overflow.
+                                                                           846 *
+00000000000007AC  7F7FFFFF                                                 847          DC    X'7F7FFFFF'         +maxvalue
+00000000000007B0  00000001                                                 848          DC    X'00000001'         +minvalue (tiny)
+                                                                           849 *
+                                                                           850 * Divide the smallest possible normal by 2.0 to get the largest
+                                                                           851 * possible tiny, and get underflow in the process.
+                                                                           852 *
+00000000000007B4  00800000                                                 853          DC    X'00800000'         smallest possible normal
+00000000000007B8  40000000                                                 854          DC    X'40000000'         divide by 2.0, force underflow
+                                                                           855 *
+                                                                           856 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                           857 * rounded in any precision.  Inexact, Incremented.
+                                                                           858 *
+00000000000007BC  3F800000                                                 859          DC    X'3F800000'         +1
+00000000000007C0  41200000                                                 860          DC    X'41200000'         +10.0
+                                                                           861 *
+                                                                           862 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                           863 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                           864 *
+00000000000007C4  40100000                                                 865          DC    X'40100000'         7.0
+00000000000007C8  41200000                                                 866          DC    X'41200000'         +10.0
+                                                                           867 *
+                                                                           868 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                           869 * rounded in any precision.  Inexact, Incremented.
+                                                                           870 *
+00000000000007CC  3F800000                                                 871          DC    X'3F800000'         +1
+00000000000007D0  C1200000                                                 872          DC    X'C1200000'         -10.0
+                                                                           873 *
+                                                                           874 * Divide 7.0 by -10.0 to get 0.7, a repeating fraction that must be
+                                                                           875 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                           876 *
+00000000000007D4  40100000                                                 877          DC    X'40100000'         7.0
+00000000000007D8  C1200000                                                 878          DC    X'C1200000'         -10.0
+                                                                           879 *
+                                      0000000000000006  0000000000000001   880 SBFPCT   EQU   (*-SBFPIN)/4/2    Count of short BFP in list
+
+
+
+                                                                           882 ***********************************************************************
+                                                                           883 *
+                                                                           884 * Third input test data set.  These are finite pairs intended to
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    27
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           885 * test all combinations of rounding mode for the quotient and the
+                                                                           886 * remainder.  Values are chosen to create a requirement to round
+                                                                           887 * to the target precision after the computation
+                                                                           888 *
+                                                                           889 ***********************************************************************
+
+
+00000000000007DC                                                           891 SBFPINRM DS    0F                Inputs for short BFP rounding testing
+                                                                           892 *
+                                                                           893 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                           894 * rounded in any precision.  Inexact, Incremented.
+                                                                           895 *
+00000000000007DC  3F800000                                                 896          DC    X'3F800000'         +1
+00000000000007E0  41200000                                                 897          DC    X'41200000'         +10.0
+                                                                           898 *
+                                                                           899 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                           900 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                           901 *
+00000000000007E4  40100000                                                 902          DC    X'40100000'         7.0
+00000000000007E8  41200000                                                 903          DC    X'41200000'         +10.0
+                                                                           904 *
+                                                                           905 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                           906 * rounded in any precision.  Inexact, Incremented.
+                                                                           907 *
+00000000000007EC  3F800000                                                 908          DC    X'3F800000'         +1
+00000000000007F0  C1200000                                                 909          DC    X'C1200000'         -10.0
+                                                                           910 *
+                                                                           911 * Divide 7.0 by -10.0 to get 0.7, a repeating fraction that must be
+                                                                           912 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                           913 *
+00000000000007F4  40100000                                                 914          DC    X'40100000'         7.0
+00000000000007F8  C1200000                                                 915          DC    X'C1200000'         -10.0
+                                                                           916 *
+                                      0000000000000004  0000000000000001   917 SBFPRMCT EQU   (*-SBFPINRM)/4/2  Count of short BFP rounding tests
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    28
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           919 ***********************************************************************
+                                                                           920 *
+                                                                           921 * Long BFP test data sets for Divide testing.
+                                                                           922 *
+                                                                           923 * The first test data set is used for tests of basic functionality,
+                                                                           924 * NaN propagation, and results from operations involving other than
+                                                                           925 * finite numbers.
+                                                                           926 *
+                                                                           927 * The second test data set is used for testing boundary conditions
+                                                                           928 * using two finite non-zero values.  Each possible condition code
+                                                                           929 * and type of result (normal, scaled, etc) is created by members of
+                                                                           930 * this test data set.
+                                                                           931 *
+                                                                           932 * The third test data set is used for exhaustive testing of final
+                                                                           933 * results across the five rounding modes available for the Divide
+                                                                           934 * instruction.
+                                                                           935 *
+                                                                           936 ***********************************************************************
+
+
+                                                                           938 ***********************************************************************
+                                                                           939 *
+                                                                           940 * First input test data set, to test operations using non-finite or
+                                                                           941 * zero inputs.  Member values chosen to validate part 1 of Figure 19-21
+                                                                           942 * on page 19-29 of SA22-7832-10.  Each value in this table is tested
+                                                                           943 * against every other value in the table.
+                                                                           944 *
+                                                                           945 ***********************************************************************
+
+
+00000000000007FC                                                           947 LBFPNFIN DS    0F                Inputs for long BFP testing
+00000000000007FC  FFF00000 00000000                                        948          DC    X'FFF0000000000000'         -inf
+0000000000000804  C0000000 00000000                                        949          DC    X'C000000000000000'         -2.0
+000000000000080C  80000000 00000000                                        950          DC    X'8000000000000000'         -0
+0000000000000814  00000000 00000000                                        951          DC    X'0000000000000000'         +0
+000000000000081C  40000000 00000000                                        952          DC    X'4000000000000000'         +2.0
+0000000000000824  7FF00000 00000000                                        953          DC    X'7FF0000000000000'         +inf
+000000000000082C  FFF8B000 00000000                                        954          DC    X'FFF8B00000000000'         -QNaN
+0000000000000834  7FF0A000 00000000                                        955          DC    X'7FF0A00000000000'         +SNaN
+                                      0000000000000008  0000000000000001   956 LBFPNFCT EQU   (*-LBFPNFIN)/8     Count of long BFP in list
+
+
+
+                                                                           958 ***********************************************************************
+                                                                           959 *
+                                                                           960 * Second input test data set.  These are finite pairs intended to
+                                                                           961 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                           962 * divided twice, once non-trappable and once trappable.  Trappable
+                                                                           963 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                           964 * will show whether the Incremented DXC code is returned.
+                                                                           965 *
+                                                                           966 * The following test cases are required:
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    29
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           967 * 1. Overflow
+                                                                           968 * 2. Underflow
+                                                                           969 * 3. Inexact - incremented
+                                                                           970 * 4. Inexact - truncated
+                                                                           971 *
+                                                                           972 ***********************************************************************
+
+
+0000000000000840                                                           974 LBFPIN   DS    0D                Inputs for long BFP finite tests
+                                                                           975 *
+                                                                           976 * Following forces quotient overflow.
+                                                                           977 *
+0000000000000840  7FEFFFFF FFFFFFFF                                        978          DC    X'7FEFFFFFFFFFFFFF' +maxvalue
+0000000000000848  00000000 00000001                                        979          DC    X'0000000000000001' +minvalue (tiny)
+                                                                           980 *
+                                                                           981 * Divide the smallest possible normal by 2.0 to get the largest
+                                                                           982 * possible tiny, and get underflow in the process.
+                                                                           983 *
+0000000000000850  00100000 00000000                                        984          DC    X'0010000000000000' smallest possible normal
+0000000000000858  40000000 00000000                                        985          DC    X'4000000000000000' divide by 2.0, force underflow
+                                                                           986 *
+                                                                           987 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                           988 * rounded in any precision.  Inexact, Incremented.
+                                                                           989 *
+0000000000000860  3FF00000 00000000                                        990          DC    X'3FF0000000000000'         +1
+0000000000000868  40240000 00000000                                        991          DC    X'4024000000000000'         +10.0
+                                                                           992 *
+                                                                           993 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                           994 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                           995 *
+0000000000000870  401C0000 00000000                                        996          DC    X'401C000000000000'         7.0
+0000000000000878  40240000 00000000                                        997          DC    X'4024000000000000'         +10.0
+                                                                           998 *
+                                                                           999 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                          1000 * rounded in any precision.  Inexact, Incremented.
+                                                                          1001 *
+0000000000000880  3FF00000 00000000                                       1002          DC    X'3FF0000000000000'         +1
+0000000000000888  C0240000 00000000                                       1003          DC    X'C024000000000000'         -10.0
+                                                                          1004 *
+                                                                          1005 * Divide 7.0 by -10.0 to get -0.7, a repeating fraction that must be
+                                                                          1006 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1007 *
+0000000000000890  401C0000 00000000                                       1008          DC    X'401C000000000000'         7.0
+0000000000000898  C0240000 00000000                                       1009          DC    X'C024000000000000'         -10.0
+                                                                          1010 *
+                                      0000000000000006  0000000000000001  1011 LBFPCT   EQU   (*-LBFPIN)/8/2   Count of long BFP in list * 8
+
+
+
+                                                                          1013 ***********************************************************************
+                                                                          1014 *
+                                                                          1015 * Third input test data set.  These are finite pairs intended to
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    30
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1016 * test all combinations of rounding mode for the quotient and the
+                                                                          1017 * remainder.  Values are chosen to create a requirement to round
+                                                                          1018 * to the target precision after the computation
+                                                                          1019 *
+                                                                          1020 ***********************************************************************
+
+
+00000000000008A0                                                          1022 LBFPINRM DS    0F
+                                                                          1023 *
+                                                                          1024 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                          1025 * rounded in any precision.  Inexact, Incremented.
+                                                                          1026 *
+00000000000008A0  3FF00000 00000000                                       1027          DC    X'3FF0000000000000'         +1
+00000000000008A8  40240000 00000000                                       1028          DC    X'4024000000000000'         +10.0
+                                                                          1029 *
+                                                                          1030 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                          1031 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1032 *
+00000000000008B0  401C0000 00000000                                       1033          DC    X'401C000000000000'         7.0
+00000000000008B8  40240000 00000000                                       1034          DC    X'4024000000000000'         +10.0
+                                                                          1035 *
+                                                                          1036 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                          1037 * rounded in any precision.  Inexact, Incremented.
+                                                                          1038 *
+00000000000008C0  3FF00000 00000000                                       1039          DC    X'3FF0000000000000'         +1
+00000000000008C8  C0240000 00000000                                       1040          DC    X'C024000000000000'         -10.0
+                                                                          1041 *
+                                                                          1042 * Divide 7.0 by -10.0 to get -0.7, a repeating fraction that must be
+                                                                          1043 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1044 *
+00000000000008D0  401C0000 00000000                                       1045          DC    X'401C000000000000'         7.0
+00000000000008D8  C0240000 00000000                                       1046          DC    X'C024000000000000'         -10.0
+                                                                          1047 *
+                                      0000000000000004  0000000000000001  1048 LBFPRMCT EQU   (*-LBFPINRM)/8/2  Count of long BFP rounding tests * 8
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    31
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1050 ***********************************************************************
+                                                                          1051 *
+                                                                          1052 * Extended BFP test data sets for Divide testing.
+                                                                          1053 *
+                                                                          1054 * The first test data set is used for tests of basic functionality,
+                                                                          1055 * NaN propagation, and results from operations involving other than
+                                                                          1056 * finite numbers.
+                                                                          1057 *
+                                                                          1058 * The second test data set is used for testing boundary conditions
+                                                                          1059 * using two finite non-zero values.  Each possible condition code
+                                                                          1060 * and type of result (normal, scaled, etc) is created by members of
+                                                                          1061 * this test data set.
+                                                                          1062 *
+                                                                          1063 * The third test data set is used for exhaustive testing of final
+                                                                          1064 * results across the five rounding modes available for the Divide
+                                                                          1065 * instruction.
+                                                                          1066 *
+                                                                          1067 ***********************************************************************
+
+
+                                                                          1069 ***********************************************************************
+                                                                          1070 *
+                                                                          1071 * First input test data set, to test operations using non-finite or
+                                                                          1072 * zero inputs.  Member values chosen to validate part 1 of Figure 19-21
+                                                                          1073 * on page 19-29 of SA22-7832-10.  Each value in this table is tested
+                                                                          1074 * against every other value in the table.
+                                                                          1075 *
+                                                                          1076 ***********************************************************************
+
+
+00000000000008E0                                                          1078 XBFPNFIN DS    0F                Inputs for extended BFP testing
+00000000000008E0  FFFF0000 00000000                                       1079          DC    X'FFFF0000000000000000000000000000'         -inf
+00000000000008F0  C0000000 00000000                                       1080          DC    X'C0000000000000000000000000000000'         -2.0
+0000000000000900  80000000 00000000                                       1081          DC    X'80000000000000000000000000000000'         -0
+0000000000000910  00000000 00000000                                       1082          DC    X'00000000000000000000000000000000'         +0
+0000000000000920  40000000 00000000                                       1083          DC    X'40000000000000000000000000000000'         +2.0
+0000000000000930  7FFF0000 00000000                                       1084          DC    X'7FFF0000000000000000000000000000'         +inf
+0000000000000940  FFFF8B00 00000000                                       1085          DC    X'FFFF8B00000000000000000000000000'         -QNaN
+0000000000000950  7FFF0A00 00000000                                       1086          DC    X'7FFF0A00000000000000000000000000'         +SNaN
+                                      0000000000000008  0000000000000001  1087 XBFPNFCT EQU   (*-XBFPNFIN)/16     Count of extended BFP in list
+
+
+
+                                                                          1089 ***********************************************************************
+                                                                          1090 *
+                                                                          1091 * Second input test data set.  These are finite pairs intended to
+                                                                          1092 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                          1093 * divided twice, once non-trappable and once trappable.  Trappable
+                                                                          1094 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                          1095 * will show whether the Incremented DXC code is returned.
+                                                                          1096 *
+                                                                          1097 * The following test cases are required:
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    32
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1098 * 1. Overflow
+                                                                          1099 * 2. Underflow
+                                                                          1100 * 3. Inexact - incremented
+                                                                          1101 * 4. Inexact - truncated
+                                                                          1102 *
+                                                                          1103 ***********************************************************************
+
+
+0000000000000960                                                          1105 XBFPIN   DS    0F                Inputs for long BFP finite tests
+                                                                          1106 *
+                                                                          1107 * Following forces quotient overflow.
+                                                                          1108 *
+0000000000000960  7FFEFFFF FFFFFFFF                                       1109          DC    X'7FFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF' +maxvalue
+0000000000000970  00000000 00000000                                       1110          DC    X'00000000000000000000000000000001' +minvalue (tiny)
+                                                                          1111 *
+                                                                          1112 * Divide the smallest possible normal by 2.0 to get the largest
+                                                                          1113 * possible tiny, and get underflow in the process.
+                                                                          1114 *
+0000000000000980  00010000 00000000                                       1115          DC    X'00010000000000000000000000000000' smallest normal
+0000000000000990  40000000 00000000                                       1116          DC    X'40000000000000000000000000000000' divide by 2.0
+                                                                          1117 *
+                                                                          1118 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                          1119 * rounded in any precision.  Inexact, Incremented.
+                                                                          1120 *
+00000000000009A0  3FFF0000 00000000                                       1121          DC    X'3FFF0000000000000000000000000000'  +1
+00000000000009B0  40024000 00000000                                       1122          DC    X'40024000000000000000000000000000'  +10.0
+                                                                          1123 *
+                                                                          1124 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                          1125 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1126 *
+00000000000009C0  4001C000 00000000                                       1127          DC    X'4001C000000000000000000000000000'  +7.0
+00000000000009D0  40024000 00000000                                       1128          DC    X'40024000000000000000000000000000'  +10.0
+                                                                          1129 *
+                                                                          1130 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                          1131 * rounded in any precision.  Inexact, Incremented.
+                                                                          1132 *
+00000000000009E0  3FFF0000 00000000                                       1133          DC    X'3FFF0000000000000000000000000000'  +1
+00000000000009F0  C0024000 00000000                                       1134          DC    X'C0024000000000000000000000000000'  -10.0
+                                                                          1135 *
+                                                                          1136 * Divide 7.0 by -10.0 to get -0.7, a repeating fraction that must be
+                                                                          1137 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1138 *
+0000000000000A00  4001C000 00000000                                       1139          DC    X'4001C000000000000000000000000000'  +7.0
+0000000000000A10  C0024000 00000000                                       1140          DC    X'C0024000000000000000000000000000'  -10.0
+                                                                          1141 *
+                                      0000000000000006  0000000000000001  1142 XBFPCT   EQU   (*-XBFPIN)/16/2   Count of long BFP in list * 8
+
+
+
+                                                                          1144 ***********************************************************************
+                                                                          1145 *
+                                                                          1146 * Third input test data set.  These are finite pairs intended to
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    33
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1147 * test all combinations of rounding mode for the quotient and the
+                                                                          1148 * remainder.  Values are chosen to create a requirement to round
+                                                                          1149 * to the target precision after the computation
+                                                                          1150 *
+                                                                          1151 ***********************************************************************
+
+
+0000000000000A20                                                          1153 XBFPINRM DS    0D
+                                                                          1154 *
+                                                                          1155 * Divide 1.0 by 10.0 to get 0.1, a repeating fraction that must be
+                                                                          1156 * rounded in any precision.  Inexact, Incremented.
+                                                                          1157 *
+0000000000000A20  3FFF0000 00000000                                       1158          DC    X'3FFF0000000000000000000000000000'  +1
+0000000000000A30  40024000 00000000                                       1159          DC    X'40024000000000000000000000000000'  +10.0
+                                                                          1160 *
+                                                                          1161 * Divide 7.0 by 10.0 to get 0.7, a repeating fraction that must be
+                                                                          1162 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1163 *
+0000000000000A40  4001C000 00000000                                       1164          DC    X'4001C000000000000000000000000000'  +7.0
+0000000000000A50  40024000 00000000                                       1165          DC    X'40024000000000000000000000000000'  +10.0
+                                                                          1166 *
+                                                                          1167 * Divide 1.0 by -10.0 to get -0.1, a repeating fraction that must be
+                                                                          1168 * rounded in any precision.  Inexact, Incremented.
+                                                                          1169 *
+0000000000000A60  3FFF0000 00000000                                       1170          DC    X'3FFF0000000000000000000000000000'  +1
+0000000000000A70  C0024000 00000000                                       1171          DC    X'C0024000000000000000000000000000'  -10.0
+                                                                          1172 *
+                                                                          1173 * Divide 7.0 by -10.0 to get -0.7, a repeating fraction that must be
+                                                                          1174 * rounded in any precision.  But this one rounds down.  Inexact only.
+                                                                          1175 *
+0000000000000A80  4001C000 00000000                                       1176          DC    X'4001C000000000000000000000000000'  +7.0
+0000000000000A90  C0024000 00000000                                       1177          DC    X'C0024000000000000000000000000000'  -10.0
+                                                                          1178 *
+                                      0000000000000004  0000000000000001  1179 XBFPRMCT EQU   (*-XBFPINRM)/16/2  Count of long BFP rounding tests
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    34
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1181 *
+                                                                          1182 *  Locations for results
+                                                                          1183 *
+                                      0000000000001000  0000000000000001  1184 SBFPNFOT EQU   STRTLABL+X'1000'    Integer short non-finite BFP results
+                                                                          1185 *                                  ..room for 64 tests, 64 used
+                                      0000000000001400  0000000000000001  1186 SBFPNFFL EQU   STRTLABL+X'1400'    FPCR flags and DXC from short BFP
+                                                                          1187 *                                  ..room for 64 tests, 64 used
+                                                                          1188 *
+                                      0000000000001800  0000000000000001  1189 SBFPOUT  EQU   STRTLABL+X'1800'    Integer short BFP finite results
+                                                                          1190 *                                  ..room for 16 tests, 6 used
+                                      0000000000001900  0000000000000001  1191 SBFPFLGS EQU   STRTLABL+X'1900'    FPCR flags and DXC from short BFP
+                                                                          1192 *                                  ..room for 16 tests, 6 used
+                                                                          1193 *
+                                      0000000000001A00  0000000000000001  1194 SBFPRMO  EQU   STRTLABL+X'1A00'    Short BFP rounding mode test results
+                                                                          1195 *                                  ..Room for 16, 4 used.
+                                      0000000000001D00  0000000000000001  1196 SBFPRMOF EQU   STRTLABL+X'1D00'    Short BFP rounding mode FPCR results
+                                                                          1197 *                                  ..Room for 16, 4 used.
+                                                                          1198 *                                  ..next location starts at X'2000'
+                                                                          1199 *
+                                      0000000000003000  0000000000000001  1200 LBFPNFOT EQU   STRTLABL+X'3000'    Integer long non-finite BFP results
+                                                                          1201 *                                  ..room for 64 tests, 64 used
+                                      0000000000003800  0000000000000001  1202 LBFPNFFL EQU   STRTLABL+X'3800'    FPCR flags and DXC from long BFP
+                                                                          1203 *                                  ..room for 64 tests, 64 used
+                                                                          1204 *
+                                      0000000000003C00  0000000000000001  1205 LBFPOUT  EQU   STRTLABL+X'3C00'    Integer long BFP finite results
+                                                                          1206 *                                  ..room for 16 tests, 6 used
+                                      0000000000003E00  0000000000000001  1207 LBFPFLGS EQU   STRTLABL+X'3E00'    FPCR flags and DXC from long BFP
+                                                                          1208 *                                  ..room for 16 tests, 6 used
+                                                                          1209 *
+                                      0000000000004000  0000000000000001  1210 LBFPRMO  EQU   STRTLABL+X'4000'    Long BFP rounding mode test results
+                                                                          1211 *                                  ..Room for 16, 4 used.
+                                      0000000000004500  0000000000000001  1212 LBFPRMOF EQU   STRTLABL+X'4500'    Long BFP rounding mode FPCR results
+                                                                          1213 *                                  ..Room for 16, 4 used.
+                                                                          1214 *                                  ..next location starts at X'4800'
+                                                                          1215 *
+                                      0000000000005000  0000000000000001  1216 XBFPNFOT EQU   STRTLABL+X'5000'    Integer ext'd non-finite BFP results
+                                                                          1217 *                                  ..room for 64 tests, 64 used
+                                      0000000000005800  0000000000000001  1218 XBFPNFFL EQU   STRTLABL+X'5800'    FPCR flags and DXC from ext'd BFP
+                                                                          1219 *                                  ..room for 64 tests, 64 used
+                                                                          1220 *
+                                      0000000000005C00  0000000000000001  1221 XBFPOUT  EQU   STRTLABL+X'5C00'    Extended BFP finite results
+                                                                          1222 *                                  ..room for 16 tests, 6 used
+                                      0000000000005E00  0000000000000001  1223 XBFPFLGS EQU   STRTLABL+X'5E00'    FPCR flags and DXC from ext'd BFP
+                                                                          1224 *                                  ..room for 16 tests, 6 used
+                                                                          1225 *
+                                      0000000000006000  0000000000000001  1226 XBFPRMO  EQU   STRTLABL+X'6000'    Ext'd BFP rounding mode test results
+                                                                          1227 *                                  ..Room for 16, 4 used.
+                                      0000000000006A00  0000000000000001  1228 XBFPRMOF EQU   STRTLABL+X'6A00'    Ext'd BFP rounding mode FPCR results
+                                                                          1229 *                                  ..Room for 16, 4 used.
+                                                                          1230 *                                  ..next location starts at X'6D00'
+                                                                          1231 *
+                                      0000000000006D00  0000000000000001  1232 ENDLABL  EQU   STRTLABL+X'6D00'
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    35
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1233          PADCSECT ENDLABL
+                                                                          1234+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000AA0                                                          1235          END
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    36
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPDIV              J    000000    2720    77
+CTLR0               F    000290       4   193   160   161   162
+ENDLABL             U    006D00       1  1232
+FPCMCT              U    000005       1   785   400   574   733
+FPCMODES            C    000784       1   779   785   403   577   736
+FPCREGNT            X    000294       4   194   288   302   344   358   405   413   463   476   518   532   579   587   637   683
+                                                738
+FPCREGTR            X    000298       4   195   295   308   351   364   470   482   525   538   647   693
+FPR0                U    000000       1    98
+FPR1                U    000001       1    99   287   289   294   296   301   346   347   354   408   409   462   464   469   471
+                                                520   521   528   582   583   635   638   645   648   686   688   697   742   744
+FPR10               U    00000A       1   108   634   640   644   650   741   746
+FPR11               U    00000B       1   109
+FPR12               U    00000C       1   110
+FPR13               U    00000D       1   111   684   688   689   694   697   698
+FPR14               U    00000E       1   112
+FPR15               U    00000F       1   113   685   690   695   699
+FPR2                U    000002       1   100
+FPR3                U    000003       1   101   636   646   687   743
+FPR4                U    000004       1   102
+FPR5                U    000005       1   103
+FPR6                U    000006       1   104
+FPR7                U    000007       1   105
+FPR8                U    000008       1   106   286   289   290   293   296   297   300   303   304   307   309   310   345   347
+                                                348   352   354   355   359   360   361   365   366   367   407   409   410   415
+                                                416   417   461   464   465   468   471   472   475   477   478   481   483   484
+                                                519   521   522   526   528   529   533   534   535   539   540   541   581   583
+                                                584   589   590   591   633   638   639   643   648   649   740   744   745
+FPR9                U    000009       1   107
+HARDWAIT            X    000280       8   191   151
+IMAGE               1    000000    2720     0
+LBFPCT              U    000006       1  1011   229
+LBFPF               I    000580       4   512   174
+LBFPFLGS            U    003E00       1  1207   232
+LBFPIN              D    000840       8   974  1011   230
+LBFPINRM            F    0008A0       4  1022  1048   236
+LBFPNF              H    0004FA       2   450   172
+LBFPNFCT            U    000008       1   956   223
+LBFPNFFL            U    003800       1  1202   226
+LBFPNFIN            F    0007FC       4   947   956   224
+LBFPNFOT            U    003000       1  1200   225
+LBFPOUT             U    003C00       1  1205   231
+LBFPRM              I    0005F6       4   567   176
+LBFPRMCT            U    000004       1  1048   235
+LBFPRMO             U    004000       1  1210   237
+LBFPRMOF            U    004500       1  1212   238
+LONGF               F    000340       4   228   173
+LONGNF              F    000330       4   222   171
+PCINTCD             H    00008E       2   128   145
+PCNOTDTA            H    00020C       2   148   146
+PCOLDPSW            U    000150       1   130   147
+PROGCHK             H    000200       2   144   136
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    37
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R0                  U    000000       1    79   160   162
+R1                  U    000001       1    80   397   403   406   414   571   577   580   588   730   736   739
+R10                 U    00000A       1    89   164   166   168   171   173   175   178   180   182   276   277   282   338   339
+                                                393   394   451   452   457   512   513   567   568   623   624   629   677   678
+                                                726   727
+R11                 U    00000B       1    90
+R12                 U    00000C       1    91   280   319   342   373   398   430   455   493   516   547   572   603   627   659
+                                                681   705   731   758
+R13                 U    00000D       1    92   165   167   169   172   174   176   179   181   183   279   320   341   374   396
+                                                432   454   494   515   548   570   605   626   660   680   707   729   760
+R14                 U    00000E       1    93   149   150   185   186
+R15                 U    00000F       1    94   115
+R2                  U    000002       1    81   276   278   319   338   340   373   393   395   430   451   453   493   512   514
+                                                547   567   569   603   623   625   659   677   679   705   726   728   758
+R3                  U    000003       1    82   276   286   293   300   307   318   338   345   346   352   359   360   365   366
+                                                370   393   407   408   415   416   427   451   461   468   475   481   492   512
+                                                519   520   526   533   534   539   540   544   567   581   582   589   590   601
+                                                623   633   634   643   644   658   677   684   685   686   687   694   695   702
+                                                726   740   741   742   743   756
+R4                  U    000004       1    83   282   316   457   490   629   656
+R5                  U    000005       1    84   282   287   294   301   303   309   313   400   403   423   457   462   469   477
+                                                483   487   574   577   597   629   635   636   645   646   653   733   736   752
+R6                  U    000006       1    85   284   316   459   490   631   656
+R7                  U    000007       1    86   277   290   297   304   310   314   339   348   355   361   367   371   394   410
+                                                417   420   428   452   465   472   478   484   488   513   522   529   535   541
+                                                545   568   584   591   594   624   639   640   649   650   654   678   689   690
+                                                698   699   703   727   745   746   749
+R8                  U    000008       1    87   277   291   298   305   311   315   339   349   356   362   368   372   394   411
+                                                418   421   429   452   466   473   479   485   489   513   523   530   536   542
+                                                546   568   585   592   595   602   624   641   651   655   678   691   700   704
+                                                727   747   750   757
+R9                  U    000009       1    88   401   423   575   597   734   752
+RMLONGS             F    000350       4   234   175
+RMSHORTS            F    000320       4   216   168
+RMXTNDS             F    000380       4   252   182
+SBFPCT              U    000006       1   880   211
+SBFPF               I    00041A       4   338   167
+SBFPFLGS            U    001900       1  1191   214
+SBFPIN              F    0007AC       4   843   880   212
+SBFPINRM            F    0007DC       4   891   917   218
+SBFPNF              H    000390       2   275   165
+SBFPNFCT            U    000008       1   825   205
+SBFPNFFL            U    001400       1  1186   208
+SBFPNFIN            F    00078C       4   816   825   206
+SBFPNFOT            U    001000       1  1184   207
+SBFPOUT             U    001800       1  1189   213
+SBFPRM              I    000490       4   393   169
+SBFPRMCT            U    000004       1   917   217
+SBFPRMO             U    001A00       1  1194   219
+SBFPRMOF            U    001D00       1  1196   220
+SHORTF              F    000310       4   210   166
+SHORTNF             F    000300       4   204   164
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    38
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+START               H    000214       2   159   133
+STRTLABL            U    000000       1    78   127   130   132   135   143   203  1184  1186  1189  1191  1194  1196  1200  1202
+                                               1205  1207  1210  1212  1216  1218  1221  1223  1226  1228  1232
+WAITPSW             X    000270       8   190   187
+XBFPCT              U    000006       1  1142   247
+XBFPF               I    0006CE       4   677   181
+XBFPFLGS            U    005E00       1  1223   250
+XBFPIN              F    000960       4  1105  1142   248
+XBFPINRM            D    000A20       8  1153  1179   254
+XBFPNF              H    00065C       2   622   179
+XBFPNFCT            U    000008       1  1087   241
+XBFPNFFL            U    005800       1  1218   244
+XBFPNFIN            F    0008E0       4  1078  1087   242
+XBFPNFOT            U    005000       1  1216   243
+XBFPOUT             U    005C00       1  1221   249
+XBFPRM              I    00072C       4   726   183
+XBFPRMCT            U    000004       1  1179   253
+XBFPRMO             U    006000       1  1226   255
+XBFPRMOF            U    006A00       1  1228   256
+XTNDF               F    000370       4   246   180
+XTNDNF              F    000360       4   240   178
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    39
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     52   1233
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    40
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   2720  000-A9F  000-A9F
+  Region           2720  000-A9F  000-A9F
+    CSECT  BFPDIV  2720  000-A9F  000-A9F
+ASMA Ver. 0.2.0  bfp-014-divide.asm: Test IEEE Divide                                               28 Sep 2016 07:27:04  Page    41
+
+   STMT                              FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-014-divide.asm
+
+
+** NO ERRORS FOUND **
+
+[1234] MNOTE *,asma detected; no CSECT padding performed
+

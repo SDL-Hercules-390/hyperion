@@ -1,0 +1,99 @@
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             1 * PFPO TITLE 'Perform floating point operation. ESA and z mode.'
+                                                                             2
+                                                                             3 * This file was put into the public domain 2016-05-05
+                                                                             4 * by John P. Hartmann. You can use it for anything you like,
+                                                                             5 * as long as this notice remains.
+                                                                             6
+                                                                             7 * Note that this test runs in problem state. As a result STFL is
+                                                                             8 * not a good idea; nor is lpsw for that matter.
+                                                                             9
+                                                                            10 * So we terminate by SVC, and we determine architecture mode
+                                                                            11 * by seeing where the restart old psw was stored.
+                                                                            12
+                                      0000000000000000  0000000000000303    13 pfpo start 0
+0000000000000000                      0000000000000000                      14  using pfpo,15
+                                                                            15
+0000000000000000  00090000 00000200                                         16  dc a(x'00090000',go) ESA restart new PSW at 0
+0000000000000008                                                            17 ropsw390 ds 0xl8  ESA/390 Restart old psw
+0000000000000008  00000000 00000000                                         18  ds x'ffffffffffffffff'  If no longer ones, then ESA/390 mode
+                                                                            19
+0000000000000010                      0000000000000010  0000000000000060    20  org pfpo+x'60' ESA SVC new PSW
+0000000000000060  000A0000 00000000                                         21  dc x'000a0000',a(x'0')    normal end of job
+                                                                            22
+0000000000000068                      0000000000000068  0000000000000068    23  org pfpo+x'68' ESA program new
+0000000000000068  000A0000 DEADDEAD                                         24  dc x'000a0000',a(x'deaddead')
+                                                                            25
+0000000000000070                      0000000000000070  0000000000000120    26  org pfpo+x'120'
+0000000000000120                                                            27 ropswz ds 0xl16   z/Arch Restart old psw
+0000000000000120  FFFFFFFF FFFFFFFF                                         28  dc 16x'ff'  If no longer ones, then z/Arch mode
+                                                                            29
+0000000000000130                      0000000000000130  00000000000001A0    30  org pfpo+x'1a0' z restart new PSW
+00000000000001A0  00010001 80000000                                         31  dc x'0001000180000000',ad(go)
+                                                                            32
+00000000000001B0                      00000000000001B0  00000000000001C0    33  org pfpo+x'1c0' z SVC Program new
+00000000000001C0  00020001 80000000                                         34  dc x'0002000180000000',ad(0)
+                                                                            35
+00000000000001D0                      00000000000001D0  00000000000001D0    36  org pfpo+x'1d0' z Program new
+00000000000001D0  00020001 80000000                                         37  dc x'0002000180000000',ad(x'deaddead')
+                                                                            38
+00000000000001E0                      0000000000000000                      39  using pfpo,15
+00000000000001E0                      00000000000001E0  0000000000000200    40  org pfpo+x'200'
+0000000000000200                                                            41 go ds 0h
+0000000000000200  95FF F008                             0000000000000008    42  cli ropsw390,x'ff'   Running in ESA/390 mode?
+0000000000000204  4770 F218                             0000000000000218    43  bne eoj ..yes, no PFPO support, skip instruction execution
+0000000000000208  1B33                                                      44  sr 3,3 clear r3 for later condition code store
+000000000000020A  5800 F21C                             000000000000021C    45  l 0,=a(x'80000000') Test for invalid function
+000000000000020E  010A                                                      46  pfpo
+0000000000000210  B222 0030                                                 47  ipm 3 collect condition code from PSW
+0000000000000214  5030 F300                             0000000000000300    48  st 3,condcode
+0000000000000218                                                            49 eoj ds 0h
+0000000000000218  0A00                                                      50  svc 0 load hardwait psw.
+000000000000021C                                                            51  ltorg
+000000000000021C  80000000                                                  52                =a(x'80000000')
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000220                      0000000000000220  0000000000000300    53  org pfpo+x'300'
+0000000000000300  00000000                                                  54 condcode dc f'0'
+0000000000000304                                                            55  end
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     3
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CONDCODE            F    000300       4    54  48
+EOJ                 H    000218       2    49  43
+GO                  H    000200       2    41  16  31
+IMAGE               1    000000     772     0
+PFPO                J    000000     772    13  20  23  26  30  33  36  40  53  14  39
+ROPSW390            X    000008       8    17  42
+ROPSWZ              X    000120      16    27
+=a(x'80000000')     A    00021C       4    52  45
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     4
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     5
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    772  000-303  000-303
+  Region            772  000-303  000-303
+    CSECT  PFPO     772  000-303  000-303
+ASMA Ver. 0.2.0                                                                                     28 Oct 2016 21:32:58  Page     6
+
+   STMT                         FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\pfpo.asm
+
+
+** NO ERRORS FOUND **
+
+

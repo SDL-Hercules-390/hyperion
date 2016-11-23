@@ -535,22 +535,6 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) || ((_r3) & 2) ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
-    /* Program check if fpc is not valid contents for FPC register */
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
- #define FPC_BRM FPC_BRM_3BIT
- #define FPC_CHECK(_fpc, _regs) \
-    if(((_fpc) & FPC_RESV_FPX) \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4 \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5 \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#else /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
- #define FPC_BRM FPC_BRM_2BIT
- #define FPC_CHECK(_fpc, _regs) \
-    if((_fpc) & FPC_RESERVED) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
-
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|(FEATURE_LCSS_MAX-1))) \
@@ -616,6 +600,26 @@ do { \
 #include "machdep.h"
 
 #endif /*!defined(_OPCODE_H)*/
+
+/* Program check if fpc is not valid contents for FPC register */
+#undef FPC_BRM
+#undef FPC_CHECK
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#define FPC_BRM FPC_BRM_3BIT
+#define FPC_CHECK(_fpc, _regs) \
+    if(((_fpc) & FPC_RESV_FPX) \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4 \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5 \
+     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6) \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#else /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#define FPC_BRM FPC_BRM_2BIT
+#define FPC_CHECK(_fpc, _regs) \
+    if((_fpc) & FPC_RESERVED) \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
+
+
 
 #undef SIE_ACTIVE
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)

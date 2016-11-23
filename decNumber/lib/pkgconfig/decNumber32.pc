@@ -1,0 +1,5 @@
+Name:         decNumber32
+Description:  ANSI C General Decimal Arithmetic Library (32-bit Release)
+Version:      3.6.8
+Libs:         -L "/lib"  -l decNumber32
+Cflags:       -I "/include"   -D DECLITEND=1 -D DECPRINT=0

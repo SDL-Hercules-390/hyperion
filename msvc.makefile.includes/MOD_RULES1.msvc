@@ -29,17 +29,11 @@ $(O)build_pch.pch: build_pch.c
 
 !ENDIF
 
-{decNumber}.c{$(OBJDIR)}.obj::
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
-
 $(O)dfp.obj: dfp.c
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
+    $(cc) $(cdebug) $(cflags) /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
 
 $(O)pfpo.obj: pfpo.c
-    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" pfpo.c
-
-$(O)decNumber.res: decNumber\decNumber.rc
-    $(rc) $(rcflags) $(rcvars) -i decNumber -fo $(O)decNumber.res decNumber\decNumber.rc
+    $(cc) $(cdebug) $(cflags) /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" pfpo.c
 
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule

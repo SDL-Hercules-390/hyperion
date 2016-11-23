@@ -1,113 +1,127 @@
---- start of preamble
+-------------------------------------------------------------------------------
+              Berkeley SoftFloat Release 3a: Library Interface
+-------------------------------------------------------------------------------
 
-This is a verbatim copy of the README distributed with original unmodified
-SoftFloat package with only this preamble added
+                               Introduction
 
-no <functional> code modifications were done to the Hercules <version> of the
-package
+  Berkeley SoftFloat is a software implementation of binary floating-point
+  that conforms to the IEEE Standard for Floating-Point Arithmetic.  The
+  current release supports four binary formats: 32-bit single-precision,
+  64-bit double-precision, 80-bit double-extended-precision, and 128-bit
+  quadruple-precision.  The following functions are supported for each format:
 
----
+    *  addition, subtraction, multiplication, division, and square root;
+    *  fused multiply-add as defined by the IEEE Standard,
+       except for 80-bit double-extended-precision;
+    *  remainder as defined by the IEEE Standard;
+    *  round to integral value;
+    *  comparisons;
+    *  conversions to/from other supported formats; and
+    *  conversions to/from 32-bit and 64-bit integers, signed and unsigned.
 
-To fix the incompatibilities found when building Hercules on different platforms
-the SoftFloat needed sources were copied to the main source path
+  All operations required by the original 1985 version of the IEEE Floating-
+  Point Standard are implemented, except for conversions to and from decimal.
+  This document gives information about the types defined and the routines
+  implemented by SoftFloat.  It does not attempt to define or explain the
+  IEEE Floating-Point Standard.  Information about the standard is available
+  elsewhere.
 
-To make clear the components of the SoftFloat package ( as related to Hercules )
-all the sources start with SoftFloat ( case sensitive )
+  The current version of SoftFloat is Release 3a.  The only difference between
+  this version and the previous Release 3 is the replacement of the license
+  text supplied by the University of California.
 
-milieu.h was renamed to SoftFloat-milieu.h
-and all the sources interested/involved were modified accordingly
-( SoftFloat provided sources and ieee.c )
+  The functional interface of SoftFloat Release 3 and afterward differs in many
+  details from that of earlier releases.  For specifics of these differences,
+  see section 9 below, "Changes from SoftFloat Release 2."
 
-as a cosmetic change
-all the occurrences of SoftFloat were changed to SoftFloat ( case sensitive )
-to make searching easier
+-------------------------------------------------------------------------------
 
-for such a minor change no need to muck around the copyright notice
+                               Limitations
 
-the following has been inserted in the interested/involved sources
+  SoftFloat assumes the computer has an addressable byte size of 8 or 16 bits.
+  (Nearly all computers in use today have 8-bit bytes.)
 
-/* SoftFloat was repackaged to reside in the main source path        */
-/* to provide FULL CROSS PLATFORM build compatibility.               */
-/* To make evident the SoftFloat rePackaging standardized names      */
-/* were used                                                         */
-/* mileu.h was renamed to SoftFloat-milieu.h and all the sources     */
-/* were modified accordingly.                                        */
-/* no other modifications were made                                  */
-/* no reason to clutter the copyright stuff for such a minor change  */
-/*                                                                   */
-/* the original unmodified SoftFloat package is still distributed    */
-/* in zipped format here as SoftFloat-2b.zip                         */
+  SoftFloat is written in C and is designed to work with other C code. The
+  C compiler used must conform at a minimum to the 1989 ANSI standard for
+  the C language (same as the 1990 ISO standard) and must in addition support
+  basic arithmetic on 64-bit integers.  Earlier releases of SoftFloat included
+  implementations of 32-bit single-precision and 64-bit double-precision
+  floating-point that did not require 64-bit integers, but this option is not
+  supported starting with Release 3.  Since 1999, ISO standards for C have
+  mandated compiler support for 64-bit integers.  A compiler conforming to
+  the 1999 C Standard or later is recommended but not strictly required.
 
---- end of preamble
+  Most operations not required by the original 1985 version of the IEEE
+  Floating-Point Standard but added in the 2008 version are not yet supported
+  in SoftFloat Release 3a.
 
-Package Overview for SoftFloat Release 2b
+-------------------------------------------------------------------------------
 
-John R. Hauser
-2002 May 27
+                             Acknowledgments
 
+  The SoftFloat package was written by me, John R. Hauser. Release 3 of
+  SoftFloat was a completely new implementation supplanting earlier releases.
+  The project to create Release 3 (and now 3a) was done in the employ of the
+  University of California, Berkeley, within the Department of Electrical
+  Engineering and Computer Sciences, first for the Parallel Computing
+  Laboratory (Par Lab) and then for the ASPIRE Lab. The work was officially
+  overseen by Prof. Krste Asanovic, with funding provided by these sources:
 
-----------------------------------------------------------------------------
-Overview
+    Par Lab:      Microsoft (Award #024263), Intel (Award #024894),
+                  and U.C. Discovery (Award #DIG07-10227), with additional
+                  support from Par Lab affiliates Nokia, NVIDIA, Oracle,
+                  and Samsung.
 
-SoftFloat is a software implementation of floating-point that conforms to
-the IEC/IEEE Standard for Binary Floating-Point Arithmetic.  SoftFloat is
-distributed in the form of C source code.  Compiling the SoftFloat sources
-generates two things:
+    ASPIRE Lab:   DARPA PERFECT program (Award #HR0011-12-2-0016), with
+                  additional support from ASPIRE industrial sponsor Intel
+                  and ASPIRE affiliates Google, Nokia, NVIDIA, Oracle,
+                  and Samsung.
 
--- A SoftFloat object file (typically `SoftFloat.o') containing the complete
-   set of IEC/IEEE floating-point routines.
+-------------------------------------------------------------------------------
 
--- A `timesoftfloat' program for evaluating the speed of the SoftFloat
-   routines.  (The SoftFloat module is linked into this program.)
+                                LICENSE
 
-The SoftFloat package is documented in four text files:
+  The following applies to the whole of SoftFloat Release 3a as well as to
+  each source file individually.
 
-   SoftFloat.txt          Documentation for using the SoftFloat functions.
-   SoftFloat-source.txt   Documentation for compiling SoftFloat.
-   SoftFloat-history.txt  History of major changes to SoftFloat.
-   timesoftfloat.txt      Documentation for using `timesoftfloat'.
+  Copyright 2011, 2012, 2013, 2014, 2015 The Regents of the University of
+  California. All rights reserved.
 
-Other files in the package comprise the source code for SoftFloat.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
 
-Please be aware that some work is involved in porting this software to other
-targets.  It is not just a matter of getting `make' to complete without
-error messages.  I would have written the code that way if I could, but
-there are fundamental differences between systems that can't be hidden.
-You should not attempt to compile SoftFloat without first reading both
-`SoftFloat.txt' and `SoftFloat-source.txt'.
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions, and the following disclaimer.
 
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions, and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
 
-----------------------------------------------------------------------------
-Legal Notice
+    3. Neither the name of the University nor the names of its contributors
+       may be used to endorse or promote products derived from this software
+       without specific prior written permission.
 
-SoftFloat was written by me, John R. Hauser.  This work was made possible in
-part by the International Computer Science Institute, located at Suite 600,
-1947 Center Street, Berkeley, California 94704.  Funding was partially
-provided by the National Science Foundation under grant MIP-9311980.  The
-original version of this code was written as part of a project to build
-a fixed-point vector processor in collaboration with the University of
-California at Berkeley, overseen by Profs. Nelson Morgan and John Wawrzynek.
+  THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS "AS IS", AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ARE
+  DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-THIS SOFTWARE IS DISTRIBUTED AS IS, FOR FREE.  Although reasonable effort
-has been made to avoid it, THIS SOFTWARE MAY CONTAIN FAULTS THAT WILL AT
-TIMES RESULT IN INCORRECT BEHAVIOR.  USE OF THIS SOFTWARE IS RESTRICTED TO
-PERSONS AND ORGANIZATIONS WHO CAN AND WILL TAKE FULL RESPONSIBILITY FOR ALL
-LOSSES, COSTS, OR OTHER PROBLEMS THEY INCUR DUE TO THE SOFTWARE, AND WHO
-FURTHERMORE EFFECTIVELY INDEMNIFY JOHN HAUSER AND THE INTERNATIONAL COMPUTER
-SCIENCE INSTITUTE (possibly via similar legal warning) AGAINST ALL LOSSES,
-COSTS, OR OTHER PROBLEMS INCURRED BY THEIR CUSTOMERS AND CLIENTS DUE TO THE
-SOFTWARE.
+-------------------------------------------------------------------------------
 
-Derivative works are acceptable, even for commercial purposes, provided
-that the minimal documentation requirements stated in the source code are
-satisfied.
+                                BUILDING
 
+For additional information regarding SoftFloat as well as instructions on
+how to build the SoftFloat External Package for Hercules, please refer to
+the files in the SoftFloat source code repository hosted on GitHub at the
+following URL:
 
-----------------------------------------------------------------------------
-Contact Information
+            https://github.com/hercules-390/SoftFloat-3a
 
-At the time of this writing, the most up-to-date information about
-SoftFloat and the latest release can be found at the Web page `http://
-www.cs.berkeley.edu/~jhauser/arithmetic/SoftFloat.html'.
-
-
+-------------------------------------------------------------------------------

@@ -1,0 +1,715 @@
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE Test Data Classs and Load And Test
+                                                                             5 *  Exhaustively test results from the Test Data Class instruction.
+                                                                             6 *  Exhaustively test condition code setting from Load And Test.
+                                                                             7 *  The Condition Code, the only result from either instruction, is
+                                                                             8 *  saved for comparison with reference values.
+                                                                             9 *
+                                                                            10 ***********************************************************************
+
+
+                                                                            12 ***********************************************************************
+                                                                            13 *
+                                                                            14 * Neither Load And Test nor Test Data Class can result in IEEE
+                                                                            15 * exceptions.  All tests are performed with the FPC set to not trap
+                                                                            16 * on any exception.
+                                                                            17 *
+                                                                            18 * The same test data are used for both Load And Test and Test Data
+                                                                            19 * Class.
+                                                                            20 *
+                                                                            21 * For Load And Test, the result value and condition code are stored.
+                                                                            22 * For all but SNaN inputs, the result should be the same as the input.
+                                                                            23 * For SNaN inputs, the result is the corresponding QNaN.
+                                                                            24 *
+                                                                            25 * For Test Data Class, 13 Condition codes are stored.  The  first
+                                                                            26 * 12 correspond to a one-bit in each of 12 positions of the Test Data
+                                                                            27 * class second operand mask, and the thirteenth is generated with a
+                                                                            28 * mask of zero.  Test Data Class mask bits:
+                                                                            29 *
+                                                                            30 *           1 0 0 0 | 0 0 0 0 | 0 0 0 0  + zero
+                                                                            31 *           0 1 0 0 | 0 0 0 0 | 0 0 0 0  - zero
+                                                                            32 *           0 0 1 0 | 0 0 0 0 | 0 0 0 0  + finite
+                                                                            33 *           0 0 0 1 | 0 0 0 0 | 0 0 0 0  - finite
+                                                                            34 *           0 0 0 0 | 1 0 0 0 | 0 0 0 0  + tiny
+                                                                            35 *           0 0 0 0 | 0 1 0 0 | 0 0 0 0  - tiny
+                                                                            36 *           0 0 0 0 | 0 0 1 0 | 0 0 0 0  + inf
+                                                                            37 *           0 0 0 0 | 0 0 0 1 | 0 0 0 0  - inf
+                                                                            38 *           0 0 0 0 | 0 0 0 0 | 1 0 0 0  + QNaN
+                                                                            39 *           0 0 0 0 | 0 0 0 0 | 0 1 0 0  - QNaN
+                                                                            40 *           0 0 0 0 | 0 0 0 0 | 0 0 1 0  + SNaN
+                                                                            41 *           0 0 0 0 | 0 0 0 0 | 0 0 0 1  - SNaN
+                                                                            42 *
+                                                                            43 * Tests 3 LOAD AND TEST and 3 TEST DATA CLASS instructions
+                                                                            44 *   LOAD AND TEST (BFP short, RRE) LTEBR
+                                                                            45 *   LOAD AND TEST (BFP long, RRE) LTDBR
+                                                                            46 *   LOAD AND TEST (BFP extended, RRE) LTXBR
+                                                                            47 *   TEST DATA CLASS (BFP short, RRE) LTEBR
+                                                                            48 *   TEST DATA CLASS (BFP long, RRE) LTDBR
+                                                                            49 *   TEST DATA CLASS (BFP extended, RRE) LTXBR
+                                                                            50 *
+                                                                            51 * Also tests the following floating point support instructions
+                                                                            52 *   EXTRACT FPC
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            53 *   LOAD  (Short)
+                                                                            54 *   LOAD  (Long)
+                                                                            55 *   LOAD ZERO (Long)
+                                                                            56 *   STORE (Short)
+                                                                            57 *   STORE (Long)
+                                                                            58 *   SET FPC
+                                                                            59 *
+                                                                            60 ***********************************************************************
+
+
+                                                                            62          MACRO
+                                                                            63          PADCSECT &ENDLABL
+                                                                            64 .*
+                                                                            65 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            66 .*  program is not being assembled using asma.  asma generates a core
+                                                                            67 .*  image that is loaded by the loadcore command, and because the
+                                                                            68 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            69 .*  this small effort to keep the core image small.
+                                                                            70 .*
+                                                                            71          AIF   (D'&ENDLABL).GOODPAD
+                                                                            72          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            73          MNOTE *,'No CSECT padding performed'
+                                                                            74          MEXIT
+                                                                            75 .*
+                                                                            76 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            77          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            78          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            79          MEXIT
+                                                                            80 .*
+                                                                            81 .NOPAD   ANOP
+                                                                            82          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            83          MEND
+                                                                            84 *
+                                                                            85 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            86 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            87 *
+                                      0000000000000000  00000000000006C7    88 BFPLTTDC START 0
+                                      0000000000000000  0000000000000001    89 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    90 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    91 R1       EQU   1                   Current Test Data Class mask
+                                      0000000000000002  0000000000000001    92 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    93 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    94 R4       EQU   4                   Available
+                                      0000000000000005  0000000000000001    95 R5       EQU   5                   Available
+                                      0000000000000006  0000000000000001    96 R6       EQU   6                   Test Data Class top of loop
+                                      0000000000000007  0000000000000001    97 R7       EQU   7                   Ptr to next result for Load And Test
+                                      0000000000000008  0000000000000001    98 R8       EQU   8                   Ptr to next CC for Load And Test
+                                      0000000000000009  0000000000000001    99 R9       EQU   9                   Ptr to next CC for Test Data Class
+                                      000000000000000A  0000000000000001   100 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001   101 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001   102 R12      EQU   12                  Test value top of loop
+                                      000000000000000D  0000000000000001   103 R13      EQU   13                  Mainline return address
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000000E  0000000000000001   104 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001   105 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                           106 *
+                                                                           107 * Floating Point Register equates to keep the cross reference clean
+                                                                           108 *
+                                      0000000000000000  0000000000000001   109 FPR0     EQU   0
+                                      0000000000000001  0000000000000001   110 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   111 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   112 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   113 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   114 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   115 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   116 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   117 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   118 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   119 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   120 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   121 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   122 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   123 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   124 FPR15    EQU   15
+                                                                           125 *
+0000000000000000                      0000000000000000                     126          USING *,R15
+                                                                           127 *
+                                                                           128 * Above works on real iron (R15=0 after sysclear)
+                                                                           129 * and in z/CMS (R15 points to start of load module)
+                                                                           130 *
+
+
+                                                                           132 ***********************************************************************
+                                                                           133 *
+                                                                           134 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           135 *
+                                                                           136 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   138          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     139 PCINTCD  DS    H
+                                                                           140 *
+                                      0000000000000150  0000000000000001   141 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           142 *
+0000000000000090                      0000000000000090  00000000000001A0   143          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        144          DC    X'0000000180000000',AD(START)
+                                                                           145 *
+00000000000001B0                      00000000000001B0  00000000000001D0   146          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        147          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           148 *
+                                                                           149 * Program check routine.  If Data Exception, continue execution at
+                                                                           150 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           151 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           152 * in the FPCR.
+                                                                           153 *
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000001E0                      00000000000001E0  0000000000000200   154          ORG   STRTLABL+X'200'
+0000000000000200                                                           155 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   156          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   157          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   158          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           159 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     160          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     161          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F250                             0000000000000250   162          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           164 ***********************************************************************
+                                                                           165 *
+                                                                           166 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           167 *
+                                                                           168 ***********************************************************************
+
+
+0000000000000214                                                           170 START    DS    0H
+0000000000000214  B600 F260                             0000000000000260   171          STCTL R0,R0,CTLR0   Store CR0 to enable AFP
+0000000000000218  9604 F261                             0000000000000261   172          OI    CTLR0+1,X'04' Turn on AFP bit
+000000000000021C  B700 F260                             0000000000000260   173          LCTL  R0,R0,CTLR0   Reload updated CR0
+                                                                           174 *
+0000000000000220  41A0 F300                             0000000000000300   175          LA    R10,SHORTS    Point to short BFP test inputs
+0000000000000224  4DD0 F330                             0000000000000330   176          BAS   R13,TESTSBFP  Perform short BFP tests
+                                                                           177 *
+0000000000000228  41A0 F310                             0000000000000310   178          LA    R10,LONGS     Point to long BFP test inputs
+000000000000022C  4DD0 F3DC                             00000000000003DC   179          BAS   R13,TESTLBFP  Perform long BFP tests
+                                                                           180 *
+0000000000000230  41A0 F320                             0000000000000320   181          LA    R10,EXTDS     Point to extended BFP test inputs
+0000000000000234  4DD0 F488                             0000000000000488   182          BAS   R13,TESTXBFP  Perform short BFP tests
+                                                                           183 *
+0000000000000238  12EE                                                     184          LTR   R14,R14       Return address provided?
+000000000000023A  077E                                                     185          BNZR  R14           ..Yes, return to z/CMS test rig.
+000000000000023C  B2B2 F240                             0000000000000240   186          LPSWE WAITPSW       All done
+                                                                           187 *
+0000000000000240                                                           188          DS    0D            Ensure correct alignment for psw
+0000000000000240  00020000 00000000                                        189 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000250  00020000 00000000                                        190 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           191 *
+0000000000000260  00000000                                                 192 CTLR0    DS    F
+0000000000000264  00000000                                                 193 FPCREGNT DC    X'00000000'   FPCR, trap no IEEE exceptions, zero flags
+0000000000000268  F8000000                                                 194 FPCREGTR DC    X'F8000000'   FPCR, trap all IEEE exceptions, zero flags
+                                                                           195 *
+                                                                           196 * Input values parameter list, four fullwords for each test data set
+                                                                           197 *      1) Count,
+                                                                           198 *      2) Address of inputs,
+                                                                           199 *      3) Address to place results, and
+                                                                           200 *      4) Address to place DXC/Flags/cc values.
+                                                                           201 *
+000000000000026C                      000000000000026C  0000000000000300   202          ORG   STRTLABL+X'300'  Enable run-time replacement
+0000000000000300                                                           203 SHORTS   DS    0F           Input pairs for short BFP ests
+0000000000000300  0000000C                                                 204          DC    A(SBFPINCT)
+0000000000000304  0000055C                                                 205          DC    A(SBFPIN)
+0000000000000308  00001000                                                 206          DC    A(SBFPOUT)
+000000000000030C  00001100                                                 207          DC    A(SBFPOCC)
+                                                                           208 *
+0000000000000310                                                           209 LONGS    DS    0F           Input pairs for long BFP testing
+0000000000000310  0000000C                                                 210          DC    A(LBFPINCT)
+0000000000000314  00000590                                                 211          DC    A(LBFPIN)
+0000000000000318  00002000                                                 212          DC    A(LBFPOUT)
+000000000000031C  00002100                                                 213          DC    A(LBFPOCC)
+                                                                           214 *
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000320                                                           215 EXTDS    DS    0F           Input pairs for extendedd BFP testing
+0000000000000320  0000000C                                                 216          DC    A(XBFPINCT)
+0000000000000324  000005F8                                                 217          DC    A(XBFPIN)
+0000000000000328  00003000                                                 218          DC    A(XBFPOUT)
+000000000000032C  00003200                                                 219          DC    A(XBFPOCC)
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           221 ***********************************************************************
+                                                                           222 * Perform Short BFP Tests.  This includes one execution of Load And
+                                                                           223 * Test, followed by 13 executions of Test Data Class.  The result value
+                                                                           224 * and Condition code are saved for Load And Test, and the Condition
+                                                                           225 * Code is saved for each execution of Test Data Class.
+                                                                           226 *
+                                                                           227 ***********************************************************************
+
+
+0000000000000330                                                           229 TESTSBFP DS    0H            Test short BFP input values
+0000000000000330  9823 A000                             0000000000000000   230          LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000334  9878 A008                             0000000000000008   231          LM    R7,R8,8(R10)  Get address of result and CC areas.
+0000000000000338  1222                                                     232          LTR   R2,R2         Any test cases?
+000000000000033A  078D                                                     233          BZR   R13           ..No, return to caller
+000000000000033C  0DC0                                                     234          BASR  R12,0         Set top of loop
+                                                                           235 *
+000000000000033E  7880 3000                             0000000000000000   236          LE    FPR8,0(,R3)   Get short BFP test value
+                                                                           237 *                            Polute the CC result area.  Correct
+                                                                           238 *                            ..results will clean it up.
+0000000000000342  D20F 8000 F540      0000000000000000  0000000000000540   239          MVC   0(16,R8),=X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+                                                                           240 *
+0000000000000348  B29D F264                             0000000000000264   241          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000034C  7810 F58C                             000000000000058C   242          LE    FPR1,SBFPINVL Ensure an unchanged FPR1 is detectable
+0000000000000350  B222 0000                                                243          IPM   R0            Get current program mask and CC
+0000000000000354  5400 F550                             0000000000000550   244          N     R0,=X'CFFFFFFF' Turn off condition code bits
+0000000000000358  5600 F554                             0000000000000554   245          O     R0,=X'20000000' Force condition code two
+000000000000035C  0400                                                     246          SPM   R0            Set PSW CC to two
+000000000000035E  B302 0018                                                247          LTEBR FPR1,FPR8     Load and Test into FPR1
+0000000000000362  7010 7000                             0000000000000000   248          STE   FPR1,0(,R7)   Store short BFP result
+0000000000000366  B222 0000                                                249          IPM   R0            Retrieve condition code
+000000000000036A  8800 001C                             000000000000001C   250          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000036E  4200 8000                             0000000000000000   251          STC   R0,0(,R8)     Store in CC result area
+                                                                           252 *
+0000000000000372  B29D F268                             0000000000000268   253          LFPC  FPCREGTR      Set exceptions non-trappable
+0000000000000376  7810 F58C                             000000000000058C   254          LE    FPR1,SBFPINVL Ensure an unchanged FPR1 is detectable
+000000000000037A  B222 0000                                                255          IPM   R0            Get current program mask and CC
+000000000000037E  5400 F550                             0000000000000550   256          N     R0,=X'CFFFFFFF' Turn off condition code bits
+0000000000000382  5600 F554                             0000000000000554   257          O     R0,=X'20000000' Force condition code two
+0000000000000386  0400                                                     258          SPM   R0            Set PSW CC to two
+0000000000000388  B302 0018                                                259          LTEBR FPR1,FPR8     Load and Test into FPR1
+000000000000038C  7010 7004                             0000000000000004   260          STE   FPR1,4(,R7)   Store short BFP result
+0000000000000390  B222 0000                                                261          IPM   R0            Retrieve condition code
+0000000000000394  8800 001C                             000000000000001C   262          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000398  4200 8001                             0000000000000001   263          STC   R0,1(,R8)     Store in CC result area
+000000000000039C  B38C 0000                                                264          EFPC  R0            Extract FPC contents to R0
+00000000000003A0  BE02 8002                             0000000000000002   265          STCM  R0,B'0010',2(R8)  Store any DXC code
+                                                                           266 *
+00000000000003A4  A718 1000                                                267          LHI   R1,4096       Load Test Data Class mask starting point
+00000000000003A8  4190 8003                             0000000000000003   268          LA    R9,3(,R8)     Point to first Test Data Class CC
+00000000000003AC  0D60                                                     269          BASR  R6,0          Set start of Test Data Class loop
+                                                                           270 *
+00000000000003AE  8810 0001                             0000000000000001   271          SRL   R1,1          Shift to get next class mask value
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000003B2  ED80 1000 0010                        0000000000000000   272          TCEB  FPR8,0(,R1)   Test value against class mask
+00000000000003B8  B222 0000                                                273          IPM   R0            Retrieve condition code
+00000000000003BC  8800 001C                             000000000000001C   274          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000003C0  4200 9000                             0000000000000000   275          STC   R0,0(,R9)     Store in CC result area
+00000000000003C4  4190 9001                             0000000000000001   276          LA    R9,1(,R9)     Point to next CC slot
+00000000000003C8  1211                                                     277          LTR   R1,R1         Have we tested all masks including zero
+00000000000003CA  0776                                                     278          BNZR  R6            ..no, at least one more to test
+                                                                           279
+00000000000003CC  4130 3004                             0000000000000004   280          LA    R3,4(,R3)     Point to next short BFP test value
+00000000000003D0  4170 7008                             0000000000000008   281          LA    R7,8(,R7)     Point to next Load And Test result pair
+00000000000003D4  4180 8010                             0000000000000010   282          LA    R8,16(,R8)    Point to next CC result set
+00000000000003D8  062C                                                     283          BCTR  R2,R12        Loop through all test cases
+                                                                           284 *
+00000000000003DA  07FD                                                     285          BR    R13           Tests done, return to mainline
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           287 ***********************************************************************
+                                                                           288 * Perform long BFP Tests.  This includes one execution of Load And
+                                                                           289 * Test, followed by 13 executions of Test Data Class.  The result value
+                                                                           290 * and Condition code are saved for Load And Test, and the Condition
+                                                                           291 * Code is saved for each execution of Test Data Class.
+                                                                           292 *
+                                                                           293 ***********************************************************************
+
+
+00000000000003DC                                                           295 TESTLBFP DS    0H            Test long BFP input values
+00000000000003DC  9823 A000                             0000000000000000   296          LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000003E0  9878 A008                             0000000000000008   297          LM    R7,R8,8(R10)  Get address of result and CC areas.
+00000000000003E4  1222                                                     298          LTR   R2,R2         Any test cases?
+00000000000003E6  078D                                                     299          BZR   R13           ..No, return to caller
+00000000000003E8  0DC0                                                     300          BASR  R12,0         Set top of loop
+                                                                           301 *
+00000000000003EA  6880 3000                             0000000000000000   302          LD    FPR8,0(,R3)   Get long BFP test value
+                                                                           303 *                            Polute the CC result area.  Correct
+                                                                           304 *                            ..results will clean it up.
+00000000000003EE  D20F 8000 F540      0000000000000000  0000000000000540   305          MVC   0(16,R8),=X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+                                                                           306 *
+00000000000003F4  B29D F264                             0000000000000264   307          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003F8  6810 F5F0                             00000000000005F0   308          LD    FPR1,LBFPINVL Ensure an unchanged FPR1 is detectable
+00000000000003FC  B222 0000                                                309          IPM   R0            Get current program mask and CC
+0000000000000400  5400 F550                             0000000000000550   310          N     R0,=X'CFFFFFFF' Turn off condition code bits
+0000000000000404  5600 F558                             0000000000000558   311          O     R0,=X'10000000' Force condition code one
+0000000000000408  0400                                                     312          SPM   R0            Set PSW CC to one
+000000000000040A  B312 0018                                                313          LTDBR FPR1,FPR8     Load and Test into FPR1
+000000000000040E  6010 7000                             0000000000000000   314          STD   FPR1,0(,R7)   Store long BFP result
+0000000000000412  B222 0000                                                315          IPM   R0            Retrieve condition code
+0000000000000416  8800 001C                             000000000000001C   316          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000041A  4200 8000                             0000000000000000   317          STC   R0,0(,R8)     Store in CC result area
+                                                                           318 *
+000000000000041E  B29D F268                             0000000000000268   319          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000422  6810 F5F0                             00000000000005F0   320          LD    FPR1,LBFPINVL Ensure an unchanged FPR1 is detectable
+0000000000000426  B222 0000                                                321          IPM   R0            Get current program mask and CC
+000000000000042A  5400 F550                             0000000000000550   322          N     R0,=X'CFFFFFFF' Turn off condition code bits
+000000000000042E  5600 F558                             0000000000000558   323          O     R0,=X'10000000' Force condition code one
+0000000000000432  0400                                                     324          SPM   R0            Set PSW CC to one
+0000000000000434  B312 0018                                                325          LTDBR FPR1,FPR8     Load and Test into FPR1
+0000000000000438  6010 7008                             0000000000000008   326          STD   FPR1,8(,R7)   Store long BFP result
+000000000000043C  B222 0000                                                327          IPM   R0            Retrieve condition code
+0000000000000440  8800 001C                             000000000000001C   328          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000444  4200 8001                             0000000000000001   329          STC   R0,1(,R8)     Store in CC result area
+0000000000000448  B38C 0000                                                330          EFPC  R0            Extract FPC contents to R0
+000000000000044C  BE02 8002                             0000000000000002   331          STCM  R0,B'0010',2(R8)  Store any DXC code
+                                                                           332 *
+0000000000000450  A718 1000                                                333          LHI   R1,4096       Load Test Data Class mask starting point
+0000000000000454  4190 8003                             0000000000000003   334          LA    R9,3(,R8)     Point to first Test Data Class CC
+0000000000000458  0D60                                                     335          BASR  R6,0          Set start of Test Data Class loop
+                                                                           336
+000000000000045A  8810 0001                             0000000000000001   337          SRL   R1,1          Shift to get next class mask value
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000045E  ED80 1000 0011                        0000000000000000   338          TCDB  FPR8,0(,R1)   Test value against class mask
+0000000000000464  B222 0000                                                339          IPM   R0            Retrieve condition code
+0000000000000468  8800 001C                             000000000000001C   340          SRL   R0,28         Move CC to low-order r0, dump prog mask
+000000000000046C  4200 9000                             0000000000000000   341          STC   R0,0(,R9)     Store in CC result area
+0000000000000470  4190 9001                             0000000000000001   342          LA    R9,1(,R9)     Point to next CC slot
+0000000000000474  1211                                                     343          LTR   R1,R1         Have we tested all masks including zero
+0000000000000476  0776                                                     344          BNZR  R6            ..no, at least one more to test
+                                                                           345
+0000000000000478  4130 3008                             0000000000000008   346          LA    R3,8(,R3)     Point to next long BFP test value
+000000000000047C  4170 7010                             0000000000000010   347          LA    R7,16(,R7)    Point to next Load And Test result pair
+0000000000000480  4180 8010                             0000000000000010   348          LA    R8,16(,R8)    Point to next CC result set
+0000000000000484  062C                                                     349          BCTR  R2,R12        Loop through all test cases
+                                                                           350 *
+0000000000000486  07FD                                                     351          BR    R13           Tests done, return to mainline
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           353 ***********************************************************************
+                                                                           354 * Perform extended BFP Tests.  This includes one execution of Load And
+                                                                           355 * Test, followed by 13 executions of Test Data Class.  The result value
+                                                                           356 * and Condition code are saved for Load And Test, and the Condition
+                                                                           357 * Code is saved for each execution of Test Data Class.
+                                                                           358 *
+                                                                           359 ***********************************************************************
+
+
+0000000000000488                                                           361 TESTXBFP DS    0H            Test extended BFP input values
+0000000000000488  9823 A000                             0000000000000000   362          LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000048C  9878 A008                             0000000000000008   363          LM    R7,R8,8(R10)  Get address of result and CC areas.
+0000000000000490  1222                                                     364          LTR   R2,R2         Any test cases?
+0000000000000492  078D                                                     365          BZR   R13           ..No, return to caller
+0000000000000494  0DC0                                                     366          BASR  R12,0         Set top of loop
+                                                                           367 *
+0000000000000496  6880 3000                             0000000000000000   368          LD    FPR8,0(,R3)   Get extended BFP test value part 1
+000000000000049A  68A0 3008                             0000000000000008   369          LD    FPR10,8(,R3)  Get extended BFP test value part 2
+                                                                           370 *                            Polute the CC result area.  Correct
+                                                                           371 *                            ..results will clean it up.
+000000000000049E  D20F 8000 F540      0000000000000000  0000000000000540   372          MVC   0(16,R8),=X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+                                                                           373 *
+00000000000004A4  B29D F264                             0000000000000264   374          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004A8  6810 F6B8                             00000000000006B8   375          LD    FPR1,XBFPINVL   Ensure an unchanged FPR1-3 is detectable
+00000000000004AC  6830 F6C0                             00000000000006C0   376          LD    FPR3,XBFPINVL+8 ..part 2 of load FPR pair
+00000000000004B0  B222 0000                                                377          IPM   R0            Get current program mask and CC
+00000000000004B4  5400 F550                             0000000000000550   378          N     R0,=X'CFFFFFFF' Turn off condition code bits
+00000000000004B8  0400                                                     379          SPM   R0            Set PSW CC to zero
+00000000000004BA  B342 0018                                                380          LTXBR FPR1,FPR8     Load and Test into FPR1
+00000000000004BE  6010 7000                             0000000000000000   381          STD   FPR1,0(,R7)   Store extended BFP result part 1
+00000000000004C2  6030 7008                             0000000000000008   382          STD   FPR3,8(,R7)   Store extended BFP result part 2
+00000000000004C6  B222 0000                                                383          IPM   R0            Retrieve condition code
+00000000000004CA  8800 001C                             000000000000001C   384          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000004CE  4200 8000                             0000000000000000   385          STC   R0,0(,R8)     Store in CC result area
+                                                                           386 *
+00000000000004D2  B29D F268                             0000000000000268   387          LFPC  FPCREGTR      Set exceptions trappable
+00000000000004D6  6810 F6B8                             00000000000006B8   388          LD    FPR1,XBFPINVL   Ensure an unchanged FPR1-3 is detectable
+00000000000004DA  6830 F6C0                             00000000000006C0   389          LD    FPR3,XBFPINVL+8 ..part 2 of load FPR pair
+00000000000004DE  B222 0000                                                390          IPM   R0            Get current program mask and CC
+00000000000004E2  5400 F550                             0000000000000550   391          N     R0,=X'CFFFFFFF' Turn off condition code bits
+00000000000004E6  0400                                                     392          SPM   R0            Set PSW CC to zero
+00000000000004E8  B342 0018                                                393          LTXBR FPR1,FPR8     Load and Test into FPR1
+00000000000004EC  6010 7010                             0000000000000010   394          STD   FPR1,16(,R7)  Store extended BFP result part 1
+00000000000004F0  6030 7018                             0000000000000018   395          STD   FPR3,24(,R7)  Store extended BFP result part 2
+00000000000004F4  B222 0000                                                396          IPM   R0            Retrieve condition code
+00000000000004F8  8800 001C                             000000000000001C   397          SRL   R0,28         Move CC to low-order r0, dump prog mask
+00000000000004FC  4200 8001                             0000000000000001   398          STC   R0,1(,R8)     Store in CC result area
+0000000000000500  B38C 0000                                                399          EFPC  R0            Extract FPC contents to R0
+0000000000000504  BE02 8002                             0000000000000002   400          STCM  R0,B'0010',2(R8)  Store any DXC code
+                                                                           401 *
+0000000000000508  A718 1000                                                402          LHI   R1,4096       Load Test Data Class mask starting point
+000000000000050C  4190 8003                             0000000000000003   403          LA    R9,3(,R8)     Point to first Test Data Class CC
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000510  0D60                                                     404          BASR  R6,0          Set start of Test Data Class loop
+                                                                           405
+0000000000000512  8810 0001                             0000000000000001   406          SRL   R1,1          Shift to get next class mask value
+0000000000000516  ED80 1000 0012                        0000000000000000   407          TCXB  FPR8,0(,R1)   Test value against class mask
+000000000000051C  B222 0000                                                408          IPM   R0            Retrieve condition code
+0000000000000520  8800 001C                             000000000000001C   409          SRL   R0,28         Move CC to low-order r0, dump prog mask
+0000000000000524  4200 9000                             0000000000000000   410          STC   R0,0(,R9)     Store in last byte of FPCR
+0000000000000528  4190 9001                             0000000000000001   411          LA    R9,1(,R9)     Point to next CC slot
+000000000000052C  1211                                                     412          LTR   R1,R1         Have we tested all masks including zero
+000000000000052E  0776                                                     413          BNZR  R6            ..no, at least one more to test
+                                                                           414
+0000000000000530  4130 3010                             0000000000000010   415          LA    R3,16(,R3)    Point to next extended BFP test value
+0000000000000534  4170 7020                             0000000000000020   416          LA    R7,32(,R7)    Point to next Load And Test result pair
+0000000000000538  4180 8010                             0000000000000010   417          LA    R8,16(,R8)    Point to next CC result set
+000000000000053C  062C                                                     418          BCTR  R2,R12        Loop through all test cases
+                                                                           419 *
+000000000000053E  07FD                                                     420          BR    R13           Tests done, return to mainline
+                                                                           421 *
+0000000000000540                                                           422          LTORG
+0000000000000540  FFFFFFFF FFFFFFFF                                        423                =X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+0000000000000550  CFFFFFFF                                                 424                =X'CFFFFFFF'
+0000000000000554  20000000                                                 425                =X'20000000'
+0000000000000558  10000000                                                 426                =X'10000000'
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           428 ***********************************************************************
+                                                                           429 *
+                                                                           430 * Short integer inputs for Load And Test and Test Data Class.  The same
+                                                                           431 * values are used for short, long, and extended formats.
+                                                                           432 *
+                                                                           433 ***********************************************************************
+
+
+000000000000055C                                                           435 SBFPIN   DS    0F            Ensure fullword alignment for input table
+000000000000055C  00000000                                                 436          DC    X'00000000'      +0
+0000000000000560  80000000                                                 437          DC    X'80000000'      -0
+0000000000000564  3F800000                                                 438          DC    X'3F800000'      +1
+0000000000000568  BF800000                                                 439          DC    X'BF800000'      -1
+000000000000056C  007FFFFF                                                 440          DC    X'007FFFFF'      +subnormal
+0000000000000570  807FFFFF                                                 441          DC    X'807FFFFF'      -subnormal
+0000000000000574  7F800000                                                 442          DC    X'7F800000'      +infinity
+0000000000000578  FF800000                                                 443          DC    X'FF800000'      -infinity
+000000000000057C  7FC00000                                                 444          DC    X'7FC00000'      +QNaN
+0000000000000580  FFC00000                                                 445          DC    X'FFC00000'      -QNaN
+0000000000000584  7F810000                                                 446          DC    X'7F810000'      +SNaN
+0000000000000588  FF810000                                                 447          DC    X'FF810000'      -SNaN
+                                      000000000000000C  0000000000000001   448 SBFPINCT EQU   (*-SBFPIN)/4  count of short BFP test values
+                                                                           449 *
+000000000000058C  0000DEAD                                                 450 SBFPINVL DC    X'0000DEAD'   Invalid result, used to polute result FPR
+
+
+
+                                                                           452 ***********************************************************************
+                                                                           453 *
+                                                                           454 * Long integer inputs for Load And Test and Test Data Class.  The same
+                                                                           455 * values are used for short, long, and extended formats.
+                                                                           456 *
+                                                                           457 ***********************************************************************
+
+
+0000000000000590                                                           459 LBFPIN   DS    0D
+0000000000000590  00000000 00000000                                        460          DC    X'0000000000000000'      +0
+0000000000000598  80000000 00000000                                        461          DC    X'8000000000000000'      -0
+00000000000005A0  3FF00000 00000000                                        462          DC    X'3FF0000000000000'      +1
+00000000000005A8  BFF00000 00000000                                        463          DC    X'BFF0000000000000'      -1
+00000000000005B0  000FFFFF FFFFFFFF                                        464          DC    X'000FFFFFFFFFFFFF'      +subnormal
+00000000000005B8  800FFFFF FFFFFFFF                                        465          DC    X'800FFFFFFFFFFFFF'      -subnormal
+00000000000005C0  7FF00000 00000000                                        466          DC    X'7FF0000000000000'      +infinity
+00000000000005C8  FFF00000 00000000                                        467          DC    X'FFF0000000000000'      -infinity
+00000000000005D0  7FF80000 00000000                                        468          DC    X'7FF8000000000000'      +QNaN
+00000000000005D8  FFF80000 00000000                                        469          DC    X'FFF8000000000000'      -QNaN
+00000000000005E0  7FF01000 00000000                                        470          DC    X'7FF0100000000000'      +SNaN
+00000000000005E8  FFF01000 00000000                                        471          DC    X'FFF0100000000000'      -SNaN
+                                      000000000000000C  0000000000000001   472 LBFPINCT EQU   (*-LBFPIN)/8  count of long BFP test values
+                                                                           473 *
+00000000000005F0  0000DEAD 00000000                                        474 LBFPINVL DC    X'0000DEAD00000000'  Invalid result, used to
+                                                                           475 *                                   ..polute result FPR
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+
+                                                                           477 ***********************************************************************
+                                                                           478 *
+                                                                           479 * Extended integer inputs for Load And Test and Test Data Class.  The
+                                                                           480 * same values are used for short, long, and extended formats.
+                                                                           481 *
+                                                                           482 ***********************************************************************
+
+
+00000000000005F8                                                           484 XBFPIN   DS    0D
+00000000000005F8  00000000 00000000                                        485          DC    X'00000000000000000000000000000000' +0
+0000000000000608  80000000 00000000                                        486          DC    X'80000000000000000000000000000000' -0
+0000000000000618  3FFF0000 00000000                                        487          DC    X'3FFF0000000000000000000000000000' +1
+0000000000000628  BFFF0000 00000000                                        488          DC    X'BFFF0000000000000000000000000000' -1
+0000000000000638  0000FFFF FFFFFFFF                                        489          DC    X'0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF' +subnormal
+0000000000000648  8000FFFF FFFFFFFF                                        490          DC    X'8000FFFFFFFFFFFFFFFFFFFFFFFFFFFF' -subnormal
+0000000000000658  7FFF0000 00000000                                        491          DC    X'7FFF0000000000000000000000000000' +infinity
+0000000000000668  FFFF0000 00000000                                        492          DC    X'FFFF0000000000000000000000000000' -infinity
+0000000000000678  7FFF8000 00000000                                        493          DC    X'7FFF8000000000000000000000000000' +QNaN
+0000000000000688  FFFF8000 00000000                                        494          DC    X'FFFF8000000000000000000000000000' -QNaN
+0000000000000698  7FFF0100 00000000                                        495          DC    X'7FFF0100000000000000000000000000' +SNaN
+00000000000006A8  FFFF0100 00000000                                        496          DC    X'FFFF0100000000000000000000000000' -SNaN
+                                      000000000000000C  0000000000000001   497 XBFPINCT EQU   (*-XBFPIN)/16  count of extended BFP test values
+                                                                           498 *
+00000000000006B8  0000DEAD 00000000                                        499 XBFPINVL DC    X'0000DEAD000000000000000000000000'  Invalid result, used to
+                                                                           500 *                                   ..used to polute result FPR
+
+
+
+                                                                           502 ***********************************************************************
+                                                                           503 *
+                                                                           504 *  Locations for results
+                                                                           505 *
+                                                                           506 ***********************************************************************
+
+
+                                      0000000000001000  0000000000000001   508 SBFPOUT  EQU   STRTLABL+X'1000'    Integer short BFP Load and Test
+                                                                           509 *                                  ..12 used, room for 60 tests
+                                      0000000000001100  0000000000000001   510 SBFPOCC  EQU   STRTLABL+X'1100'    Condition codes from Load and Test
+                                                                           511 *                                  ..and Test Data Class.
+                                                                           512 *                                  ..12 sets used, room for 60 sets
+                                                                           513 *                                  ..next available is X'1500'
+                                                                           514 *
+                                      0000000000002000  0000000000000001   515 LBFPOUT  EQU   STRTLABL+X'2000'    Integer long BFP Load And Test
+                                                                           516 *                                  ..12 used, room for 32 tests,
+                                      0000000000002100  0000000000000001   517 LBFPOCC  EQU   STRTLABL+X'2100'     Condition codes from Load and Test
+                                                                           518 *                                  ..and Test Data Class.
+                                                                           519 *                                  ..12 sets used, room for 32 sets
+                                                                           520 *                                  ..next available is X'2300'
+                                                                           521 *
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000003000  0000000000000001   522 XBFPOUT  EQU   STRTLABL+X'3000'    Integer extended BFP Load And Test
+                                                                           523 *                                  ..12 used, room for 32 tests,
+                                      0000000000003200  0000000000000001   524 XBFPOCC  EQU   STRTLABL+X'3200'    Condition codes from Load and Test
+                                                                           525 *                                  ..and Test Data Class.
+                                                                           526 *                                  ..12 sets used, room for 32 sets
+                                                                           527 *                                  ..next available is X'3400'
+                                                                           528 *
+                                      0000000000003400  0000000000000001   529 ENDLABL  EQU   STRTLABL+X'3400'
+                                                                           530          PADCSECT ENDLABL
+                                                                           531+         MNOTE *,'asma detected; no CSECT padding performed'
+                                                                           532 *
+00000000000006C8                                                           533          END
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    16
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPLTTDC            J    000000    1736    88
+CTLR0               F    000260       4   192  171  172  173
+ENDLABL             U    003400       1   529
+EXTDS               F    000320       4   215  181
+FPCREGNT            X    000264       4   193  241  307  374
+FPCREGTR            X    000268       4   194  253  319  387
+FPR0                U    000000       1   109
+FPR1                U    000001       1   110  242  247  248  254  259  260  308  313  314  320  325  326  375  380  381  388  393
+                                               394
+FPR10               U    00000A       1   119  369
+FPR11               U    00000B       1   120
+FPR12               U    00000C       1   121
+FPR13               U    00000D       1   122
+FPR14               U    00000E       1   123
+FPR15               U    00000F       1   124
+FPR2                U    000002       1   111
+FPR3                U    000003       1   112  376  382  389  395
+FPR4                U    000004       1   113
+FPR5                U    000005       1   114
+FPR6                U    000006       1   115
+FPR7                U    000007       1   116
+FPR8                U    000008       1   117  236  247  259  272  302  313  325  338  368  380  393  407
+FPR9                U    000009       1   118
+HARDWAIT            X    000250       8   190  162
+IMAGE               1    000000    1736     0
+LBFPIN              D    000590       8   459  472  211
+LBFPINCT            U    00000C       1   472  210
+LBFPINVL            X    0005F0       8   474  308  320
+LBFPOCC             U    002100       1   517  213
+LBFPOUT             U    002000       1   515  212
+LONGS               F    000310       4   209  178
+PCINTCD             H    00008E       2   139  156
+PCNOTDTA            H    00020C       2   159  157
+PCOLDPSW            U    000150       1   141  158
+PROGCHK             H    000200       2   155  147
+R0                  U    000000       1    90  171  173  243  244  245  246  249  250  251  255  256  257  258  261  262  263  264
+                                               265  273  274  275  309  310  311  312  315  316  317  321  322  323  324  327  328
+                                               329  330  331  339  340  341  377  378  379  383  384  385  390  391  392  396  397
+                                               398  399  400  408  409  410
+R1                  U    000001       1    91  267  271  272  277  333  337  338  343  402  406  407  412
+R10                 U    00000A       1   100  175  178  181  230  231  296  297  362  363
+R11                 U    00000B       1   101
+R12                 U    00000C       1   102  234  283  300  349  366  418
+R13                 U    00000D       1   103  176  179  182  233  285  299  351  365  420
+R14                 U    00000E       1   104  160  161  184  185
+R15                 U    00000F       1   105  126
+R2                  U    000002       1    92  230  232  283  296  298  349  362  364  418
+R3                  U    000003       1    93  230  236  280  296  302  346  362  368  369  415
+R4                  U    000004       1    94
+R5                  U    000005       1    95
+R6                  U    000006       1    96  269  278  335  344  404  413
+R7                  U    000007       1    97  231  248  260  281  297  314  326  347  363  381  382  394  395  416
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    17
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R8                  U    000008       1    98  231  239  251  263  265  268  282  297  305  317  329  331  334  348  363  372  385
+                                               398  400  403  417
+R9                  U    000009       1    99  268  275  276  334  341  342  403  410  411
+SBFPIN              F    00055C       4   435  448  205
+SBFPINCT            U    00000C       1   448  204
+SBFPINVL            X    00058C       4   450  242  254
+SBFPOCC             U    001100       1   510  207
+SBFPOUT             U    001000       1   508  206
+SHORTS              F    000300       4   203  175
+START               H    000214       2   170  144
+STRTLABL            U    000000       1    89  138  141  143  146  154  202  508  510  515  517  522  524  529
+TESTLBFP            H    0003DC       2   295  179
+TESTSBFP            H    000330       2   229  176
+TESTXBFP            H    000488       2   361  182
+WAITPSW             X    000240       8   189  186
+XBFPIN              D    0005F8       8   484  497  217
+XBFPINCT            U    00000C       1   497  216
+XBFPINVL            X    0006B8      16   499  375  376  388  389
+XBFPOCC             U    003200       1   524  219
+XBFPOUT             U    003000       1   522  218
+=X'10000000'        X    000558       4   426  311  323
+=X'20000000'        X    000554       4   425  245  257
+=X'CFFFFFFF'        X    000550       4   424  244  256  310  322  378  391
+=X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+                    X    000540      16   423  239  305  372
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    18
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     63   530
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    19
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1736  000-6C7  000-6C7
+  Region             1736  000-6C7  000-6C7
+    CSECT  BFPLTTDC  1736  000-6C7  000-6C7
+ASMA Ver. 0.2.0  bfp-012-loadtest.asm: Test IEEE Test Data Class, Load And Test                     27 Sep 2016 15:36:20  Page    20
+
+   STMT                               FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-012-loadtest.asm
+
+
+** NO ERRORS FOUND **
+
+[531] MNOTE *,asma detected; no CSECT padding performed
+

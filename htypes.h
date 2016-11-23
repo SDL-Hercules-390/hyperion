@@ -1,38 +1,97 @@
-/* HTYPES.H     (c) Copyright Roger Bowler, 1999-2012                */
+/* HTYPES.H     (C) Copyright Roger Bowler, 1999-2016                */
 /*              Hercules Type Definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
+/* Fixed size integer, boolean and Hercules types (int32_t, bool,    */
+/* U32, U64, FWORD, DBLWRD, etc). Try to pull in as many of the      */
+/* values as possible from the available system headers.             */
+/*-------------------------------------------------------------------*/
+
 #ifndef _HTYPES_H_
 #define _HTYPES_H_
-/*
-    Try to pull in as many typedef's as possible
-    from the provided system headers for whatever
-    system we're building on...
-*/
-#ifndef HAVE_INTTYPES_H
-  #ifdef HAVE_U_INT
-    #define  uint8_t   u_int8_t
-    #define  uint16_t  u_int16_t
-    #define  uint32_t  u_int32_t
-    #define  uint64_t  u_int64_t
-  #else
-    #error Unable to find fixed-size data types
+
+#ifdef HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Standard fixed size integer and boolean types                     */
+/*-------------------------------------------------------------------*/
+
+#ifdef HAVE_INTTYPES_H
+  #include <inttypes.h>
+#endif
+
+#ifdef HAVE_STDBOOL_H
+  #include <stdbool.h>
+#else
+  #define                       _Bool    int
+  #define bool                  _Bool
+  #define true                  1
+  #define false                 0
+  #define __bool_true_false_are_defined  1
+#endif
+
+#ifdef HAVE_STDINT_H
+  #include <stdint.h>
+#else
+  typedef char                  int8_t; 
+  typedef short                 int16_t; 
+  typedef int                   int32_t; 
+  typedef long long             int64_t; 
+  typedef unsigned char         uint8_t; 
+  typedef unsigned short        uint16_t; 
+  typedef unsigned int          uint32_t; 
+  typedef unsigned long long    uint64_t; 
+  typedef char                  int_fast8_t;
+  typedef int                   int_fast16_t;
+  typedef int                   int_fast32_t;
+  typedef long long             int_fast64_t;
+  typedef unsigned char         uint_least8_t;
+  typedef unsigned char         uint_fast8_t;
+  typedef unsigned int          uint_fast16_t;
+  typedef unsigned int          uint_fast32_t;
+  typedef unsigned long long    uint_fast64_t;
+#endif
+#define int32_t                 int32_t /* used by external packages */
+#ifndef HAVE_U_INT8_T
+  typedef uint8_t               u_int8_t;
+  typedef uint16_t              u_int16_t;
+  typedef uint32_t              u_int32_t;
+  typedef uint64_t              u_int64_t;
+#endif
+#ifndef _BSDTYPES_DEFINED
+  #ifndef HAVE_U_CHAR
+    typedef unsigned char       u_char;
+  #endif
+  #ifndef HAVE_U_SHORT
+    typedef unsigned short      u_short;
+  #endif
+  #ifndef HAVE_U_INT
+    typedef unsigned int        u_int;
+  #endif
+  #ifndef HAVE_U_LONG
+    typedef unsigned long       u_long;
+  #endif
+  #define _BSDTYPES_DEFINED
+#endif
+#ifdef _MSVC_
+  typedef  int32_t              pid_t;
+  typedef  int32_t              mode_t;
+  typedef uint32_t              in_addr_t;
+  #ifndef   _SSIZE_T_DEFINED
+    typedef  SSIZE_T            ssize_t;
+    #define _SSIZE_T_DEFINED
   #endif
 #endif
 
-#ifndef HAVE_U_INT8_T
-  #ifdef HAVE_INTTYPES_H
-    typedef  uint8_t   u_int8_t;
-    typedef  uint16_t  u_int16_t;
-    typedef  uint32_t  u_int32_t;
-    typedef  uint64_t  u_int64_t;
-  #else
-    #error Unable to define u_intNN_t data types
-  #endif
-#endif
+/*-------------------------------------------------------------------*/
+/* Hercules fixed size integer types                                 */
+/*-------------------------------------------------------------------*/
 
 typedef  int8_t     S8;         // signed 8-bits
 typedef  int16_t    S16;        // signed 16-bits
@@ -56,22 +115,6 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 /* Socket stuff                                                      */
 /*-------------------------------------------------------------------*/
 
-#ifndef _BSDTYPES_DEFINED
-  #ifndef HAVE_U_CHAR
-    typedef unsigned char   u_char;
-  #endif
-  #ifndef HAVE_U_SHORT
-    typedef unsigned short  u_short;
-  #endif
-  #ifndef HAVE_U_INT
-    typedef unsigned int    u_int;
-  #endif
-  #ifndef HAVE_U_LONG
-    typedef unsigned long   u_long;
-  #endif
-  #define _BSDTYPES_DEFINED
-#endif
-
 #ifndef HAVE_SOCKLEN_T
   typedef  unsigned int     socklen_t;
 #endif
@@ -80,11 +123,8 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   typedef  unsigned int     in_addr_t;
 #endif
 
-/* FIXME : THAT'S WRONG ! BUT IT WORKS FOR THE TIME BEING */
-#if defined(_MSVC_)
 #ifndef HAVE_USECONDS_T
-  typedef  long             useconds_t;
-#endif
+  typedef  unsigned int     useconds_t;
 #endif
 
 #if !defined( HAVE_STRUCT_IN_ADDR_S_ADDR ) && !defined( _WINSOCK_H )
@@ -99,17 +139,21 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   typedef  char               GETSET_SOCKOPT_T;
   typedef  const char *const *EXECV_ARG2_ARGV_T;
 #else
-  typedef  void         GETSET_SOCKOPT_T;
-  typedef  char *const *EXECV_ARG2_ARGV_T;
+  typedef  void               GETSET_SOCKOPT_T;
+  typedef  char *const       *EXECV_ARG2_ARGV_T;
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Magnetic Tape stuff                                               */
+/*-------------------------------------------------------------------*/
 
 #if defined( OPTION_SCSI_TAPE ) && !defined( HAVE_SYS_MTIO_H )
   struct mt_tape_info
   {
-     long t_type;    /* device type id (mt_type) */
-     char *t_name;   /* descriptive name */
+     long   t_type;         /* device type id (mt_type) */
+     char  *t_name;         /* descriptive name */
   };
-  #define MT_TAPE_INFO   { { 0, NULL } }
+  #define MT_TAPE_INFO      { { 0, NULL } }
 #endif
 
 /*-------------------------------------------------------------------*/

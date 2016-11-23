@@ -1,0 +1,725 @@
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE Compare and Compare And Signal.
+                                                                             5 *  Exhaustively test results from the Compare and Compare And Signal
+                                                                             6 *  instructions.  The Condition Code and FPC flags are saved for each
+                                                                             7 *  test value pair.  If an IEEE trap occurs, the DXC code is saved
+                                                                             8 *  instead of the Condition Code.
+                                                                             9 *
+                                                                            10 ***********************************************************************
+
+
+                                                                            12 ***********************************************************************
+                                                                            13 *
+                                                                            14 *  Each possible comparison class is tested, for a total of 64 test
+                                                                            15 *  value pairs for each of the five instruction precisions and formats.
+                                                                            16 *  Each instruction precision and format is tested twice, once with
+                                                                            17 *  exceptions non-trappable and once with exceptions trappable.
+                                                                            18 *
+                                                                            19 *  One list of input values is provided.  Each value is tested against
+                                                                            20 *  every other value in the same list.
+                                                                            21 *
+                                                                            22 *  Each result is two bytes, one for the CC and one for FPC flags.  If
+                                                                            23 *  a trap occurs, the DXC code replaces the CC.
+                                                                            24 *
+                                                                            25 * Tests 5 COMPARE, 5 COMPARE AND SIGNAL
+                                                                            26 *   COMPARE (BFP short, RRE) CEBR
+                                                                            27 *   COMPARE (BFP short, RXE) CEB
+                                                                            28 *   COMPARE (BFP long, RRE) CDBR
+                                                                            29 *   COMPARE (BFP long, RXE) CDB
+                                                                            30 *   COMPARE (BFP extended, RRE) CXBR
+                                                                            31 *   COMPARE AND SIGNAL (BFP short, RRE) KEBR
+                                                                            32 *   COMPARE AND SIGNAL (BFP short, RXE) KEB
+                                                                            33 *   COMPARE AND SIGNAL (BFP long, RRE) KDBR
+                                                                            34 *   COMPARE AND SIGNAL (BFP long, RXE) KDB
+                                                                            35 *   COMPARE AND SIGNAL (BFP extended, RRE) KXBR
+                                                                            36 *
+                                                                            37 * Also tests the following floating point support instructions
+                                                                            38 *   EXTRACT FPC
+                                                                            39 *   LOAD  (Short)
+                                                                            40 *   LOAD  (Long)
+                                                                            41 *   LOAD ZERO (Long)
+                                                                            42 *   STORE (Short)
+                                                                            43 *   STORE (Long)
+                                                                            44 *   SET FPC
+                                                                            45 *
+                                                                            46 ***********************************************************************
+
+
+                                                                            48          MACRO
+                                                                            49          PADCSECT &ENDLABL
+                                                                            50 .*
+                                                                            51 .*  Macro to pad the CSECT to include result data areas if this test
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52 .*  program is not being assembled using asma.  asma generates a core
+                                                                            53 .*  image that is loaded by the loadcore command, and because the
+                                                                            54 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            55 .*  this small effort to keep the core image small.
+                                                                            56 .*
+                                                                            57          AIF   (D'&ENDLABL).GOODPAD
+                                                                            58          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            59          MNOTE *,'No CSECT padding performed'
+                                                                            60          MEXIT
+                                                                            61 .*
+                                                                            62 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            63          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            64          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            65          MEXIT
+                                                                            66 .*
+                                                                            67 .NOPAD   ANOP
+                                                                            68          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            69          MEND
+                                                                            70 *
+                                                                            71 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            72 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            73 *
+                                      0000000000000000  00000000000006CF    74 BFPCOMPS START 0
+                                      0000000000000000  0000000000000001    75 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    76 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    77 R1       EQU   1                   Current Test Data Class mask
+                                      0000000000000002  0000000000000001    78 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    79 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    80 R4       EQU   4                   Available
+                                      0000000000000005  0000000000000001    81 R5       EQU   5                   Available
+                                      0000000000000006  0000000000000001    82 R6       EQU   6                   Available
+                                      0000000000000007  0000000000000001    83 R7       EQU   7                   Ptr to next Compare result
+                                      0000000000000008  0000000000000001    84 R8       EQU   8                   Ptr to next Compare and Signal reslt
+                                      0000000000000009  0000000000000001    85 R9       EQU   9                   Available
+                                      000000000000000A  0000000000000001    86 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    87 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    88 R12      EQU   12                  Test value top of loop
+                                      000000000000000D  0000000000000001    89 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    90 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    91 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            92 *
+                                                                            93 * Floating Point Register equates to keep the cross reference clean
+                                                                            94 *
+                                      0000000000000000  0000000000000001    95 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    96 FPR1     EQU   1
+                                      0000000000000002  0000000000000001    97 FPR2     EQU   2
+                                      0000000000000003  0000000000000001    98 FPR3     EQU   3
+                                      0000000000000004  0000000000000001    99 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   100 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   101 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   102 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   103 FPR8     EQU   8
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000000009  0000000000000001   104 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   105 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   106 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   107 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   108 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   109 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   110 FPR15    EQU   15
+                                                                           111 *
+0000000000000000                      0000000000000000                     112          USING *,R15
+                                                                           113 *
+                                                                           114 * Above works on real iron (R15=0 after sysclear)
+                                                                           115 * and in z/CMS (R15 points to start of load module)
+                                                                           116 *
+
+
+                                                                           118 ***********************************************************************
+                                                                           119 *
+                                                                           120 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           121 *
+                                                                           122 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   124          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     125 PCINTCD  DS    H
+                                                                           126 *
+                                      0000000000000150  0000000000000001   127 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           128 *
+0000000000000090                      0000000000000090  00000000000001A0   129          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        130          DC    X'0000000180000000',AD(START)
+                                                                           131 *
+00000000000001B0                      00000000000001B0  00000000000001D0   132          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        133          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           134 *
+                                                                           135 * Program check routine.  If Data Exception, continue execution at
+                                                                           136 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           137 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           138 * in the FPCR.
+                                                                           139 *
+00000000000001E0                      00000000000001E0  0000000000000200   140          ORG   STRTLABL+X'200'
+0000000000000200                                                           141 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   142          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   143          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   144          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           145 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     146          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     147          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F250                             0000000000000250   148          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           150 ***********************************************************************
+                                                                           151 *
+                                                                           152 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           153 *
+                                                                           154 ***********************************************************************
+
+
+0000000000000214                                                           156 START    DS    0H
+0000000000000214  B600 F260                             0000000000000260   157          STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F261                             0000000000000261   158          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F260                             0000000000000260   159          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           160 *
+0000000000000220  41A0 F300                             0000000000000300   161          LA    R10,SHORTC    Point to short BFP parameters
+0000000000000224  4DD0 F330                             0000000000000330   162          BAS   R13,SBFPCOMP  Perform short BFP Compare
+                                                                           163 *
+0000000000000228  41A0 F310                             0000000000000310   164          LA    R10,LONGC    Point to long BFP parameters
+000000000000022C  4DD0 F43C                             000000000000043C   165          BAS   R13,LBFPCOMP  Perform long BFP Compare
+                                                                           166 *
+0000000000000230  41A0 F320                             0000000000000320   167          LA    R10,XTNDC     Point to extended BFP parameters
+0000000000000234  4DD0 F548                             0000000000000548   168          BAS   R13,XBFPCOMP  Perform extended BFP Compare
+                                                                           169 *
+0000000000000238  12EE                                                     170          LTR   R14,R14        Any value in R14?
+000000000000023A  077E                                                     171          BNZR  R14            ..yes, running on z/CMS, take graceful exit
+000000000000023C  B2B2 F240                             0000000000000240   172          LPSWE WAITPSW        ..no, on bare iron, load disabled wait PSW
+                                                                           173 *
+0000000000000240                                                           174          DS    0D             Ensure correct alignment for psw
+0000000000000240  00020000 00000000                                        175 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000250  00020000 00000000                                        176 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           177 *
+0000000000000260  00000000                                                 178 CTLR0    DS    F
+0000000000000264  00000000                                                 179 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000268  F8000000                                                 180 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           181 *
+                                                                           182 * Input values parameter list, four fullwords for each test data set
+                                                                           183 *      1) Count,
+                                                                           184 *      2) Address of inputs,
+                                                                           185 *      3) Address to place results, and
+                                                                           186 *      4) Address to place DXC/Flags/cc values.
+                                                                           187 *
+000000000000026C                      000000000000026C  0000000000000300   188          ORG   STRTLABL+X'300'  Enable run-time replacement
+0000000000000300                                                           189 SHORTC   DS    0F            Inputs for short BFP Compare
+0000000000000300  00000008                                                 190          DC    A(SBFPCT)
+0000000000000304  000005EC                                                 191          DC    A(SBFPIN)
+0000000000000308  00001000                                                 192          DC    A(SBFPCCC)
+000000000000030C  00001400                                                 193          DC    A(SBFPCSCC)
+                                                                           194 *
+0000000000000310                                                           195 LONGC    DS    0F            Inputs for long BFP Compare
+0000000000000310  00000008                                                 196          DC    A(LBFPCT)
+0000000000000314  00000610                                                 197          DC    A(LBFPIN)
+0000000000000318  00002000                                                 198          DC    A(LBFPCCC)
+000000000000031C  00002400                                                 199          DC    A(LBFPCSCC)
+                                                                           200 *
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000320                                                           201 XTNDC    DS    0F            Inputs for extended BFP Compare
+0000000000000320  00000008                                                 202          DC    A(XBFPCT)
+0000000000000324  00000650                                                 203          DC    A(XBFPIN)
+0000000000000328  00003000                                                 204          DC    A(XBFPCCC)
+000000000000032C  00003400                                                 205          DC    A(XBFPCSCC)
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           207 ***********************************************************************
+                                                                           208 *
+                                                                           209 * Compare short BFP inputs to each possible class of short BFP.  Eight
+                                                                           210 * pairs of results are generated for each input: one with all
+                                                                           211 * exceptions non-trappable, and the second with all exceptions
+                                                                           212 * trappable.   The CC and FPC flags are stored for each result that
+                                                                           213 * does not cause a trap.  The DXC code and  FPC flags are stored for
+                                                                           214 * each result that traps.
+                                                                           215 *
+                                                                           216 ***********************************************************************
+
+
+0000000000000330                                                           218 SBFPCOMP DS    0H            Compare short BFP inputs
+0000000000000330  9823 A000                             0000000000000000   219          LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000334  9878 A008                             0000000000000008   220          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000338  1222                                                     221          LTR   R2,R2         Any test cases?
+000000000000033A  078D                                                     222          BZR   R13           ..No, return to caller
+000000000000033C  0DC0                                                     223          BASR  R12,0         Set top of loop
+                                                                           224 *
+000000000000033E  7880 3000                             0000000000000000   225          LE    FPR8,0(,R3)   Get short BFP left-hand test value
+0000000000000342  9845 A000                             0000000000000000   226          LM    R4,R5,0(R10)  Get count and start of right-hand side
+0000000000000346  1799                                                     227          XR    R9,R9         Reference zero value for Set Program Mask
+0000000000000348  0D60                                                     228          BASR  R6,0          Set top of inner loop
+                                                                           229 *
+                                                                           230 * top of loop to test left-hand value against each input
+                                                                           231 *
+000000000000034A  7810 5000                             0000000000000000   232          LE    FPR1,0(,R5)   Get right-hand side of compare
+                                                                           233 *
+000000000000034E  B29D F264                             0000000000000264   234          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000352  0490                                                     235          SPM   R9            Clear condition code
+0000000000000354  B309 0081                                                236          CEBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+0000000000000358  B29C 7000                             0000000000000000   237          STFPC 0(R7)         Store FPC
+000000000000035C  B222 0000                                                238          IPM   R0            Get condition code and program mask
+0000000000000360  8800 001C                             000000000000001C   239          SRL   R0,28         Isolate CC in low order byte
+0000000000000364  4200 7003                             0000000000000003   240          STC   R0,3(,R7)     Save condition code in results table
+                                                                           241 *
+0000000000000368  B29D F268                             0000000000000268   242          LFPC  FPCREGTR      Set exceptions trappable
+000000000000036C  0490                                                     243          SPM   R9            Clear condition code
+000000000000036E  B309 0081                                                244          CEBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+0000000000000372  B29C 7004                             0000000000000004   245          STFPC 4(R7)         Store FPC
+0000000000000376  B222 0000                                                246          IPM   R0            Get condition code and program mask
+000000000000037A  8800 001C                             000000000000001C   247          SRL   R0,28         Isolate CC in low order byte
+000000000000037E  4200 7007                             0000000000000007   248          STC   R0,7(,R7)     Save condition code in results table
+                                                                           249 *
+0000000000000382  B29D F264                             0000000000000264   250          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000386  0490                                                     251          SPM   R9            Clear condition code
+0000000000000388  ED80 5000 0009                        0000000000000000   252          CEB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+000000000000038E  B29C 7008                             0000000000000008   253          STFPC 8(R7)         Store FPC
+0000000000000392  B222 0000                                                254          IPM   R0            Get condition code and program mask
+0000000000000396  8800 001C                             000000000000001C   255          SRL   R0,28         Isolate CC in low order byte
+000000000000039A  4200 700B                             000000000000000B   256          STC   R0,11(,R7)    Save condition code in results table
+                                                                           257 *
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000039E  B29D F268                             0000000000000268   258          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003A2  0490                                                     259          SPM   R9            Clear condition code
+00000000000003A4  ED80 5000 0009                        0000000000000000   260          CEB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+00000000000003AA  B29C 700C                             000000000000000C   261          STFPC 12(R7)        Store FPC
+00000000000003AE  B222 0000                                                262          IPM   R0            Get condition code and program mask
+00000000000003B2  8800 001C                             000000000000001C   263          SRL   R0,28         Isolate CC in low order byte
+00000000000003B6  4200 700F                             000000000000000F   264          STC   R0,15(,R7)    Save condition code in results table
+                                                                           265 *
+00000000000003BA  B29D F264                             0000000000000264   266          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003BE  0490                                                     267          SPM   R9            Clear condition code
+00000000000003C0  B308 0081                                                268          KEBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000003C4  B29C 8000                             0000000000000000   269          STFPC 0(R8)         Store FPC
+00000000000003C8  B222 0000                                                270          IPM   R0            Get condition code and program mask
+00000000000003CC  8800 001C                             000000000000001C   271          SRL   R0,28         Isolate CC in low order byte
+00000000000003D0  4200 8003                             0000000000000003   272          STC   R0,3(,R8)     Save condition code in results table
+                                                                           273 *
+00000000000003D4  B29D F268                             0000000000000268   274          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003D8  0490                                                     275          SPM   R9            Clear condition code
+00000000000003DA  B308 0081                                                276          KEBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000003DE  B29C 8004                             0000000000000004   277          STFPC 4(R8)         Store FPC
+00000000000003E2  B222 0000                                                278          IPM   R0            Get condition code and program mask
+00000000000003E6  8800 001C                             000000000000001C   279          SRL   R0,28         Isolate CC in low order byte
+00000000000003EA  4200 8007                             0000000000000007   280          STC   R0,7(,R8)     Save condition code in results table
+                                                                           281 *
+00000000000003EE  B29D F264                             0000000000000264   282          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003F2  0490                                                     283          SPM   R9            Clear condition code
+00000000000003F4  ED80 5000 0008                        0000000000000000   284          KEB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+00000000000003FA  B29C 8008                             0000000000000008   285          STFPC 8(R8)         Store FPC
+00000000000003FE  B222 0000                                                286          IPM   R0            Get condition code and program mask
+0000000000000402  8800 001C                             000000000000001C   287          SRL   R0,28         Isolate CC in low order byte
+0000000000000406  4200 800B                             000000000000000B   288          STC   R0,11(,R8)    Save condition code in results table
+                                                                           289 *
+000000000000040A  B29D F268                             0000000000000268   290          LFPC  FPCREGTR      Set exceptions trappable
+000000000000040E  0490                                                     291          SPM   R9            Clear condition code
+0000000000000410  ED80 5000 0008                        0000000000000000   292          KEB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+0000000000000416  B29C 800C                             000000000000000C   293          STFPC 12(R8)        Store FPC
+000000000000041A  B222 0000                                                294          IPM   R0            Get condition code and program mask
+000000000000041E  8800 001C                             000000000000001C   295          SRL   R0,28         Isolate CC in low order byte
+0000000000000422  4200 800F                             000000000000000F   296          STC   R0,15(,R8)    Save condition code in results table
+                                                                           297 *
+0000000000000426  4150 5004                             0000000000000004   298          LA    R5,4(,R5)     Point to next right-hand value
+000000000000042A  4170 7010                             0000000000000010   299          LA    R7,16(,R7)    Point to next CC/DXC/FPR CEB result area
+000000000000042E  4180 8010                             0000000000000010   300          LA    R8,16(,R8)    Point to next CC/DXC/FPR KEB result area
+0000000000000432  0646                                                     301          BCTR  R4,R6         Loop through right-hand values
+                                                                           302 *
+0000000000000434  4130 3004                             0000000000000004   303          LA    R3,4(,R3)     Point to next left-hand value
+0000000000000438  062C                                                     304          BCTR  R2,R12        Loop through left-hand values
+                                                                           305 *
+000000000000043A  07FD                                                     306          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           308 ***********************************************************************
+                                                                           309 *
+                                                                           310 * Compare long BFP inputs to each possible class of long BFP.  Eight
+                                                                           311 * pairs of results are generated for each input: one with all
+                                                                           312 * exceptions non-trappable, and the second with all exceptions
+                                                                           313 * trappable.   The CC and FPC flags are stored for each result that
+                                                                           314 * does not cause a trap.  The DXC code and  FPC flags are stored for
+                                                                           315 * each result that traps.
+                                                                           316 *
+                                                                           317 ***********************************************************************
+
+
+000000000000043C                                                           319 LBFPCOMP DS    0H            Compare long BFP inputs
+000000000000043C  9823 A000                             0000000000000000   320          LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000440  9878 A008                             0000000000000008   321          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000444  1222                                                     322          LTR   R2,R2         Any test cases?
+0000000000000446  078D                                                     323          BZR   R13           ..No, return to caller
+0000000000000448  0DC0                                                     324          BASR  R12,0         Set top of loop
+                                                                           325 *
+000000000000044A  6880 3000                             0000000000000000   326          LD    FPR8,0(,R3)   Get long BFP left-hand test value
+000000000000044E  9845 A000                             0000000000000000   327          LM    R4,R5,0(R10)  Get count and start of right-hand side
+0000000000000452  1799                                                     328          XR    R9,R9         Reference zero value for Set Program Mask
+0000000000000454  0D60                                                     329          BASR  R6,0          Set top of inner loop
+                                                                           330 *
+                                                                           331 * top of loop to test left-hand value against each input
+                                                                           332 *
+0000000000000456  6810 5000                             0000000000000000   333          LD    FPR1,0(,R5)   Get right-hand side of compare
+                                                                           334 *
+000000000000045A  B29D F264                             0000000000000264   335          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000045E  0490                                                     336          SPM   R9            Clear condition code
+0000000000000460  B319 0081                                                337          CDBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+0000000000000464  B29C 7000                             0000000000000000   338          STFPC 0(R7)         Store FPC
+0000000000000468  B222 0000                                                339          IPM   R0            Get condition code and program mask
+000000000000046C  8800 001C                             000000000000001C   340          SRL   R0,28         Isolate CC in low order byte
+0000000000000470  4200 7003                             0000000000000003   341          STC   R0,3(,R7)     Save condition code in results table
+                                                                           342 *
+0000000000000474  B29D F268                             0000000000000268   343          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000478  0490                                                     344          SPM   R9            Clear condition code
+000000000000047A  B319 0081                                                345          CDBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+000000000000047E  B29C 7004                             0000000000000004   346          STFPC 4(R7)         Store FPC
+0000000000000482  B222 0000                                                347          IPM   R0            Get condition code and program mask
+0000000000000486  8800 001C                             000000000000001C   348          SRL   R0,28         Isolate CC in low order byte
+000000000000048A  4200 7007                             0000000000000007   349          STC   R0,7(,R7)     Save condition code in results table
+                                                                           350 *
+000000000000048E  B29D F264                             0000000000000264   351          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000492  0490                                                     352          SPM   R9            Clear condition code
+0000000000000494  ED80 5000 0019                        0000000000000000   353          CDB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+000000000000049A  B29C 7008                             0000000000000008   354          STFPC 8(R7)         Store FPC
+000000000000049E  B222 0000                                                355          IPM   R0            Get condition code and program mask
+00000000000004A2  8800 001C                             000000000000001C   356          SRL   R0,28         Isolate CC in low order byte
+00000000000004A6  4200 700B                             000000000000000B   357          STC   R0,11(,R7)    Save condition code in results table
+                                                                           358 *
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004AA  B29D F268                             0000000000000268   359          LFPC  FPCREGTR      Set exceptions trappable
+00000000000004AE  0490                                                     360          SPM   R9            Clear condition code
+00000000000004B0  ED80 5000 0019                        0000000000000000   361          CDB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+00000000000004B6  B29C 700C                             000000000000000C   362          STFPC 12(R7)        Store FPC
+00000000000004BA  B222 0000                                                363          IPM   R0            Get condition code and program mask
+00000000000004BE  8800 001C                             000000000000001C   364          SRL   R0,28         Isolate CC in low order byte
+00000000000004C2  4200 700F                             000000000000000F   365          STC   R0,15(,R7)    Save condition code in results table
+                                                                           366 *
+00000000000004C6  B29D F264                             0000000000000264   367          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004CA  0490                                                     368          SPM   R9            Clear condition code
+00000000000004CC  B318 0081                                                369          KDBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000004D0  B29C 8000                             0000000000000000   370          STFPC 0(R8)         Store FPC
+00000000000004D4  B222 0000                                                371          IPM   R0            Get condition code and program mask
+00000000000004D8  8800 001C                             000000000000001C   372          SRL   R0,28         Isolate CC in low order byte
+00000000000004DC  4200 8003                             0000000000000003   373          STC   R0,3(,R8)     Save condition code in results table
+                                                                           374 *
+00000000000004E0  B29D F268                             0000000000000268   375          LFPC  FPCREGTR      Set exceptions trappable
+00000000000004E4  0490                                                     376          SPM   R9            Clear condition code
+00000000000004E6  B318 0081                                                377          KDBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000004EA  B29C 8004                             0000000000000004   378          STFPC 4(R8)         Store FPC
+00000000000004EE  B222 0000                                                379          IPM   R0            Get condition code and program mask
+00000000000004F2  8800 001C                             000000000000001C   380          SRL   R0,28         Isolate CC in low order byte
+00000000000004F6  4200 8007                             0000000000000007   381          STC   R0,7(,R8)     Save condition code in results table
+                                                                           382 *
+00000000000004FA  B29D F264                             0000000000000264   383          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004FE  0490                                                     384          SPM   R9            Clear condition code
+0000000000000500  ED80 5000 0018                        0000000000000000   385          KDB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+0000000000000506  B29C 8008                             0000000000000008   386          STFPC 8(R8)         Store FPC
+000000000000050A  B222 0000                                                387          IPM   R0            Get condition code and program mask
+000000000000050E  8800 001C                             000000000000001C   388          SRL   R0,28         Isolate CC in low order byte
+0000000000000512  4200 800B                             000000000000000B   389          STC   R0,11(,R8)    Save condition code in results table
+                                                                           390 *
+0000000000000516  B29D F268                             0000000000000268   391          LFPC  FPCREGTR      Set exceptions trappable
+000000000000051A  0490                                                     392          SPM   R9            Clear condition code
+000000000000051C  ED80 5000 0018                        0000000000000000   393          KDB   FPR8,0(,R5)   Compare And Signal floating point nrs RXE
+0000000000000522  B29C 800C                             000000000000000C   394          STFPC 12(R8)        Store FPC
+0000000000000526  B222 0000                                                395          IPM   R0            Get condition code and program mask
+000000000000052A  8800 001C                             000000000000001C   396          SRL   R0,28         Isolate CC in low order byte
+000000000000052E  4200 800F                             000000000000000F   397          STC   R0,15(,R8)    Save condition code in results table
+                                                                           398 *
+0000000000000532  4150 5008                             0000000000000008   399          LA    R5,8(,R5)     Point to next right-hand value
+0000000000000536  4170 7010                             0000000000000010   400          LA    R7,16(,R7)    Point to next CC/DXC/FPR CDB result area
+000000000000053A  4180 8010                             0000000000000010   401          LA    R8,16(,R8)    Point to next CC/DXC/FPR KDB result area
+000000000000053E  0646                                                     402          BCTR  R4,R6         Loop through right-hand values
+                                                                           403 *
+0000000000000540  4130 3008                             0000000000000008   404          LA    R3,8(,R3)     Point to next left-hand value
+0000000000000544  062C                                                     405          BCTR  R2,R12        Loop through left-hand values
+                                                                           406 *
+0000000000000546  07FD                                                     407          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           409 ***********************************************************************
+                                                                           410 *
+                                                                           411 * Compare long BFP inputs to each possible class of long BFP.  Eight
+                                                                           412 * pairs of results are generated for each input: one with all
+                                                                           413 * exceptions non-trappable, and the second with all exceptions
+                                                                           414 * trappable.   The CC and FPC flags are stored for each result that
+                                                                           415 * does not cause a trap.  The DXC code and  FPC flags are stored for
+                                                                           416 * each result that traps.
+                                                                           417 *
+                                                                           418 ***********************************************************************
+
+
+0000000000000548                                                           420 XBFPCOMP DS    0H            Compare long BFP inputs
+0000000000000548  9823 A000                             0000000000000000   421          LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000054C  9878 A008                             0000000000000008   422          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000550  1222                                                     423          LTR   R2,R2         Any test cases?
+0000000000000552  078D                                                     424          BZR   R13           ..No, return to caller
+0000000000000554  0DC0                                                     425          BASR  R12,0         Set top of loop
+                                                                           426 *
+0000000000000556  6880 3000                             0000000000000000   427          LD    FPR8,0(,R3)   Get long BFP left-hand test value part 1
+000000000000055A  68A0 3008                             0000000000000008   428          LD    FPR10,8(,R3)  Get long BFP left-hand test value part 2
+000000000000055E  9845 A000                             0000000000000000   429          LM    R4,R5,0(R10)  Get count and start of right-hand side
+0000000000000562  1799                                                     430          XR    R9,R9         Reference zero value for Set Program Mask
+0000000000000564  0D60                                                     431          BASR  R6,0          Set top of inner loop
+                                                                           432 *
+                                                                           433 * top of loop to test left-hand value against each input
+                                                                           434 *
+0000000000000566  6810 5000                             0000000000000000   435          LD    FPR1,0(,R5)   Get right-hand side of compare part 1
+000000000000056A  6830 5008                             0000000000000008   436          LD    FPR3,8(,R5)   Get right-hand side of compare part 2
+                                                                           437 *
+000000000000056E  B29D F264                             0000000000000264   438          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000572  0490                                                     439          SPM   R9            Clear condition code
+0000000000000574  B349 0081                                                440          CXBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+0000000000000578  B29C 7000                             0000000000000000   441          STFPC 0(R7)         Store FPC
+000000000000057C  B222 0000                                                442          IPM   R0            Get condition code and program mask
+0000000000000580  8800 001C                             000000000000001C   443          SRL   R0,28         Isolate CC in low order byte
+0000000000000584  4200 7003                             0000000000000003   444          STC   R0,3(,R7)     Save condition code in results table
+                                                                           445 *
+0000000000000588  B29D F268                             0000000000000268   446          LFPC  FPCREGTR      Set exceptions trappable
+000000000000058C  0490                                                     447          SPM   R9            Clear condition code
+000000000000058E  B349 0081                                                448          CXBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+0000000000000592  B29C 7004                             0000000000000004   449          STFPC 4(R7)         Store FPC
+0000000000000596  B222 0000                                                450          IPM   R0            Get condition code and program mask
+000000000000059A  8800 001C                             000000000000001C   451          SRL   R0,28         Isolate CC in low order byte
+000000000000059E  4200 7007                             0000000000000007   452          STC   R0,7(,R7)     Save condition code in results table
+                                                                           453 *
+00000000000005A2  B29D F264                             0000000000000264   454          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000005A6  0490                                                     455          SPM   R9            Clear condition code
+00000000000005A8  B348 0081                                                456          KXBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000005AC  B29C 8000                             0000000000000000   457          STFPC 0(R8)         Store FPC
+00000000000005B0  B222 0000                                                458          IPM   R0            Get condition code and program mask
+00000000000005B4  8800 001C                             000000000000001C   459          SRL   R0,28         Isolate CC in low order byte
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005B8  4200 8003                             0000000000000003   460          STC   R0,3(,R8)     Save condition code in results table
+                                                                           461 *
+00000000000005BC  B29D F268                             0000000000000268   462          LFPC  FPCREGTR      Set exceptions trappable
+00000000000005C0  0490                                                     463          SPM   R9            Clear condition code
+00000000000005C2  B348 0081                                                464          KXBR  FPR8,FPR1     Compare And Signal floating point nrs RRE
+00000000000005C6  B29C 8004                             0000000000000004   465          STFPC 4(R8)         Store FPC
+00000000000005CA  B222 0000                                                466          IPM   R0            Get condition code and program mask
+00000000000005CE  8800 001C                             000000000000001C   467          SRL   R0,28         Isolate CC in low order byte
+00000000000005D2  4200 8007                             0000000000000007   468          STC   R0,7(,R8)     Save condition code in results table
+                                                                           469 *
+00000000000005D6  4150 5010                             0000000000000010   470          LA    R5,16(,R5)    Point to next right-hand value
+00000000000005DA  4170 7010                             0000000000000010   471          LA    R7,16(,R7)    Point to next CC/DXC/FPR CDB result area
+00000000000005DE  4180 8010                             0000000000000010   472          LA    R8,16(,R8)    Point to next CC/DXC/FPR KDB result area
+00000000000005E2  0646                                                     473          BCTR  R4,R6         Loop through right-hand values
+                                                                           474 *
+00000000000005E4  4130 3010                             0000000000000010   475          LA    R3,16(,R3)    Point to next left-hand value
+00000000000005E8  062C                                                     476          BCTR  R2,R12        Loop through left-hand values
+                                                                           477 *
+00000000000005EA  07FD                                                     478          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           480 ***********************************************************************
+                                                                           481 *
+                                                                           482 * Input test values.  Each input is tested against every input in the
+                                                                           483 * list, which means the eight values result in 64 tests.
+                                                                           484 *
+                                                                           485 ***********************************************************************
+
+
+                                                                           487 *
+                                                                           488 *  Short BFP Input values
+                                                                           489 *
+00000000000005EC                                                           490 SBFPIN   DS    0F            Ensure fullword alignment for input table
+00000000000005EC  FF800000                                                 491          DC    X'FF800000'      -infinity
+00000000000005F0  BF800000                                                 492          DC    X'BF800000'      -1
+00000000000005F4  80000000                                                 493          DC    X'80000000'      -0
+00000000000005F8  00000000                                                 494          DC    X'00000000'      +0
+00000000000005FC  3F800000                                                 495          DC    X'3F800000'      +1
+0000000000000600  7F800000                                                 496          DC    X'7F800000'      +infinity
+0000000000000604  FFC00000                                                 497          DC    X'FFC00000'      -QNaN
+0000000000000608  7F810000                                                 498          DC    X'7F810000'      +SNaN
+                                      0000000000000008  0000000000000001   499 SBFPCT   EQU   (*-SBFPIN)/4  Count of input values
+                                                                           500 *
+                                                                           501 *  Long BFP Input values
+                                                                           502 *
+0000000000000610                                                           503 LBFPIN   DS    0D            Ensure doubleword alignment for inputs
+0000000000000610  FFF00000 00000000                                        504          DC    X'FFF0000000000000'      -infinity
+0000000000000618  BFF00000 00000000                                        505          DC    X'BFF0000000000000'      -1
+0000000000000620  80000000 00000000                                        506          DC    X'8000000000000000'      -0
+0000000000000628  00000000 00000000                                        507          DC    X'0000000000000000'      +0
+0000000000000630  3FF00000 00000000                                        508          DC    X'3FF0000000000000'      +1
+0000000000000638  7FF00000 00000000                                        509          DC    X'7FF0000000000000'      +infinity
+0000000000000640  7FF80000 00000000                                        510          DC    X'7FF8000000000000'      -QNaN
+0000000000000648  7FF01000 00000000                                        511          DC    X'7FF0100000000000'      +SNaN
+                                      0000000000000008  0000000000000001   512 LBFPCT   EQU   (*-LBFPIN)/8  Count of input values
+                                                                           513 *
+                                                                           514 *  Long BFP Input values
+                                                                           515 *
+0000000000000650                                                           516 XBFPIN   DS    0D            Ensure doubleword alignment for inputs
+0000000000000650  FFFF0000 00000000                                        517          DC    X'FFFF0000000000000000000000000000'      -infinity
+0000000000000660  BFFF0000 00000000                                        518          DC    X'BFFF0000000000000000000000000000'      -1
+0000000000000670  80000000 00000000                                        519          DC    X'80000000000000000000000000000000'      -0
+0000000000000680  00000000 00000000                                        520          DC    X'00000000000000000000000000000000'      +0
+0000000000000690  3FFF0000 00000000                                        521          DC    X'3FFF0000000000000000000000000000'      +1
+00000000000006A0  7FFF0000 00000000                                        522          DC    X'7FFF0000000000000000000000000000'      +infinity
+00000000000006B0  FFFF8000 00000000                                        523          DC    X'FFFF8000000000000000000000000000'      -QNaN
+00000000000006C0  7FFF0100 00000000                                        524          DC    X'7FFF0100000000000000000000000000'      +SNaN
+                                      0000000000000008  0000000000000001   525 XBFPCT   EQU   (*-XBFPIN)/16  Count of input values
+                                                                           526 *
+                                                                           527 * Locations for test results
+                                                                           528 *
+                                                                           529 * For each test result, four bytes are generated as follows
+                                                                           530 *  1 - non-trap CC
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           531 *  2 - non-trap FPC flags
+                                                                           532 *  3 - trappable CC
+                                                                           533 *  4 - trappable FPC flags
+                                                                           534 *
+                                                                           535 * Only for Compare involving SNaN and Compare And Signal involving any
+                                                                           536 * NaN will the trappable and non-trap results be different.
+                                                                           537 *
+                                                                           538 * For short and long instruction precisions, the RRE format is tested
+                                                                           539 * first, followed by the RXE format.  Extended precision only exists in
+                                                                           540 * RRE format.
+                                                                           541 *
+                                      0000000000001000  0000000000000001   542 SBFPCCC  EQU   STRTLABL+X'1000'    Integer short Compare results
+                                                                           543 *                                  ..room for 64 tests, all used
+                                                                           544 *
+                                      0000000000001400  0000000000000001   545 SBFPCSCC EQU   STRTLABL+X'1400'    Integer short Compare & Sig. results
+                                                                           546 *                                  ..room for 64 tests, all used
+                                                                           547 *
+                                      0000000000002000  0000000000000001   548 LBFPCCC  EQU   STRTLABL+X'2000'    Integer long Compare results
+                                                                           549 *                                  ..room for 64 tests, all used
+                                                                           550 *
+                                      0000000000002400  0000000000000001   551 LBFPCSCC EQU   STRTLABL+X'2400'    Integer lon Compare & Sig. results
+                                                                           552 *                                  ..room for 64 tests, all used
+                                                                           553 *
+                                      0000000000003000  0000000000000001   554 XBFPCCC  EQU   STRTLABL+X'3000'    Integer extended Compare results
+                                                                           555 *                                  ..room for 64 tests, all used
+                                                                           556 *
+                                      0000000000003400  0000000000000001   557 XBFPCSCC EQU   STRTLABL+X'3400'    Integer ext'd Compare & Sig. results
+                                                                           558 *                                  ..room for 64 tests, all used
+                                                                           559 *
+                                                                           560 *
+                                      0000000000003400  0000000000000001   561 ENDLABL  EQU   STRTLABL+X'3400'
+                                                                           562          PADCSECT ENDLABL
+                                                                           563+         MNOTE *,'asma detected; no CSECT padding performed'
+                                                                           564 *
+00000000000006D0                                                           565          END
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    14
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPCOMPS            J    000000    1744    74
+CTLR0               F    000260       4   178  157  158  159
+ENDLABL             U    003400       1   561
+FPCREGNT            X    000264       4   179  234  250  266  282  335  351  367  383  438  454
+FPCREGTR            X    000268       4   180  242  258  274  290  343  359  375  391  446  462
+FPR0                U    000000       1    95
+FPR1                U    000001       1    96  232  236  244  268  276  333  337  345  369  377  435  440  448  456  464
+FPR10               U    00000A       1   105  428
+FPR11               U    00000B       1   106
+FPR12               U    00000C       1   107
+FPR13               U    00000D       1   108
+FPR14               U    00000E       1   109
+FPR15               U    00000F       1   110
+FPR2                U    000002       1    97
+FPR3                U    000003       1    98  436
+FPR4                U    000004       1    99
+FPR5                U    000005       1   100
+FPR6                U    000006       1   101
+FPR7                U    000007       1   102
+FPR8                U    000008       1   103  225  236  244  252  260  268  276  284  292  326  337  345  353  361  369  377  385
+                                               393  427  440  448  456  464
+FPR9                U    000009       1   104
+HARDWAIT            X    000250       8   176  148
+IMAGE               1    000000    1744     0
+LBFPCCC             U    002000       1   548  198
+LBFPCOMP            H    00043C       2   319  165
+LBFPCSCC            U    002400       1   551  199
+LBFPCT              U    000008       1   512  196
+LBFPIN              D    000610       8   503  512  197
+LONGC               F    000310       4   195  164
+PCINTCD             H    00008E       2   125  142
+PCNOTDTA            H    00020C       2   145  143
+PCOLDPSW            U    000150       1   127  144
+PROGCHK             H    000200       2   141  133
+R0                  U    000000       1    76  157  159  238  239  240  246  247  248  254  255  256  262  263  264  270  271  272
+                                               278  279  280  286  287  288  294  295  296  339  340  341  347  348  349  355  356
+                                               357  363  364  365  371  372  373  379  380  381  387  388  389  395  396  397  442
+                                               443  444  450  451  452  458  459  460  466  467  468
+R1                  U    000001       1    77
+R10                 U    00000A       1    86  161  164  167  219  220  226  320  321  327  421  422  429
+R11                 U    00000B       1    87
+R12                 U    00000C       1    88  223  304  324  405  425  476
+R13                 U    00000D       1    89  162  165  168  222  306  323  407  424  478
+R14                 U    00000E       1    90  146  147  170  171
+R15                 U    00000F       1    91  112
+R2                  U    000002       1    78  219  221  304  320  322  405  421  423  476
+R3                  U    000003       1    79  219  225  303  320  326  404  421  427  428  475
+R4                  U    000004       1    80  226  301  327  402  429  473
+R5                  U    000005       1    81  226  232  252  260  284  292  298  327  333  353  361  385  393  399  429  435  436
+                                               470
+R6                  U    000006       1    82  228  301  329  402  431  473
+R7                  U    000007       1    83  220  237  240  245  248  253  256  261  264  299  321  338  341  346  349  354  357
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    15
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+                                               362  365  400  422  441  444  449  452  471
+R8                  U    000008       1    84  220  269  272  277  280  285  288  293  296  300  321  370  373  378  381  386  389
+                                               394  397  401  422  457  460  465  468  472
+R9                  U    000009       1    85  227  235  243  251  259  267  275  283  291  328  336  344  352  360  368  376  384
+                                               392  430  439  447  455  463
+SBFPCCC             U    001000       1   542  192
+SBFPCOMP            H    000330       2   218  162
+SBFPCSCC            U    001400       1   545  193
+SBFPCT              U    000008       1   499  190
+SBFPIN              F    0005EC       4   490  499  191
+SHORTC              F    000300       4   189  161
+START               H    000214       2   156  130
+STRTLABL            U    000000       1    75  124  127  129  132  140  188  542  545  548  551  554  557  561
+WAITPSW             X    000240       8   175  172
+XBFPCCC             U    003000       1   554  204
+XBFPCOMP            H    000548       2   420  168
+XBFPCSCC            U    003400       1   557  205
+XBFPCT              U    000008       1   525  202
+XBFPIN              D    000650       8   516  525  203
+XTNDC               F    000320       4   201  167
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    16
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     49   562
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    17
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1744  000-6CF  000-6CF
+  Region             1744  000-6CF  000-6CF
+    CSECT  BFPCOMPS  1744  000-6CF  000-6CF
+ASMA Ver. 0.2.0  bfp-013-comps.asm: Test IEEE Compare, Compare And Signal                           19 Sep 2016 07:27:21  Page    18
+
+   STMT                              FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-013-comps.asm
+
+
+** NO ERRORS FOUND **
+
+[563] MNOTE *,asma detected; no CSECT padding performed
+

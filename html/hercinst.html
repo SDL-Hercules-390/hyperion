@@ -14,14 +14,14 @@ Hercules Version 4: Installation and Operation</TITLE>
 <h2>Contents</h2>
 <blockquote>
     <p>
-        <a href="#install">Installation Procedure</a>
+        <a href="#install">Building and Installing</a>
         <ul>
             <li><a href="#instsource">Building from source</a>
-            <li><a href="#instbinary">Pre-built binaries</a>
+            <li><a href="#instbinary">Windows Pre-built binaries</a>
         </ul>
     </p>
     <p>
-        <a href="#config">Configuration Procedure</a>
+        <a href="#config">Configuration</a>
     </p>
     <p>
         <a href="#dasd">Creating DASD volumes</a>
@@ -43,7 +43,34 @@ Hercules Version 4: Installation and Operation</TITLE>
 </blockquote>
 
 <p><hr><a name="install"></a>
-<h2>Installation Procedure</h2>
+<h2>Building and Installing</h2>
+
+<h3>Building External Packages</h3>
+
+Hercules links with several pre-built "External Package" static link libraries
+that have been pre-built for you and come distributed with Hercules (i.e. they
+are a part of the Hercules repository).
+
+<br /><br />
+
+Currently all of the external package static link libraries are for the x86
+architecture only (both 32-bit x86 and 64-bit x64 for both Windows and Linux)
+so you should not have to do antyhing special.  Simply build like normal as
+explained in the sections below.
+
+<br /><br />
+
+If you wish to build a <i>non-x86 architecture</i> version of Hercules however,
+you will need to build and install all external packages for your architecture
+first, before building Hercules. Non-x86 builds of external packages must be
+installed into their own separate architectural subdirectory beneath each of
+Hercules's main external package subdirectories (e.g. decNumber/sparc, etc).
+The Hercules configure.ac script currently understands the following foreign
+architectures: arm, mips, ppc, sparc, xscale and unknown. For additional
+information refer to the
+<a href="https://github.com/hercules-390/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
+document.
+
 <a name="instsource"></a>
 <h3>Building from source - Windows</h3>
 <ol>
@@ -63,6 +90,17 @@ on his <a href="http://www.softdevlabs.com/hercules-msvc-build.html">MSVC Hercul
 </ol>
 </p>
 
+<a name="instbinary"></a>
+<h3>Windows pre-built binaries:</h3>
+<ol>
+<li>Download one of the
+<a href="http://www.softdevlabs.com/hyperion.html#prebuilt">pre-built binaries</a>
+from <a href="http://www.softdevlabs.com">SoftDevLabs</a>.
+<br />
+<br />
+<li>(Optional) You might also want to install Fish's
+<a href="http://www.softdevlabs.com/hercgui">Hercules GUI for Windows</a>.<br /><br />
+</ol>
 
 <h3>Building from source - Mac OS X</h3>
 <ol>
@@ -86,6 +124,13 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 </ol>
 
 <h3>Building from source - Linux and Mac OS X</h3>
+
+<em><b>Important:</b></em>
+You must use at least version 3.00 of the gcc compiler and the glibc2 library.
+Refer to the <a href="hercfaq.html#3.04">
+Hercules Frequently-Asked Questions</a> page for required
+compiler and other software levels.<br />
+
 <ol>
 <li>Download the
 <a href="https://github.com/hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
@@ -141,26 +186,8 @@ required packages installed:
 <p><li>(Optional) Install the programs: as root: <p><code>make install</code><br />
 </ol>
 
-<em>Important:</em>
-You must use at least version 3.00 of the gcc compiler and the glibc2 library.
-Refer to the <a href="hercfaq.html#3.04">
-Hercules Frequently-Asked Questions</a> page for required
-compiler and other software levels.<br /><br />
-
-<a name="instbinary"></a>
-<h3>Installing pre-built binaries for Windows:</h3>
-<ol>
-<li>Download one of the
-<a href="http://www.softdevlabs.com/hyperion.html#prebuilt">pre-built binaries</a>
-from <a href="http://www.softdevlabs.com">SoftDevLabs</a>.
-<br />
-<br />
-<li>(Optional) You might also want to install Fish's
-<a href="http://www.softdevlabs.com/hercgui">Hercules GUI for Windows</a>.<br /><br />
-</ol>
-
 <p><hr><a name="config"></a>
-<h2>Configuration Procedure</h2>
+<h2>Configuration</h2>
 <p>
 You will need to amend the configuration file
 <em><b>hercules.cnf</b></em> to reflect your device layout and intended
@@ -197,7 +224,7 @@ To start Hercules enter this command at the host's command prompt:
               [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
               [ -s <em>symbol=value</em> ] ...   |  [ --defsym=<em>symbol=value</em> ] ...
               [ -v ]                    |  [ --verbose ]
-              [ -h ]                    |  [ --help ]
+              [ -h ]                    |  [ --help[=type] ]
               [ -t[factor]]             |  [ --test[=factor]]
               [ &gt; <em>logfile</em> ]
 </pre></code>
@@ -224,12 +251,12 @@ where:
             initial welcome screen presented when a TN 3270 terminal connects 
             to a hercules 3270 device.
         <p>
-        <dt><code><em>-d</em></em></code><p><dd>
+        <dt><code><em>--daemon</em></em></code><p><dd>
 
             specifies that Hercules is to be run in 'daemon' mode,
             wherein it runs invisibly with no attached console.
         <p>
-        <dt><code><em>-e</em></em></code><p><dd>
+        <dt><code><em>--externalgui</em></em></code><p><dd>
 
             indicates Hercules is to be controlled by an External GUI.
         <p>
@@ -253,16 +280,33 @@ where:
             for more information on using symbols. The '-s' option may be repeated. 
             Note: 'value' may be quoted to contain imbedded blanks. 
         <p>        
-        <dt><code><em>-v</em></code><p><dd>
+        <dt><code><em>--verbose</em></code><p><dd>
 
             sets the message-level to verbose. This is the same as
             entering the command <code>msglvl +verbose</code>.
         <p>
-        <dt><code><em>-h</em></code><p><dd>
+        <dt><code><em>--help[=type]</em></code><p><dd>
 
-            displays help information regarding the syntax of command-line arguments.
+            displays help regarding the syntax of command-line arguments and,
+            optionally, other information as well if the optional help
+            <code>type</code> is also specified.
+            <p>
+            The optional <code>type</code> value identifies what type of help
+            you want to display. Valid values are: <code>short</code>,
+            <code>long</code>, <code>version</code> or <code>build</code>.
+            Additionally, <code>all</code> and <code>full</code> are also
+            accepted as aliases for <code>long</code>.
+            <p>
+            The <code>short</code> help option displays just the syntax of the
+            the command line arguments. The <code>version</code> help option
+            displays version information. The <code>build</code> option displays
+            some of the more important optional features that Hercules was
+            either built with or without. The <code>long</code>, <code>all</code>
+            and <code>full</code> options displays all three types. The default
+            is <code>short</code> (i.e. only the command-line syntax is shown).
+
         <p>
-        <dt><code><em>-t[factor]</em></code><p><dd>
+        <dt><code><em>--test[=factor]</em></code><p><dd>
 
             starts Hercules in test mode, activating special .rc file script
             commands used only by QA test scripts. Normal Hercules use should

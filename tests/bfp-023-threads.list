@@ -1,0 +1,942 @@
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase ieee.c/Softfloat 3a thread safety.
+                                                                             5 *  This test case dispatches floating point work on four CPUs.  Any
+                                                                             6 *  variation from expected results, as detected by each CPU, shows a
+                                                                             7 *  lack of thread safety.
+                                                                             8 *
+                                                                             9 *  Each CPU is given a single floating point operation to be performed
+                                                                            10 *  in a loop.  Each CPU has a different operation to perform, with a
+                                                                            11 *  different expected result and IEEE flag set from Softfloat.
+                                                                            12 *
+                                                                            13 ***********************************************************************
+
+
+                                                                            15 ***********************************************************************
+                                                                            16 *
+                                                                            17 *Function/Operation
+                                                                            18 * - Test Case Processing
+                                                                            19 *   1) The first CPU is started by the runtest restart command.  The
+                                                                            20 *      first CPU:
+                                                                            21 *      a) starts the second CPU using SIGP.
+                                                                            22 *      b) repeats the assigned floating point operation, looking for
+                                                                            23 *         evidence of pre-emptive multitasking and incorrect results.
+                                                                            24 *      c) At the end of a set number of calculations, the other three
+                                                                            25 *         processors are stopped via SIGP.
+                                                                            26 *      d) A hardwait PSW is loaded
+                                                                            27 *   2) The second CPU is started by the SIGP restart from the first
+                                                                            28 *      CPU.  The second CPU:
+                                                                            29 *      a) starts the third CPU using SIGP.
+                                                                            30 *      b) repeats the assigned floating point operation, looking for
+                                                                            31 *         evidence of pre-emptive multitasking and incorrect results.
+                                                                            32 *      c) The floating point operation is repeated until the CPU is
+                                                                            33 *         stopped by the first CPU.
+                                                                            34 *   3) The third CPU is started by the second, and starts the fourth.
+                                                                            35 *      Otherwise, it operates in the same way that CPU two does.
+                                                                            36 *   4) The fourth CPU is started by the second.  It does not start
+                                                                            37 *      another CPU.  Otherwise, it operates in the same way that CPUs
+                                                                            38 *    two and three do.
+                                                                            39 *
+                                                                            40 *Entry Points
+                                                                            41 * - All entries are via the PSW stored in the restart PSW field
+                                                                            42 * - CPUnBEG, where n is replaced by 0, 1, 2, or 3.  Each is the start
+                                                                            43 *   of the CPU-specific code for that CPU.
+                                                                            44 *
+                                                                            45 *Input
+                                                                            46 * - Floating point operands and expected results are compiled into
+                                                                            47 *   the program.
+                                                                            48 *
+                                                                            49 *Output
+                                                                            50 * - All outputs are stored starting at real memory location X'2000'
+                                                                            51 * - Count of trials performed by each CPU.
+                                                                            52 * - Count of thread pre-emptions (switches) detected by each CPU.
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            53 *   Note that not all pre-emptions are detected.
+                                                                            54 * - Count of trials that returned incorrect results by CPU.
+                                                                            55 * - Count of trials that returned incorrect FPCR contents by CPU.
+                                                                            56 * - For each CPU, the last incorrect result and the last incorrect
+                                                                            57 *   FPCR contents.  Note that the incorrect result and the incorrect
+                                                                            58 *   FPCR contents may be from different trials.
+                                                                            59 *
+                                                                            60 *External Dependencies
+                                                                            61 * - This program is intended to be run on Hercules as part of the
+                                                                            62 *   'runtest' facility.
+                                                                            63 *
+                                                                            64 *Exit
+                                                                            65 * Normal- via LPSWE of a disabled wait PSW, address zero
+                                                                            66 * Abnormal- via LPSWE of a disabled wait PSW, address X'DEAD'
+                                                                            67 *
+                                                                            68 *Attributes
+                                                                            69 * - None
+                                                                            70 *
+                                                                            71 *Notes
+                                                                            72 * - Prefixing is used by this program.
+                                                                            73 *
+                                                                            74 *
+                                                                            75 ***********************************************************************
+
+
+                                                                            77          MACRO
+                                                                            78          PADCSECT &ENDLABL
+                                                                            79 .*
+                                                                            80 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            81 .*  program is not being assembled using asma.  asma generates a core
+                                                                            82 .*  image that is loaded by the loadcore command, and because the
+                                                                            83 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            84 .*  this small effort to keep the core image small.
+                                                                            85 .*
+                                                                            86          AIF   (D'&ENDLABL).GOODPAD
+                                                                            87          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            88          MNOTE *,'No CSECT padding performed'
+                                                                            89          MEXIT
+                                                                            90 .*
+                                                                            91 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            92          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            93          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            94          MEXIT
+                                                                            95 .*
+                                                                            96 .NOPAD   ANOP
+                                                                            97          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            98          MEND
+                                                                            99 *
+                                                                           100 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                           101 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                           102 *  Although this program's use of four processors likely precludes
+                                                                           103 *  its validation in z/CMS.
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           104 *
+                                      0000000000000000  0000000000002081   105 BFPTHRED START 0
+                                      0000000000000000  0000000000000001   106 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001   107 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001   108 R1       EQU   1
+                                      0000000000000002  0000000000000001   109 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001   110 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001   111 R4       EQU   4                   Rounding tests inner loop control
+                                      0000000000000005  0000000000000001   112 R5       EQU   5                   Rounding tests outer loop control
+                                      0000000000000006  0000000000000001   113 R6       EQU   6                   Rounding tests top of inner loop
+                                      0000000000000007  0000000000000001   114 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001   115 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001   116 R9       EQU   9                   Rounding tests top of outer loop
+                                      000000000000000A  0000000000000001   117 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001   118 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001   119 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001   120 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001   121 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001   122 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                           123 *
+                                                                           124 * Floating Point Register equates to keep the cross reference clean
+                                                                           125 *
+                                      0000000000000000  0000000000000001   126 FPR0     EQU   0
+                                      0000000000000001  0000000000000001   127 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   128 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   129 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   130 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   131 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   132 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   133 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   134 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   135 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   136 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   137 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   138 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   139 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   140 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   141 FPR15    EQU   15
+                                                                           142 *
+                                      0000000000010000  0000000000000001   143 CPU1PRE  EQU   X'10000'        CPU 1 prefix area at 64K
+                                      0000000000012000  0000000000000001   144 CPU2PRE  EQU   CPU1PRE+X'2000' CPU 2 prefix area at 64K + 8K
+                                      0000000000014000  0000000000000001   145 CPU3PRE  EQU   CPU2PRE+X'2000' CPU 2 prefix area at 64K + 2 * 8K
+                                                                           146 *
+0000000000000000                      0000000000000000                     147          USING *,R15
+                                                                           148 *
+                                                                           149 * Above works on real iron (R15=0 after sysclear)
+                                                                           150 * and in z/CMS (R15 points to start of load module)
+                                                                           151 *
+
+
+                                                                           153 ***********************************************************************
+                                                                           154 *
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           155 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           156 *
+                                                                           157 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   159          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     160 PCINTCD  DS    H
+                                                                           161 *
+                                      0000000000000150  0000000000000001   162 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           163 *
+0000000000000090                      0000000000000090  00000000000001A0   164          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        165 RESTRPSW DC    X'0000000180000000',AD(CPU0BEG)  64-bit addr, 4k page
+                                      00000000000001A8  0000000000000001   166 RPSWADR  EQU   RESTRPSW-STRTLABL+8 Displacement of restart psw address
+                                                                           167 *
+00000000000001B0                      00000000000001B0  00000000000001D0   168          ORG   STRTLABL+X'1D0'     z/Arch Program check new PSW
+00000000000001D0  00000001 80000000                                        169          DC    X'0000000180000000',AD(PROGCHK)
+                                                                           170 *
+                                                                           171 ******** Following ORG overlays the PC new PSW with a hard wait.
+                                                                           172 *
+                                                                           173 **       ORG   STRTLABL+X'1D0'     z/Arch Program check new PSW
+                                                                           174 **       DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           175 *
+                                                                           176 * Program check routine.  If Data Exception, continue execution at
+                                                                           177 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           178 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           179 * in the FPCR.
+                                                                           180 *
+00000000000001E0                      00000000000001E0  0000000000000200   181          ORG   STRTLABL+X'200'
+0000000000000200                                                           182 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   183          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   184          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   185          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           186 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     187          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     188          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F228                             0000000000000228   189          LPSWE HARDWAIT       Not data exception, enter disabled wait
+                                                                           190 *
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           192 ***********************************************************************
+                                                                           193 *
+                                                                           194 * Data areas global to all four processors and areas that are per-cpu.
+                                                                           195 *
+                                                                           196 * Per-CPU variables are prefixed with 'CPUn' where n is replaced with
+                                                                           197 * the CPU number, starting with zero.
+                                                                           198 *
+                                                                           199 ***********************************************************************
+
+
+                                                                           201 *
+                                      0000000000000006  0000000000000001   202 SIGPREST EQU   6             SIGP order for CPU Restart
+                                      0000000000000005  0000000000000001   203 SIGPSTOP EQU   5             SIGP order for CPU Stop
+                                      000000000000000D  0000000000000001   204 SIGPPREF EQU   13            SIGP order for Set Prefix
+                                                                           205 *
+0000000000000218                                                           206          DS    0D            Ensure correct alignment for psw
+0000000000000218  00020000 00000000                                        207 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000228  00020000 00000000                                        208 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           209 *
+0000000000000238  00000000                                                 210 CPU0CR0  DS    F             CR0, used to turn on AFP
+000000000000023C  00000000                                                 211 CPU1CR0  DS    F             CR0, used to turn on AFP
+0000000000000240  00000000                                                 212 CPU2CR0  DS    F             CR0, used to turn on AFP
+0000000000000244  00000000                                                 213 CPU3CR0  DS    F             CR0, used to turn on AFP
+                                                                           214 *
+0000000000000248  0000                                                     215 CPU0ADR  DS    H             CPU addr returned from STAP, used by SIGP
+000000000000024A  0000                                                     216 CPU1ADR  DS    H             CPU addr returned from STAP, used by SIGP
+000000000000024C  0000                                                     217 CPU2ADR  DS    H             CPU addr returned from STAP, used by SIGP
+000000000000024E  0000                                                     218 CPU3ADR  DS    H             CPU addr returned from STAP, used by SIGP
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           220 ***********************************************************************
+                                                                           221 *
+                                                                           222 * CPU 0 program.  Set prefixes, start all processors, enable Additional
+                                                                           223 * Floating Point Registers, repetitively perform a floating point
+                                                                           224 * operation, then stop all three other processors and load a hard wait
+                                                                           225 * PSW.
+                                                                           226 *
+                                                                           227 ***********************************************************************
+
+
+0000000000000250                                                           229 CPU0BEG  DS    0H            Start of processing for CPU zero
+0000000000000250  B212 F248                             0000000000000248   230          STAP  CPU0ADR       Store CPU address of this processor
+0000000000000254  4810 F248                             0000000000000248   231          LH    R1,CPU0ADR    Get CPU address
+0000000000000258  4110 1001                             0000000000000001   232          LA    R1,1(,R1)     Update to next CPU address
+000000000000025C  4010 F24A                             000000000000024A   233          STH   R1,CPU1ADR    Store next CPU address
+0000000000000260  4110 1001                             0000000000000001   234          LA    R1,1(,R1)     Update to next CPU address
+0000000000000264  4010 F24C                             000000000000024C   235          STH   R1,CPU2ADR    Store next CPU address
+0000000000000268  4110 1001                             0000000000000001   236          LA    R1,1(,R1)     Update to next CPU address
+000000000000026C  4010 F24E                             000000000000024E   237          STH   R1,CPU3ADR    Store next CPU address
+                                                                           238 *
+                                                                           239 * Set up prefixing for each of the three additional CPUs that will
+                                                                           240 * perform floating point operations. Copy the first 8K to appropriate
+                                                                           241 * locations for each of the CPUs, modify the restart PSW, and issue
+                                                                           242 * SIGP Set Prefix for each of them.
+                                                                           243 *
+                                                                           244 * Because the entirety of this program fits in less than 8K, prefixing
+                                                                           245 * is not difficult.
+                                                                           246 *
+                                                                           247 *                            Set Prefix and start CPU 1
+0000000000000270  4820 F24A                             000000000000024A   248          LH    R2,CPU1ADR    Get next CPU addresss
+0000000000000274  E310 F5E8 0004                        00000000000005E8   249          LG    R1,=AD(CPU1PRE)   Get address of CPU1 Prefix area
+000000000000027A  1700                                                     250          XR    R0,R0         Set address of real low core
+000000000000027C  B254 0010                                                251          MVPG  R1,R0         Make a copy of low core
+0000000000000280  AE12 000D                             000000000000000D   252          SIGP  R1,R2,SIGPPREF Set prefix area for CPU 1
+0000000000000284  D207 11A8 F5E0      00000000000001A8  00000000000005E0   253          MVC   RPSWADR(8,R1),=AD(CPU1BEG)  Update restart PSW in prefix
+000000000000028A  1711                                                     254          XR    R1,R1         Zero SIGP parameter register
+000000000000028C  AE02 0006                             0000000000000006   255          SIGP  R0,R2,SIGPREST  Start next CPU using a Restart command
+                                                                           256 *
+                                                                           257 *                            Set Prefix and start CPU 2
+0000000000000290  4820 F24C                             000000000000024C   258          LH    R2,CPU2ADR    Get next CPU addresss
+0000000000000294  E310 F5F8 0004                        00000000000005F8   259          LG    R1,=AD(CPU2PRE)   Get address of CPU1 Prefix area
+000000000000029A  1700                                                     260          XR    R0,R0         Set address of real low core
+000000000000029C  B254 0010                                                261          MVPG  R1,R0         Make a copy of low core
+00000000000002A0  AE12 000D                             000000000000000D   262          SIGP  R1,R2,SIGPPREF Set prefix area for CPU 2
+00000000000002A4  D207 11A8 F608      00000000000001A8  0000000000000608   263          MVC   RPSWADR(8,R1),=AD(CPU2BEG)  Update restart PSW in prefix
+00000000000002AA  1711                                                     264          XR    R1,R1         Zero SIGP parameter register
+00000000000002AC  AE02 0006                             0000000000000006   265          SIGP  R0,R2,SIGPREST  Start next CPU using a Restart command
+                                                                           266 *
+                                                                           267 *                            Set Prefix and start CPU 3
+00000000000002B0  4820 F24E                             000000000000024E   268          LH    R2,CPU3ADR    Get next CPU addresss
+00000000000002B4  E310 F5F0 0004                        00000000000005F0   269          LG    R1,=AD(CPU3PRE)   Get address of CPU1 Prefix area
+00000000000002BA  1700                                                     270          XR    R0,R0         Set address of real low core
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000002BC  B254 0010                                                271          MVPG  R1,R0         Make a copy of low core
+00000000000002C0  AE12 000D                             000000000000000D   272          SIGP  R1,R2,SIGPPREF Set prefix area for CPU 3
+00000000000002C4  D207 11A8 F600      00000000000001A8  0000000000000600   273          MVC   RPSWADR(8,R1),=AD(CPU3BEG)  Update restart PSW in prefix
+00000000000002CA  1711                                                     274          XR    R1,R1         Zero SIGP parameter register
+00000000000002CC  AE02 0006                             0000000000000006   275          SIGP  R0,R2,SIGPREST  Start next CPU using a Restart command
+                                                                           276 *
+                                                                           277 * Other processors started.  Now perform floating point operations.
+                                                                           278 *
+00000000000002D0  B600 F238                             0000000000000238   279          STCTL R0,R0,CPU0CR0 Store CR0 to enable AFP
+00000000000002D4  9604 F239                             0000000000000239   280          OI    CPU0CR0+1,X'04' Turn on AFP bit
+00000000000002D8  B700 F238                             0000000000000238   281          LCTL  R0,R0,CPU0CR0 Reload updated CR0
+                                                                           282 *
+                                                                           283 * Initialize counter for loop control
+                                                                           284 *
+00000000000002DC  C0C0 0000 0E92                        0000000000002000   285          LARL  R12,RESAREA   Point to shared results area
+00000000000002E2                      0000000000002000                     286          USING RESAREA,R12   Make results addressable
+00000000000002E2  5820 F610                             0000000000000610   287          L     R2,=F'10000000' Run loop 10,000,000 times
+00000000000002E6  1733                                                     288          XR    R3,R3         Zero count of loop iterations
+00000000000002E8  1843                                                     289          LR    R4,R3         Zero count of detected pre-emptions
+00000000000002EA  1853                                                     290          LR    R5,R3         Zero count of result errors
+00000000000002EC  1863                                                     291          LR    R6,R3         Zero count of FPCR contents errors
+00000000000002EE  0DD0                                                     292          BASR  R13,0         Set top of loop
+                                                                           293 *
+                                                                           294 * Top of loop.  Check for pre-emption, do floating point operation,
+                                                                           295 * increment count of trips through loop.
+                                                                           296 *
+00000000000002F0  D501 C080 F248      0000000000002080  0000000000000248   297          CLC   LASTCPU,CPU0ADR  Has another CPU been dispatched
+00000000000002F6  4780 F308                             0000000000000308   298          BE    CPU0CALC      ..not that we can detect...do calc.
+00000000000002FA  D201 C080 F248      0000000000002080  0000000000000248   299          MVC   LASTCPU,CPU0ADR  Update last dispatched CPU
+0000000000000300  4140 4001                             0000000000000001   300          LA    R4,1(,R4)     Increment count of pre-emption detections
+0000000000000304  5040 C010                             0000000000002010   301          ST    R4,CPU0PDET   Store updated count
+                                                                           302 *
+0000000000000308                                                           303 CPU0CALC DS    0H            Perform floating point operation
+0000000000000308  B29D F3BC                             00000000000003BC   304          LFPC  CPU0FPCR      Reset FPCR to non-trap, RNTE
+000000000000030C  7820 F3C0                             00000000000003C0   305          LE    FPR2,CPU0OP1  Load operand one
+0000000000000310  B357 0082                                                306          FIEBR FPR8,0,FPR2   Floating Point Integer
+0000000000000314  7080 C040                             0000000000002040   307          STE   FPR8,CPU0ARES Store actual result
+0000000000000318  B29C C044                             0000000000002044   308          STFPC CPU0AFPC      Store actual FPCR contents
+                                                                           309 *
+000000000000031C  D503 C040 F3C4      0000000000002040  00000000000003C4   310          CLC   CPU0ARES,CPU0ER1  Did we get expected results?
+0000000000000322  4780 F334                             0000000000000334   311          BE    CPU0CF1C      ..Yes, go check FPCR contents
+0000000000000326  4150 5001                             0000000000000001   312          LA    R5,1(,R5)     Increment result error count
+000000000000032A  5050 C020                             0000000000002020   313          ST    R5,CPU0RECT   Store updated result error count
+000000000000032E  D203 C060 C040      0000000000002060  0000000000002040   314          MVC   CPU0XRES,CPU0ARES  Save incorrect result
+                                                                           315 *
+0000000000000334                                                           316 CPU0CF1C DS    0H
+0000000000000334  D503 C044 F3C8      0000000000002044  00000000000003C8   317          CLC   CPU0AFPC,CPU0EF1  Did we get expected results?
+000000000000033A  4780 F34C                             000000000000034C   318          BE    CPU0OPNX      ..Yes, do next operation
+000000000000033E  4160 6001                             0000000000000001   319          LA    R6,1(,R6)     Increment FPCR contents error count
+0000000000000342  5060 C030                             0000000000002030   320          ST    R6,CPU0FECT   Store updated FPCR contents error count
+0000000000000346  D203 C064 C044      0000000000002064  0000000000002044   321          MVC   CPU0XFPC,CPU0AFPC  Save incorrect result
+                                                                           322 *
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000034C                                                           323 CPU0OPNX DS    0H            Do second floating point operation
+000000000000034C  B29D F3BC                             00000000000003BC   324          LFPC  CPU0FPCR      Reset FPCR to non-trap, RNTE
+0000000000000350  7820 F3CC                             00000000000003CC   325          LE    FPR2,CPU0OP2  Load operand one
+0000000000000354  B357 0082                                                326          FIEBR FPR8,0,FPR2   Floating Point Integer
+0000000000000358  7080 C040                             0000000000002040   327          STE   FPR8,CPU0ARES Store actual result
+000000000000035C  B29C C044                             0000000000002044   328          STFPC CPU0AFPC      Store actual FPCR contents
+                                                                           329 *
+0000000000000360  D503 C040 F3D0      0000000000002040  00000000000003D0   330          CLC   CPU0ARES,CPU0ER2  Did we get expected results?
+0000000000000366  4780 F378                             0000000000000378   331          BE    CPU0CF2C      ..Yes, go check FPCR contents
+000000000000036A  4150 5001                             0000000000000001   332          LA    R5,1(,R5)     Increment result error count
+000000000000036E  5050 C020                             0000000000002020   333          ST    R5,CPU0RECT   Store updated result error count
+0000000000000372  D203 C060 C040      0000000000002060  0000000000002040   334          MVC   CPU0XRES,CPU0ARES  Save incorrect result
+                                                                           335 *
+0000000000000378                                                           336 CPU0CF2C DS    0H
+0000000000000378  D503 C044 F3D4      0000000000002044  00000000000003D4   337          CLC   CPU0AFPC,CPU0EF2  Did we get expected results?
+000000000000037E  4780 F390                             0000000000000390   338          BE    CPU0OPDN      ..Yes, end of iteration
+0000000000000382  4160 6001                             0000000000000001   339          LA    R6,1(,R6)     Increment FPCR contents error count
+0000000000000386  5060 C030                             0000000000002030   340          ST    R6,CPU0FECT   Store updated FPCR contents error count
+000000000000038A  D203 C064 C044      0000000000002064  0000000000002044   341          MVC   CPU0XFPC,CPU0AFPC  Save incorrect result
+                                                                           342 *
+0000000000000390                                                           343 CPU0OPDN DS    0H            FP op and result checks done
+0000000000000390  4130 3001                             0000000000000001   344          LA    R3,1(,R3)     Increment loop iteration count
+0000000000000394  5030 C000                             0000000000002000   345          ST    R3,CPU0CTR    Store updated loop iteration count
+0000000000000398  062D                                                     346          BCTR  R2,R13        Perform next iteration
+                                                                           347 *
+                                                                           348 * Looping completed.   Stop other processors and load hardwait PSW.
+                                                                           349 *
+000000000000039A                                                           350          DROP  R12
+000000000000039A  1711                                                     351          XR    R1,R1         Zero SIGP parameter register
+                                                                           352 *
+000000000000039C  4820 F24A                             000000000000024A   353          LH    R2,CPU1ADR    Get next CPU addresss
+00000000000003A0  AE02 0005                             0000000000000005   354          SIGP  R0,R2,SIGPSTOP  Stop the CPU
+                                                                           355 *
+00000000000003A4  4820 F24C                             000000000000024C   356          LH    R2,CPU2ADR    Get next CPU addresss
+00000000000003A8  AE02 0005                             0000000000000005   357          SIGP  R0,R2,SIGPSTOP  Stop the CPU
+                                                                           358 *
+00000000000003AC  4820 F24E                             000000000000024E   359          LH    R2,CPU3ADR    Get next CPU addresss
+00000000000003B0  AE02 0005                             0000000000000005   360          SIGP  R0,R2,SIGPSTOP  Stop the CPU
+                                                                           361 *
+00000000000003B4  12EE                                                     362          LTR   R14,R14       Return address provided?
+00000000000003B6  077E                                                     363          BNZR  R14           ..Yes, return to z/CMS test rig.
+00000000000003B8  B2B2 F218                             0000000000000218   364          LPSWE WAITPSW       All done
+                                                                           365 *
+                                                                           366 * Load Floating Point Integer of 1.5, RNTE.  Expect 2.0 and inexact
+                                                                           367 *
+00000000000003BC  00000000                                                 368 CPU0FPCR DC    X'00000000'   FPCR, no traps, RNTE
+                                                                           369 *
+00000000000003C0  3FC00000                                                 370 CPU0OP1  DC    X'3FC00000'         +1.5
+00000000000003C4  40000000                                                 371 CPU0ER1  DC    X'40000000'         Expected result 2.0
+00000000000003C8  00080000                                                 372 CPU0EF1  DC    X'00080000'         Expected FPCR contents flag inexact
+                                                                           373 *
+00000000000003CC  3F800000                                                 374 CPU0OP2  DC    X'3F800000'         +1.0
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000003D0  3F800000                                                 375 CPU0ER2  DC    X'3F800000'         Expected 1.0
+00000000000003D4  00000000                                                 376 CPU0EF2  DC    X'00000000'         Expected FPCR flag-free, RNTE
+                                                                           377 *
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           379 ***********************************************************************
+                                                                           380 *
+                                                                           381 * CPU 1 program.  Start the next processor, enable Advanced Floating
+                                                                           382 * Point, and repetitively perform a floating point operation until
+                                                                           383 * this processor is stopped by CPU 0.
+                                                                           384 *
+                                                                           385 ***********************************************************************
+
+
+00000000000003D8                                                           387 CPU1BEG  DS    0H            Start of processing for CPU zero
+                                                                           388 *
+00000000000003D8  B600 F23C                             000000000000023C   389          STCTL R0,R0,CPU1CR0 Store CR0 to enable AFP
+00000000000003DC  9604 F23D                             000000000000023D   390          OI    CPU1CR0+1,X'04' Turn on AFP bit
+00000000000003E0  B700 F23C                             000000000000023C   391          LCTL  R0,R0,CPU1CR0 Reload updated CR0
+                                                                           392 *
+                                                                           393 * Perform repetitive operation in a loop
+                                                                           394 *
+00000000000003E4  C0C0 0000 0E0E                        0000000000002000   395          LARL  R12,RESAREA   Point to shared results area
+00000000000003EA                      0000000000002000                     396          USING RESAREA,R12   Make results addressable
+00000000000003EA  1733                                                     397          XR    R3,R3         Zero count of loop iterations
+00000000000003EC  1843                                                     398          LR    R4,R3         Zero count of detected pre-emptions
+00000000000003EE  1853                                                     399          LR    R5,R3         Zero count of result errors
+00000000000003F0  1863                                                     400          LR    R6,R3         Zero count of FPCR contents errors
+00000000000003F2  0DD0                                                     401          BASR  R13,0         Set top of loop
+                                                                           402 *
+                                                                           403 * Top of loop.  Check for pre-emption, do floating point operation,
+                                                                           404 * increment count of trips through loop.
+                                                                           405 *
+00000000000003F4  D501 C080 F24A      0000000000002080  000000000000024A   406          CLC   LASTCPU,CPU1ADR  Has another CPU been dispatched
+00000000000003FA  4780 F40C                             000000000000040C   407          BE    CPU1CALC      ..not that we can detect...do calc.
+00000000000003FE  D201 C080 F24A      0000000000002080  000000000000024A   408          MVC   LASTCPU,CPU1ADR  Update last dispatched CPU
+0000000000000404  4140 4001                             0000000000000001   409          LA    R4,1(,R4)     Increment count of pre-emption detections
+0000000000000408  5040 C014                             0000000000002014   410          ST    R4,CPU1PDET   Store updated count
+                                                                           411 *
+000000000000040C                                                           412 CPU1CALC DS    0H            Perform floating point operation
+000000000000040C  B29D F49E                             000000000000049E   413          LFPC  CPU1FPCR      Reset FPCR to non-trap, RM
+0000000000000410  7820 F4A2                             00000000000004A2   414          LE    FPR2,CPU1OP1  Load operand one
+0000000000000414  B357 0082                                                415          FIEBR FPR8,0,FPR2   Convert to Floating Point integer
+0000000000000418  7080 C048                             0000000000002048   416          STE   FPR8,CPU1ARES Store actual result
+000000000000041C  B29C C04C                             000000000000204C   417          STFPC CPU1AFPC      Store actual FPCR contents
+                                                                           418 *
+0000000000000420  D503 C048 F4A6      0000000000002048  00000000000004A6   419          CLC   CPU1ARES,CPU1ER1  Did we get expected results?
+0000000000000426  4780 F438                             0000000000000438   420          BE    CPU1CF1C      ..Yes, go check FPCR contents
+000000000000042A  4150 5001                             0000000000000001   421          LA    R5,1(,R5)     Increment result error count
+000000000000042E  5050 C024                             0000000000002024   422          ST    R5,CPU1RECT   Store updated loop iteration count
+0000000000000432  D203 C068 C048      0000000000002068  0000000000002048   423          MVC   CPU1XRES,CPU1ARES  Save incorrect result
+                                                                           424 *
+0000000000000438                                                           425 CPU1CF1C DS    0H
+0000000000000438  D503 C04C F4AA      000000000000204C  00000000000004AA   426          CLC   CPU1AFPC,CPU1EF1  Did we get expected results?
+000000000000043E  4780 F450                             0000000000000450   427          BE    CPU1OPNX      ..Yes, end of iteration
+0000000000000442  4160 6001                             0000000000000001   428          LA    R6,1(,R6)     Increment FPCR contents error count
+0000000000000446  5060 C034                             0000000000002034   429          ST    R6,CPU1FECT   Store updated loop iteration count
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000044A  D203 C06C C04C      000000000000206C  000000000000204C   430          MVC   CPU1XFPC,CPU1AFPC  Save incorrect result
+                                                                           431 *
+0000000000000450                                                           432 CPU1OPNX DS    0H            FP op and result checks done
+0000000000000450  B29D F49E                             000000000000049E   433          LFPC  CPU1FPCR      Reset FPCR to non-trap, RM
+0000000000000454  7820 F4AE                             00000000000004AE   434          LE    FPR2,CPU1OP2  Load operand one
+0000000000000458  B357 0082                                                435          FIEBR FPR8,0,FPR2   Convert to Floating Point integer
+000000000000045C  7080 C048                             0000000000002048   436          STE   FPR8,CPU1ARES Store actual result
+0000000000000460  B29C C04C                             000000000000204C   437          STFPC CPU1AFPC      Store actual FPCR contents
+                                                                           438 *
+0000000000000464  D503 C048 F4B2      0000000000002048  00000000000004B2   439          CLC   CPU1ARES,CPU1ER2  Did we get expected results?
+000000000000046A  4780 F47C                             000000000000047C   440          BE    CPU1CF2C      ..Yes, go check FPCR contents
+000000000000046E  4150 5001                             0000000000000001   441          LA    R5,1(,R5)     Increment result error count
+0000000000000472  5050 C024                             0000000000002024   442          ST    R5,CPU1RECT   Store updated loop iteration count
+0000000000000476  D203 C068 C048      0000000000002068  0000000000002048   443          MVC   CPU1XRES,CPU1ARES  Save incorrect result
+                                                                           444 *
+000000000000047C                                                           445 CPU1CF2C DS    0H
+000000000000047C  D503 C04C F4B6      000000000000204C  00000000000004B6   446          CLC   CPU1AFPC,CPU1EF2  Did we get expected results?
+0000000000000482  4780 F494                             0000000000000494   447          BE    CPU1OPDN      ..Yes, end of iteration
+0000000000000486  4160 6001                             0000000000000001   448          LA    R6,1(,R6)     Increment FPCR contents error count
+000000000000048A  5060 C034                             0000000000002034   449          ST    R6,CPU1FECT   Store updated loop iteration count
+000000000000048E  D203 C06C C04C      000000000000206C  000000000000204C   450          MVC   CPU1XFPC,CPU1AFPC  Save incorrect result
+                                                                           451 *
+0000000000000494                                                           452 CPU1OPDN DS    0H            FP op and result checks done
+0000000000000494  4130 3001                             0000000000000001   453          LA    R3,1(,R3)     Increment count of loop iterations
+0000000000000498  5030 C004                             0000000000002004   454          ST    R3,CPU1CTR    Store updated loop iteration count
+000000000000049C  07FD                                                     455          BR    R13           Perform next iteration until CPU stopped
+                                                                           456 *
+000000000000049E                                                           457          DROP  R12
+                                                                           458 *
+                                                                           459 * Load Floating Point Integer of 1.5, RZ.  Expect 1.0 and inexact
+                                                                           460 *
+000000000000049E  00000001                                                 461 CPU1FPCR DC    X'00000001'   FPCR, no traps, RZ
+                                                                           462 *
+00000000000004A2  3FC00000                                                 463 CPU1OP1  DC    X'3FC00000'         +1.5
+00000000000004A6  3F800000                                                 464 CPU1ER1  DC    X'3F800000'         Expected 1.0
+00000000000004AA  00080001                                                 465 CPU1EF1  DC    X'00080001'         Expected FPCR flag inexact, RM
+                                                                           466 *
+00000000000004AE  3F800000                                                 467 CPU1OP2  DC    X'3F800000'         +1.0
+00000000000004B2  3F800000                                                 468 CPU1ER2  DC    X'3F800000'         Expected 1.0
+00000000000004B6  00000001                                                 469 CPU1EF2  DC    X'00000001'         Expected FPCR flag-free, RM
+                                                                           470 *
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           472 ***********************************************************************
+                                                                           473 *
+                                                                           474 * CPU 2 program.  Start the next processor, enable Advanced Floating
+                                                                           475 * Point, and repetitively perform a floating point operation until
+                                                                           476 * this processor is stopped by CPU 0.
+                                                                           477 *
+                                                                           478 ***********************************************************************
+
+
+00000000000004BA                                                           480 CPU2BEG  DS    0H            Start of processing for CPU zero
+                                                                           481 *
+00000000000004BA  B600 F240                             0000000000000240   482          STCTL R0,R0,CPU2CR0 Store CR0 to enable AFP
+00000000000004BE  9604 F241                             0000000000000241   483          OI    CPU2CR0+1,X'04' Turn on AFP bit
+00000000000004C2  B700 F240                             0000000000000240   484          LCTL  R0,R0,CPU2CR0 Reload updated CR0
+                                                                           485 *
+                                                                           486 * Perform repetitive operation in a loop
+                                                                           487 *
+00000000000004C6  C0C0 0000 0D9D                        0000000000002000   488          LARL  R12,RESAREA   Point to shared results area
+00000000000004CC                      0000000000002000                     489          USING RESAREA,R12   Make results addressable
+00000000000004CC  1733                                                     490          XR    R3,R3         Zero count of loop iterations
+00000000000004CE  1843                                                     491          LR    R4,R3         Zero count of detected pre-emptions
+00000000000004D0  1853                                                     492          LR    R5,R3         Zero count of result errors
+00000000000004D2  1863                                                     493          LR    R6,R3         Zero count of FPCR contents errors
+00000000000004D4  0DD0                                                     494          BASR  R13,0         Set top of loop
+                                                                           495 *
+                                                                           496 * Top of loop.  Check for pre-emption, do floating point operation,
+                                                                           497 * increment count of trips through loop.
+                                                                           498 *
+00000000000004D6  D501 C080 F24C      0000000000002080  000000000000024C   499          CLC   LASTCPU,CPU2ADR  Has another CPU been dispatched
+00000000000004DC  4780 F4EE                             00000000000004EE   500          BE    CPU2CALC      ..not that we can detect...do calc.
+00000000000004E0  D201 C080 F24C      0000000000002080  000000000000024C   501          MVC   LASTCPU,CPU2ADR  Update last dispatched CPU
+00000000000004E6  4140 4001                             0000000000000001   502          LA    R4,1(,R4)     Increment count of pre-emption detections
+00000000000004EA  5040 C018                             0000000000002018   503          ST    R4,CPU2PDET   Store updated count
+                                                                           504 *
+00000000000004EE                                                           505 CPU2CALC DS    0H            Perform floating point operation
+00000000000004EE  B29D F53C                             000000000000053C   506          LFPC  CPU2FPCR      Reset FPCR to non-trap, RM
+00000000000004F2  7820 F540                             0000000000000540   507          LE    FPR2,CPU2OP1  Load operand one
+00000000000004F6  B357 0082                                                508          FIEBR FPR8,0,FPR2   Convert to Floating Point integer
+00000000000004FA  7080 C050                             0000000000002050   509          STE   FPR8,CPU2ARES Store actual result
+00000000000004FE  B29C C054                             0000000000002054   510          STFPC CPU2AFPC      Store actual FPCR contents
+                                                                           511 *
+0000000000000502  D503 C050 F544      0000000000002050  0000000000000544   512          CLC   CPU2ARES,CPU2ERES  Did we get expected results?
+0000000000000508  4780 F51A                             000000000000051A   513          BE    CPU2CFPC      ..Yes, go check FPCR contents
+000000000000050C  4150 5001                             0000000000000001   514          LA    R5,1(,R5)     Increment result error count
+0000000000000510  5050 C028                             0000000000002028   515          ST    R5,CPU2RECT   Store updated loop iteration count
+0000000000000514  D203 C070 C050      0000000000002070  0000000000002050   516          MVC   CPU2XRES,CPU2ARES  Save incorrect result
+                                                                           517 *
+000000000000051A                                                           518 CPU2CFPC DS    0H
+000000000000051A  D503 C054 F548      0000000000002054  0000000000000548   519          CLC   CPU2AFPC,CPU2EFPC  Did we get expected results?
+0000000000000520  4780 F532                             0000000000000532   520          BE    CPU2OPDN      ..Yes, end of iteration
+0000000000000524  4160 6001                             0000000000000001   521          LA    R6,1(,R6)     Increment FPCR contents error count
+0000000000000528  5060 C038                             0000000000002038   522          ST    R6,CPU2FECT   Store updated loop iteration count
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000052C  D203 C074 C054      0000000000002074  0000000000002054   523          MVC   CPU2XFPC,CPU2AFPC  Save incorrect result
+                                                                           524 *
+0000000000000532                                                           525 CPU2OPDN DS    0H            FP op and result checks done
+0000000000000532  4130 3001                             0000000000000001   526          LA    R3,1(,R3)     Increment count of loop iterations
+0000000000000536  5030 C008                             0000000000002008   527          ST    R3,CPU2CTR    Store updated loop iteration count
+000000000000053A  07FD                                                     528          BR    R13           Perform next iteration until CPU stopped
+                                                                           529 *
+000000000000053C                                                           530          DROP  R12
+                                                                           531 *
+                                                                           532 * Load Floating Point Integer of 1.5, RP.  Expect 2.0 and inexact
+                                                                           533 *
+000000000000053C  00000002                                                 534 CPU2FPCR DC    X'00000002'   FPCR, no traps, RP
+                                                                           535 *
+0000000000000540  3FC00000                                                 536 CPU2OP1  DC    X'3FC00000'         +1.5
+                                                                           537 *
+0000000000000544  40000000                                                 538 CPU2ERES DC    X'40000000'         Expected 2.0
+0000000000000548  00080002                                                 539 CPU2EFPC DC    X'00080002'         Expected FPCR flag inexact, RM
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           541 ***********************************************************************
+                                                                           542 *
+                                                                           543 * CPU 3 program.  Start the next processor, enable Advanced Floating
+                                                                           544 * Point, and repetitively perform a floating point operation until
+                                                                           545 * this processor is stopped by CPU 0.
+                                                                           546 *
+                                                                           547 ***********************************************************************
+
+
+000000000000054C                                                           549 CPU3BEG  DS    0H            Start of processing for CPU zero
+                                                                           550 *
+000000000000054C  B600 F244                             0000000000000244   551          STCTL R0,R0,CPU3CR0 Store CR0 to enable AFP
+0000000000000550  9604 F245                             0000000000000245   552          OI    CPU3CR0+1,X'04' Turn on AFP bit
+0000000000000554  B700 F244                             0000000000000244   553          LCTL  R0,R0,CPU3CR0 Reload updated CR0
+                                                                           554 *
+                                                                           555 * Perform repetitive operation in a loop
+                                                                           556 *
+0000000000000558  C0C0 0000 0D54                        0000000000002000   557          LARL  R12,RESAREA   Point to shared results area
+000000000000055E                      0000000000002000                     558          USING RESAREA,R12   Make results addressable
+000000000000055E  1733                                                     559          XR    R3,R3         Zero count of loop iterations
+0000000000000560  1843                                                     560          LR    R4,R3         Zero count of detected pre-emptions
+0000000000000562  1853                                                     561          LR    R5,R3         Zero count of result errors
+0000000000000564  1863                                                     562          LR    R6,R3         Zero count of FPCR contents errors
+0000000000000566  0DD0                                                     563          BASR  R13,0         Set top of loop
+                                                                           564 *
+                                                                           565 * Top of loop.  Check for pre-emption, do floating point operation,
+                                                                           566 * increment count of trips through loop.
+                                                                           567 *
+0000000000000568  D501 C080 F24E      0000000000002080  000000000000024E   568          CLC   LASTCPU,CPU3ADR  Has another CPU been dispatched
+000000000000056E  4780 F580                             0000000000000580   569          BE    CPU3CALC      ..not that we can detect...do calc.
+0000000000000572  D201 C080 F24E      0000000000002080  000000000000024E   570          MVC   LASTCPU,CPU3ADR  Update last dispatched CPU
+0000000000000578  4140 4001                             0000000000000001   571          LA    R4,1(,R4)     Increment count of pre-emption detections
+000000000000057C  5040 C01C                             000000000000201C   572          ST    R4,CPU3PDET   Store updated count
+                                                                           573 *
+0000000000000580                                                           574 CPU3CALC DS    0H            Perform floating point operation
+0000000000000580  B29D F5CE                             00000000000005CE   575          LFPC  CPU3FPCR      Reset FPCR to non-trap, RM
+0000000000000584  7820 F5D2                             00000000000005D2   576          LE    FPR2,CPU3OP1  Load operand one
+0000000000000588  B357 0082                                                577          FIEBR FPR8,0,FPR2   Convert to Floating Point integer
+000000000000058C  7080 C058                             0000000000002058   578          STE   FPR8,CPU3ARES Store actual result
+0000000000000590  B29C C05C                             000000000000205C   579          STFPC CPU3AFPC      Store actual FPCR contents
+                                                                           580 *
+0000000000000594  D503 C058 F5D6      0000000000002058  00000000000005D6   581          CLC   CPU3ARES,CPU3ERES  Did we get expected results?
+000000000000059A  4780 F5AC                             00000000000005AC   582          BE    CPU3CFPC      ..Yes, go check FPCR contents
+000000000000059E  4150 5001                             0000000000000001   583          LA    R5,1(,R5)     Increment result error count
+00000000000005A2  5050 C02C                             000000000000202C   584          ST    R5,CPU3RECT   Store updated loop iteration count
+00000000000005A6  D203 C078 C058      0000000000002078  0000000000002058   585          MVC   CPU3XRES,CPU3ARES  Save incorrect result
+                                                                           586 *
+00000000000005AC                                                           587 CPU3CFPC DS    0H
+00000000000005AC  D503 C05C F5DA      000000000000205C  00000000000005DA   588          CLC   CPU3AFPC,CPU3EFPC  Did we get expected FPCR?
+00000000000005B2  4780 F5C4                             00000000000005C4   589          BE    CPU3OPDN      ..Yes, end of iteration
+00000000000005B6  4160 6001                             0000000000000001   590          LA    R6,1(,R6)     Increment FPCR contents error count
+00000000000005BA  5060 C03C                             000000000000203C   591          ST    R6,CPU3FECT   Store updated loop iteration count
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005BE  D203 C07C C05C      000000000000207C  000000000000205C   592          MVC   CPU3XFPC,CPU3AFPC  Save incorrect result
+                                                                           593 *
+00000000000005C4                                                           594 CPU3OPDN DS    0H            FP op and result checks done
+00000000000005C4  4130 3001                             0000000000000001   595          LA    R3,1(,R3)     Increment count of iterations
+00000000000005C8  5030 C00C                             000000000000200C   596          ST    R3,CPU3CTR    Store updated loop iteration count
+00000000000005CC  07FD                                                     597          BR    R13           Perform next iteration until CPU stopped
+00000000000005CE                                                           598          DROP  R12
+                                                                           599 *
+                                                                           600 * Load Floating Point Integer of 1.0, RM.  Expect 1.0 and no flags
+                                                                           601 *
+00000000000005CE  00000003                                                 602 CPU3FPCR DC    X'00000003'   FPCR, no traps, RP
+                                                                           603 *
+00000000000005D2  3F800000                                                 604 CPU3OP1  DC    X'3F800000'         +1.0
+                                                                           605 *
+00000000000005D6  3F800000                                                 606 CPU3ERES DC    X'3F800000'         Expected 1.0
+00000000000005DA  00000003                                                 607 CPU3EFPC DC    X'00000003'         Expected FPCR flag-free, RP
+
+
+
+00000000000005E0                                                           609          LTORG
+00000000000005E0  00000000 000003D8                                        610                =AD(CPU1BEG)
+00000000000005E8  00000000 00010000                                        611                =AD(CPU1PRE)
+00000000000005F0  00000000 00014000                                        612                =AD(CPU3PRE)
+00000000000005F8  00000000 00012000                                        613                =AD(CPU2PRE)
+0000000000000600  00000000 0000054C                                        614                =AD(CPU3BEG)
+0000000000000608  00000000 000004BA                                        615                =AD(CPU2BEG)
+0000000000000610  00989680                                                 616                =F'10000000'
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           618 *
+                                                                           619 * Locations for results.  Because all four threads use these
+                                                                           620 * values, they must not be in the area affected by prefixing.
+                                                                           621 *
+0000000000000614                      0000000000000614  0000000000002000   622          ORG   STRTLABL+X'2000'  Shared tables.
+0000000000002000                                                           623 RESAREA  DS    0D            Start of results area
+                                                                           624 *
+                                                                           625 *  Loop iteration counter for each CPU
+                                                                           626 *
+0000000000002000  00000000                                                 627 CPU0CTR  DC    F'0'
+0000000000002004  00000000                                                 628 CPU1CTR  DC    F'0'
+0000000000002008  00000000                                                 629 CPU2CTR  DC    F'0'
+000000000000200C  00000000                                                 630 CPU3CTR  DC    F'0'
+                                                                           631 *
+                                                                           632 *  Pre-emption detection counter for each CPU
+                                                                           633 *
+0000000000002010  00000000                                                 634 CPU0PDET DC    F'0'
+0000000000002014  00000000                                                 635 CPU1PDET DC    F'0'
+0000000000002018  00000000                                                 636 CPU2PDET DC    F'0'
+000000000000201C  00000000                                                 637 CPU3PDET DC    F'0'
+                                                                           638 *
+                                                                           639 *  Result error detection counter for each CPU
+                                                                           640 *
+0000000000002020  00000000                                                 641 CPU0RECT DC    F'0'
+0000000000002024  00000000                                                 642 CPU1RECT DC    F'0'
+0000000000002028  00000000                                                 643 CPU2RECT DC    F'0'
+000000000000202C  00000000                                                 644 CPU3RECT DC    F'0'
+                                                                           645 *
+                                                                           646 *  FPCR contents error detection counter for each CPU
+                                                                           647 *
+0000000000002030  00000000                                                 648 CPU0FECT DC    F'0'
+0000000000002034  00000000                                                 649 CPU1FECT DC    F'0'
+0000000000002038  00000000                                                 650 CPU2FECT DC    F'0'
+000000000000203C  00000000                                                 651 CPU3FECT DC    F'0'
+                                                                           652 *
+                                                                           653 * Actual Results
+                                                                           654 *
+0000000000002040  00000000                                                 655 CPU0ARES DC    X'00000000'         Actual results
+0000000000002044  00000000                                                 656 CPU0AFPC DC    X'00000000'         Actual FPCR contents
+                                                                           657 *
+0000000000002048  00000000                                                 658 CPU1ARES DC    X'00000000'         Actual results
+000000000000204C  00000000                                                 659 CPU1AFPC DC    X'00000000'         Actual FPCR contents
+                                                                           660 *
+0000000000002050  00000000                                                 661 CPU2ARES DC    X'00000000'         Actual results
+0000000000002054  00000000                                                 662 CPU2AFPC DC    X'00000000'         Actual FPCR contents
+                                                                           663 *
+0000000000002058  00000000                                                 664 CPU3ARES DC    X'00000000'         Actual results
+000000000000205C  00000000                                                 665 CPU3AFPC DC    X'00000000'         Actual FPCR contents
+                                                                           666 *
+                                                                           667 * Error Results
+                                                                           668 *
+0000000000002060  00000000                                                 669 CPU0XRES DC    X'00000000'         Last error results
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000002064  00000000                                                 670 CPU0XFPC DC    X'00000000'         Last error FPCR contents
+                                                                           671 *
+0000000000002068  00000000                                                 672 CPU1XRES DC    X'00000000'         Last error results
+000000000000206C  00000000                                                 673 CPU1XFPC DC    X'00000000'         Last error FPCR contents
+                                                                           674 *
+0000000000002070  00000000                                                 675 CPU2XRES DC    X'00000000'         Last error results
+0000000000002074  00000000                                                 676 CPU2XFPC DC    X'00000000'         Last error FPCR contents
+                                                                           677 *
+0000000000002078  00000000                                                 678 CPU3XRES DC    X'00000000'         Last error results
+000000000000207C  00000000                                                 679 CPU3XFPC DC    X'00000000'         Last error FPCR contents
+                                                                           680 *
+                                                                           681 * Following shared variable used for preemption detection.  Cannot be
+                                                                           682 * in the prefixed area, lest each CPU have its own copy.
+                                                                           683 *
+0000000000002080  0000                                                     684 LASTCPU  DC    H'0'          Address of last detected dispatched CPU
+                                                                           685 *
+                                      0000000000002200  0000000000000001   686 ENDLABL  EQU   STRTLABL+X'2200'
+                                                                           687          PADCSECT ENDLABL
+                                                                           688+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000002082                                                           689          END
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    18
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPTHRED            J    000000    8322   105
+CPU0ADR             H    000248       2   215  230  231  297  299
+CPU0AFPC            X    002044       4   656  308  317  321  328  337  341
+CPU0ARES            X    002040       4   655  307  310  314  327  330  334
+CPU0BEG             H    000250       2   229  165
+CPU0CALC            H    000308       2   303  298
+CPU0CF1C            H    000334       2   316  311
+CPU0CF2C            H    000378       2   336  331
+CPU0CR0             F    000238       4   210  279  280  281
+CPU0CTR             F    002000       4   627  345
+CPU0EF1             X    0003C8       4   372  317
+CPU0EF2             X    0003D4       4   376  337
+CPU0ER1             X    0003C4       4   371  310
+CPU0ER2             X    0003D0       4   375  330
+CPU0FECT            F    002030       4   648  320  340
+CPU0FPCR            X    0003BC       4   368  304  324
+CPU0OP1             X    0003C0       4   370  305
+CPU0OP2             X    0003CC       4   374  325
+CPU0OPDN            H    000390       2   343  338
+CPU0OPNX            H    00034C       2   323  318
+CPU0PDET            F    002010       4   634  301
+CPU0RECT            F    002020       4   641  313  333
+CPU0XFPC            X    002064       4   670  321  341
+CPU0XRES            X    002060       4   669  314  334
+CPU1ADR             H    00024A       2   216  233  248  353  406  408
+CPU1AFPC            X    00204C       4   659  417  426  430  437  446  450
+CPU1ARES            X    002048       4   658  416  419  423  436  439  443
+CPU1BEG             H    0003D8       2   387  253
+CPU1CALC            H    00040C       2   412  407
+CPU1CF1C            H    000438       2   425  420
+CPU1CF2C            H    00047C       2   445  440
+CPU1CR0             F    00023C       4   211  389  390  391
+CPU1CTR             F    002004       4   628  454
+CPU1EF1             X    0004AA       4   465  426
+CPU1EF2             X    0004B6       4   469  446
+CPU1ER1             X    0004A6       4   464  419
+CPU1ER2             X    0004B2       4   468  439
+CPU1FECT            F    002034       4   649  429  449
+CPU1FPCR            X    00049E       4   461  413  433
+CPU1OP1             X    0004A2       4   463  414
+CPU1OP2             X    0004AE       4   467  434
+CPU1OPDN            H    000494       2   452  447
+CPU1OPNX            H    000450       2   432  427
+CPU1PDET            F    002014       4   635  410
+CPU1PRE             U    010000       1   143  144  249
+CPU1RECT            F    002024       4   642  422  442
+CPU1XFPC            X    00206C       4   673  430  450
+CPU1XRES            X    002068       4   672  423  443
+CPU2ADR             H    00024C       2   217  235  258  356  499  501
+CPU2AFPC            X    002054       4   662  510  519  523
+CPU2ARES            X    002050       4   661  509  512  516
+CPU2BEG             H    0004BA       2   480  263
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    19
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CPU2CALC            H    0004EE       2   505  500
+CPU2CFPC            H    00051A       2   518  513
+CPU2CR0             F    000240       4   212  482  483  484
+CPU2CTR             F    002008       4   629  527
+CPU2EFPC            X    000548       4   539  519
+CPU2ERES            X    000544       4   538  512
+CPU2FECT            F    002038       4   650  522
+CPU2FPCR            X    00053C       4   534  506
+CPU2OP1             X    000540       4   536  507
+CPU2OPDN            H    000532       2   525  520
+CPU2PDET            F    002018       4   636  503
+CPU2PRE             U    012000       1   144  145  259
+CPU2RECT            F    002028       4   643  515
+CPU2XFPC            X    002074       4   676  523
+CPU2XRES            X    002070       4   675  516
+CPU3ADR             H    00024E       2   218  237  268  359  568  570
+CPU3AFPC            X    00205C       4   665  579  588  592
+CPU3ARES            X    002058       4   664  578  581  585
+CPU3BEG             H    00054C       2   549  273
+CPU3CALC            H    000580       2   574  569
+CPU3CFPC            H    0005AC       2   587  582
+CPU3CR0             F    000244       4   213  551  552  553
+CPU3CTR             F    00200C       4   630  596
+CPU3EFPC            X    0005DA       4   607  588
+CPU3ERES            X    0005D6       4   606  581
+CPU3FECT            F    00203C       4   651  591
+CPU3FPCR            X    0005CE       4   602  575
+CPU3OP1             X    0005D2       4   604  576
+CPU3OPDN            H    0005C4       2   594  589
+CPU3PDET            F    00201C       4   637  572
+CPU3PRE             U    014000       1   145  269
+CPU3RECT            F    00202C       4   644  584
+CPU3XFPC            X    00207C       4   679  592
+CPU3XRES            X    002078       4   678  585
+ENDLABL             U    002200       1   686
+FPR0                U    000000       1   126
+FPR1                U    000001       1   127
+FPR10               U    00000A       1   136
+FPR11               U    00000B       1   137
+FPR12               U    00000C       1   138
+FPR13               U    00000D       1   139
+FPR14               U    00000E       1   140
+FPR15               U    00000F       1   141
+FPR2                U    000002       1   128  305  306  325  326  414  415  434  435  507  508  576  577
+FPR3                U    000003       1   129
+FPR4                U    000004       1   130
+FPR5                U    000005       1   131
+FPR6                U    000006       1   132
+FPR7                U    000007       1   133
+FPR8                U    000008       1   134  306  307  326  327  415  416  435  436  508  509  577  578
+FPR9                U    000009       1   135
+HARDWAIT            X    000228       8   208  189
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    20
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IMAGE               1    000000    8322     0
+LASTCPU             H    002080       2   684  297  299  406  408  499  501  568  570
+PCINTCD             H    00008E       2   160  183
+PCNOTDTA            H    00020C       2   186  184
+PCOLDPSW            U    000150       1   162  185
+PROGCHK             H    000200       2   182  169
+R0                  U    000000       1   107  250  251  255  260  261  265  270  271  275  279  281  354  357  360  389  391  482
+                                               484  551  553
+R1                  U    000001       1   108  231  232  233  234  235  236  237  249  251  252  253  254  259  261  262  263  264
+                                               269  271  272  273  274  351
+R10                 U    00000A       1   117
+R11                 U    00000B       1   118
+R12                 U    00000C       1   119  285  286  350  395  396  457  488  489  530  557  558  598
+R13                 U    00000D       1   120  292  346  401  455  494  528  563  597
+R14                 U    00000E       1   121  187  188  362  363
+R15                 U    00000F       1   122  147
+R2                  U    000002       1   109  248  252  255  258  262  265  268  272  275  287  346  353  354  356  357  359  360
+R3                  U    000003       1   110  288  289  290  291  344  345  397  398  399  400  453  454  490  491  492  493  526
+                                               527  559  560  561  562  595  596
+R4                  U    000004       1   111  289  300  301  398  409  410  491  502  503  560  571  572
+R5                  U    000005       1   112  290  312  313  332  333  399  421  422  441  442  492  514  515  561  583  584
+R6                  U    000006       1   113  291  319  320  339  340  400  428  429  448  449  493  521  522  562  590  591
+R7                  U    000007       1   114
+R8                  U    000008       1   115
+R9                  U    000009       1   116
+RESAREA             D    002000       8   623  285  286  395  396  488  489  557  558
+RESTRPSW            X    0001A0       8   165  166
+RPSWADR             U    0001A8       1   166  253  263  273
+SIGPPREF            U    00000D       1   204  252  262  272
+SIGPREST            U    000006       1   202  255  265  275
+SIGPSTOP            U    000005       1   203  354  357  360
+STRTLABL            U    000000       1   106  159  162  164  166  168  181  622  686
+WAITPSW             X    000218       8   207  364
+=AD(CPU1BEG)        A    0005E0       8   610  253
+=AD(CPU1PRE)        A    0005E8       8   611  249
+=AD(CPU2BEG)        A    000608       8   615  263
+=AD(CPU2PRE)        A    0005F8       8   613  259
+=AD(CPU3BEG)        A    000600       8   614  273
+=AD(CPU3PRE)        A    0005F0       8   612  269
+=F'10000000'        F    000610       4   616  287
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    21
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     78   687
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    22
+
+   DESC     SYMBOL   SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE     8322  0000-2081  0000-2081
+  Region             8322  0000-2081  0000-2081
+    CSECT  BFPTHRED  8322  0000-2081  0000-2081
+ASMA Ver. 0.2.0  bfp-023-threads.asm: Test IEEE/Softfloat 3a Thread Safety                          27 Oct 2016 23:07:10  Page    23
+
+   STMT                               FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-023-threads.asm
+
+
+** NO ERRORS FOUND **
+
+[688] MNOTE *,asma detected; no CSECT padding performed
+

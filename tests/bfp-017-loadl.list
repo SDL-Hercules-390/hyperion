@@ -1,0 +1,830 @@
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE LOAD LENGTHENED
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise. Test results, FPCR flags, and any DXC are saved for all
+                                                                             7 *  tests.  Load Lengthened does not set the condition code.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following three conversion instructions
+                                                                            14 *   LOAD LENGTHENED (short BFP, RRE)
+                                                                            15 *   LOAD LENGTHENED (long BFP, RRE)
+                                                                            16 *   LOAD LENGTHENED (extended BFP, RRE)
+                                                                            17 *   LOAD LENGTHENED (short BFP, RXE)
+                                                                            18 *   LOAD LENGTHENED (long BFP, RXE)
+                                                                            19 *   LOAD LENGTHENED (extended BFP, RXE)
+                                                                            20 *
+                                                                            21 * Test data is compiled into this program.  The test script that runs
+                                                                            22 * this program can provide alternative test data through Hercules R
+                                                                            23 * commands.
+                                                                            24 *
+                                                                            25 * Test Case Order
+                                                                            26 * 1) Short to log BFP non-finite tests, non-trap and trap
+                                                                            27 * 2) Short to log BFP finite tests, non-trappable
+                                                                            28 * 3) Long to extended BFP non-finite tests, non-trap and trap
+                                                                            29 * 4) Long to extended BFP finite tests, non-trappable
+                                                                            30 * 5) Short to extended BFP non-finite tests, non-trap and trap
+                                                                            31 * 6) Short to extended BFP finite tests, non-trappable
+                                                                            32 *
+                                                                            33 * Two input test data sets are provided, one each for short and long
+                                                                            34 *   precision BFP inputs.  The same short BFP inputs are used for
+                                                                            35 *   short to long testing and short to extended testing.
+                                                                            36 *
+                                                                            37 * Also tests the following floating point support instructions
+                                                                            38 *   LOAD  (Short)
+                                                                            39 *   LOAD  (Long)
+                                                                            40 *   LFPC  (Load Floating Point Control Register)
+                                                                            41 *   STORE (Short)
+                                                                            42 *   STORE (Long)
+                                                                            43 *   STFPC (Store Floating Point Control Register)
+                                                                            44 *
+                                                                            45 ***********************************************************************
+
+
+                                                                            47          MACRO
+                                                                            48          PADCSECT &ENDLABL
+                                                                            49 .*
+                                                                            50 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            51 .*  program is not being assembled using asma.  asma generates a core
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52 .*  image that is loaded by the loadcore command, and because the
+                                                                            53 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            54 .*  this small effort to keep the core image small.
+                                                                            55 .*
+                                                                            56          AIF   (D'&ENDLABL).GOODPAD
+                                                                            57          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            58          MNOTE *,'No CSECT padding performed'
+                                                                            59          MEXIT
+                                                                            60 .*
+                                                                            61 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            62          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            63          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            64          MEXIT
+                                                                            65 .*
+                                                                            66 .NOPAD   ANOP
+                                                                            67          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            68          MEND
+                                                                            69 *
+                                                                            70 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            71 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            72 *
+                                      0000000000000000  0000000000000687    73 BFPLDLEN START 0                   Load Lengthened Testing
+                                      0000000000000000  0000000000000001    74 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    75 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    76 R1       EQU   1                   Available
+                                      0000000000000002  0000000000000001    77 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    78 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    79 R4       EQU   4                   Available
+                                      0000000000000005  0000000000000001    80 R5       EQU   5                   Available
+                                      0000000000000006  0000000000000001    81 R6       EQU   6                   Available
+                                      0000000000000007  0000000000000001    82 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    83 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    84 R9       EQU   9                   Available
+                                      000000000000000A  0000000000000001    85 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    86 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    87 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001    88 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    89 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    90 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            91 *
+                                                                            92 * Floating Point Register equates to keep the cross reference clean
+                                                                            93 *
+                                      0000000000000000  0000000000000001    94 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    95 FPR1     EQU   1
+                                      0000000000000002  0000000000000001    96 FPR2     EQU   2
+                                      0000000000000003  0000000000000001    97 FPR3     EQU   3
+                                      0000000000000004  0000000000000001    98 FPR4     EQU   4
+                                      0000000000000005  0000000000000001    99 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   100 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   101 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   102 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   103 FPR9     EQU   9
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000000A  0000000000000001   104 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   105 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   106 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   107 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   108 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   109 FPR15    EQU   15
+                                                                           110 *
+0000000000000000                      0000000000000000                     111          USING *,R15
+                                                                           112 * Above works on real iron (R15=0 after sysclear)
+                                                                           113 * and in z/CMS (R15 points to start of load module)
+                                                                           114 *
+
+
+                                                                           116 ***********************************************************************
+                                                                           117 *
+                                                                           118 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           119 *
+                                                                           120 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   122          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     123 PCINTCD  DS    H
+                                                                           124 *
+                                      0000000000000150  0000000000000001   125 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           126 *
+0000000000000090                      0000000000000090  00000000000001A0   127          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        128          DC    X'0000000180000000',AD(START)
+                                                                           129 *
+00000000000001B0                      00000000000001B0  00000000000001D0   130          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        131          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           132 *
+                                                                           133 * Program check routine.  If Data Exception, continue execution at
+                                                                           134 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           135 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           136 * in the FPCR.
+                                                                           137 *
+00000000000001E0                                                           138 PROGCHK  DS    0H             Program check occured...
+00000000000001E0  9507 F08F                             000000000000008F   139          CLI   PCINTCD+1,X'07'  Data Exception?
+00000000000001E4  A774 0004                             00000000000001EC   140          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+00000000000001E8  B2B2 F150                             0000000000000150   141          LPSWE PCOLDPSW       ..yes, resume program execution
+00000000000001EC                                                           142 PCNOTDTA DS    0H
+00000000000001EC  12EE                                                     143          LTR   R14,R14        Return address provided?
+00000000000001EE  077E                                                     144          BNZR  R14            Yes, return to z/CMS test rig.
+00000000000001F0  B2B2 F248                             0000000000000248   145          LPSWE HARDWAIT       Not data exception, enter disabled wait.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           147 ***********************************************************************
+                                                                           148 *
+                                                                           149 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           150 *
+                                                                           151 ***********************************************************************
+
+
+00000000000001F4                                                           153 START    DS    0H
+00000000000001F4  B600 F258                             0000000000000258   154          STCTL R0,R0,CTLR0   Store CR0 to enable AFP
+00000000000001F8  9604 F259                             0000000000000259   155          OI    CTLR0+1,X'04' Turn on AFP bit
+00000000000001FC  B700 F258                             0000000000000258   156          LCTL  R0,R0,CTLR0   Reload updated CR0
+                                                                           157 *
+0000000000000200  41A0 F300                             0000000000000300   158          LA    R10,SHORTNF   Point to short BFP non-finite test data
+0000000000000204  4DD0 F360                             0000000000000360   159          BAS   R13,LDEBRNF   Convert short BFP to long BFP
+0000000000000208  41A0 F310                             0000000000000310   160          LA    R10,SHORTF    Point to short BFP finite test data
+000000000000020C  4DD0 F3CE                             00000000000003CE   161          BAS   R13,LDEBRF    Convert short BFP to long BFP
+                                                                           162 *
+0000000000000210  41A0 F320                             0000000000000320   163          LA    R10,LONGNF    Point to long BFP non-finite test data
+0000000000000214  4DD0 F416                             0000000000000416   164          BAS   R13,LXDBRNF   Convert long BFP to integer long BFP
+0000000000000218  41A0 F330                             0000000000000330   165          LA    R10,LONGF     Point to long BFP finite test data
+000000000000021C  4DD0 F494                             0000000000000494   166          BAS   R13,LXDBRF    Convert using all rounding mode options
+                                                                           167 *
+0000000000000220  41A0 F340                             0000000000000340   168          LA    R10,XTNDNF    Point to short BFP non-finite test data
+0000000000000224  4DD0 F4E0                             00000000000004E0   169          BAS   R13,LXEBRNF   Convert short BFP to extended BFP
+0000000000000228  41A0 F350                             0000000000000350   170          LA    R10,XTNDF     Point to short BFP finite test data
+000000000000022C  4DD0 F55E                             000000000000055E   171          BAS   R13,LXEBRF    Convert short BFP to extended BFP
+                                                                           172 *
+0000000000000230  12EE                                                     173          LTR   R14,R14       Return address provided?
+0000000000000232  077E                                                     174          BNZR  R14           ..Yes, return to z/CMS test rig.
+0000000000000234  B2B2 F238                             0000000000000238   175          LPSWE WAITPSW       All done
+                                                                           176 *
+0000000000000238                                                           177          DS    0D            Ensure correct alignment for psw
+0000000000000238  00020000 00000000                                        178 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000248  00020000 00000000                                        179 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           180 *
+0000000000000258  00000000                                                 181 CTLR0    DS    F
+000000000000025C  00000000                                                 182 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000260  F8000000                                                 183 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           184 *
+                                                                           185 * Input values parameter list, four fullwords:
+                                                                           186 *      1) Count,
+                                                                           187 *      2) Address of inputs,
+                                                                           188 *      3) Address to place results, and
+                                                                           189 *      4) Address to place DXC/Flags/cc values.
+                                                                           190 *
+0000000000000264                      0000000000000264  0000000000000300   191          ORG   STRTLABL+X'300'
+0000000000000300                                                           192 SHORTNF  DS    0F            Short to long BFP non-finite inputs
+0000000000000300  00000008                                                 193          DC    A(SBFPNFCT)
+0000000000000304  000005AC                                                 194          DC    A(SBFPNFIN)
+0000000000000308  00001000                                                 195          DC    A(SBFPNFOT)
+000000000000030C  00001100                                                 196          DC    A(SBFPNFFL)
+                                                                           197 *
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000310                                                           198 SHORTF   DS    0F            Short to long BFP finite inputs
+0000000000000310  0000000A                                                 199          DC    A(SBFPFCT)
+0000000000000314  000005CC                                                 200          DC    A(SBFPFIN)
+0000000000000318  00001200                                                 201          DC    A(SBFPFOT)
+000000000000031C  00001300                                                 202          DC    A(SBFPFOF)
+                                                                           203 *
+0000000000000320                                                           204 LONGNF   DS    0F            Long to extended BFP non-finite inputs
+0000000000000320  00000008                                                 205          DC    A(LBFPNFCT)
+0000000000000324  000005F8                                                 206          DC    A(LBFPNFIN)
+0000000000000328  00002000                                                 207          DC    A(LBFPNFOT)
+000000000000032C  00002200                                                 208          DC    A(LBFPNFFL)
+                                                                           209 *
+0000000000000330                                                           210 LONGF    DS    0F            Long to extended BFP finite inputs
+0000000000000330  0000000A                                                 211          DC    A(LBFPFCT)
+0000000000000334  00000638                                                 212          DC    A(LBFPFIN)
+0000000000000338  00002300                                                 213          DC    A(LBFPFOT)
+000000000000033C  00002500                                                 214          DC    A(LBFPFOF)
+                                                                           215 *
+0000000000000340                                                           216 XTNDNF   DS    0F            Short to extended BFP non-finite inputs
+0000000000000340  00000008                                                 217          DC    A(SBFPNFCT)
+0000000000000344  000005AC                                                 218          DC    A(SBFPNFIN)
+0000000000000348  00003000                                                 219          DC    A(XBFPNFOT)
+000000000000034C  00003200                                                 220          DC    A(XBFPNFFL)
+                                                                           221 *
+0000000000000350                                                           222 XTNDF    DS    0F            Short to extended BFP finite inputs
+0000000000000350  0000000A                                                 223          DC    A(SBFPFCT)
+0000000000000354  000005CC                                                 224          DC    A(SBFPFIN)
+0000000000000358  00003300                                                 225          DC    A(XBFPFOT)
+000000000000035C  00003500                                                 226          DC    A(XBFPFOF)
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           228 ***********************************************************************
+                                                                           229 *
+                                                                           230 * Load Lengthened Short to Long non-finite tests
+                                                                           231 *
+                                                                           232 * Lengthen short BFP inputs to long BFP.  Two pairs of results are
+                                                                           233 * generated, one pair for RRE and one for RXE.  Each pair consists of
+                                                                           234 * a result with all exceptions non-trappable and a second with all
+                                                                           235 * exceptions trappable.   The FPCR is stored for each result.  The
+                                                                           236 * Condition Code in not changed by Load Lengthened and is not stored.
+                                                                           237 *
+                                                                           238 ***********************************************************************
+
+
+0000000000000360                                                           240 LDEBRNF  DS    0H            Convert short BFP inputs to long BFP
+0000000000000360  9823 A000                             0000000000000000   241          LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000364  9878 A008                             0000000000000008   242          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000368  1222                                                     243          LTR   R2,R2         Any test cases?
+000000000000036A  078D                                                     244          BZR   R13           ..No, return to caller
+000000000000036C  0DC0                                                     245          BASR  R12,0         Set top of loop
+                                                                           246 *
+000000000000036E  7880 3000                             0000000000000000   247          LE    FPR8,0(,R3)   Get short BFP test value
+0000000000000372  B29D F25C                             000000000000025C   248          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000376  B304 0018                                                249          LDEBR FPR1,FPR8     Lengthen short in FPR8 to long in FPR1
+000000000000037A  6010 7000                             0000000000000000   250          STD   FPR1,0(,R7)   Store long BFP result
+000000000000037E  B29C 8000                             0000000000000000   251          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           252 *
+0000000000000382  B29D F260                             0000000000000260   253          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000386  B374 0010                                                254          LZER  FPR1          Eliminate any residual results
+000000000000038A  B304 0018                                                255          LDEBR FPR1,FPR8     Lengthen short in FPR8 to long in FPR1
+000000000000038E  6010 7008                             0000000000000008   256          STD   FPR1,8(,R7)   Store long BFP result
+0000000000000392  B29C 8004                             0000000000000004   257          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           258 *
+0000000000000396  B29D F25C                             000000000000025C   259          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000039A  ED10 3000 0004                        0000000000000000   260          LDEB  FPR1,0(,R3)   Lengthen short BFP to long in FPR1
+00000000000003A0  6010 7010                             0000000000000010   261          STD   FPR1,16(,R7)  Store long BFP result
+00000000000003A4  B29C 8008                             0000000000000008   262          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           263 *
+00000000000003A8  B29D F260                             0000000000000260   264          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003AC  B374 0010                                                265          LZER  FPR1          Eliminate any residual results
+00000000000003B0  ED10 3000 0004                        0000000000000000   266          LDEB  FPR1,0(,R3)   Lengthen short BFP to long in FPR1
+00000000000003B6  6010 7018                             0000000000000018   267          STD   FPR1,24(,R7)  Store long BFP result
+00000000000003BA  B29C 800C                             000000000000000C   268          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           269 *
+00000000000003BE  4130 3004                             0000000000000004   270          LA    R3,4(,R3)     Point to next input value
+00000000000003C2  4170 7020                             0000000000000020   271          LA    R7,4*8(,R7)   Point to next long BFP result set
+00000000000003C6  4180 8010                             0000000000000010   272          LA    R8,4*4(,R8)   Point to next FPCR result area
+00000000000003CA  062C                                                     273          BCTR  R2,R12        Convert next input value.
+00000000000003CC  07FD                                                     274          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           276 ***********************************************************************
+                                                                           277 *
+                                                                           278 * Load Lengthened Short to Long finite tests
+                                                                           279 *
+                                                                           280 * Convert short BFP to integer BFP using each possible rounding mode.
+                                                                           281 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           282 * section is used to keep results sets aligned on a quad-double word.
+                                                                           283 *
+                                                                           284 * The first four tests use rounding modes specified in the FPCR with
+                                                                           285 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
+                                                                           286 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
+                                                                           287 * the last two To get full coverage of that instruction pair.
+                                                                           288 *
+                                                                           289 * The next six results use instruction-specified rounding modes.
+                                                                           290 *
+                                                                           291 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           292 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           293 * explicitly as a rounding mode in this section.
+                                                                           294 *
+                                                                           295 ***********************************************************************
+
+
+00000000000003CE  9823 A000                             0000000000000000   297 LDEBRF   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000003D2  9878 A008                             0000000000000008   298          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000003D6  1222                                                     299          LTR   R2,R2         Any test cases?
+00000000000003D8  078D                                                     300          BZR   R13           ..No, return to caller
+00000000000003DA  0DC0                                                     301          BASR  R12,0         Set top of loop
+                                                                           302 *
+00000000000003DC  7880 3000                             0000000000000000   303          LE    FPR8,0(,R3)    Get short BFP test value
+                                                                           304 *
+00000000000003E0  B29D F25C                             000000000000025C   305          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003E4  B304 0018                                                306          LDEBR FPR1,FPR8     Lengthen short in FPR8 to long in FPR1
+00000000000003E8  6010 7000                             0000000000000000   307          STD   FPR1,0(,R7)   Store long BFP result
+00000000000003EC  B29C 8000                             0000000000000000   308          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           309 *
+00000000000003F0  B29D F25C                             000000000000025C   310          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003F4  B374 0010                                                311          LZER  FPR1          Eliminate any residual results
+00000000000003F8  ED10 3000 0004                        0000000000000000   312          LDEB  FPR1,0(,R3)   Lengthen short in FPR8 to long in FPR1
+00000000000003FE  6010 7008                             0000000000000008   313          STD   FPR1,8(,R7)   Store long BFP result
+0000000000000402  B29C 8004                             0000000000000004   314          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           315 *
+0000000000000406  4130 3004                             0000000000000004   316          LA    R3,4(,R3)     Point to next input value
+000000000000040A  4170 7010                             0000000000000010   317          LA    R7,2*8(,R7)   Point to next long BFP result set
+000000000000040E  4180 8008                             0000000000000008   318          LA    R8,2*4(,R8)   Point to next FPCR result area
+0000000000000412  062C                                                     319          BCTR  R2,R12        Convert next input value.
+0000000000000414  07FD                                                     320          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           322 ***********************************************************************
+                                                                           323 *
+                                                                           324 * Load Lengthened Long to Extended non-finite tests
+                                                                           325 *
+                                                                           326 * Lengthen long BFP inputs to extended BFP.  Two pairs of results are
+                                                                           327 * generated, one pair for RRE and one for RXE.  Each pair consists of
+                                                                           328 * a result with all exceptions non-trappable and a second with all
+                                                                           329 * exceptions trappable.   The FPCR is stored for each result.  The
+                                                                           330 * Condition Code in not changed by Load Lengthened and is not stored.
+                                                                           331 *
+                                                                           332 ***********************************************************************
+
+
+0000000000000416  9823 A000                             0000000000000000   334 LXDBRNF  LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000041A  9878 A008                             0000000000000008   335          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000041E  1222                                                     336          LTR   R2,R2         Any test cases?
+0000000000000420  078D                                                     337          BZR   R13           ..No, return to caller
+0000000000000422  0DC0                                                     338          BASR  R12,0         Set top of loop
+                                                                           339 *
+0000000000000424  6880 3000                             0000000000000000   340          LD    FPR8,0(,R3)   Get long BFP test value
+0000000000000428  B29D F25C                             000000000000025C   341          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000042C  B305 0018                                                342          LXDBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+0000000000000430  6010 7000                             0000000000000000   343          STD   FPR1,0(,R7)   Store extended BFP result part 1
+0000000000000434  6030 7008                             0000000000000008   344          STD   FPR3,8(,R7)   Store extended BFP result part 2
+0000000000000438  B29C 8000                             0000000000000000   345          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           346 *
+000000000000043C  B29D F260                             0000000000000260   347          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000440  B376 0010                                                348          LZXR  FPR1          Eliminate any residual results
+0000000000000444  B305 0018                                                349          LXDBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+0000000000000448  6010 7010                             0000000000000010   350          STD   FPR1,16(,R7)  Store extended BFP result part 1
+000000000000044C  6030 7018                             0000000000000018   351          STD   FPR3,24(,R7)  Store extended BFP result part 2
+0000000000000450  B29C 8004                             0000000000000004   352          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           353 *
+0000000000000454  B29D F25C                             000000000000025C   354          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000458  ED10 3000 0005                        0000000000000000   355          LXDB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+000000000000045E  6010 7020                             0000000000000020   356          STD   FPR1,32(,R7)  Store extended BFP result part 1
+0000000000000462  6030 7028                             0000000000000028   357          STD   FPR3,40(,R7)  Store extended BFP result part 2
+0000000000000466  B29C 8008                             0000000000000008   358          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           359 *
+000000000000046A  B29D F260                             0000000000000260   360          LFPC  FPCREGTR      Set exceptions trappable
+000000000000046E  B376 0010                                                361          LZXR  FPR1          Eliminate any residual results
+0000000000000472  ED10 3000 0005                        0000000000000000   362          LXDB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+0000000000000478  6010 7030                             0000000000000030   363          STD   FPR1,48(,R7)  Store extended BFP result part 1
+000000000000047C  6030 7038                             0000000000000038   364          STD   FPR3,56(,R7)  Store extended BFP result part 2
+0000000000000480  B29C 800C                             000000000000000C   365          STFPC 12(R8)        Store resulting FPCR flags and DXC
+                                                                           366 *
+0000000000000484  4130 3008                             0000000000000008   367          LA    R3,8(,R3)     Point to next input value
+0000000000000488  4170 7040                             0000000000000040   368          LA    R7,4*16(,R7)  Point to next extended BFP result set
+000000000000048C  4180 8010                             0000000000000010   369          LA    R8,4*4(,R8)   Point to next FPCR result area
+0000000000000490  062C                                                     370          BCTR  R2,R12        Convert next input value.
+0000000000000492  07FD                                                     371          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           373 ***********************************************************************
+                                                                           374 *
+                                                                           375 * Convert long BFP to integers using each possible rounding mode.
+                                                                           376 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           377 * section is used to keep results sets aligned on a quad-double word.
+                                                                           378 *
+                                                                           379 * The first four tests use rounding modes specified in the FPCR with
+                                                                           380 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
+                                                                           381 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
+                                                                           382 * the last two To get full coverage of that instruction pair.
+                                                                           383 *
+                                                                           384 * The next six results use instruction-specified rounding modes.
+                                                                           385 *
+                                                                           386 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           387 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           388 * explicitly as a rounding mode in this section.
+                                                                           389 *
+                                                                           390 ***********************************************************************
+
+
+0000000000000494  9823 A000                             0000000000000000   392 LXDBRF   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000498  9878 A008                             0000000000000008   393          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000049C  1222                                                     394          LTR   R2,R2         Any test cases?
+000000000000049E  078D                                                     395          BZR   R13           ..No, return to caller
+00000000000004A0  0DC0                                                     396          BASR  R12,0         Set top of loop
+                                                                           397 *
+00000000000004A2  6880 3000                             0000000000000000   398          LD    FPR8,0(,R3)   Get long BFP test value
+00000000000004A6  B29D F25C                             000000000000025C   399          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004AA  B305 0018                                                400          LXDBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+00000000000004AE  6010 7000                             0000000000000000   401          STD   FPR1,0(,R7)   Store extended BFP result part 1
+00000000000004B2  6030 7008                             0000000000000008   402          STD   FPR3,8(,R7)   Store extended BFP result part 2
+00000000000004B6  B29C 8000                             0000000000000000   403          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           404 *
+00000000000004BA  B29D F25C                             000000000000025C   405          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004BE  ED10 3000 0005                        0000000000000000   406          LXDB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+00000000000004C4  6010 7010                             0000000000000010   407          STD   FPR1,16(,R7)  Store extended BFP result part 1
+00000000000004C8  6030 7018                             0000000000000018   408          STD   FPR3,24(,R7)  Store extended BFP result part 2
+00000000000004CC  B29C 8004                             0000000000000004   409          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           410 *
+00000000000004D0  4130 3008                             0000000000000008   411          LA    R3,8(,R3)     Point to next input value
+00000000000004D4  4170 7020                             0000000000000020   412          LA    R7,2*16(,R7)  Point to next extended BFP result set
+00000000000004D8  4180 8008                             0000000000000008   413          LA    R8,2*4(,R8)   Point to next FPCR result area
+00000000000004DC  062C                                                     414          BCTR  R2,R12        Convert next input value.
+00000000000004DE  07FD                                                     415          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           417 ***********************************************************************
+                                                                           418 *
+                                                                           419 * Load Lengthened Short to Extended non-finite tests
+                                                                           420 *
+                                                                           421 * Lengthen short BFP inputs to extended BFP.  Two pairs of results are
+                                                                           422 * generated, one pair for RRE and one for RXE.  Each pair consists of
+                                                                           423 * a result with all exceptions non-trappable and a second with all
+                                                                           424 * exceptions trappable.   The FPCR is stored for each result.  The
+                                                                           425 * Condition Code in not changed by Load Lengthened and is not stored.
+                                                                           426 *
+                                                                           427 ***********************************************************************
+
+
+00000000000004E0  9823 A000                             0000000000000000   429 LXEBRNF  LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000004E4  9878 A008                             0000000000000008   430          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000004E8  1222                                                     431          LTR   R2,R2         Any test cases?
+00000000000004EA  078D                                                     432          BZR   R13           ..No, return to caller
+00000000000004EC  0DC0                                                     433          BASR  R12,0         Set top of loop
+                                                                           434 *
+00000000000004EE  7880 3000                             0000000000000000   435          LE    FPR8,0(,R3)   Get long BFP test value
+00000000000004F2  B29D F25C                             000000000000025C   436          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004F6  B306 0018                                                437          LXEBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+00000000000004FA  6010 7000                             0000000000000000   438          STD   FPR1,0(,R7)   Store extended BFP result part 1
+00000000000004FE  6030 7008                             0000000000000008   439          STD   FPR3,8(,R7)   Store extended BFP result part 2
+0000000000000502  B29C 8000                             0000000000000000   440          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           441 *
+0000000000000506  B29D F260                             0000000000000260   442          LFPC  FPCREGTR      Set exceptions trappable
+000000000000050A  B376 0010                                                443          LZXR  FPR1          Eliminate any residual results
+000000000000050E  B306 0018                                                444          LXEBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+0000000000000512  6010 7010                             0000000000000010   445          STD   FPR1,16(,R7)  Store extended BFP result part 1
+0000000000000516  6030 7018                             0000000000000018   446          STD   FPR3,24(,R7)  Store extended BFP result part 2
+000000000000051A  B29C 8004                             0000000000000004   447          STFPC 4(R8)         Store resulting FPCR flags and DXC
+                                                                           448 *
+000000000000051E  B29D F25C                             000000000000025C   449          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000522  ED10 3000 0006                        0000000000000000   450          LXEB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+0000000000000528  6010 7020                             0000000000000020   451          STD   FPR1,32(,R7)  Store extended BFP result part 1
+000000000000052C  6030 7028                             0000000000000028   452          STD   FPR3,40(,R7)  Store extended BFP result part 2
+0000000000000530  B29C 8008                             0000000000000008   453          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           454 *
+0000000000000534  B29D F260                             0000000000000260   455          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000538  B376 0010                                                456          LZXR  FPR1          Eliminate any residual results
+000000000000053C  ED10 3000 0006                        0000000000000000   457          LXEB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+0000000000000542  6010 7030                             0000000000000030   458          STD   FPR1,48(,R7)  Store extended BFP result part 1
+0000000000000546  6030 7038                             0000000000000038   459          STD   FPR3,56(,R7)  Store extended BFP result part 2
+000000000000054A  B29C 800C                             000000000000000C   460          STFPC 12(R8)         Store resulting FPCR flags and DXC
+                                                                           461 *
+000000000000054E  4130 3004                             0000000000000004   462          LA    R3,4(,R3)     Point to next input value
+0000000000000552  4170 7040                             0000000000000040   463          LA    R7,4*16(,R7)  Point to next extended BFP result set
+0000000000000556  4180 8010                             0000000000000010   464          LA    R8,4*4(,R8)   Point to next FPCR result area
+000000000000055A  062C                                                     465          BCTR  R2,R12        Convert next input value.
+000000000000055C  07FD                                                     466          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           468 ***********************************************************************
+                                                                           469 *
+                                                                           470 * Convert extended BFP to integers using each possible rounding mode.
+                                                                           471 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           472 * section is used to keep results sets aligned on a quad-double word.
+                                                                           473 *
+                                                                           474 * The first four tests use rounding modes specified in the FPCR with
+                                                                           475 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
+                                                                           476 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
+                                                                           477 * the last two To get full coverage of that instruction pair.
+                                                                           478 *
+                                                                           479 * The next six results use instruction-specified rounding modes.
+                                                                           480 *
+                                                                           481 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           482 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           483 * explicitly as a rounding mode in this section.
+                                                                           484 *
+                                                                           485 ***********************************************************************
+
+
+000000000000055E  9823 A000                             0000000000000000   487 LXEBRF   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000562  9878 A008                             0000000000000008   488          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000566  1222                                                     489          LTR   R2,R2         Any test cases?
+0000000000000568  078D                                                     490          BZR   R13           ..No, return to caller
+000000000000056A  0DC0                                                     491          BASR  R12,0         Set top of loop
+                                                                           492 *
+000000000000056C  7880 3000                             0000000000000000   493          LE    FPR8,0(,R3)   Get long BFP test value
+0000000000000570  B29D F25C                             000000000000025C   494          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000574  B306 0018                                                495          LXEBR FPR1,FPR8     Lengthen long in FPR8 to extended in FPR1
+0000000000000578  6010 7000                             0000000000000000   496          STD   FPR1,0(,R7)   Store extended BFP result part 1
+000000000000057C  6030 7008                             0000000000000008   497          STD   FPR3,8(,R7)   Store extended BFP result part 2
+0000000000000580  B29C 8000                             0000000000000000   498          STFPC 0(R8)         Store resulting FPCR flags and DXC
+                                                                           499 *
+0000000000000584  B29D F25C                             000000000000025C   500          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000588  ED10 3000 0006                        0000000000000000   501          LXEB  FPR1,0(,R3)   Lengthen long BFP to extended in FPR1-3
+000000000000058E  6010 7010                             0000000000000010   502          STD   FPR1,16(,R7)  Store extended BFP result part 1
+0000000000000592  6030 7018                             0000000000000018   503          STD   FPR3,24(,R7)  Store extended BFP result part 2
+0000000000000596  B29C 8008                             0000000000000008   504          STFPC 8(R8)         Store resulting FPCR flags and DXC
+                                                                           505 *
+000000000000059A  4130 3004                             0000000000000004   506          LA    R3,4(,R3)     Point to next input value
+000000000000059E  4170 7020                             0000000000000020   507          LA    R7,2*16(,R7)  Point to next extended BFP result set
+00000000000005A2  4180 8008                             0000000000000008   508          LA    R8,2*4(,R8)   Point to next FPCR result area
+00000000000005A6  062C                                                     509          BCTR  R2,R12        Convert next input value.
+00000000000005A8  07FD                                                     510          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           512 ***********************************************************************
+                                                                           513 *
+                                                                           514 * Short integer inputs for Load Lengthened testing.  These values
+                                                                           515 * correspond to the data classes listed in Figure 19-17 on page 19-21
+                                                                           516 * of SA22-7832-10. The values are tested with and without traps
+                                                                           517 * enabled.
+                                                                           518 *
+                                                                           519 * The same values are used for long and extended result creation.
+                                                                           520 *
+                                                                           521 ***********************************************************************
+
+
+00000000000005AC                                                           523 SBFPNFIN DS    0F              Inputs for short BFP non-finite testing
+00000000000005AC  FF800000                                                 524          DC    X'FF800000'         -Infinity
+00000000000005B0  BF800000                                                 525          DC    X'BF800000'         -1.0
+00000000000005B4  80000000                                                 526          DC    X'80000000'         -0.0
+00000000000005B8  00000000                                                 527          DC    X'00000000'         +0.0
+00000000000005BC  3F800000                                                 528          DC    X'3F800000'         +1.0
+00000000000005C0  7F800000                                                 529          DC    X'7F800000'         -Infinity
+00000000000005C4  7FC10000                                                 530          DC    X'7FC10000'         QNaN
+00000000000005C8  7F820000                                                 531          DC    X'7F820000'         SNaN
+                                      0000000000000008  0000000000000001   532 SBFPNFCT EQU   (*-SBFPNFIN)/4  Count of short BFP in list
+
+
+
+                                                                           534 ***********************************************************************
+                                                                           535 *
+                                                                           536 * Short integer inputs for Load Lengthened testing.  These values
+                                                                           537 * functionally test Load Lengthened operations including preservation
+                                                                           538 * of all signficant bits in the result and renormalization of subnormal
+                                                                           539 * (tiny) values.
+                                                                           540 *
+                                                                           541 * The same values are used for long and extended result creation.
+                                                                           542 *
+                                                                           543 ***********************************************************************
+
+
+00000000000005CC                                                           545 SBFPFIN  DS    0F              Inputs for short BFP finite testing
+00000000000005CC  FF7FFFFF                                                 546          DC    X'FF7FFFFF'         Maximum -normal, all bits test
+00000000000005D0  804FFFFF                                                 547          DC    X'804FFFFF'         maximum -tiny, all bits test
+00000000000005D4  80000001                                                 548          DC    X'80000001'         minimum -tiny
+00000000000005D8  BDCCCCCD                                                 549          DC    X'BDCCCCCD'         -0.1 rounded away from zero
+00000000000005DC  BDCCCCCC                                                 550          DC    X'BDCCCCCC'         -0.1 rounded toward zero
+00000000000005E0  3DCCCCCC                                                 551          DC    X'3DCCCCCC'         +0.1 rounded toward zero
+00000000000005E4  3DCCCCCD                                                 552          DC    X'3DCCCCCD'         +0.1 rounded away from zero
+00000000000005E8  00000001                                                 553          DC    X'00000001'         minimum +tiny
+00000000000005EC  004FFFFF                                                 554          DC    X'004FFFFF'         maximum +tiny, all bits test
+00000000000005F0  7F7FFFFF                                                 555          DC    X'7F7FFFFF'         maximum +normal, all bits test
+                                      000000000000000A  0000000000000001   556 SBFPFCT  EQU   (*-SBFPFIN)/4   Count of short BFP in list
+                                                                           557 *
+                                                                           558 ***********************************************************************
+                                                                           559 *
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           560 * Long integer inputs for Load Lengthened testing.  These values
+                                                                           561 * correspond to the data classes listed in Figure 19-17 on page 19-21
+                                                                           562 * of SA22-7832-10. The values are tested with and without traps
+                                                                           563 * enabled.
+                                                                           564 *
+                                                                           565 ***********************************************************************
+
+
+00000000000005F8                                                           567 LBFPNFIN DS    0D              Inputs for long BFP non-finite testing
+00000000000005F8  FFF00000 00000000                                        568          DC    X'FFF0000000000000'         -Infinity
+0000000000000600  BFF00000 00000000                                        569          DC    X'BFF0000000000000'         -1.0
+0000000000000608  80000000 00000000                                        570          DC    X'8000000000000000'         -0.0
+0000000000000610  00000000 00000000                                        571          DC    X'0000000000000000'         +0.0
+0000000000000618  3FF00000 00000000                                        572          DC    X'3FF0000000000000'         +1.0
+0000000000000620  7FF00000 00000000                                        573          DC    X'7FF0000000000000'         -Infinity
+0000000000000628  7FF81000 00000000                                        574          DC    X'7FF8100000000000'         +QNaN
+0000000000000630  7FF02000 00000000                                        575          DC    X'7FF0200000000000'         +SNaN
+                                      0000000000000008  0000000000000001   576 LBFPNFCT EQU   (*-LBFPNFIN)/8  Count of long BFP in list
+
+
+
+                                                                           578 ***********************************************************************
+                                                                           579 *
+                                                                           580 * Long integer inputs for Load Lengthened testing.  These values
+                                                                           581 * functionally test Load Lengthened operations including preservation
+                                                                           582 * of all signficant bits in the result and renormalization of subnormal
+                                                                           583 * (tiny) values.
+                                                                           584 *
+                                                                           585 ***********************************************************************
+
+
+0000000000000638                                                           587 LBFPFIN  DS    0F              Inputs for long BFP finite testing
+0000000000000638  7FFFFFFF FFFFFFFF                                        588          DC    X'7FFFFFFFFFFFFFFF'    Maximum -normal, all bits test
+0000000000000640  800FFFFF FFFFFFFF                                        589          DC    X'800FFFFFFFFFFFFF'    Maximum -tiny, all bits test
+0000000000000648  80000000 00000001                                        590          DC    X'8000000000000001'    Minimum -tiny
+0000000000000650  BFB99999 9999999A                                        591          DC    X'BFB999999999999A'    -0.1 rounded away from zero
+0000000000000658  BFB99999 99999999                                        592          DC    X'BFB9999999999999'    -0.1 rounded toward zero
+0000000000000660  3FB99999 99999999                                        593          DC    X'3FB9999999999999'    +0.1 rounded toward zero
+0000000000000668  3FB99999 9999999A                                        594          DC    X'3FB999999999999A'    +0.1 rounded away from zero
+0000000000000670  00000000 00000001                                        595          DC    X'0000000000000001'    Minimum +tiny
+0000000000000678  000FFFFF FFFFFFFF                                        596          DC    X'000FFFFFFFFFFFFF'    Maximum +tiny, all bits test
+0000000000000680  7FFFFFFF FFFFFFFF                                        597          DC    X'7FFFFFFFFFFFFFFF'    Maximum +normal, all bits test
+                                      000000000000000A  0000000000000001   598 LBFPFCT  EQU   (*-LBFPFIN)/8   Count of long BFP rounding tests * 8
+                                                                           599 *
+                                                                           600 *  Locations for results
+                                                                           601 *
+                                                                           602 *  Results from short -> long Load Lengthened
+                                                                           603 *
+                                      0000000000001000  0000000000000001   604 SBFPNFOT EQU   STRTLABL+X'1000'    Long BFP non-finite results
+                                                                           605 *                                  ..8 used, room for 8
+                                      0000000000001100  0000000000000001   606 SBFPNFFL EQU   STRTLABL+X'1100'    FPCR flags and DXC from long BFP
+                                                                           607 *                                  ..8 used, room for 16
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000001200  0000000000000001   608 SBFPFOT  EQU   STRTLABL+X'1200'    Long BFP finite test results
+                                                                           609 *                                  ..10 used, room for 16
+                                      0000000000001300  0000000000000001   610 SBFPFOF  EQU   STRTLABL+X'1300'    Long BFP finite FPCR results
+                                                                           611 *                                  ..10 used, room for 16
+                                                                           612 *                                   .. next assignment X'1400'
+                                                                           613 *
+                                                                           614 *  Results from long -> extended Load Lengthened
+                                                                           615 *
+                                      0000000000002000  0000000000000001   616 LBFPNFOT EQU   STRTLABL+X'2000'    Extended BFP non-finite results
+                                                                           617 *                                  ..8 used, room for 8
+                                      0000000000002200  0000000000000001   618 LBFPNFFL EQU   STRTLABL+X'2200'    FPCR flags and DXC from extended BFP
+                                                                           619 *                                  ..8 used, room for 16
+                                      0000000000002300  0000000000000001   620 LBFPFOT  EQU   STRTLABL+X'2300'    Extended BFP non-finite test results
+                                                                           621 *                                  ..10 used, room for 16
+                                      0000000000002500  0000000000000001   622 LBFPFOF  EQU   STRTLABL+X'2500'    Extended BFP non-finite FPCR results
+                                                                           623 *                                  ..10 used, room for 16
+                                                                           624 *                                   .. next assignment X'2600'
+                                                                           625 *
+                                                                           626 *  Results from short -> extended Load Lengthened
+                                                                           627 *
+                                      0000000000003000  0000000000000001   628 XBFPNFOT EQU   STRTLABL+X'3000'    Extended BFP rounded results
+                                                                           629 *                                  ..8 used, room for 8
+                                      0000000000003200  0000000000000001   630 XBFPNFFL EQU   STRTLABL+X'3200'    FPCR flags and DXC from extended BFP
+                                                                           631 *                                  ..8 used, room for 16
+                                      0000000000003300  0000000000000001   632 XBFPFOT  EQU   STRTLABL+X'3300'    Extd BFP rounding mode test results
+                                                                           633 *                                  ..10 used, room for 16
+                                      0000000000003500  0000000000000001   634 XBFPFOF  EQU   STRTLABL+X'3500'    Extd BFP rounding mode FPCR results
+                                                                           635 *                                  ..10 used, room for 16
+                                                                           636 *                                   .. next assignment X'3500'
+                                                                           637 *
+                                                                           638 *
+                                      0000000000003600  0000000000000001   639 ENDLABL  EQU   STRTLABL+X'3600'
+                                                                           640 *  Pad CSECT if not running on ASMA for a stand-alone environment
+                                                                           641          PADCSECT ENDLABL
+                                                                           642+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000688                                                           643          END
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    15
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPLDLEN            J    000000    1672    73
+CTLR0               F    000258       4   181  154  155  156
+ENDLABL             U    003600       1   639
+FPCREGNT            X    00025C       4   182  248  259  305  310  341  354  399  405  436  449  494  500
+FPCREGTR            X    000260       4   183  253  264  347  360  442  455
+FPR0                U    000000       1    94
+FPR1                U    000001       1    95  249  250  254  255  256  260  261  265  266  267  306  307  311  312  313  342  343
+                                               348  349  350  355  356  361  362  363  400  401  406  407  437  438  443  444  445
+                                               450  451  456  457  458  495  496  501  502
+FPR10               U    00000A       1   104
+FPR11               U    00000B       1   105
+FPR12               U    00000C       1   106
+FPR13               U    00000D       1   107
+FPR14               U    00000E       1   108
+FPR15               U    00000F       1   109
+FPR2                U    000002       1    96
+FPR3                U    000003       1    97  344  351  357  364  402  408  439  446  452  459  497  503
+FPR4                U    000004       1    98
+FPR5                U    000005       1    99
+FPR6                U    000006       1   100
+FPR7                U    000007       1   101
+FPR8                U    000008       1   102  247  249  255  303  306  340  342  349  398  400  435  437  444  493  495
+FPR9                U    000009       1   103
+HARDWAIT            X    000248       8   179  145
+IMAGE               1    000000    1672     0
+LBFPFCT             U    00000A       1   598  211
+LBFPFIN             F    000638       4   587  598  212
+LBFPFOF             U    002500       1   622  214
+LBFPFOT             U    002300       1   620  213
+LBFPNFCT            U    000008       1   576  205
+LBFPNFFL            U    002200       1   618  208
+LBFPNFIN            D    0005F8       8   567  576  206
+LBFPNFOT            U    002000       1   616  207
+LDEBRF              I    0003CE       4   297  161
+LDEBRNF             H    000360       2   240  159
+LONGF               F    000330       4   210  165
+LONGNF              F    000320       4   204  163
+LXDBRF              I    000494       4   392  166
+LXDBRNF             I    000416       4   334  164
+LXEBRF              I    00055E       4   487  171
+LXEBRNF             I    0004E0       4   429  169
+PCINTCD             H    00008E       2   123  139
+PCNOTDTA            H    0001EC       2   142  140
+PCOLDPSW            U    000150       1   125  141
+PROGCHK             H    0001E0       2   138  131
+R0                  U    000000       1    75  154  156
+R1                  U    000001       1    76
+R10                 U    00000A       1    85  158  160  163  165  168  170  241  242  297  298  334  335  392  393  429  430  487
+                                               488
+R11                 U    00000B       1    86
+R12                 U    00000C       1    87  245  273  301  319  338  370  396  414  433  465  491  509
+R13                 U    00000D       1    88  159  161  164  166  169  171  244  274  300  320  337  371  395  415  432  466  490
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    16
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+                                               510
+R14                 U    00000E       1    89  143  144  173  174
+R15                 U    00000F       1    90  111
+R2                  U    000002       1    77  241  243  273  297  299  319  334  336  370  392  394  414  429  431  465  487  489
+                                               509
+R3                  U    000003       1    78  241  247  260  266  270  297  303  312  316  334  340  355  362  367  392  398  406
+                                               411  429  435  450  457  462  487  493  501  506
+R4                  U    000004       1    79
+R5                  U    000005       1    80
+R6                  U    000006       1    81
+R7                  U    000007       1    82  242  250  256  261  267  271  298  307  313  317  335  343  344  350  351  356  357
+                                               363  364  368  393  401  402  407  408  412  430  438  439  445  446  451  452  458
+                                               459  463  488  496  497  502  503  507
+R8                  U    000008       1    83  242  251  257  262  268  272  298  308  314  318  335  345  352  358  365  369  393
+                                               403  409  413  430  440  447  453  460  464  488  498  504  508
+R9                  U    000009       1    84
+SBFPFCT             U    00000A       1   556  199  223
+SBFPFIN             F    0005CC       4   545  556  200  224
+SBFPFOF             U    001300       1   610  202
+SBFPFOT             U    001200       1   608  201
+SBFPNFCT            U    000008       1   532  193  217
+SBFPNFFL            U    001100       1   606  196
+SBFPNFIN            F    0005AC       4   523  532  194  218
+SBFPNFOT            U    001000       1   604  195
+SHORTF              F    000310       4   198  160
+SHORTNF             F    000300       4   192  158
+START               H    0001F4       2   153  128
+STRTLABL            U    000000       1    74  122  125  127  130  191  604  606  608  610  616  618  620  622  628  630  632  634
+                                               639
+WAITPSW             X    000238       8   178  175
+XBFPFOF             U    003500       1   634  226
+XBFPFOT             U    003300       1   632  225
+XBFPNFFL            U    003200       1   630  220
+XBFPNFOT            U    003000       1   628  219
+XTNDF               F    000350       4   222  170
+XTNDNF              F    000340       4   216  168
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    17
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     48   641
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    18
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1672  000-687  000-687
+  Region             1672  000-687  000-687
+    CSECT  BFPLDLEN  1672  000-687  000-687
+ASMA Ver. 0.2.0  bfp-017-loadl.asm: Test IEEE Load Lengthened                                       28 Sep 2016 13:44:39  Page    19
+
+   STMT                              FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-017-loadl.asm
+
+
+** NO ERRORS FOUND **
+
+[642] MNOTE *,asma detected; no CSECT padding performed
+

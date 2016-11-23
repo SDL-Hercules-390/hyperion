@@ -1,0 +1,41 @@
+*Testcase bfp-023-threads.tst: Test thread safety of ieee.c/Softfloat 3a
+
+#Testcase bfp-023-threads.tst: Test thread safety of ieee.c/Softfloat 3a
+#..Dispatches floating point work on four CPUs.  Deviation from expected
+#..results indicates lack of thread safety.  
+
+sysclear
+archmode esame
+
+numcpu 4    # four CPUs required for this test.   
+
+loadcore "$(testpath)/bfp-023-threads.core"
+
+runtest 240.0
+
+
+*Compare
+r 2000.10  # Loop counts
+*Want "Loop iterations by CPU" 00000000 00000000 00000000 00000000
+r 2010.10
+*Want "Pre-emptions detected by CPU" 00000000 00000000 00000000 00000000
+
+r 2020.10
+*Want "Result errors by CPU" 00000000 00000000 00000000 00000000
+r 2030.10
+*Want "FPCR contents errors by CPU" 00000000 00000000 00000000 00000000
+
+r 2040.10
+*Want "CPU0 Res/FPCR, CPU1 Res/FPCR" 00000000 00000000 00000000 00000000
+r 2050.10
+*Want "CPU2 Res/FPCR, CPU3 Res/FPCR" 00000000 00000000 00000000 00000000
+
+r 2060.10
+*Want "CPU0/CPU1 last error" 00000000 00000000 00000000 00000000
+r 2070.10
+*Want "CPU0/CPU1 last error" 00000000 00000000 00000000 00000000
+
+numcpu 1
+
+*Done
+

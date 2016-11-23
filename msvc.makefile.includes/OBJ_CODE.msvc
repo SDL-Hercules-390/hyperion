@@ -75,14 +75,6 @@ dyncrypt_OBJ =       \
     $(O)aes.obj
 !ENDIF
 
-decNumber_OBJ = \
-    $(O)decContext.obj \
-    $(O)decimal128.obj \
-    $(O)decimal32.obj  \
-    $(O)decimal64.obj  \
-    $(O)decNumber.obj  \
-    $(O)decPacked.obj
-
 altcmpsc_OBJ = \
     $(O)cmpsc.obj
 
@@ -131,8 +123,6 @@ hengine_OBJ = \
     $(O)hscmisc.obj  \
     $(O)httpserv.obj \
     $(O)ieee.obj     \
-    $(O)SoftFloat-specialise.obj \
-    $(O)SoftFloat.obj \
     $(O)impl.obj     \
     $(O)io.obj       \
     $(O)ipl.obj      \

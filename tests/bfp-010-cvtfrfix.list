@@ -1,0 +1,605 @@
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE CONVERT FROM FIXED 32
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise.  Test result, FPC flags, and DXC saved for all tests.
+                                                                             7 *  Convert From Fixed does not set the condition code.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following six conversion instructions
+                                                                            14 *   CONVERT FROM FIXED (32 to short BFP, RRE)
+                                                                            15 *   CONVERT FROM FIXED (32 to long BFP, RRE)
+                                                                            16 *   CONVERT FROM FIXED (32 to extended BFP, RRE)
+                                                                            17 *   CONVERT FROM FIXED (32 to short BFP, RRF-e)
+                                                                            18 *   CONVERT FROM FIXED (32 to long BFP, RRF-e)
+                                                                            19 *   CONVERT FROM FIXED (32 to extended BFP, RRF-e)
+                                                                            20 *
+                                                                            21 * Test data is compiled into this program.  The test script that runs
+                                                                            22 * this program can provide alternative test data through Hercules R
+                                                                            23 * commands.
+                                                                            24 *
+                                                                            25 * Test Case Order
+                                                                            26 * 1) Int-32 to Short BFP
+                                                                            27 * 2) Int-32 to Short BFP with all rounding modes
+                                                                            28 * 3) Int-32 to Long BFP
+                                                                            29 * 4) Int-32 to Extended BFP
+                                                                            30 *
+                                                                            31 * Provided test data is 1, 2, 4, -2, 2 147 483 647, -2 147 483 647.
+                                                                            32 *   The last two values will trigger inexact exceptions when converted
+                                                                            33 *   to short BFP.  The last two values are also used to test rounding
+                                                                            34 *   mode and inexact supression in the CEFBRA instruction.
+                                                                            35 *
+                                                                            36 * Also tests the following floating point support instructions
+                                                                            37 *   LOAD  (Short)
+                                                                            38 *   LOAD  (Long)
+                                                                            39 *   LOAD FPC
+                                                                            40 *   SET BFP ROUNDING MODE 2-BIT
+                                                                            41 *   SET BFP ROUNDING MODE 3-BIT
+                                                                            42 *   STORE (Short)
+                                                                            43 *   STORE (Long)
+                                                                            44 *   STORE FPC
+                                                                            45 *
+                                                                            46 ***********************************************************************
+
+
+                                                                            48          MACRO
+                                                                            49          PADCSECT &ENDLABL
+                                                                            50 .*
+                                                                            51 .*  Macro to pad the CSECT to include result data areas if this test
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52 .*  program is not being assembled using asma.  asma generates a core
+                                                                            53 .*  image that is loaded by the loadcore command, and because the
+                                                                            54 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            55 .*  this small effort to keep the core image small.
+                                                                            56 .*
+                                                                            57          AIF   (D'&ENDLABL).GOODPAD
+                                                                            58          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            59          MNOTE *,'No CSECT padding performed'
+                                                                            60          MEXIT
+                                                                            61 .*
+                                                                            62 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            63          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            64          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            65          MEXIT
+                                                                            66 .*
+                                                                            67 .NOPAD   ANOP
+                                                                            68          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            69          MEND
+                                                                            70 *
+                                                                            71 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            72 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            73 *
+
+
+
+                                      0000000000000000  0000000000000507    75 BFPCVTFF START 0
+                                      0000000000000000  0000000000000001    76 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    77 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    78 R1       EQU   1
+                                      0000000000000002  0000000000000001    79 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    80 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    81 R4       EQU   4                   Available
+                                      0000000000000005  0000000000000001    82 R5       EQU   5                   Available
+                                      0000000000000006  0000000000000001    83 R6       EQU   6                   Available
+                                      0000000000000007  0000000000000001    84 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    85 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    86 R9       EQU   9                   Rounding tests top of outer loop
+                                      000000000000000A  0000000000000001    87 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    88 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    89 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001    90 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    91 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    92 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            93 *
+                                                                            94 * Floating Point Register equates to keep the cross reference clean
+                                                                            95 *
+                                      0000000000000000  0000000000000001    96 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    97 FPR1     EQU   1
+                                      0000000000000002  0000000000000001    98 FPR2     EQU   2
+                                      0000000000000003  0000000000000001    99 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   100 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   101 FPR5     EQU   5
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000000006  0000000000000001   102 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   103 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   104 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   105 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   106 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   107 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   108 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   109 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   110 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   111 FPR15    EQU   15
+                                                                           112 *
+0000000000000000                      0000000000000000                     113          USING *,R15
+                                                                           114 *
+                                                                           115 * Above works on real iron (R15=0 after sysclear)
+                                                                           116 * and in z/CMS (R15 points to start of load module)
+                                                                           117 *
+0000000000000000                      0000000000000000  000000000000008E   118          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     119 PCINTCD  DS    H
+                                                                           120 *
+                                      0000000000000150  0000000000000001   121 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           122 *
+0000000000000090                      0000000000000090  00000000000001A0   123          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        124          DC    X'0000000180000000',AD(START)
+                                                                           125 *
+00000000000001B0                      00000000000001B0  00000000000001D0   126          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        127          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           128 *
+                                                                           129 * Program check routine.  If Data Exception, continue execution at
+                                                                           130 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           131 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           132 * in the FPCR.
+                                                                           133 *
+00000000000001E0                      00000000000001E0  0000000000000200   134          ORG   STRTLABL+X'200'
+0000000000000200                                                           135 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   136          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   137          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   138          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           139 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     140          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     141          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F258                             0000000000000258   142          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           144 ***********************************************************************
+                                                                           145 *
+                                                                           146 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           147 *
+                                                                           148 ***********************************************************************
+
+
+0000000000000214  B600 F268                             0000000000000268   150 START    STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F269                             0000000000000269   151          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F268                             0000000000000268   152          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           153 *
+0000000000000220  41A0 F300                             0000000000000300   154          LA    R10,SHORTS     Point to integer test inputs
+0000000000000224  4DD0 F340                             0000000000000340   155          BAS   R13,CEFBR      Convert values from fixed to short BFP
+                                                                           156 *2345678901234567890123456789012345678901234567890123456789012345678901
+                                                                           157
+0000000000000228  41A0 F330                             0000000000000330   158          LA    R10,RMSHORTS   Point to inputs for rounding mode tests
+000000000000022C  4DD0 F382                             0000000000000382   159          BAS   R13,CEFBRA     Convert using all rounding mode options
+                                                                           160 *
+0000000000000230  41A0 F310                             0000000000000310   161          LA    R10,LONGS      Point to integer test inputs
+0000000000000234  4DD0 F454                             0000000000000454   162          BAS   R13,CDFBR      Convert values from fixed to long BFP
+                                                                           163 *
+0000000000000238  41A0 F320                             0000000000000320   164          LA    R10,EXTDS      Point to integer test inputs
+000000000000023C  4DD0 F496                             0000000000000496   165          BAS   R13,CXFBR      Convert values from fixed to extended
+                                                                           166 *
+0000000000000240  12EE                                                     167          LTR   R14,R14        Return address provided?
+0000000000000242  077E                                                     168          BNZR  R14            ..Yes, return to z/CMS test rig.
+0000000000000244  B2B2 F248                             0000000000000248   169          LPSWE WAITPSW        All done
+                                                                           170 *
+0000000000000248                                                           171          DS    0D             Ensure correct alignment for psw
+0000000000000248  00020000 00000000                                        172 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000258  00020000 00000000                                        173 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           174 *
+0000000000000268  00000000                                                 175 CTLR0    DS    F
+000000000000026C  00000000                                                 176 FPCREGNT DC    X'00000000'    FPC Reg IEEE exceptions Not Trappable
+0000000000000270  F8000000                                                 177 FPCREGTR DC    X'F8000000'    FPC Reg IEEE exceptions TRappable
+                                                                           178 *
+                                                                           179 * Input values parameter list, four fullwords:
+                                                                           180 *      1) Count,
+                                                                           181 *      2) Address of inputs,
+                                                                           182 *      3) Address to place results, and
+                                                                           183 *      4) Address to place DXC/Flags/cc values.
+                                                                           184 *
+0000000000000274                      0000000000000274  0000000000000300   185          ORG   STRTLABL+X'300'
+0000000000000300                                                           186 SHORTS   DS    0F
+0000000000000300  00000007                                                 187          DC    A(INTCOUNT)
+0000000000000304  000004E0                                                 188          DC    A(INTIN)
+0000000000000308  00001000                                                 189          DC    A(SBFPOUT)
+000000000000030C  00001100                                                 190          DC    A(SBFPFLGS)
+                                                                           191 *
+0000000000000310                                                           192 LONGS    DS    0F           int-32 inputs for long BFP testing
+0000000000000310  00000007                                                 193          DC    A(INTCOUNT)
+0000000000000314  000004E0                                                 194          DC    A(INTIN)
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000318  00002000                                                 195          DC    A(LBFPOUT)
+000000000000031C  00002100                                                 196          DC    A(LBFPFLGS)
+                                                                           197 *
+0000000000000320                                                           198 EXTDS    DS    0F           int-32 inputs for Extended BFP testing
+0000000000000320  00000007                                                 199          DC    A(INTCOUNT)
+0000000000000324  000004E0                                                 200          DC    A(INTIN)
+0000000000000328  00003000                                                 201          DC    A(XBFPOUT)
+000000000000032C  00003200                                                 202          DC    A(XBFPFLGS)
+                                                                           203 *
+0000000000000330  00000003                                                 204 RMSHORTS DC    A(INTRMCT)
+0000000000000334  000004FC                                                 205          DC    A(INTINRM)   Last two int-32 are only concerns
+0000000000000338  00001200                                                 206          DC    A(SBFPRMO)   Space for rounding mode tests
+000000000000033C  00001500                                                 207          DC    A(SBFPRMOF)  Space for rounding mode test flags
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           209 ***********************************************************************
+                                                                           210 *
+                                                                           211 * Convert int-32 to short BFP format.  A pair of results is generated
+                                                                           212 * for each input: one with all exceptions non-trappable, and the second
+                                                                           213 * with all exceptions trappable.   The FPCR is stored for each result.
+                                                                           214 *
+                                                                           215 ***********************************************************************
+
+
+
+0000000000000340  9823 A000                             0000000000000000   217 CEFBR    LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000344  9878 A008                             0000000000000008   218          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000348  1222                                                     219          LTR   R2,R2         Any test cases?
+000000000000034A  078D                                                     220          BZR   R13           ..No, return to caller
+000000000000034C  0DC0                                                     221          BASR  R12,0         Set top of loop
+                                                                           222 *
+000000000000034E  5810 3000                             0000000000000000   223          L     R1,0(,R3)     Get integer test value
+0000000000000352  B29D F26C                             000000000000026C   224          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000356  B394 0081                                                225          CEFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8
+000000000000035A  7080 7000                             0000000000000000   226          STE   FPR8,0(,R7)   Store short BFP result
+000000000000035E  B29C 8000                             0000000000000000   227          STFPC 0(R8)         Store resulting FPC flags and DXC
+                                                                           228 *
+0000000000000362  B29D F270                             0000000000000270   229          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000366  B394 0081                                                230          CEFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8
+000000000000036A  7080 7004                             0000000000000004   231          STE   FPR8,4(,R7)   Store short BFP result
+000000000000036E  B29C 8004                             0000000000000004   232          STFPC 4(R8)         Store resulting FPC flags and DXC
+0000000000000372  4130 3004                             0000000000000004   233          LA    R3,4(,R3)     Foint to next input values
+0000000000000376  4170 7008                             0000000000000008   234          LA    R7,8(,R7)     Point to next short BFP converted values
+000000000000037A  4180 8008                             0000000000000008   235          LA    R8,8(,R8)     Point to next FPCR/CC result area
+000000000000037E  062C                                                     236          BCTR  R2,R12        Convert next input value.
+0000000000000380  07FD                                                     237          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           239 ***********************************************************************
+                                                                           240 *
+                                                                           241 * Convert int-32 to short BFP format using each possible rounding mode.
+                                                                           242 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           243 * section is used to keep results sets aligned on a quad-double word.
+                                                                           244 *
+                                                                           245 * The first four tests use rounding modes specified in the FPC with the
+                                                                           246 * IEEE Inexact exception supressed.  SRNM (2-bit) is used  for the first
+                                                                           247 * two FPCR-controlled tests and SRNMB (3-bit) is used for the last two
+                                                                           248 * to get full coverage of that instruction pair.
+                                                                           249 *
+                                                                           250 * The next six results use instruction-specified rounding modes.
+                                                                           251 *
+                                                                           252 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           253 * prior tests used the default rounding mode.  RNTE is tested explicitly
+                                                                           254 * as a rounding mode in this section.
+                                                                           255 *
+                                                                           256 ***********************************************************************
+
+
+0000000000000382  9823 A000                             0000000000000000   258 CEFBRA   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000386  9878 A008                             0000000000000008   259          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000038A  1222                                                     260          LTR   R2,R2         Any test cases?
+000000000000038C  078D                                                     261          BZR   R13           ..No, return to caller
+000000000000038E  0DC0                                                     262          BASR  R12,0         Set top of loop
+                                                                           263 *
+0000000000000390  5810 3000                             0000000000000000   264          L     R1,0(,R3)     Get integer test value
+                                                                           265 *
+                                                                           266 * Test cases using rounding mode specified in the FPCR
+                                                                           267 *
+0000000000000394  B29D F26C                             000000000000026C   268          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000398  B299 0001                             0000000000000001   269          SRNM  1             SET FPCR to RZ, towards zero
+000000000000039C  B394 0481                                                270          CEFBRA FPR8,0,R1,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003A0  7080 7000                             0000000000000000   271          STE   FPR8,0*4(,R7) Store short BFP result
+00000000000003A4  B29C 8000                             0000000000000000   272          STFPC 0(R8)         Store resulting FPC flags and DXC
+                                                                           273 *
+00000000000003A8  B29D F26C                             000000000000026C   274          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003AC  B299 0002                             0000000000000002   275          SRNM  2             SET FPCR to RP, to +infinity
+00000000000003B0  B394 0481                                                276          CEFBRA FPR8,0,R1,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003B4  7080 7004                             0000000000000004   277          STE   FPR8,1*4(,R7) Store short BFP result
+00000000000003B8  B29C 8004                             0000000000000004   278          STFPC 1*4(R8)       Store resulting FPC flags and DXC
+                                                                           279 *
+00000000000003BC  B29D F26C                             000000000000026C   280          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003C0  B2B8 0003                             0000000000000003   281          SRNMB 3             SET FPCR to RM, to -infinity
+00000000000003C4  B394 0481                                                282          CEFBRA FPR8,0,R1,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003C8  7080 7008                             0000000000000008   283          STE   FPR8,2*4(,R7) Store short BFP result
+00000000000003CC  B29C 8008                             0000000000000008   284          STFPC 2*4(R8)       Store resulting FPC flags and DXC
+                                                                           285 *
+00000000000003D0  B29D F26C                             000000000000026C   286          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003D4  B2B8 0007                             0000000000000007   287          SRNMB 7             RFS, Prepare For Shorter Precision
+00000000000003D8  B394 0481                                                288          CEFBRA FPR8,0,R1,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003DC  7080 700C                             000000000000000C   289          STE   FPR8,3*4(,R7) Store short BFP result
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000003E0  B29C 800C                             000000000000000C   290          STFPC 3*4(R8)       Store resulting FPC flags and DXC
+                                                                           291 *
+00000000000003E4  B29D F26C                             000000000000026C   292          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003E8  B394 1081                                                293          CEFBRA FPR8,1,R1,B'0000'  RNTA, to nearest, ties away from zero
+00000000000003EC  7080 7010                             0000000000000010   294          STE   FPR8,4*4(,R7) Store short BFP result
+00000000000003F0  B29C 8010                             0000000000000010   295          STFPC 4*4(R8)       Store resulting FPC flags and DXC
+                                                                           296 *
+00000000000003F4  B29D F26C                             000000000000026C   297          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003F8  B394 3081                                                298          CEFBRA FPR8,3,R1,B'0000'  RPS, to prepare for shorter precision
+00000000000003FC  7080 7014                             0000000000000014   299          STE   FPR8,5*4(,R7) Store short BFP result
+0000000000000400  B29C 8014                             0000000000000014   300          STFPC 5*4(R8)       Store resulting FPC flags and DXC
+                                                                           301 *
+0000000000000404  B29D F26C                             000000000000026C   302          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000408  B394 4081                                                303          CEFBRA FPR8,4,R1,B'0000'  RNTE to nearest, ties to even
+000000000000040C  7080 7018                             0000000000000018   304          STE   FPR8,6*4(,R7) Store short BFP result
+0000000000000410  B29C 8018                             0000000000000018   305          STFPC 6*4(R8)       Store resulting FPC flags and DXC
+                                                                           306 *
+0000000000000414  B29D F26C                             000000000000026C   307          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000418  B394 5081                                                308          CEFBRA FPR8,5,R1,B'0000'  RZ, toward zero
+000000000000041C  7080 701C                             000000000000001C   309          STE   FPR8,7*4(,R7) Store short BFP result
+0000000000000420  B29C 801C                             000000000000001C   310          STFPC 7*4(R8)       Store resulting FPC flags and DXC
+                                                                           311 *
+0000000000000424  B29D F26C                             000000000000026C   312          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000428  B394 6081                                                313          CEFBRA FPR8,6,R1,B'0000'  RP, to +inf
+000000000000042C  7080 7020                             0000000000000020   314          STE   FPR8,8*4(,R7) Store short BFP result
+0000000000000430  B29C 8020                             0000000000000020   315          STFPC 8*4(R8)       Store resulting FPC flags and DXC
+                                                                           316 *
+0000000000000434  B29D F26C                             000000000000026C   317          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000438  B394 7081                                                318          CEFBRA FPR8,7,R1,B'0000'  RM, to -inf
+000000000000043C  7080 7024                             0000000000000024   319          STE   FPR8,9*4(,R7) Store short BFP result
+0000000000000440  B29C 8024                             0000000000000024   320          STFPC 9*4(R8)       Store resulting FPC flags and DXC
+                                                                           321 *
+0000000000000444  4130 3004                             0000000000000004   322          LA    R3,4(,R3)     Point to next input values
+0000000000000448  4170 7030                             0000000000000030   323          LA    R7,12*4(,R7)  Point to next short BFP converted values
+000000000000044C  4180 8030                             0000000000000030   324          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
+0000000000000450  062C                                                     325          BCTR  R2,R12        Convert next input value.
+0000000000000452  07FD                                                     326          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           328 ***********************************************************************
+                                                                           329 *
+                                                                           330 * Convert int-32 to long BFP format.  A pair of results is generated
+                                                                           331 * for each input: one with all exceptions non-trappable, and the second
+                                                                           332 * with all exceptions trappable.   The FPCR is stored for each result.
+                                                                           333 * Conversion of a 32-bit integer to long is always exact; no exceptions
+                                                                           334 * are expected
+                                                                           335 *
+                                                                           336 ***********************************************************************
+
+
+0000000000000454  9823 A000                             0000000000000000   338 CDFBR    LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000458  9878 A008                             0000000000000008   339          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000045C  1222                                                     340          LTR   R2,R2         Any test cases?
+000000000000045E  078D                                                     341          BZR   R13           ..No, return to caller
+0000000000000460  0DC0                                                     342          BASR  R12,0         Set top of loop
+                                                                           343 *
+0000000000000462  5810 3000                             0000000000000000   344          L     R1,0(,R3)     Get integer test value
+0000000000000466  B29D F26C                             000000000000026C   345          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000046A  B395 0081                                                346          CDFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8
+000000000000046E  6080 7000                             0000000000000000   347          STD   FPR8,0(,R7)   Store long BFP result
+0000000000000472  B29C 8000                             0000000000000000   348          STFPC 0(R8)         Store resulting FPC flags and DXC
+                                                                           349 *
+0000000000000476  B29D F270                             0000000000000270   350          LFPC  FPCREGTR      Set exceptions trappable
+000000000000047A  B395 0081                                                351          CDFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8
+000000000000047E  6080 7008                             0000000000000008   352          STD   FPR8,8(,R7)   Store long BFP result
+0000000000000482  B29C 8004                             0000000000000004   353          STFPC 4(R8)         Store resulting FPC flags and DXC
+                                                                           354 *
+0000000000000486  4130 3004                             0000000000000004   355          LA    R3,4(,R3)     Point to next input values
+000000000000048A  4170 7010                             0000000000000010   356          LA    R7,16(,R7)    Point to next long BFP converted value
+000000000000048E  4180 8008                             0000000000000008   357          LA    R8,8(,R8)     Point to next FPCR/CC result area
+0000000000000492  062C                                                     358          BCTR  R2,R12        Convert next input value.
+0000000000000494  07FD                                                     359          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           361 ***********************************************************************
+                                                                           362 *
+                                                                           363 * Convert int-32 to extended BFP format.  A pair of results is
+                                                                           364 * generated for each input: one with all exceptions non-trappable,
+                                                                           365 * and the second with all exceptions trappable.   The FPCR is
+                                                                           366 * stored for each result.  Conversion of a 32-bit integer to
+                                                                           367 * extended is always exact; no exceptions are expected
+                                                                           368 *
+                                                                           369 ***********************************************************************
+
+
+0000000000000496  9823 A000                             0000000000000000   371 CXFBR    LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000049A  9878 A008                             0000000000000008   372          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000049E  1222                                                     373          LTR   R2,R2         Any test cases?
+00000000000004A0  078D                                                     374          BZR   R13           ..No, return to caller
+00000000000004A2  0DC0                                                     375          BASR  R12,0         Set top of loop
+                                                                           376 *
+00000000000004A4  5810 3000                             0000000000000000   377          L     R1,0(,R3)     Get integer test value
+00000000000004A8  B29D F26C                             000000000000026C   378          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004AC  B396 0081                                                379          CXFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8-FPR10
+00000000000004B0  6080 7000                             0000000000000000   380          STD   FPR8,0(,R7)   Store extended BFP result part 1
+00000000000004B4  60A0 7008                             0000000000000008   381          STD   FPR10,8(,R7)  Store extended BFP result part 2
+00000000000004B8  B29C 8000                             0000000000000000   382          STFPC 0(R8)         Store resulting FPC flags and DXC
+                                                                           383 *
+00000000000004BC  B29D F270                             0000000000000270   384          LFPC  FPCREGTR      Set exceptions trappable
+00000000000004C0  B396 0081                                                385          CXFBR FPR8,R1       Cvt Int in GPR1 to float in FPR8-FPR10
+00000000000004C4  6080 7010                             0000000000000010   386          STD   FPR8,16(,R7)  Store extended BFP result part 1
+00000000000004C8  60A0 7018                             0000000000000018   387          STD   FPR10,24(,R7) Store extended BFP result part 2
+00000000000004CC  B29C 8004                             0000000000000004   388          STFPC 4(R8)         Store resulting FPC flags and DXC
+                                                                           389 *
+00000000000004D0  4130 3004                             0000000000000004   390          LA    R3,4(,R3)     Point to next input values
+00000000000004D4  4170 7020                             0000000000000020   391          LA    R7,32(,R7)    Point to next extended BFP converted value
+00000000000004D8  4180 8008                             0000000000000008   392          LA    R8,8(,R8)     Point to next FPCR/CC result area
+00000000000004DC  062C                                                     393          BCTR  R2,R12        Convert next input value.
+00000000000004DE  07FD                                                     394          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           396 ***********************************************************************
+                                                                           397 *
+                                                                           398 * Short integer inputs for Convert From Fixed testing.  The same set of
+                                                                           399 * inputs are used for short, long, and extended formats.  The last two
+                                                                           400 * values are used for rounding mode tests for short only; conversion of
+                                                                           401 * int-32 to long or extended are always exact.
+                                                                           402 *
+                                                                           403 ***********************************************************************
+
+
+
+00000000000004E0                                                           405 INTIN    DS    0F
+00000000000004E0  00000001                                                 406          DC    F'1'
+00000000000004E4  00000002                                                 407          DC    F'2'
+00000000000004E8  00000004                                                 408          DC    F'4'
+00000000000004EC  FFFFFFFE                                                 409          DC    F'-2'
+00000000000004F0  7FFFFFFF                                                 410          DC    F'2147483647'  should compile to X'7FFFFFFF' - inexact
+00000000000004F4  80000001                                                 411          DC    F'-2147483647' should compile to X'80000001' - inexact
+00000000000004F8  7FFFFF80                                                 412          DC    XL4'7FFFFF80'  Fits in short BFP
+                                      0000000000000007  0000000000000001   413 INTCOUNT EQU   (*-INTIN)/4    Count of integers in list
+                                                                           414 *
+                                                                           415 * Short BFP Exhaustive rounding mode tests.  int-32 always fits in
+                                                                           416 * long BFP or extended BFP with no loss of precision, so no basis for
+                                                                           417 * exhaustive rounding tests for long or extended
+                                                                           418 *
+00000000000004FC                                                           419 INTINRM  DS    0F
+00000000000004FC  7FFFFFE0                                                 420          DC    XL4'7FFFFFE0'  Inexact, normally rounds up
+0000000000000500  7FFFFFC0                                                 421          DC    XL4'7FFFFFC0'  Inexact, Tie
+0000000000000504  7FFFFFA0                                                 422          DC    XL4'7FFFFFA0'  Inexact, normally rounds down
+                                      0000000000000003  0000000000000001   423 INTRMCT  EQU   (*-INTINRM)/4  Count of rounding mode test inputs
+                                                                           424 *
+                                      0000000000001000  0000000000000001   425 SBFPOUT  EQU   STRTLABL+X'1000'    Short BFP results from Int-32 inputs
+                                                                           426 *                                  ..6 pairs used, room for 32 pairs
+                                      0000000000001100  0000000000000001   427 SBFPFLGS EQU   STRTLABL+X'1100'    FPCR flags and DXC from short BFP
+                                                                           428 *                                  ..6 pairs used, room for 32 pairs
+                                      0000000000001200  0000000000000001   429 SBFPRMO  EQU   STRTLABL+X'1200'    Short BFP rounding mode results
+                                                                           430 *                                  ..2 sets used, room for 16
+                                      0000000000001500  0000000000000001   431 SBFPRMOF EQU   STRTLABL+X'1500'    Short BFP rndg mode FPCR contents
+                                                                           432 *                                  ..2 sets used, room for +16
+                                                                           433 *                                  ..next set at X'1800'
+                                                                           434 *
+                                      0000000000002000  0000000000000001   435 LBFPOUT  EQU   STRTLABL+X'2000'    Long BFP results from Int-32 inputs
+                                                                           436 *                                  ..6 pairs used, room for 16 pairs
+                                      0000000000002100  0000000000000001   437 LBFPFLGS EQU   STRTLABL+X'2100'    Long BFP FPCR contents
+                                                                           438 *                                  ..6 pairs used, room for 32+ pairs
+                                                                           439 *                                  ..next pair at X'2200'
+                                                                           440 *
+                                      0000000000003000  0000000000000001   441 XBFPOUT  EQU   STRTLABL+X'3000'    Extended BFP results from Int-32
+                                                                           442 *                                  ..6 pairs used, room for 16 pairs
+                                      0000000000003200  0000000000000001   443 XBFPFLGS EQU   STRTLABL+X'3200'    Extended BFP FPCR contents
+                                                                           444 *                                  ..6 pairs used, room for 16 pairs
+                                                                           445 *
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000003300  0000000000000001   446 ENDLABL  EQU   STRTLABL+X'3300'    Next result area available
+                                                                           447          PADCSECT ENDLABL
+                                                                           448+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000508                                                           449          END
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    13
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPCVTFF            J    000000    1288    75
+CDFBR               I    000454       4   338  162
+CEFBR               I    000340       4   217  155
+CEFBRA              I    000382       4   258  159
+CTLR0               F    000268       4   175  150  151  152
+CXFBR               I    000496       4   371  165
+ENDLABL             U    003300       1   446
+EXTDS               F    000320       4   198  164
+FPCREGNT            X    00026C       4   176  224  268  274  280  286  292  297  302  307  312  317  345  378
+FPCREGTR            X    000270       4   177  229  350  384
+FPR0                U    000000       1    96
+FPR1                U    000001       1    97
+FPR10               U    00000A       1   106  381  387
+FPR11               U    00000B       1   107
+FPR12               U    00000C       1   108
+FPR13               U    00000D       1   109
+FPR14               U    00000E       1   110
+FPR15               U    00000F       1   111
+FPR2                U    000002       1    98
+FPR3                U    000003       1    99
+FPR4                U    000004       1   100
+FPR5                U    000005       1   101
+FPR6                U    000006       1   102
+FPR7                U    000007       1   103
+FPR8                U    000008       1   104  225  226  230  231  270  271  276  277  282  283  288  289  293  294  298  299  303
+                                               304  308  309  313  314  318  319  346  347  351  352  379  380  385  386
+FPR9                U    000009       1   105
+HARDWAIT            X    000258       8   173  142
+IMAGE               1    000000    1288     0
+INTCOUNT            U    000007       1   413  187  193  199
+INTIN               F    0004E0       4   405  413  188  194  200
+INTINRM             F    0004FC       4   419  423  205
+INTRMCT             U    000003       1   423  204
+LBFPFLGS            U    002100       1   437  196
+LBFPOUT             U    002000       1   435  195
+LONGS               F    000310       4   192  161
+PCINTCD             H    00008E       2   119  136
+PCNOTDTA            H    00020C       2   139  137
+PCOLDPSW            U    000150       1   121  138
+PROGCHK             H    000200       2   135  127
+R0                  U    000000       1    77  150  152
+R1                  U    000001       1    78  223  225  230  264  270  276  282  288  293  298  303  308  313  318  344  346  351
+                                               377  379  385
+R10                 U    00000A       1    87  154  158  161  164  217  218  258  259  338  339  371  372
+R11                 U    00000B       1    88
+R12                 U    00000C       1    89  221  236  262  325  342  358  375  393
+R13                 U    00000D       1    90  155  159  162  165  220  237  261  326  341  359  374  394
+R14                 U    00000E       1    91  140  141  167  168
+R15                 U    00000F       1    92  113
+R2                  U    000002       1    79  217  219  236  258  260  325  338  340  358  371  373  393
+R3                  U    000003       1    80  217  223  233  258  264  322  338  344  355  371  377  390
+R4                  U    000004       1    81
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    14
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R5                  U    000005       1    82
+R6                  U    000006       1    83
+R7                  U    000007       1    84  218  226  231  234  259  271  277  283  289  294  299  304  309  314  319  323  339
+                                               347  352  356  372  380  381  386  387  391
+R8                  U    000008       1    85  218  227  232  235  259  272  278  284  290  295  300  305  310  315  320  324  339
+                                               348  353  357  372  382  388  392
+R9                  U    000009       1    86
+RMSHORTS            A    000330       4   204  158
+SBFPFLGS            U    001100       1   427  190
+SBFPOUT             U    001000       1   425  189
+SBFPRMO             U    001200       1   429  206
+SBFPRMOF            U    001500       1   431  207
+SHORTS              F    000300       4   186  154
+START               I    000214       4   150  124
+STRTLABL            U    000000       1    76  118  121  123  126  134  185  425  427  429  431  435  437  441  443  446
+WAITPSW             X    000248       8   172  169
+XBFPFLGS            U    003200       1   443  202
+XBFPOUT             U    003000       1   441  201
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    15
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     49   447
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    16
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1288  000-507  000-507
+  Region             1288  000-507  000-507
+    CSECT  BFPCVTFF  1288  000-507  000-507
+ASMA Ver. 0.2.0  ieee-cvtfrfix.asm: Test IEEE Convert From Fixed (int-32)                           08 Sep 2016 08:40:02  Page    17
+
+   STMT                               FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-010-cvtfrfix.asm
+
+
+** NO ERRORS FOUND **
+
+[448] MNOTE *,asma detected; no CSECT padding performed
+

@@ -2,14 +2,30 @@ dist_pkgdata_DATA =			\
 	 a.core					\
 	 b.core					\
 	 bctr.core				\
+     bfp-001-divtoint.core	\
+     bfp-002-loadr.core	    \
+     bfp-003-loadfpi.core	\
+     bfp-004-cvttolog.core	\
+     bfp-005-cvttolog64.core	\
+     bfp-006-cvttofix.core	\
+     bfp-007-cvttofix64.core	\
+     bfp-008-cvtfrlog.core	\
+     bfp-009-cvtfrlog64.core	\
+     bfp-010-cvtfrfix.core	\
+     bfp-011-cvtfrfix64.core	\
+     bfp-012-loadtest.core	\
+     bfp-013-comps.core	    \
+     bfp-014-divide.core	\
+     bfp-015-sqrt.core	    \
+     bfp-016-add.core	    \
+     bfp-017-loadl.core	    \
+     bfp-018-subtract.core	\
+     bfp-019-multiply.core	\
+     bfp-020-multlonger.core	\
+     bfp-021-multadd.core	\
+     bfp-022-multsub.core	\
+     bfp-023-threads.core	\
 	 cpu0off.core			\
-	 ieee-adds.core			\
-	 ieee-comps.core		\
-	 ieee-div-nans.core		\
-	 ieee-divs.core			\
-	 ieee-mults.core		\
-	 ieee-sqrts.core		\
-	 ieee-subs.core			\
 	 l.core					\
 	 la.core				\
 	 la2.core				\
@@ -29,6 +45,75 @@ EXTRA_DIST =				\
 	 axtr.txt				\
 	 bldhtc.exec			\
 	 bldhtc.rexx			\
+     bfp-001-divtoint.asm	\
+     bfp-001-divtoint.list	\
+     bfp-001-divtoint.tst	\
+     bfp-002-loadr.asm  	\
+     bfp-002-loadr.list	    \
+     bfp-002-loadr.tst	    \
+     bfp-003-loadfpi.asm	\
+     bfp-003-loadfpi.list	\
+     bfp-003-loadfpi.tst	\
+     bfp-004-cvttolog.asm	\
+     bfp-004-cvttolog.list	\
+     bfp-004-cvttolog.tst	\
+     bfp-005-cvttolog64.asm	\
+     bfp-005-cvttolog64.list	\
+     bfp-005-cvttolog64.tst	\
+     bfp-006-cvttofix.asm	\
+     bfp-006-cvttofix.list	\
+     bfp-006-cvttofix.tst	\
+     bfp-007-cvttofix64.asm	\
+     bfp-007-cvttofix64.list	\
+     bfp-007-cvttofix64.tst	\
+     bfp-008-cvtfrlog.asm	\
+     bfp-008-cvtfrlog.list	\
+     bfp-008-cvtfrlog.tst	\
+     bfp-009-cvtfrlog64.asm	\
+     bfp-009-cvtfrlog64.list	\
+     bfp-009-cvtfrlog64.tst	\
+     bfp-010-cvtfrfix.asm	\
+     bfp-010-cvtfrfix.list	\
+     bfp-010-cvtfrfix.tst	\
+     bfp-011-cvtfrfix64.asm	\
+     bfp-011-cvtfrfix64.list	\
+     bfp-011-cvtfrfix64.tst	\
+     bfp-012-loadtest.asm	\
+     bfp-012-loadtest.list	\
+     bfp-012-loadtest.tst	\
+     bfp-013-comps.asm  	\
+     bfp-013-comps.list	    \
+     bfp-013-comps.tst	    \
+     bfp-014-divide.asm	    \
+     bfp-014-divide.list	\
+     bfp-014-divide.tst	    \
+     bfp-015-sqrt.asm	    \
+     bfp-015-sqrt.list	    \
+     bfp-015-sqrt.tst	    \
+     bfp-016-add.asm	    \
+     bfp-016-add.list	    \
+     bfp-016-add.tst	    \
+     bfp-017-loadl.asm	    \
+     bfp-017-loadl.list	    \
+     bfp-017-loadl.tst	    \
+     bfp-018-subtract.asm	\
+     bfp-018-subtract.list	\
+     bfp-018-subtract.tst	\
+     bfp-019-multiply.asm	\
+     bfp-019-multiply.list	\
+     bfp-019-multiply.tst	\
+     bfp-020-multlonger.asm	\
+     bfp-020-multlonger.list	\
+     bfp-020-multlonger.tst	\
+     bfp-021-multadd.asm	\
+     bfp-021-multadd.list	\
+     bfp-021-multadd.tst	\
+     bfp-022-multsub.asm	\
+     bfp-022-multsub.list	\
+     bfp-022-multsub.tst	\
+     bfp-023-threads.asm	\
+     bfp-023-threads.list	\
+     bfp-023-threads.sptst	\
 	 brc.txt				\
 	 cdfr.txt				\
 	 cdgr.txt				\
@@ -74,27 +159,6 @@ EXTRA_DIST =				\
 	 hetbsf.het				\
 	 hetbsf.tst				\
 	 iedtr.txt				\
-	 ieee-adds.asm			\
-	 ieee-adds.list			\
-	 ieee-adds.tst			\
-	 ieee-comps.asm			\
-	 ieee-comps.list		\
-	 ieee-comps.tst			\
-	 ieee-div-nans.asm		\
-	 ieee-div-nans.list		\
-	 ieee-div-nans.tst		\
-	 ieee-divs.asm			\
-	 ieee-divs.list			\
-	 ieee-divs.tst			\
-	 ieee-mults.asm			\
-	 ieee-mults.list		\
-	 ieee-mults.tst			\
-	 ieee-sqrts.asm			\
-	 ieee-sqrts.list		\
-	 ieee-sqrts.tst			\
-	 ieee-subs.asm			\
-	 ieee-subs.list			\
-	 ieee-subs.tst			\
 	 ilc.assemble			\
 	 ilc.listing			\
 	 ilc.tst				\
@@ -221,9 +285,10 @@ EXTRA_DIST =				\
 	 mvcle.tst				\
 	 mvcos.txt				\
 	 mxtr.txt				\
-	 pfpo-esa.assemble		\
-	 pfpo-esa.listing		\
-	 pfpo-esa.tst			\
+	 pfpo.asm				\
+	 pfpo.core				\
+	 pfpo.list				\
+	 pfpo.tst				\
 	 popcnt.txt				\
 	 pr.tst					\
 	 pr.subtst				\

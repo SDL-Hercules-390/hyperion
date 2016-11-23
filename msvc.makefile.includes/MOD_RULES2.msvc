@@ -11,8 +11,6 @@
 
 $(O)altcmpsc.lib:   $(X)altcmpsc.dll
 
-$(O)decNumber.lib:  $(X)decNumber.dll
-
 $(O)hdasd.lib:      $(X)hdasd.dll
 
 $(O)htape.lib:      $(X)htape.dll
@@ -30,22 +28,27 @@ $(O)hsys.lib:       $(X)hsys.dll
 $(X)hsys.dll:     $(hsys_OBJ) \
                                                $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hutil.dll:    $(hutil_OBJ) \
                                  $(O)hsys.lib  $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdasd.dll:    $(hdasd_OBJ) \
                   $(O)hutil.lib  $(O)hsys.lib  $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)htape.dll:    $(htape_OBJ) \
                   $(O)hutil.lib  $(O)hsys.lib  $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
-$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)decNumber.lib \
+$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib \
                   $(O)hutil.lib  $(O)hsys.lib  $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 # ---------------------------------------------------------------------
 # Device modules
@@ -53,66 +56,82 @@ $(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)decNumber.lib \
 $(X)hdteq.dll:    $(O)hdteq.obj \
                   $(O)hengine.lib $(O)hutil.lib              $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt2703.dll:  $(O)commadpt.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3705.dll:  $(O)comm3705.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3420.dll:  $(hdt3420_OBJ) $(O)htape.lib \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3505.dll:  $(O)cardrdr.obj $(O)sockdev.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt1403.dll:  $(O)printer.obj $(O)sockdev.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3525.dll:  $(O)cardpch.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3270.dll:  $(O)console.obj $(O)telnet.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt1052c.dll: $(O)con1052c.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdt3088.dll:  $(ctc_OBJ) $(tuntap_OBJ) \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdtqeth.dll:  $(O)qeth.obj $(tuntap_OBJ) \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)hdtzfcp.dll:  $(O)zfcp.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)dyngui.dll:   $(O)dyngui.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)dyninst.dll:  $(O)dyninst.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 $(X)s37x.dll:     $(O)s37xmod.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 # ---------------------------------------------------------------------
 # Additional loadable modules
@@ -122,23 +141,25 @@ crypto: $(X)dyncrypt.dll
 
 $(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 !ENDIF
 
-$(X)decNumber.dll: $(decNumber_OBJ) $(O)decNumber.res
-    $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) /def:decNumber\decNumber.def -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
-
 $(X)altcmpsc.dll: $(altcmpsc_OBJ) $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkdll)
+    $(MT_DLL_CMD)
 
 # ---------------------------------------------------------------------
 # Main product executables
 
 $(X)hercules.exe: $(O)bootstrap.obj $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
+    $(MT_EXE_CMD)
+
 
 $(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
+    $(MT_EXE_CMD)
 
 # ---------------------------------------------------------------------
 # System utilities

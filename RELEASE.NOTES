@@ -12,6 +12,13 @@
                      Version 4.0 RELEASE NOTES
 
 
+* External Packages
+
+  Select source code and associated functionality has been moved out of
+  the Hercules repository and into separately maintained External Package
+  repositories.  Refer to the README.EXTPKG document for more information.
+
+
 * Minimum supported Windows platform is now Windows XP x64 or greater
 
   The new minimum supported Microsoft Windows platform is now Windows XP x64

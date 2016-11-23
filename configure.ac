@@ -106,6 +106,69 @@ case "$target_os" in
         ;;
 esac
 
+#--------------------------------------------------------------#
+#  Determine target CPU architecture  (x86, mips, sparc, etc)  #
+#--------------------------------------------------------------#
+
+AC_MSG_CHECKING( [target CPU architecture] )
+
+case "$target_cpu" in
+
+    i*86|x86*)
+        hc_cv_cpu_arch=x86
+        hc_cv_pkg_lib_subdir=""
+        ;;
+
+    arm*)
+        hc_cv_cpu_arch=arm
+        hc_cv_pkg_lib_subdir="/arm"
+        ;;
+
+    mips*)
+        hc_cv_cpu_arch=mips
+        hc_cv_pkg_lib_subdir="/mips"
+        ;;
+
+    ppc*)
+        hc_cv_cpu_arch=ppc
+        hc_cv_pkg_lib_subdir="/ppc"
+        ;;
+
+    sparc*)
+        hc_cv_cpu_arch=sparc
+        hc_cv_pkg_lib_subdir="/sparc"
+        ;;
+
+    xscale*)
+        hc_cv_cpu_arch=xscale
+        hc_cv_pkg_lib_subdir="/xscale"
+        ;;
+
+    *)
+        hc_cv_cpu_arch=unknown
+        hc_cv_pkg_lib_subdir="/unknown"
+        ;;
+esac
+
+AC_MSG_RESULT( [${hc_cv_cpu_arch}] )
+
+#----------------------------------------------------#
+#  Determine target CPU bitness  (32-bit or 64-bit)  #
+#----------------------------------------------------#
+
+AC_MSG_CHECKING( [target CPU bitness] )
+
+case "$target_cpu" in
+
+    *64)
+        hc_cv_cpu_bits=64
+        ;;
+    *)
+        hc_cv_cpu_bits=32
+        ;;
+esac
+
+AC_MSG_RESULT( [${hc_cv_cpu_bits}] )
 
 #----------------------------------------------------------------------#
 #  Determine GCC level                                                 #
@@ -432,7 +495,6 @@ AH_TEMPLATE( [NO_SIGABEND_HANDLER],     [Define to disable sigabend_handler (ple
 AH_TEMPLATE( [NON_UNIQUE_GETTIMEOFDAY], [Define if 'gettimeofday' returns non-unique values] )
 AH_TEMPLATE( [NEED_GETOPT_WRAPPER],     [Define to indicate a wrapper for getopt is needed] )
 AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
-AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is present on your system] )
 AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_INCLUDE], [Define to enable enhanced-mode 'include' file support in configuration file] )
 AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
@@ -673,44 +735,37 @@ AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_s
 #------------------------------------------------------------------------------
 AC_CHECK_HEADERS_ONCE(stdatomic.h sys/sysctl.h assert.h)
 
-AC_CHECK_HEADERS( sys/mtio.h,     [hc_cv_have_sys_mtio_h=yes],     [hc_cv_have_sys_mtio_h=no]     )
-AC_CHECK_HEADERS( sys/resource.h, [hc_cv_have_sys_resource_h=yes], [hc_cv_have_sys_resource_h=no] )
-AC_CHECK_HEADERS( sys/uio.h,      [hc_cv_have_sys_uio_h=yes],      [hc_cv_have_sys_uio_h=no]      )
-AC_CHECK_HEADERS( sys/utsname.h,  [hc_cv_have_sys_utsname_h=yes],  [hc_cv_have_sys_utsname_h=no]  )
-AC_CHECK_HEADERS( sys/wait.h,     [hc_cv_have_sys_wait_h=yes],     [hc_cv_have_sys_wait_h=no]     )
-AC_CHECK_HEADERS( sys/un.h,       [hc_cv_have_sys_un_h=yes],       [hc_cv_have_sys_un_h=no]       )
-AC_CHECK_HEADERS( byteswap.h,     [hc_cv_have_byteswap_h=yes],     [hc_cv_have_byteswap_h=no]     )
-AC_CHECK_HEADERS( bzlib.h,        [hc_cv_have_bzlib_h=yes],        [hc_cv_have_bzlib_h=no]        )
-AC_CHECK_HEADERS( dlfcn.h,        [hc_cv_have_dlfcn_h=yes],        [hc_cv_have_dlfcn_h=no]        )
-AC_CHECK_HEADERS( fenv.h,         [hc_cv_have_fenv_h=yes],         [hc_cv_have_fenv_h=no]         )
-AC_CHECK_HEADERS( inttypes.h,     [hc_cv_have_inttypes_h=yes],     [hc_cv_have_inttypes_h=no]     )
-AC_CHECK_HEADERS( locale.h,       [hc_cv_have_locale_h=yes],       [hc_cv_have_locale_h=no]       )
-AC_CHECK_HEADERS( ltdl.h,         [hc_cv_have_ltdl_h=yes],         [hc_cv_have_ltdl_h=no]         )
-AC_CHECK_HEADERS( malloc.h,       [hc_cv_have_malloc_h=yes],       [hc_cv_have_malloc_h=no]       )
-AC_CHECK_HEADERS( math.h,         [hc_cv_have_math_h=yes],         [hc_cv_have_math_h=no]         )
-AC_CHECK_HEADERS( netdb.h,        [hc_cv_have_netdb_h=yes],        [hc_cv_have_netdb_h=no]        )
-AC_CHECK_HEADERS( pwd.h,          [hc_cv_have_pwd_h=yes],          [hc_cv_have_pwd_h=no]          )
-AC_CHECK_HEADERS( regex.h,        [hc_cv_have_regex_h=yes],        [hc_cv_have_regex_h=no]        )
-AC_CHECK_HEADERS( signal.h,       [hc_cv_have_signal_h=yes],       [hc_cv_have_signal_h=no]       )
-AC_CHECK_HEADERS( termios.h,      [hc_cv_have_termios_h=yes],      [hc_cv_have_termios_h=no]      )
-AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_time_h=no]         )
-AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
-AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
-AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
-AC_CHECK_HEADERS( sys/syscall.h,  [hc_cv_have_syscall_h=yes],      [hc_cv_have_syscall_h=no]    )
-
-AC_CHECK_HEADERS( rexx.h,
-                  [hc_cv_have_rexx_h=yes],
-                  [hc_cv_have_rexx_h=no]    )
-AC_CHECK_HEADERS( oorexxapi.h,
-                  [hc_cv_have_oorexxapi_h=yes],
-                  [hc_cv_have_oorexxapi_h=no]    )
-AC_CHECK_HEADERS( regina/rexxsaa.h,
-                  [hc_cv_have_regina_rexxsaa_h=yes],
-                  [hc_cv_have_regina_rexxsaa_h=no]    )
-AC_CHECK_HEADERS( rexxsaa.h,
-                  [hc_cv_have_rexxsaa_h=yes],
-                  [hc_cv_have_rexxsaa_h=no]    )
+AC_CHECK_HEADERS( sys/mtio.h,       [hc_cv_have_sys_mtio_h=yes],       [hc_cv_have_sys_mtio_h=no]       )
+AC_CHECK_HEADERS( sys/resource.h,   [hc_cv_have_sys_resource_h=yes],   [hc_cv_have_sys_resource_h=no]   )
+AC_CHECK_HEADERS( sys/uio.h,        [hc_cv_have_sys_uio_h=yes],        [hc_cv_have_sys_uio_h=no]        )
+AC_CHECK_HEADERS( sys/utsname.h,    [hc_cv_have_sys_utsname_h=yes],    [hc_cv_have_sys_utsname_h=no]    )
+AC_CHECK_HEADERS( sys/wait.h,       [hc_cv_have_sys_wait_h=yes],       [hc_cv_have_sys_wait_h=no]       )
+AC_CHECK_HEADERS( sys/un.h,         [hc_cv_have_sys_un_h=yes],         [hc_cv_have_sys_un_h=no]         )
+AC_CHECK_HEADERS( byteswap.h,       [hc_cv_have_byteswap_h=yes],       [hc_cv_have_byteswap_h=no]       )
+AC_CHECK_HEADERS( bzlib.h,          [hc_cv_have_bzlib_h=yes],          [hc_cv_have_bzlib_h=no]          )
+AC_CHECK_HEADERS( dlfcn.h,          [hc_cv_have_dlfcn_h=yes],          [hc_cv_have_dlfcn_h=no]          )
+AC_CHECK_HEADERS( fenv.h,           [hc_cv_have_fenv_h=yes],           [hc_cv_have_fenv_h=no]           )
+AC_CHECK_HEADERS( inttypes.h,       [hc_cv_have_inttypes_h=yes],       [hc_cv_have_inttypes_h=no]       )
+AC_CHECK_HEADERS( stdint.h,         [hc_cv_have_stdint_h=yes],         [hc_cv_have_stdint_h=no]         )
+AC_CHECK_HEADERS( stdbool.h,        [hc_cv_have_stdbool_h=yes],        [hc_cv_have_stdbool_h=no]        )
+AC_CHECK_HEADERS( locale.h,         [hc_cv_have_locale_h=yes],         [hc_cv_have_locale_h=no]         )
+AC_CHECK_HEADERS( ltdl.h,           [hc_cv_have_ltdl_h=yes],           [hc_cv_have_ltdl_h=no]           )
+AC_CHECK_HEADERS( malloc.h,         [hc_cv_have_malloc_h=yes],         [hc_cv_have_malloc_h=no]         )
+AC_CHECK_HEADERS( math.h,           [hc_cv_have_math_h=yes],           [hc_cv_have_math_h=no]           )
+AC_CHECK_HEADERS( netdb.h,          [hc_cv_have_netdb_h=yes],          [hc_cv_have_netdb_h=no]          )
+AC_CHECK_HEADERS( pwd.h,            [hc_cv_have_pwd_h=yes],            [hc_cv_have_pwd_h=no]            )
+AC_CHECK_HEADERS( regex.h,          [hc_cv_have_regex_h=yes],          [hc_cv_have_regex_h=no]          )
+AC_CHECK_HEADERS( signal.h,         [hc_cv_have_signal_h=yes],         [hc_cv_have_signal_h=no]         )
+AC_CHECK_HEADERS( termios.h,        [hc_cv_have_termios_h=yes],        [hc_cv_have_termios_h=no]        )
+AC_CHECK_HEADERS( time.h,           [hc_cv_have_time_h=yes],           [hc_cv_have_time_h=no]           )
+AC_CHECK_HEADERS( zlib.h,           [hc_cv_have_zlib_h=yes],           [hc_cv_have_zlib_h=no]           )
+AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],       [hc_cv_have_sys_capa_h=no]       )
+AC_CHECK_HEADERS( sys/prctl.h,      [hc_cv_have_sys_prctl_h=yes],      [hc_cv_have_sys_prctl_h=no]      )
+AC_CHECK_HEADERS( sys/syscall.h,    [hc_cv_have_syscall_h=yes],        [hc_cv_have_syscall_h=no]        )
+AC_CHECK_HEADERS( rexx.h,           [hc_cv_have_rexx_h=yes],           [hc_cv_have_rexx_h=no]           )
+AC_CHECK_HEADERS( oorexxapi.h,      [hc_cv_have_oorexxapi_h=yes],      [hc_cv_have_oorexxapi_h=no]      )
+AC_CHECK_HEADERS( regina/rexxsaa.h, [hc_cv_have_regina_rexxsaa_h=yes], [hc_cv_have_regina_rexxsaa_h=no] )
+AC_CHECK_HEADERS( rexxsaa.h,        [hc_cv_have_rexxsaa_h=yes],        [hc_cv_have_rexxsaa_h=no]        )
 
 AC_CACHE_SAVE()
 
@@ -1845,13 +1900,12 @@ fi
 
 AC_MSG_CHECKING( [whether byte-swapping can be done using assembler] )
 
-# (use our own byteswap assembler routines are i486+ only)
-# use system's byteswap routines if present...
+# Use the system's byteswap routines if they're present.
+# Use our own byteswap assembler routines for i486+ only.
 
-case "$target_cpu" in
+case "$hc_cv_cpu_arch" in
 
-    i486|i586|i686|i786|x86_64)
-
+    x86)
         hc_cv_asm_byteswap=yes
         ;;
     *)
@@ -2387,6 +2441,7 @@ fi
 #------------------------------------------------------------------------------
 
 if test "$hc_cv_have_inttypes_h" != "yes"  &&
+   test "$hc_cv_have_stdint_h"   != "yes"  &&
    test "$hc_cv_have_u_int8_t"   != "yes"; then
 
    AC_MSG_RESULT( [ERROR: unable to find fixed-size data types] )
@@ -2589,7 +2644,7 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             if test $target_cpu = i786; then
                 hc_cv_intel_cpu_type=pentium4
             else
-                if test $target_cpu        = i686   &&
+                if test $target_cpu = i686   &&
                    test "$hc_cv_is_gcc_2_96" = "yes"; then
                     hc_cv_intel_cpu_type=i586
                 else
@@ -2700,7 +2755,6 @@ CPPFLAGS="$CPPFLAGS"' -DPKGDATADIR=\"$(pkgdatadir)\" -DMODULESDIR=\"$(modexecdir
 
 test "$hc_cv_have_hqa_h"                  = "yes"  &&  AC_DEFINE(HAVE_HQA_H)
 test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
-test "$hc_cv_have_inttypes_h"             = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
 test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
 test "$hc_cv_opt_enhanced_configincludes" = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_INCLUDE)
 test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
@@ -2808,6 +2862,16 @@ test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
 test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
 test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lws2_32"
 
+#------------------------------------------------------#
+#  Construct cpu-bitness + build-configuration suffix  #
+#------------------------------------------------------#
+
+if test "$hc_cv_opt_debug" = "yes"; then
+  hc_cv_pkg_lib_suffix=${hc_cv_cpu_bits}d
+else
+  hc_cv_pkg_lib_suffix=${hc_cv_cpu_bits}
+fi
+
 AC_CACHE_SAVE()
 
 #--------------------------------------------------------------------------------#
@@ -2831,12 +2895,17 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
 fi
 
 HQA_INC="$hc_cv_hqa_inc"
-
 AC_SUBST(HQA_INC)
+
+PKG_LIB_SUFFIX=$hc_cv_pkg_lib_suffix
+AC_SUBST(PKG_LIB_SUFFIX)
+
+PKG_LIB_SUBDIR=$hc_cv_pkg_lib_subdir
+AC_SUBST(PKG_LIB_SUBDIR)
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile] )
 
 ###############################################################################
 #   (end-of-file)

@@ -41,7 +41,7 @@ by the 'bldlvlck' script in the 'util' subdirectory:
      sed         3.02   (or greater!)
 
 
-The following package(s) is(are) optional
+The following package(s) is(are) optional but highly recommended:
 
      Package   Version  (or greater!)
     ----------------------------------
@@ -104,7 +104,7 @@ summarized version first.
 Briefly, the way you build Herc is to first "configure" the building
 process and then invoke your pre-configured building process. The build
 process basically consists of a 'make' command which processes a 'makefile'.
-The makfile however needs to be customized for your system. That's what
+The makefile however needs to be customized for your system. That's what
 the "configure" script does. It contructs a customized makefile and that
 is what is meant by "configuring your building process".
 

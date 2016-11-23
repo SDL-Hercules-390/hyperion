@@ -1,79 +1,114 @@
-This the upgrade of the decNumber package to the 3.68 level
+-------------------------------------------------------------------------------
+                          The decNumber C library
+-------------------------------------------------------------------------------
 
-relevant urls
+                                Overview
 
-for the general decimal arithmetic
-http://speleotrove.com/decimal/
+  The decNumber library implements the General Decimal Arithmetic Specification
+  in ANSI C.  This specification defines a decimal arithmetic which meets the
+  requirements of commercial, financial, and human-oriented applications.  It
+  also matches the decimal arithmetic in the IEEE 754 Standard for Floating Point
+  Arithmetic.
 
-decNumber package documentation
-http://speleotrove.com/decimal/decnumber.html
+  The library fully implements the specification, and hence supports integer,
+  fixed-point, and floating-point decimal numbers directly, including infinite,
+  NaN (Not a Number), and subnormal values.  Both arbitrary-precision and fixed-
+  size representations are supported.
 
-for the errata
-http://speleotrove.com/decimal/decnumerr.html
+  (Refer to the package's PDF file in the repository for more information.)
 
-quoting verbatim from the above
-A decNumber user has reported that Visual Studio 2010 (32 bit) has difficulty with compiling the decNumber source files.
-Here are his workarounds.
-http://speleotrove.com/decimal/decnumVS.html
+-------------------------------------------------------------------------------
 
-the workaround has been implemented using
-quoting verbatim from the above
+                            Library structure
 
-Method 2:
-In file: "decBasic.c"
-1. Change extension from .c to .h
+  The library comprises several modules (corresponding to classes in an
+  object-oriented implementation).  Each module has a header file (for
+  example, decNumber.h ) which defines its data structure, and a source file
+  of the same name (e.g., decNumber.c ) which implements the operations on
+  that data structure.  These correspond to the instance variables and methods
+  of an object-oriented design.
 
-2. Add the following at the beginning of the code:
-#if !defined(DECBASIC)
-#define DECBASIC
+  (Refer to the package's PDF file in the repository for more information.)
 
-3. Add the following at the end of the code:
-#endif
+-------------------------------------------------------------------------------
 
-4. Replace the following line 2 lines
-#error decBasic.c must be included after decCommon.c
-#error Routines in decBasic.c are for decDouble and decQuad only
-with
-#error decBasic.h must be included after decCommon.h
-#error Routines in decBasic.h are for decDouble and decQuad only
-respectively.
+                            Relevant standards
 
-In file "decCommon.c"
-1. Change extension from .c to .h
+  It is intended that, where applicable, functions provided in the decNumber
+  package follow the requirements of:
 
-2. Add the following at the beginning of the code:
-#if !defined(DECCOMMON)
-#define DECCOMMON
-3. Add the following at the end of the code:
-#endif
+    *  the decimal arithmetic requirements of IEEE 754 except that:
 
-In the following files:
-decQuad.c
-decDouble.c
-decSingle.c
+       1. the IEEE remainder operator (decNumberRemainderNear) is
+          restricted to those values where the intermediate integer
+          can be represented in the current precision, because the
+          conventional implementation of this operator would be very
+          long-running for the range of numbers supported (up to
+          +/- 10**1,000,000,000).
 
-replace lines:
-#include "decCommon.c"
-#include "decBasic.c"
+       2. the mathematical functions in the decNumber module do not,
+          in general, correspond to the recommended functions in IEEE 754
+          with the same or similar names; in particular, the power function
+          has some different special cases, and most of the functions may
+          be up to one unit wrong in the last place (note, however, that
+          the squareroot function is correctly rounded)
 
-with
-#include "decCommon.h"
-#include "decBasic.h"
+    *  the floating-point decimal arithmetic defined in ANSI X3.274-1996
+       (including errata through 2001); note that this applies to functions
+       in the decNumber module only, with appropriate context.
 
-as applicable.
+  Please advise the author of any discrepancies with these standards.
 
-References to decCommon.c and decBasic.c in commentary should also be modified to refer to the corresponding .h.
+-------------------------------------------------------------------------------
+
+                              ICU License
+
+                        (ICU 1.8.1 and later)
 
 
-NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE    NOTE
+  COPYRIGHT AND PERMISSION NOTICE
 
-decnumber.h has been modified to add ...
+  Copyright (C) 1995-2005 International Business Machines Corporation and
+  others. All rights reserved.
 
-#if defined( _MSVC_ )
-    /* disable some MSVC compiler warnings                            */
-    /* for 64bits builds under WINDOWS 7                              */
-    #pragma warning( disable: 4244 ) // "conversion from 'x' to 'y', possible loss of data"
-#endif
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, provided that the above copyright notice(s) and this
+  permission notice appear in all copies of the Software and that both the
+  above copyright notice(s) and this permission notice appear in supporting
+  documentation.
 
-to get rid of a "show stopper" for 64bits MSVC builds
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+  BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+  OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+  Except as contained in this notice, the name of a copyright holder shall
+  not be used in advertising or otherwise to promote the sale, use or other
+  dealings in this Software without prior written authorization of the
+  copyright holder.
+
+
+  ----
+  All trademarks and registered trademarks mentioned herein are the property
+  of their respective owners.
+
+-------------------------------------------------------------------------------
+
+                                BUILDING
+
+For additional information regarding decNumber as well as instructions on
+how to build the decNumber External Package for Hercules, please refer to
+the files in the decNumber source code repository hosted on GitHub at the
+following URL:
+
+            https://github.com/hercules-390/decNumber-icu-368
+
+-------------------------------------------------------------------------------

@@ -1,0 +1,1779 @@
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE ADD
+                                                                             5 *  Test case capability includes IEEE exceptions trappable and
+                                                                             6 *  otherwise. Test results, FPCR flags, the Condition code, and any
+                                                                             7 *  DXC are saved for all tests.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following three conversion instructions
+                                                                            14 *   ADD (short BFP, RRE)
+                                                                            15 *   ADD (long BFP, RRE)
+                                                                            16 *   ADD (extended BFP, RRE)
+                                                                            17 *   ADD (short BFP, RXE)
+                                                                            18 *   ADD (long BFP, RXE)
+                                                                            19 *
+                                                                            20 * Test data is compiled into this program.  The test script that runs
+                                                                            21 * this program can provide alternative test data through Hercules R
+                                                                            22 * commands.
+                                                                            23 *
+                                                                            24 * Test Case Order
+                                                                            25 * 1) Short BFP basic tests, including traps and NaN propagation
+                                                                            26 * 2) Short BFP finite number tests, incl. traps and scaling
+                                                                            27 * 3) Short BFP FPC-controlled rounding mode exhaustive tests
+                                                                            28 * 4) Long BFP basic tests, including traps and NaN propagation
+                                                                            29 * 5) Long BFP finite number tests, incl. traps and scaling
+                                                                            30 * 6) Long BFP FPC-controlled rounding mode exhaustive tests
+                                                                            31 * 7) Extended BFP basic tests, including traps and NaN propagation
+                                                                            32 * 8) Extended BFP finite number tests, incl. traps and scaling
+                                                                            33 * 9) Extended BFP FPC-controlled rounding mode exhaustive tests
+                                                                            34 *
+                                                                            35 * Three input test sets are provided each for short, long, and
+                                                                            36 *   extended BFP inputs.  Test values are the same for each precision
+                                                                            37 *   for most tests.  Overflow and underflow each require precision-
+                                                                            38 *   dependent test values.
+                                                                            39 *
+                                                                            40 * Also tests the following floating point support instructions
+                                                                            41 *   LOAD  (Short)
+                                                                            42 *   LOAD  (Long)
+                                                                            43 *   LFPC  (Load Floating Point Control Register)
+                                                                            44 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                            45 *   STORE (Short)
+                                                                            46 *   STORE (Long)
+                                                                            47 *   STFPC (Store Floating Point Control Register)
+                                                                            48 *
+                                                                            49 ***********************************************************************
+
+
+                                                                            51          MACRO
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52          PADCSECT &ENDLABL
+                                                                            53 .*
+                                                                            54 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            55 .*  program is not being assembled using asma.  asma generates a core
+                                                                            56 .*  image that is loaded by the loadcore command, and because the
+                                                                            57 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            58 .*  this small effort to keep the core image small.
+                                                                            59 .*
+                                                                            60          AIF   (D'&ENDLABL).GOODPAD
+                                                                            61          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            62          MNOTE *,'No CSECT padding performed'
+                                                                            63          MEXIT
+                                                                            64 .*
+                                                                            65 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            66          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            67          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            68          MEXIT
+                                                                            69 .*
+                                                                            70 .NOPAD   ANOP
+                                                                            71          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            72          MEND
+                                                                            73 *
+                                                                            74 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            75 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            76 *
+                                      0000000000000000  0000000000000CDF    77 BFPADD   START 0
+                                      0000000000000000  0000000000000001    78 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001    79 R0       EQU   0                   Work register for cc extraction
+                                      0000000000000001  0000000000000001    80 R1       EQU   1
+                                      0000000000000002  0000000000000001    81 R2       EQU   2                   Holds count of test input values
+                                      0000000000000003  0000000000000001    82 R3       EQU   3                   Points to next test input value(s)
+                                      0000000000000004  0000000000000001    83 R4       EQU   4                   Rounding tests inner loop control
+                                      0000000000000005  0000000000000001    84 R5       EQU   5                   Rounding tests outer loop control
+                                      0000000000000006  0000000000000001    85 R6       EQU   6                   Rounding tests top of inner loop
+                                      0000000000000007  0000000000000001    86 R7       EQU   7                   Pointer to next result value(s)
+                                      0000000000000008  0000000000000001    87 R8       EQU   8                   Pointer to next FPCR result
+                                      0000000000000009  0000000000000001    88 R9       EQU   9                   Rounding tests top of outer loop
+                                      000000000000000A  0000000000000001    89 R10      EQU   10                  Pointer to test address list
+                                      000000000000000B  0000000000000001    90 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001    91 R12      EQU   12                  Holds number of test cases in set
+                                      000000000000000D  0000000000000001    92 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001    93 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001    94 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                            95 *
+                                                                            96 * Floating Point Register equates to keep the cross reference clean
+                                                                            97 *
+                                      0000000000000000  0000000000000001    98 FPR0     EQU   0
+                                      0000000000000001  0000000000000001    99 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   100 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   101 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   102 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   103 FPR5     EQU   5
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000000006  0000000000000001   104 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   105 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   106 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   107 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   108 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   109 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   110 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   111 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   112 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   113 FPR15    EQU   15
+                                                                           114 *
+0000000000000000                      0000000000000000                     115          USING *,R15
+                                                                           116 *
+                                                                           117 * Above works on real iron (R15=0 after sysclear)
+                                                                           118 * and in z/CMS (R15 points to start of load module)
+                                                                           119 *
+
+
+                                                                           121 ***********************************************************************
+                                                                           122 *
+                                                                           123 * Low core definitions, Restart PSW, and Program Check Routine.
+                                                                           124 *
+                                                                           125 ***********************************************************************
+
+
+0000000000000000                      0000000000000000  000000000000008E   127          ORG   STRTLABL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     128 PCINTCD  DS    H
+                                                                           129 *
+                                      0000000000000150  0000000000000001   130 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           131 *
+0000000000000090                      0000000000000090  00000000000001A0   132          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        133          DC    X'0000000180000000',AD(START)
+                                                                           134 *
+00000000000001B0                      00000000000001B0  00000000000001D0   135          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        136          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           137 *
+                                                                           138 * Program check routine.  If Data Exception, continue execution at
+                                                                           139 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           140 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           141 * in the FPCR.
+                                                                           142 *
+00000000000001E0                      00000000000001E0  0000000000000200   143          ORG   STRTLABL+X'200'
+0000000000000200                                                           144 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   145          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   146          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   147          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           148 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     149          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     150          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F280                             0000000000000280   151          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           153 ***********************************************************************
+                                                                           154 *
+                                                                           155 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           156 *
+                                                                           157 ***********************************************************************
+
+
+0000000000000214                                                           159 START    DS    0H
+0000000000000214  B600 F290                             0000000000000290   160          STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F291                             0000000000000291   161          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F290                             0000000000000290   162          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           163 *
+0000000000000220  41A0 F300                             0000000000000300   164          LA    R10,SHORTNF   Point to short BFP non-finite inputs
+0000000000000224  4DD0 F390                             0000000000000390   165          BAS   R13,SBFPNF    Add short BFP non-finites
+0000000000000228  41A0 F310                             0000000000000310   166          LA    R10,SHORTF    Point to short BFP finite inputs
+000000000000022C  4DD0 F44A                             000000000000044A   167          BAS   R13,SBFPF     Add short BFP finites
+0000000000000230  41A0 F320                             0000000000000320   168          LA    R10,RMSHORTS  Point to short BFP rounding mode tests
+0000000000000234  4DD0 F4F0                             00000000000004F0   169          BAS   R13,SBFPRM    Add short BFP for rounding tests
+                                                                           170 *
+0000000000000238  41A0 F330                             0000000000000330   171          LA    R10,LONGNF    Point to long BFP non-finite inputs
+000000000000023C  4DD0 F572                             0000000000000572   172          BAS   R13,LBFPNF    Add long BFP non-finites
+0000000000000240  41A0 F340                             0000000000000340   173          LA    R10,LONGF     Point to long BFP finite inputs
+0000000000000244  4DD0 F628                             0000000000000628   174          BAS   R13,LBFPF     Add long BFP finites
+0000000000000248  41A0 F350                             0000000000000350   175          LA    R10,RMLONGS   Point to long  BFP rounding mode tests
+000000000000024C  4DD0 F6CE                             00000000000006CE   176          BAS   R13,LBFPRM    Add long BFP for rounding tests
+                                                                           177 *
+0000000000000250  41A0 F360                             0000000000000360   178          LA    R10,XTNDNF    Point to extended BFP non-finite inputs
+0000000000000254  4DD0 F74C                             000000000000074C   179          BAS   R13,XBFPNF    Add extended BFP non-finites
+0000000000000258  41A0 F370                             0000000000000370   180          LA    R10,XTNDF     Point to ext'd BFP finite inputs
+000000000000025C  4DD0 F7D6                             00000000000007D6   181          BAS   R13,XBFPF     Add ext'd BFP finites
+0000000000000260  41A0 F380                             0000000000000380   182          LA    R10,RMXTNDS   Point to ext'd BFP rounding mode tests
+0000000000000264  4DD0 F84C                             000000000000084C   183          BAS   R13,XBFPRM    Add ext'd BFP for rounding tests
+                                                                           184 *
+0000000000000268  12EE                                                     185          LTR   R14,R14       Return address provided?
+000000000000026A  077E                                                     186          BNZR  R14           ..Yes, return to z/CMS test rig.
+000000000000026C  B2B2 F270                             0000000000000270   187          LPSWE WAITPSW       All done
+                                                                           188 *
+0000000000000270                                                           189          DS    0D            Ensure correct alignment for psw
+0000000000000270  00020000 00000000                                        190 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000280  00020000 00000000                                        191 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           192 *
+0000000000000290  00000000                                                 193 CTLR0    DS    F
+0000000000000294  00000000                                                 194 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000298  F8000000                                                 195 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           196 *
+                                                                           197 * Input values parameter list, four fullwords for each test data set
+                                                                           198 *      1) Count,
+                                                                           199 *      2) Address of inputs,
+                                                                           200 *      3) Address to place results, and
+                                                                           201 *      4) Address to place DXC/Flags/cc values.
+                                                                           202 *
+000000000000029C                      000000000000029C  0000000000000300   203          ORG   STRTLABL+X'300'  Enable run-time replacement
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000300                                                           204 SHORTNF  DS    0F           Input pairs for short BFP non-finite tests
+0000000000000300  0000000A                                                 205          DC    A(SBFPNFCT)
+0000000000000304  000008B8                                                 206          DC    A(SBFPNFIN)
+0000000000000308  00001000                                                 207          DC    A(SBFPNFOT)
+000000000000030C  00001700                                                 208          DC    A(SBFPNFFL)
+                                                                           209 *
+0000000000000310                                                           210 SHORTF   DS    0F           Input pairs for short BFP finite tests
+0000000000000310  00000006                                                 211          DC    A(SBFPCT)
+0000000000000314  000008E0                                                 212          DC    A(SBFPIN)
+0000000000000318  00001E00                                                 213          DC    A(SBFPOUT)
+000000000000031C  00001F00                                                 214          DC    A(SBFPFLGS)
+                                                                           215 *
+0000000000000320                                                           216 RMSHORTS DS    0F           Input pairs for short BFP rounding testing
+0000000000000320  00000008                                                 217          DC    A(SBFPRMCT)
+0000000000000324  00000910                                                 218          DC    A(SBFPINRM)
+0000000000000328  00002000                                                 219          DC    A(SBFPRMO)
+000000000000032C  00002300                                                 220          DC    A(SBFPRMOF)
+                                                                           221 *
+0000000000000330                                                           222 LONGNF   DS    0F           Input pairs for long BFP non-finite testing
+0000000000000330  0000000A                                                 223          DC    A(LBFPNFCT)
+0000000000000334  00000950                                                 224          DC    A(LBFPNFIN)
+0000000000000338  00004000                                                 225          DC    A(LBFPNFOT)
+000000000000033C  00004D00                                                 226          DC    A(LBFPNFFL)
+                                                                           227 *
+0000000000000340                                                           228 LONGF    DS    0F           Input pairs for long BFP finite testing
+0000000000000340  00000006                                                 229          DC    A(LBFPCT)
+0000000000000344  000009A0                                                 230          DC    A(LBFPIN)
+0000000000000348  00005400                                                 231          DC    A(LBFPOUT)
+000000000000034C  00005600                                                 232          DC    A(LBFPFLGS)
+                                                                           233 *
+0000000000000350                                                           234 RMLONGS  DS    0F           Input pairs for long BFP rounding testing
+0000000000000350  00000008                                                 235          DC    A(LBFPRMCT)
+0000000000000354  00000A00                                                 236          DC    A(LBFPINRM)
+0000000000000358  00005700                                                 237          DC    A(LBFPRMO)
+000000000000035C  00005C00                                                 238          DC    A(LBFPRMOF)
+                                                                           239 *
+0000000000000360                                                           240 XTNDNF   DS    0F           Inputs for ext'd BFP non-finite testing
+0000000000000360  0000000A                                                 241          DC    A(XBFPNFCT)
+0000000000000364  00000A80                                                 242          DC    A(XBFPNFIN)
+0000000000000368  00008000                                                 243          DC    A(XBFPNFOT)
+000000000000036C  00008D00                                                 244          DC    A(XBFPNFFL)
+                                                                           245 *
+0000000000000370                                                           246 XTNDF    DS    0F           Inputs for ext'd BFP finite testing
+0000000000000370  00000006                                                 247          DC    A(XBFPCT)
+0000000000000374  00000B20                                                 248          DC    A(XBFPIN)
+0000000000000378  00009400                                                 249          DC    A(XBFPOUT)
+000000000000037C  00009600                                                 250          DC    A(XBFPFLGS)
+                                                                           251 *
+0000000000000380                                                           252 RMXTNDS  DS    0F           Inputs for ext'd BFP non-finite testing
+0000000000000380  00000008                                                 253          DC    A(XBFPRMCT)
+0000000000000384  00000BE0                                                 254          DC    A(XBFPINRM)
+0000000000000388  00009700                                                 255          DC    A(XBFPRMO)
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000038C  00009C00                                                 256          DC    A(XBFPRMOF)
+                                                                           257 *
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           259 ***********************************************************************
+                                                                           260 *
+                                                                           261 * Perform Add using provided short BFP inputs.  This set of tests
+                                                                           262 * checks NaN propagation, operations on values that are not finite
+                                                                           263 * numbers, and other basic tests.  This set generates results that can
+                                                                           264 * be validated against Figure 19-13 on page 19-16 of SA22-7832-10.
+                                                                           265 *
+                                                                           266 * That Figure has separate rows and colums for Normal and Tiny
+                                                                           267 * operands.  Although the results are effectively the same for Normal
+                                                                           268 * and Tiny in any combination, the input data includes Normal and
+                                                                           269 * Tiny values.
+                                                                           270 *
+                                                                           271 * Four results are generated for each input: one RRE with all
+                                                                           272 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           273 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           274 * exceptions trappable,
+                                                                           275 *
+                                                                           276 * The sum, FPCR, and condition code are stored for each result.
+                                                                           277 *
+                                                                           278 ***********************************************************************
+
+
+0000000000000390                                                           280 SBFPNF   DS    0H            BFP Short non-finite values tests
+0000000000000390  9823 A000                             0000000000000000   281          LM    R2,R3,0(R10)  Get count and address of add values
+0000000000000394  9878 A008                             0000000000000008   282          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000398  1222                                                     283          LTR   R2,R2         Any test cases?
+000000000000039A  078D                                                     284          BZR   R13           ..No, return to caller
+000000000000039C  0DC0                                                     285          BASR  R12,0         Set top of loop
+                                                                           286 *
+000000000000039E  9845 A000                             0000000000000000   287          LM    R4,R5,0(R10)  Get count and start of addend values
+                                                                           288 *                            ..which are the same as the augends
+00000000000003A2  0D60                                                     289          BASR  R6,0          Set top of inner loop
+                                                                           290 *
+00000000000003A4  7880 3000                             0000000000000000   291          LE    FPR8,0(,R3)   Get short BFP augend
+00000000000003A8  7810 5000                             0000000000000000   292          LE    FPR1,0(,R5)   Get short BFP addend
+00000000000003AC  B29D F294                             0000000000000294   293          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003B0  B30A 0081                                                294          AEBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+00000000000003B4  7080 7000                             0000000000000000   295          STE   FPR8,0(,R7)   Store short BFP sum
+00000000000003B8  B29C 8000                             0000000000000000   296          STFPC 0(R8)         Store resulting FPCR flags and DXC
+00000000000003BC  B222 0000                                                297          IPM   R0            Get condition code and program mask
+00000000000003C0  8800 001C                             000000000000001C   298          SRL   R0,28         Isolate CC in low order byte
+00000000000003C4  4200 8003                             0000000000000003   299          STC   R0,3(,R8)     Save condition code in results table
+                                                                           300 *
+00000000000003C8  7880 3000                             0000000000000000   301          LE    FPR8,0(,R3)   Get short BFP augend
+00000000000003CC  7810 5000                             0000000000000000   302          LE    FPR1,0(,R5)   Get short BFP addend
+00000000000003D0  B29D F298                             0000000000000298   303          LFPC  FPCREGTR      Set exceptions trappable
+00000000000003D4  B30A 0081                                                304          AEBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+00000000000003D8  7080 7004                             0000000000000004   305          STE   FPR8,4(,R7)   Store short BFP sum
+00000000000003DC  B29C 8004                             0000000000000004   306          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000003E0  B222 0000                                                307          IPM   R0            Get condition code and program mask
+00000000000003E4  8800 001C                             000000000000001C   308          SRL   R0,28         Isolate CC in low order byte
+00000000000003E8  4200 8007                             0000000000000007   309          STC   R0,7(,R8)     Save condition code in results table
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           310 *
+00000000000003EC  7880 3000                             0000000000000000   311          LE    FPR8,0(,R3)   Get short BFP augend
+00000000000003F0  7810 5000                             0000000000000000   312          LE    FPR1,0(,R5)   Get short BFP addend
+00000000000003F4  B29D F294                             0000000000000294   313          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000003F8  ED80 5000 000A                        0000000000000000   314          AEB   FPR8,0(,R5)   Add FPR0/FPR1 RXE
+00000000000003FE  7080 7008                             0000000000000008   315          STE   FPR8,8(,R7)   Store short BFP sum
+0000000000000402  B29C 8008                             0000000000000008   316          STFPC 8(R8)         Store resulting FPCR flags and DXC
+0000000000000406  B222 0000                                                317          IPM   R0            Get condition code and program mask
+000000000000040A  8800 001C                             000000000000001C   318          SRL   R0,28         Isolate CC in low order byte
+000000000000040E  4200 800B                             000000000000000B   319          STC   R0,11(,R8)    Save condition code in results table
+                                                                           320 *
+0000000000000412  7880 3000                             0000000000000000   321          LE    FPR8,0(,R3)   Get short BFP augend
+0000000000000416  B29D F298                             0000000000000298   322          LFPC  FPCREGTR      Set exceptions trappable
+000000000000041A  ED80 5000 000A                        0000000000000000   323          AEB   FPR8,0(,R5)   Add FPR0/FPR1 RXE
+0000000000000420  7080 700C                             000000000000000C   324          STE   FPR8,12(,R7)  Store short BFP sum
+0000000000000424  B29C 800C                             000000000000000C   325          STFPC 12(R8)        Store resulting FPCR flags and DXC
+0000000000000428  B222 0000                                                326          IPM   R0            Get condition code and program mask
+000000000000042C  8800 001C                             000000000000001C   327          SRL   R0,28         Isolate CC in low order byte
+0000000000000430  4200 800F                             000000000000000F   328          STC   R0,15(,R8)    Save condition code in results table
+                                                                           329 *
+0000000000000434  4150 5004                             0000000000000004   330          LA    R5,4(,R5)     Point to next addend value
+0000000000000438  4170 7010                             0000000000000010   331          LA    R7,4*4(,R7)   Point to next Add result area
+000000000000043C  4180 8010                             0000000000000010   332          LA    R8,4*4(,R8)   Point to next Add FPCR area
+0000000000000440  0646                                                     333          BCTR  R4,R6         Loop through right-hand values
+                                                                           334 *
+0000000000000442  4130 3004                             0000000000000004   335          LA    R3,4(,R3)     Point to next input augend
+0000000000000446  062C                                                     336          BCTR  R2,R12        Loop through left-hand values
+0000000000000448  07FD                                                     337          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           339 ***********************************************************************
+                                                                           340 *
+                                                                           341 * Perform Add using provided short BFP input pairs.  This set of
+                                                                           342 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           343 * collects both trap and non-trap results.
+                                                                           344 *
+                                                                           345 * Four results are generated for each input: one RRE with all
+                                                                           346 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           347 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           348 * exceptions trappable,
+                                                                           349 *
+                                                                           350 * The sum, FPCR, and condition code are stored for each result.
+                                                                           351 *
+                                                                           352 ***********************************************************************
+
+
+000000000000044A  9823 A000                             0000000000000000   354 SBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000044E  9878 A008                             0000000000000008   355          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000452  1222                                                     356          LTR   R2,R2         Any test cases?
+0000000000000454  078D                                                     357          BZR   R13           ..No, return to caller
+0000000000000456  0DC0                                                     358          BASR  R12,0         Set top of loop
+                                                                           359 *
+0000000000000458  B29D F294                             0000000000000294   360          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000045C  7880 3000                             0000000000000000   361          LE    FPR8,0(,R3)   Get short BFP augend
+0000000000000460  7810 3004                             0000000000000004   362          LE    FPR1,4(,R3)   Get short BFP addend
+0000000000000464  B30A 0081                                                363          AEBR  FPR8,FPR1     Add FPR8/FPR1 RRE non-trappable
+0000000000000468  7080 7000                             0000000000000000   364          STE   FPR8,0(,R7)   Store short BFP sum
+000000000000046C  B29C 8000                             0000000000000000   365          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000470  B222 0000                                                366          IPM   R0            Get condition code and program mask
+0000000000000474  8800 001C                             000000000000001C   367          SRL   R0,28         Isolate CC in low order byte
+0000000000000478  4200 8003                             0000000000000003   368          STC   R0,3(,R8)     Save condition code in results table
+                                                                           369 *
+000000000000047C  B29D F298                             0000000000000298   370          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000480  7880 3000                             0000000000000000   371          LE    FPR8,0(,R3)   Reload short BFP augend
+                                                                           372 *                            ..addend is still in FPR1
+0000000000000484  B30A 0081                                                373          AEBR  FPR8,FPR1     Add FPR8/FPR1 RRE trappable
+0000000000000488  7080 7004                             0000000000000004   374          STE   FPR8,4(,R7)   Store short BFP sum
+000000000000048C  B29C 8004                             0000000000000004   375          STFPC 4(R8)         Store resulting FPCR flags and DXC
+0000000000000490  B222 0000                                                376          IPM   R0            Get condition code and program mask
+0000000000000494  8800 001C                             000000000000001C   377          SRL   R0,28         Isolate CC in low order byte
+0000000000000498  4200 8007                             0000000000000007   378          STC   R0,7(,R8)     Save condition code in results table
+                                                                           379 *
+000000000000049C  B29D F294                             0000000000000294   380          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000004A0  7880 3000                             0000000000000000   381          LE    FPR8,0(,R3)   Reload short BFP augend
+00000000000004A4  ED80 3004 000A                        0000000000000004   382          AEB   FPR8,4(,R3)   Add FPR8 by addend RXE non-trappable
+00000000000004AA  7080 7008                             0000000000000008   383          STE   FPR8,8(,R7)   Store short BFP sum
+00000000000004AE  B29C 8008                             0000000000000008   384          STFPC 8(R8)         Store resulting FPCR flags and DXC
+00000000000004B2  B222 0000                                                385          IPM   R0            Get condition code and program mask
+00000000000004B6  8800 001C                             000000000000001C   386          SRL   R0,28         Isolate CC in low order byte
+00000000000004BA  4200 800B                             000000000000000B   387          STC   R0,11(,R8)    Save condition code in results table
+                                                                           388 *
+00000000000004BE  B29D F298                             0000000000000298   389          LFPC  FPCREGTR      Set exceptions trappable
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004C2  7880 3000                             0000000000000000   390          LE    FPR8,0(,R3)   Reload short BFP augend
+00000000000004C6  ED80 3004 000A                        0000000000000004   391          AEB   FPR8,4(,R3)   Add FPR8 by addend RXE trappable
+00000000000004CC  7080 700C                             000000000000000C   392          STE   FPR8,12(,R7)  Store short BFP sum
+00000000000004D0  B29C 800C                             000000000000000C   393          STFPC 12(R8)        Store resulting FPCR flags and DXC
+00000000000004D4  B222 0000                                                394          IPM   R0            Get condition code and program mask
+00000000000004D8  8800 001C                             000000000000001C   395          SRL   R0,28         Isolate CC in low order byte
+00000000000004DC  4200 800F                             000000000000000F   396          STC   R0,15(,R8)    Save condition code in results table
+                                                                           397 *
+00000000000004E0  4130 3008                             0000000000000008   398          LA    R3,2*4(,R3)   Point to next input value pair
+00000000000004E4  4170 7010                             0000000000000010   399          LA    R7,4*4(,R7)   Point to next sum result set
+00000000000004E8  4180 8010                             0000000000000010   400          LA    R8,4*4(,R8)   Point to next FPCR result set
+00000000000004EC  062C                                                     401          BCTR  R2,R12        Convert next input value.
+00000000000004EE  07FD                                                     402          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           404 ***********************************************************************
+                                                                           405 *
+                                                                           406 * Perform Add using provided short BFP input pairs.  This set of
+                                                                           407 * tests exhaustively tests all rounding modes available for Add.
+                                                                           408 * The rounding mode can only be specified in the FPC.
+                                                                           409 *
+                                                                           410 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           411 * using rounding mode RNTE, do not often create results that require
+                                                                           412 * rounding.
+                                                                           413 *
+                                                                           414 * Two results are generated for each input and rounding mode: one RRE
+                                                                           415 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           416 *
+                                                                           417 * The sum, FPCR, and condition code are stored for each test.
+                                                                           418 *
+                                                                           419 ***********************************************************************
+
+
+00000000000004F0  9823 A000                             0000000000000000   421 SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000004F4  9878 A008                             0000000000000008   422          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000004F8  1222                                                     423          LTR   R2,R2         Any test cases?
+00000000000004FA  078D                                                     424          BZR   R13           ..No, return to caller
+00000000000004FC  1711                                                     425          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+00000000000004FE  0DC0                                                     426          BASR  R12,0         Set top of test case loop
+                                                                           427
+0000000000000500  4150 0005                             0000000000000005   428          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000504  0D90                                                     429          BASR  R9,0          Set top of rounding mode outer loop
+                                                                           430 *
+0000000000000506  4315 F8AF                             00000000000008AF   431          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           432 *
+000000000000050A  B29D F294                             0000000000000294   433          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000050E  B2B8 1000                             0000000000000000   434          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000512  7880 3000                             0000000000000000   435          LE    FPR8,0(,R3)   Get short BFP augend
+0000000000000516  7810 3004                             0000000000000004   436          LE    FPR1,4(,R3)   Get short BFP addend
+000000000000051A  B30A 0081                                                437          AEBR  FPR8,FPR1     Add RRE FPR8/FPR1 non-trappable
+000000000000051E  7080 7000                             0000000000000000   438          STE   FPR8,0(,R7)   Store short BFP sum
+0000000000000522  B29C 8000                             0000000000000000   439          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000526  B222 0000                                                440          IPM   R0            Get condition code and program mask
+000000000000052A  8800 001C                             000000000000001C   441          SRL   R0,28         Isolate CC in low order byte
+000000000000052E  4200 8003                             0000000000000003   442          STC   R0,3(,R8)     Save condition code in results table
+                                                                           443 *
+0000000000000532  B29D F294                             0000000000000294   444          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000536  B2B8 1000                             0000000000000000   445          SRNMB 0(R1)         Set FPC Rounding Mode
+000000000000053A  7880 3000                             0000000000000000   446          LE    FPR8,0(,R3)   Get short BFP augend
+000000000000053E  ED80 3004 000A                        0000000000000004   447          AEB   FPR8,4(,R3)   Add RXE FPR8 by addend non-trappable
+0000000000000544  7080 7004                             0000000000000004   448          STE   FPR8,4(,R7)   Store short BFP sum
+0000000000000548  B29C 8004                             0000000000000004   449          STFPC 4(R8)         Store resulting FPCR flags and DXC
+000000000000054C  B222 0000                                                450          IPM   R0            Get condition code and program mask
+0000000000000550  8800 001C                             000000000000001C   451          SRL   R0,28         Isolate CC in low order byte
+0000000000000554  4200 8007                             0000000000000007   452          STC   R0,7(,R8)     Save condition code in results table
+                                                                           453 *
+0000000000000558  4170 7008                             0000000000000008   454          LA    R7,2*4(,R7)   Point to next sum result set
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000055C  4180 8008                             0000000000000008   455          LA    R8,2*4(,R8)   Point to next FPCR result area
+                                                                           456 *
+0000000000000560  0659                                                     457          BCTR  R5,R9         Iterate to next FPC mode for this input
+                                                                           458 *
+                                                                           459 * End of FPC modes to be tested.  Advance to next test case.  We will
+                                                                           460 * skip eight bytes of result area so that each set of five result
+                                                                           461 * value pairs starts at a memory address ending in zero for the
+                                                                           462 * convenience of memory dump review.
+                                                                           463 *
+0000000000000562  4130 3008                             0000000000000008   464          LA    R3,2*4(,R3)   Point to next input value pair
+0000000000000566  4170 7008                             0000000000000008   465          LA    R7,8(,R7)     Skip to start of next result set
+000000000000056A  4180 8008                             0000000000000008   466          LA    R8,8(,R8)     Skip to start of next FPCR result set
+000000000000056E  062C                                                     467          BCTR  R2,R12        Advance to the next input pair
+                                                                           468 *
+0000000000000570  07FD                                                     469          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           471 ***********************************************************************
+                                                                           472 *
+                                                                           473 * Perform Add using provided long BFP inputs.  This set of tests
+                                                                           474 * checks NaN propagation, operations on values that are not finite
+                                                                           475 * numbers, and other basic tests.  This set generates results that can
+                                                                           476 * be validated against Figure 19-13 on page 19-16 of SA22-7832-10.
+                                                                           477 *
+                                                                           478 * That Figure has separate rows and colums for Normal and Tiny
+                                                                           479 * operands.  Although the results are effectively the same for Normal
+                                                                           480 * and Tiny in any combination, the input data includes Normal and
+                                                                           481 * Tiny values.
+                                                                           482 *
+                                                                           483 * Four results are generated for each input: one RRE with all
+                                                                           484 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           485 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           486 * exceptions trappable,
+                                                                           487 *
+                                                                           488 * The sum, FPCR, and condition code are stored for each result.
+                                                                           489 *
+                                                                           490 ***********************************************************************
+
+
+0000000000000572                                                           492 LBFPNF   DS    0H            BFP long non-finite values tests
+0000000000000572  9823 A000                             0000000000000000   493          LM    R2,R3,0(R10)  Get count and address of augend values
+0000000000000576  9878 A008                             0000000000000008   494          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000057A  1222                                                     495          LTR   R2,R2         Any test cases?
+000000000000057C  078D                                                     496          BZR   R13           ..No, return to caller
+000000000000057E  0DC0                                                     497          BASR  R12,0         Set top of loop
+                                                                           498 *
+0000000000000580  9845 A000                             0000000000000000   499          LM    R4,R5,0(R10)  Get count and start of addend values
+                                                                           500 *                            ..which are the same as the augends
+0000000000000584  0D60                                                     501          BASR  R6,0          Set top of inner loop
+                                                                           502 *
+0000000000000586  6880 3000                             0000000000000000   503          LD    FPR8,0(,R3)   Get long BFP augend
+000000000000058A  6810 5000                             0000000000000000   504          LD    FPR1,0(,R5)   Get long BFP addend
+000000000000058E  B29D F294                             0000000000000294   505          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000592  B31A 0081                                                506          ADBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+0000000000000596  6080 7000                             0000000000000000   507          STD   FPR8,0(,R7)   Store long BFP sum
+000000000000059A  B29C 8000                             0000000000000000   508          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000059E  B222 0000                                                509          IPM   R0            Get condition code and program mask
+00000000000005A2  8800 001C                             000000000000001C   510          SRL   R0,28         Isolate CC in low order byte
+00000000000005A6  4200 8003                             0000000000000003   511          STC   R0,3(,R8)     Save condition code in results table
+                                                                           512 *
+00000000000005AA  6880 3000                             0000000000000000   513          LD    FPR8,0(,R3)   Get long BFP augend
+00000000000005AE  6810 5000                             0000000000000000   514          LD    FPR1,0(,R5)   Get long BFP addend
+00000000000005B2  B29D F298                             0000000000000298   515          LFPC  FPCREGTR      Set exceptions trappable
+00000000000005B6  B31A 0081                                                516          ADBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+00000000000005BA  6080 7008                             0000000000000008   517          STD   FPR8,8(,R7)   Store long BFP remainder
+00000000000005BE  B29C 8004                             0000000000000004   518          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000005C2  B222 0000                                                519          IPM   R0            Get condition code and program mask
+00000000000005C6  8800 001C                             000000000000001C   520          SRL   R0,28         Isolate CC in low order byte
+00000000000005CA  4200 8007                             0000000000000007   521          STC   R0,7(,R8)     Save condition code in results table
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           522 *
+00000000000005CE  6880 3000                             0000000000000000   523          LD    FPR8,0(,R3)   Get long BFP augend
+00000000000005D2  B29D F294                             0000000000000294   524          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000005D6  ED80 5000 001A                        0000000000000000   525          ADB   FPR8,0(,R5)   Add FPR0/FPR1 RXE
+00000000000005DC  6080 7010                             0000000000000010   526          STD   FPR8,16(,R7)  Store long BFP sum
+00000000000005E0  B29C 8008                             0000000000000008   527          STFPC 8(R8)         Store resulting FPCR flags and DXC
+00000000000005E4  B222 0000                                                528          IPM   R0            Get condition code and program mask
+00000000000005E8  8800 001C                             000000000000001C   529          SRL   R0,28         Isolate CC in low order byte
+00000000000005EC  4200 800B                             000000000000000B   530          STC   R0,11(,R8)    Save condition code in results table
+                                                                           531 *
+00000000000005F0  6880 3000                             0000000000000000   532          LD    FPR8,0(,R3)   Get long BFP augend
+00000000000005F4  B29D F298                             0000000000000298   533          LFPC  FPCREGTR      Set exceptions trappable
+00000000000005F8  ED80 5000 001A                        0000000000000000   534          ADB   FPR8,0(,R5)   Add FPR0/FPR1 RXE
+00000000000005FE  6080 7018                             0000000000000018   535          STD   FPR8,24(,R7)  Store long BFP remainder
+0000000000000602  B29C 800C                             000000000000000C   536          STFPC 12(R8)        Store resulting FPCR flags and DXC
+0000000000000606  B222 0000                                                537          IPM   R0            Get condition code and program mask
+000000000000060A  8800 001C                             000000000000001C   538          SRL   R0,28         Isolate CC in low order byte
+000000000000060E  4200 800F                             000000000000000F   539          STC   R0,15(,R8)    Save condition code in results table
+                                                                           540 *
+0000000000000612  4150 5008                             0000000000000008   541          LA    R5,8(,R5)     Point to next addend value
+0000000000000616  4170 7020                             0000000000000020   542          LA    R7,4*8(,R7)   Point to next Add result area
+000000000000061A  4180 8010                             0000000000000010   543          LA    R8,4*4(,R8)   Point to next Add FPCR area
+000000000000061E  0646                                                     544          BCTR  R4,R6         Loop through right-hand values
+                                                                           545 *
+0000000000000620  4130 3008                             0000000000000008   546          LA    R3,8(,R3)     Point to next augend value
+0000000000000624  062C                                                     547          BCTR  R2,R12        Add until all cases tested
+0000000000000626  07FD                                                     548          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           550 ***********************************************************************
+                                                                           551 *
+                                                                           552 * Perform Add using provided long BFP input pairs.  This set of
+                                                                           553 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           554 * collects non-trap and trap results.
+                                                                           555 *
+                                                                           556 * Four results are generated for each input: one RRE with all
+                                                                           557 * exceptions non-trappable, a second RRE with all exceptions trappable,
+                                                                           558 * a third RXE with all exceptions non-trappable, a fourth RXE with all
+                                                                           559 * exceptions trappable,
+                                                                           560 *
+                                                                           561 * The sum, FPCR, and condition code are stored for each result.
+                                                                           562 *
+                                                                           563 ***********************************************************************
+
+
+0000000000000628  9823 A000                             0000000000000000   565 LBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000062C  9878 A008                             0000000000000008   566          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000630  1222                                                     567          LTR   R2,R2         Any test cases?
+0000000000000632  078D                                                     568          BZR   R13           ..No, return to caller
+0000000000000634  0DC0                                                     569          BASR  R12,0         Set top of loop
+                                                                           570 *
+0000000000000636  B29D F294                             0000000000000294   571          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000063A  6880 3000                             0000000000000000   572          LD    FPR8,0(,R3)   Get short BFP augend
+000000000000063E  6810 3008                             0000000000000008   573          LD    FPR1,8(,R3)   Get short BFP addend
+0000000000000642  B31A 0081                                                574          ADBR  FPR8,FPR1     Add FPR8/FPR1 RRE non-trappable
+0000000000000646  6080 7000                             0000000000000000   575          STD   FPR8,0(,R7)   Store short BFP sum
+000000000000064A  B29C 8000                             0000000000000000   576          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000064E  B222 0000                                                577          IPM   R0            Get condition code and program mask
+0000000000000652  8800 001C                             000000000000001C   578          SRL   R0,28         Isolate CC in low order byte
+0000000000000656  4200 8003                             0000000000000003   579          STC   R0,3(,R8)     Save condition code in results table
+                                                                           580 *
+000000000000065A  B29D F298                             0000000000000298   581          LFPC  FPCREGTR      Set exceptions trappable
+000000000000065E  6880 3000                             0000000000000000   582          LD    FPR8,0(,R3)   Reload short BFP augend
+                                                                           583 *                            ..addend is still in FPR1
+0000000000000662  B31A 0081                                                584          ADBR  FPR8,FPR1     Add FPR8/FPR1 RRE trappable
+0000000000000666  6080 7008                             0000000000000008   585          STD   FPR8,8(,R7)   Store short BFP sum
+000000000000066A  B29C 8004                             0000000000000004   586          STFPC 4(R8)         Store resulting FPCR flags and DXC
+000000000000066E  B222 0000                                                587          IPM   R0            Get condition code and program mask
+0000000000000672  8800 001C                             000000000000001C   588          SRL   R0,28         Isolate CC in low order byte
+0000000000000676  4200 8007                             0000000000000007   589          STC   R0,7(,R8)     Save condition code in results table
+                                                                           590 *
+000000000000067A  B29D F294                             0000000000000294   591          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000067E  6880 3000                             0000000000000000   592          LD    FPR8,0(,R3)   Reload short BFP augend
+0000000000000682  ED80 3008 001A                        0000000000000008   593          ADB   FPR8,8(,R3)   Add FPR8/FPR1 RXE non-trappable
+0000000000000688  6080 7010                             0000000000000010   594          STD   FPR8,16(,R7)  Store short BFP sum
+000000000000068C  B29C 8008                             0000000000000008   595          STFPC 8(R8)         Store resulting FPCR flags and DXC
+0000000000000690  B222 0000                                                596          IPM   R0            Get condition code and program mask
+0000000000000694  8800 001C                             000000000000001C   597          SRL   R0,28         Isolate CC in low order byte
+0000000000000698  4200 800B                             000000000000000B   598          STC   R0,11(,R8)    Save condition code in results table
+                                                                           599 *
+000000000000069C  B29D F298                             0000000000000298   600          LFPC  FPCREGTR      Set exceptions trappable
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000006A0  6880 3000                             0000000000000000   601          LD    FPR8,0(,R3)   Reload short BFP augend
+00000000000006A4  ED80 3008 001A                        0000000000000008   602          ADB   FPR8,8(,R3)   Add FPR8/FPR1 RXE trappable
+00000000000006AA  6080 7018                             0000000000000018   603          STD   FPR8,24(,R7)  Store short BFP sum
+00000000000006AE  B29C 800C                             000000000000000C   604          STFPC 12(R8)        Store resulting FPCR flags and DXC
+00000000000006B2  B222 0000                                                605          IPM   R0            Get condition code and program mask
+00000000000006B6  8800 001C                             000000000000001C   606          SRL   R0,28         Isolate CC in low order byte
+00000000000006BA  4200 800F                             000000000000000F   607          STC   R0,15(,R8)    Save condition code in results table
+                                                                           608 *
+00000000000006BE  4130 3010                             0000000000000010   609          LA    R3,2*8(,R3)   Point to next input value pair
+00000000000006C2  4170 7020                             0000000000000020   610          LA    R7,4*8(,R7)   Point to next quotent result pair
+00000000000006C6  4180 8010                             0000000000000010   611          LA    R8,4*4(,R8)   Point to next FPCR result area
+00000000000006CA  062C                                                     612          BCTR  R2,R12        Convert next input value.
+00000000000006CC  07FD                                                     613          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           615 ***********************************************************************
+                                                                           616 *
+                                                                           617 * Perform Add using provided long BFP input pairs.  This set of
+                                                                           618 * tests exhaustively tests all rounding modes available for Add.
+                                                                           619 * The rounding mode can only be specified in the FPC.
+                                                                           620 *
+                                                                           621 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           622 * using rounding mode RNTE, do not often create results that require
+                                                                           623 * rounding.
+                                                                           624 *
+                                                                           625 * Two results are generated for each input and rounding mode: one RRE
+                                                                           626 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           627 *
+                                                                           628 * The sum, FPCR, and condition code are stored for each result.
+                                                                           629 *
+                                                                           630 ***********************************************************************
+
+
+00000000000006CE  9823 A000                             0000000000000000   632 LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000006D2  9878 A008                             0000000000000008   633          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000006D6  1222                                                     634          LTR   R2,R2         Any test cases?
+00000000000006D8  078D                                                     635          BZR   R13           ..No, return to caller
+00000000000006DA  1711                                                     636          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+00000000000006DC  0DC0                                                     637          BASR  R12,0         Set top of test case loop
+                                                                           638
+00000000000006DE  4150 0005                             0000000000000005   639          LA    R5,FPCMCT     Get count of FPC modes to be tested
+00000000000006E2  0D90                                                     640          BASR  R9,0          Set top of rounding mode loop
+                                                                           641 *
+00000000000006E4  4315 F8AF                             00000000000008AF   642          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           643 *
+00000000000006E8  B29D F294                             0000000000000294   644          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000006EC  B2B8 1000                             0000000000000000   645          SRNMB 0(R1)         Set FPC Rounding Mode
+00000000000006F0  6880 3000                             0000000000000000   646          LD    FPR8,0(,R3)   Get long BFP augend
+00000000000006F4  6810 3008                             0000000000000008   647          LD    FPR1,8(,R3)   Get long BFP addend
+00000000000006F8  B31A 0081                                                648          ADBR  FPR8,FPR1     Add RRE FPR8/FPR1 non-trappable
+00000000000006FC  6080 7000                             0000000000000000   649          STD   FPR8,0(,R7)   Store long BFP sum
+0000000000000700  B29C 8000                             0000000000000000   650          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000704  B222 0000                                                651          IPM   R0            Get condition code and program mask
+0000000000000708  8800 001C                             000000000000001C   652          SRL   R0,28         Isolate CC in low order byte
+000000000000070C  4200 8003                             0000000000000003   653          STC   R0,3(,R8)     Save condition code in results table
+                                                                           654 *
+0000000000000710  B29D F294                             0000000000000294   655          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000714  B2B8 1000                             0000000000000000   656          SRNMB 0(R1)         Set FPC Rounding Mode
+0000000000000718  6880 3000                             0000000000000000   657          LD    FPR8,0(,R3)   Reload long BFP augend
+000000000000071C  ED80 3008 001A                        0000000000000008   658          ADB   FPR8,8(,R3)   Add RXE FPR8 by addend non-trappable
+0000000000000722  6080 7008                             0000000000000008   659          STD   FPR8,8(,R7)   Store long BFP sum
+0000000000000726  B29C 8004                             0000000000000004   660          STFPC 4(R8)         Store resulting FPCR flags and DXC
+000000000000072A  B222 0000                                                661          IPM   R0            Get condition code and program mask
+000000000000072E  8800 001C                             000000000000001C   662          SRL   R0,28         Isolate CC in low order byte
+0000000000000732  4200 8007                             0000000000000007   663          STC   R0,7(,R8)     Save condition code in results table
+                                                                           664 *
+0000000000000736  4170 7010                             0000000000000010   665          LA    R7,2*8(,R7)   Point to next sum result set
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000073A  4180 8008                             0000000000000008   666          LA    R8,2*4(,R8)   Point to next FPCR result area
+                                                                           667 *
+000000000000073E  0659                                                     668          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           669 *
+                                                                           670 * End of FPC modes to be tested.  Advance to next test case.  We will
+                                                                           671 * skip eight bytes of FPCR result area so that each set of five result
+                                                                           672 * FPCR contents pairs starts at a memory address ending in zero for the
+                                                                           673 * convenience of memory dump review.
+                                                                           674 *
+0000000000000740  4130 3010                             0000000000000010   675          LA    R3,2*8(,R3)   Point to next input value pair
+0000000000000744  4180 8008                             0000000000000008   676          LA    R8,8(,R8)     Skip to start of next FPCR result area
+0000000000000748  062C                                                     677          BCTR  R2,R12        Add next input value lots of times
+                                                                           678 *
+000000000000074A  07FD                                                     679          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           681 ***********************************************************************
+                                                                           682 *
+                                                                           683 * Perform Add using provided extended BFP inputs.  This set of tests
+                                                                           684 * checks NaN propagation, operations on values that are not finite
+                                                                           685 * numbers, and other basic tests.  This set generates results that can
+                                                                           686 * be validated against Figure 19-13 on page 19-16 of SA22-7832-10.
+                                                                           687 *
+                                                                           688 * That Figure has separate rows and colums for Normal and Tiny
+                                                                           689 * operands.  Although the results are effectively the same for Normal
+                                                                           690 * and Tiny in any combination, the input data includes Normal and
+                                                                           691 * Tiny values.
+                                                                           692 *
+                                                                           693 * Two results are generated for each input: one RRE with all
+                                                                           694 * exceptions non-trappable, and a second RRE with all exceptions
+                                                                           695 * trappable.  Extended BFP Add does not have an RXE format.
+                                                                           696 *
+                                                                           697 * The sum, FPCR, and condition code are stored for each result.
+                                                                           698 *
+                                                                           699 ***********************************************************************
+
+
+000000000000074C                                                           701 XBFPNF   DS    0H            BFP extended non-finite values tests
+000000000000074C  9823 A000                             0000000000000000   702          LM    R2,R3,0(R10)  Get count and address of augend values
+0000000000000750  9878 A008                             0000000000000008   703          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000754  1222                                                     704          LTR   R2,R2         Any test cases?
+0000000000000756  078D                                                     705          BZR   R13           ..No, return to caller
+0000000000000758  0DC0                                                     706          BASR  R12,0         Set top of loop
+                                                                           707 *
+000000000000075A  9845 A000                             0000000000000000   708          LM    R4,R5,0(R10)  Get count and start of addend values
+                                                                           709 *                            ..which are the same as the augends
+000000000000075E  0D60                                                     710          BASR  R6,0          Set top of inner loop
+                                                                           711 *
+0000000000000760  6880 3000                             0000000000000000   712          LD    FPR8,0(,R3)   Get extended BFP augend part 1
+0000000000000764  68A0 3008                             0000000000000008   713          LD    FPR10,8(,R3)  Get extended BFP augend part 2
+0000000000000768  6810 5000                             0000000000000000   714          LD    FPR1,0(,R5)   Get extended BFP addend part 1
+000000000000076C  6830 5008                             0000000000000008   715          LD    FPR3,8(,R5)   Get extended BFP addend part 2
+0000000000000770  B29D F294                             0000000000000294   716          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000774  B34A 0081                                                717          AXBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+0000000000000778  6080 7000                             0000000000000000   718          STD   FPR8,0(,R7)   Store extended BFP sum part 1
+000000000000077C  60A0 7008                             0000000000000008   719          STD   FPR10,8(,R7)  Store extended BFP sum part 2
+0000000000000780  B29C 8000                             0000000000000000   720          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000784  B222 0000                                                721          IPM   R0            Get condition code and program mask
+0000000000000788  8800 001C                             000000000000001C   722          SRL   R0,28         Isolate CC in low order byte
+000000000000078C  4200 8003                             0000000000000003   723          STC   R0,3(,R8)     Save condition code in results table
+                                                                           724 *
+0000000000000790  6880 3000                             0000000000000000   725          LD    FPR8,0(,R3)   Get extended BFP augend part 1
+0000000000000794  68A0 3008                             0000000000000008   726          LD    FPR10,8(,R3)  Get extended BFP augend part 2
+0000000000000798  6810 5000                             0000000000000000   727          LD    FPR1,0(,R5)   Get extended BFP addend part 1
+000000000000079C  6830 5008                             0000000000000008   728          LD    FPR3,8(,R5)   Get extended BFP addend part 2
+00000000000007A0  B29D F298                             0000000000000298   729          LFPC  FPCREGTR      Set exceptions trappable
+00000000000007A4  B34A 0081                                                730          AXBR  FPR8,FPR1     Add FPR0/FPR1 RRE
+00000000000007A8  6080 7010                             0000000000000010   731          STD   FPR8,16(,R7)  Store extended BFP sum part 1
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000007AC  60A0 7018                             0000000000000018   732          STD   FPR10,24(,R7) Store extended BFP sum part 2
+00000000000007B0  B29C 8004                             0000000000000004   733          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000007B4  B222 0000                                                734          IPM   R0            Get condition code and program mask
+00000000000007B8  8800 001C                             000000000000001C   735          SRL   R0,28         Isolate CC in low order byte
+00000000000007BC  4200 8007                             0000000000000007   736          STC   R0,7(,R8)     Save condition code in results table
+                                                                           737 *
+00000000000007C0  4150 5010                             0000000000000010   738          LA    R5,16(,R5)    Point to next addend value
+00000000000007C4  4170 7020                             0000000000000020   739          LA    R7,32(,R7)    Point to next Add result area
+00000000000007C8  4180 8010                             0000000000000010   740          LA    R8,16(,R8)    Point to next Add FPCR area
+00000000000007CC  0646                                                     741          BCTR  R4,R6         Loop through right-hand values
+                                                                           742 *
+00000000000007CE  4130 3010                             0000000000000010   743          LA    R3,16(,R3)    Point to next augend value
+00000000000007D2  062C                                                     744          BCTR  R2,R12        Add until all cases tested
+00000000000007D4  07FD                                                     745          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           747 ***********************************************************************
+                                                                           748 *
+                                                                           749 * Perform Add using provided extended BFP input pairs.  This set of
+                                                                           750 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
+                                                                           751 * collects results when the exceptions do not result in a trap and when
+                                                                           752 * they do.
+                                                                           753 *
+                                                                           754 * Two results are generated for each input: one RRE with all
+                                                                           755 * exceptions non-trappable and a second RRE with all exceptions
+                                                                           756 * trappable.  There is no RXE format for Add in extended precision.
+                                                                           757 *
+                                                                           758 * The sum, FPCR, and condition code are stored for each result.
+                                                                           759 *
+                                                                           760 ***********************************************************************
+
+
+00000000000007D6  9823 A000                             0000000000000000   762 XBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000007DA  9878 A008                             0000000000000008   763          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000007DE  1222                                                     764          LTR   R2,R2         Any test cases?
+00000000000007E0  078D                                                     765          BZR   R13           ..No, return to caller
+00000000000007E2  0DC0                                                     766          BASR  R12,0         Set top of loop
+                                                                           767 *
+00000000000007E4  B29D F294                             0000000000000294   768          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000007E8  6880 3000                             0000000000000000   769          LD    FPR8,0(,R3)   Get extended BFP augend part 1
+00000000000007EC  68A0 3008                             0000000000000008   770          LD    FPR10,8(,R3)  Get extended BFP augend part 2
+00000000000007F0  6810 3010                             0000000000000010   771          LD    FPR1,16(,R3)  Get extended BFP addend part 1
+00000000000007F4  6830 3018                             0000000000000018   772          LD    FPR3,24(,R3)  Get extended BFP addend part 2
+00000000000007F8  B34A 0081                                                773          AXBR  FPR8,FPR1     Add FPR8-10/FPR1-3 RRE non-trappable
+00000000000007FC  6080 7000                             0000000000000000   774          STD   FPR8,0(,R7)   Store extended BFP sum part 1
+0000000000000800  60A0 7008                             0000000000000008   775          STD   FPR10,8(,R7)  Store extended BFP sum part 2
+0000000000000804  B29C 8000                             0000000000000000   776          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000808  B222 0000                                                777          IPM   R0            Get condition code and program mask
+000000000000080C  8800 001C                             000000000000001C   778          SRL   R0,28         Isolate CC in low order byte
+0000000000000810  4200 8003                             0000000000000003   779          STC   R0,3(,R8)     Save condition code in results table
+                                                                           780 *
+0000000000000814  B29D F298                             0000000000000298   781          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000818  6880 3000                             0000000000000000   782          LD    FPR8,0(,R3)   Reload extended BFP augend part 1
+000000000000081C  68A0 3008                             0000000000000008   783          LD    FPR10,8(,R3)  Reload extended BFP augend part 2
+                                                                           784 *                            ..addend is still in FPR1-FPR3
+0000000000000820  B34A 0081                                                785          AXBR  FPR8,FPR1     Add FPR8-10/FPR1-3 RRE trappable
+0000000000000824  6080 7010                             0000000000000010   786          STD   FPR8,16(,R7)  Store extended BFP sum part 1
+0000000000000828  60A0 7018                             0000000000000018   787          STD   FPR10,24(,R7) Store extended BFP sum part 2
+000000000000082C  B29C 8004                             0000000000000004   788          STFPC 4(R8)         Store resulting FPCR flags and DXC
+0000000000000830  B222 0000                                                789          IPM   R0            Get condition code and program mask
+0000000000000834  8800 001C                             000000000000001C   790          SRL   R0,28         Isolate CC in low order byte
+0000000000000838  4200 8007                             0000000000000007   791          STC   R0,7(,R8)     Save condition code in results table
+                                                                           792 *
+000000000000083C  4130 3020                             0000000000000020   793          LA    R3,32(,R3)    Point to next input value pair
+0000000000000840  4170 7020                             0000000000000020   794          LA    R7,32(,R7)    Point to next quotent result pair
+0000000000000844  4180 8010                             0000000000000010   795          LA    R8,16(,R8)    Point to next FPCR result area
+0000000000000848  062C                                                     796          BCTR  R2,R12        Convert next input value.
+                                                                           797 *
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    22
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000084A  07FD                                                     798          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    23
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           800 ***********************************************************************
+                                                                           801 *
+                                                                           802 * Perform Add using provided extended BFP input pairs.  This set of
+                                                                           803 * tests exhaustively tests all rounding modes available for Add.
+                                                                           804 * The rounding mode can only be specified in the FPC.
+                                                                           805 *
+                                                                           806 * All five FPC rounding modes are tested because the preceeding tests,
+                                                                           807 * using rounding mode RNTE, do not often create results that require
+                                                                           808 * rounding.
+                                                                           809 *
+                                                                           810 * Two results are generated for each input and rounding mode: one RRE
+                                                                           811 * and one RXE.  Traps are disabled for all rounding mode tests.
+                                                                           812 *
+                                                                           813 * The sum, FPCR, and condition code are stored for each result.
+                                                                           814 *
+                                                                           815 ***********************************************************************
+
+
+000000000000084C  9823 A000                             0000000000000000   817 XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000850  9878 A008                             0000000000000008   818          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000854  1222                                                     819          LTR   R2,R2         Any test cases?
+0000000000000856  078D                                                     820          BZR   R13           ..No, return to caller
+0000000000000858  1711                                                     821          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
+000000000000085A  0DC0                                                     822          BASR  R12,0         Set top of test case loop
+                                                                           823
+000000000000085C  4150 0005                             0000000000000005   824          LA    R5,FPCMCT     Get count of FPC modes to be tested
+0000000000000860  0D90                                                     825          BASR  R9,0          Set top of rounding mode loop
+                                                                           826 *
+0000000000000862  4315 F8AF                             00000000000008AF   827          IC    R1,FPCMODES-L'FPCMODES(R5)  Get next FPC mode
+                                                                           828 *
+0000000000000866  B29D F294                             0000000000000294   829          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000086A  B2B8 1000                             0000000000000000   830          SRNMB 0(R1)         Set FPC Rounding Mode
+000000000000086E  6880 3000                             0000000000000000   831          LD    FPR8,0(,R3)   Get extended BFP augend part 1
+0000000000000872  68A0 3008                             0000000000000008   832          LD    FPR10,8(,R3)  Get extended BFP augend part 2
+0000000000000876  6810 3010                             0000000000000010   833          LD    FPR1,16(,R3)  Get extended BFP addend part 1
+000000000000087A  6830 3018                             0000000000000018   834          LD    FPR3,24(,R3)  Get extended BFP addend part 2
+000000000000087E  B34A 0081                                                835          AXBR  FPR8,FPR1     Add RRE FPR8/FPR1 non-trappable
+0000000000000882  6080 7000                             0000000000000000   836          STD   FPR8,0(,R7)   Store extended BFP sum part 1
+0000000000000886  60A0 7008                             0000000000000008   837          STD   FPR10,8(,R7)  Store extended BFP sum part 2
+000000000000088A  B29C 8000                             0000000000000000   838          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000088E  B222 0000                                                839          IPM   R0            Get condition code and program mask
+0000000000000892  8800 001C                             000000000000001C   840          SRL   R0,28         Isolate CC in low order byte
+0000000000000896  4200 8003                             0000000000000003   841          STC   R0,3(,R8)     Save condition code in results table
+                                                                           842 *
+000000000000089A  4170 7010                             0000000000000010   843          LA    R7,16(,R7)    Point to next sum result set
+000000000000089E  4180 8004                             0000000000000004   844          LA    R8,4(,R8)     Point to next FPCR result area
+                                                                           845 *
+00000000000008A2  0659                                                     846          BCTR  R5,R9         Iterate to next FPC mode
+                                                                           847 *
+                                                                           848 * End of FPC modes to be tested.  Advance to next test case.  We will
+                                                                           849 * skip eight bytes of FPCR result area so that each set of five result
+                                                                           850 * FPCR contents pairs starts at a memory address ending in zero for the
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    24
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           851 * convenience of memory dump review.
+                                                                           852 *
+00000000000008A4  4130 3020                             0000000000000020   853          LA    R3,2*16(,R3)  Point to next input value pair
+00000000000008A8  4180 800C                             000000000000000C   854          LA    R8,12(,R8)    Skip to start of next FPCR result area
+00000000000008AC  062C                                                     855          BCTR  R2,R12        Add next input value lots of times
+                                                                           856 *
+00000000000008AE  07FD                                                     857          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    25
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           859 ***********************************************************************
+                                                                           860 *
+                                                                           861 * Table of FPC rounding modes to test sum rounding modes.
+                                                                           862 *
+                                                                           863 * The Set BFP Rounding Mode does allow specification of the FPC
+                                                                           864 * rounding mode as an address, so we shall index into a table of
+                                                                           865 * BFP rounding modes without bothering with Execute.
+                                                                           866 *
+                                                                           867 ***********************************************************************
+
+
+                                                                           869 *
+                                                                           870 * Rounding modes that may be set in the FPCR.  The FPCR controls
+                                                                           871 * rounding of the sum.
+                                                                           872 *
+                                                                           873 * These are indexed directly by the loop counter, which counts down.
+                                                                           874 * So the modes are listed in reverse order here.
+                                                                           875 *
+00000000000008B0                                                           876 FPCMODES DS    0C
+00000000000008B0  07                                                       877          DC    AL1(7)              RFS, Round for shorter precision
+00000000000008B1  03                                                       878          DC    AL1(3)              RM, Round to -infinity
+00000000000008B2  02                                                       879          DC    AL1(2)              RP, Round to +infinity
+00000000000008B3  01                                                       880          DC    AL1(1)              RZ, Round to zero
+00000000000008B4  00                                                       881          DC    AL1(0)              RNTE, Round to Nearest, ties to even
+                                      0000000000000005  0000000000000001   882 FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
+                                                                           883 *
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    26
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           885 ***********************************************************************
+                                                                           886 *
+                                                                           887 * Short BFP test data sets for Add testing.
+                                                                           888 *
+                                                                           889 * The first test data set is used for tests of basic functionality,
+                                                                           890 * NaN propagation, and results from operations involving other than
+                                                                           891 * finite numbers.
+                                                                           892 *
+                                                                           893 * The second test data set is used for testing boundary conditions
+                                                                           894 * using two finite non-zero values.  Each possible condition code
+                                                                           895 * and type of result (normal, scaled, etc) is created by members of
+                                                                           896 * this test data set.
+                                                                           897 *
+                                                                           898 * The third test data set is used for exhaustive testing of final
+                                                                           899 * results across the five rounding modes available for the Add
+                                                                           900 * instruction.
+                                                                           901 *
+                                                                           902 ***********************************************************************
+
+
+                                                                           904 ***********************************************************************
+                                                                           905 *
+                                                                           906 * First input test data set, to test operations using non-finite or
+                                                                           907 * zero inputs.  Member values chosen to validate Figure 19-13 on page
+                                                                           908 * 19-16 of SA22-7832-10.  Each value in this table is tested against
+                                                                           909 * every other value in the table.  Ten entries means 100 result sets.
+                                                                           910 *
+                                                                           911 ***********************************************************************
+
+
+00000000000008B8                                                           913 SBFPNFIN DS    0F                Inputs for short BFP non-finite tests
+00000000000008B8  FF800000                                                 914          DC    X'FF800000'         -inf
+00000000000008BC  C0000000                                                 915          DC    X'C0000000'         -2.0
+00000000000008C0  80010000                                                 916          DC    X'80010000'         -Dnice
+00000000000008C4  80000000                                                 917          DC    X'80000000'         -0
+00000000000008C8  00000000                                                 918          DC    X'00000000'         +0
+00000000000008CC  00010000                                                 919          DC    X'00010000'         -Dnice
+00000000000008D0  40000000                                                 920          DC    X'40000000'         +2.0
+00000000000008D4  7F800000                                                 921          DC    X'7F800000'         +inf
+00000000000008D8  FFCB0000                                                 922          DC    X'FFCB0000'         -QNaN
+00000000000008DC  7F8A0000                                                 923          DC    X'7F8A0000'         +SNaN
+                                      000000000000000A  0000000000000001   924 SBFPNFCT EQU   (*-SBFPNFIN)/4    Count of short BFP in list
+
+
+
+                                                                           926 ***********************************************************************
+                                                                           927 *
+                                                                           928 * Second input test data set.  These are finite pairs intended to
+                                                                           929 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                           930 * added twice, once non-trappable and once trappable.  Trappable
+                                                                           931 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                           932 * will show whether the Incremented DXC code is returned.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    27
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           933 *
+                                                                           934 * The following test cases are required:
+                                                                           935 * 1. Overflow
+                                                                           936 * 2. Underflow - normal inputs
+                                                                           937 * 3. Underflow - subnormal inputs
+                                                                           938 * 4. Normal - from subnormal inputs
+                                                                           939 * 5. Inexact - incremented
+                                                                           940 * 6. Inexact - truncated
+                                                                           941 *
+                                                                           942 ***********************************************************************
+
+
+00000000000008E0                                                           944 SBFPIN   DS    0F                Inputs for short BFP finite tests
+                                                                           945 *
+                                                                           946 * Overflow on addition
+                                                                           947 *
+00000000000008E0  7F7FFFFF                                                 948          DC    X'7F7FFFFF'         +Nmax
+00000000000008E4  7F7FFFFF                                                 949          DC    X'7F7FFFFF'         +Nmax
+                                                                           950 *
+                                                                           951 * Underflow from sum of normals.  We will add a small normal to a
+                                                                           952 * negative smaller normal to generate a subnormal.
+                                                                           953 *
+00000000000008E8  00FFFFFF                                                 954          DC    X'00FFFFFF'         Very small normal number
+00000000000008EC  80800000                                                 955          DC    X'80800000'         Smaller normal negative
+                                                                           956 *
+                                                                           957 * Underflow from sum of subnormals.  We will add two subnormals.
+                                                                           958 *
+00000000000008F0  00040000                                                 959          DC    X'00040000'         Subnormal, < +Dmax
+00000000000008F4  00000F0F                                                 960          DC    X'00000F0F'         Smaller subnormal
+                                                                           961 *
+                                                                           962 * Normal result from sum of subnormals.  We will add two subnormals.
+                                                                           963 * The result will be greater than +Nmin
+                                                                           964 *
+00000000000008F8  007FFFFF                                                 965          DC    X'007FFFFF'         +Dmax
+00000000000008FC  00000001                                                 966          DC    X'00000001'         +Dmin, result will be +Nmin
+                                                                           967 *
+                                                                           968 * Add a value to 1.0 such that the added digits are to the right of
+                                                                           969 * the right-most bit in the stored significand. The result will be
+                                                                           970 * inexact, and incremented will be determined by the value of the
+                                                                           971 * bits in the addend.
+                                                                           972 *
+0000000000000900  3F800000                                                 973          DC    X'3F800000'         Augend +1, aka 1.0b0
+0000000000000904  33F80000                                                 974          DC    X'33F80000'         Addend 1.1111b-24
+                                                                           975 *                       ..Above addend is 1.154839992523193359375E-7
+                                                                           976 *                       ..nearest is away from zero, incremented.
+                                                                           977 *
+0000000000000908  3F800000                                                 978          DC    X'3F800000'         Augend +1, aka 1.0b0
+000000000000090C  33780000                                                 979          DC    X'33780000'         Addend 1.1111b-25
+                                                                           980 *                       ..Above addend is 5.774199962615966796875E-8
+                                                                           981 *                       ..nearest is toward zero, truncated
+                                                                           982 *
+                                      0000000000000006  0000000000000001   983 SBFPCT   EQU   (*-SBFPIN)/4/2    Count of short BFP in list
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    28
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+
+                                                                           985 ***********************************************************************
+                                                                           986 *
+                                                                           987 * Third input test data set.  These are finite pairs intended to
+                                                                           988 * test all combinations of rounding mode for the sum and the
+                                                                           989 * remainder.  Values are chosen to create a requirement to round
+                                                                           990 * to the target precision after the computation and to generate
+                                                                           991 * varying results depending on the rounding mode in the FPCR.
+                                                                           992 *
+                                                                           993 * The result set will have cases that represent each of the following
+                                                                           994 *
+                                                                           995 * 1. Positive, nearest magnitude is toward zero.
+                                                                           996 * 2. Negative, nearest magnitude is toward zero.
+                                                                           997 * 3. Positive, nearest magnitude is away from zero.
+                                                                           998 * 4. Negative, nearest magnitude is away from zero.
+                                                                           999 * 5. Positive, tie, nearest even has greater magnitude
+                                                                          1000 * 6. Negative, tie, nearest even has greater magnitude
+                                                                          1001 * 7. Positive, tie, nearest even has lower magnitude
+                                                                          1002 * 8. Negative, tie, nearest even has lower magnitude
+                                                                          1003 *
+                                                                          1004 * Round For Shorter precision correctness can be determined from the
+                                                                          1005 * above test cases.
+                                                                          1006 *
+                                                                          1007 ***********************************************************************
+
+
+0000000000000910                                                          1009 SBFPINRM DS    0F                Inputs for short BFP rounding testing
+                                                                          1010 *
+                                                                          1011 * Add a value to 1.0 such that the added digits are to the right of
+                                                                          1012 * the right-most bit in the stored significand. The result will be
+                                                                          1013 * inexact, and incremented will be determined by the value of the
+                                                                          1014 * bits in the addend.
+                                                                          1015 *
+0000000000000910  3F800000                                                1016          DC    X'3F800000'         Augend +1, aka +1.0b0
+0000000000000914  337E0000                                                1017          DC    X'337E0000'         Addend +1.111111b-25
+0000000000000918  BF800000                                                1018          DC    X'BF800000'         Augend -1, aka -1.0b0
+000000000000091C  B37E0000                                                1019          DC    X'B37E0000'         Addend -1.111111b-25
+                                                                          1020 *                       ..Above addend is 5.91389834880828857421875E-8
+                                                                          1021 *                       ..nearest is toward zero, truncated
+                                                                          1022 *
+0000000000000920  3F800000                                                1023          DC    X'3F800000'         Augend +1, aka 1.0b0
+0000000000000924  33FF0000                                                1024          DC    X'33FF0000'         Addend +1.1111111b-24
+0000000000000928  BF800000                                                1025          DC    X'BF800000'         Augend -1, aka -1.0b0
+000000000000092C  B3FF0000                                                1026          DC    X'B3FF0000'         Addend -1.1111111b-24
+                                                                          1027 *                       ..Above addend is 1.187436282634735107421875E-7
+                                                                          1028 *                       ..nearest is away from zero, incremented.
+                                                                          1029 *
+0000000000000930  3F800000                                                1030          DC    X'3F800000'         Augend +1, aka +1.0b0
+0000000000000934  33800000                                                1031          DC    X'33800000'         Addend +1.0b-24
+0000000000000938  BF800000                                                1032          DC    X'BF800000'         Augend -1, aka -1.0b0
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    29
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000093C  B3800000                                                1033          DC    X'B3800000'         Addend -1.0b-24
+                                                                          1034 *                 ..Above addend is 5.9604644775390625E-8
+                                                                          1035 *                 ..nearest is a tie, nearest even has lower magnitude
+                                                                          1036 *
+0000000000000940  3F800000                                                1037          DC    X'3F800000'         Augend +1, aka +1.0b0
+0000000000000944  34400000                                                1038          DC    X'34400000'         Addend +1.1b-23
+0000000000000948  BF800000                                                1039          DC    X'BF800000'         Augend -1, aka -1.0b0
+000000000000094C  B4400000                                                1040          DC    X'B4400000'         Addend -1.1b-23
+                                                                          1041 *               ..Above addend is 1.78813934326171875E-7
+                                                                          1042 *               ..nearest is a tie, nearest even has greater magnitude
+                                      0000000000000008  0000000000000001  1043 SBFPRMCT EQU   (*-SBFPINRM)/4/2  Count of short BFP rounding tests
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    30
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1045 ***********************************************************************
+                                                                          1046 *
+                                                                          1047 * Long BFP test data sets for Add testing.
+                                                                          1048 *
+                                                                          1049 * The first test data set is used for tests of basic functionality,
+                                                                          1050 * NaN propagation, and results from operations involving other than
+                                                                          1051 * finite numbers.
+                                                                          1052 *
+                                                                          1053 * The second test data set is used for testing boundary conditions
+                                                                          1054 * using two finite non-zero values.  Each possible condition code
+                                                                          1055 * and type of result (normal, scaled, etc) is created by members of
+                                                                          1056 * this test data set.
+                                                                          1057 *
+                                                                          1058 * The third test data set is used for exhaustive testing of final
+                                                                          1059 * results across the five rounding modes available for the Add
+                                                                          1060 * instruction.
+                                                                          1061 *
+                                                                          1062 ***********************************************************************
+
+
+                                                                          1064 ***********************************************************************
+                                                                          1065 *
+                                                                          1066 * First input test data set, to test operations using non-finite or
+                                                                          1067 * zero inputs.  Member values chosen to validate Figure 19-13 on page
+                                                                          1068 * 19-16 of SA22-7832-10.  Each value in this table is tested against
+                                                                          1069 * every other value in the table.  Ten entries means 100 result sets.
+                                                                          1070 *
+                                                                          1071 ***********************************************************************
+
+
+0000000000000950                                                          1073 LBFPNFIN DS    0F                Inputs for long BFP testing
+0000000000000950  FFF00000 00000000                                       1074          DC    X'FFF0000000000000'         -inf
+0000000000000958  C0000000 00000000                                       1075          DC    X'C000000000000000'         -2.0
+0000000000000960  80010000 00000000                                       1076          DC    X'8001000000000000'         -Dnice
+0000000000000968  80000000 00000000                                       1077          DC    X'8000000000000000'         -0
+0000000000000970  00000000 00000000                                       1078          DC    X'0000000000000000'         +0
+0000000000000978  00010000 00000000                                       1079          DC    X'0001000000000000'         +Dnice
+0000000000000980  40000000 00000000                                       1080          DC    X'4000000000000000'         +2.0
+0000000000000988  7FF00000 00000000                                       1081          DC    X'7FF0000000000000'         +inf
+0000000000000990  FFF8B000 00000000                                       1082          DC    X'FFF8B00000000000'         -QNaN
+0000000000000998  7FF0A000 00000000                                       1083          DC    X'7FF0A00000000000'         +SNaN
+                                      000000000000000A  0000000000000001  1084 LBFPNFCT EQU   (*-LBFPNFIN)/8     Count of long BFP in list
+
+
+
+                                                                          1086 ***********************************************************************
+                                                                          1087 *
+                                                                          1088 * Second input test data set.  These are finite pairs intended to
+                                                                          1089 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                          1090 * added twice, once non-trappable and once trappable.  Trappable
+                                                                          1091 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                          1092 * will show whether the Incremented DXC code is returned.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    31
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1093 *
+                                                                          1094 * The following test cases are required:
+                                                                          1095 * 1. Overflow
+                                                                          1096 * 2. Underflow - normal inputs
+                                                                          1097 * 3. Underflow - subnormal inputs
+                                                                          1098 * 4. Normal - from subnormal inputs
+                                                                          1099 * 5. Inexact - incremented
+                                                                          1100 * 6. Inexact - truncated
+                                                                          1101 *
+                                                                          1102 ***********************************************************************
+
+
+00000000000009A0                                                          1104 LBFPIN   DS    0D                Inputs for long BFP finite tests
+                                                                          1105 *
+                                                                          1106 * Overflow on addition
+                                                                          1107 *
+00000000000009A0  7FFFFFFF FFFFFFFF                                       1108          DC    X'7FFFFFFFFFFFFFFF'  +Nmax
+00000000000009A8  7FFFFFFF FFFFFFFF                                       1109          DC    X'7FFFFFFFFFFFFFFF'  +Nmax
+                                                                          1110 *
+                                                                          1111 * Underflow from sum of normals.  We will add a small normal to a
+                                                                          1112 * negative smaller normal to generate a subnormal.
+                                                                          1113 *
+00000000000009B0  001FFFFF FFFFFFFF                                       1114          DC    X'001FFFFFFFFFFFFF'  Very small normal number
+00000000000009B8  80100000 00000000                                       1115          DC    X'8010000000000000'  Smaller normal negative
+                                                                          1116 *
+                                                                          1117 * Underflow from sum of subnormals.  We will add two subnormals.
+                                                                          1118 *
+00000000000009C0  00080000 00000000                                       1119          DC    X'0008000000000000'  Subnormal, < +Dmax
+00000000000009C8  0000F0F0 00000000                                       1120          DC    X'0000F0F000000000'  Smaller subnormal
+                                                                          1121 *
+                                                                          1122 * Normal result from sum of subnormals.  We will add two subnormals.
+                                                                          1123 * The result will be greater than +Nmin
+                                                                          1124 *
+00000000000009D0  000FFFFF FFFFFFFF                                       1125          DC    X'000FFFFFFFFFFFFF'  +Dmax
+00000000000009D8  00000000 00000001                                       1126          DC    X'0000000000000001'  +Dmin, result will be +Nmin
+                                                                          1127 *
+                                                                          1128 * Add a value to 1.0 such that the added digits are to the right of
+                                                                          1129 * the right-most bit in the stored significand. The result will be
+                                                                          1130 * inexact, and incremented will be determined by the value of the
+                                                                          1131 * bits in the addend.
+                                                                          1132 *
+00000000000009E0  3FF00000 00000000                                       1133          DC    X'3FF0000000000000'  Augend +1, aka 1.0b0
+00000000000009E8  3CAF0000 00000000                                       1134          DC    X'3CAF000000000000'  Addend 1.1111b-53
+                                                                          1135 *    ..Above addend is 2.15105711021124079707078635692596435546875E-16
+                                                                          1136 *    ..nearest is away from zero, incremented.
+                                                                          1137 *
+00000000000009F0  3FF00000 00000000                                       1138          DC    X'3FF0000000000000'  Augend +1, aka 1.0b0
+00000000000009F8  3C9F0000 00000000                                       1139          DC    X'3C9F000000000000'  Addend 1.1111b-54
+                                                                          1140 *    ..Above addend is 1.075528555105620398535393178462982177734375E-16
+                                                                          1141 *    ..nearest is toward zero, truncated.
+                                                                          1142 *
+                                      0000000000000006  0000000000000001  1143 LBFPCT   EQU   (*-LBFPIN)/8/2   Count of long BFP in list
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    32
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+
+
+
+                                                                          1145 ***********************************************************************
+                                                                          1146 *
+                                                                          1147 * Third input test data set.  These are finite pairs intended to
+                                                                          1148 * test all combinations of rounding mode for the sum and the
+                                                                          1149 * remainder.  Values are chosen to create a requirement to round
+                                                                          1150 * to the target precision after the computation and to generate
+                                                                          1151 * varying results depending on the rounding mode in the FPCR.
+                                                                          1152 *
+                                                                          1153 * The result set will have cases that represent each of the following
+                                                                          1154 *
+                                                                          1155 * 1. Positive, nearest magnitude is toward zero.
+                                                                          1156 * 2. Negative, nearest magnitude is toward zero.
+                                                                          1157 * 3. Positive, nearest magnitude is away from zero.
+                                                                          1158 * 4. Negative, nearest magnitude is away from zero.
+                                                                          1159 * 5. Positive, tie, nearest even has greater magnitude
+                                                                          1160 * 6. Negative, tie, nearest even has greater magnitude
+                                                                          1161 * 7. Positive, tie, nearest even has lower magnitude
+                                                                          1162 * 8. Negative, tie, nearest even has lower magnitude
+                                                                          1163 *
+                                                                          1164 * Round For Shorter precision correctness can be determined from the
+                                                                          1165 * above test cases.
+                                                                          1166 *
+                                                                          1167 ***********************************************************************
+
+
+0000000000000A00                                                          1169 LBFPINRM DS    0F
+                                                                          1170 *
+                                                                          1171 * Add a value to 1.0 such that the added digits are to the right of
+                                                                          1172 * the right-most bit in the stored significand. The result will be
+                                                                          1173 * inexact, and incremented will be determined by the value of the
+                                                                          1174 * bits in the addend.
+                                                                          1175 *
+0000000000000A00  3FF00000 00000000                                       1176          DC    X'3FF0000000000000'  Augend +1, aka +1.0b0
+0000000000000A08  3C9FC000 00000000                                       1177          DC    X'3C9FC00000000000'  Addend +1.111111b-54
+0000000000000A10  BFF00000 00000000                                       1178          DC    X'BFF0000000000000'  Augend -1, aka -1.0b0
+0000000000000A18  BC9FC000 00000000                                       1179          DC    X'BC9FC00000000000'  Addend -1.111111b-54
+                                                                          1180 * ..Above addend is 1.10154940724527250495157204568386077880859375E-16
+                                                                          1181 * ..nearest is toward zero, truncated.
+                                                                          1182 *
+0000000000000A20  3FF00000 00000000                                       1183          DC    X'3FF0000000000000'  Augend +1, aka +1.0b0
+0000000000000A28  3CAFE000 00000000                                       1184          DC    X'3CAFE00000000000'  Addend +1.1111111b-53
+0000000000000A30  BFF00000 00000000                                       1185          DC    X'BFF0000000000000'  Augend -1, aka -1.0b0
+0000000000000A38  BCAFE000 00000000                                       1186          DC    X'BCAFE00000000000'  Addend -1.1111111b-53
+                                                                          1187 * ..Above addend is  2.21177243187042904537520371377468109130859375E-16
+                                                                          1188 * ..nearest is away from zero, incremented.
+                                                                          1189 *
+0000000000000A40  3FF00000 00000000                                       1190          DC    X'3FF0000000000000'  Augend +1, aka +1.0b0
+0000000000000A48  3CA00000 00000000                                       1191          DC    X'3CA0000000000000'  Addend +1.0b-53
+0000000000000A50  BFF00000 00000000                                       1192          DC    X'BFF0000000000000'  Augend -1, aka -1.0b0
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    33
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000A58  BCA00000 00000000                                       1193          DC    X'BCA0000000000000'  Addend -1.0b-53
+                                                                          1194 *    ..Above addend is 1.1102230246251565404236316680908203125E-16
+                                                                          1195 *    ..nearest is a tie, nearest even has lower magnitude
+                                                                          1196 *
+0000000000000A60  3FF00000 00000000                                       1197          DC    X'3FF0000000000000'  Augend +1, aka +1.0b0
+0000000000000A68  3CB80000 00000000                                       1198          DC    X'3CB8000000000000'  Addend +1.1b-52
+0000000000000A70  BFF00000 00000000                                       1199          DC    X'BFF0000000000000'  Augend -1, aka -1.0b0
+0000000000000A78  BCB80000 00000000                                       1200          DC    X'BCB8000000000000'  Addend -1.1b-52
+                                                                          1201 *    ..Above addend is 3.3306690738754696212708950042724609375E-16
+                                                                          1202 *    ..nearest is a tie, nearest even has greater magnitude
+                                                                          1203 *
+                                                                          1204 *
+                                      0000000000000008  0000000000000001  1205 LBFPRMCT EQU   (*-LBFPINRM)/8/2  Count of long BFP rounding tests
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    34
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1207 ***********************************************************************
+                                                                          1208 *
+                                                                          1209 * Extended BFP test data sets for Add testing.
+                                                                          1210 *
+                                                                          1211 * The first test data set is used for tests of basic functionality,
+                                                                          1212 * NaN propagation, and results from operations involving other than
+                                                                          1213 * finite numbers.
+                                                                          1214 *
+                                                                          1215 * The second test data set is used for testing boundary conditions
+                                                                          1216 * using two finite non-zero values.  Each possible condition code
+                                                                          1217 * and type of result (normal, scaled, etc) is created by members of
+                                                                          1218 * this test data set.
+                                                                          1219 *
+                                                                          1220 * The third test data set is used for exhaustive testing of final
+                                                                          1221 * results across the five rounding modes available for the Add
+                                                                          1222 * instruction.
+                                                                          1223 *
+                                                                          1224 ***********************************************************************
+
+
+                                                                          1226 ***********************************************************************
+                                                                          1227 *
+                                                                          1228 * First input test data set, to test operations using non-finite or
+                                                                          1229 * zero inputs.  Member values chosen to validate Figure 19-13 on page
+                                                                          1230 * 19-16 of SA22-7832-10.  Each value in this table is tested against
+                                                                          1231 * every other value in the table.  Ten entries means 100 result sets.
+                                                                          1232 *
+                                                                          1233 ***********************************************************************
+
+
+0000000000000A80                                                          1235 XBFPNFIN DS    0F                Inputs for extended BFP testing
+0000000000000A80  FFFF0000 00000000                                       1236          DC    X'FFFF0000000000000000000000000000'   -inf
+0000000000000A90  C0000000 00000000                                       1237          DC    X'C0000000000000000000000000000000'   -2.0
+0000000000000AA0  80001000 00000000                                       1238          DC    X'80001000000000000000000000000000'   -Dnice
+0000000000000AB0  80000000 00000000                                       1239          DC    X'80000000000000000000000000000000'   -0
+0000000000000AC0  00000000 00000000                                       1240          DC    X'00000000000000000000000000000000'   +0
+0000000000000AD0  00001000 00000000                                       1241          DC    X'00001000000000000000000000000000'   +Dnice
+0000000000000AE0  40000000 00000000                                       1242          DC    X'40000000000000000000000000000000'   +2.0
+0000000000000AF0  7FFF0000 00000000                                       1243          DC    X'7FFF0000000000000000000000000000'   +inf
+0000000000000B00  FFFF8B00 00000000                                       1244          DC    X'FFFF8B00000000000000000000000000'   -QNaN
+0000000000000B10  7FFF0A00 00000000                                       1245          DC    X'7FFF0A00000000000000000000000000'   +SNaN
+                                      000000000000000A  0000000000000001  1246 XBFPNFCT EQU   (*-XBFPNFIN)/16     Count of extended BFP in list
+
+
+
+                                                                          1248 ***********************************************************************
+                                                                          1249 *
+                                                                          1250 * Second input test data set.  These are finite pairs intended to
+                                                                          1251 * trigger overflow, underflow, and inexact exceptions.  Each pair is
+                                                                          1252 * added twice, once non-trappable and once trappable.  Trappable
+                                                                          1253 * overflow or underflow yields a scaled result.  Trappable inexact
+                                                                          1254 * will show whether the Incremented DXC code is returned.
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    35
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1255 *
+                                                                          1256 * The following test cases are required:
+                                                                          1257 * The following test cases are required:
+                                                                          1258 * 1. Overflow
+                                                                          1259 * 2. Underflow - normal inputs
+                                                                          1260 * 3. Underflow - subnormal inputs
+                                                                          1261 * 4. Normal - from subnormal inputs
+                                                                          1262 * 5. Inexact - incremented
+                                                                          1263 * 6. Inexact - truncated
+                                                                          1264 *
+                                                                          1265 ***********************************************************************
+
+
+0000000000000B20                                                          1267 XBFPIN   DS    0F                Inputs for extended BFP finite tests
+                                                                          1268 *
+                                                                          1269 * Overflow on addition
+                                                                          1270 *
+0000000000000B20  7FFFFFFF FFFFFFFF                                       1271          DC    X'7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Nmax
+0000000000000B30  7FFFFFFF FFFFFFFF                                       1272          DC    X'7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Nmax
+                                                                          1273 *
+                                                                          1274 * Underflow from sum of normals.  We will add a small normal to a
+                                                                          1275 * negative smaller normal to generate a subnormal.
+                                                                          1276 *
+0000000000000B40  0001FFFF FFFFFFFF                                       1277          DC    X'0001FFFFFFFFFFFFFFFFFFFFFFFFFFFF'  Very small normal
+0000000000000B50  80010000 00000000                                       1278          DC    X'80010000000000000000000000000000'  Smaller normal
+                                                                          1279 *
+                                                                          1280 * Underflow from sum of subnormals.  We will add two subnormals.
+                                                                          1281 *
+0000000000000B60  00008000 00000000                                       1282          DC    X'00008000000000000000000000000000'  Subnormal, < +Dmax
+0000000000000B70  00000F0F 00000000                                       1283          DC    X'00000F0F000000000000000000000000'  Smaller subnormal
+                                                                          1284 *
+                                                                          1285 * Normal result from sum of subnormals.  We will add two subnormals.
+                                                                          1286 * The result will be greater than +Nmin
+                                                                          1287 *
+0000000000000B80  0000FFFF FFFFFFFF                                       1288          DC    X'0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Dmax
+0000000000000B90  00000000 00000000                                       1289          DC    X'00000000000000000000000000000001'  +Dmin
+                                                                          1290 *                                   ...result will be +Nmin
+                                                                          1291 *
+                                                                          1292 * Add a value to 1.0 such that the added digits are to the right of
+                                                                          1293 * the right-most bit in the stored significand. The result will be
+                                                                          1294 * inexact, and incremented will be determined by the value of the
+                                                                          1295 * bits in the addend.
+                                                                          1296 *
+0000000000000BA0  3FFF0000 00000000                                       1297          DC    X'3FFF0000000000000000000000000000'  +1, aka 1.0b0
+0000000000000BB0  3F8EF000 00000000                                       1298          DC    X'3F8EF000000000000000000000000000'  1.1111b-113
+                                                                          1299 *    ..Above addend is 1.865744633625134732647978631879148339833785...
+                                                                          1300 *                      ...97170865731413869070820510387420654296875E-34
+                                                                          1301 *    ..nearest is away from zero, incremented.
+                                                                          1302 *
+0000000000000BC0  3FFF0000 00000000                                       1303          DC    X'3FFF0000000000000000000000000000'  +1, aka 1.0b0
+0000000000000BD0  3F8DF000 00000000                                       1304          DC    X'3F8DF000000000000000000000000000'  1.1111b-114
+                                                                          1305 *    ..Above addend is 9.328723168125673663239893159395741699168929...
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    36
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1306 *                      ...85854328657069345354102551937103271484375E-35
+                                                                          1307 *    ..nearest is toward zero, truncated
+                                                                          1308 *
+                                      0000000000000006  0000000000000001  1309 XBFPCT   EQU   (*-XBFPIN)/16/2   Count of extended BFP in list
+
+
+
+                                                                          1311 ***********************************************************************
+                                                                          1312 *
+                                                                          1313 * Third input test data set.  These are finite pairs intended to
+                                                                          1314 * test all combinations of rounding mode for the sum and the
+                                                                          1315 * remainder.  Values are chosen to create a requirement to round
+                                                                          1316 * to the target precision after the computation and to generate
+                                                                          1317 * varying results depending on the rounding mode in the FPCR.
+                                                                          1318 *
+                                                                          1319 * The result set will have cases that represent each of the following
+                                                                          1320 *
+                                                                          1321 * 1. Positive, nearest magnitude is toward zero.
+                                                                          1322 * 2. Negative, nearest magnitude is toward zero.
+                                                                          1323 * 3. Positive, nearest magnitude is away from zero.
+                                                                          1324 * 4. Negative, nearest magnitude is away from zero.
+                                                                          1325 * 5. Positive, tie, nearest even has greater magnitude
+                                                                          1326 * 6. Negative, tie, nearest even has greater magnitude
+                                                                          1327 * 7. Positive, tie, nearest even has lower magnitude
+                                                                          1328 * 8. Negative, tie, nearest even has lower magnitude
+                                                                          1329 *
+                                                                          1330 * Round For Shorter precision correctness can be determined from the
+                                                                          1331 * above test cases.
+                                                                          1332 *
+                                                                          1333 ***********************************************************************
+
+
+0000000000000BE0                                                          1335 XBFPINRM DS    0D
+                                                                          1336 *
+                                                                          1337 * Add a value to 1.0 such that the added digits are to the right of
+                                                                          1338 * the right-most bit in the stored significand. The result will be
+                                                                          1339 * inexact, and incremented will be determined by the value of the
+                                                                          1340 * bits in the addend.
+                                                                          1341 *
+0000000000000BE0  3FFF0000 00000000                                       1342          DC    X'3FFF0000000000000000000000000000'  +1, aka +1.0b0
+0000000000000BF0  3F8DFC00 00000000                                       1343          DC    X'3F8DFC00000000000000000000000000'  +1.111111b-114
+0000000000000C00  BFFF0000 00000000                                       1344          DC    X'BFFF0000000000000000000000000000'  -1, aka -1.0b0
+0000000000000C10  BF8DFC00 00000000                                       1345          DC    X'BF8DFC00000000000000000000000000'  -1.111111b-114
+                                                                          1346 *    ..Above addend is 9.554418083483552864769890574542412869310113...
+                                                                          1347 *                  ...6454435273748231338686309754848480224609375E-35
+                                                                          1348 *    ..nearest is toward zero
+                                                                          1349 *
+0000000000000C20  3FFF0000 00000000                                       1350          DC    X'3FFF0000000000000000000000000000'  +1, aka +1.0b0
+0000000000000C30  3F8EFE00 00000000                                       1351          DC    X'3F8EFE00000000000000000000000000'  +1.1111111b-113
+0000000000000C40  BFFF0000 00000000                                       1352          DC    X'BFFF0000000000000000000000000000'  -1, aka -1.0b0
+0000000000000C50  BF8EFE00 00000000                                       1353          DC    X'BF8EFE00000000000000000000000000'  -1.1111111b-113
+                                                                          1354 *    ..Above addend is 1.918406780541973213004978028746704946200062...
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    37
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1355 *                  ...18865204683510228278464637696743011474609375E-34
+                                                                          1356 *    ..nearest is away from zero
+                                                                          1357 *
+0000000000000C60  3FFF0000 00000000                                       1358          DC    X'3FFF0000000000000000000000000000'  +1, aka +1.0b0
+0000000000000C70  3F8E0000 00000000                                       1359          DC    X'3F8E0000000000000000000000000000'  +1.0000b-113
+0000000000000C80  BFFF0000 00000000                                       1360          DC    X'BFFF0000000000000000000000000000'  -1, aka -1.0b0
+0000000000000C90  BF8E0000 00000000                                       1361          DC    X'BF8E0000000000000000000000000000'  -1.0000b-113
+                                                                          1362 *    ..Above addend is 9.629649721936179265279889712924636592690508...
+                                                                          1363 *                  ...241076940976199693977832794189453125E-35
+                                                                          1364 *    ..nearest is a tie, nearest even has lower magnitude
+                                                                          1365 *
+0000000000000CA0  3FFF0000 00000000                                       1366          DC    X'3FFF0000000000000000000000000000'  +1, aka +1.0b0
+0000000000000CB0  3F8F8000 00000000                                       1367          DC    X'3F8F8000000000000000000000000000'  +1.1b-112
+0000000000000CC0  BFFF0000 00000000                                       1368          DC    X'BFFF0000000000000000000000000000'  -1, aka -1.0b0
+0000000000000CD0  BF8F8000 00000000                                       1369          DC    X'BF8F8000000000000000000000000000'  -1.1b-112
+                                                                          1370 *    ..Above addend is 9.629649721936179265279889712924636592690508...
+                                                                          1371 *                  ...241076940976199693977832794189453125E-35
+                                                                          1372 *    ..nearest is a tie, nearest even has greater magnitude
+                                                                          1373 *
+                                      0000000000000008  0000000000000001  1374 XBFPRMCT EQU   (*-XBFPINRM)/16/2  Count of long BFP rounding tests
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    38
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1376 *
+                                                                          1377 *  Locations for results
+                                                                          1378 *
+                                      0000000000001000  0000000000000001  1379 SBFPNFOT EQU   STRTLABL+X'1000'    Integer short non-finite BFP results
+                                                                          1380 *                                  ..room for 110 tests, 100 used
+                                      0000000000001700  0000000000000001  1381 SBFPNFFL EQU   STRTLABL+X'1700'    FPCR flags and DXC from short BFP
+                                                                          1382 *                                  ..room for 110 tests, 100 used
+                                                                          1383 *
+                                      0000000000001E00  0000000000000001  1384 SBFPOUT  EQU   STRTLABL+X'1E00'    Integer short BFP finite results
+                                                                          1385 *                                  ..room for 16 tests, 6 used
+                                      0000000000001F00  0000000000000001  1386 SBFPFLGS EQU   STRTLABL+X'1F00'    FPCR flags and DXC from short BFP
+                                                                          1387 *                                  ..room for 16 tests, 6 used
+                                                                          1388 *
+                                      0000000000002000  0000000000000001  1389 SBFPRMO  EQU   STRTLABL+X'2000'    Short BFP rounding mode test results
+                                                                          1390 *                                  ..Room for 16, 8 used.
+                                      0000000000002300  0000000000000001  1391 SBFPRMOF EQU   STRTLABL+X'2300'    Short BFP rounding mode FPCR results
+                                                                          1392 *                                  ..Room for 16, 8 used.
+                                                                          1393 *                                  ..next location starts at X'2500'
+                                                                          1394 *
+                                      0000000000004000  0000000000000001  1395 LBFPNFOT EQU   STRTLABL+X'4000'    Integer long non-finite BFP results
+                                                                          1396 *                                  ..room for 100 tests, 100 used
+                                      0000000000004D00  0000000000000001  1397 LBFPNFFL EQU   STRTLABL+X'4D00'    FPCR flags and DXC from long BFP
+                                                                          1398 *                                  ..room for 100 tests, 100 used
+                                                                          1399 *
+                                      0000000000005400  0000000000000001  1400 LBFPOUT  EQU   STRTLABL+X'5400'    Integer long BFP finite results
+                                                                          1401 *                                  ..room for 16 tests, 6 used
+                                      0000000000005600  0000000000000001  1402 LBFPFLGS EQU   STRTLABL+X'5600'    FPCR flags and DXC from long BFP
+                                                                          1403 *                                  ..room for 16 tests, 6 used
+                                                                          1404 *
+                                      0000000000005700  0000000000000001  1405 LBFPRMO  EQU   STRTLABL+X'5700'    Long BFP rounding mode test results
+                                                                          1406 *                                  ..Room for 16, 8 used.
+                                      0000000000005C00  0000000000000001  1407 LBFPRMOF EQU   STRTLABL+X'5C00'    Long BFP rounding mode FPCR results
+                                                                          1408 *                                  ..Room for 16, 8 used.
+                                                                          1409 *                                  ..next location starts at X'5E00'
+                                                                          1410 *
+                                      0000000000008000  0000000000000001  1411 XBFPNFOT EQU   STRTLABL+X'8000'    Integer ext'd non-finite BFP results
+                                                                          1412 *                                  ..room for 100 tests, 100 used
+                                      0000000000008D00  0000000000000001  1413 XBFPNFFL EQU   STRTLABL+X'8D00'    FPCR flags and DXC from ext'd BFP
+                                                                          1414 *                                  ..room for 100 tests, 100 used
+                                                                          1415 *
+                                      0000000000009400  0000000000000001  1416 XBFPOUT  EQU   STRTLABL+X'9400'    Extended BFP finite results
+                                                                          1417 *                                  ..room for 16 tests, 6 used
+                                      0000000000009600  0000000000000001  1418 XBFPFLGS EQU   STRTLABL+X'9600'    FPCR flags and DXC from ext'd BFP
+                                                                          1419 *                                  ..room for 16 tests, 6 used
+                                                                          1420 *
+                                      0000000000009700  0000000000000001  1421 XBFPRMO  EQU   STRTLABL+X'9700'    Ext'd BFP rounding mode test results
+                                                                          1422 *                                  ..Room for 16, 8 used.
+                                      0000000000009C00  0000000000000001  1423 XBFPRMOF EQU   STRTLABL+X'9C00'    Ext'd BFP rounding mode FPCR results
+                                                                          1424 *                                  ..Room for 16, 8 used.
+                                                                          1425 *                                  ..next location starts at X'9E00'
+                                                                          1426 *
+                                      0000000000009E00  0000000000000001  1427 ENDLABL  EQU   STRTLABL+X'9E00'
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    39
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                          1428          PADCSECT ENDLABL
+                                                                          1429+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000CE0                                                          1430          END
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    40
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPADD              J    000000    3296    77
+CTLR0               F    000290       4   193   160   161   162
+ENDLABL             U    009E00       1  1427
+FPCMCT              U    000005       1   882   428   639   824
+FPCMODES            C    0008B0       1   876   882   431   642   827
+FPCREGNT            X    000294       4   194   293   313   360   380   433   444   505   524   571   591   644   655   716   768
+                                                829
+FPCREGTR            X    000298       4   195   303   322   370   389   515   533   581   600   729   781
+FPR0                U    000000       1    98
+FPR1                U    000001       1    99   292   294   302   304   312   362   363   373   436   437   504   506   514   516
+                                                573   574   584   647   648   714   717   727   730   771   773   785   833   835
+FPR10               U    00000A       1   108   713   719   726   732   770   775   783   787   832   837
+FPR11               U    00000B       1   109
+FPR12               U    00000C       1   110
+FPR13               U    00000D       1   111
+FPR14               U    00000E       1   112
+FPR15               U    00000F       1   113
+FPR2                U    000002       1   100
+FPR3                U    000003       1   101   715   728   772   834
+FPR4                U    000004       1   102
+FPR5                U    000005       1   103
+FPR6                U    000006       1   104
+FPR7                U    000007       1   105
+FPR8                U    000008       1   106   291   294   295   301   304   305   311   314   315   321   323   324   361   363
+                                                364   371   373   374   381   382   383   390   391   392   435   437   438   446
+                                                447   448   503   506   507   513   516   517   523   525   526   532   534   535
+                                                572   574   575   582   584   585   592   593   594   601   602   603   646   648
+                                                649   657   658   659   712   717   718   725   730   731   769   773   774   782
+                                                785   786   831   835   836
+FPR9                U    000009       1   107
+HARDWAIT            X    000280       8   191   151
+IMAGE               1    000000    3296     0
+LBFPCT              U    000006       1  1143   229
+LBFPF               I    000628       4   565   174
+LBFPFLGS            U    005600       1  1402   232
+LBFPIN              D    0009A0       8  1104  1143   230
+LBFPINRM            F    000A00       4  1169  1205   236
+LBFPNF              H    000572       2   492   172
+LBFPNFCT            U    00000A       1  1084   223
+LBFPNFFL            U    004D00       1  1397   226
+LBFPNFIN            F    000950       4  1073  1084   224
+LBFPNFOT            U    004000       1  1395   225
+LBFPOUT             U    005400       1  1400   231
+LBFPRM              I    0006CE       4   632   176
+LBFPRMCT            U    000008       1  1205   235
+LBFPRMO             U    005700       1  1405   237
+LBFPRMOF            U    005C00       1  1407   238
+LONGF               F    000340       4   228   173
+LONGNF              F    000330       4   222   171
+PCINTCD             H    00008E       2   128   145
+PCNOTDTA            H    00020C       2   148   146
+PCOLDPSW            U    000150       1   130   147
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    41
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PROGCHK             H    000200       2   144   136
+R0                  U    000000       1    79   160   162   297   298   299   307   308   309   317   318   319   326   327   328
+                                                366   367   368   376   377   378   385   386   387   394   395   396   440   441
+                                                442   450   451   452   509   510   511   519   520   521   528   529   530   537
+                                                538   539   577   578   579   587   588   589   596   597   598   605   606   607
+                                                651   652   653   661   662   663   721   722   723   734   735   736   777   778
+                                                779   789   790   791   839   840   841
+R1                  U    000001       1    80   425   431   434   445   636   642   645   656   821   827   830
+R10                 U    00000A       1    89   164   166   168   171   173   175   178   180   182   281   282   287   354   355
+                                                421   422   493   494   499   565   566   632   633   702   703   708   762   763
+                                                817   818
+R11                 U    00000B       1    90
+R12                 U    00000C       1    91   285   336   358   401   426   467   497   547   569   612   637   677   706   744
+                                                766   796   822   855
+R13                 U    00000D       1    92   165   167   169   172   174   176   179   181   183   284   337   357   402   424
+                                                469   496   548   568   613   635   679   705   745   765   798   820   857
+R14                 U    00000E       1    93   149   150   185   186
+R15                 U    00000F       1    94   115
+R2                  U    000002       1    81   281   283   336   354   356   401   421   423   467   493   495   547   565   567
+                                                612   632   634   677   702   704   744   762   764   796   817   819   855
+R3                  U    000003       1    82   281   291   301   311   321   335   354   361   362   371   381   382   390   391
+                                                398   421   435   436   446   447   464   493   503   513   523   532   546   565
+                                                572   573   582   592   593   601   602   609   632   646   647   657   658   675
+                                                702   712   713   725   726   743   762   769   770   771   772   782   783   793
+                                                817   831   832   833   834   853
+R4                  U    000004       1    83   287   333   499   544   708   741
+R5                  U    000005       1    84   287   292   302   312   314   323   330   428   431   457   499   504   514   525
+                                                534   541   639   642   668   708   714   715   727   728   738   824   827   846
+R6                  U    000006       1    85   289   333   501   544   710   741
+R7                  U    000007       1    86   282   295   305   315   324   331   355   364   374   383   392   399   422   438
+                                                448   454   465   494   507   517   526   535   542   566   575   585   594   603
+                                                610   633   649   659   665   703   718   719   731   732   739   763   774   775
+                                                786   787   794   818   836   837   843
+R8                  U    000008       1    87   282   296   299   306   309   316   319   325   328   332   355   365   368   375
+                                                378   384   387   393   396   400   422   439   442   449   452   455   466   494
+                                                508   511   518   521   527   530   536   539   543   566   576   579   586   589
+                                                595   598   604   607   611   633   650   653   660   663   666   676   703   720
+                                                723   733   736   740   763   776   779   788   791   795   818   838   841   844
+                                                854
+R9                  U    000009       1    88   429   457   640   668   825   846
+RMLONGS             F    000350       4   234   175
+RMSHORTS            F    000320       4   216   168
+RMXTNDS             F    000380       4   252   182
+SBFPCT              U    000006       1   983   211
+SBFPF               I    00044A       4   354   167
+SBFPFLGS            U    001F00       1  1386   214
+SBFPIN              F    0008E0       4   944   983   212
+SBFPINRM            F    000910       4  1009  1043   218
+SBFPNF              H    000390       2   280   165
+SBFPNFCT            U    00000A       1   924   205
+SBFPNFFL            U    001700       1  1381   208
+SBFPNFIN            F    0008B8       4   913   924   206
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    42
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SBFPNFOT            U    001000       1  1379   207
+SBFPOUT             U    001E00       1  1384   213
+SBFPRM              I    0004F0       4   421   169
+SBFPRMCT            U    000008       1  1043   217
+SBFPRMO             U    002000       1  1389   219
+SBFPRMOF            U    002300       1  1391   220
+SHORTF              F    000310       4   210   166
+SHORTNF             F    000300       4   204   164
+START               H    000214       2   159   133
+STRTLABL            U    000000       1    78   127   130   132   135   143   203  1379  1381  1384  1386  1389  1391  1395  1397
+                                               1400  1402  1405  1407  1411  1413  1416  1418  1421  1423  1427
+WAITPSW             X    000270       8   190   187
+XBFPCT              U    000006       1  1309   247
+XBFPF               I    0007D6       4   762   181
+XBFPFLGS            U    009600       1  1418   250
+XBFPIN              F    000B20       4  1267  1309   248
+XBFPINRM            D    000BE0       8  1335  1374   254
+XBFPNF              H    00074C       2   701   179
+XBFPNFCT            U    00000A       1  1246   241
+XBFPNFFL            U    008D00       1  1413   244
+XBFPNFIN            F    000A80       4  1235  1246   242
+XBFPNFOT            U    008000       1  1411   243
+XBFPOUT             U    009400       1  1416   249
+XBFPRM              I    00084C       4   817   183
+XBFPRMCT            U    000008       1  1374   253
+XBFPRMO             U    009700       1  1421   255
+XBFPRMOF            U    009C00       1  1423   256
+XTNDF               F    000370       4   246   180
+XTNDNF              F    000360       4   240   178
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    43
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     52   1428
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    44
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   3296  000-CDF  000-CDF
+  Region           3296  000-CDF  000-CDF
+    CSECT  BFPADD  3296  000-CDF  000-CDF
+ASMA Ver. 0.2.0  bfp-016-add.asm: Test IEEE Add                                                     02 Oct 2016 09:24:30  Page    45
+
+   STMT                             FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-016-add.asm
+
+
+** NO ERRORS FOUND **
+
+[1429] MNOTE *,asma detected; no CSECT padding performed
+

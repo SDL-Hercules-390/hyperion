@@ -1,0 +1,1090 @@
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase IEEE CONVERT TO LOGICAL 32
+                                                                             5 *  Test case capability includes ieee exceptions trappable and
+                                                                             6 *  otherwise.  Test results, FPCR flags, DXC, and condition codes are
+                                                                             7 *  saved for all tests.
+                                                                             8 *
+                                                                             9 ***********************************************************************
+
+
+                                                                            11 ***********************************************************************
+                                                                            12 *
+                                                                            13 * Tests the following three conversion instructions
+                                                                            14 *   CONVERT TO LOGICAL (short BFP to uint-32, RRF-e)
+                                                                            15 *   CONVERT TO LOGICAL (long BFP to uint-32, RRF-e)
+                                                                            16 *   CONVERT TO LOGICAL (extended BFP to uint-32, RRF-e)
+                                                                            17 *
+                                                                            18 * Test data is compiled into this program.  The test script that runs
+                                                                            19 * this program can provide alternative test data through Hercules R
+                                                                            20 * commands.
+                                                                            21 *
+                                                                            22 * Test Case Order
+                                                                            23 * 1) Short BFP to uint-32
+                                                                            24 * 2) Short BFP to uint-32 with all rounding modes
+                                                                            25 * 3) Long BFP uint-32
+                                                                            26 * 3) Long BFP uint-32 with all rounding modes
+                                                                            27 * 4) Extended BFP to uint-32
+                                                                            28 * 4) Extended BFP to uint-32 with all rounding modes
+                                                                            29 *
+                                                                            30 * Three input test data sets are provided, one each for short, long,
+                                                                            31 *   and extended precision BFP.  All are converted to uint-32.
+                                                                            32 *
+                                                                            33 * Provided test data is 1, 2, 4, 9, QNaN, SNaN, 4294967295.5.
+                                                                            34 *   The last three values will trigger inexact exceptions when
+                                                                            35 *   converted to uint-32.  The last value is present only in the long
+                                                                            36 *   and extended BFP test cases and should overflow a uint-32.
+                                                                            37 * Provided test data for rounding tests is taken from Table 9-11 on
+                                                                            38 *   page 9-16 of SA22-7832-10.
+                                                                            39 *        -1.5, -0.5, +0.5, +1.5, +2.5, +5.5, +9.5.
+                                                                            40 *   While the table illustrates LOAD FP INTEGER, the same results
+                                                                            41 *   should be generated when creating a uint-32 or uint-64 from BFP.
+                                                                            42 * For long BFP and extended BFP rounding mode tests, ond additional
+                                                                            43 *   test case is included: 4294967294.5.  This case rounds down to a
+                                                                            44 *   maximum uint-32 and rounds up to overflow; it tests the case where
+                                                                            45 *   the input is greater than a maximum uint-32 but rounds to a maximum
+                                                                            46 *   uint-32.  See Table 19-19 on page 19-26 of SA22-7832-10 for details
+                                                                            47 *   on this boundary condition test.
+                                                                            48 *
+                                                                            49 * Also tests the following floating point support instructions
+                                                                            50 *   LOAD  (Short)
+                                                                            51 *   LOAD  (Long)
+                                                                            52 *   LOAD FPC
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            53 *   SRNMB (Set BFP Rounding Mode 2-bit)
+                                                                            54 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                            55 *   STORE (Short)
+                                                                            56 *   STORE (Long)
+                                                                            57 *   STORE FPC
+                                                                            58 *
+                                                                            59 *
+                                                                            60 ***********************************************************************
+
+
+                                                                            62          MACRO
+                                                                            63          PADCSECT &ENDLABL
+                                                                            64 .*
+                                                                            65 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            66 .*  program is not being assembled using asma.  asma generates a core
+                                                                            67 .*  image that is loaded by the loadcore command, and because the
+                                                                            68 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            69 .*  this small effort to keep the core image small.
+                                                                            70 .*
+                                                                            71          AIF   (D'&ENDLABL).GOODPAD
+                                                                            72          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            73          MNOTE *,'No CSECT padding performed'
+                                                                            74          MEXIT
+                                                                            75 .*
+                                                                            76 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                            77          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                            78          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                            79          MEXIT
+                                                                            80 .*
+                                                                            81 .NOPAD   ANOP
+                                                                            82          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                            83          MEND
+                                                                            84 *
+                                                                            85 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                            86 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                            87 *
+                                      0000000000000000  0000000000000A77    88 BFPCVTTL START 0
+                                      0000000000000000  0000000000000001    89 R0       EQU   0
+                                      0000000000000001  0000000000000001    90 R1       EQU   1
+                                      0000000000000002  0000000000000001    91 R2       EQU   2
+                                      0000000000000003  0000000000000001    92 R3       EQU   3
+                                      0000000000000004  0000000000000001    93 R4       EQU   4
+                                      0000000000000005  0000000000000001    94 R5       EQU   5
+                                      0000000000000006  0000000000000001    95 R6       EQU   6
+                                      0000000000000007  0000000000000001    96 R7       EQU   7
+                                      0000000000000008  0000000000000001    97 R8       EQU   8
+                                      0000000000000009  0000000000000001    98 R9       EQU   9
+                                      000000000000000A  0000000000000001    99 R10      EQU   10
+                                      000000000000000B  0000000000000001   100 R11      EQU   11
+                                      000000000000000C  0000000000000001   101 R12      EQU   12
+                                      000000000000000D  0000000000000001   102 R13      EQU   13
+                                      000000000000000E  0000000000000001   103 R14      EQU   14
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      000000000000000F  0000000000000001   104 R15      EQU   15
+                                                                           105 *
+                                                                           106 * Floating Point Register equates to keep the cross reference clean
+                                                                           107 *
+                                      0000000000000000  0000000000000001   108 FPR0     EQU   0
+                                      0000000000000001  0000000000000001   109 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   110 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   111 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   112 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   113 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   114 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   115 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   116 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   117 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   118 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   119 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   120 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   121 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   122 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   123 FPR15    EQU   15
+                                                                           124 *
+0000000000000000                      0000000000000000                     125          USING *,R15
+                                                                           126 *
+                                                                           127 * Above works on real iron (R15=0 after sysclear)
+                                                                           128 * and in z/CMS (R15 points to start of load module)
+                                                                           129 *
+0000000000000000                      0000000000000000  000000000000008E   130          ORG   BFPCVTTL+X'8E'      Program check interrution code
+000000000000008E  0000                                                     131 PCINTCD  DS    H
+                                                                           132 *
+                                      0000000000000150  0000000000000000   133 PCOLDPSW EQU   BFPCVTTL+X'150'     z/Arch Program check old PSW
+                                                                           134 *
+0000000000000090                      0000000000000090  00000000000001A0   135          ORG   BFPCVTTL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        136          DC    X'0000000180000000',AD(START)
+                                                                           137 *
+00000000000001B0                      00000000000001B0  00000000000001D0   138          ORG   BFPCVTTL+X'1D0'     z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        139          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           140 *
+                                                                           141 * Program check routine.  If Data Exception, continue execution at
+                                                                           142 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           143 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           144 * in the FPCR.
+                                                                           145 *
+00000000000001E0                      00000000000001E0  0000000000000200   146          ORG   BFPCVTTL+X'200'
+0000000000000200                                                           147 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   148          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   149          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   150          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           151 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     152          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     153          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F268                             0000000000000268   154          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           156 ***********************************************************************
+                                                                           157 *
+                                                                           158 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           159 *
+                                                                           160 ***********************************************************************
+
+
+0000000000000214  B600 F278                             0000000000000278   162 START    STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+0000000000000218  9604 F279                             0000000000000279   163          OI    CTLR0+1,X'04'  Turn on AFP bit
+000000000000021C  B700 F278                             0000000000000278   164          LCTL  R0,R0,CTLR0    Reload updated CR0
+                                                                           165 *
+                                                                           166 * Short BFP Input testing
+                                                                           167 *
+0000000000000220  41A0 F300                             0000000000000300   168          LA    R10,SHORTS     Point to short BFP test inputs
+0000000000000224  4DD0 F360                             0000000000000360   169          BAS   R13,CLFEBR     Convert values to uint-32 from short BFP
+0000000000000228  41A0 F330                             0000000000000330   170          LA    R10,RMSHORTS   Point to inputs for rounding mode tests
+000000000000022C  4DD0 F3BE                             00000000000003BE   171          BAS   R13,CLFEBRA    Convert using all rounding mode options
+                                                                           172 *
+                                                                           173 * Short BFP Input testing
+                                                                           174 *
+0000000000000230  41A0 F310                             0000000000000310   175          LA    R10,LONGS      Point to long BFP test inputs
+0000000000000234  4DD0 F508                             0000000000000508   176          BAS   R13,CLFDBR     Convert values to uint-32 from long BFP
+0000000000000238  41A0 F340                             0000000000000340   177          LA    R10,RMLONGS    Point to inputs for rounding mode tests
+000000000000023C  4DD0 F566                             0000000000000566   178          BAS   R13,CLFDBRA    Convert using all rounding mode options
+                                                                           179 *
+                                                                           180 * Short BFP Input testing
+                                                                           181 *
+0000000000000240  41A0 F320                             0000000000000320   182          LA    R10,EXTDS      Point to extended BFP test inputs
+0000000000000244  4DD0 F6B0                             00000000000006B0   183          BAS   R13,CLFXBR     Convert values to uint-32 from extended
+0000000000000248  41A0 F350                             0000000000000350   184          LA    R10,RMEXTDS    Point to inputs for rounding mode tests
+000000000000024C  4DD0 F712                             0000000000000712   185          BAS   R13,CLFXBRA    Convert using all rounding mode options
+                                                                           186 *
+0000000000000250  12EE                                                     187          LTR   R14,R14        Return address provided?
+0000000000000252  077E                                                     188          BNZR  R14            ..Yes, return to z/CMS test rig.
+0000000000000254  B2B2 F258                             0000000000000258   189          LPSWE WAITPSW        All done
+                                                                           190 *
+0000000000000258                                                           191          DS    0D             Ensure correct alignment for psw
+0000000000000258  00020000 00000000                                        192 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000268  00020000 00000000                                        193 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           194 *
+0000000000000278  00000000                                                 195 CTLR0    DS    F
+000000000000027C  00000000                                                 196 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000280  F8000000                                                 197 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           198 *
+                                                                           199 * Input values parameter list, four fullwords:
+                                                                           200 *      1) Count,
+                                                                           201 *      2) Address of inputs,
+                                                                           202 *      3) Address to place results, and
+                                                                           203 *      4) Address to place DXC/Flags/cc values.
+                                                                           204 *
+0000000000000284                      0000000000000284  0000000000000300   205          ORG   BFPCVTTL+X'300'
+0000000000000300                                                           206 SHORTS   DS    0F           Inputs for short BFP testing
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000300  00000009                                                 207          DC    A(SBFPCT/4)
+0000000000000304  00000860                                                 208          DC    A(SBFPIN)
+0000000000000308  00001000                                                 209          DC    A(SINTOUT)
+000000000000030C  00001100                                                 210          DC    A(SINTFLGS)
+                                                                           211 *
+0000000000000310                                                           212 LONGS    DS    0F           Inputs for long BFP testing
+0000000000000310  00000009                                                 213          DC    A(LBFPCT/8)
+0000000000000314  000008AC                                                 214          DC    A(LBFPIN)
+0000000000000318  00002000                                                 215          DC    A(LINTOUT)
+000000000000031C  00002100                                                 216          DC    A(LINTFLGS)
+                                                                           217 *
+0000000000000320                                                           218 EXTDS    DS    0F           Inputs for Extended BFP testing
+0000000000000320  00000009                                                 219          DC    A(XBFPCT/16)
+0000000000000324  00000948                                                 220          DC    A(XBFPIN)
+0000000000000328  00003000                                                 221          DC    A(XINTOUT)
+000000000000032C  00003100                                                 222          DC    A(XINTFLGS)
+                                                                           223 *
+0000000000000330  0000000A                                                 224 RMSHORTS DC    A(SBFPRMCT/4)
+0000000000000334  00000884                                                 225          DC    A(SBFPINRM)  Short BFP rounding mode test inputs
+0000000000000338  00001200                                                 226          DC    A(SINTRMO)   Short BFP rounding mode test results
+000000000000033C  00001600                                                 227          DC    A(SINTRMOF)  Short BFP rounding mode test flags
+                                                                           228 *
+0000000000000340  0000000A                                                 229 RMLONGS  DC    A(LBFPRMCT/8)
+0000000000000344  000008F4                                                 230          DC    A(LBFPINRM)  Long BFP rounding mode test inputs
+0000000000000348  00002200                                                 231          DC    A(LINTRMO)   Long BFP rounding mode test results
+000000000000034C  00002600                                                 232          DC    A(LINTRMOF)  Long BFP rounding mode test flags
+                                                                           233 *
+0000000000000350  0000000A                                                 234 RMEXTDS  DC    A(XBFPRMCT/16)
+0000000000000354  000009D8                                                 235          DC    A(XBFPINRM)  Extended BFP rounding mode test inputs
+0000000000000358  00003200                                                 236          DC    A(XINTRMO)   Extended BFP rounding mode test results
+000000000000035C  00003600                                                 237          DC    A(XINTRMOF)  Extended BFP rounding mode test flags
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           239 ***********************************************************************
+                                                                           240 *
+                                                                           241 * Convert short BFP to uint-32 format.  A pair of results is generated
+                                                                           242 * for each input: one with all exceptions non-trappable, and the second
+                                                                           243 * with all exceptions trappable.   The FPCR and condition code is
+                                                                           244 * stored for each result.
+                                                                           245 *
+                                                                           246 ***********************************************************************
+
+
+0000000000000360  9823 A000                             0000000000000000   248 CLFEBR   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000364  9878 A008                             0000000000000008   249          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000368  1222                                                     250          LTR   R2,R2         Any test cases?
+000000000000036A  078D                                                     251          BZR   R13           ..No, return to caller
+000000000000036C  0DC0                                                     252          BASR  R12,0         Set top of loop
+                                                                           253 *
+000000000000036E  7800 3000                             0000000000000000   254          LE    FPR0,0(,R3)   Get short BFP test value
+0000000000000372  B29D F27C                             000000000000027C   255          LFPC  FPCREGNT      Set exceptions non-trappable
+0000000000000376  B39C 0010                                                256          CLFEBR R1,0,FPR0,0  Cvt float in FPR0 to uint-32 in GPR1
+000000000000037A  5010 7000                             0000000000000000   257          ST    R1,0(,R7)     Store int-32 result
+000000000000037E  B29C 8000                             0000000000000000   258          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000382  B222 0010                                                259          IPM   R1            Get condition code and program mask
+0000000000000386  8810 001C                             000000000000001C   260          SRL   R1,28         Isolate CC in low order byte
+000000000000038A  4210 8003                             0000000000000003   261          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           262 *
+000000000000038E  B29D F280                             0000000000000280   263          LFPC  FPCREGTR      Set exceptions trappable
+0000000000000392  1711                                                     264          XR    R1,R1         Clear any residual result in R1
+0000000000000394  0410                                                     265          SPM   R1            Clear out any residual nz condition code
+0000000000000396  B39C 0010                                                266          CLFEBR R1,0,FPR0,0  Cvt float in FPR0 to uint-32 in GPR1
+000000000000039A  5010 7004                             0000000000000004   267          ST    R1,4(,R7)     Store short BFP result
+000000000000039E  B29C 8004                             0000000000000004   268          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000003A2  B222 0010                                                269          IPM   R1            Get condition code and program mask
+00000000000003A6  8810 001C                             000000000000001C   270          SRL   R1,28         Isolate CC in low order byte
+00000000000003AA  4210 8007                             0000000000000007   271          STC   R1,7(,R8)     Save condition code as low byte of FPCR
+                                                                           272 *
+00000000000003AE  4130 3004                             0000000000000004   273          LA    R3,4(,R3)     Point to next input values
+00000000000003B2  4170 7008                             0000000000000008   274          LA    R7,8(,R7)     Point to next int-32 converted value pair
+00000000000003B6  4180 8008                             0000000000000008   275          LA    R8,8(,R8)     Point to next FPCR/CC result area
+00000000000003BA  062C                                                     276          BCTR  R2,R12        Convert next input value.
+00000000000003BC  07FD                                                     277          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           279 ***********************************************************************
+                                                                           280 *
+                                                                           281 * Convert short BFP to integers using each possible rounding mode.
+                                                                           282 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           283 * section is used to keep results sets aligned on a quad-double word.
+                                                                           284 *
+                                                                           285 * The first four tests use rounding modes specified in the FPCR with
+                                                                           286 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
+                                                                           287 * the first two FPCR-controlled tests and SRNMB (3-bit) is used for
+                                                                           288 * the last two To get full coverage of that instruction pair.
+                                                                           289 *
+                                                                           290 * The next six results use instruction-specified rounding modes.
+                                                                           291 *
+                                                                           292 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           293 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           294 * explicitly as a rounding mode in this section.
+                                                                           295 *
+                                                                           296 ***********************************************************************
+
+
+00000000000003BE  9823 A000                             0000000000000000   298 CLFEBRA  LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000003C2  9878 A008                             0000000000000008   299          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000003C6  1222                                                     300          LTR   R2,R2         Any test cases?
+00000000000003C8  078D                                                     301          BZR   R13           ..No, return to caller
+00000000000003CA  0DC0                                                     302          BASR  R12,0         Set top of loop
+                                                                           303 *
+00000000000003CC  7800 3000                             0000000000000000   304          LE    FPR0,0(,R3)    Get short BFP test value
+                                                                           305 *
+                                                                           306 * Test cases using rounding mode specified in the FPCR
+                                                                           307 *
+00000000000003D0  B29D F27C                             000000000000027C   308          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003D4  B299 0001                             0000000000000001   309          SRNM  1             SET FPCR to RZ, towards zero.
+00000000000003D8  B39C 0410                                                310          CLFEBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003DC  5010 7000                             0000000000000000   311          ST    R1,0*4(,R7)   Store uint-32 result
+00000000000003E0  B29C 8000                             0000000000000000   312          STFPC 0(R8)         Store resulting FPCR flags and DXC
+00000000000003E4  B222 0010                                                313          IPM   R1            Get condition code and program mask
+00000000000003E8  8810 001C                             000000000000001C   314          SRL   R1,28         Isolate CC in low order byte
+00000000000003EC  4210 8003                             0000000000000003   315          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           316 *
+00000000000003F0  B29D F27C                             000000000000027C   317          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003F4  B299 0002                             0000000000000002   318          SRNM  2             SET FPCR to RP, to +infinity
+00000000000003F8  B39C 0410                                                319          CLFEBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000003FC  5010 7004                             0000000000000004   320          ST    R1,1*4(,R7)   Store uint-32 result
+0000000000000400  B29C 8004                             0000000000000004   321          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+0000000000000404  B222 0010                                                322          IPM   R1            Get condition code and program mask
+0000000000000408  8810 001C                             000000000000001C   323          SRL   R1,28         Isolate CC in low order byte
+000000000000040C  4210 8007                             0000000000000007   324          STC   R1,(1*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           325 *
+0000000000000410  B29D F27C                             000000000000027C   326          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000414  B2B8 0003                             0000000000000003   327          SRNMB 3             SET FPCR to RM, to -infinity
+0000000000000418  B39C 0410                                                328          CLFEBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+000000000000041C  5010 7008                             0000000000000008   329          ST    R1,2*4(,R7)   Store uint-32 result
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000420  B29C 8008                             0000000000000008   330          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+0000000000000424  B222 0010                                                331          IPM   R1            Get condition code and program mask
+0000000000000428  8810 001C                             000000000000001C   332          SRL   R1,28         Isolate CC in low order byte
+000000000000042C  4210 800B                             000000000000000B   333          STC   R1,(2*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           334 *
+0000000000000430  B29D F27C                             000000000000027C   335          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000434  B2B8 0007                             0000000000000007   336          SRNMB 7             RFS, Prepare for Shorter Precision
+0000000000000438  B39C 0410                                                337          CLFEBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+000000000000043C  5010 700C                             000000000000000C   338          ST    R1,3*4(,R7)   Store uint-32 result
+0000000000000440  B29C 800C                             000000000000000C   339          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+0000000000000444  B222 0010                                                340          IPM   R1            Get condition code and program mask
+0000000000000448  8810 001C                             000000000000001C   341          SRL   R1,28         Isolate CC in low order byte
+000000000000044C  4210 800F                             000000000000000F   342          STC   R1,(3*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           343 *
+                                                                           344 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           345 *
+0000000000000450  B29D F27C                             000000000000027C   346          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000454  B39C 1010                                                347          CLFEBR R1,1,FPR0,B'0000'  RNTA, to nearest, ties away
+0000000000000458  5010 7010                             0000000000000010   348          ST    R1,4*4(,R7)   Store uint-32 result
+000000000000045C  B29C 8010                             0000000000000010   349          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+0000000000000460  B222 0010                                                350          IPM   R1            Get condition code and program mask
+0000000000000464  8810 001C                             000000000000001C   351          SRL   R1,28         Isolate CC in low order byte
+0000000000000468  4210 8013                             0000000000000013   352          STC   R1,(4*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           353 *
+000000000000046C  B29D F27C                             000000000000027C   354          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000470  B39C 3010                                                355          CLFEBR R1,3,FPR0,B'0000'  RFS, prepare for shorter precision
+0000000000000474  5010 7014                             0000000000000014   356          ST    R1,5*4(,R7)   Store uint-32 result
+0000000000000478  B29C 8014                             0000000000000014   357          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+000000000000047C  B222 0010                                                358          IPM   R1            Get condition code and program mask
+0000000000000480  8810 001C                             000000000000001C   359          SRL   R1,28         Isolate CC in low order byte
+0000000000000484  4210 8017                             0000000000000017   360          STC   R1,(5*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           361 *
+0000000000000488  B29D F27C                             000000000000027C   362          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000048C  B39C 4010                                                363          CLFEBR R1,4,FPR0,B'0000'  RNTE, to nearest, ties to even
+0000000000000490  5010 7018                             0000000000000018   364          ST    R1,6*4(,R7)   Store uint-32 result
+0000000000000494  B29C 8018                             0000000000000018   365          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+0000000000000498  B222 0010                                                366          IPM   R1            Get condition code and program mask
+000000000000049C  8810 001C                             000000000000001C   367          SRL   R1,28         Isolate CC in low order byte
+00000000000004A0  4210 801B                             000000000000001B   368          STC   R1,(6*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           369 *
+00000000000004A4  B29D F27C                             000000000000027C   370          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004A8  B39C 5010                                                371          CLFEBR R1,5,FPR0,B'0000'  RZ, toward zero
+00000000000004AC  5010 701C                             000000000000001C   372          ST    R1,7*4(,R7)   Store uint-32 result
+00000000000004B0  B29C 801C                             000000000000001C   373          STFPC 7*4(R8)       Store resulting FPCR flags and DXC
+00000000000004B4  B222 0010                                                374          IPM   R1            Get condition code and program mask
+00000000000004B8  8810 001C                             000000000000001C   375          SRL   R1,28         Isolate CC in low order byte
+00000000000004BC  4210 801F                             000000000000001F   376          STC   R1,(7*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           377 *
+00000000000004C0  B29D F27C                             000000000000027C   378          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004C4  B39C 6010                                                379          CLFEBR R1,6,FPR0,B'0000'  RP, to +inf
+00000000000004C8  5010 7020                             0000000000000020   380          ST    R1,8*4(,R7)   Store uint-32 result
+00000000000004CC  B29C 8020                             0000000000000020   381          STFPC 8*4(R8)       Store resulting FPCR flags and DXC
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004D0  B222 0010                                                382          IPM   R1            Get condition code and program mask
+00000000000004D4  8810 001C                             000000000000001C   383          SRL   R1,28         Isolate CC in low order byte
+00000000000004D8  4210 8023                             0000000000000023   384          STC   R1,(8*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           385 *
+00000000000004DC  B29D F27C                             000000000000027C   386          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004E0  B39C 7010                                                387          CLFEBR R1,7,FPR0,B'0000'  RM, to -inf
+00000000000004E4  5010 7024                             0000000000000024   388          ST    R1,9*4(,R7)   Store uint-32 result
+00000000000004E8  B29C 8024                             0000000000000024   389          STFPC 9*4(R8)       Store resulting FPCR flags and DXC
+00000000000004EC  B222 0010                                                390          IPM   R1            Get condition code and program mask
+00000000000004F0  8810 001C                             000000000000001C   391          SRL   R1,28         Isolate CC in low order byte
+00000000000004F4  4210 8027                             0000000000000027   392          STC   R1,(9*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           393 *
+00000000000004F8  4130 3004                             0000000000000004   394          LA    R3,4(,R3)     Point to next input value
+00000000000004FC  4170 7030                             0000000000000030   395          LA    R7,12*4(,R7)  Point to next uint-32 result set
+0000000000000500  4180 8030                             0000000000000030   396          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
+0000000000000504  062C                                                     397          BCTR  R2,R12        Convert next input value.
+0000000000000506  07FD                                                     398          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           400 ***********************************************************************
+                                                                           401 *
+                                                                           402 * Convert long BFP inputs to uint-32.  A pair of results is generated
+                                                                           403 * for each input: one with all exceptions non-trappable, and the second
+                                                                           404 * with all exceptions trappable.   The FPCR and condition code is
+                                                                           405 * stored for each result.
+                                                                           406 *
+                                                                           407 ***********************************************************************
+
+
+0000000000000508  9823 A000                             0000000000000000   409 CLFDBR   LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000050C  9878 A008                             0000000000000008   410          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000510  1222                                                     411          LTR   R2,R2         Any test cases?
+0000000000000512  078D                                                     412          BZR   R13           ..No, return to caller
+0000000000000514  0DC0                                                     413          BASR  R12,0         Set top of loop
+                                                                           414 *
+0000000000000516  6800 3000                             0000000000000000   415          LD    FPR0,0(,R3)   Get long BFP test value
+000000000000051A  B29D F27C                             000000000000027C   416          LFPC  FPCREGNT      Set exceptions non-trappable
+000000000000051E  B39D 0010                                                417          CLFDBR R1,0,FPR0,0  Cvt float in FPR0 to uint-32 in GPR1
+0000000000000522  5010 7000                             0000000000000000   418          ST    R1,0(,R7)     Store long BFP result
+0000000000000526  B29C 8000                             0000000000000000   419          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000052A  B222 0010                                                420          IPM   R1            Get condition code and program mask
+000000000000052E  8810 001C                             000000000000001C   421          SRL   R1,28         Isolate CC in low order byte
+0000000000000532  4210 8003                             0000000000000003   422          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           423 *
+0000000000000536  B29D F280                             0000000000000280   424          LFPC  FPCREGTR      Set exceptions trappable
+000000000000053A  1711                                                     425          XR    R1,R1         Clear any residual result in R1
+000000000000053C  0410                                                     426          SPM   R1            Clear out any residual nz condition code
+000000000000053E  B39D 0010                                                427          CLFDBR R1,0,FPR0,0  Cvt float in FPR0 to uint-32 in GPR1
+0000000000000542  5010 7004                             0000000000000004   428          ST    R1,4(,R7)     Store int-32 result
+0000000000000546  B29C 8004                             0000000000000004   429          STFPC 4(R8)         Store resulting FPCR flags and DXC
+000000000000054A  B222 0010                                                430          IPM   R1            Get condition code and program mask
+000000000000054E  8810 001C                             000000000000001C   431          SRL   R1,28         Isolate CC in low order byte
+0000000000000552  4210 8007                             0000000000000007   432          STC   R1,7(,R8)     Save condition code as low byte of FPCR
+                                                                           433 *
+0000000000000556  4130 3008                             0000000000000008   434          LA    R3,8(,R3)     Point to next input values
+000000000000055A  4170 7008                             0000000000000008   435          LA    R7,8(,R7)     Point to next uint-32 converted value pair
+000000000000055E  4180 8008                             0000000000000008   436          LA    R8,8(,R8)     Point to next FPCR/CC result area
+0000000000000562  062C                                                     437          BCTR  R2,R12        Convert next input value.
+0000000000000564  07FD                                                     438          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           440 ***********************************************************************
+                                                                           441 *
+                                                                           442 * Convert long BFP to integers using each possible rounding mode.
+                                                                           443 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           444 * section is used to keep results sets aligned on a quad-double word.
+                                                                           445 *
+                                                                           446 * The first four tests use rounding modes specified in the FPCR with
+                                                                           447 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for
+                                                                           448 * thefirst two FPCR-controlled tests and SRNMB (3-bit) is used for
+                                                                           449 * the last two To get full coverage of that instruction pair.
+                                                                           450 *
+                                                                           451 * The next six results use instruction-specified rounding modes.
+                                                                           452 *
+                                                                           453 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           454 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           455 * explicitly as a rounding mode in this section.
+                                                                           456 *
+                                                                           457 ***********************************************************************
+
+
+0000000000000566  9823 A000                             0000000000000000   459 CLFDBRA  LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000056A  9878 A008                             0000000000000008   460          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000056E  1222                                                     461          LTR   R2,R2         Any test cases?
+0000000000000570  078D                                                     462          BZR   R13           ..No, return to caller
+0000000000000572  0DC0                                                     463          BASR  R12,0         Set top of loop
+                                                                           464 *
+0000000000000574  6800 3000                             0000000000000000   465          LD    FPR0,0(,R3)    Get long BFP test value
+                                                                           466 *
+                                                                           467 * Test cases using rounding mode specified in the FPCR
+                                                                           468 *
+0000000000000578  B29D F27C                             000000000000027C   469          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000057C  B299 0001                             0000000000000001   470          SRNM  1             SET FPCR to RZ, towards zero.
+0000000000000580  B39D 0410                                                471          CLFDBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+0000000000000584  5010 7000                             0000000000000000   472          ST    R1,0*4(,R7)   Store uint-32 result
+0000000000000588  B29C 8000                             0000000000000000   473          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000058C  B222 0010                                                474          IPM   R1            Get condition code and program mask
+0000000000000590  8810 001C                             000000000000001C   475          SRL   R1,28         Isolate CC in low order byte
+0000000000000594  4210 8003                             0000000000000003   476          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           477 *
+0000000000000598  B29D F27C                             000000000000027C   478          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000059C  B299 0002                             0000000000000002   479          SRNM  2             SET FPCR to RP, to +infinity
+00000000000005A0  B39D 0410                                                480          CLFDBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000005A4  5010 7004                             0000000000000004   481          ST    R1,1*4(,R7)   Store uint-32 result
+00000000000005A8  B29C 8004                             0000000000000004   482          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+00000000000005AC  B222 0010                                                483          IPM   R1            Get condition code and program mask
+00000000000005B0  8810 001C                             000000000000001C   484          SRL   R1,28         Isolate CC in low order byte
+00000000000005B4  4210 8007                             0000000000000007   485          STC   R1,(1*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           486 *
+00000000000005B8  B29D F27C                             000000000000027C   487          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005BC  B2B8 0003                             0000000000000003   488          SRNMB 3             SET FPCR to RM, to -infinity
+00000000000005C0  B39D 0410                                                489          CLFDBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000005C4  5010 7008                             0000000000000008   490          ST    R1,2*4(,R7)   Store uint-32 result
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005C8  B29C 8008                             0000000000000008   491          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+00000000000005CC  B222 0010                                                492          IPM   R1            Get condition code and program mask
+00000000000005D0  8810 001C                             000000000000001C   493          SRL   R1,28         Isolate CC in low order byte
+00000000000005D4  4210 800B                             000000000000000B   494          STC   R1,(2*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           495 *
+00000000000005D8  B29D F27C                             000000000000027C   496          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005DC  B2B8 0007                             0000000000000007   497          SRNMB 7             RFS, Prepare for Shorter Precision
+00000000000005E0  B39D 0410                                                498          CLFDBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+00000000000005E4  5010 700C                             000000000000000C   499          ST    R1,3*4(,R7)   Store uint-32 result
+00000000000005E8  B29C 800C                             000000000000000C   500          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+00000000000005EC  B222 0010                                                501          IPM   R1            Get condition code and program mask
+00000000000005F0  8810 001C                             000000000000001C   502          SRL   R1,28         Isolate CC in low order byte
+00000000000005F4  4210 800F                             000000000000000F   503          STC   R1,(3*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           504 *
+                                                                           505 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           506 *
+00000000000005F8  B29D F27C                             000000000000027C   507          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005FC  B39D 1010                                                508          CLFDBR R1,1,FPR0,B'0000'  RNTA, to nearest, ties away
+0000000000000600  5010 7010                             0000000000000010   509          ST    R1,4*4(,R7)   Store uint-32 result
+0000000000000604  B29C 8010                             0000000000000010   510          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+0000000000000608  B222 0010                                                511          IPM   R1            Get condition code and program mask
+000000000000060C  8810 001C                             000000000000001C   512          SRL   R1,28         Isolate CC in low order byte
+0000000000000610  4210 8013                             0000000000000013   513          STC   R1,(4*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           514 *
+0000000000000614  B29D F27C                             000000000000027C   515          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000618  B39D 3010                                                516          CLFDBR R1,3,FPR0,B'0000'  RFS, prepare for shorter precision
+000000000000061C  5010 7014                             0000000000000014   517          ST    R1,5*4(,R7)   Store uint-32 result
+0000000000000620  B29C 8014                             0000000000000014   518          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+0000000000000624  B222 0010                                                519          IPM   R1            Get condition code and program mask
+0000000000000628  8810 001C                             000000000000001C   520          SRL   R1,28         Isolate CC in low order byte
+000000000000062C  4210 8017                             0000000000000017   521          STC   R1,(5*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           522 *
+0000000000000630  B29D F27C                             000000000000027C   523          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000634  B39D 4010                                                524          CLFDBR R1,4,FPR0,B'0000'  RNTE, to nearest, ties to even
+0000000000000638  5010 7018                             0000000000000018   525          ST    R1,6*4(,R7)   Store uint-32 result
+000000000000063C  B29C 8018                             0000000000000018   526          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+0000000000000640  B222 0010                                                527          IPM   R1            Get condition code and program mask
+0000000000000644  8810 001C                             000000000000001C   528          SRL   R1,28         Isolate CC in low order byte
+0000000000000648  4210 801B                             000000000000001B   529          STC   R1,(6*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           530 *
+000000000000064C  B29D F27C                             000000000000027C   531          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000650  B39D 5010                                                532          CLFDBR R1,5,FPR0,B'0000'  RZ, toward zero
+0000000000000654  5010 701C                             000000000000001C   533          ST    R1,7*4(,R7)   Store uint-32 result
+0000000000000658  B29C 801C                             000000000000001C   534          STFPC 7*4(R8)       Store resulting FPCR flags and DXC
+000000000000065C  B222 0010                                                535          IPM   R1            Get condition code and program mask
+0000000000000660  8810 001C                             000000000000001C   536          SRL   R1,28         Isolate CC in low order byte
+0000000000000664  4210 801F                             000000000000001F   537          STC   R1,(7*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           538 *
+0000000000000668  B29D F27C                             000000000000027C   539          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000066C  B39D 6010                                                540          CLFDBR R1,6,FPR0,B'0000'  RP, to +inf
+0000000000000670  5010 7020                             0000000000000020   541          ST    R1,8*4(,R7)   Store uint-32 result
+0000000000000674  B29C 8020                             0000000000000020   542          STFPC 8*4(R8)       Store resulting FPCR flags and DXC
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000678  B222 0010                                                543          IPM   R1            Get condition code and program mask
+000000000000067C  8810 001C                             000000000000001C   544          SRL   R1,28         Isolate CC in low order byte
+0000000000000680  4210 8023                             0000000000000023   545          STC   R1,(8*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           546 *
+0000000000000684  B29D F27C                             000000000000027C   547          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000688  B39D 7010                                                548          CLFDBR R1,7,FPR0,B'0000'  RM, to -inf
+000000000000068C  5010 7024                             0000000000000024   549          ST    R1,9*4(,R7)   Store uint-32 result
+0000000000000690  B29C 8024                             0000000000000024   550          STFPC 9*4(R8)       Store resulting FPCR flags and DXC
+0000000000000694  B222 0010                                                551          IPM   R1            Get condition code and program mask
+0000000000000698  8810 001C                             000000000000001C   552          SRL   R1,28         Isolate CC in low order byte
+000000000000069C  4210 8027                             0000000000000027   553          STC   R1,(9*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           554 *
+00000000000006A0  4130 3008                             0000000000000008   555          LA    R3,8(,R3)     Point to next input values
+00000000000006A4  4170 7030                             0000000000000030   556          LA    R7,12*4(,R7)  Point to next long BFP converted values
+00000000000006A8  4180 8030                             0000000000000030   557          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
+00000000000006AC  062C                                                     558          BCTR  R2,R12        Convert next input value.
+00000000000006AE  07FD                                                     559          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           561 ***********************************************************************
+                                                                           562 *
+                                                                           563 * Convert extended BFP to uint-32.  A pair of results is generated
+                                                                           564 * for each input: one with all exceptions non-trappable, and the
+                                                                           565 * second with all exceptions trappable.   The FPCR and condition code
+                                                                           566 * are stored for each result.
+                                                                           567 *
+                                                                           568 ***********************************************************************
+
+
+00000000000006B0  9823 A000                             0000000000000000   570 CLFXBR   LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000006B4  9878 A008                             0000000000000008   571          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000006B8  1222                                                     572          LTR   R2,R2         Any test cases?
+00000000000006BA  078D                                                     573          BZR   R13           ..No, return to caller
+00000000000006BC  0DC0                                                     574          BASR  R12,0         Set top of loop
+                                                                           575 *
+00000000000006BE  6800 3000                             0000000000000000   576          LD    FPR0,0(,R3)   Get extended BFP test value part 1
+00000000000006C2  6820 3008                             0000000000000008   577          LD    FPR2,8(,R3)   Get extended BFP test value part 1
+00000000000006C6  B29D F27C                             000000000000027C   578          LFPC  FPCREGNT      Set exceptions non-trappable
+00000000000006CA  B39E 0010                                                579          CLFXBR R1,0,FPR0,0  Cvt float in FPR0-FPR2 to uint-32 in GPR1
+00000000000006CE  5010 7000                             0000000000000000   580          ST    R1,0(,R7)     Store uint-32 result
+00000000000006D2  B29C 8000                             0000000000000000   581          STFPC 0(R8)         Store resulting FPCR flags and DXC
+00000000000006D6  B222 0010                                                582          IPM   R1            Get condition code and program mask
+00000000000006DA  8810 001C                             000000000000001C   583          SRL   R1,28         Isolate CC in low order byte
+00000000000006DE  4210 8003                             0000000000000003   584          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           585 *
+00000000000006E2  B29D F280                             0000000000000280   586          LFPC  FPCREGTR      Set exceptions trappable
+00000000000006E6  1711                                                     587          XR    R1,R1         Clear any residual result in R1
+00000000000006E8  0410                                                     588          SPM   R1            Clear out any residual nz condition code
+00000000000006EA  B39E 0010                                                589          CLFXBR R1,0,FPR0,0  Cvt float in FPR0-FPR2 to uint-32 in GPR1
+00000000000006EE  5010 7004                             0000000000000004   590          ST    R1,4(,R7)     Store uint-32 result
+00000000000006F2  B29C 8004                             0000000000000004   591          STFPC 4(R8)         Store resulting FPCR flags and DXC
+00000000000006F6  B222 0010                                                592          IPM   R1            Get condition code and program mask
+00000000000006FA  8810 001C                             000000000000001C   593          SRL   R1,28         Isolate CC in low order byte
+00000000000006FE  4210 8007                             0000000000000007   594          STC   R1,7(,R8)     Save condition code as low byte of FPCR
+                                                                           595 *
+0000000000000702  4130 3010                             0000000000000010   596          LA    R3,16(,R3)    Point to next extended BFP input value
+0000000000000706  4170 7008                             0000000000000008   597          LA    R7,8(,R7)     Point to next uint-32 converted value pair
+000000000000070A  4180 8008                             0000000000000008   598          LA    R8,8(,R8)     Point to next FPCR/CC result area
+000000000000070E  062C                                                     599          BCTR  R2,R12        Convert next input value.
+0000000000000710  07FD                                                     600          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           602 ***********************************************************************
+                                                                           603 *
+                                                                           604 * Convert extended BFP to integers using each possible rounding mode.
+                                                                           605 * Ten test results are generated for each input.  A 48-byte test result
+                                                                           606 * section is used to keep results sets aligned on a quad-double word.
+                                                                           607 *
+                                                                           608 * The first four tests use rounding modes specified in the FPCR with
+                                                                           609 * the IEEE Inexact exception supressed.  SRNM (2-bit) is used  for the
+                                                                           610 * first two FPCR-controlled tests and SRNMB (3-bit) is used for the
+                                                                           611 * last two To get full coverage of that instruction pair.
+                                                                           612 *
+                                                                           613 * The next six results use instruction-specified rounding modes.
+                                                                           614 *
+                                                                           615 * The default rounding mode (0 for RNTE) is not tested in this section;
+                                                                           616 * prior tests used the default rounding mode.  RNTE is tested
+                                                                           617 * explicitly as a rounding mode in this section.
+                                                                           618 *
+                                                                           619 ***********************************************************************
+
+
+0000000000000712  9823 A000                             0000000000000000   621 CLFXBRA  LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000716  9878 A008                             0000000000000008   622          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000071A  1222                                                     623          LTR   R2,R2         Any test cases?
+000000000000071C  078D                                                     624          BZR   R13           ..No, return to caller
+000000000000071E  0DC0                                                     625          BASR  R12,0         Set top of loop
+                                                                           626 *
+0000000000000720  6800 3000                             0000000000000000   627          LD    FPR0,0(,R3)   Get extended BFP test value part 1
+0000000000000724  6820 3008                             0000000000000008   628          LD    FPR2,8(,R3)   Get extended BFP test value part 2
+                                                                           629 *
+                                                                           630 * Test cases using rounding mode specified in the FPCR
+                                                                           631 *
+0000000000000728  B29D F27C                             000000000000027C   632          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000072C  B299 0001                             0000000000000001   633          SRNM  1             Set FPCR to RZ, towards zero.
+0000000000000730  B39E 0410                                                634          CLFXBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+0000000000000734  5010 7000                             0000000000000000   635          ST    R1,0*4(,R7)   Store uint-32 result
+0000000000000738  B29C 8000                             0000000000000000   636          STFPC 0(R8)         Store resulting FPCR flags and DXC
+000000000000073C  B222 0010                                                637          IPM   R1            Get condition code and program mask
+0000000000000740  8810 001C                             000000000000001C   638          SRL   R1,28         Isolate CC in low order byte
+0000000000000744  4210 8003                             0000000000000003   639          STC   R1,3(,R8)     Save condition code as low byte of FPCR
+                                                                           640 *
+0000000000000748  B29D F27C                             000000000000027C   641          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000074C  B299 0002                             0000000000000002   642          SRNM  2             SET FPCR to RP, to +infinity
+0000000000000750  B39E 0410                                                643          CLFXBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+0000000000000754  5010 7004                             0000000000000004   644          ST    R1,1*4(,R7)   Store uint-32 result
+0000000000000758  B29C 8004                             0000000000000004   645          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+000000000000075C  B222 0010                                                646          IPM   R1            Get condition code and program mask
+0000000000000760  8810 001C                             000000000000001C   647          SRL   R1,28         Isolate CC in low order byte
+0000000000000764  4210 8007                             0000000000000007   648          STC   R1,(1*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           649 *
+0000000000000768  B29D F27C                             000000000000027C   650          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000076C  B2B8 0003                             0000000000000003   651          SRNMB 3             SET FPCR to RM, to -infinity
+0000000000000770  B39E 0410                                                652          CLFXBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000774  5010 7008                             0000000000000008   653          ST    R1,2*4(,R7)   Store uint-32 result
+0000000000000778  B29C 8008                             0000000000000008   654          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+000000000000077C  B222 0010                                                655          IPM   R1            Get condition code and program mask
+0000000000000780  8810 001C                             000000000000001C   656          SRL   R1,28         Isolate CC in low order byte
+0000000000000784  4210 800B                             000000000000000B   657          STC   R1,(2*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           658 *
+0000000000000788  B29D F27C                             000000000000027C   659          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000078C  B2B8 0007                             0000000000000007   660          SRNMB 7             RFS, Prepare for Shorter Precision
+0000000000000790  B39E 0410                                                661          CLFXBR R1,0,FPR0,B'0100'  FPCR ctl'd rounding, inexact masked
+0000000000000794  5010 700C                             000000000000000C   662          ST    R1,3*4(,R7)   Store uint-32 result
+0000000000000798  B29C 800C                             000000000000000C   663          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+000000000000079C  B222 0010                                                664          IPM   R1            Get condition code and program mask
+00000000000007A0  8810 001C                             000000000000001C   665          SRL   R1,28         Isolate CC in low order byte
+00000000000007A4  4210 800F                             000000000000000F   666          STC   R1,(3*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           667 *
+                                                                           668 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           669 *
+00000000000007A8  B29D F27C                             000000000000027C   670          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000007AC  B39E 1010                                                671          CLFXBR R1,1,FPR0,B'0000'  RNTA, to nearest, ties away
+00000000000007B0  5010 7010                             0000000000000010   672          ST    R1,4*4(,R7)   Store uint-32 result
+00000000000007B4  B29C 8010                             0000000000000010   673          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+00000000000007B8  B222 0010                                                674          IPM   R1            Get condition code and program mask
+00000000000007BC  8810 001C                             000000000000001C   675          SRL   R1,28         Isolate CC in low order byte
+00000000000007C0  4210 8013                             0000000000000013   676          STC   R1,(4*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           677 *
+00000000000007C4  B29D F27C                             000000000000027C   678          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000007C8  B39E 3010                                                679          CLFXBR R1,3,FPR0,B'0000'  RFS, prepare for shorter precision
+00000000000007CC  5010 7014                             0000000000000014   680          ST    R1,5*4(,R7)   Store uint-32 result
+00000000000007D0  B29C 8014                             0000000000000014   681          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+00000000000007D4  B222 0010                                                682          IPM   R1            Get condition code and program mask
+00000000000007D8  8810 001C                             000000000000001C   683          SRL   R1,28         Isolate CC in low order byte
+00000000000007DC  4210 8017                             0000000000000017   684          STC   R1,(5*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           685 *
+00000000000007E0  B29D F27C                             000000000000027C   686          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000007E4  B39E 4010                                                687          CLFXBR R1,4,FPR0,B'0000'  RNTE, to nearest, ties to even
+00000000000007E8  5010 7018                             0000000000000018   688          ST    R1,6*4(,R7)   Store uint-32 result
+00000000000007EC  B29C 8018                             0000000000000018   689          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+00000000000007F0  B222 0010                                                690          IPM   R1            Get condition code and program mask
+00000000000007F4  8810 001C                             000000000000001C   691          SRL   R1,28         Isolate CC in low order byte
+00000000000007F8  4210 801B                             000000000000001B   692          STC   R1,(6*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           693 *
+00000000000007FC  B29D F27C                             000000000000027C   694          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000800  B39E 5010                                                695          CLFXBR R1,5,FPR0,B'0000'  RZ, toward zero
+0000000000000804  5010 701C                             000000000000001C   696          ST    R1,7*4(,R7)   Store uint-32 result
+0000000000000808  B29C 801C                             000000000000001C   697          STFPC 7*4(R8)       Store resulting FPCR flags and DXC
+000000000000080C  B222 0010                                                698          IPM   R1            Get condition code and program mask
+0000000000000810  8810 001C                             000000000000001C   699          SRL   R1,28         Isolate CC in low order byte
+0000000000000814  4210 801F                             000000000000001F   700          STC   R1,(7*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           701 *
+0000000000000818  B29D F27C                             000000000000027C   702          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000081C  B39E 6010                                                703          CLFXBR R1,6,FPR0,B'0000'  RP, to +inf
+0000000000000820  5010 7020                             0000000000000020   704          ST    R1,8*4(,R7)   Store uint-32 result
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000824  B29C 8020                             0000000000000020   705          STFPC 8*4(R8)       Store resulting FPCR flags and DXC
+0000000000000828  B222 0010                                                706          IPM   R1            Get condition code and program mask
+000000000000082C  8810 001C                             000000000000001C   707          SRL   R1,28         Isolate CC in low order byte
+0000000000000830  4210 8023                             0000000000000023   708          STC   R1,(8*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           709 *
+0000000000000834  B29D F27C                             000000000000027C   710          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000838  B39E 7010                                                711          CLFXBR R1,7,FPR0,B'0000'  RM, to -inf
+000000000000083C  5010 7024                             0000000000000024   712          ST    R1,9*4(,R7)   Store uint-32 result
+0000000000000840  B29C 8024                             0000000000000024   713          STFPC 9*4(R8)       Store resulting FPCR flags and DXC
+0000000000000844  B222 0010                                                714          IPM   R1            Get condition code and program mask
+0000000000000848  8810 001C                             000000000000001C   715          SRL   R1,28         Isolate CC in low order byte
+000000000000084C  4210 8027                             0000000000000027   716          STC   R1,(9*4)+3(,R8)  Save condition code as low byte of FPCR
+                                                                           717 *
+0000000000000850  4130 3010                             0000000000000010   718          LA    R3,16(,R3)    Point to next input value
+0000000000000854  4170 7030                             0000000000000030   719          LA    R7,12*4(,R7)  Point to next long BFP converted values
+0000000000000858  4180 8030                             0000000000000030   720          LA    R8,12*4(,R8)  Point to next FPCR/CC result area
+000000000000085C  062C                                                     721          BCTR  R2,R12        Convert next input value.
+000000000000085E  07FD                                                     722          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           724 ***********************************************************************
+                                                                           725 *
+                                                                           726 * Floating point inputs for Convert From Fixed testing.  The same test
+                                                                           727 * values in the appropriate input format are used for short, long,
+                                                                           728 * and extended format tests.  The last four values should generate
+                                                                           729 * exceptions.
+                                                                           730 *
+                                                                           731 ***********************************************************************
+
+
+                                                                           733 *
+                                                                           734 * Inputs for short BFP testing of trap and non-trap results
+                                                                           735 *
+0000000000000860                                                           736 SBFPIN   DS    0F            Inputs for short BFP testing
+0000000000000860  3F800000                                                 737          DC    X'3F800000'    +1.0
+0000000000000864  40000000                                                 738          DC    X'40000000'    +2.0
+0000000000000868  40800000                                                 739          DC    X'40800000'    +4.0
+000000000000086C  7F810000                                                 740          DC    X'7F810000'    SNaN
+0000000000000870  7FC10000                                                 741          DC    X'7FC10000'    QNaN
+0000000000000874  4F800000                                                 742          DC    X'4F800000'    Max uint-32 + 1 rounded to short BFP
+                                                                           743 *                             ...4 294 967 296
+0000000000000878  4F7FFFFF                                                 744          DC    X'4F7FFFFF'    Max uint-32 value representable
+                                                                           745 *                             ...in short bfp (4 294 967 040)
+000000000000087C  3F400000                                                 746          DC    X'3F400000'    +0.75
+0000000000000880  3E800000                                                 747          DC    X'3E800000'    +0.25
+                                      0000000000000024  0000000000000001   748 SBFPCT   EQU   *-SBFPIN     Count of short BFP in list * 4
+                                                                           749 *
+                                                                           750 * Inputs for short BFP exhaustive rounding mode testing.
+                                                                           751 *
+0000000000000884                                                           752 SBFPINRM DS    0F
+0000000000000884  BFC00000                                                 753          DC    X'BFC00000'    -1.5
+0000000000000888  BF000000                                                 754          DC    X'BF000000'    -0.5
+000000000000088C  3F000000                                                 755          DC    X'3F000000'    +0.5
+0000000000000890  3FC00000                                                 756          DC    X'3FC00000'    +1.5
+0000000000000894  40200000                                                 757          DC    X'40200000'    +2.5
+0000000000000898  40B00000                                                 758          DC    X'40B00000'    +5.5
+000000000000089C  41180000                                                 759          DC    X'41180000'    +9.5
+00000000000008A0  4F7FFFFF                                                 760          DC    X'4F7FFFFF'    largest uint-32 value representable
+                                                                           761 *                             ...in short bfp (4 294 967 040)
+00000000000008A4  3F400000                                                 762          DC    X'3F400000'    +0.75
+00000000000008A8  3E800000                                                 763          DC    X'3E800000'    +0.25
+                                      0000000000000028  0000000000000001   764 SBFPRMCT EQU   *-SBFPINRM   Count of short BFP for rounding tests * 4
+                                                                           765 *
+                                                                           766 * Inputs for long BFP testing of trap and non-trap results
+                                                                           767 *
+00000000000008AC                                                           768 LBFPIN   DS    0F                Inputs for long BFP testing
+00000000000008AC  3FF00000 00000000                                        769          DC    X'3FF0000000000000'    +1.0
+00000000000008B4  40000000 00000000                                        770          DC    X'4000000000000000'    +2.0
+00000000000008BC  40100000 00000000                                        771          DC    X'4010000000000000'    +4.0
+00000000000008C4  7FF01000 00000000                                        772          DC    X'7FF0100000000000'    SNaN
+00000000000008CC  7FF81000 00000000                                        773          DC    X'7FF8100000000000'    QNaN
+00000000000008D4  41EFFFFF FFF00000                                        774          DC    X'41EFFFFFFFF00000'    max uint-32 + 0.5
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           775 *                                     ...4 294 967 295.5
+                                                                           776 *                                     Rounds up on RNTE, overflows
+00000000000008DC  41EFFFFF FFECCCCD                                        777          DC    X'41EFFFFFFFECCCCD'    max uint-32 + 0.4
+                                                                           778 *                                     ...4 294 967 295.4, exceeds
+                                                                           779 *                                     uint-32, but rounds down to fit
+00000000000008E4  3FE80000 00000000                                        780          DC    X'3FE8000000000000'    +0.75
+00000000000008EC  3FD00000 00000000                                        781          DC    X'3FD0000000000000'    +0.25
+                                      0000000000000048  0000000000000001   782 LBFPCT   EQU   *-LBFPIN      Count of long BFP in list * 8
+                                                                           783 *
+                                                                           784 * Inputs for long BFP exhaustive rounding mode testing.
+                                                                           785 *
+00000000000008F4                                                           786 LBFPINRM DS    0F
+00000000000008F4  BFF80000 00000000                                        787          DC    X'BFF8000000000000'    -1.5
+00000000000008FC  BFE00000 00000000                                        788          DC    X'BFE0000000000000'    -0.5
+0000000000000904  3FE00000 00000000                                        789          DC    X'3FE0000000000000'    +0.5
+000000000000090C  3FF80000 00000000                                        790          DC    X'3FF8000000000000'    +1.5
+0000000000000914  40040000 00000000                                        791          DC    X'4004000000000000'    +2.5
+000000000000091C  40160000 00000000                                        792          DC    X'4016000000000000'    +5.5
+0000000000000924  40230000 00000000                                        793          DC    X'4023000000000000'    +9.5
+000000000000092C  41EFFFFF FFF00000                                        794          DC    X'41EFFFFFFFF00000'    max uint-32 + 0.5
+                                                                           795 *                                     ...4 294 967 295.5
+0000000000000934  3FE80000 00000000                                        796          DC    X'3FE8000000000000'    +0.75
+000000000000093C  3FD00000 00000000                                        797          DC    X'3FD0000000000000'    +0.25
+                                      0000000000000050  0000000000000001   798 LBFPRMCT EQU   *-LBFPINRM   Count of long BFP for rounding tests * 8
+                                                                           799 *
+                                                                           800 * Inputs for short BFP testing of trap and non-trap results
+                                                                           801 *
+0000000000000948                                                           802 XBFPIN   DS    0D                Inputs for long BFP testing
+0000000000000948  3FFF0000 00000000                                        803          DC    X'3FFF0000000000000000000000000000'    +1.0
+0000000000000958  40000000 00000000                                        804          DC    X'40000000000000000000000000000000'    +2.0
+0000000000000968  40010000 00000000                                        805          DC    X'40010000000000000000000000000000'    +4.0
+0000000000000978  7FFF0100 00000000                                        806          DC    X'7FFF0100000000000000000000000000'    SNaN
+0000000000000988  7FFF8100 00000000                                        807          DC    X'7FFF8100000000000000000000000000'    QNaN
+0000000000000998  401EFFFF FFFF0000                                        808          DC    X'401EFFFFFFFF00000000000000000000'    max uint-32+0.5
+                                                                           809 *                                     ...4 294 967 295.5
+                                                                           810 *                                     Rounds up on RNTE, overflows
+00000000000009A8  401EFFFF FFFECCCC                                        811          DC    X'401EFFFFFFFECCCCCCCCCCCCCCCCCCCD'    max uint-32+0.4
+                                                                           812 *                                     ...4 294 967 295.4, exceeds
+                                                                           813 *                                     uint-32, but rounds down to fit
+00000000000009B8  3FFE8000 00000000                                        814          DC    X'3FFE8000000000000000000000000000'         0.75
+00000000000009C8  3FFD0000 00000000                                        815          DC    X'3FFD0000000000000000000000000000'         0.25
+                                      0000000000000090  0000000000000001   816 XBFPCT   EQU   *-XBFPIN     Count of extended BFP in list * 16
+                                                                           817 *
+                                                                           818 * Inputs for extended BFP exhaustive rounding mode testing.
+                                                                           819 *
+00000000000009D8                                                           820 XBFPINRM DS    0D
+00000000000009D8  BFFF8000 00000000                                        821          DC    X'BFFF8000000000000000000000000000'   -1.5
+00000000000009E8  BFFE0000 00000000                                        822          DC    X'BFFE0000000000000000000000000000'   -0.5
+00000000000009F8  3FFE0000 00000000                                        823          DC    X'3FFE0000000000000000000000000000'   +0.5
+0000000000000A08  3FFF8000 00000000                                        824          DC    X'3FFF8000000000000000000000000000'   +1.5
+0000000000000A18  40004000 00000000                                        825          DC    X'40004000000000000000000000000000'   +2.5
+0000000000000A28  40016000 00000000                                        826          DC    X'40016000000000000000000000000000'   +5.5
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000A38  40023000 00000000                                        827          DC    X'40023000000000000000000000000000'   +9.5
+0000000000000A48  401EFFFF FFFF0000                                        828          DC    X'401EFFFFFFFF00000000000000000000'   max uint-32 + 0.5
+                                                                           829 *                                                (+4 294 967 295.5)
+                                                                           830 *    Above is always inexact, and may overflow based on rounding mode
+0000000000000A58  3FFE8000 00000000                                        831          DC    X'3FFE8000000000000000000000000000'         0.75
+0000000000000A68  3FFD0000 00000000                                        832          DC    X'3FFD0000000000000000000000000000'         0.25
+                                      00000000000000A0  0000000000000001   833 XBFPRMCT EQU   *-XBFPINRM   Count of extended BFP rounding tests * 16
+                                                                           834 *
+                                                                           835 *  Locations for results
+                                                                           836 *
+                                      0000000000001000  0000000000000000   837 SINTOUT  EQU   BFPCVTTL+X'1000'    uint-32 values from short BFP
+                                                                           838 *                                  ..7 pairs used, room for 16
+                                      0000000000001100  0000000000000000   839 SINTFLGS EQU   BFPCVTTL+X'1100'    FPCR flags and DXC from short BFP
+                                                                           840 *                                  ..7 pairs used, room for 16
+                                      0000000000001200  0000000000000000   841 SINTRMO  EQU   BFPCVTTL+X'1200'    Short rounding mode test results
+                                                                           842 *                                  ..8 sets used, room for 20
+                                      0000000000001600  0000000000000000   843 SINTRMOF EQU   BFPCVTTL+X'1600'    Short rounding mode FPCR contents
+                                                                           844 *                                  ..8 sets used, room for 20
+                                                                           845 *
+                                      0000000000002000  0000000000000000   846 LINTOUT  EQU   BFPCVTTL+X'2000'    uint-32 values from long BFP
+                                                                           847 *                                  ..7 pairs used, room for 16
+                                      0000000000002100  0000000000000000   848 LINTFLGS EQU   BFPCVTTL+X'2100'    FPCR flags and DXC from long BFP
+                                                                           849 *                                  ..7 pairs used, room for 16
+                                      0000000000002200  0000000000000000   850 LINTRMO  EQU   BFPCVTTL+X'2200'    Long rounding mode test results
+                                                                           851 *                                  ..8 sets used, room for 20
+                                      0000000000002600  0000000000000000   852 LINTRMOF EQU   BFPCVTTL+X'2600'    Long rounding mode FPCR contents
+                                                                           853 *                                  ..8 sets used, room for 20
+                                                                           854 *
+                                      0000000000003000  0000000000000000   855 XINTOUT  EQU   BFPCVTTL+X'3000'    uint-32 values from extended BFP
+                                                                           856 *                                  ..7 pairs used, room for 16
+                                      0000000000003100  0000000000000000   857 XINTFLGS EQU   BFPCVTTL+X'3100'    FPCR flags and DXC from extended BFP
+                                                                           858 *                                  ..7 pairs used, room for 16
+                                      0000000000003200  0000000000000000   859 XINTRMO  EQU   BFPCVTTL+X'3200'    Extended rounding mode test results
+                                                                           860 *                                  ..8 sets used, room for 20
+                                      0000000000003600  0000000000000000   861 XINTRMOF EQU   BFPCVTTL+X'3600'    Extended rounding mode FPCR contents
+                                                                           862 *                                  ..8 sets used, room for 20
+                                                                           863 *
+                                      0000000000003A00  0000000000000000   864 ENDLABL  EQU   BFPCVTTL+X'3A00'    end of test program
+                                                                           865          PADCSECT ENDLABL          pad csect for non-asma assembly
+                                                                           866+         MNOTE *,'asma detected; no CSECT padding performed'
+0000000000000A78                                                           867          END
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    21
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPCVTTL            J    000000    2680    88  130  133  135  138  146  205  837  839  841  843  846  848  850  852  855  857  859
+                                               861  864
+CLFDBR              I    000508       4   409  176
+CLFDBRA             I    000566       4   459  178
+CLFEBR              I    000360       4   248  169
+CLFEBRA             I    0003BE       4   298  171
+CLFXBR              I    0006B0       4   570  183
+CLFXBRA             I    000712       4   621  185
+CTLR0               F    000278       4   195  162  163  164
+ENDLABL             U    003A00       0   864
+EXTDS               F    000320       4   218  182
+FPCREGNT            X    00027C       4   196  255  308  317  326  335  346  354  362  370  378  386  416  469  478  487  496  507
+                                               515  523  531  539  547  578  632  641  650  659  670  678  686  694  702  710
+FPCREGTR            X    000280       4   197  263  424  586
+FPR0                U    000000       1   108  254  256  266  304  310  319  328  337  347  355  363  371  379  387  415  417  427
+                                               465  471  480  489  498  508  516  524  532  540  548  576  579  589  627  634  643
+                                               652  661  671  679  687  695  703  711
+FPR1                U    000001       1   109
+FPR10               U    00000A       1   118
+FPR11               U    00000B       1   119
+FPR12               U    00000C       1   120
+FPR13               U    00000D       1   121
+FPR14               U    00000E       1   122
+FPR15               U    00000F       1   123
+FPR2                U    000002       1   110  577  628
+FPR3                U    000003       1   111
+FPR4                U    000004       1   112
+FPR5                U    000005       1   113
+FPR6                U    000006       1   114
+FPR7                U    000007       1   115
+FPR8                U    000008       1   116
+FPR9                U    000009       1   117
+HARDWAIT            X    000268       8   193  154
+IMAGE               1    000000    2680     0
+LBFPCT              U    000048       1   782  213
+LBFPIN              F    0008AC       4   768  782  214
+LBFPINRM            F    0008F4       4   786  798  230
+LBFPRMCT            U    000050       1   798  229
+LINTFLGS            U    002100       0   848  216
+LINTOUT             U    002000       0   846  215
+LINTRMO             U    002200       0   850  231
+LINTRMOF            U    002600       0   852  232
+LONGS               F    000310       4   212  175
+PCINTCD             H    00008E       2   131  148
+PCNOTDTA            H    00020C       2   151  149
+PCOLDPSW            U    000150       0   133  150
+PROGCHK             H    000200       2   147  139
+R0                  U    000000       1    89  162  164
+R1                  U    000001       1    90  256  257  259  260  261  264  265  266  267  269  270  271  310  311  313  314  315
+                                               319  320  322  323  324  328  329  331  332  333  337  338  340  341  342  347  348
+                                               350  351  352  355  356  358  359  360  363  364  366  367  368  371  372  374  375
+                                               376  379  380  382  383  384  387  388  390  391  392  417  418  420  421  422  425
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    22
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+                                               426  427  428  430  431  432  471  472  474  475  476  480  481  483  484  485  489
+                                               490  492  493  494  498  499  501  502  503  508  509  511  512  513  516  517  519
+                                               520  521  524  525  527  528  529  532  533  535  536  537  540  541  543  544  545
+                                               548  549  551  552  553  579  580  582  583  584  587  588  589  590  592  593  594
+                                               634  635  637  638  639  643  644  646  647  648  652  653  655  656  657  661  662
+                                               664  665  666  671  672  674  675  676  679  680  682  683  684  687  688  690  691
+                                               692  695  696  698  699  700  703  704  706  707  708  711  712  714  715  716
+R10                 U    00000A       1    99  168  170  175  177  182  184  248  249  298  299  409  410  459  460  570  571  621
+                                               622
+R11                 U    00000B       1   100
+R12                 U    00000C       1   101  252  276  302  397  413  437  463  558  574  599  625  721
+R13                 U    00000D       1   102  169  171  176  178  183  185  251  277  301  398  412  438  462  559  573  600  624
+                                               722
+R14                 U    00000E       1   103  152  153  187  188
+R15                 U    00000F       1   104  125
+R2                  U    000002       1    91  248  250  276  298  300  397  409  411  437  459  461  558  570  572  599  621  623
+                                               721
+R3                  U    000003       1    92  248  254  273  298  304  394  409  415  434  459  465  555  570  576  577  596  621
+                                               627  628  718
+R4                  U    000004       1    93
+R5                  U    000005       1    94
+R6                  U    000006       1    95
+R7                  U    000007       1    96  249  257  267  274  299  311  320  329  338  348  356  364  372  380  388  395  410
+                                               418  428  435  460  472  481  490  499  509  517  525  533  541  549  556  571  580
+                                               590  597  622  635  644  653  662  672  680  688  696  704  712  719
+R8                  U    000008       1    97  249  258  261  268  271  275  299  312  315  321  324  330  333  339  342  349  352
+                                               357  360  365  368  373  376  381  384  389  392  396  410  419  422  429  432  436
+                                               460  473  476  482  485  491  494  500  503  510  513  518  521  526  529  534  537
+                                               542  545  550  553  557  571  581  584  591  594  598  622  636  639  645  648  654
+                                               657  663  666  673  676  681  684  689  692  697  700  705  708  713  716  720
+R9                  U    000009       1    98
+RMEXTDS             A    000350       4   234  184
+RMLONGS             A    000340       4   229  177
+RMSHORTS            A    000330       4   224  170
+SBFPCT              U    000024       1   748  207
+SBFPIN              F    000860       4   736  748  208
+SBFPINRM            F    000884       4   752  764  225
+SBFPRMCT            U    000028       1   764  224
+SHORTS              F    000300       4   206  168
+SINTFLGS            U    001100       0   839  210
+SINTOUT             U    001000       0   837  209
+SINTRMO             U    001200       0   841  226
+SINTRMOF            U    001600       0   843  227
+START               I    000214       4   162  136
+WAITPSW             X    000258       8   192  189
+XBFPCT              U    000090       1   816  219
+XBFPIN              D    000948       8   802  816  220
+XBFPINRM            D    0009D8       8   820  833  235
+XBFPRMCT            U    0000A0       1   833  234
+XINTFLGS            U    003100       0   857  222
+XINTOUT             U    003000       0   855  221
+XINTRMO             U    003200       0   859  236
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+XINTRMOF            U    003600       0   861  237
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    24
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     63   865
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    25
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     2680  000-A77  000-A77
+  Region             2680  000-A77  000-A77
+    CSECT  BFPCVTTL  2680  000-A77  000-A77
+ASMA Ver. 0.2.0  ieee-cvttolog.asm: Test IEEE Convert To Logical (uint-32)                          01 Sep 2016 10:11:17  Page    26
+
+   STMT                               FILE NAME
+
+1     C:\Users\srorso\Documents\GitHub\hyperion\tests\bfp-004-cvttolog.asm
+
+
+** NO ERRORS FOUND **
+
+[866] MNOTE *,asma detected; no CSECT padding performed
+
