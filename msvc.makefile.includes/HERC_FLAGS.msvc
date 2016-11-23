@@ -26,6 +26,8 @@ cflags = $(cflags) /WX
 cflags = $(cflags) /FAcs /Fa$(ASMDIR)\$(NULL)
 !ENDIF
 
+rcflags = $(rcflags) /nologo
+
 # PRERELEASE Flag support
 !IFDEF PRERELEASE
 rcflags = $(rcflags) -D PRERELEASE=1
