@@ -138,7 +138,6 @@ autoconf/compile
 /Hercules_VS*.opensdf
 /Hercules_VS*.sdf
 /Hercules_VS*.suo
-/msvc.*
 *.vcxproj.user
 .vs
 *.VC.db
