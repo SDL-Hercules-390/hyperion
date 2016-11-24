@@ -1,0 +1,54 @@
+# ***************************************************************************
+#     EXT_PKGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright "Fish" (David B. Trout)
+# --------------------------------------------------------------------------
+#
+#  Sets additional Hercules-related compiler/linker flags & #defines
+#  needed by external packages.
+#
+# ***************************************************************************
+
+!IFDEF _WIN64
+!IFDEF NODEBUG
+arch_suffix = 64
+!ELSE
+arch_suffix = 64d
+!ENDIF
+!ELSE
+!IFDEF NODEBUG
+arch_suffix = 32
+!ELSE
+arch_suffix = 32d
+!ENDIF
+!ENDIF
+
+
+#--------------
+#  decNumber
+#--------------
+
+decNumber_pkgname  =  decNumber
+decNumber_pkgdir   =  $(decNumber_pkgname)
+decNumber_libname  =  $(decNumber_pkgname)$(arch_suffix)
+decNumber_incdir   =  $(decNumber_pkgdir)\include
+decNumber_libdir   =  $(decNumber_pkgdir)\lib
+decNumber_libpath  =  $(decNumber_libdir)\$(decNumber_libname).lib
+
+LIBS    =  $(LIBS)        "$(decNumber_libpath)"
+cflags  =  $(cflags)  /I  "$(decNumber_incdir)"
+
+
+#--------------
+#  SoftFloat
+#--------------
+
+softfloat_pkgname  =  softfloat
+softfloat_pkgdir   =  $(softfloat_pkgname)
+softfloat_libname  =  $(softfloat_pkgname)$(arch_suffix)
+softfloat_incdir   =  $(softfloat_pkgdir)\include
+softfloat_libdir   =  $(softfloat_pkgdir)\lib
+softfloat_libpath  =  $(softfloat_libdir)\$(softfloat_libname).lib
+
+LIBS    =  $(LIBS)        "$(softfloat_libpath)"
+cflags  =  $(cflags)  /I  "$(softfloat_incdir)"
