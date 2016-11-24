@@ -25,7 +25,7 @@
 #define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
 #define HERCULES_COPYRIGHT        "(C) Copyright 1999-2016"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
-#define HERCULES_PRODUCT_URL      "http://hercules-390.github.io/html"
+#define HERCULES_PRODUCT_URL      "http://fish-git.github.io/html"
 #define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"
 
 #if defined(PRERELEASE)
