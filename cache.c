@@ -14,11 +14,26 @@
 
 #include "hercules.h"
 
-static CACHEBLK cacheblk[CACHE_MAX_INDEX];
+/*-------------------------------------------------------------------*/
+/* The master cache blocks array and master global caching lock      */
+/*-------------------------------------------------------------------*/
+static CACHEBLK  cacheblk[ CACHE_MAX_INDEX ];
+static LOCK      cache_glock;
 
 /*-------------------------------------------------------------------*/
 /* Public functions                                                  */
 /*-------------------------------------------------------------------*/
+DLL_EXPORT int cache_ginit()
+{
+    int  ix;
+    for (ix=0; ix < CACHE_MAX_INDEX; ix++)
+        memset( &cacheblk[ix], 0, sizeof( CACHEBLK ));
+    return initialize_lock( &cache_glock );
+}
+
+#define OBTAIN_GLOBAL_CACHE_LOCK()      obtain_lock(  &cache_glock )
+#define RELEASE_GLOBAL_CACHE_LOCK()     release_lock( &cache_glock )
+
 int cache_nbr (int ix)
 {
     if (cache_check_ix(ix)) return -1;
@@ -368,75 +383,130 @@ DLL_EXPORT int cachestats_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    for (ix = 0; ix < CACHE_MAX_INDEX; ix++) {
-        if (cacheblk[ix].magic != CACHE_MAGIC) {
+    OBTAIN_GLOBAL_CACHE_LOCK();
+
+    for (ix = 0; ix < CACHE_MAX_INDEX; ix++)
+    {
+        if (cacheblk[ix].magic != CACHE_MAGIC)
+        {
             MSGBUF(buf, "Cache[%d] ....... not created", ix);
             WRMSG(HHC02294, "I", buf);
             continue;
         }
+
         MSGBUF( buf, "Cache............ %10d", ix);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "nbr ............. %10d", cacheblk[ix].nbr);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "busy ............ %10d", cacheblk[ix].busy);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "busy%% ........... %10d",cache_busy_percent(ix));
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "empty ........... %10d", cacheblk[ix].empty);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "waiters ......... %10d", cacheblk[ix].waiters);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "waits ........... %10d", cacheblk[ix].waits);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "buf size ........ %10"PRId64, cacheblk[ix].size);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "hits ............ %10"PRId64, cacheblk[ix].hits);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "fast hits ....... %10"PRId64, cacheblk[ix].fasthits);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "misses .......... %10"PRId64, cacheblk[ix].misses);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "hit%% ............ %10d", cache_hit_percent(ix));
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "age ............. %10"PRId64, cacheblk[ix].age);
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "last adjusted ... %s", cacheblk[ix].atime == 0 ? "none\n" : ctime(&cacheblk[ix].atime));
         buf[strlen(buf)-1] = '\0';
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "last wait ....... %s", cacheblk[ix].wtime == 0 ? "none\n" : ctime(&cacheblk[ix].wtime));
         buf[strlen(buf)-1] = '\0';
         WRMSG(HHC02294, "I", buf);
+
         MSGBUF( buf, "adjustments ..... %10d", cacheblk[ix].adjusts);
         WRMSG(HHC02294, "I", buf);
 
         if (argc > 1)
-          for (i = 0; i < cacheblk[ix].nbr; i++)
-          {
-            MSGBUF( buf, "[%4d] %16.16"PRIx64" %8.8x %10p %6d %10"PRId64,
-              i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
-              cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
-              cacheblk[ix].cache[i].age);
-            WRMSG(HHC02294, "I", buf);
-          }
+        {
+            for (i = 0; i < cacheblk[ix].nbr; i++)
+            {
+                MSGBUF( buf, "[%4d] %16.16"PRIx64" %8.8x %10p %6d %10"PRId64,
+                    i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
+                    cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
+                    cacheblk[ix].cache[i].age);
+                WRMSG(HHC02294, "I", buf);
+            }
+        }
     }
+
+    RELEASE_GLOBAL_CACHE_LOCK();
     return 0;
 }
 
 /*-------------------------------------------------------------------*/
 /* Private functions                                                 */
 /*-------------------------------------------------------------------*/
-static int cache_create (int ix)
+static int cache_destroy_locked (int ix)
 {
-    cache_destroy (ix);
+    int i;
+    if (cacheblk[ix].magic == CACHE_MAGIC)
+    {
+        destroy_lock (&cacheblk[ix].lock);
+        destroy_condition (&cacheblk[ix].waitcond);
+
+        if (cacheblk[ix].cache)
+        {
+            for (i = 0; i < cacheblk[ix].nbr; i++)
+                cache_release(ix, i, CACHE_FREEBUF);
+
+            free (cacheblk[ix].cache);
+        }
+    }
+    memset(&cacheblk[ix], 0, sizeof(CACHEBLK));
+    return 0;
+}
+
+static int cache_create_locked( int ix )
+{
+    cache_destroy_locked (ix);
     cacheblk[ix].magic = CACHE_MAGIC;
-//FIXME See the note in cache.h about CACHE_DEFAULT_L2_NBR
-    cacheblk[ix].nbr = ix != CACHE_L2 ? CACHE_DEFAULT_NBR : CACHE_DEFAULT_L2_NBR;
+
+    // FIXME: See the note in cache.h about CACHE_DEFAULT_L2_NBR
+
+    cacheblk[ix].nbr = ix != CACHE_L2 ? CACHE_DEFAULT_NBR
+                                      : CACHE_DEFAULT_L2_NBR;
+
     cacheblk[ix].empty = cacheblk[ix].nbr;
+
     initialize_lock (&cacheblk[ix].lock);
     initialize_condition (&cacheblk[ix].waitcond);
+
     cacheblk[ix].cache = calloc (cacheblk[ix].nbr, sizeof(CACHE));
-    if (cacheblk[ix].cache == NULL) {
-        WRMSG (HHC00011, "E", "cache()", ix, (int)(cacheblk[ix].nbr * (int)sizeof(CACHE)), errno, strerror(errno));
+
+    if (cacheblk[ix].cache == NULL)
+    {
+        // "Function %s failed; cache %d size %d: [%02d] %s"
+        WRMSG (HHC00011, "E", "cache()", ix,
+            (int)(cacheblk[ix].nbr * (int)sizeof(CACHE)),
+            errno, strerror(errno));
         return -1;
     }
     return 0;
@@ -444,18 +514,24 @@ static int cache_create (int ix)
 
 static int cache_destroy (int ix)
 {
-    int i;
-    if (cacheblk[ix].magic == CACHE_MAGIC) {
-        destroy_lock (&cacheblk[ix].lock);
-        destroy_condition (&cacheblk[ix].waitcond);
-        if (cacheblk[ix].cache) {
-            for (i = 0; i < cacheblk[ix].nbr; i++)
-                cache_release(ix, i, CACHE_FREEBUF);
-            free (cacheblk[ix].cache);
-        }
+    int rc;
+    OBTAIN_GLOBAL_CACHE_LOCK();
+    {
+        rc = cache_destroy_locked(ix);
     }
-    memset(&cacheblk[ix], 0, sizeof(CACHEBLK));
-    return 0;
+    RELEASE_GLOBAL_CACHE_LOCK();
+    return rc;
+}
+
+static int cache_create (int ix)
+{
+    int rc;
+    OBTAIN_GLOBAL_CACHE_LOCK();
+    {
+        rc = cache_create_locked(ix);
+    }
+    RELEASE_GLOBAL_CACHE_LOCK();
+    return rc;
 }
 
 static int cache_check_ix(int ix)
@@ -466,10 +542,14 @@ static int cache_check_ix(int ix)
 
 static int cache_check_cache(int ix)
 {
-    if (cache_check_ix(ix)
-     || (cacheblk[ix].magic != CACHE_MAGIC && cache_create(ix)))
-        return -1;
-    return 0;
+    int rc;
+    OBTAIN_GLOBAL_CACHE_LOCK();
+    {
+        rc = cache_check_ix(ix) ||
+            (cacheblk[ix].magic != CACHE_MAGIC && cache_create_locked(ix));
+    }
+    RELEASE_GLOBAL_CACHE_LOCK();
+    return rc;
 }
 
 static int cache_check(int ix, int i)

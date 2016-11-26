@@ -864,6 +864,9 @@ int     rc;
     InitializeListHead   ( &sysblk.stape_status_link  );
 #endif /* defined(OPTION_SCSI_TAPE) */
 
+    /* Initialize dasd caching (cache.h/cache.c) */
+    cache_ginit();
+
     if (sysblk.scrtest)
     {
         // "Hercules is running in test mode."

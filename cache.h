@@ -7,6 +7,7 @@
 
 /*-------------------------------------------------------------------
   Description:
+
     Manages multiple caches in a multi-threaded environment.  A cache
     is dynamically created and destroyed.  It's size or number of
     entries is also dynamically determined.  A cache entry contains
@@ -14,13 +15,16 @@
     busy or not, and a `buf' which is a pointer to the cached object.
 
   Cache entry:
+
     The structure of a cache entry is:
+
       U64       key;
       U32       flag;
       int       len;
       void     *buf;
       int       value;
       U64       age;
+
     The first 8 bits of the flag indicates if the entry is `busy' or
     not.  If any of the first 8 bits are non-zero then the entry is
     considered `busy' and will not be stolen or otherwise reused.
@@ -28,6 +32,7 @@
   APIs:
 
     General query functions:
+
       int         cache_nbr(int ix); [0]
                   Number of entries
 
@@ -67,6 +72,7 @@
                       indicate an error circumstance.
 
     Entry specific functions:
+
       U64         cache_getkey(int ix, int i); [0]
                   Return key for the specified cache entry
 
@@ -109,6 +115,7 @@
                       does not correspond to date or time
 
     Locking functions:
+
       int         cache_lock(int ix);
                   Obtain the lock for cache `ix'.  If the cache does
                   not exist then it will be created.  Generally, the
@@ -122,6 +129,7 @@
                   Release the cache lock
 
     Search functions:
+
       int         cache_lookup(int ix, U64 key, int *o);
                   Search cache `ix' for entry matching `key'.
                   If a non-NULL pointer `o' is provided, then the
@@ -140,6 +148,12 @@
                   value then the scan is terminated.
 
     Other functions:
+
+      init        cache_ginit();
+                  Global caching initialization function. Must be
+                  called once and only once at startup/initialization
+                  before any other caching functions are called.
+
       int         cache_wait(int ix);
                   Wait for a non-busy cache entry to become available.
                   Typically called after `cache_lookup' was
@@ -259,6 +273,9 @@ typedef struct _CACHEBLK {              /* Cache header              */
 /*-------------------------------------------------------------------*/
 /* Functions                                                         */
 /*-------------------------------------------------------------------*/
+CCH_DLL_IMPORT int cache_ginit();
+CCH_DLL_IMPORT int cachestats_cmd(int argc, char *argv[], char *cmdline);
+
 int         cache_nbr(int ix);
 int         cache_busy(int ix);
 int         cache_empty(int ix);
@@ -287,7 +304,6 @@ int         cache_getlen(int ix, int i);
 int         cache_getval(int ix, int i);
 int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
-CCH_DLL_IMPORT int  cachestats_cmd(int argc, char *argv[], char *cmdline);
 
 #ifdef _CACHE_C_
 static int  cache_create (int ix);
