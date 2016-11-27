@@ -7,6 +7,75 @@
 *  tests.
 *
 ***********************************************************************
+         SPACE 2
+***********************************************************************
+*
+*                       bfp-001-divtoint.asm 
+*
+*        This assembly-language source file is part of the
+*        Hercules Decimal Floating Point Validation Package 
+*                        by Stephen R. Orso
+*
+* Copyright 2016 by Stephen R Orso.  All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in
+*    the documentation and/or other materials provided  with the
+*    distribution.
+*
+* 3. The name of the author may not be used to endorse or promote
+*    products derived from this software without specific prior written
+*    permission.
+*
+* DISCLAMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS"
+* AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+* THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+* PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+* HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+* EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+* PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*
+***********************************************************************
+         SPACE 2
+*
+*Outstanding Issues:
+* - 'A' versions of instructions are not tested.  Space for these added
+*   results has not been allowed for in the results areas. Eight 
+*   additional results are needed per input pair.  
+* - Initial execution on real hardware shows no inexact / truncated on 
+*   underflow; not sure this case can be created on Add.  Finite 
+*   rounding mode test cases must be reviewed.  
+* - The quantum exception is not tested.  This is only available in the 
+*   'A' mode instructions, and only the finite tests will detect a 
+*   quantum trap.  This has implications for the test case selection 
+*   and the selection of the instruction used for the test.  Note: the
+*   M4 rounding mode used with the 'A' instructions must be in the 
+*   range 8-15.  
+* - Note that the test case values selected for the rounding mode tests
+*   will never trigger the quantum flag.  
+*
+* - If Quantum exceptions can be created, they will be tested in the
+*   Finite tests.  
+* - A fourth test run will perform pathlength validation on the M4 
+*   Rounding Mode tests, rather than run 16 additional tests on each of
+*   8 (at present) rounding mode test pairs.  A pair of tests is
+*   sufficient: a positive RNTE odd and a negative RNTE even.  (Or the
+*   other way around.)
+*
+*
+*
+***********************************************************************
           SPACE 2
 ***********************************************************************
 *
