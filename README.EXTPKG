@@ -4,7 +4,8 @@
 
                               OVERVIEW
 
-Hercules 4.0 Hyperion links with several "external package" static libraries.
+This version of Hercules 4.0 Hyperion links with several "external package"
+static libraries.
 
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
@@ -19,7 +20,7 @@ Each external package is built separately from the Hercules emulator and then
 "installed" into the appropriate Hercules repository subdirectory.  Building
 Hercules itself should not change.
 
-At present, the only external packages that Hercules 4.0 Hyperion links with
+At present, the only external packages this Hercules 4.0 Hyperion links with
 are the "decNumber" and "SoftFloat" packages.  Over time additional Hercules
 functionality will be moved out of the emulator into their own separately
 maintained and built external package repositories, eventually reducing the
