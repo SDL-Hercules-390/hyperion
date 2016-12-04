@@ -147,6 +147,7 @@ HDLSHD *shdent;
 DLL_EXPORT char *hdl_setpath(char *path, int flag)
 {
     char    pathname[MAX_PATH];         /* pathname conversion */
+    char    abspath[MAX_PATH];          /* pathname conversion */
 
     if (path == NULL)
         return hdl_modpath;             /* return module path to caller */
@@ -158,7 +159,16 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
         return NULL;
     }
 
-    hostpath(pathname, path, sizeof(pathname));
+    // Convert path to host format
+    hostpath( pathname, path, sizeof (pathname ));
+
+    // Convert path to absolute path
+    if (!realpath( pathname, abspath ))
+    {
+        // "HDL: error in function %s: %s"
+        WRMSG( HHC01511, "E", "realpath()", strerror( errno ));
+        return NULL;
+    }
 
     if (flag)
     {
@@ -166,7 +176,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
         {
             if (!hdl_arg_p)
             {
-                free(hdl_modpath);
+                free( hdl_modpath );
             }
             else
             {
@@ -181,13 +191,14 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     else
     {
         hdl_arg_p = TRUE;
-        if(hdl_modpath)
-            free(hdl_modpath);
+
+        if (hdl_modpath)
+            free( hdl_modpath );
     }
 
-    hdl_modpath = strdup(pathname);
+    hdl_modpath = strdup( abspath );
 
-    if (MLVL(VERBOSE))
+    if (MLVL( VERBOSE ))
         // "HDL: loadable module directory is %s"
         WRMSG( HHC01508, "I", hdl_modpath );
 
