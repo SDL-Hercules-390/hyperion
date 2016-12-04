@@ -1980,8 +1980,12 @@ static int ARCH_DEP(cmpsc_vstore)(struct ec *ec, BYTE *buf, unsigned len)
 
 #if !defined( NOT_HERC )        // (building Hercules?)
 
-/* Dependency  section  is  in  hdlmain.c;  FreeBSD  does not like a */
-/* duplicate.  jph 2016-11-05.                                       */
+HDL_DEPENDENCY_SECTION;
+{
+    HDL_DEPENDENCY( HERCULES );
+    HDL_DEPENDENCY( REGS );
+}
+END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
