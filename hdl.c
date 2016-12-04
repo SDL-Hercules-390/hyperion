@@ -105,6 +105,7 @@ DLL_EXPORT void hdl_shut (void)
 HDLSHD *shdent;
 
     if(MLVL(DEBUG))
+        // "HDL: begin shutdown sequence"
         WRMSG( HHC01500, "I" );
 
     hdl_sdip = TRUE;
@@ -116,17 +117,20 @@ HDLSHD *shdent;
 
         {
             if(MLVL(DEBUG))
+                // "HDL: calling %s"
                 WRMSG( HHC01501, "I", shdent->shdname );
 
             (shdent->shdcall) (shdent->shdarg);
 
             if(MLVL(DEBUG))
+                // "HDL: calling %s complete"
                 WRMSG( HHC01502, "I", shdent->shdname );
         }
         free(shdent);
     }
 
         if(MLVL(DEBUG))
+            // "HDL: shutdown sequence complete"
             WRMSG( HHC01504, "I" );
 }
 
@@ -149,6 +153,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
 
     if ( strlen(path) > MAX_PATH )
     {
+        // "HDL: path name length %d exceeds maximum of %d"
         WRMSG( HHC01505, "E", (int)strlen(path), MAX_PATH );
         return NULL;
     }
@@ -354,6 +359,7 @@ int len;
 
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
+        // "HDL: dll type = %s, name = %s, flags = (%s, %s)"
         WRMSG( HHC01531, "I"
             ,(dllent->flags & HDL_LOAD_MAIN)       ? "main"     : "load"
             ,dllent->name
@@ -364,6 +370,7 @@ int len;
             if((flags & HDL_LIST_ALL)
               || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
             {
+                // "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
                 WRMSG( HHC01532, "I"
                     ,modent->name
                     ,modent->count
@@ -377,6 +384,7 @@ int len;
             len = 0;
             for(hndent = dllent->hndent; hndent; hndent = hndent->next)
                 len += snprintf(buf + len, sizeof(buf) - len - 1, " %s",hndent->name);
+            // "HDL:  devtype(s) =%s"
             WRMSG( HHC01533, "I", buf );
 
         }
@@ -399,6 +407,7 @@ int len;
                 if(insent->archflags & HDL_INSTARCH_900)
                     len += snprintf(buf + len, sizeof(buf) - len - 1, ", archmode = " _ARCH_900_NAME);
 #endif
+                // "HDL:  instruction = %s, opcode = %4.4X%s"
                 WRMSG( HHC01534, "I"
                     ,insent->instname
                     ,insent->opcode
@@ -418,6 +427,7 @@ HDLDEP *depent;
     for(depent = hdl_depend;
       depent;
       depent = depent->next)
+        // "HDL: dependency %s version %s size %d"
         WRMSG( HHC01535,"I",depent->name,depent->version,depent->size );
 }
 
@@ -456,12 +466,14 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
+            // "HDL: dependency check failed for %s, version %s expected %s"
             WRMSG( HHC01509, "I",name, version, depent->version );
             return -1;
         }
 
         if(size != depent->size)
         {
+            // "HDL: dependency check failed for %s, size %d expected %d"
             WRMSG( HHC01510, "I", name, size, depent->size );
             return -1;
         }
@@ -503,6 +515,7 @@ void *fep;
         {
             if(!(modent = malloc(sizeof(MODENT))))
             {
+                // "HDL: error in function %s: %s"
                 WRMSG( HHC01511, "E", "malloc()", strerror(errno) );
                 return NULL;
             }
@@ -598,6 +611,7 @@ static void hdl_term (void *unused _HDL_UNUSED)
 DLLENT *dllent;
 
     if(MLVL(DEBUG))
+        // "HDL: begin termination sequence"
         WRMSG( HHC01512, "I" );
 
     /* Call all final routines, in reverse load order */
@@ -606,16 +620,19 @@ DLLENT *dllent;
         if(dllent->hdlfini)
         {
             if(MLVL(DEBUG))
+                // "HDL: calling module cleanup routine %s"
                 WRMSG( HHC01513, "I", dllent->name );
 
             (dllent->hdlfini)();
 
             if(MLVL(DEBUG))
+                // "HDL: module cleanup routine %s complete"
                 WRMSG( HHC01514, "I", dllent->name );
         }
     }
 
     if(MLVL(DEBUG))
+        // "HDL: termination sequence complete"
         WRMSG( HHC01515, "I" );
 }
 
@@ -634,6 +651,7 @@ MODENT *modent;
 
     if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
     {
+        // "HDL: unable to open dll %s: %s"
         WRMSG( HHC01516, "E", dllent->name, dlerror() );
         free(dllent);
         return -1;
@@ -643,6 +661,7 @@ MODENT *modent;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
+        // "HDL: no dependency section in %s: %s"
         WRMSG( HHC01517, "E", dllent->name, dlerror() );
         free(dllent);
         return -1;
@@ -669,6 +688,7 @@ MODENT *modent;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
+            // "HDL: dependency check failed for module %s"
             WRMSG( HHC01518, "E", dllent->name );
         }
     }
@@ -862,6 +882,7 @@ char *modname;
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
         {
+            // "HDL: module %s already loaded"
             WRMSG( HHC01519, "E", dllent->name );
             return -1;
         }
@@ -869,6 +890,7 @@ char *modname;
 
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
+        // "HDL: error in function %s: %s"
         WRMSG( HHC01511, "E", "malloc()", strerror(errno) );
         return -1;
     }
@@ -878,6 +900,7 @@ char *modname;
     if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
+            // "HDL: unable to open dll %s: %s"
             WRMSG( HHC01516, "E", name, dlerror() );
         free(dllent);
         return -1;
@@ -887,6 +910,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
+        // "HDL: no dependency section in %s: %s"
         WRMSG( HHC01517, "E", dllent->name, dlerror() );
         dlclose(dllent->dll);
         free(dllent);
@@ -897,6 +921,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
+            // "HDL: dll %s is duplicate of %s"
             WRMSG( HHC01520, "E", dllent->name, tmpdll->name );
             dlclose(dllent->dll);
             free(dllent);
@@ -926,6 +951,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
+            // "HDL: dependency check failed for module %s"
             WRMSG( HHC01518, "E", dllent->name );
             if(!(flags & HDL_LOAD_FORCE))
             {
@@ -998,6 +1024,7 @@ char *modname;
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
                 release_lock(&hdl_lock);
+                // "HDL: unloading of module %s not allowed"
                 WRMSG( HHC01521, "E", (*dllent)->name );
                 return -1;
             }
@@ -1008,6 +1035,7 @@ char *modname;
                         if(hnd->hnd == dev->hnd)
                         {
                             release_lock(&hdl_lock);
+                            // "HDL: module %s bound to device %1d:%04X"
                             WRMSG( HHC01522, "E",(*dllent)->name, SSID_TO_LCSS(dev->ssid), dev->devnum );
                             return -1;
                         }
@@ -1020,6 +1048,7 @@ char *modname;
                 if((rc = ((*dllent)->hdlfini)()))
                 {
                     release_lock(&hdl_lock);
+                    // "HDL: unload of module %s rejected by final section"
                     WRMSG( HHC01523, "E", (*dllent)->name );
                     return rc;
                 }
@@ -1090,6 +1119,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
+    // "HDL: module %s not found"
     WRMSG( HHC01524, "E", modname );
 
     return -1;
