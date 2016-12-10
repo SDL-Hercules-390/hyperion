@@ -175,6 +175,25 @@
 
 
 ::-----------------------------------------------------------------------------
+::                              tempfn
+::-----------------------------------------------------------------------------
+:tempfn
+
+  setlocal
+  set "var_name=%~1"
+  set "file_ext=%~2"
+  set "%var_name%="
+  set "@="
+  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
+    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
+      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%random%%file_ext%"
+    )
+  )
+  endlocal && set "%var_name%=%@%"
+  %return%
+
+
+::-----------------------------------------------------------------------------
 ::                             fullpath
 ::-----------------------------------------------------------------------------
 :fullpath
@@ -197,15 +216,16 @@
 :calc_mttof
 
   @REM  'mttof' is the maximum test timeout factor (runtest script statement)
-  @REM  'msto' is the maximum scripting timeout (i.e. script pause statement)
+  @REM  'msto'  is the maximum scripting timeout (i.e. script pause statement)
 
   setlocal
   set "mttof="
   set "msto=300.0"
-  echo WScript.Echo Eval(WScript.Arguments(0)) > %wfn%.vbs
-  for /f %%i in ('cscript //nologo %wfn%.vbs "(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"') do set mttof=%%i
-  for /f %%i in ('cscript //nologo %wfn%.vbs "Int(10.0 * %mttof%) / 10.0"') do set mttof=%%i
-  del %wfn%.vbs
+  call :tempfn                                    calc_mttof_vbs    .vbs
+  echo WScript.Echo Eval(WScript.Arguments(0)) > %calc_mttof_vbs%
+  for /f %%i in ('cscript //nologo               %calc_mttof_vbs% "(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"') do set mttof=%%i
+  for /f %%i in ('cscript //nologo               %calc_mttof_vbs% "Int(10.0 * %mttof%) / 10.0"')                                      do set mttof=%%i
+  del                                            %calc_mttof_vbs%
   endlocal && set "mttof=%mttof%"
   %return%
 
@@ -806,14 +826,14 @@
 
   if not defined ttof %skip%
 
-  echo If %ttof% ^< 1.0 Or %ttof% ^> %mttof% Then   >  %wfn%.vbs
-  echo Wscript.Echo "0"                             >> %wfn%.vbs
-  echo Else                                         >> %wfn%.vbs
-  echo Wscript.Echo "1"                             >> %wfn%.vbs
-  echo End If                                       >> %wfn%.vbs
-
-  for /f %%i in ('cscript //nologo %wfn%.vbs 2^>^&1') do set ok=%%i
-  del %wfn%.vbs
+  call :tempfn                                          check_mttof_vbs    .vbs
+  echo If %ttof% ^< 1.0 Or %ttof% ^> %mttof% Then   >  %check_mttof_vbs%
+  echo Wscript.Echo "0"                             >> %check_mttof_vbs%
+  echo Else                                         >> %check_mttof_vbs%
+  echo Wscript.Echo "1"                             >> %check_mttof_vbs%
+  echo End If                                       >> %check_mttof_vbs%
+  for /f %%i in ('cscript //nologo                     %check_mttof_vbs% 2^>^&1') do set ok=%%i
+  del                                                  %check_mttof_vbs%
   %TRACE% "mttof=%mttof%, ttof=%ttof%: ok=%ok%"
 
   if not "%ok%" == "1" (
