@@ -34,6 +34,7 @@ to the BUILDING document in each package's source code repository.
 
 For more information on each external package please refer to each of their
 README.XXXXX documents as well as the detailed documentation contained in
-each of their repositories. The URL for each is each README.XXXX document.
+each of their repositories. The URL for each external package's repository
+is in each of their corresponding README.XXXX documents.
 
 -------------------------------------------------------------------------------
