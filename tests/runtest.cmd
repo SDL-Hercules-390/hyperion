@@ -175,6 +175,23 @@
 
 
 ::-----------------------------------------------------------------------------
+::                             fullpath
+::-----------------------------------------------------------------------------
+:fullpath
+
+  set "@=%path%"
+  set "path=.;%path%"
+  set "#=%~$PATH:1"
+  set "path=%@%"
+  if defined # (
+    if not "%~2" == "" (
+      set "%~2=%#%"
+    )
+  )
+  %return%
+
+
+::-----------------------------------------------------------------------------
 ::                           calc_mttof
 ::-----------------------------------------------------------------------------
 :calc_mttof
@@ -832,6 +849,15 @@
   %TRACE%.
   if defined DEBUG goto :exitnow
 
+  @REM  Convert tests diretory to full path
+
+  call :fullpath "%tdir%" fp_tdir
+  if not defined # (
+    echo ERROR: Could not convert "%tdir%" to full path. 1>&2
+    set /a "rc=1"
+    %exit%
+  )
+
   goto :begin
 
 
@@ -841,6 +867,7 @@
 :begin
 
   set "begin=1"
+
 
   @REM  Save start date/time
 
@@ -878,31 +905,54 @@
   )
 
 
+  :: PROGRAMMING NOTE: It's CRITICALLY IMPORTANT we NOT use "%ftype%"
+  :: for the filename extension of the consolidated tests file that
+  :: we construct here in order to prevent re-appending a partially
+  :: constructed copy of ourselves to ourselves.
+  ::
+  :: Thus we use "_%ftype%" to guarantee the filename extension of
+  :: the consolidated tests file that we're constructing will always
+  :: be different from the filename extension of the test files that
+  :: we're concatenating together.
+
+  set "wfe=_%ftype%"  &&  @REM (guaranteed different from %ftype%)
+
+
   @REM Delete any leftover work files from previous run
 
-  if exist %wfn%.temp del /f %wfn%.temp
-  if exist %wfn%.tst  del /f %wfn%.tst
-  if exist %wfn%.rc   del /f %wfn%.rc
-  if exist %wfn%.out  del /f %wfn%.out
-  if exist %wfn%.txt  del /f %wfn%.txt
+  if exist %wfn%.%wfe%  del /f %wfn%.%wfe%
+  if exist %wfn%.rc     del /f %wfn%.rc
+  if exist %wfn%.out    del /f %wfn%.out
+  if exist %wfn%.txt    del /f %wfn%.txt
 
 
   @REM Build test script consisting of all *.tst files concatenated together
 
-  echo msglvl -debug +emsgloc      >> %wfn%.testin
-  echo defsym testpath %tdir%      >> %wfn%.testin
+  echo msglvl -debug +emsgloc                                              >> %wfn%.%wfe%
+  echo defsym testpath %tdir%                                              >> %wfn%.%wfe%
+  echo *                                                                   >> %wfn%.%wfe%
+  echo *                                                                   >> %wfn%.%wfe%
+  echo *                                                                   >> %wfn%.%wfe%
+  echo *  Tests directory:  "%fp_tdir%"                                    >> %wfn%.%wfe%
   for %%a in (%tdir%\%tname%.%ftype%) do (
-    echo * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  >> %wfn%.temp
-    echo *                         >> %wfn%.testin
-    echo * Start of test file %%~nxa date %%~ta in %%~dpa  >> %wfn%.testin
-    echo *                         >> %wfn%.testin
-    type "%%a"                     >> %wfn%.testin
+    echo *                                                                 >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    echo * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * >> %wfn%.%wfe%
+    echo * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    echo * Test file:  "%%~nxa"  date: %%~ta                               >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    echo *                                                                 >> %wfn%.%wfe%
+    type "%%a"                                                             >> %wfn%.%wfe%
   )
-  if not defined noexit echo exit >> %wfn%.testin
+  if not defined noexit echo exit                                          >> %wfn%.%wfe%
+
 
   @REM Build startup .rc file which invokes the test script
 
-  echo script %wfn%.testin >> %wfn%.rc
+  echo script %wfn%.%wfe% >> %wfn%.rc
 
 
   @REM Initialize counters
