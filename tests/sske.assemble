@@ -13,7 +13,8 @@
  gblb &havepx Prefixing?                                                        
 &havepx setb ('&prefix' eq 'yes')                                               
 &org(1) setc 'x''200''','x''2000'''                                             
- punch ':btst &arch'                                                    00060000
+ punch 'sysclear'                                                       00060000
+ punch 'archmode &arch'                                                 00060000
  org sske+x'1a0'                                                        00090000
  dc x'000&problem.000&am.0000000'                                       00100000
  dc ad(&org(&havepx+1))                                                 00110000
@@ -55,37 +56,37 @@ psw&sysndx dc 0d,x'0002000180000000',ad(&rc)
  lhi 3,x'f0'                                                            00180000
  sske 3,2,1                                                             00190000
  stop                                                                           
- punch '* runtest .1'                                                   00250000
- punch '* *Compare'                                                             
- punch '* abs  0.8'                                                             
- punch '* *Key 06'                                                              
- punch '* abs 1000.8'                                                           
- punch '* *Key &p1key.'                                                         
- punch '* r ff000.8'                                                            
- punch '* *Key F0'                                                              
- punch '* r ff000.8'                                                            
- punch '* *Key F0'                                                              
- punch '* r 100000.8'                                                           
- punch '* *Key 00'                                                              
- punch '* gpr'                                                                  
- punch '* *Gpr 2 &r2hi.00100004'                                                
+ punch 'runtest .1'                                                     00250000
+ punch '*Compare'                                                               
+ punch 'abs  0.8'                                                               
+ punch '*Key 06'                                                                
+ punch 'abs 1000.8'                                                             
+ punch '*Key &p1key.'                                                           
+ punch 'r ff000.8'                                                              
+ punch '*Key F0'                                                                
+ punch 'r ff000.8'                                                              
+ punch '*Key F0'                                                                
+ punch 'r 100000.8'                                                             
+ punch '*Key 00'                                                                
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 &r2hi.00100004'                                                  
  aif (not &havepx).x                                                            
- punch '* r    0.8'                                                             
- punch '* *Key f0'                                                              
- punch '* r 1000.8'                                                             
- punch '* *Key F0'                                                              
- punch '* abs 2000.8'                                                           
- punch '* *Key F4'                                                              
- punch '* r 2000.8'                                                             
- punch '* *Key F4'                                                              
- punch '* r 5000.8'                                                             
- punch '* *Key F0'                                                              
+ punch 'r    0.8'                                                               
+ punch '*Key f0'                                                                
+ punch 'r 1000.8'                                                               
+ punch '*Key F0'                                                                
+ punch 'abs 2000.8'                                                             
+ punch '*Key F4'                                                                
+ punch 'r 2000.8'                                                               
+ punch '*Key F4'                                                                
+ punch 'r 5000.8'                                                               
+ punch '*Key F0'                                                                
 .x mend                                                                         
                                                                                 
 * Test for instruction being privileged                                         
                                                                                 
- punch ':test sske#1'                                                   00050000
- punch '* * sske#1:  Test for sske being privileged.'                           
+ punch '*Testcase sske#1'                                               00050000
+ punch '* sske#1:  Test for sske being privileged.'                             
 sske start 0                                                            00070000
  supsws problem=1                                                               
 go ds 0h =x'200'                                                                
@@ -93,64 +94,64 @@ go ds 0h =x'200'
  lhi 3,x'f0'                                                            00180000
  sske 3,2                                                               00190000
  stop rc=x'bad'                                                         00200000
- punch '* *Program 0002' Expect program check                           00240000
- punch '* runtest .1'                                                   00250000
- punch '* *Done'                                                        00260000
+ punch '*Program 0002' Expect program check                             00240000
+ punch 'runtest .1'                                                     00250000
+ punch '*Done'                                                          00260000
                                                                                 
 * Test ability to set a key                                                     
- punch ':test sske#2'                                                   00050000
- punch '* * sske#2:  Basic set key operation.'                                  
+ punch '*Testcase sske#2'                                               00050000
+ punch '* sske#2:  Basic set key operation.'                                    
  supsws                                                                         
  org go                                                                         
  lhi 2,x'2004'                                                                  
  la  3,x'f0'                                                                    
  SSKE    3,2                                                                    
  stop                                                                           
- punch '* runtest .1'                                                   00250000
- punch '* *Compare'                                                             
- punch '* r 2000.8'                                                             
- punch '* *Key F0'                                                              
- punch '* gpr'                                                                  
- punch '* *Gpr 2 2004'                                                          
+ punch 'runtest .1'                                                     00250000
+ punch '*Compare'                                                               
+ punch 'r 2000.8'                                                               
+ punch '*Key F0'                                                                
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 2004'                                                            
                                                                                 
 * Test prefixing with single page frame                                         
 * Make the fourth page the prefix.  Note that the prefix is two                 
 * pages                                                                         
                                                                                 
- punch '* * sske#3:  Test prefixing with single page frame.'                    
+ punch '* sske#3:  Test prefixing with single page frame.'                      
  supsws prefix=yes                                                              
  lhi 2,x'1004'                                                                  
  la  3,x'f0'                                                                    
  SSKE    3,2                                                                    
  stop                                                                           
- punch '* runtest .1'                                                   00250000
- punch '* *Compare'                                                             
- punch '* abs 1000.8'                                                           
- punch '* *Key 00'                                                              
- punch '* r 1000.8'                                                             
- punch '* *Key F0'                                                              
- punch '* abs 5000.8'                                                           
- punch '* *Key F0'                                                              
- punch '* r 5000.8'                                                             
- punch '* *Key 00'                                                              
+ punch 'runtest .1'                                                     00250000
+ punch '*Compare'                                                               
+ punch 'abs 1000.8'                                                             
+ punch '*Key 00'                                                                
+ punch 'r 1000.8'                                                               
+ punch '*Key F0'                                                                
+ punch 'abs 5000.8'                                                             
+ punch '*Key F0'                                                                
+ punch 'r 5000.8'                                                               
+ punch '*Key 00'                                                                
                                                                                 
 * Set multiple keys.  Requires 1M page support                                  
                                                                                 
 * Setting  multiple keys without prefixing.  The low 12 bits of       *         
 * R2 should remain unchanged.                                         *         
                                                                                 
- punch '* * sske#4:  Setting multiple keys without prefixing.'                  
+ punch '* sske#4:  Setting multiple keys without prefixing.'                    
  supsws                                                                         
  dosskemf x'2004',p1key=00                                              00170000
- punch '* r 2000.8'                                                             
- punch '* *Key F0'                                                              
- punch '* r 5000.8'                                                             
- punch '* *Key F0'                                                              
+ punch 'r 2000.8'                                                               
+ punch '*Key F0'                                                                
+ punch 'r 5000.8'                                                               
+ punch '*Key F0'                                                                
                                                                                 
 * Same  with prefixing.  The point being that this variation of       *         
 * the instruction is not subject to prefixing,                        *         
                                                                                 
- punch '* * SSKE#5: Test prefixing with multiple page frames.'                  
+ punch '* SSKE#5: Test prefixing with multiple page frames.'                    
  supsws prefix=yes                                                              
  dosskemf x'1004'  Starting address                                     00170000
                                                                                 
@@ -167,5 +168,5 @@ go ds 0h =x'200'
                                                                                 
 * Insert more here                                                              
                                                                                 
- punch '* *Done'                                                        00260000
+ punch '*Done'                                                          00260000
  end                                                                    00270000

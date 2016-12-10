@@ -1,0 +1,58 @@
+ASMA Ver. 0.2.0  Null (well almost) test case for a privop                                          30 Nov 2016 09:56:59  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2 *
+                                               3 * This file was put into the public domain 2016-11-29
+                                               4 * by John P. Hartmann.  You can use it for anything you like,
+                                               5 * as long as this notice remains.
+                                               6 *
+                            000000  00020F     7 PRIVOP start 0
+000000                      000000             8  using PRIVOP,15
+000000                      000000  0001A0     9  org PRIVOP+x'1a0' Restart
+0001A0  00010001 80000000                     10  dc x'0001000180000000',ad(go)
+0001B0                      0001B0  0001C0    11  org PRIVOP+x'1c0' SVC new
+0001C0  00020001 80000000                     12  dc x'0002000180000000',ad(0)
+0001D0                      0001D0  0001D0    13  org PRIVOP+x'1d0' Program
+0001D0  00020001 80000000                     14  dc x'0002000180000000',ad(x'deaddead')
+0001E0                      0001E0  000200    15  org PRIVOP+x'200'
+                            000200  000001    16 go equ *
+000200  0900                                  17  isk 0,0
+                                              18 * Stop by disabled program check
+000202  B229 0000                             19  iske 0,0
+                                              20 * Stop by disabled program check
+000206  4100 0FFF                   000FFF    21  la 0,x'fff'
+00020A  B229 0000                             22  iske 0,0
+00020E  0A00                                  23  svc 0
+000210                                        24  end
+ASMA Ver. 0.2.0  Null (well almost) test case for a privop                                          30 Nov 2016 09:56:59  Page     2
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+GO                  U    000200       1    16  10
+IMAGE               1    000000     528     0
+PRIVOP              J    000000     528     7   9  11  13  15   8
+ASMA Ver. 0.2.0  Null (well almost) test case for a privop                                          30 Nov 2016 09:56:59  Page     3
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0  Null (well almost) test case for a privop                                          30 Nov 2016 09:56:59  Page     4
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    528  000-20F  000-20F
+  Region            528  000-20F  000-20F
+    CSECT  PRIVOP   528  000-20F  000-20F
+ASMA Ver. 0.2.0  Null (well almost) test case for a privop                                          30 Nov 2016 09:56:59  Page     5
+
+   STMT   FILE NAME
+
+1     ./privop.asm
+
+
+** NO ERRORS FOUND **
+
+

@@ -36,13 +36,16 @@
 # The default is parent of -d if there is no hercules executable in the
 # current directory.
 
-# -p <word>
-# Specify the library path for loadable modules.  The default is .libs.
-
 # -l <word>
 # Specify the name of a module to load dynamically into hercules.  This
-# is passed to Hercules.  You can specify multiple -l flags; they will
-# be accumulated.
+# is passed to Hercules.  The configuration file loads
+# dyncrypt; if you manage to load that module, Hercules will abort.
+# You can specify multiple -l flags; they will be accumulated.
+
+# -p <word>
+# Specify the library path for loadable modules, e.g., device managers.
+# This is passed to Hercules.  The default is .libs since test cases
+# are run from the build rather than install directories.
 
 # -q
 # Pass "quiet" to redtest to suppress details about test cases.
@@ -53,7 +56,7 @@
 # daemon mode.
 
 # -t <number>
-# Passed to hercules (timeout factor)
+# Passed to hercules (timeout factor).
 
 # -v <word>
 # Set  variable  for redtest.rexx (in fact, arguments to redtest.rexx).
@@ -221,9 +224,11 @@ if [ -z "$files" ] ; then files="$testdir/*.$ftype"; fi
 if [ ! -x hercules ] ; then
    if [ -x $dir/../hercules ] ; then
         hdir=$dir/..
+   elif [ -x $hercexec/hercules ] ; then
+        hdir=$hercexec
    else
       echo 'Hercules executable (or the libtool front end) is not where expected.'
-      echo "... tried '$PWD' and '$dir/..'"
+      echo "... tried '$PWD', '$dir/..', and '$hercexec'"
       exit 16
    fi
 fi
@@ -235,6 +240,8 @@ if [ -f $hdir/config.h ] ; then
 else
    echo "Unable to determine the size of a pointer.  Specify ptrsize=4 if on a 32-bit system."
 fi
+
+vars="$vars platform=$(uname -s)"
 
 # Verify that the configuration file and redtest.rexx are available.
 
@@ -273,22 +280,31 @@ fi
 # set -x
 
 echo Files: $files
-echo msglvl -debug +emsgloc >  $wfn.testin
-echo defsym testpath $dir   >> $wfn.testin
-file_patterns_array=($files)
-for file_pattern in "${file_patterns_array[@]}"; do
-    for file in $file_pattern; do
-        echo ostailor null  >> $wfn.testin
-        echo numcpu 1       >> $wfn.testin
-        echo mainsize 2     >> $wfn.testin
-        cat $file           >> $wfn.testin
-        rv=$?
-        if [ $rv -ne 0 ] ; then
-            echo Unable to build input file rv=$rv
-            exit $rv
-        fi
-    done
-done
+
+{
+        echo defsym testpath $dir
+        todo=$(echo $files)
+
+        for file in $todo; do
+
+                mod=$(stat $file|grep 'Modify'|cut -d ' ' -f 2-)
+                dir=$(dirname $file)
+                full=$(cd $dir;pwd)
+                first=$(echo $file|cut -c 1)
+                echo '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *'
+                echo '*'
+                echo '* Start of test file' $file date $mod in $full
+                echo '*'
+                cat $file
+        done
+
+} >$wfn.testin
+
+rv=$?
+if [ $rv -ne 0 ] ; then
+        echo Unable to build input file rv=$rv
+        exit $rv
+fi
 if [ -n "$repeat" ] ; then
         echo Repeating $repeat
         while [ 0 -lt $repeat ]
@@ -317,8 +333,6 @@ fi
 
 # Read entire file to allow redtest.rexx to parse the features list
 if [ $rv -eq 0 ] ; then
-   platform=$(uname -s)
-   vars="platform=$platform $vars"
    rexx $dir/redtest.rexx $wfn.out $vars $rest
    rv=$?
 fi

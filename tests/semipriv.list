@@ -1,0 +1,69 @@
+ASMA Ver. 0.2.0  Test a semiprivileged instruction                                                  30 Nov 2016 10:57:32  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2 *
+                                               3 * This file was put into the public domain 2016-11-30
+                                               4 * by John P. Hartmann.  You can use it for anything you like,
+                                               5 * as long as this notice remains.
+                                               6 *
+                            000000  000233     7 SEMIPRIV start 0
+000000                      000000             8  using SEMIPRIV,15
+000000                      000000  0001A0     9  org SEMIPRIV+x'1a0' Restart
+0001A0  00000001 80000000                     10  dc x'0000000180000000',ad(go)
+0001B0                      0001B0  0001C0    11  org SEMIPRIV+x'1c0' SVC new
+0001C0  00020001 80000000                     12  dc x'0002000180000000',ad(0)
+0001D0                      0001D0  0001D0    13  org SEMIPRIV+x'1d0' Program
+0001D0  00020001 80000000                     14  dc x'0002000180000000',ad(x'deaddead')
+0001E0                      0001E0  000200    15  org SEMIPRIV+x'200'
+                            000200  000001    16 go equ *
+                                              17 * Supervisor state part
+000200  B733 F230                   000230    18  lctl 3,3,cr3
+000204  B20A 0080                   000080    19  spka x'80' Forbidden in problem state, but not for me
+000208  B20B 0000                   000000    20  ipk , Current key -> r2
+00020C  B904 0042                             21  lgr 4,2 Save proof
+000210  B909 0000                             22  sgr 0,0
+000214  8200 F228                   000228    23  lpsw prob
+000218                                        24 goprob ds 0h
+000218  B20A 0040                   000040    25  spka x'40' Should be OK
+                                              26 * ipk here would privop since CR0.36 is 0.  Test separately.
+00021C  B20A 0080                   000080    27  spka x'80'
+000220  0A01                                  28  svc 1 If we survive
+                                              29
+000228  00F90000 00000218                     30 prob dc 0d'0',x'00f9',h'0',a(goprob) Problem state and 24-bit
+000230  7F7F0000                              31 cr3 dc a(x'7f7f0000') disallow key 0 and 8
+000234                                        32  end
+ASMA Ver. 0.2.0  Test a semiprivileged instruction                                                  30 Nov 2016 10:57:32  Page     2
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CR3                 A    000230       4    31  18
+GO                  U    000200       1    16  10
+GOPROB              H    000218       2    24  30
+IMAGE               1    000000     564     0
+PROB                D    000228       8    30  23
+SEMIPRIV            J    000000     564     7   9  11  13  15   8
+ASMA Ver. 0.2.0  Test a semiprivileged instruction                                                  30 Nov 2016 10:57:32  Page     3
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0  Test a semiprivileged instruction                                                  30 Nov 2016 10:57:32  Page     4
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE      564  000-233  000-233
+  Region              564  000-233  000-233
+    CSECT  SEMIPRIV   564  000-233  000-233
+ASMA Ver. 0.2.0  Test a semiprivileged instruction                                                  30 Nov 2016 10:57:32  Page     5
+
+   STMT    FILE NAME
+
+1     ./semipriv.asm
+
+
+** NO ERRORS FOUND **
+
+

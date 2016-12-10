@@ -6,15 +6,10 @@ Signal on novalue
 /* by John P. Hartmann.  You can use it for anything you like,       */
 /* as long as this notice remains.                                   */
 
-parse arg in
-parse var in fn '.'
-
-out = fn'.core'
-call sysfiledelete out
 core = ''
 
-do while lines(in) > 0
-   ln = charin(in, , 80)
+do while lines() > 0
+   ln = charin(, , 80)
    parse var ln two +1 tpe+3 +1 addr+3 +2 len+2 +2 id+2 data
    addr = c2d(addr)
    len = c2d(len)
@@ -25,18 +20,19 @@ do while lines(in) > 0
          Then say 'Bad start char' c2x(two)
       When tpe = 'c5e2c4'x
          Then call esd
-      When tpe = 'e3e7e3'x
-         Then call txt
+      When tpe = 'e3e7e3'x            /* TXT                         */
+         then core = overlay(data, core, addr+1, len, '00'x)
       When tpe = 'd9d3c4'x
          Then nop
-      When tpe = 'c5d5c4'x
+      When tpe = 'c5d5c4'x            /* END                         */
          Then leave
       Otherwise
          call err 'Bad record' c2x(tpe)
    end
 end
 
-call charout out, left(core, modlen, '00'x)
+/* Pad module to control section length                              */
+call charout , left(core, modlen, '00'x)
 exit
 
 esd:
@@ -47,10 +43,6 @@ If t \= '00'x
    Then call err 'ESD expected.  Got' c2x(t)
 modlen = c2d(len)
 say 'Section length:' c2x(len)
-return
-
-txt:
-core = overlay(data, core, addr+1, len, '00'x)
 return
 
 err:

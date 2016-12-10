@@ -22,3 +22,4 @@ defsym  maxdur   0.4    #  Expected test duration, give or take.
 script "$(testpath)/runtest.subtst"
 *
 * ----------------------------------------------------------------------------
+numcpu      1           #  Clean up own mess

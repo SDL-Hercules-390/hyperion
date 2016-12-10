@@ -1,0 +1,61 @@
+ASMA Ver. 0.2.0                                                                                     02 Dec 2016 11:00:01  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               1 * Multiply halfword immediate test
+                                               2
+                                               3 * This file was put into the public domain 2015-10-22
+                                               4 * by John P. Hartmann.  You can use it for anything you like,
+                                               5 * as long as this notice remains.
+                                               6
+                            000000  000217     7 mhi start 0
+000000                      000000             8  using mhi,0
+000000                      000000  000060     9  org mhi+x'60' Unused bcmode stuff as scratch
+000060  00020000 00000000                     10 stop dc x'0002 0000',f'0',ad(0)
+000070                      000070  0001A0    11  org mhi+x'1a0' Restart
+0001A0  00000001 80000000                     12  dc x'0000 0001 8000 0000',ad(go)
+0001B0                      0001B0  0001D0    13  org mhi+x'1d0' Program
+0001D0  00020001 80000000                     14  dc x'0002 0001 8000 0000',ad(x'deaddead')
+0001E0                      0001E0  000200    15  org mhi+x'200'
+                            000200  000001    16 go equ *
+000200  4120 0021                   000021    17  la 2,x'21'
+000204  1852                                  18  lr 5,2
+000206  A72C 0002                             19  mhi 2,2
+00020A  1862                                  20  lr 6,2
+00020C  B222 0040                             21  ipm 4
+000210  4132 2001                   000001    22  la 3,1(2,2)
+000214  B2B2 0060                   000060    23  lpswe stop
+000218                                        24  ltorg
+000218                                        25  end
+ASMA Ver. 0.2.0                                                                                     02 Dec 2016 11:00:01  Page     2
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+GO                  U    000200       1    16  12
+IMAGE               1    000000     536     0
+MHI                 J    000000     536     7   9  11  13  15   8
+STOP                X    000060       4    10  23
+ASMA Ver. 0.2.0                                                                                     02 Dec 2016 11:00:01  Page     3
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0                                                                                     02 Dec 2016 11:00:01  Page     4
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    536  000-217  000-217
+  Region            536  000-217  000-217
+    CSECT  MHI      536  000-217  000-217
+ASMA Ver. 0.2.0                                                                                     02 Dec 2016 11:00:01  Page     5
+
+   STMT  FILE NAME
+
+1     ./mhi.asm
+
+
+** NO ERRORS FOUND **
+
+

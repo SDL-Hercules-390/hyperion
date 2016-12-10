@@ -1,0 +1,71 @@
+ASMA Ver. 0.2.0  Store facilities list [extended].                                                  02 Dec 2016 10:56:59  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2
+                                               3 * This file was put into the public domain 2016-08-20
+                                               4 * by John P. Hartmann.  You can use it for anything you like,
+                                               5 * as long as this notice remains.
+                                               6
+                            000000  0002CF     7 stfl start 0
+000000                      000000             8  using *,15
+000000                      000000  0000C8     9  org stfl+x'c8'
+0000C8  00000000                              10 privfl ds f Stored in the PSA by STFL
+0000CC                      0000CC  0001A0    11  org stfl+x'1a0' Restart new
+0001A0  00000000 00000000                     12  dc ad(0,go)
+0001B0                      0001B0  0001D0    13  org stfl+x'1d0' Program new
+0001D0  00020000 00000000                     14  dc x'00020000',a(0,0,0)
+0001E0                      0001E0  000200    15  org stfl+x'200'
+000200  00000000 00000000                     16 sefl ds 2d
+000210  00000000 00000000                     17 efl ds 16d  Should last a while
+                            000290  000001    18 go equ *
+000290  B2B1 0000                   000000    19  stfl 0   32 bits at 200 decimal = x'c8'
+000294  B982 0000                             20  xgr 0,0  Short
+000298  B2B0 F200                   000200    21  stfle sefl
+00029C  B222 0020                             22  ipm 2   Should be 3
+0002A0  B904 0030                             23  lgr 3,0 Should be 1
+0002A4  A708 0007                             24  lhi 0,7 Store up to 8
+0002A8  B2B0 F210                   000210    25  stfle efl
+0002AC  B222 0040                             26  ipm 4
+0002B0  B904 0050                             27  lgr 5,0
+0002B4  B2B0 0001                   000001    28  stfle 1 Should specification due to unalignment
+0002B8  12EE                                  29  ltr 14,14
+0002BA  077E                                  30  bnzr 14
+0002BC  B2B2 F2C0                   0002C0    31  lpswe stop
+0002C0  00020000 00000000                     32 stop dc 0d'0',x'0002 0000',2a(0),a(x'deadbeef')
+0002D0                                        33  end
+ASMA Ver. 0.2.0  Store facilities list [extended].                                                  02 Dec 2016 10:56:59  Page     2
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+EFL                 D    000210       8    17  25
+GO                  U    000290       1    18  12
+IMAGE               1    000000     720     0
+PRIVFL              F    0000C8       4    10
+SEFL                D    000200       8    16  21
+STFL                J    000000     720     7   9  11  13  15
+STOP                D    0002C0       8    32  31
+ASMA Ver. 0.2.0  Store facilities list [extended].                                                  02 Dec 2016 10:56:59  Page     3
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0  Store facilities list [extended].                                                  02 Dec 2016 10:56:59  Page     4
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE    720  000-2CF  000-2CF
+  Region            720  000-2CF  000-2CF
+    CSECT  STFL     720  000-2CF  000-2CF
+ASMA Ver. 0.2.0  Store facilities list [extended].                                                  02 Dec 2016 10:56:59  Page     5
+
+   STMT  FILE NAME
+
+1     ./stfl.asm
+
+
+** NO ERRORS FOUND **
+
+

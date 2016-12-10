@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2016/05/27 14.29
+-                                                                                           jHLASM 1.0   2016/12/02 12.03
 0  No Overriding ASMAOPT Parameters                                                                                      
    Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1DIGEST                                        External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/05/27 14.29
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/12/02 12.03
 0DIGEST    SD 00000001 00000000 00000706             07                                                                  
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0                                               2 ***********************************************************************
                                                 3 *                                                                     *
                                                 4 * This  file  was put into the public domain 2016-05-07 by John       *
@@ -70,10 +70,10 @@
                                                14 digest amode any                                                       
                                                15 digest rmode any                                                       
                      R:F 00000000              16  using *,15                                                            
-                                               17  punch '* *Testcase digest &sysdatc &systime'                          
-                                                 + punch '* *Testcase digest 20160527 14.29'                             
-                                               18  punch '* sysclear'                                                    
-                                               19  punch '* archlvl z'                                                   
+                                               17  punch '*Testcase digest &sysdatc &systime'                            
+                                                 + punch '*Testcase digest 20161202 12.03'                               
+                                               18  punch 'sysclear'                                                      
+                                               19  punch 'archlvl z'                                                     
  00000000                00000000 00000140     20  org digest+x'140' SVC old                                             
  00000140                                      21 svcold ds 2d                                                           
  00000150                00000150 000001A0     22  org digest+x'1a0' Restart new                                         
@@ -109,7 +109,7 @@
  00000610 07F9                                 54  br 9                         Return to caller                         
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    4
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0                        00000612              55 bare equ *                                                             
  00000612 0AFF                                 56  svc 255  We are in problem state                                      
  00000614 07F9                                 57  br 9                                                                  
@@ -120,25 +120,25 @@
  00000616 4100 0080               00000080     62  la 0,x'80' Invalid function code                                      
  0000061A 4110 F200               00000200     63  la 1,kimdmap                                                          
  0000061E B93E 0002                            64  kimd 0,2                                                              
-                                               65  punch '* *Program 6'                                                  
-                                               66  punch '* runtest .1' Bad function                                     
+                                               65  punch '*Program 6'                                                    
+                                               66  punch 'runtest .1' Bad function                                       
  00000622 4100 0000               00000000     67  la 0,0 valid function code                                            
  00000626 4110 F200               00000200     68  la 1,kimdmap                                                          
  0000062A B93E 0000                            69  kimd 0,0  Bad R2                                                      
-                                               70  punch '* *Program 6'                                                  
-                                               71  punch '* runtest program .1' Bad operand 2                            
+                                               70  punch '*Program 6'                                                    
+                                               71  punch 'runtest program .1' Bad operand 2                              
  0000062E B93E 0002                            72  kimd 0,2  Store list of supported codes                               
  00000632 4D90 F600               00000600     73  bas 9,swap  Go check it                                               
-                                               74  punch '* runtest program .1' Good query                               
-                                               75  punch '* *Compare'                                                    
-                                               76  punch '* r 200.10'                                                    
-                                               77  punch '* *Want F0000000 00000000 40000000 00000000 '                  
+                                               74  punch 'runtest program .1' Good query                                 
+                                               75  punch '*Compare'                                                      
+                                               76  punch 'r 200.10'                                                      
+                                               77  punch '*Want F0000000 00000000 40000000 00000000 '                    
                                                78 *                                                                      
                                                79 * Function 1   KIMD                                                    
                                                80 *                                                                      
-                                               81  punch '* * '                                                          
-                                               82  punch '* * SHA1'                                                      
-                                               83  punch '* * '                                                          
+                                               81  punch '* '                                                            
+                                               82  punch '* SHA1'                                                        
+                                               83  punch '* '                                                            
  00000220                00000000 00000706     84 digest loctr                                                           
                                                85 * 220                                                                  
  00000220 67452301                             86 DIGEST1  DC    X'67452301'             \                                TST01450
@@ -154,26 +154,26 @@
  0000063E 4120 F400               00000400     96  la 2,cryptdat                                                         
  00000642 4130 0090               00000090     97  la 3,LCRYPDAT  Not multiple of 64                                     
  00000646 B93E 0002                            98  kimd 0,2                                                              
-                                               99  punch '* *Program 6'                                                  
-                                              100  punch '* runtest svc .1' SHA 1                                        
+                                               99  punch '*Program 6'                                                    
+                                              100  punch 'runtest svc .1' SHA 1                                          
  0000064A 4130 0040               00000040    101  la 3,64 One block                                                     
  0000064E B93E 0002                           102  kimd 0,2  Good                                                        
  00000652 4710 F64E               0000064E    103  bo *-4                                                                
  00000656 B222 0040                           104  ipm 4                                                                 
  0000065A 4D90 F600               00000600    105  bas 9,swap  Go check it                                               
-                                              106  punch '* runtest program .1' SHA 1                                    
-                                              107  punch '* gpr'                                                         
-                                              108  punch '* *Gpr 2 0440 #address'                                        
-                                              109  punch '* *Gpr 3 0000'                                                 
+                                              106  punch 'runtest program .1' SHA 1                                      
+                                              107  punch 'gpr'                                                           
+                                              108  punch '*Gpr 2 0440 #address'                                          
+                                              109  punch '*Gpr 3 0000'                                                   
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    5
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
-0                                             110  punch '* *Gpr 4 0000'                                                 
-                                              111  punch '* r 220.10'                                                    
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
+0                                             110  punch '*Gpr 4 0000'                                                   
+                                              111  punch 'r 220.10'                                                      
                                               112 *  87A5F8FF 10EEA3A1 4A00D61F F1FFA053                                 
-                                              113  punch '* *Want 8FEA16BE 2F911D81 D9F428E2 3BAD6691'                   
-                                              114  punch '* r 230.4'                                                     
-                                              115  punch '* *Want 94298417'                                              
+                                              113  punch '*Want 8FEA16BE 2F911D81 D9F428E2 3BAD6691'                     
+                                              114  punch 'r 230.4'                                                       
+                                              115  punch '*Want 94298417'                                                
                                               116 *                                                                      
                                               117 * Test 2.  KLMD SHA1                                                   
                                               118 *                                                                      
@@ -182,28 +182,28 @@
  00000666 4710 F662               00000662    121  bo *-4                                                                
  0000066A B222 0040                           122  ipm 4                                                                 
  0000066E 4D90 F600               00000600    123  bas 9,swap  Go check it                                               
-                                              124  punch '* runtest svc .1' SHA 1                                        
-                                              125  punch '* gpr'                                                         
-                                              126  punch '* *Gpr 2 0490 #address'                                        
-                                              127  punch '* *Gpr 3 0000'                                                 
-                                              128  punch '* *Gpr 4 0000'                                                 
-                                              129  punch '* r 220.10'                                                    
-                                              130  punch '* *Want 666D243D 011EFC7A F7BA3154 41E9752A'                   
-                                              131  punch '* r 230.4'                                                     
-                                              132  punch '* *Want BC1249FC'                                              
-                                              133  punch '* r 234.8'                                                     
-                                              134  punch '* *Want  00000000 00000480'                                    
+                                              124  punch 'runtest svc .1' SHA 1                                          
+                                              125  punch 'gpr'                                                           
+                                              126  punch '*Gpr 2 0490 #address'                                          
+                                              127  punch '*Gpr 3 0000'                                                   
+                                              128  punch '*Gpr 4 0000'                                                   
+                                              129  punch 'r 220.10'                                                      
+                                              130  punch '*Want 666D243D 011EFC7A F7BA3154 41E9752A'                     
+                                              131  punch 'r 230.4'                                                       
+                                              132  punch '*Want BC1249FC'                                                
+                                              133  punch 'r 234.8'                                                       
+                                              134  punch '*Want  00000000 00000480'                                      
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    6
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0                                             136 ***********************************************************************
                                               137 *                                                                     *
                                               138 * SHA256                                                              *
                                               139 *                                                                     *
                                               140 ***********************************************************************
--                                             142  punch '* * '                                                          
-                                              143  punch '* * SHA256'                                                    
-                                              144  punch '* * '                                                          
+-                                             142  punch '* '                                                            
+                                              143  punch '* SHA256'                                                      
+                                              144  punch '* '                                                            
  0000023C                00000000 00000706    145 digest loctr                                                           
                                               146 * 240                                                                  
  00000240                                     147 sha256 ds 0d                                                           
@@ -223,22 +223,22 @@
  0000067A 4120 F400               00000400    162  la 2,cryptdat                                                         
  0000067E 4130 0090               00000090    163  la 3,LCRYPDAT  Not multiple of 64                                     
  00000682 B93E 0002                           164  kimd 0,2                                                              
-                                              165  punch '* *Program 6'                                                  
-                                              166  punch '* runtest svc .1' SHA 1                                        
+                                              165  punch '*Program 6'                                                    
+                                              166  punch 'runtest svc .1' SHA 1                                          
  00000686 4130 0040               00000040    167  la 3,64 One block                                                     
  0000068A B93E 0002                           168  kimd 0,2  Good                                                        
  0000068E 4710 F68A               0000068A    169  bo *-4                                                                
  00000692 B222 0040                           170  ipm 4                                                                 
  00000696 4D90 F600               00000600    171  bas 9,swap  Go check it                                               
-                                              172  punch '* runtest program .1' SHA 256                                  
-                                              173  punch '* gpr'                                                         
-                                              174  punch '* *Gpr 2 0440 #address'                                        
-                                              175  punch '* *Gpr 3 0000'                                                 
-                                              176  punch '* *Gpr 4 0000'                                                 
-                                              177  punch '* r 240.10'                                                    
-                                              178  punch '* *Want F0A7469C 39FC8746 A28C327F 76118103'                   
-                                              179  punch '* r 250.10'                                                    
-                                              180  punch '* *Want 5E07E96A AC689C36 EC17DF1F 88779E4B'                   
+                                              172  punch 'runtest program .1' SHA 256                                    
+                                              173  punch 'gpr'                                                           
+                                              174  punch '*Gpr 2 0440 #address'                                          
+                                              175  punch '*Gpr 3 0000'                                                   
+                                              176  punch '*Gpr 4 0000'                                                   
+                                              177  punch 'r 240.10'                                                      
+                                              178  punch '*Want F0A7469C 39FC8746 A28C327F 76118103'                     
+                                              179  punch 'r 250.10'                                                      
+                                              180  punch '*Want 5E07E96A AC689C36 EC17DF1F 88779E4B'                     
                                               181 *                                                                      
                                               182 * Test 4.  KLMD SHA256                                                 
                                               183 *                                                                      
@@ -247,31 +247,31 @@
  000006A2 4710 F69E               0000069E    186  bo *-4                                                                
  000006A6 B222 0040                           187  ipm 4                                                                 
  000006AA 4D90 F600               00000600    188  bas 9,swap  Go check it                                               
-                                              189  punch '* runtest svc .1' SHA 1                                        
+                                              189  punch 'runtest svc .1' SHA 1                                          
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    7
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
-0                                             190  punch '* gpr'                                                         
-                                              191  punch '* *Gpr 2 0490 #address'                                        
-                                              192  punch '* *Gpr 3 0000'                                                 
-                                              193  punch '* *Gpr 4 0000'                                                 
-                                              194  punch '* r 240.10'                                                    
-                                              195  punch '* *Want 712F0D37 DD6440BF F9FFE27F 6DD8FBC0'                   
-                                              196  punch '* r 250.10'                                                    
-                                              197  punch '* *Want  785A84C6 D352D7A5 D3647682 9FF675E8'                  
-                                              198  punch '* r 260.8'                                                     
-                                              199  punch '* *Want  00000000 00000480'                                    
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
+0                                             190  punch 'gpr'                                                           
+                                              191  punch '*Gpr 2 0490 #address'                                          
+                                              192  punch '*Gpr 3 0000'                                                   
+                                              193  punch '*Gpr 4 0000'                                                   
+                                              194  punch 'r 240.10'                                                      
+                                              195  punch '*Want 712F0D37 DD6440BF F9FFE27F 6DD8FBC0'                     
+                                              196  punch 'r 250.10'                                                      
+                                              197  punch '*Want  785A84C6 D352D7A5 D3647682 9FF675E8'                    
+                                              198  punch 'r 260.8'                                                       
+                                              199  punch '*Want  00000000 00000480'                                      
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    8
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0                                             201 ***********************************************************************
                                               202 *                                                                     *
                                               203 * SHA512                                                              *
                                               204 *                                                                     *
                                               205 ***********************************************************************
--                                             207  punch '* * '                                                          
-                                              208  punch '* * SHA512'                                                    
-                                              209  punch '* * '                                                          
+-                                             207  punch '* '                                                            
+                                              208  punch '* SHA512'                                                      
+                                              209  punch '* '                                                            
  00000270                00000000 00000706    210 digest loctr                                                           
                                               211 * 270                                                                  
  00000270                                     212 sha512 ds 0d                                                           
@@ -292,55 +292,55 @@
  000006B6 4120 F400               00000400    228  la 2,longdata                                                         
  000006BA 4130 0120               00000120    229  la 3,L'longdata  'Not multiple of 64                                  
  000006BE B93E 0002                           230  kimd 0,2                                                              
-                                              231  punch '* *Program 6'                                                  
-                                              232  punch '* runtest svc .1' SHA 1                                        
+                                              231  punch '*Program 6'                                                    
+                                              232  punch 'runtest svc .1' SHA 1                                          
  000006C2 4130 0080               00000080    233  la 3,128 One block                                                    
  000006C6 B93E 0002                           234  kimd 0,2  Good                                                        
  000006CA 4710 F6C6               000006C6    235  bo *-4                                                                
  000006CE B222 0040                           236  ipm 4                                                                 
  000006D2 4D90 F600               00000600    237  bas 9,swap  Go check it                                               
-                                              238  punch '* runtest program .1'                                          
-                                              239  punch '* gpr'                                                         
-                                              240  punch '* *Gpr 2 0480 #address'                                        
-                                              241  punch '* *Gpr 3 0000'                                                 
-                                              242  punch '* *Gpr 4 0000'                                                 
-                                              243  punch '* r 270.10'                                                    
-                                              244  punch '* *Want 3683E74A DE2CF007 5CB76A7C 9B5386F3'                   
-                                              245  punch '* r 280.10'                                                    
-                                              246  punch '* *Want 722122C7 9EC1B0CC E10202B2 13274F27'                   
-                                              247  punch '* r 290.10'                                                    
-                                              248  punch '* *Want 17BFB280 F0CEF114 CB9511E5 775F09DC'                   
-                                              249  punch '* r 2a0.10'                                                    
-                                              250  punch '* *Want 057B9AE0 D25AF58B 161617FD 0E4E7395'                   
+                                              238  punch 'runtest program .1'                                            
+                                              239  punch 'gpr'                                                           
+                                              240  punch '*Gpr 2 0480 #address'                                          
+                                              241  punch '*Gpr 3 0000'                                                   
+                                              242  punch '*Gpr 4 0000'                                                   
+                                              243  punch 'r 270.10'                                                      
+                                              244  punch '*Want 3683E74A DE2CF007 5CB76A7C 9B5386F3'                     
+                                              245  punch 'r 280.10'                                                      
+                                              246  punch '*Want 722122C7 9EC1B0CC E10202B2 13274F27'                     
+                                              247  punch 'r 290.10'                                                      
+                                              248  punch '*Want 17BFB280 F0CEF114 CB9511E5 775F09DC'                     
+                                              249  punch 'r 2a0.10'                                                      
+                                              250  punch '*Want 057B9AE0 D25AF58B 161617FD 0E4E7395'                     
                                               251 *                                                                      
                                               252 * Test 4.  KLMD SHA512                                                 
                                               253 *                                                                      
  000006D6 4130 00A0               000000A0    254  la 3,l'longdata-128 'Remainder of block                               
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page    9
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0000006DA B93F 0002                           255  klmd 0,2                                                              
  000006DE 4710 F6DA               000006DA    256  bo *-4                                                                
  000006E2 B222 0040                           257  ipm 4                                                                 
  000006E6 4D90 F600               00000600    258  bas 9,swap  Go check it                                               
-                                              259  punch '* runtest svc .1'                                              
-                                              260  punch '* gpr'                                                         
-                                              261  punch '* *Gpr 2 0520 #address'                                        
-                                              262  punch '* *Gpr 3 0000'                                                 
-                                              263  punch '* *Gpr 4 0000'                                                 
-                                              264  punch '* r 270.10'                                                    
-                                              265  punch '* *Want 24F541F7 9ED7EF7D 703F2F73 4687F0B3'                   
-                                              266  punch '* r 280.10'                                                    
-                                              267  punch '* *Want FEE421D4 126933BD 714C0278 3C71FF52'                   
-                                              268  punch '* r 290.10'                                                    
-                                              269  punch '* *Want A5D3CEFB 1E32E356 EB021FF4 803293B4'                   
-                                              270  punch '* r 2a0.10'                                                    
-                                              271  punch '* *Want 4036039B 61CEC167 D0D5FB43 E1C46250'                   
-                                              272  punch '* r 2b0.10'                                                    
-                                              273  punch '* *Want 00000000 00000000 00000000 00000900'                   
+                                              259  punch 'runtest svc .1'                                                
+                                              260  punch 'gpr'                                                           
+                                              261  punch '*Gpr 2 0520 #address'                                          
+                                              262  punch '*Gpr 3 0000'                                                   
+                                              263  punch '*Gpr 4 0000'                                                   
+                                              264  punch 'r 270.10'                                                      
+                                              265  punch '*Want 24F541F7 9ED7EF7D 703F2F73 4687F0B3'                     
+                                              266  punch 'r 280.10'                                                      
+                                              267  punch '*Want FEE421D4 126933BD 714C0278 3C71FF52'                     
+                                              268  punch 'r 290.10'                                                      
+                                              269  punch '*Want A5D3CEFB 1E32E356 EB021FF4 803293B4'                     
+                                              270  punch 'r 2a0.10'                                                      
+                                              271  punch '*Want 4036039B 61CEC167 D0D5FB43 E1C46250'                     
+                                              272  punch 'r 2b0.10'                                                      
+                                              273  punch '*Want 00000000 00000000 00000000 00000900'                     
 1DIGEST   Tests for message digest instructions KIMD KLMD                                                       Page   10
    Active Usings: DIGEST,R15                                                                                             
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/27 14.29
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/02 12.03
 0                                             275 ***********************************************************************
                                               276 *                                                                     *
                                               277 * GHASH                                                               *
@@ -351,9 +351,9 @@
                                               282 * 128-bit, 192-bit, or 256-bit cryptographic key.                     *
                                               283 *                                                                     *
                                               284 ***********************************************************************
--                                             286  punch '* * '                                                          
-                                              287  punch '* * GHASH'                                                     
-                                              288  punch '* * '                                                          
+-                                             286  punch '* '                                                            
+                                              287  punch '* GHASH'                                                       
+                                              288  punch '* '                                                            
  000002C0                00000000 00000706    289 digest loctr                                                           
                                               290 * 2c0                                                                  
  000002C0 6A09E667BB67AE85                    291 ghparms dc x'6A09E667BB67AE853C6EF372A54FF53A'                         
@@ -374,26 +374,26 @@
  000006FA B93E 0002                           306  kimd 0,2                                                              
  000006FE 4710 F6FA               000006FA    307  bo *-4                                                                
  00000702 4D90 F600               00000600    308  bas 9,swap  Go check it                                               
-0                                             310  punch '* runtest svc .1'                                              
-                                              311  punch '* gpr'                                                         
-                                              312  punch '* *Gpr 2 0560 #address'                                        
-                                              313  punch '* *Gpr 3 0000'                                                 
-                                              314  punch '* *Gpr 4 0000'                                                 
-                                              315  punch '* r 2c0.10'                                                    
-                                              316  punch '* *Want 3835EC6F 7151E73A 2A593988 B05B7E61'                   
-                                              317  punch '* r 2d0.10'                                                    
-                                              318  punch '* *Want 510E527F 9B05688C 1F83D9AB 5BE0CD19'                   
-0                                             320  punch '* *Done'                                                       
+0                                             310  punch 'runtest svc .1'                                                
+                                              311  punch 'gpr'                                                           
+                                              312  punch '*Gpr 2 0560 #address'                                          
+                                              313  punch '*Gpr 3 0000'                                                   
+                                              314  punch '*Gpr 4 0000'                                                   
+                                              315  punch 'r 2c0.10'                                                      
+                                              316  punch '*Want 3835EC6F 7151E73A 2A593988 B05B7E61'                     
+                                              317  punch 'r 2d0.10'                                                      
+                                              318  punch '*Want 510E527F 9B05688C 1F83D9AB 5BE0CD19'                     
+0                                             320  punch '*Done'                                                         
  000002E0                00000000 00000706    321 digest loctr ,                                                         
  000002E0                000002E0 00000400    322  org digest+x'400'                                                     
  00000560                00000400 00000706    323 data loctr                                                             
  00000560                00000560 00000600    324  org data+x'200'                                                       
                                               325  end                                                                   
 1DIGEST                                           Relocation Dictionary                                         Page   11
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/05/27 14.29
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/12/02 12.03
 0  00000001 00000001 000001A8   A 8     +                                                                                
 1DIGEST                         Ordinary Symbol and Literal Cross Reference                                     Page   12
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/05/27 14.29
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/12/02 12.03
 0bare          1 00000612 00000001     U                   55   49B                                                      
  code          1 00000600 00000001     J                   43   93   159   225   301                                     
  CRYPTDAT     48 00000400 00000001     C  CE               34   37    41    41    96   162                               
@@ -413,15 +413,15 @@
  svcold        8 00000140 00000001     D  D                21   52S                                                      
  swap          1 00000600 00000001     U                   47   73B  105B  123B  171B  188B  237B  258B  308B            
 1DIGEST                            Unreferenced Symbols Defined in CSECTs                                       Page   13
--  Defn  Symbol                                                                             jHLASM 1.0   2016/05/27 14.29
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/12/02 12.03
 0    30  kmacmap                                                                                                         
 1DIGEST                                                Using Map                                                Page   14
--                                                                                           jHLASM 1.0   2016/05/27 14.29
+-                                                                                           jHLASM 1.0   2016/12/02 12.03
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    16  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 006FA    308 *,15                          
 1                                   General Purpose Register Cross Reference                                    Page   15
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/05/27 14.29
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/12/02 12.03
 0    0(0)      62S   64    67S   69M   69    72    94S   98   102   120   160S  164   168   185   226S  230   234   255   302S  306
      1(1)      63S   64    68S   69M   69    72    95S   98   102   120   161S  164   168   185   227S  230   234   255   303S  306
      2(2)      64M   72M   96S   98M  102M  120M  162S  164M  168M  185M  228S  230M  234M  255M  304S  306M             
@@ -440,14 +440,14 @@
     14(E)      48S   48    53S   53B                                                                                     
     15(F)      16U                                                                                                       
 1DIGEST                            Diagnostic Cross Reference and Assembler Summary                             Page   16
--                                                                                           jHLASM 1.0   2016/05/27 14.29
+-                                                                                           jHLASM 1.0   2016/12/02 12.03
 0     No Statements Flagged in this Assembly                                                                             
-0John's High Level Assembler Release 1.0, May 17 2016 14:03:54                                                           
-0System:  Linux release 3.19.0-59-generic on jbox (i686)                                                                 
+0John's High Level Assembler Release 1.0, Sep  1 2016 18:13:16                                                           
+0System:  Linux release 3.13.0-101-generic on jack (x86_64)                                                              
 0Data Sets Allocated for this Assembly                                                                                   
   Type     Mtime                File path                                                                                
-  input    2016-05-27 10:22:50  digest.assemble                                                                          
-0Assembly Start Time: 14.29.06 Stop Time: 14.29.06 Processor Time: 00.00.00.0370.
+  input    2016-12-02 12:00:12  digest.assemble                                                                          
+0Assembly Start Time: 12.03.46 Stop Time: 12.03.46 Processor Time: 00.00.00.0068.
  
                                      
  Return Code 000                                                                                                         

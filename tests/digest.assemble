@@ -14,9 +14,9 @@ digest start 0
 digest amode any                                                                
 digest rmode any                                                                
  using *,15                                                                     
- punch '* *Testcase digest &sysdatc &systime'                                   
- punch '* sysclear'                                                             
- punch '* archlvl z'                                                            
+ punch '*Testcase digest &sysdatc &systime'                                     
+ punch 'sysclear'                                                               
+ punch 'archlvl z'                                                              
  org digest+x'140' SVC old                                                      
 svcold ds 2d                                                                    
  org digest+x'1a0' Restart new                                                  
@@ -62,25 +62,25 @@ go equ *
  la 0,x'80' Invalid function code                                               
  la 1,kimdmap                                                                   
  kimd 0,2                                                                       
- punch '* *Program 6'                                                           
- punch '* runtest .1' Bad function                                              
+ punch '*Program 6'                                                             
+ punch 'runtest .1' Bad function                                                
  la 0,0 valid function code                                                     
  la 1,kimdmap                                                                   
  kimd 0,0  Bad R2                                                               
- punch '* *Program 6'                                                           
- punch '* runtest program .1' Bad operand 2                                     
+ punch '*Program 6'                                                             
+ punch 'runtest program .1' Bad operand 2                                       
  kimd 0,2  Store list of supported codes                                        
  bas 9,swap  Go check it                                                        
- punch '* runtest program .1' Good query                                        
- punch '* *Compare'                                                             
- punch '* r 200.10'                                                             
- punch '* *Want F0000000 00000000 40000000 00000000 '                           
+ punch 'runtest program .1' Good query                                          
+ punch '*Compare'                                                               
+ punch 'r 200.10'                                                               
+ punch '*Want F0000000 00000000 40000000 00000000 '                             
 *                                                                               
 * Function 1   KIMD                                                             
 *                                                                               
- punch '* * '                                                                   
- punch '* * SHA1'                                                               
- punch '* * '                                                                   
+ punch '* '                                                                     
+ punch '* SHA1'                                                                 
+ punch '* '                                                                     
 digest loctr                                                                    
 * 220                                                                           
 DIGEST1  DC    X'67452301'             \                                TST01450
@@ -96,23 +96,23 @@ code loctr
  la 2,cryptdat                                                                  
  la 3,LCRYPDAT  Not multiple of 64                                              
  kimd 0,2                                                                       
- punch '* *Program 6'                                                           
- punch '* runtest svc .1' SHA 1                                                 
+ punch '*Program 6'                                                             
+ punch 'runtest svc .1' SHA 1                                                   
  la 3,64 One block                                                              
  kimd 0,2  Good                                                                 
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest program .1' SHA 1                                             
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0440 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 220.10'                                                             
+ punch 'runtest program .1' SHA 1                                               
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0440 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 220.10'                                                               
 *  87A5F8FF 10EEA3A1 4A00D61F F1FFA053                                          
- punch '* *Want 8FEA16BE 2F911D81 D9F428E2 3BAD6691'                            
- punch '* r 230.4'                                                              
- punch '* *Want 94298417'                                                       
+ punch '*Want 8FEA16BE 2F911D81 D9F428E2 3BAD6691'                              
+ punch 'r 230.4'                                                                
+ punch '*Want 94298417'                                                         
 *                                                                               
 * Test 2.  KLMD SHA1                                                            
 *                                                                               
@@ -121,17 +121,17 @@ code loctr
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest svc .1' SHA 1                                                 
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0490 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 220.10'                                                             
- punch '* *Want 666D243D 011EFC7A F7BA3154 41E9752A'                            
- punch '* r 230.4'                                                              
- punch '* *Want BC1249FC'                                                       
- punch '* r 234.8'                                                              
- punch '* *Want  00000000 00000480'                                             
+ punch 'runtest svc .1' SHA 1                                                   
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0490 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 220.10'                                                               
+ punch '*Want 666D243D 011EFC7A F7BA3154 41E9752A'                              
+ punch 'r 230.4'                                                                
+ punch '*Want BC1249FC'                                                         
+ punch 'r 234.8'                                                                
+ punch '*Want  00000000 00000480'                                               
                                                        EJECT                    
 ***********************************************************************         
 *                                                                     *         
@@ -139,9 +139,9 @@ code loctr
 *                                                                     *         
 ***********************************************************************         
                                                      SPACE 2                    
- punch '* * '                                                                   
- punch '* * SHA256'                                                             
- punch '* * '                                                                   
+ punch '* '                                                                     
+ punch '* SHA256'                                                               
+ punch '* '                                                                     
 digest loctr                                                                    
 * 240                                                                           
 sha256 ds 0d                                                                    
@@ -162,22 +162,22 @@ code loctr
  la 2,cryptdat                                                                  
  la 3,LCRYPDAT  Not multiple of 64                                              
  kimd 0,2                                                                       
- punch '* *Program 6'                                                           
- punch '* runtest svc .1' SHA 1                                                 
+ punch '*Program 6'                                                             
+ punch 'runtest svc .1' SHA 1                                                   
  la 3,64 One block                                                              
  kimd 0,2  Good                                                                 
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest program .1' SHA 256                                           
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0440 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 240.10'                                                             
- punch '* *Want F0A7469C 39FC8746 A28C327F 76118103'                            
- punch '* r 250.10'                                                             
- punch '* *Want 5E07E96A AC689C36 EC17DF1F 88779E4B'                            
+ punch 'runtest program .1' SHA 256                                             
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0440 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 240.10'                                                               
+ punch '*Want F0A7469C 39FC8746 A28C327F 76118103'                              
+ punch 'r 250.10'                                                               
+ punch '*Want 5E07E96A AC689C36 EC17DF1F 88779E4B'                              
 *                                                                               
 * Test 4.  KLMD SHA256                                                          
 *                                                                               
@@ -186,17 +186,17 @@ code loctr
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest svc .1' SHA 1                                                 
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0490 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 240.10'                                                             
- punch '* *Want 712F0D37 DD6440BF F9FFE27F 6DD8FBC0'                            
- punch '* r 250.10'                                                             
- punch '* *Want  785A84C6 D352D7A5 D3647682 9FF675E8'                           
- punch '* r 260.8'                                                              
- punch '* *Want  00000000 00000480'                                             
+ punch 'runtest svc .1' SHA 1                                                   
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0490 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 240.10'                                                               
+ punch '*Want 712F0D37 DD6440BF F9FFE27F 6DD8FBC0'                              
+ punch 'r 250.10'                                                               
+ punch '*Want  785A84C6 D352D7A5 D3647682 9FF675E8'                             
+ punch 'r 260.8'                                                                
+ punch '*Want  00000000 00000480'                                               
                                                        EJECT                    
 ***********************************************************************         
 *                                                                     *         
@@ -204,9 +204,9 @@ code loctr
 *                                                                     *         
 ***********************************************************************         
                                                      SPACE 2                    
- punch '* * '                                                                   
- punch '* * SHA512'                                                             
- punch '* * '                                                                   
+ punch '* '                                                                     
+ punch '* SHA512'                                                               
+ punch '* '                                                                     
 digest loctr                                                                    
 * 270                                                                           
 sha512 ds 0d                                                                    
@@ -228,26 +228,26 @@ code loctr
  la 2,longdata                                                                  
  la 3,L'longdata  'Not multiple of 64                                           
  kimd 0,2                                                                       
- punch '* *Program 6'                                                           
- punch '* runtest svc .1' SHA 1                                                 
+ punch '*Program 6'                                                             
+ punch 'runtest svc .1' SHA 1                                                   
  la 3,128 One block                                                             
  kimd 0,2  Good                                                                 
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest program .1'                                                   
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0480 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 270.10'                                                             
- punch '* *Want 3683E74A DE2CF007 5CB76A7C 9B5386F3'                            
- punch '* r 280.10'                                                             
- punch '* *Want 722122C7 9EC1B0CC E10202B2 13274F27'                            
- punch '* r 290.10'                                                             
- punch '* *Want 17BFB280 F0CEF114 CB9511E5 775F09DC'                            
- punch '* r 2a0.10'                                                             
- punch '* *Want 057B9AE0 D25AF58B 161617FD 0E4E7395'                            
+ punch 'runtest program .1'                                                     
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0480 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 270.10'                                                               
+ punch '*Want 3683E74A DE2CF007 5CB76A7C 9B5386F3'                              
+ punch 'r 280.10'                                                               
+ punch '*Want 722122C7 9EC1B0CC E10202B2 13274F27'                              
+ punch 'r 290.10'                                                               
+ punch '*Want 17BFB280 F0CEF114 CB9511E5 775F09DC'                              
+ punch 'r 2a0.10'                                                               
+ punch '*Want 057B9AE0 D25AF58B 161617FD 0E4E7395'                              
 *                                                                               
 * Test 4.  KLMD SHA512                                                          
 *                                                                               
@@ -256,21 +256,21 @@ code loctr
  bo *-4                                                                         
  ipm 4                                                                          
  bas 9,swap  Go check it                                                        
- punch '* runtest svc .1'                                                       
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0520 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 270.10'                                                             
- punch '* *Want 24F541F7 9ED7EF7D 703F2F73 4687F0B3'                            
- punch '* r 280.10'                                                             
- punch '* *Want FEE421D4 126933BD 714C0278 3C71FF52'                            
- punch '* r 290.10'                                                             
- punch '* *Want A5D3CEFB 1E32E356 EB021FF4 803293B4'                            
- punch '* r 2a0.10'                                                             
- punch '* *Want 4036039B 61CEC167 D0D5FB43 E1C46250'                            
- punch '* r 2b0.10'                                                             
- punch '* *Want 00000000 00000000 00000000 00000900'                            
+ punch 'runtest svc .1'                                                         
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0520 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 270.10'                                                               
+ punch '*Want 24F541F7 9ED7EF7D 703F2F73 4687F0B3'                              
+ punch 'r 280.10'                                                               
+ punch '*Want FEE421D4 126933BD 714C0278 3C71FF52'                              
+ punch 'r 290.10'                                                               
+ punch '*Want A5D3CEFB 1E32E356 EB021FF4 803293B4'                              
+ punch 'r 2a0.10'                                                               
+ punch '*Want 4036039B 61CEC167 D0D5FB43 E1C46250'                              
+ punch 'r 2b0.10'                                                               
+ punch '*Want 00000000 00000000 00000000 00000900'                              
                                                        EJECT                    
 ***********************************************************************         
 *                                                                     *         
@@ -283,9 +283,9 @@ code loctr
 *                                                                     *         
 ***********************************************************************         
                                                      SPACE 2                    
- punch '* * '                                                                   
- punch '* * GHASH'                                                              
- punch '* * '                                                                   
+ punch '* '                                                                     
+ punch '* GHASH'                                                                
+ punch '* '                                                                     
 digest loctr                                                                    
 * 2c0                                                                           
 ghparms dc x'6A09E667BB67AE853C6EF372A54FF53A'                                  
@@ -307,17 +307,17 @@ code loctr
  bo *-4                                                                         
  bas 9,swap  Go check it                                                        
                                                                                 
- punch '* runtest svc .1'                                                       
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0560 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0000'                                                          
- punch '* r 2c0.10'                                                             
- punch '* *Want 3835EC6F 7151E73A 2A593988 B05B7E61'                            
- punch '* r 2d0.10'                                                             
- punch '* *Want 510E527F 9B05688C 1F83D9AB 5BE0CD19'                            
+ punch 'runtest svc .1'                                                         
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0560 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0000'                                                            
+ punch 'r 2c0.10'                                                               
+ punch '*Want 3835EC6F 7151E73A 2A593988 B05B7E61'                              
+ punch 'r 2d0.10'                                                               
+ punch '*Want 510E527F 9B05688C 1F83D9AB 5BE0CD19'                              
                                                                                 
- punch '* *Done'                                                                
+ punch '*Done'                                                                  
 digest loctr ,                                                                  
  org digest+x'400'                                                              
 data loctr                                                                      

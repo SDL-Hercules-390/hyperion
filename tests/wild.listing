@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2016/08/20 10.36
+-                                                                                           jHLASM 1.0   2016/12/01 11.41
 0  No Overriding ASMAOPT Parameters                                                                                      
    Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
@@ -51,66 +51,59 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/08/20 10.36
-0STFL      SD 00000001 00000000 000002D8             00                                                                  
-1         Store facilities list [extended].                                                                     Page    3
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/12/01 11.41
+0MLT       SD 00000001 00000000 00000208             00                                                                  
+1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/08/20 10.36
-000000000                00000000 000002D8      2 stfl start 0                                                           
-                     R:F 00000000               3  using *,15                                                            
- 00000000                00000000 000000C8      4  org stfl+x'c8'                                                        
- 000000C8                                       5 privfl ds f Stored in the PSA by STFL                                  
- 000000CC                000000CC 000001A0      6  org stfl+x'1a0'                                                       
- 000001A0 0000000000000000                      7  dc ad(0,go)                                                           
- 000001B0                000001B0 000001D0      8  org stfl+x'1d0'                                                       
- 000001D0 0002000000000000                      9  dc x'00020000',a(0,0,0)                                               
- 000001E0                000001E0 00000200     10  org stfl+x'200'                                                       
- 00000200                                      11 sefl ds 2d                                                             
- 00000210                                      12 efl ds 16d  Should last a while                                        
-                         00000290              13 go equ *                                                               
- 00000290 B2B1 0000      00000000              14  stfl 0   32 bits at 200 decimal = x'c8'                               
- 00000294 D203 F0C8 00C8 000000C8 000000C8     15  mvc privfl,x'c8' Move for compare                                     
- 0000029A B982 0000                            16  xgr 0,0  Short                                                        
- 0000029E B2B0 F200      00000200              17  stfle sefl                                                            
- 000002A2 B222 0020                            18  ipm 2   Should be 3                                                   
- 000002A6 B904 0030                            19  lgr 3,0                                                               
- 000002AA A708 0007               00000007     20  lhi 0,7 Store up to 8                                                 
- 000002AE B2B0 F210      00000210              21  stfle efl                                                             
- 000002B2 B222 0040                            22  ipm 4                                                                 
- 000002B6 B904 0050                            23  lgr 5,0                                                               
- 000002BA B2B0 0001      00000001              24  stfle 1 Should specification                                          
- ** ASMA033I Storage alignment for 1 unfavorable                                                                         
- ** ASMA435I Record 24 in stfl on volume: .none.                                                                         
- 000002BE 12EE                                 25  ltr 14,14                                                             
- 000002C0 077E                                 26  bnzr 14                                                               
- 000002C2 B2B2 F2C8      000002C8              27  lpswe stop                                                            
- 000002C6 0000                                                                                                           
- 000002C8 0002000000000000                     28 stop dc 0d,x'0002 0000',3a(0)                                          
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/01 11.41
+0                                               1 * These are punched before the ESD record(s)                           
+                                                2  punch '*Testcase multix'                                              
+                                                3  punch 'sysclear'                                                      
+                                                4  punch 'archmode z'                                                    
+ 00000000                00000000 00000208      5 mlt start 0                                                            
+ 00000000                00000000 000001A0      6  org mlt+x'1a0' Restart new                                            
+ 000001A0 0000000180000000                      7 rstnew dc x'0000000180000000',ad(go)                                   
+ 000001B0                000001B0 000001C0      8  org mlt+x'1c0' SVC new                                                
+ 000001C0 0002000180000000                      9  dc x'0002000180000000',ad(0)                                          
+ 000001D0                000001D0 00000200     10  org mlt+x'200'                                                        
+ 00000200                                      11 go ds 0h                                                               
+ 00000200 5800 0000               00000000     12  l 0,0 <do something>                                                  
+ 00000204 0A00                                 13  svc 0 OK so far                                                       
+                                               14  punch 'runtest .1'                                                    
+                                               15  punch '*Compare'                                                      
+                                               16  punch 'r 88.4'                                                        
+                                               17  punch '*Want 00020000'                                                
+                                               18  punch '*Done'                                                         
+ 00000206                00000206 000001A0     19 resume org rstnew                                                      
+ 000001A0 0071000000000000                     20  dc x'0071000000000000',ad(next) Key 7 24 bit                          
+ 000001B0                000001B0 00000206     21  org resume  Back; org (no operands) likely works too                  
+ 00000206 0A01                                 22 next svc 1                                                             
+                                               23  punch '*Testcase multix1'                                             
+                                               24  punch 'runtest .1'                                                    
+                                               25  punch '*Compare'                                                      
+                                               26  punch 'r 88.4'                                                        
+                                               27  punch '*Want 00020001'                                                
+                                               28  punch '*Done'                                                         
                                                29  end                                                                   
 1                                                 Relocation Dictionary                                         Page    4
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/08/20 10.36
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/12/01 11.41
 0  00000001 00000001 000001A8   A 8     +                                                                                
+   00000001 00000001 000001A8   A 8     +                                                                                
 1                               Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/08/20 10.36
-0efl           8 00000210 00000001     D  D                12   21M                                                      
- go            1 00000290 00000001     U                   13    7                                                       
- privfl        4 000000C8 00000001     F  F                 5   15S                                                      
- sefl          8 00000200 00000001     D  D                11   17M                                                      
- stfl          1 00000000 00000001     J                    2    4     6     8    10                                     
- stop          8 000002C8 00000001     D  D                28   27                                                       
-1                                                      Using Map                                                Page    6
--                                                                                           jHLASM 1.0   2016/08/20 10.36
-   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
-           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
-0     3  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 002C8     27 *,15                          
-1                                   General Purpose Register Cross Reference                                    Page    7
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/08/20 10.36
-0    0(0)      16M   16    17    17M   19    20S   21    21M   23    24    24M                                           
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/12/01 11.41
+0go            2 00000200 00000001     H  H                11    7                                                       
+ mlt           1 00000000 00000001     J                    5    6     8    10                                           
+ next          2 00000206 00000001     I                   22   20                                                       
+ resume        1 00000206 00000001     U                   19   21                                                       
+ rstnew        8 000001A0 00000001     X  X                 7   19                                                       
+1                                   General Purpose Register Cross Reference                                    Page    6
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/12/01 11.41
+0    0(0)      12S                                                                                                       
      1(1)    (no references identified)                                                                                  
-     2(2)      18M                                                                                                       
-     3(3)      19M                                                                                                       
-     4(4)      22M                                                                                                       
-     5(5)      23M                                                                                                       
+     2(2)    (no references identified)                                                                                  
+     3(3)    (no references identified)                                                                                  
+     4(4)    (no references identified)                                                                                  
+     5(5)    (no references identified)                                                                                  
      6(6)    (no references identified)                                                                                  
      7(7)    (no references identified)                                                                                  
      8(8)    (no references identified)                                                                                  
@@ -119,22 +112,17 @@
     11(B)    (no references identified)                                                                                  
     12(C)    (no references identified)                                                                                  
     13(D)    (no references identified)                                                                                  
-    14(E)      25S   25    26B                                                                                           
-    15(F)       3U                                                                                                       
-1                                  Diagnostic Cross Reference and Assembler Summary                             Page    8
--                                                                                           jHLASM 1.0   2016/08/20 10.36
-0Statements Flagged                                                                                                      
-0    24(P2,24)                                                                                                           
-                                                                                                                         
-       1 Statement  Flagged in this Assembly        0 was Highest Severity Code                                          
-1                                  Diagnostic Cross Reference and Assembler Summary                             Page    9
--                                                                                           jHLASM 1.0   2016/08/20 10.36
-0John's High Level Assembler Release 1.0, Aug  3 2016 12:34:10                                                           
-0System:  Linux release 3.13.0-93-generic on jack (x86_64)                                                               
+    14(E)    (no references identified)                                                                                  
+    15(F)    (no references identified)                                                                                  
+1                                  Diagnostic Cross Reference and Assembler Summary                             Page    7
+-                                                                                           jHLASM 1.0   2016/12/01 11.41
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Sep  1 2016 18:13:16                                                           
+0System:  Linux release 3.13.0-101-generic on jack (x86_64)                                                              
 0Data Sets Allocated for this Assembly                                                                                   
   Type     Mtime                File path                                                                                
-  input    2016-08-20 10:25:43  stfl.assemble                                                                            
-0Assembly Start Time: 10.36.07 Stop Time: 10.36.07 Processor Time: 00.00.00.0053.
+  input    2016-12-01 09:59:09  wild.assemble                                                                            
+0Assembly Start Time: 11.41.00 Stop Time: 11.41.00 Processor Time: 00.00.00.0023.
  
                                      
  Return Code 000                                                                                                         

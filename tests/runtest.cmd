@@ -878,43 +878,31 @@
   )
 
 
-  :: PROGRAMMING NOTE: It's CRITICALLY IMPORTANT we NOT use "%ftype%"
-  :: for the filename extension of the consolidated tests file that
-  :: we construct here in order to prevent re-appending a partially
-  :: constructed copy of ourselves to ourselves.
-  ::
-  :: Thus we use "_%ftype%" to guarantee the filename extension of
-  :: the consolidated tests file that we're constructing will always
-  :: be different from the filename extension of the test files that
-  :: we're concatenating together.
-
-  set "wfe=_%ftype%"  &&  @REM (guaranteed different from %ftype%)
-
-
   @REM Delete any leftover work files from previous run
 
-  if exist %wfn%.%wfe%  del /f %wfn%.%wfe%
-  if exist %wfn%.rc     del /f %wfn%.rc
-  if exist %wfn%.out    del /f %wfn%.out
-  if exist %wfn%.txt    del /f %wfn%.txt
+  if exist %wfn%.temp del /f %wfn%.temp
+  if exist %wfn%.tst  del /f %wfn%.tst
+  if exist %wfn%.rc   del /f %wfn%.rc
+  if exist %wfn%.out  del /f %wfn%.out
+  if exist %wfn%.txt  del /f %wfn%.txt
 
 
   @REM Build test script consisting of all *.tst files concatenated together
 
-  echo msglvl -debug +emsgloc     >> %wfn%.%wfe%
-  echo defsym testpath %tdir%     >> %wfn%.%wfe%
+  echo msglvl -debug +emsgloc      >> %wfn%.testin
+  echo defsym testpath %tdir%      >> %wfn%.testin
   for %%a in (%tdir%\%tname%.%ftype%) do (
-    echo ostailor null            >> %wfn%.%wfe%
-    echo numcpu 1                 >> %wfn%.%wfe%
-    echo mainsize 2               >> %wfn%.%wfe%
-    type "%%a"                    >> %wfn%.%wfe%
+    echo * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  >> %wfn%.temp
+    echo *                         >> %wfn%.testin
+    echo * Start of test file %%~nxa date %%~ta in %%~dpa  >> %wfn%.testin
+    echo *                         >> %wfn%.testin
+    type "%%a"                     >> %wfn%.testin
   )
-  if not defined noexit echo exit >> %wfn%.%wfe%
-
+  if not defined noexit echo exit >> %wfn%.testin
 
   @REM Build startup .rc file which invokes the test script
 
-  echo script %wfn%.%wfe% >> %wfn%.rc
+  echo script %wfn%.testin >> %wfn%.rc
 
 
   @REM Initialize counters

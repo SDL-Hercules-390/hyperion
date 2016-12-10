@@ -26,17 +26,17 @@ CIPHER   TITLE 'Test of KM instruction.'
  la 4,enciphered                                                                
  xc enciphered,enciphered                                                       
  sr 5,5 For mask                                                                
- &op 4,2                                                                        
- jo *-4                                                                         
+&op.&sysndx. &op 4,2                                                            
+ jo &op.&sysndx.                                                                
  ipm 5                                                                          
  jas 9,swap                                                                     
- punch '* runtest svc .1'                                                       
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0800 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0500 #address'                                                 
- punch '* *Gpr 5 0000' cc                                                       
- punch '* r 400.10'                                                             
+ punch 'runtest svc .1'                                                         
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0800 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0500 #address'                                                   
+ punch '*Gpr 5 0000' cc                                                         
+ punch 'r 400.10'                                                               
  mend                                                                           
                                                      SPACE 1                    
  macro                                                                          
@@ -55,14 +55,14 @@ CIPHER   TITLE 'Test of KM instruction.'
  jo *-4                                                                         
  ipm 5                                                                          
  jas 9,swap                                                                     
- punch '* runtest svc .1'                                                       
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0500 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0600 #address'                                                 
- punch '* *Gpr 5 0000' cc                                                       
- punch '* r 500.10'                                                             
- punch '* *Want "&what. clear" 12EEA784 000841A0 900050A0 F14C0DEE'             
+ punch 'runtest svc .1'                                                         
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0500 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0600 #address'                                                   
+ punch '*Gpr 5 0000' cc                                                         
+ punch 'r 500.10'                                                               
+ punch '*Want "&what. clear" 12EEA784 000841A0 900050A0 F14C0DEE'               
  mend                                                                           
                                                      SPACE 1                    
 cipher start 0                                                                  
@@ -74,9 +74,9 @@ data loctr
 code loctr                                                                      
 psa loctr                                                                       
  using *,15                                                                     
- punch '* *Testcase cipher &sysdatc &systime'                                   
- punch '* sysclear'                                                             
- punch '* archlvl z'                                                            
+ punch '*Testcase cipher &sysdatc &systime'                                     
+ punch 'sysclear'                                                               
+ punch 'archlvl z'                                                              
  org psa+x'140' SVC old                                                         
 svcold ds 2d                                                                    
  org psa+x'1a0' Restart new                                                     
@@ -166,15 +166,15 @@ code loctr
  la  0,x'80' Query                                                              
  la  1,ckqueryout                                                               
  pckmo                                                                          
- punch '* *Program 6'                                                           
- punch '* runtest .1' bad operand 1                                             
+ punch '*Program 6'                                                             
+ punch 'runtest .1' bad operand 1                                               
  la  0,0 Query                                                                  
  pckmo                                                                          
  jas 9,swap                                                                     
- punch '* runtest program .1' OK query                                          
- punch '* *Compare'                                                             
- punch '* r 200.10'                                                             
- punch '* *Want F0003800 00000000 00000000 00000000'                            
+ punch 'runtest program .1' OK query                                            
+ punch '*Compare'                                                               
+ punch 'r 200.10'                                                               
+ punch '*Want F0003800 00000000 00000000 00000000'                              
 *                                                                               
  la 0,1                                                                         
  la 1,dea_key                                                                   
@@ -195,11 +195,11 @@ code loctr
  la 1,aes_256_key                                                               
  pckmo                                                                          
  jas 9,swap                                                                     
- punch '* runtest svc .1' OK query                                              
- punch '* *Compare'                                                             
+ punch 'runtest svc .1' OK query                                                
+ punch '*Compare'                                                               
 * The contents of this is not predictable, but can be used with                 
 * various other instructions.                                                   
- punch '* r 230.130'                                                            
+ punch 'r 230.130'                                                              
                                                        EJECT                    
 ***********************************************************************         
 *                                                                     *         
@@ -210,21 +210,21 @@ code loctr
  la  0,0 Query                                                                  
  la  1,queryout                                                                 
  km  0,2                                                                        
- punch '* *Program 6'                                                           
- punch '* runtest svc .1' bad operand 1                                         
+ punch '*Program 6'                                                             
+ punch 'runtest svc .1' bad operand 1                                           
  km  2,0                                                                        
- punch '* *Program 6'                                                           
- punch '* runtest program .1' Bad operand 2                                     
+ punch '*Program 6'                                                             
+ punch 'runtest program .1' Bad operand 2                                       
  km  2,2                                                                        
  la 1,kmcqueryout                                                               
  kmc  2,2                                                                       
  jas 9,swap                                                                     
- punch '* runtest program .1' OK query                                          
- punch '* *Compare'                                                             
- punch '* r 210.10'                                                             
- punch '* *Want "km query" F0703838 00002828 00000000 00000000'                 
- punch '* r 220.10'                                                             
- punch '* *Want "kmc query" F0703838 00000000 10000000 00000000'                
+ punch 'runtest program .1' OK query                                            
+ punch '*Compare'                                                               
+ punch 'r 210.10'                                                               
+ punch '*Want "km query" F0703838 00002828 00000000 00000000'                   
+ punch 'r 220.10'                                                               
+ punch '*Want "kmc query" F0703838 00000000 10000000 00000000'                  
                                                        EJECT                    
 ***********************************************************************         
 *                                                                     *         
@@ -241,12 +241,12 @@ deakey dc x'0001020304050607'
  ds d Align on quad                                                             
 code loctr                                                                      
  encipher 1,deakey                                                              
- punch '* *Want "DEA encrypt"  0AC1057C AE3140C8 42998815 A83F973B'             
+ punch '*Want "DEA encrypt"  0AC1057C AE3140C8 42998815 A83F973B'               
                                                                                 
  decipher dea                                                                   
                                                                                 
  encipher 1,deachainx,op=kmc                                                    
- punch '* *Want "kmc DEA encrypt" 775871E5 7BCFB637 7A18002F 9D060111'          
+ punch '*Want "kmc DEA encrypt" 775871E5 7BCFB637 7A18002F 9D060111'            
                                                                                 
  decipher kmc-dea                                                               
                                                        EJECT                    
@@ -257,7 +257,7 @@ code loctr
 ***********************************************************************         
                                                      SPACE 2                    
  encipher  9,dea_key                                                            
- punch '* *Want "dea-c encrypt" 0AC1057C AE3140C8 42998815 A83F973B'            
+ punch '*Want "dea-c encrypt" 0AC1057C AE3140C8 42998815 A83F973B'              
                                                                                 
  decipher  dea-c                                                                
                                                      SPACE 2                    
@@ -447,7 +447,7 @@ code loctr
  encipher 27,aes_192_key                                                        
  repro                                                                          
 * *Want "AES-192-c encrypt"  EE3EAA7F 5500091D 509AC619 2A222632                
- punch '* r 410.f0'                                                             
+ punch 'r 410.f0'                                                               
                                                                                 
  decipher aes-192-c                                                             
                                                      SPACE 2                    
@@ -527,23 +527,23 @@ code loctr
  jo *-4                                                                         
  ipm 5                                                                          
  jas 9,swap                                                                     
- punch '* runtest svc .1'                                                       
- punch '* gpr'                                                                  
- punch '* *Gpr 2 0800 #address'                                                 
- punch '* *Gpr 3 0000'                                                          
- punch '* *Gpr 4 0500 #address'                                                 
- punch '* *Gpr 5 0000' cc                                                       
- punch '* r 400.10'                                                             
+ punch 'runtest svc .1'                                                         
+ punch 'gpr'                                                                    
+ punch '*Gpr 2 0800 #address'                                                   
+ punch '*Gpr 3 0000'                                                            
+ punch '*Gpr 4 0500 #address'                                                   
+ punch '*Gpr 5 0000' cc                                                         
+ punch 'r 400.10'                                                               
  repro                                                                          
 * *Want "kmc-prng"  895D7F0D 4A95FB6D 2D170C6D 59FE9CF7                         
- punch '* r 3b8.8'                                                              
- punch '* *Want "prng chain" AAF415C1 203ECFBB'                                 
+ punch 'r 3b8.8'                                                                
+ punch '*Want "prng chain" AAF415C1 203ECFBB'                                   
                                                                                 
                                                                                 
 data loctr                                                                      
 work loctr                                                                      
                                                                                 
- punch '* *Done'                                                                
+ punch '*Done'                                                                  
 psa loctr                                                                       
  org psa+x'200'                                                                 
 work loctr                                                                      

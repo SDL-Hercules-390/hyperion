@@ -1,0 +1,29 @@
+* These are punched before the ESD record(s)                                    
+ punch '*Testcase multix'                                                       
+ punch 'sysclear'                                                               
+ punch 'archmode z'                                                             
+mlt start 0                                                                     
+ org mlt+x'1a0' Restart new                                                     
+rstnew dc x'0000000180000000',ad(go)                                            
+ org mlt+x'1c0' SVC new                                                         
+ dc x'0002000180000000',ad(0)                                                   
+ org mlt+x'200'                                                                 
+go ds 0h                                                                        
+ l 0,0 <do something>                                                           
+ svc 0 OK so far                                                                
+ punch 'runtest .1'                                                             
+ punch '*Compare'                                                               
+ punch 'r 88.4'                                                                 
+ punch '*Want 00020000'                                                         
+ punch '*Done'                                                                  
+resume org rstnew                                                               
+ dc x'0071000000000000',ad(next) Key 7 24 bit                                   
+ org resume  Back; org (no operands) likely works too                           
+next svc 1                                                                      
+ punch '*Testcase multix1'                                                      
+ punch 'runtest .1'                                                             
+ punch '*Compare'                                                               
+ punch 'r 88.4'                                                                 
+ punch '*Want 00020001'                                                         
+ punch '*Done'                                                                  
+ end                                                                            

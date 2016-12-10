@@ -1,15 +1,11 @@
-# This test file was generated from offline assembler source
-# by bldhtc.rexx 16 Jan 2016 12:11:11
-# Treat as object code.  That is, modifications will be lost.
-# assemble and listing files are provided for information only.
+* This file was put into the public domain 2015-10-22
+* by John P. Hartmann.  You can use it for anything you like,
+* as long as this notice remains.
+
 *Testcase mhi
 sysclear
 archmode z
-r     60=00020000000000000000000000000000
-r    1A0=00000001800000000000000000000200
-r    1D0=0002000180000000FFFFFFFFDEADDEAD
-r    200=412000211852A72C00021862B2220040
-r    210=41322001B2B20060
+loadcore "$(testpath)/mhi.core"
 runtest .1
 *Compare
 gpr
