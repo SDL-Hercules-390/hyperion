@@ -1,0 +1,491 @@
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2016/12/11 12.34
+0  No Overriding ASMAOPT Parameters                                                                                      
+   Overriding Parameters-  term                                                                                          
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+ 3   TERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1zeos                                          External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/12/11 12.34
+0ZEOS      SD 00000001 00000000 00000450             00                                                                  
+1zeos     Put stuff at end of storage                                                                           Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                               2 *                                                                      
+                                                3 * This file was put into the public domain 2016-12-07                  
+                                                4 * by John P. Hartmann.  You can use it for anything you like,          
+                                                5 * as long as this notice remains.                                      
+                                                6 *                                                                      
+0                                               8 * The purpose of this test is to align the parameter area              
+                                                9 * with the end of the first megabyte, which is the end of              
+                                               10 * storage on Hyperion.  On CMS we are not testing the instruction,     
+                                               11 * we are disccovering what it should do.                               
+0                                              13  gblc offs                                                             
+                                               14  gblc rs(1)                                                            
+0                                              16  macro                                                                 
+                                               17  want &lab,&data                                                       
+                                               18  gbla wantix                                                           
+                                               19  gblc wants(1)                                                         
+                                               20 &wantix seta &wantix+1                                                 
+                                               21 &dat setc '&data.'(2,k'&data-2) ')                                     
+                                               22 &sym setc 'dif&sysndx'                                                 
+                                               23 &sym equ &lab-&sysect                                                  
+                                               24 &len seta l'&sym '                                                     
+                                               25 &lenc setc a2x(&len)                                                   
+                                               26 .* Cannot do this assign in a local seta as the assembler does         
+                                               27 .* not understand putting a setc symbol containing the offset;         
+                                               28 .* so we substitute the label symbol in the ainsert.  Better be        
+                                               29 .* sure that the assembler can do the evaluation during the macro      
+                                               30 .* pass.                                                               
+                                               31    ainsert '&&offs setc a2x(&sym)',back                                
+                                               32    ainsert '&&rs(&wantix) setc ''r &&offs..&lenc''',back               
+                                               33 &wants(&wantix) setc '*Want &dat'                                      
+                                               34  mend                                                                  
+0                                              36  macro                                                                 
+                                               37  dumpwants                                                             
+                                               38  gblc wants(1)                                                         
+                                               39  gblc rs(1)                                                            
+                                               40  gbla wantix                                                           
+                                               41  lcla i                                                                
+                                               42 .lp anop                                                               
+                                               43 &i seta &i+1                                                           
+                                               44  punch '&rs(&i)'                                                       
+                                               45  punch '&wants(&i)'                                                    
+                                               46  aif (&i lt &wantix).lp                                                
+                                               47 &wantix seta 0  Prepare for next                                       
+                                               48  mend                                                                  
+0                                              50  macro                                                                 
+                                               51  km2 &fc=,&op=,&clear=,&crypt=,&decrypt=,&mask=                        
+                                               52  gblc kmop,kmcr,kmdec,kmmask                                           
+                                               53  gbla kmlen                                                            
+                                               54 &kmop setc '&op'                                                       
+                                               55 &kmlen seta l'&clear '                                                 
+                                               56 &kmcr setc '&crypt'                                                    
+1zeos     Put stuff at end of storage                                                                           Page    4
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                              57 &kmdec setc '&decrypt'                                                 
+                                               58 &kmmask setc '&mask'                                                   
+                                               59  aif (k'&fc eq 0).nofc ')                                              
+                                               60  la 0,&fc                                                              
+                                               61 .nofc anop                                                             
+                                               62  la 2,&crypt                                                           
+                                               63  la 4,&clear                                                           
+                                               64  la 5,&kmlen                                                           
+                                               65  dokm &op,&mask                                                        
+                                               66  mend                                                                  
+0                                              68  macro                                                                 
+                                               69  km2d                                                                  
+                                               70  gbla kmlen                                                            
+                                               71  gblc kmop,kmcr,kmdec,kmmask                                           
+                                               72  ahi 0,x'80' Turn on decrypt bit                                       
+                                               73  la 2,&kmdec                                                           
+                                               74  la 4,&kmcr                                                            
+                                               75  la 5,&kmlen                                                           
+                                               76  dokm &kmop,&kmmask                                                    
+                                               77  mend                                                                  
+0                                              79  macro                                                                 
+                                               80  dokm                                                                  
+                                               81  gblc kmop,kmcr,kmdec,kmmask                                           
+                                               82  aif (k'&kmmask gt 0).top ')                                           
+                                               83  &kmop 2,4                                                             
+                                               84  ago .mer                                                              
+                                               85 .top anop                                                              
+                                               86  la 6,&kmmask                                                          
+                                               87  &kmop 2,6,4                                                           
+                                               88 .mer anop                                                              
+                                               89  ckcc                                                                  
+                                               90  mend                                                                  
+0                                              92  macro                                                                 
+                                               93  ckcc                                                                  
+                                               94  gbla svc                                                              
+                                               95 &svc seta &svc+1                                                       
+                                               96  jo *-4 Loop if partial                                                
+                                               97  jz ok&sysndx                                                          
+                                               98  mvi svc,&svc                                                          
+                                               99  ltr 14,14                                                             
+                                              100  bnzr 14                                                               
+                                              101  svc &svc                                                              
+                                              102 ok&sysndx equ *                                                        
+                                              103  mend                                                                  
+0                                             105  macro                                                                 
+                                              106  quad  , align on quadword                                             
+                                              107  ds   ((*-zeos+15)/16*16-(*-zeos))x                                    
+                                              108  mend                                                                  
+1zeos     Put stuff at end of storage                                                                           Page    5
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             110 ***********************************************************************
+                                              111 *                                                                     *
+                                              112 * Parameter blocks                                                    *
+                                              113 *                                                                     *
+                                              114 ***********************************************************************
+-00000000                00000000 00000050    116 kmf28pb dsect                                                          
+ 00000000                                     117 kmf28cv ds xl16                                                        
+ 00000010                                     118 kmf28wrap ds xl64                                                      
+                         00000050             119 kmf28length equ *-kmf28pb                                              
+000000000                00000000 00000040    121 kmctr28pb dsect                                                        
+ 00000000                                     122 kmctr28wrap ds xl64                                                    
+                         00000040             123 kmctr28length equ *-kmctr28pb                                          
+1zeos     Put stuff at end of storage                                                                           Page    6
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             125 ***********************************************************************
+                                              126 *                                                                     *
+                                              127 * Last page of storage                                                *
+                                              128 *                                                                     *
+                                              129 ***********************************************************************
+-00000000                00000000 00001000    131 high dsect                                                             
+ 00000000                                     132  ds xl(x'1000')                                                        
+                         00001000             133 highend equ *                                                          
+                     R:9 00000000             134  using high,9                                                          
+                         00000FB0 00000050    135 kmf28 equ highend-kmf28length,kmf28length                              
+                         00000FC0 00000040    136 kmctr28 equ highend-kmctr28length,kmctr28length                        
+1zeos     Put stuff at end of storage                                                                           Page    7
+   Active Usings: HIGH,R9                                                                                                
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             138 ***********************************************************************
+                                              139 *                                                                     *
+                                              140 * Initialise machine configuration                                    *
+                                              141 *                                                                     *
+                                              142 ***********************************************************************
+-                                             144  punch '*Testcase zeos'                                                
+                                              145  punch 'sysclear'                                                      
+                                              146  punch 'mainsize 1m'                                                   
+                                              147  punch 'archmode z'                                                    
+000000000                00000000 00000450    149 zeos start 0                                                           
+                     R:F 00000000             150  using zeos,15                                                         
+ 00000000                00000000 000001A0    151  org zeos+x'1a0' Restart                                               
+ 000001A0 0000000180000000                    152  dc x'0000000180000000',ad(go)                                         
+ 000001B0                000001B0 000001C0    153  org zeos+x'1c0' SVC new                                               
+ 000001C0 0002000180000000                    154  dc x'0002000180000000',ad(0)                                          
+ 000001D0                000001D0 000001D0    155  org zeos+x'1d0' Program                                               
+ 000001D0 0002000180000000                    156  dc x'0002000180000000',ad(x'deaddead')                                
+ 000001E0                000001E0 00000200    157  org zeos+x'200'                                                       
+ 00000200 0000000000000000                    158 fo dc xl16'0'                                                          
+ 00000210 0000000000000000                    159 res dc xl16'0'                                                         
+ 00000220 0000000000000000                    160 ctrfo dc xl16'0'                                                       
+ 00000230 0000000000000000                    161 ctrres dc xl16'0'                                                      
+ 00000240 00000000                            162 svc dc f'0'    Commpletion code                                        
+0                                             164  want svc,'00000000'                                                   
+                         00000240             165+dif0001 equ svc-zeos                                                    01-00000023
+                                              166+   ainsert '&&offs setc a2x(dif0001)',back                              01-00000031
+                                              167+   ainsert '&&rs(1) setc ''r &&offs..00000004''',back                   01-00000032
+                                              168>&offs setc a2x(dif0001)                                                
+                                              169>&rs(1) setc 'r &offs..00000004'                                        
+0                        00000244             171 go equ *                                                               
+                                              172  punch '*'                                                             
+                                              173  punch '* This file was put into the public domain 2016-12-07'         
+                                              174  punch '* by John P. Hartmann.  You can use it for anything you like,' 
+                                              175  punch '* as long as this notice remains.'                             
+                                              176  punch '*'                                                             
+                                              177 *punch 't+'                                                            
+1zeos     Put stuff at end of storage                                                                           Page    8
+   Active Usings: HIGH,R9  ZEOS,R15                                                                                      
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             179 ***********************************************************************
+                                              180 *                                                                     *
+                                              181 * Address  last page of storage on Hercules.  Assuming that the       *
+                                              182 * coresize is one megabyte.                                           *
+                                              183 *                                                                     *
+                                              184 * On CMS we point to a piece fo storage in the work area.             *
+                                              185 *                                                                     *
+                                              186 ***********************************************************************
+-00000244 5890 F368               00000368    188  l 9,=a(x'100000'-x'1000') Assume stand alone                          
+ 00000248 12EE                                189  ltr 14,14                                                             
+ 0000024A A784 0006               00000256    190  jz bare                                                               
+ 0000024E 4190 F3B0               000003B0    191  la 9,work                                                             
+ 00000252 A79A F050               FFFFF050    192  ahi 9,-x'fb0'                                                         
+                         00000256             193 bare equ *                                                             
+1zeos     Put stuff at end of storage                                                                           Page    9
+   Active Usings: HIGH,R9  ZEOS,R15                                                                                      
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             195 ***********************************************************************
+                                              196 *                                                                     *
+                                              197 * Generate encrypted key and verification.                            *
+                                              198 *                                                                     *
+                                              199 ***********************************************************************
+-00000256 4100 0014               00000014    201  la 0,20                                                               
+ 0000025A 4110 F370               00000370    202  la 1,wrap20                                                           
+ 0000025E B928 0000                           203  pckmo , Set key and get verify                                        
+1zeos     Put stuff at end of storage                                                                           Page   10
+   Active Usings: HIGH,R9  ZEOS,R15                                                                                      
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             205 ***********************************************************************
+                                              206 *                                                                     *
+                                              207 * KMF.                                                                *
+                                              208 *                                                                     *
+                                              209 ***********************************************************************
+-00000262 5800 F330               00000330    211  l 0,enc                                                               
+ 00000266 4110 9FB0               00000FB0    212  la 1,kmf28                                                            
+                     R:1 00000000             213  using kmf28pb,1                                                       
+ 0000026A D20F 1000 F334 00000000 00000334    214  mvc kmf28cv,pl Set chaining value                                     
+ 00000270 D23F 1010 F370 00000010 00000370    215  mvc kmf28wrap,wrap20                                                  
+0                                             217  km2 op=kmf,clear=ctrso,crypt=fo,decrypt=res                           
+ 00000276 4120 F200               00000200    218+ la 2,fo                                                                01-00000062
+ 0000027A 4140 F344               00000344    219+ la 4,ctrso                                                             01-00000063
+ 0000027E 4150 0010               00000010    220+ la 5,16                                                                01-00000064
+ 00000282 B92A 0024                           222+ kmf   2,4                                                              02-00000083
+ 00000286 A714 FFFE               00000282    224+ jo *-4 Loop if partial                                                 03-00000096
+ 0000028A A784 0007               00000298    225+ jz ok0004                                                              03-00000097
+ 0000028E 9201 F240      00000240             226+ mvi svc,1                                                              03-00000098
+ 00000292 12EE                                227+ ltr 14,14                                                              03-00000099
+ 00000294 077E                                228+ bnzr 14                                                                03-00000100
+ 00000296 0A01                                229+ svc 1                                                                  03-00000101
+                         00000298             230+ok0004    equ *                                                         03-00000102
+000000298 D20F 1000 F334 00000000 00000334    232  mvc kmf28cv,pl Set chaining value                                     
+0                                             234  km2d                                                                  
+ 0000029E A70A 0080               00000080    235+ ahi 0,x'80' Turn on decrypt bit                                        01-00000072
+ 000002A2 4120 F210               00000210    236+ la 2,res                                                               01-00000073
+ 000002A6 4140 F200               00000200    237+ la 4,fo                                                                01-00000074
+ 000002AA 4150 0010               00000010    238+ la 5,16                                                                01-00000075
+ 000002AE B92A 0024                           240+ kmf   2,4                                                              02-00000083
+ 000002B2 A714 FFFE               000002AE    242+ jo *-4 Loop if partial                                                 03-00000096
+ 000002B6 A784 0007               000002C4    243+ jz ok0007                                                              03-00000097
+ 000002BA 9202 F240      00000240             244+ mvi svc,2                                                              03-00000098
+ 000002BE 12EE                                245+ ltr 14,14                                                              03-00000099
+ 000002C0 077E                                246+ bnzr 14                                                                03-00000100
+ 000002C2 0A02                                247+ svc 2                                                                  03-00000101
+                         000002C4             248+ok0007    equ *                                                         03-00000102
+                                              249  drop 1                                                                
+0                                             251  want fo,'866C0230 B823BA9D 9CEF1954 7E50EFC9'                         
+                         00000200             252+dif0008 equ fo-zeos                                                     01-00000023
+                                              253+   ainsert '&&offs setc a2x(dif0008)',back                              01-00000031
+                                              254+   ainsert '&&rs(2) setc ''r &&offs..00000010''',back                   01-00000032
+                                              255>&offs setc a2x(dif0008)                                                
+                                              256>&rs(2) setc 'r &offs..00000010'                                        
+                                              257  want res,'30313233 34353637 38393A3B 3C3D3E3F'                        
+                         00000210             258+dif0009 equ res-zeos                                                    01-00000023
+                                              259+   ainsert '&&offs setc a2x(dif0009)',back                              01-00000031
+                                              260+   ainsert '&&rs(3) setc ''r &&offs..00000010''',back                   01-00000032
+                                              261>&offs setc a2x(dif0009)                                                
+                                              262>&rs(3) setc 'r &offs..00000010'                                        
+1zeos     Put stuff at end of storage                                                                           Page   11
+   Active Usings: HIGH,R9  ZEOS,R15                                                                                      
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             264 ***********************************************************************
+                                              265 *                                                                     *
+                                              266 * KMCTR                                                               *
+                                              267 *                                                                     *
+                                              268 ***********************************************************************
+-000002C4 4110 9FC0               00000FC0    270  la 1,kmctr28                                                          
+                                              271  km2 op=kmctr,fc=28,clear=ctrso,crypt=ctrfo,decrypt=ctrres,mask=ctrto  
+ 000002C8 4100 001C               0000001C    272+ la 0,28                                                                01-00000060
+ 000002CC 4120 F220               00000220    273+ la 2,ctrfo                                                             01-00000062
+ 000002D0 4140 F344               00000344    274+ la 4,ctrso                                                             01-00000063
+ 000002D4 4150 0010               00000010    275+ la 5,16                                                                01-00000064
+ 000002D8 4160 F354               00000354    277+ la 6,ctrto                                                             02-00000086
+ 000002DC B92D 6024                           278+ kmctr 2,6,4                                                            02-00000087
+ 000002E0 A714 FFFE               000002DC    280+ jo *-4 Loop if partial                                                 03-00000096
+ 000002E4 A784 0007               000002F2    281+ jz ok0012                                                              03-00000097
+ 000002E8 9203 F240      00000240             282+ mvi svc,3                                                              03-00000098
+ 000002EC 12EE                                283+ ltr 14,14                                                              03-00000099
+ 000002EE 077E                                284+ bnzr 14                                                                03-00000100
+ 000002F0 0A03                                285+ svc 3                                                                  03-00000101
+                         000002F2             286+ok0012    equ *                                                         03-00000102
+                                              287  km2d                                                                  
+ 000002F2 A70A 0080               00000080    288+ ahi 0,x'80' Turn on decrypt bit                                        01-00000072
+ 000002F6 4120 F230               00000230    289+ la 2,ctrres                                                            01-00000073
+ 000002FA 4140 F220               00000220    290+ la 4,ctrfo                                                             01-00000074
+ 000002FE 4150 0010               00000010    291+ la 5,16                                                                01-00000075
+ 00000302 4160 F354               00000354    293+ la 6,ctrto                                                             02-00000086
+ 00000306 B92D 6024                           294+ kmctr 2,6,4                                                            02-00000087
+ 0000030A A714 FFFE               00000306    296+ jo *-4 Loop if partial                                                 03-00000096
+ 0000030E A784 0007               0000031C    297+ jz ok0015                                                              03-00000097
+ 00000312 9204 F240      00000240             298+ mvi svc,4                                                              03-00000098
+ 00000316 12EE                                299+ ltr 14,14                                                              03-00000099
+ 00000318 077E                                300+ bnzr 14                                                                03-00000100
+ 0000031A 0A04                                301+ svc 4                                                                  03-00000101
+                         0000031C             302+ok0015    equ *                                                         03-00000102
+                                              303  want ctrfo,'9BA94F96 FCBD3CF1 24DEEB3D AC7C85A9'                      
+                         00000220             304+dif0016 equ ctrfo-zeos                                                  01-00000023
+                                              305+   ainsert '&&offs setc a2x(dif0016)',back                              01-00000031
+                                              306+   ainsert '&&rs(4) setc ''r &&offs..00000010''',back                   01-00000032
+                                              307>&offs setc a2x(dif0016)                                                
+                                              308>&rs(4) setc 'r &offs..00000010'                                        
+                                              309  want ctrres,'30313233 34353637 38393A3B 3C3D3E3F'                     
+                         00000230             310+dif0017 equ ctrres-zeos                                                 01-00000023
+                                              311+   ainsert '&&offs setc a2x(dif0017)',back                              01-00000031
+                                              312+   ainsert '&&rs(5) setc ''r &&offs..00000010''',back                   01-00000032
+                                              313>&offs setc a2x(dif0017)                                                
+                                              314>&rs(5) setc 'r &offs..00000010'                                        
+1zeos     Put stuff at end of storage                                                                           Page   12
+   Active Usings: HIGH,R9  ZEOS,R15                                                                                      
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.34
+0                                             316 ***********************************************************************
+                                              317 *                                                                     *
+                                              318 * Done                                                                *
+                                              319 *                                                                     *
+                                              320 ***********************************************************************
+-0000031C 12EE                                322  ltr 14,14                                                             
+ 0000031E 077E                                323  bnzr 14                                                               
+ 00000320 0A00                                324  svc 0                                                                 
+ 00000328                                     325  ds d                                                                  
+ 00000330 0400001C                            326 enc dc al1(4,0,0,28)                                                   
+ 00000334 0001020304050607                    327 pl dc x'000102030405060708090A0B0C0D0E0F'                              
+ 00000344 3031323334353637                    328 ctrso dc x'303132333435363738393A3B3C3D3E3F' plaintext                 
+ 00000354 2021222324252627                    329 ctrto dc x'202122232425262728292A2B2C2D2E2F' counters                  
+ 00000368                                     330  ltorg                                                                 
+ 00000368 000FF000                            331                =a(x'100000'-x'1000')                                   
+0                                             333  punch 'runtest .1'                                                    
+                                              334  punch '*Compare'                                                      
+                                              335  dumpwants                                                             
+                                              336+ punch 'r 00000240.00000004'                                            01-00000044
+                                              337+ punch '*Want 00000000'                                                 01-00000045
+                                              338+ punch 'r 00000200.00000010'                                            01-00000044
+                                              339+ punch '*Want 866C0230 B823BA9D 9CEF1954 7E50EFC9'                      01-00000045
+                                              340+ punch 'r 00000210.00000010'                                            01-00000044
+                                              341+ punch '*Want 30313233 34353637 38393A3B 3C3D3E3F'                      01-00000045
+                                              342+ punch 'r 00000220.00000010'                                            01-00000044
+                                              343+ punch '*Want 9BA94F96 FCBD3CF1 24DEEB3D AC7C85A9'                      01-00000045
+                                              344+ punch 'r 00000230.00000010'                                            01-00000044
+                                              345+ punch '*Want 30313233 34353637 38393A3B 3C3D3E3F'                      01-00000045
+                                              346  punch '*Done'                                                         
+000000370                                     348 wrap20 ds 0d Wrapper key and verify, pckmf code 20                     
+ 00000370 1011121314151617                    349  dc x'101112131415161718191A1B1C1D1E1F'                                
+ 00000380 2021222324252627                    350  dc x'202122232425262728292A2B2C2D2E2F'                                
+ 00000390 3031323334353637                    351  dc x'303132333435363738393A3B3C3D3E3F'                                
+ 000003A0 4041424344454647                    352  dc x'404142434445464748494A4B4C4D4E4F'                                
+ 000003B0                                     353 work ds 20d Key area on CMS                                            
+ 00000450                                     354 workend ds 0d                                                          
+                                              355  end                                                                   
+1zeos                                             Relocation Dictionary                                         Page   13
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/12/11 12.34
+0  00000001 00000001 000001A8   A 8     +                                                                                
+1zeos                           Ordinary Symbol and Literal Cross Reference                                     Page   14
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/12/11 12.34
+0bare          1 00000256 00000001     U                  193  190B                                                      
+ ctrfo        16 00000220 00000001     X  X               160  273   290   304                                           
+ ctrres       16 00000230 00000001     X  X               161  289   310                                                 
+ ctrso        16 00000344 00000001     X  X               328  219   274                                                 
+ ctrto        16 00000354 00000001     X  X               329  277   293                                                 
+ enc           1 00000330 00000001     R  A               326  211                                                       
+ fo           16 00000200 00000001     X  X               158  218   237   252                                           
+ go            1 00000244 00000001     U                  171  152                                                       
+ high          1 00000000 FFFFFFFD     J                  131  134U                                                      
+ highend       1 00001000 FFFFFFFD     U                  133  135   136                                                 
+ kmctr28      64 00000FC0 FFFFFFFD     U                  136  270                                                       
+ kmctr28length                                                                                                           
+               1 00000040 FFFFFFFE A   U                  123  136   136                                                 
+ kmctr28pb                                                                                                               
+               1 00000000 FFFFFFFE     J                  121  123                                                       
+ kmf28        80 00000FB0 FFFFFFFD     U                  135  212                                                       
+ kmf28cv      16 00000000 FFFFFFFF     X  X               117  214S  232S                                                
+ kmf28length                                                                                                             
+               1 00000050 FFFFFFFF A   U                  119  135   135                                                 
+ kmf28pb       1 00000000 FFFFFFFF     J                  116  119   213U                                                
+ kmf28wrap                                                                                                               
+              64 00000010 FFFFFFFF     X  X               118  215S                                                      
+ ok0004        1 00000298 00000001     U                  230  225B                                                      
+ ok0007        1 000002C4 00000001     U                  248  243B                                                      
+ ok0012        1 000002F2 00000001     U                  286  281B                                                      
+ ok0015        1 0000031C 00000001     U                  302  297B                                                      
+ pl           16 00000334 00000001     X  X               327  214   232                                                 
+ res          16 00000210 00000001     X  X               159  236   258                                                 
+ svc           4 00000240 00000001     F  F               162  165   226S  244S  282S  298S                              
+ work          8 000003B0 00000001     D  D               353  191                                                       
+ wrap20        8 00000370 00000001     D  D               348  202   215                                                 
+ zeos          1 00000000 00000001     J                  149  150U  151   153   155   157   165   252   258   304   310 
+ =a(x'100000'-x'1000')                                                                                                   
+               4 00000368 00000001     A                  331  188                                                       
+1zeos                              Unreferenced Symbols Defined in CSECTs                                       Page   15
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/12/11 12.34
+0   165  dif0001                                                                                                         
+    252  dif0008                                                                                                         
+    258  dif0009                                                                                                         
+    304  dif0016                                                                                                         
+    310  dif0017                                                                                                         
+    354  workend                                                                                                         
+1zeos                                      Macro and Copy Code Source Summary                                   Page   16
+- Con Source                                        Volume    Members                       jHLASM 1.0   2016/12/11 12.34
+0     zeos.assemble                                           CKCC     DOKM     DUMPWANTS         KM2      KM2D     QUAD 
+                                                              WANT                                                       
+1zeos                                            Dsect Cross Reference                                          Page   17
+-Dsect     Length      Id       Defn                                                        jHLASM 1.0   2016/12/11 12.34
+0high     00001000  FFFFFFFD     131                                                                                     
+ kmctr28pb                                                                                                               
+          00000040  FFFFFFFE     121                                                                                     
+ kmf28pb  00000050  FFFFFFFF     116                                                                                     
+1zeos                                                  Using Map                                                Page   18
+-                                                                                           jHLASM 1.0   2016/12/11 12.34
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0   134  00001000  FFFFFFFD USING  ORDINARY    00000000 00001000 FFFFFFFD   9 00FC0    270 high,9                        
+    150  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 003B0    298 zeos,15                       
+    213  0000026A  00000001 USING  ORDINARY    00000000 00001000 FFFFFFFF   1 00010    232 kmf28pb,1                     
+    249  000002C4  00000001 DROP                                            1              1                             
+1                                   General Purpose Register Cross Reference                                    Page   19
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/12/11 12.34
+0    0(0)     201S  203   211S  222   235M  240   272S  278   288M  294                                                  
+     1(1)     202S  203   212S  213U  222   240   249D  270S  278   294                                                  
+     2(2)     218S  222M  236S  240M  273S  278M  289S  294M                                                             
+     3(3)     222M  240M                                                                                                 
+     4(4)     219S  222M  237S  240M  274S  278M  290S  294M                                                             
+     5(5)     220S  222M  238S  240M  275S  291S                                                                         
+     6(6)     277S  278M  293S  294M                                                                                     
+     7(7)     278M  294M                                                                                                 
+     8(8)    (no references identified)                                                                                  
+     9(9)     134U  188S  191S  192M                                                                                     
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)     189S  189   227S  227   228B  245S  245   246B  283S  283   284B  299S  299   300B  322S  322   323B       
+    15(F)     150U                                                                                                       
+1zeos                              Diagnostic Cross Reference and Assembler Summary                             Page   20
+-                                                                                           jHLASM 1.0   2016/12/11 12.34
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Dec  8 2016 15:28:27                                                           
+0System:  Linux release 3.13.0-101-generic on jack (x86_64)                                                              
+0Data Sets Allocated for this Assembly                                                                                   
+  Type     Mtime                File path                                                                                
+  input    2016-12-11 12:34:31  zeos.assemble                                                                            
+0Assembly Start Time: 12.34.53 Stop Time: 12.34.53 Processor Time: 00.00.00.0054.
+ 
+                                     
+ Return Code 000                                                                                                         

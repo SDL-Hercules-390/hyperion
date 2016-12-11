@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2016/05/15 14.47
+-                                                                                           jHLASM 1.0   2016/12/11 12.44
 0  No Overriding ASMAOPT Parameters                                                                                      
    Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
@@ -51,18 +51,18 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1AGF                                           External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/05/15 14.47
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/12/11 12.44
 0AGF       SD 00000001 00000000 00000900             07                                                                  
 1AGF      agf test case                                                                                         Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/15 14.47
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.44
 0                                               3 * This file was put into the public domain 2015-11-12                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
                                                 5 * as long as this notice remains.                                      
-0                                               7  punch '* *Testcase agf &sysdatc &systime'                             
-                                                 + punch '* *Testcase agf 20160515 14.47'                                
-                                                8  punch '* sysclear'                                                    
-                                                9  punch '* archlvl z'                                                   
+0                                               7  punch '*Testcase agf &sysdatc &systime'                               
+                                                 + punch '*Testcase agf 20161211 12.44'                                  
+                                                8  punch 'sysclear'                                                      
+                                                9  punch 'archlvl z'                                                     
  00000000                00000000 00000900     10 agf start 0                                                            
                                                11 agf rmode any                                                          
                                                12 agf amode any                                                          
@@ -112,33 +112,33 @@
  000002E0                000002E0 00000900     48  org agf+x'900'                                                        
 1AGF      agf test case                                                                                         Page    4
    Active Usings: AGF,R15                                                                                                
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/15 14.47
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/12/11 12.44
 000000900                                      49 res1 ds 0d                                                             
  00000900                                      50  ltorg                                                                 
-                                               51  punch '* runtest .1'                                                  
-                                               52  punch '* *Compare'                                                    
-                                               53  punch '* r 900.9'                                                     
-                                               54  punch '* *Want 00000000 00000008 20'                                  
-                                               55  punch '* r 910.9'                                                     
-                                               56  punch '* *Want FFFFFFFF FFFFFFF8 10'                                  
-                                               57  punch '* r 920.9'                                                     
-                                               58  punch '* *Want FFFFFFFF FFFFFFFE 10'                                  
-                                               59  punch '* r 930.9'                                                     
-                                               60  punch '* *Want 80000000 00000001 10'                                  
-                                               61  punch '* r 940.9'                                                     
-                                               62  punch '* *Want 7FFFFFFF 7FFFFFFF 20'                                  
-                                               63  punch '* r 950.9'                                                     
-                                               64  punch '* *Want 00000001 00000000 20'                                  
-                                               65  punch '* r 960.9'                                                     
-                                               66  punch '* *Want 00000001 00000001 20'                                  
-                                               67  punch '* r 970.9'                                                     
-                                               68  punch '* *Want 00000000 FFFFFFFF 20'                                  
-                                               69  punch '* r 980.9'                                                     
-                                               70  punch '* *Want 00000000 00000000 00'                                  
-                                               71  punch '* *Done'                                                       
+                                               51  punch 'runtest .1'                                                    
+                                               52  punch '*Compare'                                                      
+                                               53  punch 'r 900.9'                                                       
+                                               54  punch '*Want 00000000 00000008 20'                                    
+                                               55  punch 'r 910.9'                                                       
+                                               56  punch '*Want FFFFFFFF FFFFFFF8 10'                                    
+                                               57  punch 'r 920.9'                                                       
+                                               58  punch '*Want FFFFFFFF FFFFFFFE 10'                                    
+                                               59  punch 'r 930.9'                                                       
+                                               60  punch '*Want 80000000 00000001 10'                                    
+                                               61  punch 'r 940.9'                                                       
+                                               62  punch '*Want 7FFFFFFF 7FFFFFFF 20'                                    
+                                               63  punch 'r 950.9'                                                       
+                                               64  punch '*Want 00000001 00000000 20'                                    
+                                               65  punch 'r 960.9'                                                       
+                                               66  punch '*Want 00000001 00000001 20'                                    
+                                               67  punch 'r 970.9'                                                       
+                                               68  punch '*Want 00000000 FFFFFFFF 20'                                    
+                                               69  punch 'r 980.9'                                                       
+                                               70  punch '*Want 00000000 00000000 00'                                    
+                                               71  punch '*Done'                                                         
                                                72  END  ,                                                                
 1AGF                            Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/05/15 14.47
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/12/11 12.44
 0A             6 0000020E 00000001     I                   23   31B                                                      
  agf           1 00000000 00000001     J                   10   11    12    13U   14    16    18    48                   
  res1          8 00000900 00000001     D  D                49   21                                                       
@@ -147,7 +147,7 @@
                1 00000009 00000001 A   U                   47   19                                                       
  WAITPSW       8 00000240 00000001     X  X                36   34                                                       
 1AGF                               Unreferenced Symbols Defined in CSECTs                                       Page    6
--  Defn  Symbol                                                                             jHLASM 1.0   2016/05/15 14.47
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/12/11 12.44
 0    38  TEST2                                                                                                           
      39  TEST3                                                                                                           
      40  TEST4                                                                                                           
@@ -156,12 +156,12 @@
      43  TEST7                                                                                                           
      44  TEST8                                                                                                           
 1AGF                                                   Using Map                                                Page    7
--                                                                                           jHLASM 1.0   2016/05/15 14.47
+-                                                                                           jHLASM 1.0   2016/12/11 12.44
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    13  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00900     34 agf,15                        
 1                                   General Purpose Register Cross Reference                                    Page    8
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/05/15 14.47
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/12/11 12.44
 0    0(0)      19S   31M                                                                                                 
      1(1)      20S   23    24    25    30S   30                                                                          
      2(2)    (no references identified)                                                                                  
@@ -179,14 +179,14 @@
     14(E)      32S   32    33B                                                                                           
     15(F)      13U                                                                                                       
 1AGF                               Diagnostic Cross Reference and Assembler Summary                             Page    9
--                                                                                           jHLASM 1.0   2016/05/15 14.47
+-                                                                                           jHLASM 1.0   2016/12/11 12.44
 0     No Statements Flagged in this Assembly                                                                             
-0John's High Level Assembler Release 1.0, May 13 2016 11:46:36                                                           
-0System:  Linux release 3.19.0-59-generic on jbox (i686)                                                                 
+0John's High Level Assembler Release 1.0, Dec  8 2016 15:28:27                                                           
+0System:  Linux release 3.13.0-101-generic on jack (x86_64)                                                              
 0Data Sets Allocated for this Assembly                                                                                   
   Type     Mtime                File path                                                                                
-  input    2016-05-15 14:47:14  agf.assemble                                                                             
-0Assembly Start Time: 14.47.18 Stop Time: 14.47.18 Processor Time: 00.00.00.0269.
+  input    2016-12-02 10:11:13  agf.assemble                                                                             
+0Assembly Start Time: 12.44.51 Stop Time: 12.44.51 Processor Time: 00.00.00.0021.
  
                                      
  Return Code 000                                                                                                         

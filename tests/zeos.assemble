@@ -1,0 +1,262 @@
+zeos     TITLE 'Put stuff at end of storage'                                    
+*                                                                               
+* This file was put into the public domain 2016-12-07                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+*                                                                               
+                                                                                
+* The purpose of this test is to align the parameter area                       
+* with the end of the first megabyte, which is the end of                       
+* storage on Hyperion.  On CMS we are not testing the instruction,              
+* we are disccovering what it should do.                                        
+                                                                                
+ gblc offs                                                                      
+ gblc rs(1)                                                                     
+                                                                                
+ macro                                                                          
+ want &lab,&data                                                                
+ gbla wantix                                                                    
+ gblc wants(1)                                                                  
+&wantix seta &wantix+1                                                          
+&dat setc '&data.'(2,k'&data-2) ')                                              
+&sym setc 'dif&sysndx'                                                          
+&sym equ &lab-&sysect                                                           
+&len seta l'&sym '                                                              
+&lenc setc a2x(&len)                                                            
+.* Cannot do this assign in a local seta as the assembler does                  
+.* not understand putting a setc symbol containing the offset;                  
+.* so we substitute the label symbol in the ainsert.  Better be                 
+.* sure that the assembler can do the evaluation during the macro               
+.* pass.                                                                        
+   ainsert '&&offs setc a2x(&sym)',back                                         
+   ainsert '&&rs(&wantix) setc ''r &&offs..&lenc''',back                        
+&wants(&wantix) setc '*Want &dat'                                               
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ dumpwants                                                                      
+ gblc wants(1)                                                                  
+ gblc rs(1)                                                                     
+ gbla wantix                                                                    
+ lcla i                                                                         
+.lp anop                                                                        
+&i seta &i+1                                                                    
+ punch '&rs(&i)'                                                                
+ punch '&wants(&i)'                                                             
+ aif (&i lt &wantix).lp                                                         
+&wantix seta 0  Prepare for next                                                
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ km2 &fc=,&op=,&clear=,&crypt=,&decrypt=,&mask=                                 
+ gblc kmop,kmcr,kmdec,kmmask                                                    
+ gbla kmlen                                                                     
+&kmop setc '&op'                                                                
+&kmlen seta l'&clear '                                                          
+&kmcr setc '&crypt'                                                             
+&kmdec setc '&decrypt'                                                          
+&kmmask setc '&mask'                                                            
+ aif (k'&fc eq 0).nofc ')                                                       
+ la 0,&fc                                                                       
+.nofc anop                                                                      
+ la 2,&crypt                                                                    
+ la 4,&clear                                                                    
+ la 5,&kmlen                                                                    
+ dokm &op,&mask                                                                 
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ km2d                                                                           
+ gbla kmlen                                                                     
+ gblc kmop,kmcr,kmdec,kmmask                                                    
+ ahi 0,x'80' Turn on decrypt bit                                                
+ la 2,&kmdec                                                                    
+ la 4,&kmcr                                                                     
+ la 5,&kmlen                                                                    
+ dokm &kmop,&kmmask                                                             
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ dokm                                                                           
+ gblc kmop,kmcr,kmdec,kmmask                                                    
+ aif (k'&kmmask gt 0).top ')                                                    
+ &kmop 2,4                                                                      
+ ago .mer                                                                       
+.top anop                                                                       
+ la 6,&kmmask                                                                   
+ &kmop 2,6,4                                                                    
+.mer anop                                                                       
+ ckcc                                                                           
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ ckcc                                                                           
+ gbla svc                                                                       
+&svc seta &svc+1                                                                
+ jo *-4 Loop if partial                                                         
+ jz ok&sysndx                                                                   
+ mvi svc,&svc                                                                   
+ ltr 14,14                                                                      
+ bnzr 14                                                                        
+ svc &svc                                                                       
+ok&sysndx equ *                                                                 
+ mend                                                                           
+                                                                                
+ macro                                                                          
+ quad  , align on quadword                                                      
+ ds   ((*-zeos+15)/16*16-(*-zeos))x                                             
+ mend                                                                           
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Parameter blocks                                                    *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+kmf28pb dsect                                                                   
+kmf28cv ds xl16                                                                 
+kmf28wrap ds xl64                                                               
+kmf28length equ *-kmf28pb                                                       
+                                                     SPACE 1                    
+kmctr28pb dsect                                                                 
+kmctr28wrap ds xl64                                                             
+kmctr28length equ *-kmctr28pb                                                   
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Last page of storage                                                *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+high dsect                                                                      
+ ds xl(x'1000')                                                                 
+highend equ *                                                                   
+ using high,9                                                                   
+kmf28 equ highend-kmf28length,kmf28length                                       
+kmctr28 equ highend-kmctr28length,kmctr28length                                 
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Initialise machine configuration                                    *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ punch '*Testcase zeos'                                                         
+ punch 'sysclear'                                                               
+ punch 'mainsize 1m'                                                            
+ punch 'archmode z'                                                             
+                                                                                
+zeos start 0                                                                    
+ using zeos,15                                                                  
+ org zeos+x'1a0' Restart                                                        
+ dc x'0000000180000000',ad(go)                                                  
+ org zeos+x'1c0' SVC new                                                        
+ dc x'0002000180000000',ad(0)                                                   
+ org zeos+x'1d0' Program                                                        
+ dc x'0002000180000000',ad(x'deaddead')                                         
+ org zeos+x'200'                                                                
+fo dc xl16'0'                                                                   
+res dc xl16'0'                                                                  
+ctrfo dc xl16'0'                                                                
+ctrres dc xl16'0'                                                               
+svc dc f'0'    Commpletion code                                                 
+                                                                                
+ want svc,'00000000'                                                            
+                                                                                
+go equ *                                                                        
+ punch '*'                                                                      
+ punch '* This file was put into the public domain 2016-12-07'                  
+ punch '* by John P. Hartmann.  You can use it for anything you like,'          
+ punch '* as long as this notice remains.'                                      
+ punch '*'                                                                      
+*punch 't+'                                                                     
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Address  last page of storage on Hercules.  Assuming that the       *         
+* coresize is one megabyte.                                           *         
+*                                                                     *         
+* On CMS we point to a piece fo storage in the work area.             *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ l 9,=a(x'100000'-x'1000') Assume stand alone                                   
+ ltr 14,14                                                                      
+ jz bare                                                                        
+ la 9,work                                                                      
+ ahi 9,-x'fb0'                                                                  
+bare equ *                                                                      
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Generate encrypted key and verification.                            *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ la 0,20                                                                        
+ la 1,wrap20                                                                    
+ pckmo , Set key and get verify                                                 
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* KMF.                                                                *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ l 0,enc                                                                        
+ la 1,kmf28                                                                     
+ using kmf28pb,1                                                                
+ mvc kmf28cv,pl Set chaining value                                              
+ mvc kmf28wrap,wrap20                                                           
+                                                                                
+ km2 op=kmf,clear=ctrso,crypt=fo,decrypt=res                                    
+                                                                                
+ mvc kmf28cv,pl Set chaining value                                              
+                                                                                
+ km2d                                                                           
+ drop 1                                                                         
+                                                                                
+ want fo,'866C0230 B823BA9D 9CEF1954 7E50EFC9'                                  
+ want res,'30313233 34353637 38393A3B 3C3D3E3F'                                 
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* KMCTR                                                               *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ la 1,kmctr28                                                                   
+ km2 op=kmctr,fc=28,clear=ctrso,crypt=ctrfo,decrypt=ctrres,mask=ctrto           
+ km2d                                                                           
+ want ctrfo,'9BA94F96 FCBD3CF1 24DEEB3D AC7C85A9'                               
+ want ctrres,'30313233 34353637 38393A3B 3C3D3E3F'                              
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Done                                                                *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ ltr 14,14                                                                      
+ bnzr 14                                                                        
+ svc 0                                                                          
+ ds d                                                                           
+enc dc al1(4,0,0,28)                                                            
+pl dc x'000102030405060708090A0B0C0D0E0F'                                       
+ctrso dc x'303132333435363738393A3B3C3D3E3F' plaintext                          
+ctrto dc x'202122232425262728292A2B2C2D2E2F' counters                           
+ ltorg                                                                          
+                                                                                
+ punch 'runtest .1'                                                             
+ punch '*Compare'                                                               
+ dumpwants                                                                      
+ punch '*Done'                                                                  
+                                                                                
+wrap20 ds 0d Wrapper key and verify, pckmf code 20                              
+ dc x'101112131415161718191A1B1C1D1E1F'                                         
+ dc x'202122232425262728292A2B2C2D2E2F'                                         
+ dc x'303132333435363738393A3B3C3D3E3F'                                         
+ dc x'404142434445464748494A4B4C4D4E4F'                                         
+work ds 20d Key area on CMS                                                     
+workend ds 0d                                                                   
+ end                                                                            

@@ -5,7 +5,7 @@
 # as long as this notice remains.
 
 *Testcase stfl and stfle
-* This test case program checks on ESA hardware.
+* This test cause program checks on ESA hardware.
 sysclear
 archmode z
 loadcore $(testpath)/stfl.core
