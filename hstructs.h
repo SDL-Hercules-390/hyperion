@@ -675,8 +675,7 @@ struct SYSBLK {
                                         /* lookup table              */
         int     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
         CHPBLK *firstchp;               /* -> First channel path     */
-        u_int   dasdcache:1;            /* 0 = system cache off
-                                           1 = system cache on       */
+        LOCK    dasdcache_lock;         /* Global DASD caching lock  */
 
         /*-----------------------------------------------------------*/
         /*      I/O Management                                       */
@@ -870,7 +869,6 @@ struct SYSBLK {
 #else
   #define  DEFAULT_MLVL     (MLVL_VERBOSE)
 #endif
-        LOCK    mntlock;                /* tape mount lock          */
 
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
 #define QUITTIME_PERIOD     10

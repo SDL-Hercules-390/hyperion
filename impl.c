@@ -644,9 +644,6 @@ int     rc;
     /* set default tape autoinit value to OFF   */
     sysblk.noautoinit = TRUE;
 
-    /* default for system dasd cache is on */
-    sysblk.dasdcache = TRUE;
-
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* set default quit timeout value (also ssd) */
     sysblk.quitmout = QUITTIME_PERIOD;
@@ -771,12 +768,12 @@ int     rc;
     initialize_lock (&sysblk.iointqlk);
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
-    initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
     initialize_condition (&sysblk.scrcond);
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
+    initialize_lock( &sysblk.dasdcache_lock );
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
     /* Initialize the wrapping key registers lock */
@@ -863,9 +860,6 @@ int     rc;
     InitializeListHead   ( &sysblk.stape_mount_link   );
     InitializeListHead   ( &sysblk.stape_status_link  );
 #endif /* defined(OPTION_SCSI_TAPE) */
-
-    /* Initialize dasd caching (cache.h/cache.c) */
-    cache_ginit();
 
     if (sysblk.scrtest)
     {

@@ -15,24 +15,16 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/* The master cache blocks array and master global caching lock      */
+/* The master cache blocks array controlled by sysblk.dasdcache_lock */
 /*-------------------------------------------------------------------*/
-static CACHEBLK  cacheblk[ CACHE_MAX_INDEX ];
-static LOCK      cache_glock;
+static CACHEBLK  cacheblk[ CACHE_MAX_INDEX ] = {0};
+
+#define OBTAIN_GLOBAL_CACHE_LOCK()   obtain_lock(  &sysblk.dasdcache_lock )
+#define RELEASE_GLOBAL_CACHE_LOCK()  release_lock( &sysblk.dasdcache_lock )
 
 /*-------------------------------------------------------------------*/
 /* Public functions                                                  */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int cache_ginit()
-{
-    int  ix;
-    for (ix=0; ix < CACHE_MAX_INDEX; ix++)
-        memset( &cacheblk[ix], 0, sizeof( CACHEBLK ));
-    return initialize_lock( &cache_glock );
-}
-
-#define OBTAIN_GLOBAL_CACHE_LOCK()      obtain_lock(  &cache_glock )
-#define RELEASE_GLOBAL_CACHE_LOCK()     release_lock( &cache_glock )
 
 int cache_nbr (int ix)
 {

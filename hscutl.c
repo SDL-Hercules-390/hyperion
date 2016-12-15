@@ -1388,6 +1388,7 @@ int initialize_utility( int argc, char* argv[],
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
+    initialize_lock( &sysblk.dasdcache_lock );
 
     set_codepage( NULL );
     init_hostinfo( &hostinfo );

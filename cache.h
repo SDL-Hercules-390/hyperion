@@ -149,11 +149,6 @@
 
     Other functions:
 
-      init        cache_ginit();
-                  Global caching initialization function. Must be
-                  called once and only once at startup/initialization
-                  before any other caching functions are called.
-
       int         cache_wait(int ix);
                   Wait for a non-busy cache entry to become available.
                   Typically called after `cache_lookup' was
@@ -162,10 +157,6 @@
       int         cache_release(int ix, int i, int flag);
                   Release the cache entry.  If flag is CACHE_FREEBUF
                   then the object buffer is also freed.
-
-      int         cache_cmd(int argc, char *argv[], char *cmdline);
-                  Interface with the cache command processor.  This
-                  interface is subject to change.
 
   -------------------------------------------------------------------*/
 
@@ -273,7 +264,6 @@ typedef struct _CACHEBLK {              /* Cache header              */
 /*-------------------------------------------------------------------*/
 /* Functions                                                         */
 /*-------------------------------------------------------------------*/
-CCH_DLL_IMPORT int cache_ginit();
 CCH_DLL_IMPORT int cachestats_cmd(int argc, char *argv[], char *cmdline);
 
 int         cache_nbr(int ix);
