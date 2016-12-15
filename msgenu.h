@@ -1554,7 +1554,21 @@ Examples:
 #define HHC02460 "Member %s TTR %04X%02X text record length %X does not match %X in directory"
 #define HHC02461 "Member %s TTR %04X%02X XCTL table improperly terminated"
 #define HHC02462 "Member %s %s TTRL %02X%02X%02X%02X: %s"
-#define HHC02463 "Usage: %s ckdfile [sf=shadow-file-name]%s"
+#define HHC02463 "Usage: %s [-option [-option ... ]] ckdfile [sf=sfile]  [...]\n" \
+       "HHC02463I   ckdfile:      input dasd image file\n" \
+       "HHC02463I   sfile:        optional dasd image shadow file\n" \
+       "HHC02463I options:\n" \
+       "HHC02463I   -hdr          show column headers\n" \
+       "HHC02463I   -dsnl[=n]     restrict dsname width\n" \
+       "HHC02463I   -info         show F1 info\n" \
+       "HHC02463I   -caldt        calendar date format\n" \
+       "HHC02463I   -refdt        show last-reference date\n" \
+       "HHC02463I   -expdt        show expiry date\n" \
+       "HHC02463I   -yroffs[=n]   year offset\n" \
+       "HHC02463I Note:\n" \
+       "HHC02463I   Multiple images can be processed in the same run,\n" \
+       "HHC02463I   but options must be specified ahead of each image."
+
 #define HHC02464 "End of directory, %d members selected"
 #define HHC02465 "Invalid argument: %s"
 #define HHC02466 "Reading directory block at CCHHR %04X%04X%02X"
