@@ -832,7 +832,13 @@
   if not defined VERS_MIN set "VERS_MIN=0"
   if not defined VERS_BLD set "VERS_BLD=0"
 
-  set VERSION="%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%%modified_str%"
+  ::--------------------------------------------------------------
+  ::  Make it PAINFULLY CLEAR this is an UNOFFICIAL "SDL" version
+  ::  of 4.0 Hyperion and not an "Official" 4.0 Hyperion version
+  ::  by appending the string "-SDL" to the end of the "VERSION".
+  ::--------------------------------------------------------------
+
+  set VERSION="%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%-SDL%modified_str%"
 
   goto :set_VERSION_done
 
