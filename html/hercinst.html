@@ -701,201 +701,203 @@ panel commands:
 <p>
 <pre>
 
-    Command      Description
-    -------      -----------------------------------------------
-    !message    *SCP priority message
-    #            Silent comment
-    $locate      Display sysblk, regs or hostinfo
-    $test       *Your custom command (*DANGEROUS!*)
-    $zapcmd     *Enable/disable command (*CAREFUL!*)
-    *            Loud comment
-    .reply      *SCP command
-    ?            alias for help
-    aea          Display AEA tables
-    aia          Display AIA fields
-    alrf         Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
-    ar           Display access registers
-    archlvl     *Set Architecture Level
-    archmode     Alias for archlvl
-    asn_and_l    Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
-    attach      *Configure device
-    auto_scsi   *Command deprecated - Use "SCSIMOUNT"
-    autoinit    *Display/Set automatic create empty tape file switch
-    automount   *Display/Update allowable tape automount directories
-    b           *Set breakpoint
-    b+           Set breakpoint
-    b-          *Delete breakpoint
-    cache       *Execute cache related commands
-    cachestat    Cache stats command
-    capping     *Set/display capping value
-    cckd        *cckd command
-    cf          *Configure current CPU online or offline
-    cfall        Configure all CPU's online or offline
-    clocks       Display tod clkc and cpu timer
-    cmdlevel    *Display/Set current command group
-    cmdlvl       (alias for cmdlevel)
-    cmdsep      *Display/Set command line separator
-    cmpscpad    *Set/display the CMPSC zero padding value.
-    cnslport     Set console port
-    codepage    *Set/display code page conversion table
-    conkpalv    *Display/alter console TCP keep-alive settings
-    cp_updt     *Create/Modify user character conversion table
-    cpu         *Define target cpu for panel display and commands
-    cpuidfmt     Set format BASIC/0/1 STIDP generation
-    cpumodel     Set CPU model number
-    cpuprio      Set/Display cpuprio parameter
-    cpuserial    Set CPU serial number
-    cpuverid     Set CPU verion number
-    cr          *Display or alter control registers
-    cscript     *Cancels a running script thread
-    ctc         *Enable/Disable CTC debugging
-    define      *Rename device
-    defstore    *Define/Display main and expanded storage values
-    defsym      *Define symbol
-    delsym      *Delete a symbol
-    detach       Remove device
-    devinit     *Reinitialize device
-    devlist     *List device, device class, or all devices
-    devprio      Set/Display devprio parameter
-    devtmax     *Display or set max device threads
-    diag8cmd     Set diag8 command option
-    ds           Display subchannel
-    dumpdev     *Specify bootstrap loader DUMP parameters
-    ecps:vm     *Command deprecated - Use "ECPSVM"
-    ecpsvm      *ECPS:VM Commands
-    engines      Set engines parameter
-    evm         *Command deprecated - Use "ECPSVM"
-    exec        *Execute a Rexx script
-    exit         (Synonym for 'quit')
-    ext          Generate external interrupt
-    fcb         *Display the current FCB (if only the printer is given)
-    fpc         *Display or alter floating point control register
-    fpr         *Display or alter floating point registers
-    f{+/-}adr    Mark frames unusable/usable
-    g            Turn off instruction stepping and start all CPUs
-    gpr         *Display or alter general purpose registers
-    hao         *Hercules Automatic Operator
-    help        *list all commands / command specific help
-    herclogo    *Read a new hercules logo file
-    hercprio     Set/Display hercprio parameter
-    hst         *History of commands
-    http        *Start/Stop/Modify/Display HTTP Server
-    httpport    *Command deprecated - Use "HTTP PORT ..."
-    httproot    *Command deprecated - Use "HTTP ROOT fn"
-    hwldr       *Specify boot loader filename
-    i            Generate I/O attention interrupt for device
-    iodelay     *Display or set I/O delay value
-    ipending     Display pending interrupts
-    ipl         *IPL from device or file
-    iplc        *Command deprecated - use IPL with clear option
-    k            Display cckd internal trace
-    ldmod       *Load a module
-    legacysen    Set legacysenseid setting
-    loadcore    *Load a core image file
-    loaddev     *Specify bootstrap loader IPL parameters
-    loadparm    *Set IPL parameter
-    loadtext    *Load a text deck file
-    locks       *Display internal locks list
-    log         *Direct logger output
-    logopt      *Set/Display logging options
-    lparname    *Set LPAR name
-    lparnum     *Set LPAR identification number
-    lsdep        List module dependencies
-    lsmod        List dynamic modules
-    mainsize    *Define/Display mainsize parameter
-    manufactu    Set STSI manufacturer code
-    maxcpu       Set maxcpu parameter
-    maxrates    *Display highest MIPS/SIOS rate or set interval
-    message     *Display message on console a la VM
-    model       *Set/Query STSI model code
-    modpath      Set module load path
-    mounted_t   *Control tape initialization
-    msg          Alias for message
-    msglevel    *Display/Set current Message Display output
-    msglvl       Alias for msglevel
-    msgnoh       Similar to "message" but no header
-    mt          *Control magnetic tape operation
-    numcpu       Set numcpu parameter
-    numvec       Set numvec parameter
-    ostailor    *Tailor trace information for specific OS
-    panrate     *Display or set rate at which console refreshes
-    pantitle    *Display or set console title
-    pgmprdos    *Set LPP license setting
-    pgmtrace    *Trace program interrupts
-    plant        Set STSI plant code
-    pr           Display prefix register
-    psw         *Display or alter program status word
-    ptp         *Enable/Disable PTP debugging
-    ptt         *Set or display internal trace
-    qcpuid      *Display cpuid
-    qd           Query dasd
-    qpfkeys      Display the current PF Key settings
-    qpid         Display Process ID of Hercules
-    qports       Display TCP/IP ports in use
-    qproc        Display processors type and utilization
-    qstor        Display main and expanded storage values
-    quiet       *Toggle automatic refresh of panel display data
-    quit        *Terminate the emulator
-    r           *Display or alter real storage
-    restart      Generate restart interrupt
-    resume       Resume hercules
-    rexx        *display Rexx interpreter settings
-    rmmod        Delete a module
-    s           *Instruction stepping
-    s+          *Instruction stepping on
-    s-           Turn off instruction stepping
-    s?          *Instruction stepping query
-    savecore    *Save a core image to file
-    sclproot    *Set SCLP base directory
-    scpecho     *Set/Display option to echo to console and history of scp replys
-    scpimply    *Set/Display option to pass non-hercules commands to the scp
-    script      *Run a sequence of panel commands contained in a file
-    scsimount   *Automatic SCSI tape mounts
-    sf+dev       Add shadow file
-    sf-dev       Delete shadow file
-    sfc          Compress shadow files
-    sfd          Display shadow file stats
-    sfk         *Check shadow files
-    sh          *Shell command
-    shcmdopt     Set diag8 sh option
-    shrd         shrd command
-    shrdport     Set shrdport value
-    sizeof       Display size of structures
-    srvprio      Set/Display srvprio parameter
-    ssd         *Signal shutdown
-    start       *Start CPU (or printer/punch device if argument given)
-    startall     Start all CPU's
-    stop        *Stop CPU (or printer/punch device if argument given)
-    stopall      Stop all CPU's
-    store        Store CPU status at absolute zero
-    suspend      Suspend hercules
-    symptom      Alias for traceopt
-    syncio       Display syncio devices statistics
-    sysclear    *System Clear Reset manual operation
-    sysepoch     Set sysepoch parameter
-    sysreset    *System Reset manual operation
-    s{+/-}dev    Turn CCW stepping on/off
-    t           *Instruction trace
-    t+          *Instruction trace on
-    t-           Turn off instruction tracing
-    t?          *Instruction trace query
-    timerint    *Display or set timers update interval
-    tlb          Display TLB tables
-    toddrag      Display or set TOD clock drag factor
-    todprio      Set/Display todprio parameter
-    traceopt    *Instruction trace display options
-    tt32        *Control/query CTCI-WIN functionality
-    tzoffset     Set tzoffset parameter
-    t{+/-}CKD    Turn CKD_KEY tracing on/off
-    t{+/-}dev    Turn CCW tracing on/off
-    u           *Disassemble storage
-    uptime       Display how long Hercules has been running
-    v           *Display or alter virtual storage
-    version      Display version information
-    xpndsize    *Define/Display xpndsize parameter
-    yroffset     Set yroffset parameter
+    Command               Description
+    ----------------      -----------------------------------------------
+    !message             *SCP priority message
+    #                     Silent comment
+    $locate               Display sysblk, regs or hostinfo
+    $runtest             *Start the test if test mode is active
+    $test                *Your custom command (*DANGEROUS!*)
+    $zapcmd              *Enable/disable command (*CAREFUL!*)
+    *                     Loud comment
+    .reply               *SCP command
+    ?                     alias for help
+    abs                  *Display or alter absolute storage
+    aea                   Display AEA tables
+    aia                   Display AIA fields
+    alrf                  Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    ar                    Display access registers
+    archlvl              *Set Architecture Level
+    archmode              Alias for archlvl
+    asn_and_lx_reuse      Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    attach               *Configure device
+    auto_scsi_mount      *Command deprecated - Use "SCSIMOUNT"
+    autoinit             *Display/Set automatic create empty tape file switch
+    automount            *Display/Update allowable tape automount directories
+    b                    *Set breakpoint
+    b+                    Set breakpoint
+    b-                   *Delete breakpoint
+    cachestats            Cache stats command
+    capping              *Set/display capping value
+    cckd                 *cckd command
+    cf                   *Configure current CPU online or offline
+    cfall                 Configure all CPU's online or offline
+    clocks                Display tod clkc and cpu timer
+    cmdlevel             *Display/Set current command group
+    cmdlvl                (alias for cmdlevel)
+    cmdsep               *Display/Set command line separator
+    cmpscpad             *Set/display the CMPSC zero padding value.
+    cnslport              Set console port
+    codepage             *Set/display code page conversion table
+    conkpalv             *Display/alter console TCP keepalive settings
+    cp_updt              *Create/Modify user character conversion table
+    cpu                  *Define target cpu for panel display and commands
+    cpuidfmt              Set format BASIC/0/1 STIDP generation
+    cpumodel              Set CPU model number
+    cpuprio               Set/Display cpuprio parameter
+    cpuserial             Set CPU serial number
+    cpuverid              Set CPU verion number
+    cr                   *Display or alter control registers
+    cscript              *Cancels a running script thread
+    ctc                  *Enable/Disable CTC debugging
+    define               *Rename device
+    defstore             *Define/Display main and expanded storage values
+    defsym               *Define symbol
+    delsym               *Delete a symbol
+    detach                Remove device
+    devinit              *Reinitialize device
+    devlist              *List device, device class, or all devices
+    devprio               Set/Display devprio parameter
+    devtmax              *Display or set max device threads
+    diag8cmd              Set diag8 command option
+    ds                    Display subchannel
+    dumpdev              *Specify bootstrap loader DUMP parameters
+    ecps:vm              *Command deprecated - Use "ECPSVM"
+    ecpsvm               *ECPS:VM Commands
+    engines               Set engines parameter
+    evm                  *Command deprecated - Use "ECPSVM"
+    exec                 *Execute a Rexx script
+    exit                  (Synonym for 'quit')
+    ext                   Generate external interrupt
+    fcb                  *Display the current FCB (if only the printer is given)
+    fpc                  *Display or alter floating point control register
+    fpr                  *Display or alter floating point registers
+    f{+/-}adr             Mark frames unusable/usable
+    g                     Turn off instruction stepping and start all CPUs
+    gpr                  *Display or alter general purpose registers
+    hao                  *Hercules Automatic Operator
+    help                 *list all commands / command specific help
+    herclogo             *Read a new hercules logo file
+    hercprio              Set/Display hercprio parameter
+    hst                  *History of commands
+    http                 *Start/Stop/Modify/Display HTTP Server
+    httpport             *Command deprecated - Use "HTTP PORT ..."
+    httproot             *Command deprecated - Use "HTTP ROOT fn"
+    hwldr                *Specify boot loader filename
+    i                     Generate I/O attention interrupt for device
+    iodelay              *Display or set I/O delay value
+    ipending              Display pending interrupts
+    ipl                  *IPL from device or file
+    iplc                 *Command deprecated - use IPL with clear option
+    k                     Display cckd internal trace
+    ldmod                *Load a module
+    legacysenseid         Set legacysenseid setting
+    loadcore             *Load a core image file
+    loaddev              *Specify bootstrap loader IPL parameters
+    loadparm             *Set IPL parameter
+    loadtext             *Load a text deck file
+    locks                *Display internal locks list
+    log                  *Direct logger output
+    logopt               *Set/Display logging options
+    lparname             *Set LPAR name
+    lparnum              *Set LPAR identification number
+    lsdep                 List module dependencies
+    lsmod                 List dynamic modules
+    mainsize             *Define/Display mainsize parameter
+    manufacturer          Set STSI manufacturer code
+    maxcpu                Set maxcpu parameter
+    maxrates             *Display highest MIPS/SIOS rate or set interval
+    message              *Display message on console a la VM
+    model                *Set/Query STSI model code
+    modpath               Set module load path
+    mounted_tape_reinit  *Control tape initialization
+    msg                   Alias for message
+    msglevel             *Display/Set current Message Display output
+    msglvl                Alias for msglevel
+    msgnoh                Similar to "message" but no header
+    mt                   *Control magnetic tape operation
+    numcpu                Set numcpu parameter
+    numvec                Set numvec parameter
+    ostailor             *Tailor trace information for specific OS
+    panrate              *Display or set rate at which console refreshes
+    pantitle             *Display or set console title
+    pgmprdos             *Set LPP license setting
+    pgmtrace             *Trace program interrupts
+    plant                 Set STSI plant code
+    pr                   *Display or alter prefix register
+    psw                  *Display or alter program status word
+    ptp                  *Enable/Disable PTP debugging
+    ptt                  *Activate or display internal trace table
+    qcpuid               *Display cpuid
+    qd                   *Query device information
+    qeth                 *Enable/Disable QETH debugging
+    qpfkeys               Display the current PF Key settings
+    qpid                  Display Process ID of Hercules
+    qports                Display TCP/IP ports in use
+    qproc                 Display processors type and utilization
+    qstor                 Display main and expanded storage values
+    quiet                *Toggle automatic refresh of panel display data
+    quit                 *Terminate the emulator
+    r                    *Display or alter real storage
+    restart               Generate restart interrupt
+    resume                Resume hercules
+    rexx                 *display Rexx interpreter settings
+    rmmod                 Delete a module
+    s                    *Instruction stepping
+    s+                   *Instruction stepping on
+    s-                    Turn off instruction stepping
+    s?                   *Instruction stepping query
+    savecore             *Save a core image to file
+    sclproot             *Set SCLP base directory
+    scpecho              *Set/Display option to echo to console and history of scp replys
+    scpimply             *Set/Display option to pass non-hercules commands to the scp
+    script               *Run a sequence of panel commands contained in a file
+    scsimount            *Automatic SCSI tape mounts
+    sf+dev                Add shadow file
+    sf-dev                Delete shadow file
+    sfc                   Compress shadow files
+    sfd                   Display shadow file stats
+    sfk                  *Check shadow files
+    sh                   *Shell command
+    shcmdopt              Set diag8 sh option
+    shrd                  shrd command
+    shrdport              Set shrdport value
+    sizeof                Display size of structures
+    srvprio               Set/Display srvprio parameter
+    ssd                  *Signal shutdown
+    start                *Start CPU (or printer/punch device if argument given)
+    startall              Start all CPU's
+    stop                 *Stop CPU (or printer/punch device if argument given)
+    stopall               Stop all CPU's
+    store                 Store CPU status at absolute zero
+    suspend               Suspend hercules
+    symptom               Alias for traceopt
+    syncio                Display syncio devices statistics
+    sysclear             *System Clear Reset manual operation
+    sysepoch              Set sysepoch parameter
+    sysreset             *System Reset manual operation
+    s{+/-}dev             Turn CCW stepping on/off
+    t                    *Instruction trace
+    t+                   *Instruction trace on
+    t-                    Turn off instruction tracing
+    t?                   *Instruction trace query
+    timerint             *Display or set timers update interval
+    tlb                   Display TLB tables
+    toddrag               Display or set TOD clock drag factor
+    todprio               Set/Display todprio parameter
+    traceopt             *Instruction trace display options
+    tt32                 *Control/query CTCI-WIN functionality
+    tzoffset              Set tzoffset parameter
+    t{+/-}CKD             Turn CKD_KEY tracing on/off
+    t{+/-}dev             Turn CCW tracing on/off
+    u                    *Disassemble storage
+    uptime                Display how long Hercules has been running
+    v                    *Display or alter virtual storage
+    version               Display version information
+    xpndsize             *Define/Display xpndsize parameter
+    yroffset              Set yroffset parameter
 
-     (*)  Enter "<a href="#morehelp">help &lt;command&gt;</a>" for more info.
+     (*)  Enter "help <command>" for more info.
 
 </pre>
 <p>

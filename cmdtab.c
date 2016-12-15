@@ -497,6 +497,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
     int     rc = 1;
     int     pfxlen = -1;
     char   *p = NULL;
+    int     stmtlen, max_stmtlen = 9;
 
     UNREFERENCED( cmdline );
 
@@ -504,6 +505,16 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
     {
         qsort( cmdtab, _countof( cmdtab ), sizeof( CMDTAB ), SortCmdTab );
         didinit = 1;
+    }
+
+    /* Keep 'max_stmtlen' accurate */
+    for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
+    {
+        if (pCmdTab->statement)
+        {
+            if ((stmtlen = (int) strlen( pCmdTab->statement )) > max_stmtlen)
+                max_stmtlen = stmtlen;
+        }
     }
 
     /* Too many arguments? */
@@ -565,10 +576,10 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
                 {
                     found = TRUE;
                     WRMSG( HHC01603, "I", "" );
-                    WRMSG( HHC01602, "I", "Command", ' ', "Description" );
-                    WRMSG( HHC01602, "I", "-------", ' ', "-----------------------------------------------" );
+                    WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, "Command         ", ' ', "Description" );
+                    WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, "----------------", ' ', "-----------------------------------------------" );
                 }
-                WRMSG( HHC01602, "I", pCmdTab->statement, longflag, pCmdTab->shortdesc );
+                WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, pCmdTab->statement, longflag, pCmdTab->shortdesc );
             }
         }
 
@@ -617,9 +628,9 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
                 longflag = (pCmdTab->longdesc) ? '*' : ' ';
 
                 WRMSG( HHC01603, "I", "" );
-                WRMSG( HHC01602, "I", "Command", ' ', "Description" );
-                WRMSG( HHC01602, "I", "-------", ' ', "-------------------------------------------------------" );
-                WRMSG( HHC01602, "I", pCmdTab->statement, longflag, pCmdTab->shortdesc);
+                WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, "Command         ", ' ', "Description" );
+                WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, "----------------", ' ', "-------------------------------------------------------" );
+                WRMSG( HHC01602, "I", max_stmtlen, max_stmtlen, pCmdTab->statement, longflag, pCmdTab->shortdesc);
 
                 if (pCmdTab->longdesc)
                 {

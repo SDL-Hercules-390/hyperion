@@ -1056,7 +1056,7 @@ Examples:
 
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown command %s, enter 'help' for a list of valid commands"
-#define HHC01602 "%-9.9s   %c%s"
+#define HHC01602 "%-*.*s  %c%s"
 #define HHC01603 "%s"
 #define HHC01604 "Unknown command %s, no help available"
 #define HHC01605 "Invalid cmdlevel option: %s"
