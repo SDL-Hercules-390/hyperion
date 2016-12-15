@@ -9,8 +9,6 @@
 # ---------------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
-$(O)altcmpsc.lib:   $(X)altcmpsc.dll
-
 $(O)hdasd.lib:      $(X)hdasd.dll
 
 $(O)htape.lib:      $(X)htape.dll
@@ -144,10 +142,6 @@ $(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O
     $(MT_DLL_CMD)
 
 !ENDIF
-
-$(X)altcmpsc.dll: $(altcmpsc_OBJ) $(O)hengine.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
-    $(linkdll)
-    $(MT_DLL_CMD)
 
 # ---------------------------------------------------------------------
 # Main product executables

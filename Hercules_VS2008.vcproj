@@ -1502,14 +1502,6 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="altcmpsc"
-					>
-					<File
-						RelativePath=".\cmpsc.c"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="decNumber"
 					>
 					<File

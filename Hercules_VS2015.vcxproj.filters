@@ -89,9 +89,6 @@
     <Filter Include="Source Files\Hercules\Emulation\Header Files">
       <UniqueIdentifier>{ab161548-c943-44f0-8d63-aba7f82ec735}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Hercules\altcmpsc">
-      <UniqueIdentifier>{47c98659-eae7-4643-b9ed-40cefe55e3b2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Hercules\decNumber">
       <UniqueIdentifier>{0d3e0ef3-cda1-4750-ade8-298488709fa1}</UniqueIdentifier>
     </Filter>
@@ -734,9 +731,6 @@
     </ClCompile>
     <ClCompile Include="xstore.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cmpsc.c">
-      <Filter>Source Files\Hercules\altcmpsc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

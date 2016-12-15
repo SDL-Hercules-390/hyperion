@@ -49,9 +49,7 @@
 
   The default implementation for the CMPSC Compression Call instruction is
   now the new cmpsc_2012 implementation. The previous legacy implementation
-  is now the alternate implementation implemented as an optional dynamically
-  loadable module called "altcmpsc.dll". Refer to the README.CMPSC document
-  for more information.
+  no longer exists. Refer to the README.CMPSC document for more information.
 
 
 * The sequence of certain system parameters may be important

@@ -75,9 +75,6 @@ dyncrypt_OBJ =       \
     $(O)aes.obj
 !ENDIF
 
-altcmpsc_OBJ = \
-    $(O)cmpsc.obj
-
 hengine_OBJ = \
     $(O)archlvl.obj  \
     $(O)assist.obj   \

@@ -4,33 +4,25 @@
         Hercules CMPSC "Compression Call" instruction support
 
 
-The z/Architecture Compression Call instruction (CMPSC opcode B263) has
-two different implementations within Hercules 4.0 Hyperion.
+The z/Architecture Compression Call instruction (CMPSC opcode B263) had
+at one time two different implementations within Hercules 4.0 Hyperion.
 
-The original (legacy) cmpsc implementation does not currently support the
-z/Architecture CMPSC-enhancement facility, fails to pass certain cmpsctst
-testing tool(*) architecural compliance tests, and is not as fast.
+The original (legacy) cmpsc implementation was lacking support for the
+z/Architecture CMPSC-enhancement facility, failed to pass some cmpsctst
+testing tool(*) architecural compliance tests, and was not as fast.
 
-The newer cmpsc_2012 implementation not only passes all cmpsctst testing
-tool architectural compliance tests, but also supports the z/Architecture
-CMPSC-enhancement facility, and is about 10% faster as well. As a result,
-the new 2012 implementation is now the default implementation in Hercules
+The replacement cmpsc_2012 implementation not only passes all cmpsctst
+testing tool architectural compliance tests, but also fully supports
+the z/Architecture CMPSC-enhancement facility, and is about 10% faster
+as well. Because of this the old legacy implementation was removed and
+the new 2012 implementation is now the ONLY implementation in Hercules
 4.0 Hyperion.
-
-The original legacy implementation still exists and can still be used if
-desired, but you will need to specifically request it by adding a "LDMOD"
-(load module) statement to your configuration file to request the module
-"altcmpsc.dll" be loaded (or by manually entering the ldmod panel command
-after Hercules has been started).
 
 The CMPSC Compression Call instruction is fully described in painstaking
 detail in publication "ESA/390 Data Compression" (SA22-7208) as well as
 in the z/Architecture Principles of Operation manual too (SA22-7832).
 
-The original legacy cmpsc implementation logic is contained in a single
-'C' source file called "cmpsc.c".
-
-The newer default cmpsc_2012 implementation logic is spread across several
+The new default cmpsc_2012 implementation logic is spread across several
 different source files, each handling just one aspect of the instruction's
 overall functionality, and closely follows IBM's flow charts published in
 each of those manuals:
@@ -52,8 +44,9 @@ each of those manuals:
 
 
 The original legacy cmpsc implementation was written by Bernard van der
-Helm of Noordwijkerhout, The Netherlands. The cmpsc_2012 implementation
-was written by Fish (David B. Trout) of the United States of America.
+Helm of Noordwijkerhout, The Netherlands. The new/improved cmpsc_2012
+implementation was written by Fish (David B. Trout) of the United States
+of America, and borrows some of the techniques that Bernard pioneered.
 
 -------------------------------------------------------------------------------
 

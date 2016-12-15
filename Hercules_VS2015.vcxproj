@@ -299,7 +299,6 @@
     <ClCompile Include="ckddasd.c" />
     <ClCompile Include="clock.c" />
     <ClCompile Include="cmdtab.c" />
-    <ClCompile Include="cmpsc.c" />
     <ClCompile Include="cmpscdbg.c" />
     <ClCompile Include="cmpscdct.c" />
     <ClCompile Include="cmpscget.c" />

@@ -31,7 +31,6 @@ MODULES = \
     $(X)hdtzfcp.dll  \
     $(X)dyninst.dll  \
     $(X)s37x.dll     \
-    $(X)altcmpsc.dll \
     $(DYNCRYPT_DLL)
 
 EXECUTABLES = \
