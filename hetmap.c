@@ -220,7 +220,7 @@ main( int argc, char *argv[] )
     SInt32  lResidue    = max_bytes_dsply;  /* amount of space left to print */
     char *pgm;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Hercules AWS, HET and FakeTape tape map program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, "AWS, HET and FakeTape map program", &pgm );
 
 #define O_ALL               0xC0
 #define O_FILES             0X80

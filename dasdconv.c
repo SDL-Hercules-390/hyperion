@@ -209,7 +209,7 @@ argexit ( int code, char *pgm )
     // "Usage: %s ...
     if (sizeof(off_t) > 4)
         WRMSG( HHC02410, "I", pgm,
-                "\n            -lfs   build one large output file" );
+                "\nHHC02410I   -lfs   build one large output file" );
     else
         WRMSG( HHC02410, "I", pgm, "" );
 

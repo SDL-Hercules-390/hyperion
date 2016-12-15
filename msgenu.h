@@ -195,11 +195,11 @@ Examples:
 #define HHC00069 "There %s %d CPU%s still active; confirmation required"
 // HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
-       "          hao tgt <tgt> : define target rule (pattern) to react on\n" \
-       "          hao cmd <cmd> : define command for previously defined rule\n" \
-       "          hao list <n>  : list all rules/commands or only at index <n>\n" \
-       "          hao del <n>   : delete the rule at index <n>\n" \
-       "          hao clear     : delete all rules (stops automatic operator)"
+       "HHC00070I hao tgt <tgt> : define target rule (pattern) to react on\n" \
+       "HHC00070I hao cmd <cmd> : define command for previously defined rule\n" \
+       "HHC00070I hao list <n>  : list all rules/commands or only at index <n>\n" \
+       "HHC00070I hao del <n>   : delete the rule at index <n>\n" \
+       "HHC00070I hao clear     : delete all rules (stops automatic operator)"
 #define HHC00071 "The %s was not added because table is full; table size is %02d"
 #define HHC00072 "The command %s given, but the command %s was expected"
 #define HHC00073 "Empty %s specified"
@@ -1408,25 +1408,22 @@ Examples:
 #define HHC02407 "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
 //dasdconv.c
 #define HHC02410 "Usage: %s [options] infile outfile\n" \
-       "          infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
-       "          outfile: name of AWSCKD image file to be created\n" \
-       "          options:\n" \
-       "            -r     replace existing output file\n" \
-       "            -q     suppress progress messages%s"
+       "HHC02410I   infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
+       "HHC02410I   outfile: name of AWSCKD image file to be created\n" \
+       "HHC02410I options:\n" \
+       "HHC02410I   -r     replace existing output file\n" \
+       "HHC02410I   -q     suppress progress messages%s"
 
 #define HHC02411 "Usage: %s [-f] [-level] [-ro] file1 [file2 ...]\n" \
-       "          options:\n" \
-       "\n" \
-       "            -f      force check even if OPENED bit is on\n" \
-       "            -ro     open file readonly, no repairs\n" \
-       "\n" \
-       "        level is a digit 0 - 4:\n" \
-       "            -0  --  minimal checking (hdr, chdr, l1tab, l2tabs)\n" \
-       "            -1  --  normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n" \
-       "            -2  --  extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
-       "            -3  --  maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
-       "            -4  --  recover everything without using meta-data\n" \
-       "\n"
+       "HHC02410I   file    name of DASD image file\n" \
+       "HHC02411I options:\n" \
+       "HHC02411I   -f      force check even if OPENED bit is on\n" \
+       "HHC02411I   -ro     open file readonly, no repairs\n" \
+       "HHC02411I   -0      minimal checking (hdr, chdr, l1tab, l2tabs)\n" \
+       "HHC02411I   -1      normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n" \
+       "HHC02411I   -2      extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
+       "HHC02411I   -3      maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
+       "HHC02411I   -4      recover everything without using meta-data" 
 
 #define HHC02412 "Error in function %s: %s"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
@@ -1590,15 +1587,13 @@ Examples:
 #define HHC02493 "Filename %s specified for %s"
 #define HHC02494 "Requested number of extents %d exceeds maximum %d; utility ends"
 #define HHC02495 "Usage: %s [-f] [-n] file1 [file2 ...]\n" \
-       "\n" \
-       "          -f      force check even if OPENED bit is on\n" \
-       "\n" \
-       "          -n      chkdsk level 'n' is a digit 0 - 3:\n" \
-       "              -0  --  minimal checking\n" \
-       "              -1  --  normal  checking\n" \
-       "              -2  --  intermediate checking\n" \
-       "              -3  --  maximal checking\n" \
-       "                  default  -0"
+       "HHC02495I   file    name of CCKD file\n" \
+       "HHC02495I Options:\n" \
+       "HHC02495I   -f      force check even if OPENED bit is on\n" \
+       "HHC02495I   -0      minimal checking (default)\n" \
+       "HHC02495I   -1      normal  checking\n" \
+       "HHC02495I   -2      intermediate checking\n" \
+       "HHC02495I   -3      maximal checking"
 #define HHC02496 "Usage: %s [options] ctlfile outfile [n]\n" \
        "          options:\n" \
        "            -0     no compression (default)\n" \
@@ -1614,15 +1609,13 @@ Examples:
        "\n" \
        "          n        msglevel 'n' is a digit 0 - 5 re: output verbosity"
 #define HHC02497 "Usage: %s [-f] [-level] file1 [file2 ... ]\n" \
-       "\n" \
-       "          -f      force check even if OPENED bit is on\n" \
-       "\n" \
-       "        chkdsk level is a digit 0 - 3:\n" \
-       "          -0  --  minimal checking\n" \
-       "          -1  --  normal  checking\n" \
-       "          -2  --  intermediate checking\n" \
-       "          -3  --  maximal checking\n" \
-       "         default  0"
+       "HHC02497I   file    name of CCKD file\n" \
+       "HHC02497I Options:\n" \
+       "HHC02497I   -f      force check even if OPENED bit is on\n" \
+       "HHC02497I   -0      minimal checking (default)\n" \
+       "HHC02497I   -1      normal  checking\n" \
+       "HHC02497I   -2      intermediate checking\n" \
+       "HHC02497I   -3      maximal checking" 
 
 #define HHC02499 "Hercules utility %s - %s;"
 
@@ -1692,7 +1685,7 @@ Examples:
 #define HHC02562 "File number:    %d %s"
 #define HHC02563 "Data record:    len[%d]"
 #define HHC02564 "Input record:   CCHHR[%04X%04X%02X] (TTR[%04X%02X]) kl[%d] dl[%d]\n" \
-       "          relocated to:   CCHHR[%04X%04X%02X] (TTR[%04X%02X])"
+       "HHC02564I relocated to:   CCHHR[%04X%04X%02X] (TTR[%04X%02X])"
 #define HHC02565 "Catalog block:  cyl[%04X/%d] head[%04X/%d] rec[%02X/%d]"
 #define HHC02566 "DIP complete:   cyl[%04X/%d] head[%04X/%d] rec[%02X/%d]"
 #define HHC02567 "File %s[%04d]: %s"
@@ -1724,22 +1717,21 @@ Examples:
 #define HHC02593 "VOL1 record not readable or locatable"
 
 // reserve 026xx for utilites
-#define HHC02600 "Usage: %s [options] file-name\n" \
-       "\n" \
-       "          -d      display DEVHDR and exit\n" \
-       "          -c      display CDEVHDR and exit\n" \
-       "          -1      display L1TAB (numeric one)\n" \
-       "          -g      enable debug output\n" \
-       "\n" \
-       "           CKD track related options:\n" \
-       "           -a cc hh  display absolute CCHH data\n" \
-       "           -r tt     display relative TT data\n" \
-       "           -2        display L2TAB related to -a or -r\n" \
-       "           -t        display track data\n" \
-       "           -x        hex display track key/data\n" \
-       "\n" \
-       "           Offset option:\n" \
-       "           -o oo ll  hex display data at offset oo of length ll"
+#define HHC02600 "Usage: %s [options] file\n" \
+       "HHC02600I   file      name of CCKD file\n" \
+       "HHC02600I Options:\n" \
+       "HHC02600I   -d        display DEVHDR and exit\n" \
+       "HHC02600I   -c        display CDEVHDR and exit\n" \
+       "HHC02600I   -1        display L1TAB (numeric one)\n" \
+       "HHC02600I   -g        enable debug output\n" \
+       "HHC02600I CKD track related options:\n" \
+       "HHC02600I   -a cc hh  display absolute CCHH data\n" \
+       "HHC02600I   -r tt     display relative TT data\n" \
+       "HHC02600I   -2        display L2TAB related to -a or -r\n" \
+       "HHC02600I   -t        display track data\n" \
+       "HHC02600I   -x        hex display track key/data\n" \
+       "HHC02600I Offset option:\n" \
+       "HHC02600I   -o oo ll  hex display data at offset oo of length ll"
 #define HHC02601 "Press enter to continue"
 #define HHC02602 "From %s: Storage allocation of size %d using %s failed"
 #define HHC02603 "In %s: lseek() to pos 0x%08x error: %s"
@@ -1774,28 +1766,28 @@ Examples:
 #define HHC02722 "Tape Label: %s"
 #define HHC02723 "File No. %u: Block %u"
 #define HHC02724 "Successful completion"
-#define HHC02725 "Usage: %s infilename outfilename [nnn] [outfilename [nnn]] ...\n\n" \
-                 "nnn specifies how many tapemark-separated files to copy to the\n" \
-                 "specified outfilename. If nnn is not given 32767 is used instead."
+#define HHC02725 "Usage: %s infilename outfilename [nnn] [outfilename [nnn]] ...\n" \
+       "HHC02725I 'nnn' specifies how many tapemark-separated files to copy to the\n" \
+       "HHC02725I specified outfilename. If nnn is not given 32767 is used instead."
 #define HHC02726 "Usage: %s filename"
 #define HHC02727 "Usage: %s [-f n] infilename outfilename"
 #define HHC02728 "Usage: %s [options] hetfile outfile fileno [recfm lrecl blksize]\n" \
-       "\n" \
-       "            fileno  range 1 to 9999; default 1\n" \
-       "\n" \
-       "            Options:\n" \
-       "                -a  convert to ASCII (implies -u)\n" \
-       "                -h  display usage summary\n" \
-       "                -n  file is an NL (or BLP like) tape\n" \
-       "                -u  unblock (removes BDWs and RDWs if RECFM=V)\n" \
-       "                -s  strip trailing blanks (requires -a)"
-#define HHC02729 "Usage: %s [options] filename [volser] [owner]\n" \
-       "\n" \
-       "            Options:\n" \
-       "                -d  disable compression\n" \
-       "                -h  display usage summary\n" \
-       "                -i  create an IEHINITT formatted tape (default: on)\n" \
-       "                -n  create an NL tape"
+       "HHC02728I   hetfile   input file\n" \
+       "HHC02728I   outfile   output file\n" \
+       "HHC02728I   fileno    which file to extract (1-9999, default 1)\n" \
+       "HHC02728I Options:\n" \
+       "HHC02728I   -a    convert to ASCII (implies -u)\n" \
+       "HHC02728I   -h    display usage summary\n" \
+       "HHC02728I   -n    file is an NL (or BLP like) tape\n" \
+       "HHC02728I   -u    unblock (removes BDWs and RDWs if RECFM=V)\n" \
+       "HHC02728I   -s    strip trailing blanks (requires -a)"
+#define HHC02729 "Usage: %s [options] outfile [volser] [owner]\n" \
+       "HHC02728I   outfile   output file\n" \
+       "HHC02729I Options:\n" \
+       "HHC02729I   -d        disable compression\n" \
+       "HHC02729I   -h        display usage summary\n" \
+       "HHC02729I   -i        create an IEHINITT formatted tape (default: on)\n" \
+       "HHC02729I   -n        create an NL tape"
 #define HHC02730 "Usage: %s [options] source [dest]\n" \
        "\n" \
        "            Options:\n" \
@@ -1815,12 +1807,7 @@ Examples:
 #define HHC02733 "Bytes written: %"PRId64" (%3.1f MB)"
 
 #define HHC02738 "%s"
-#define HHC02739 "Usage: %s [options] infile outtmplt\n" \
-       "\n" \
-       "            Options:\n" \
-       "                -j  Join file pieces\n" \
-       "                -s  Split file into pieces\n" \
-       "                -h  display usage summary"
+//efine HHC02739 (available)
 #define HHC02740 "File %s: writing output file"
 #define HHC02741 "File %s: Error, incomplete %s header"
 #define HHC02742 "File %s: Error, incomplete final data block: expected %d bytes, read %d"
@@ -1836,17 +1823,17 @@ Examples:
 #define HHC02755 "HET: Setting option %s to %s"
 #define HHC02756 "HET: HETLIB reported error %s files; %s"
 #define HHC02757 "HET: %s"
-#define HHC02758 \
-    "Usage: %s [options] filename\n\n" \
-    "Options:\n" \
-    "  -a  print all label and file information (default: on)\n" \
-    "  -bn print 'n' bytes per file; -b implies -s\n" \
-    "  -d  print only dataset information (default: off)\n" \
-    "  -f  print only file information (default: off)\n" \
-    "  -h  display usage summary\n" \
-    "  -l  print only label information (default: off)\n" \
-    "  -s  print dump of each data file (SLANAL format) (default: off)\n" \
-    "  -t  print TAPEMAP-compatible format output (default: off)\n"
+#define HHC02758 "Usage: %s [options] infile\n" \
+       "HHC02758I   infile  name of input file\n" \
+       "HHC02758I Options:\n" \
+       "HHC02758I   -a      print all label and file information (default: on)\n" \
+       "HHC02758I   -bn     print 'n' bytes per file; -b implies -s\n" \
+       "HHC02758I   -d      print only dataset information (default: off)\n" \
+       "HHC02758I   -f      print only file information (default: off)\n" \
+       "HHC02758I   -h      display usage summary\n" \
+       "HHC02758I   -l      print only label information (default: off)\n" \
+       "HHC02758I   -s      print dump of each data file (SLANAL format) (default: off)\n" \
+       "HHC02758I   -t      print TAPEMAP-compatible format output (default: off)\n"
 #define HHC02759 \
     "Usage: %s filename\n"
 #define HHC02760 "%s"
@@ -2114,73 +2101,7 @@ Examples:
 // (same as HHC00205 but 9xxxx debugging range)
 #define HHC90205 "%1d:%04X Tape file %s, type %s: error in function %s: %s"
 
-/* from cmpsc.c when compiled with debug on */
-#define HHC90300 "CMPSC: compression call"
-#define HHC90301 " r%d      : GR%02d"
-#define HHC90302 " address : " F_VADR
-#define HHC90303 " length  : " F_GREG
-#define HHC90304 " GR%02d    : " F_GREG
-#define HHC90305 "   st    : %s"
-#define HHC90306 "   cdss  : %d"
-#define HHC90307 "   f1    : %s"
-#define HHC90308 "   e     : %s"
-#define HHC90309 "   dictor: " F_GREG
-#define HHC90310 "   sttoff: %08X"
-#define HHC90311 "   cbn   : %d"
-#define HHC90312 "*** Registers committed"
-#define HHC90313 "fetch_chs: %s at " F_VADR
-#define HHC90314 "compress : is %04X (%d)"
-#define HHC90315 "*** Interrupt pending, commit and return with cc3"
-#define HHC90316 "fetch_cce: index %04X"
-#define HHC90317 "fetch_ch : reached end of source"
-#define HHC90318 "fetch_ch : %02X at " F_VADR
-#define HHC90319 "  cce    : %s"
-#define HHC90320 "  cct    : %d"
-#define HHC90321 "  act    : %d"
-#define HHC90322 "  ec(s)  :%s"
-#define HHC90323 "  x1     : %c"
-#define HHC90324 "  act    : %d"
-#define HHC90325 "  cptr   : %04X"
-#define HHC90326 "  cc     : %02X"
-#define HHC90327 "  x1..x5 : %s"
-#define HHC90328 "  y1..y2 : %s"
-#define HHC90329 "  d      : %s"
-#define HHC90330 "  ec     : %02X"
-#define HHC90331 "  ccs    :%s"
-#define HHC90332 "  sd1    : %s"
-#define HHC90333 "  sct    : %d"
-#define HHC90334 "  y1..y12: %s"
-#define HHC90335 "  sc(s)  :%s"
-#define HHC90336 "  sd0    : %s"
-#define HHC90337 "  y1..y5 : %s"
-#define HHC90338 "search_cce index %04X parent"
-#define HHC90339 "fetch_sd1: index %04X"
-#define HHC90340 "fetch_sd0: index %04X"
-#define HHC90341 "search_sd: index %04X parent"
-#define HHC90342 "store_is : end of output buffer"
-#define HHC90343 "store_is : %04X -> %02X%02X"
-#define HHC90344 "store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG
-#define HHC90345 "store_iss: %04X -> %02X%02X"
-#define HHC90346 "store_iss:%s, GR%02d=" F_VADR ", GR%02d=" F_GREG
-#define HHC90347 "expand   : is %04X (%d)"
-#define HHC90348 "expand   : reached CPU determined amount of data"
-#define HHC90349 "fetch_ece: index %04X"
-#define HHC90350 "fetch_is : reached end of source"
-#define HHC90351 "fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG
-#define HHC90352 "fetch_iss: GR%02d=" F_VADR ", GR%02d=" F_GREG
-#define HHC90353 "  ece    : %s"
-#define HHC90354 "  psl    : %d"
-#define HHC90355 "  pptr   : %04X"
-#define HHC90356 "  ecs    :%s"
-#define HHC90357 "  ofst   : %02X"
-#define HHC90358 "  bit34  : %s"
-#define HHC90359 "  csl    : %d"
-#define HHC90360 "vstore   : Reached end of destination"
-#define HHC90361 F_GREG " - " F_GREG " Same buffer as previously shown"
-#define HHC90362 "%s - " F_GREG " Same line as above"
-#define HHC90363 "%s"
-#define HHC90364 "   zp    : %s"
-#define HHC90365 "dead_end : %02X %02X %s"
+// range 90300 - 90399 available
 
 /* cckddiag.c */
 #define HHC90400 "MAKBUF() malloc %s buffer of %d bytes at %p"

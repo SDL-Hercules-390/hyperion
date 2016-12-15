@@ -33,7 +33,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Hercules cckd compress program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, "CCKD compress program", &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)

@@ -34,7 +34,7 @@ int             bigend;                 /* 1=big-endian file         */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Swap 'endianess' of a cckd file", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, "Swap 'endianess' of a CCKD file", &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)

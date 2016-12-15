@@ -406,8 +406,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     INITIALIZE_UTILITY( UTILITY_NAME, "CCKD diagnostic program", &pgm );
 
-    printf("\n");
-
     /* parse the arguments */
     argc--;
     argv++ ;
