@@ -8060,49 +8060,6 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 }
 
 /*-------------------------------------------------------------------*/
-/* cache command                                                     */
-/*-------------------------------------------------------------------*/
-int cache_cmd(int argc, char *argv[], char *cmdline)
-{
-    int rc = 0;
-
-    UNREFERENCED(cmdline);
-
-    if ( ( argc == 3 || argc == 4 ) && CMD(argv[1],dasd,2) && CMD(argv[2],system,3) )
-    {
-        if ( argc == 4)
-        {
-            if ( CMD(argv[3],on,2) )
-                sysblk.dasdcache = TRUE;
-            else if ( CMD(argv[3],off,3) )
-                sysblk.dasdcache = FALSE;
-            else
-            {
-                WRMSG( HHC02205, "E", argv[3], "; value must be ON or OFF" );
-                rc = -1;
-            }
-            if ( rc == 0 && MLVL(VERBOSE) )
-            {
-                WRMSG( HHC02204, "I", "dasd system cache", argv[3] );
-            }
-        }
-        else
-            WRMSG( HHC02203, "I", "dasd system cache", sysblk.dasdcache ? "on" : "off" );
-    }
-    else if ( argc == 1 )
-    {
-        cachestats_cmd( argc, argv, cmdline );
-    }
-    else
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
-    }
-
-    return rc;
-}
-
-/*-------------------------------------------------------------------*/
 /* msglevel command                                                  */
 /*-------------------------------------------------------------------*/
 int msglevel_cmd( int argc, char* argv[], char* cmdline )

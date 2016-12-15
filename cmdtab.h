@@ -163,17 +163,6 @@
   "command is synonymous with the \"s+\" command.\n"
 
 #define bplus_cmd_desc          "Set breakpoint"
-#define cache_cmd_desc          "Execute cache related commands"
-#define cache_cmd_help          \
-                                \
-  "Format: \"cache [dasd system [on|off]]\"\n"                                  \
-  "\n"                                                                          \
-  "dasd system on|off         will enable(on) or disable(off) caching for\n"    \
-  "                           all dasd devices\n"                               \
-  "dasd system                will present status of system dasd caching\n"     \
-  "\n"                                                                          \
-  "Command without arguments will present cache stats.\n"
-
 #define cachestats_cmd_desc     "Cache stats command"
 #define capping_cmd_desc        "Set/display capping value"
 #define capping_cmd_help        \
@@ -1521,7 +1510,6 @@ COMMAND( "$runtest",                $runtest_cmd,           SYSPROGDEVELDEBUG,  
 COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
 CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  $zapcmd_cmd_desc,       $zapcmd_cmd_help    )
 
-COMMAND( "cache",                   cache_cmd,              SYSCONFIG,          cache_cmd_desc,         cache_cmd_help      )
 COMMAND( "cckd",                    cckd_cmd,               SYSCONFIG,          cckd_cmd_desc,          cckd_cmd_help       )
 COMMAND( "devtmax",                 devtmax_cmd,            SYSCONFIG,          devtmax_cmd_desc,       devtmax_cmd_help    )
 CMDABBR( "legacysenseid",  9,       legacysenseid_cmd,      SYSCONFIG,          legacy_cmd_desc,        NULL                )
