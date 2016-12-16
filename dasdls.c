@@ -451,41 +451,35 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                             case DSORG_PS: tmpstr = "PS"; break;
                             case DSORG_DA: tmpstr = "DA"; break;
                             case DSORG_PO: tmpstr = "PO"; break;
-                            case 0:        tmpstr = "  "; break;
+                            case 0:        tmpstr = "  "; break; /* none of the above */
+                            default: /* don't change? */  break; /* multiple bits set */
                         }
                     }
                     printf(" %s%s", tmpstr, f1dscb->ds1dsorg[0] & DSORG_U ? "U" : " ");
 
                     /* RECFM */
 
-                    tmpstr = "U";
-
-                    switch (f1dscb->ds1recfm & RECFM_FORMAT_U)
+                    switch (f1dscb->ds1recfm & RECFM_FORMAT)
                     {
                         case RECFM_FORMAT_F: tmpstr = "F"; break;
                         case RECFM_FORMAT_V: tmpstr = "V"; break;
-                        case RECFM_FORMAT_U:               break;
+                        default:             tmpstr = "U"; break;
                     }
-                    strcpy( txtrecfm, tmpstr );
+                    strlcpy( txtrecfm, tmpstr, _countof( txtrecfm ));
 
-                    if (f1dscb->ds1recfm & RECFM_BLOCKED)
-                        strcat( txtrecfm, "B" );
+                    if (f1dscb->ds1recfm & RECFM_BLOCKED)  strlcat( txtrecfm, "B", _countof( txtrecfm ));
+                    if (f1dscb->ds1recfm & RECFM_SPANNED)  strlcat( txtrecfm, "S", _countof( txtrecfm ));
 
-                    if (f1dscb->ds1recfm & RECFM_SPANNED)
-                        strcat( txtrecfm, "S" );
-
-                    tmpstr = "";
-
-                    switch (f1dscb->ds1recfm & (RECFM_CTLCHAR_A | RECFM_CTLCHAR_M))
+                    switch (f1dscb->ds1recfm & RECFM_CTLCHAR)
                     {
-                        case RECFM_CTLCHAR_A:                     tmpstr = "A"; break;
-                        case RECFM_CTLCHAR_M:                     tmpstr = "M"; break;
-                        case RECFM_CTLCHAR_A | RECFM_CTLCHAR_M:   tmpstr = "?"; break;
+                        case RECFM_CTLCHAR_A:                   tmpstr = "A"; break;
+                        case RECFM_CTLCHAR_M:                   tmpstr = "M"; break;
+                        case RECFM_CTLCHAR_A | RECFM_CTLCHAR_M: tmpstr = "?"; break; /* both ?! */
+                        default:                                tmpstr = "";  break; /* neither */
                     }
-                    strcat( txtrecfm, tmpstr );
+                    strlcat( txtrecfm, tmpstr, _countof( txtrecfm ));
 
-                    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)
-                        strcat( txtrecfm, "T" );
+                    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  strlcat( txtrecfm, "T", _countof( txtrecfm ));
 
                     printf(" %-5s", txtrecfm);
 
