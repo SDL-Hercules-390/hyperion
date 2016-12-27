@@ -52,3 +52,18 @@ softfloat_libpath  =  $(softfloat_libdir)\$(softfloat_libname).lib
 
 LIBS    =  $(LIBS)        "$(softfloat_libpath)"
 cflags  =  $(cflags)  /I  "$(softfloat_incdir)"
+
+
+#--------------
+#  telnet
+#--------------
+
+telnet_pkgname  =  telnet
+telnet_pkgdir   =  $(telnet_pkgname)
+telnet_libname  =  $(telnet_pkgname)$(arch_suffix)
+telnet_incdir   =  $(telnet_pkgdir)\include
+telnet_libdir   =  $(telnet_pkgdir)\lib
+telnet_libpath  =  $(telnet_libdir)\$(telnet_libname).lib
+
+LIBS    =  $(LIBS)        "$(telnet_libpath)"
+cflags  =  $(cflags)  /I  "$(telnet_incdir)"

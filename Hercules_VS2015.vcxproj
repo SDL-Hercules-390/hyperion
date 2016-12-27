@@ -134,7 +134,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG makefile.msvc 32 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>./msvc.debug.AMD64.bin\</OutDir>
@@ -144,7 +144,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-X64 makefile.msvc 64 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>./msvc.dllmod.bin\</OutDir>
@@ -154,7 +154,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL makefile.msvc 32 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>./msvc.AMD64.bin\</OutDir>
@@ -164,7 +164,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-X64 makefile.msvc 64 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -174,7 +174,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -184,7 +184,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -194,7 +194,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -204,7 +204,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -214,7 +214,7 @@
     <NMakeCleanCommandLine>makefile.bat ALL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -224,7 +224,7 @@
     <NMakeCleanCommandLine>makefile.bat ALL-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
@@ -434,7 +434,6 @@
     <ClCompile Include="tapedev.c" />
     <ClCompile Include="tapemap.c" />
     <ClCompile Include="tapesplt.c" />
-    <ClCompile Include="telnet.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="tuntap.c" />
@@ -480,6 +479,10 @@
     <None Include="decNumber\lib\decNumber64.pdb" />
     <None Include="decNumber\lib\pkgconfig\decNumber32.pc" />
     <None Include="decNumber\lib\pkgconfig\decNumber64.pc" />
+    <None Include="telnet\README.txt" />
+    <None Include="telnet\LICENSE.txt" />
+    <None Include="telnet\lib\telnet32.pdb" />
+    <None Include="telnet\lib\telnet64.pdb" />
     <None Include="dynmake.bat" />
     <None Include="hercules.cnf" />
     <None Include="hercules.cnf.rexx" />
@@ -908,6 +911,7 @@
     <ClInclude Include="decNumber\include\decNumber.h" />
     <ClInclude Include="decNumber\include\decPacked.h" />
     <ClInclude Include="decNumber\include\decQuad.h" />
+    <ClInclude Include="telnet\include\telnet.h" />
     <ClInclude Include="devtype.h" />
     <ClInclude Include="ecpsvm.h" />
     <ClInclude Include="esa390.h" />
@@ -983,7 +987,6 @@
     <ClInclude Include="sr.h" />
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="telnet.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tt32if.h" />
     <ClInclude Include="tuntap.h" />
@@ -1167,6 +1170,8 @@
     <Library Include="decNumber\lib\decNumber64.lib" />
     <Library Include="SoftFloat\lib\SoftFloat32.lib" />
     <Library Include="SoftFloat\lib\SoftFloat64.lib" />
+    <Library Include="telnet\lib\telnet32.lib" />
+    <Library Include="telnet\lib\telnet64.lib" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="hercdasd.ico" />

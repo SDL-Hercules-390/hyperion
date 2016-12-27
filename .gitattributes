@@ -395,7 +395,6 @@ makefile*.msvc      text    eol=crlf
 
 # Build (subdirectories)
 autoconf/*          text    eol=lf
-decNumber/*.def     text    eol=crlf
 m4/*                text    eol=lf
 man/*               text    eol=lf
 util/bldlvlck       text    eol=lf

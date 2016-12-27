@@ -101,6 +101,15 @@
     <Filter Include="Source Files\Hercules\decNumber\Lib\pkgconfig">
       <UniqueIdentifier>{4ecdd442-dc9f-4ad6-b2a3-9942a0d2e994}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Hercules\telnet">
+      <UniqueIdentifier>{AA385C27-3D78-451f-BA4F-0CB6253CBFCC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\telnet\Include">
+      <UniqueIdentifier>{8997E620-7FB4-473f-B680-86BA1781AB20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\telnet\Lib">
+      <UniqueIdentifier>{7E51CA54-4311-406d-9C9D-ED79986330BB}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\Hercules\SoftFloat">
       <UniqueIdentifier>{ae8c97c2-b99e-4278-8133-84ce76e383bc}</UniqueIdentifier>
     </Filter>
@@ -302,9 +311,6 @@
     </ClCompile>
     <ClCompile Include="crypto\sha256.c">
       <Filter>Source Files\Hercules\Crypto\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="telnet.c">
-      <Filter>Source Files\Hercules\Devices\Con/Disp/Term</Filter>
     </ClCompile>
     <ClCompile Include="con1052c.c">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
@@ -757,6 +763,18 @@
     </None>
     <None Include="decNumber\lib\pkgconfig\decNumber64.pc">
       <Filter>Source Files\Hercules\decNumber\Lib\pkgconfig</Filter>
+    </None>
+    <None Include="telnet\README.txt">
+      <Filter>Source Files\Hercules\telnet</Filter>
+    </None>
+    <None Include="telnet\LICENSE.txt">
+      <Filter>Source Files\Hercules\telnet</Filter>
+    </None>
+    <None Include="telnet\lib\telnet32.pdb">
+      <Filter>Source Files\Hercules\telnet\Lib</Filter>
+    </None>
+    <None Include="telnet\lib\telnet64.pdb">
+      <Filter>Source Files\Hercules\telnet\Lib</Filter>
     </None>
     <None Include="SoftFloat\README.html">
       <Filter>Source Files\Hercules\SoftFloat</Filter>
@@ -2005,9 +2023,6 @@
     <ClInclude Include="crypto\sha256.h">
       <Filter>Source Files\Hercules\Crypto\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="telnet.h">
-      <Filter>Source Files\Hercules\Devices\Con/Disp/Term</Filter>
-    </ClInclude>
     <ClInclude Include="cnsllogo.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
     </ClInclude>
@@ -2358,6 +2373,9 @@
     </ClInclude>
     <ClInclude Include="decNumber\include\decQuad.h">
       <Filter>Source Files\Hercules\decNumber\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet\include\telnet.h">
+      <Filter>Source Files\Hercules\telnet\Include</Filter>
     </ClInclude>
     <ClInclude Include="SoftFloat\include\softfloat.h">
       <Filter>Source Files\Hercules\SoftFloat\Include</Filter>
@@ -2863,6 +2881,12 @@
     </Library>
     <Library Include="decNumber\lib\decNumber64.lib">
       <Filter>Source Files\Hercules\decNumber\Lib</Filter>
+    </Library>
+    <Library Include="telnet\lib\telnet32.lib">
+      <Filter>Source Files\Hercules\telnet\Lib</Filter>
+    </Library>
+    <Library Include="telnet\lib\telnet64.lib">
+      <Filter>Source Files\Hercules\telnet\Lib</Filter>
     </Library>
     <Library Include="SoftFloat\lib\SoftFloat32.lib">
       <Filter>Source Files\Hercules\SoftFloat\Lib</Filter>

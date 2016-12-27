@@ -20,8 +20,8 @@ Each external package is built separately from the Hercules emulator and then
 "installed" into the appropriate Hercules repository subdirectory.  Building
 Hercules itself should not change.
 
-At present, the only external packages this Hercules 4.0 Hyperion links with
-are the "decNumber" and "SoftFloat" packages.  Over time additional Hercules
+Two such external packages that this Hercules 4.0 Hyperion links with are
+the "decNumber" and "SoftFloat" packages.  Over time additional Hercules
 functionality will be moved out of the emulator into their own separately
 maintained and built external package repositories, eventually reducing the
 Hercules emulator itself to just its core function: accurate emulation of

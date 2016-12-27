@@ -64,24 +64,39 @@ softfloat_headers  =  \
   $(softfloat_incdir)/softfloat_types.h
 
 #------------------------------------------------------------------------------
+
+telnet_pkgname  =  telnet
+telnet_pkgdir   =  $(telnet_pkgname)
+telnet_libname  =  lib$(telnet_pkgname)@PKG_LIB_SUFFIX@
+telnet_incdir   =  $(telnet_pkgdir)/include
+telnet_libdir   =  $(telnet_pkgdir)/lib@PKG_LIB_SUBDIR@
+telnet_libpath  =  $(telnet_libdir)/$(telnet_libname).a
+telnet_headers  =  \
+  $(telnet_incdir)/telnet.h
+
+#------------------------------------------------------------------------------
 #                         External Packages
 #------------------------------------------------------------------------------
 
 extpkg_incdirs =        \
   -I$(decnumber_incdir) \
-  -I$(softfloat_incdir)
+  -I$(softfloat_incdir) \
+  -I$(telnet_incdir)
 
 extpkg_headers =        \
   $(decnumber_headers)  \
-  $(softfloat_headers)
+  $(softfloat_headers)  \
+  $(telnet_headers)
 
 extpkg_libs =           \
   $(decnumber_libpath)  \
-  $(softfloat_libpath)
+  $(softfloat_libpath)  \
+  $(telnet_libpath)
 
 extpkg_cppflags =       \
   $(decnumber_cppflags) \
-  $(softfloat_cppflags)
+  $(softfloat_cppflags) \
+  $(telnet_cppflags)
 
 #------------------------------------------------------------------------------
 
@@ -159,7 +174,6 @@ dyndev_SRC =  \
   sockdev.c   \
   tapeccws.c  \
   tapedev.c   \
-  telnet.c    \
   tuntap.c    \
   w32ctca.c   \
   w32stape.c  \
@@ -344,7 +358,7 @@ hdt3088_la_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
 hdt3088_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-hdt3270_la_SOURCES = console.c telnet.c
+hdt3270_la_SOURCES = console.c
 hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
 
@@ -1007,7 +1021,6 @@ noinst_HEADERS =          \
   sr.h                    \
   tapedev.h               \
   targetver.h             \
-  telnet.h                \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \

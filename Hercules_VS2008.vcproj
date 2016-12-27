@@ -411,14 +411,6 @@
 					<Filter
 						Name="Con/Disp/Term"
 						>
-						<File
-							RelativePath=".\telnet.c"
-							>
-						</File>
-						<File
-							RelativePath=".\telnet.h"
-							>
-						</File>
 						<Filter
 							Name="Header Files"
 							>
@@ -1657,6 +1649,46 @@
 						</File>
 						<File
 							RelativePath=".\SoftFloat\doc\SoftFloat.html"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="telnet"
+					>
+					<File
+						RelativePath=".\telnet\LICENSE.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\telnet\README.txt"
+						>
+					</File>
+					<Filter
+						Name="Include"
+						>
+						<File
+							RelativePath=".\telnet\include\telnet.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Lib"
+						>
+						<File
+							RelativePath=".\telnet\lib\telnet32.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\telnet\lib\telnet32.pdb"
+							>
+						</File>
+						<File
+							RelativePath=".\telnet\lib\telnet64.lib"
+							>
+						</File>
+						<File
+							RelativePath=".\telnet\lib\telnet64.pdb"
 							>
 						</File>
 					</Filter>
