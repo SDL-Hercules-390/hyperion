@@ -63,7 +63,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)
     {
-        FWRMSG( stderr, HHC02463, "I", pgm, " pdsname [ascii]" );
+        FWRMSG( stderr, HHC02463, "I", pgm );
         return -1;
     }
 
@@ -90,7 +90,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         else
         {
             FWRMSG( stderr, HHC02465, "E", argv[3+i] );
-            FWRMSG( stderr, HHC02463, "I", argv[0], " pdsname [ascii]" );
+            FWRMSG( stderr, HHC02463, "I", argv[0] );
             return -1;
         }
     }

@@ -64,7 +64,7 @@ char           *fn, *sfn;
     if (argc < 2)
     {
         // "Usage: %s [-option [-option ... ]] ckdfile [sf=shadow-file-name]%s"
-        WRMSG( HHC02463, "I", pgm, "" );
+        WRMSG( HHC02463, "I", pgm );
         exit(2);
     }
 

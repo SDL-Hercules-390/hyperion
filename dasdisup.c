@@ -122,7 +122,7 @@ int             nmem = 0;               /* Number of array entries   */
     if (argc < 2 || argc > 3)
     {
         // "Usage: %s ...
-        WRMSG( HHC02463, "I", pgm, "" );
+        WRMSG( HHC02463, "I", pgm );
         return -1;
     }
 
