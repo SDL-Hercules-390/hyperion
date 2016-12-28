@@ -60,6 +60,31 @@
 #define TELNET_H
 
 /*-------------------------------------------------------------------*/
+/*                   Visual Studio versions                          */
+/*-------------------------------------------------------------------*/
+#ifdef _MSC_VER
+
+#define VS2015      1900                /* Visual Studio 2015 */
+#define VS2013      1800                /* Visual Studio 2013 */
+#define VS2012      1700                /* Visual Studio 2012 */
+#define VS2010      1600                /* Visual Studio 2010 */
+#define VS2008      1500                /* Visual Studio 2008 */
+#define VS2005      1400                /* Visual Studio 2005 */
+#define VS2003      1310                /* Visual Studio 2003 */
+#define VS2002      1300                /* Visual Studio 2002 */
+
+#define MSVC14      1900                /* Visual Studio 2015 */
+#define MSVC12      1800                /* Visual Studio 2013 */
+#define MSVC11      1700                /* Visual Studio 2012 */
+#define MSVC10      1600                /* Visual Studio 2010 */
+#define MSVC9       1500                /* Visual Studio 2008 */
+#define MSVC8       1400                /* Visual Studio 2005 */
+#define MSVC71      1310                /* Visual Studio 2003 */
+#define MSVC7       1300                /* Visual Studio 2002 */
+
+#endif /* _MSC_VER */
+
+/*-------------------------------------------------------------------*/
 /*                      Tweakable constants                          */
 /*-------------------------------------------------------------------*/
 #ifndef LIBTN_GRACEFUL_SOCKCLOSESECS
@@ -740,6 +765,64 @@ extern const char*  telnet_opt_name( BYTE opt );
 extern const char*  telnet_evt_name( telnet_event_code_t evt );
 extern const char*  telnet_err_name( telnet_error_t err );
 extern int          telnet_closesocket( int sock ); /* graceful close */
+
+#if defined( _MSC_VER ) && ( _MSC_VER >= VS2015 )
+
+#pragma comment( lib, "legacy_stdio_definitions" )
+
+#elif defined( _MSC_VER ) && ( _MSC_VER < VS2015 )
+
+#ifndef vsnprintf
+/*-------------------------------------------------------------------*/
+/*                      Windows vsnprintf                            */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  The Windows version of vsnprintf doesn't always terminate        */
+/*  the buffer and returns -1 if count is too small. The following   */
+/*  compensates for such behavior in order to match the POSIX        */
+/*  behavior of: 1) returning the number of bytes (excluding the     */
+/*  terminating null byte) that would be written had count been      */
+/*  sufficiently large, 2) always appending a terminating null       */
+/*  byte regardless of whether count is large enough.                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#define vsnprintf   _telnet_vsnprintf
+static __inline int _telnet_vsnprintf( char* bfr, size_t cnt, const char* fmt, va_list vargs )
+{
+    int rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
+    if (rc < 0)
+        rc = _vscprintf( fmt, vargs );
+    return rc;
+}
+#endif /* vsnprintf */
+
+#ifndef snprintf
+/*-------------------------------------------------------------------*/
+/*                      Windows snprintf                             */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  The Windows version of snprintf doesn't always terminate         */
+/*  the buffer and returns -1 if count is too small. The following   */
+/*  compensates for such behavior in order to match the POSIX        */
+/*  behavior of: 1) returning the number of bytes (excluding the     */
+/*  terminating null byte) that would be written had count been      */
+/*  sufficiently large, 2) always appending a terminating null       */
+/*  byte regardless of whether count is large enough.                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#define snprintf    _telnet_snprintf
+static __inline int _telnet_snprintf( char* bfr, size_t cnt, const char* fmt, ... )
+{
+    int       rc;
+    va_list   vargs;
+    va_start( vargs, fmt );
+    rc = _telnet_vsnprintf( bfr, cnt, fmt, vargs );
+    va_end( vargs);
+    return rc;
+}
+#endif /* snprintf */
+
+#endif /* defined( _MSC_VER ) && ( _MSC_VER < VS2015 ) */
 
 #if defined(__cplusplus)
 }
