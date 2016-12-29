@@ -5,11 +5,27 @@
 
 AUTOMAKE_OPTIONS = foreign 1.5
 
+#------------------------------------------------------------------------------
+
+extpkg_incdirs = @EXTPKG_INCDIRS@
+extpkg_headers = @EXTPKG_HEADERS@
+extpkg_libs    = @EXTPKG_LIBS@
+pkg_lib_suffix = @PKG_LIB_SUFFIX@
+pkg_lib_subdir = @PKG_LIB_SUBDIR@
+hqa_inc        = @HQA_INC@
+lns            = @LN_S@
+ldadd          = @LIBS@
+
+#------------------------------------------------------------------------------
+
 ACLOCAL_AMFLAGS = \
   -I autoconf     \
   -I m4
 
-lns=@LN_S@
+AM_CPPFLAGS =       \
+  -I$(top_srcdir)   \
+  $(extpkg_incdirs) \
+  -I$(hqa_inc)
 
 #------------------------------------------------------------------------------
 # NOte! Due to inter-module dependencies the sequence
@@ -24,8 +40,6 @@ SUBDIRS =     \
   .           \
   crypto
 
-LDADD = @LIBS@
-
 #------------------------------------------------------------------------------
 # Invoke shell script to dynamically build "_dynamic_version.h" header
 #------------------------------------------------------------------------------
@@ -33,77 +47,6 @@ LDADD = @LIBS@
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
 
 #------------------------------------------------------------------------------
-#                         External Packages
-#------------------------------------------------------------------------------
-
-decnumber_pkgname  =  decNumber
-decnumber_pkgdir   =  $(decnumber_pkgname)
-decnumber_libname  =  lib$(decnumber_pkgname)@PKG_LIB_SUFFIX@
-decnumber_incdir   =  $(decnumber_pkgdir)/include
-decnumber_libdir   =  $(decnumber_pkgdir)/lib@PKG_LIB_SUBDIR@
-decnumber_libpath  =  $(decnumber_libdir)/$(decnumber_libname).a
-decnumber_headers  =  \
-  $(decnumber_incdir)/decContext.h  \
-  $(decnumber_incdir)/decimal128.h  \
-  $(decnumber_incdir)/decimal32.h   \
-  $(decnumber_incdir)/decimal64.h   \
-  $(decnumber_incdir)/decNumber.h   \
-  $(decnumber_incdir)/decPacked.h   \
-  $(decnumber_incdir)/decQuad.h
-
-#------------------------------------------------------------------------------
-
-softfloat_pkgname  =  SoftFloat
-softfloat_pkgdir   =  $(softfloat_pkgname)
-softfloat_libname  =  lib$(softfloat_pkgname)@PKG_LIB_SUFFIX@
-softfloat_incdir   =  $(softfloat_pkgdir)/include
-softfloat_libdir   =  $(softfloat_pkgdir)/lib@PKG_LIB_SUBDIR@
-softfloat_libpath  =  $(softfloat_libdir)/$(softfloat_libname).a
-softfloat_headers  =  \
-  $(softfloat_incdir)/softfloat.h \
-  $(softfloat_incdir)/softfloat_types.h
-
-#------------------------------------------------------------------------------
-
-telnet_pkgname  =  telnet
-telnet_pkgdir   =  $(telnet_pkgname)
-telnet_libname  =  lib$(telnet_pkgname)@PKG_LIB_SUFFIX@
-telnet_incdir   =  $(telnet_pkgdir)/include
-telnet_libdir   =  $(telnet_pkgdir)/lib@PKG_LIB_SUBDIR@
-telnet_libpath  =  $(telnet_libdir)/$(telnet_libname).a
-telnet_headers  =  \
-  $(telnet_incdir)/telnet.h
-
-#------------------------------------------------------------------------------
-#                         External Packages
-#------------------------------------------------------------------------------
-
-extpkg_incdirs =        \
-  -I$(decnumber_incdir) \
-  -I$(softfloat_incdir) \
-  -I$(telnet_incdir)
-
-extpkg_headers =        \
-  $(decnumber_headers)  \
-  $(softfloat_headers)  \
-  $(telnet_headers)
-
-extpkg_libs =           \
-  $(decnumber_libpath)  \
-  $(softfloat_libpath)  \
-  $(telnet_libpath)
-
-extpkg_cppflags =       \
-  $(decnumber_cppflags) \
-  $(softfloat_cppflags) \
-  $(telnet_cppflags)
-
-#------------------------------------------------------------------------------
-
-AM_CPPFLAGS =         \
-  $(extpkg_incdirs)   \
-  -I$(top_srcdir)     \
-  -I@HQA_INC@
 
 if BUILD_HERCIFC
 HERCIFC = hercifc
@@ -183,7 +126,7 @@ dyndev_SRC =  \
 # -module         :  create a dlopen'able module
 # -no-undefined   :  required on all platform that do not allow
 #                    shared modules to have undefined symbols
-# $(LDADD)        :  Misc Linker flags set by autoconf
+# $(ldadd)        :  Misc Linker flags set by autoconf
 # -export-dynamic :  so dlsym works (to be verified -
 #                    not sure whether it is necessary)
 # -avoid-version  :  needed.. Otherwise libtool gives crazy names
@@ -213,7 +156,7 @@ DYNMOD_LD_ADD =   \
   libherc.la      \
   libhercs.la     \
   libhercu.la     \
-  $(LDADD)
+  $(ldadd)
 
 LIB_LD_FLAGS =    \
   -export-dynamic \
@@ -401,7 +344,7 @@ libhercs_la_SOURCES = hsys.c
 
 libhercs_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-libhercs_la_LIBADD  = $(LDADD)
+libhercs_la_LIBADD  = $(ldadd)
 
 #--------------------------------------------
 # Tape utility subroutines (shared) library
@@ -415,7 +358,7 @@ libherct_la_SOURCES = \
 libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libherct_la_LIBADD = \
-  $(LDADD)           \
+  $(ldadd)           \
   libhercs.la        \
   libhercu.la
 
@@ -436,7 +379,7 @@ libhercd_la_SOURCES = \
 libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercd_la_LIBADD = \
-  $(LDADD)           \
+  $(ldadd)           \
   libhercs.la        \
   libhercu.la
 
@@ -465,7 +408,7 @@ libhercu_la_SOURCES = \
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercu_la_LIBADD = \
-  $(LDADD)           \
+  $(ldadd)           \
   libhercs.la
 
 #--------------------------------------------
@@ -566,7 +509,7 @@ libherc_la_LIBADD = \
   libherct.la       \
   libhercd.la       \
   $(extpkg_libs)    \
-  $(LDADD)
+  $(ldadd)
 
 #--------------------------------------------------------
 #  THIS is the hercules executable.
@@ -645,7 +588,7 @@ hercules_LDADD =  \
   libherc.la      \
   libhercs.la     \
   $(extpkg_libs)  \
-  $(LDADD)
+  $(ldadd)
 
 hercules_LDFLAGS = $(HLDFLAGS)
 
@@ -665,7 +608,7 @@ herclin_LDADD =   \
   libherc.la      \
   libhercs.la     \
   $(extpkg_libs)  \
-  $(LDADD)
+  $(ldadd)
 
 herclin_LDFLAGS = $(HLDFLAGS)
 
@@ -684,9 +627,9 @@ endif
 tools_LD_FLAGS =
 
 if OPTION_DYNAMIC_LOAD
-tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
+tools_ADDLIBS = $(HERCLIBS2) $(ldadd)
 else
-tools_ADDLIBS = $(HERCLIBS2) $(LDADD) hdlmain.o
+tools_ADDLIBS = $(HERCLIBS2) $(ldadd) hdlmain.o
 endif
 
 if BUILD_HERCIFC

@@ -2894,14 +2894,98 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
     AC_SUBST(HERCIFC_GROUPNAME)
 fi
 
-HQA_INC="$hc_cv_hqa_inc"
-AC_SUBST(HQA_INC)
+###############################################################################
+#                       External Packages support
+###############################################################################
+
+decnumber_pkgname=decNumber
+decnumber_pkgdir=${decnumber_pkgname}
+decnumber_libname=lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}
+decnumber_incdir=${decnumber_pkgdir}/include
+decnumber_libdir=${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+decnumber_libpath=${decnumber_libdir}/${decnumber_libname}.a
+decnumber_headers="${decnumber_incdir}/decContext.h  \
+                   ${decnumber_incdir}/decimal128.h  \
+                   ${decnumber_incdir}/decimal32.h   \
+                   ${decnumber_incdir}/decimal64.h   \
+                   ${decnumber_incdir}/decNumber.h   \
+                   ${decnumber_incdir}/decPacked.h   \
+                   ${decnumber_incdir}/decQuad.h"
+
+#------------------------------------------------------------------------------
+
+softfloat_pkgname=SoftFloat
+softfloat_pkgdir=${softfloat_pkgname}
+softfloat_libname=lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}
+softfloat_incdir=${softfloat_pkgdir}/include
+softfloat_libdir=${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+softfloat_libpath=${softfloat_libdir}/${softfloat_libname}.a
+softfloat_headers="${softfloat_incdir}/softfloat.h \
+                   ${softfloat_incdir}/softfloat_types.h"
+
+#------------------------------------------------------------------------------
+
+telnet_pkgname=telnet
+telnet_pkgdir=${telnet_pkgname}
+telnet_libname=lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}
+telnet_incdir=${telnet_pkgdir}/include
+telnet_libdir=${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+telnet_libpath=${telnet_libdir}/${telnet_libname}.a
+telnet_headers="${telnet_incdir}/telnet.h"
+
+#------------------------------------------------------------------------------
+
+
+# PROGRAMMING NOTE: the following is temporary until such time as
+# dyncrypt can be converted to an external package. The problem stems
+# from the fact that dyncrypt code lives within its own subdirectory
+# and gets built separately from Hercules itself (i.e. it has its own
+# Makefile.am), thereby causing #include "telnet.h" to fail because
+# there is no "telnet/include" directory within the 'crypto' directory.
+
+## extpkg_incdirs="-I${decnumber_incdir} \
+##                 -I${softfloat_incdir} \
+##                 -I${telnet_incdir}"
+
+extpkg_incdirs="-I${decnumber_incdir} -I../${decnumber_incdir} \
+                -I${softfloat_incdir} -I../${softfloat_incdir} \
+                -I${telnet_incdir}    -I../${telnet_incdir}"
+
+extpkg_headers="${decnumber_headers}  \
+                ${softfloat_headers}  \
+                ${telnet_headers}"
+
+extpkg_libs="${decnumber_libpath}  \
+             ${softfloat_libpath}  \
+             ${telnet_libpath}"
+
+###############################################################################
+#          Pass values to other subdirectory Makefile.am files
+###############################################################################
+
+EXTPKG_INCDIRS=$extpkg_incdirs
+AC_SUBST(EXTPKG_INCDIRS)
+
+EXTPKG_HEADERS=$extpkg_headers
+AC_SUBST(EXTPKG_HEADERS)
+
+EXTPKG_LIBS=$extpkg_libs
+AC_SUBST(EXTPKG_LIBS)
+
+#------------------------------------------------------------------------------
 
 PKG_LIB_SUFFIX=$hc_cv_pkg_lib_suffix
 AC_SUBST(PKG_LIB_SUFFIX)
 
 PKG_LIB_SUBDIR=$hc_cv_pkg_lib_subdir
 AC_SUBST(PKG_LIB_SUBDIR)
+
+#------------------------------------------------------------------------------
+
+HQA_INC="$hc_cv_hqa_inc"
+AC_SUBST(HQA_INC)
+
+#------------------------------------------------------------------------------
 
 AC_CACHE_SAVE()
 

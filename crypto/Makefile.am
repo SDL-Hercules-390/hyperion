@@ -3,17 +3,27 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-lns = @LN_S@
+#------------------------------------------------------------------------------
 
-LDADD =             \
-    @LIBS@          \
-    ../libhercs.la  \
-    ../libherc.la   \
-    ../libhercu.la
+extpkg_incdirs = @EXTPKG_INCDIRS@
+extpkg_headers = @EXTPKG_HEADERS@
+extpkg_libs    = @EXTPKG_LIBS@
+pkg_lib_suffix = @PKG_LIB_SUFFIX@
+pkg_lib_subdir = @PKG_LIB_SUBDIR@
+hqa_inc        = @HQA_INC@
+lns            = @LN_S@
+ldadd          = @LIBS@  ../libhercs.la  \
+                         ../libherc.la   \
+                         ../libhercu.la
+
+#------------------------------------------------------------------------------
 
 AM_CPPFLAGS =       \
-    -I$(top_srcdir) \
-    -I@HQA_INC@
+  -I$(top_srcdir)   \
+  $(extpkg_incdirs) \
+  -I$(hqa_inc)
+
+#------------------------------------------------------------------------------
 
 dyndev_SRC =        \
     aes.c           \
@@ -40,7 +50,7 @@ if OPTION_DYNAMIC_LOAD
     -export-dynamic \
     -avoid-version
 
-  DYNMOD_LD_ADD   = $(LDADD)
+  DYNMOD_LD_ADD   = $(ldadd)
 
   LIB_LD_FLAGS    = \
     -export-dynamic \
