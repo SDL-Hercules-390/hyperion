@@ -303,7 +303,7 @@ hdt3088_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 hdt3270_la_SOURCES = console.c
 hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
-hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
+hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD) $(extpkg_libs)
 
 hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c w32stape.c
 hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
