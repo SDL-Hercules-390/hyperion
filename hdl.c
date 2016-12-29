@@ -146,10 +146,10 @@ HDLSHD *shdent;
  */
 DLL_EXPORT char *hdl_setpath(char *path, int flag)
 {
-    char    pathname[MAX_PATH];         /* pathname conversion */
-    char    abspath[MAX_PATH];          /* pathname conversion */
+    char    pathname[MAX_PATH];         /* pathname conversion  */
+    char    abspath[MAX_PATH];          /* pathname conversion  */
 
-    if (path == NULL)
+    if (!path)
         return hdl_modpath;             /* return module path to caller */
 
     if ( strlen(path) > MAX_PATH )
@@ -162,14 +162,20 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     // Convert path to host format
     hostpath( pathname, path, sizeof (pathname ));
 
-    // Convert path to absolute path
-    if (!realpath( pathname, abspath ))
+    // Convert path to absolute path if it's relative
+    abspath[0] = 0;
+    if ('.' == pathname[0] && !realpath( pathname, abspath ))
     {
+        char buf[MAX_PATH+128];
+        MSGBUF( buf,  "\"%s\": %s", pathname, strerror( errno ) );
         // "HDL: error in function %s: %s"
-        WRMSG( HHC01511, "E", "realpath()", strerror( errno ));
-        return NULL;
+        WRMSG( HHC01511, "W", "realpath()", buf );
+        abspath[0] = 0;
     }
+    if (!abspath[0])
+        strlcpy( abspath, pathname, sizeof( abspath ));
 
+    // Check flag: TRUE == conditional, FALSE == unconditional
     if (flag)
     {
         if (hdl_modpath)
@@ -199,8 +205,18 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     hdl_modpath = strdup( abspath );
 
     if (MLVL( VERBOSE ))
+    {
+        struct stat statbuf;
+
         // "HDL: loadable module directory is %s"
         WRMSG( HHC01508, "I", hdl_modpath );
+
+        if (stat( hdl_modpath, &statbuf ) != 0 || !S_ISDIR( statbuf.st_mode ))
+        {
+            // "HDL: %s is not a valid directory"
+            WRMSG( HHC01536, "W", hdl_modpath );
+        }
+    }
 
     return hdl_modpath;
 }

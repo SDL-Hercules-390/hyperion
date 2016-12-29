@@ -1044,6 +1044,7 @@ Examples:
 #define HHC01533 "HDL:  devtype(s) =%s"
 #define HHC01534 "HDL:  instruction = %s, opcode = %4.4X%s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
+#define HHC01536 "HDL: %s is not a valid directory"
 
 /* dyngui.c */
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
