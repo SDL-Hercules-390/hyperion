@@ -1,5 +1,0 @@
-Name:         SoftFloat32
-Description:  Berkeley IEEE Binary Floating-Point Library (32-bit Release)
-Version:      3.1.0
-Libs:         -L "/home/fish/hercules/hercules-0/SoftFloat/lib"  -l SoftFloat32
-Cflags:       -I "/home/fish/hercules/hercules-0/SoftFloat/include"   -D LITTLEENDIAN -D HAVE_PLATFORM_H -D SOFTFLOAT_FAST_INT64 -D SOFTFLOAT_FAST_DIV64TO32

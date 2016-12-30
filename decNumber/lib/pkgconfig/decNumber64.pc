@@ -1,5 +1,0 @@
-Name:         decNumber64
-Description:  ANSI C General Decimal Arithmetic Library (64-bit Release)
-Version:      3.6.8
-Libs:         -L "/home/fish/hercules/hercules-0/decNumber/lib"  -l decNumber64
-Cflags:       -I "/home/fish/hercules/hercules-0/decNumber/include"   -D DECLITEND=1 -D DECPRINT=0
