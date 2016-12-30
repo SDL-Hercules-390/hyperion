@@ -2388,7 +2388,7 @@
     <Text Include="decNumber\readme.txt">
       <Filter>Source Files\Hercules\decNumber</Filter>
     </Text>
-    <Text Include="SoftFloat\COPYING.txt">
+    <Text Include="SoftFloat\LICENSE.txt">
       <Filter>Source Files\Hercules\SoftFloat</Filter>
     </Text>
     <Text Include="SoftFloat\README.txt">

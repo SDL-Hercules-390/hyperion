@@ -1004,7 +1004,7 @@
     <Text Include="decNumber\readme.txt" />
     <Text Include="herclogo.txt" />
     <Text Include="license_dyn76.txt" />
-    <Text Include="SoftFloat\COPYING.txt" />
+    <Text Include="SoftFloat\LICENSE.txt" />
     <Text Include="SoftFloat\README.txt" />
     <Text Include="tests\agf.txt" />
     <Text Include="tests\alsi.txt" />

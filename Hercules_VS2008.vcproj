@@ -1581,7 +1581,7 @@
 					Name="SoftFloat"
 					>
 					<File
-						RelativePath=".\SoftFloat\COPYING.txt"
+						RelativePath=".\SoftFloat\LICENSE.txt"
 						>
 					</File>
 					<File
