@@ -2884,6 +2884,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\hetbsf-bzip2.het"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\hetbsf.het"
 					>
 				</File>

@@ -794,6 +794,7 @@
     <None Include="tests\digest.assemble" />
     <None Include="tests\digest.listing" />
     <None Include="tests\digest.tst" />
+    <None Include="tests\hetbsf-bzip2.het" />
     <None Include="tests\hetbsf.het" />
     <None Include="tests\hetbsf.tst" />
     <None Include="tests\ilc.assemble" />

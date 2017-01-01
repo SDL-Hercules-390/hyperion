@@ -1436,6 +1436,9 @@
     <None Include="tests\cvttst.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="tests\hetbsf-bzip2.het">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\hetbsf.het">
       <Filter>Other Files\tests</Filter>
     </None>
