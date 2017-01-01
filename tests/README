@@ -376,24 +376,81 @@ logicimm.tst shows examples of all directives, except *Key, *Prefix,
 and *Program; see sske.tst for an example of *Key and *Program.  See
 pr.tst for *Prefix.  See mainsize.tst for conditional processing.
 
-Predefined variables are specified as arguments to redtest.rexx and
-extracted from the features message, HHC01417I.  When the runtest
-script (not to be confused with the runtest command above) finds
-config.h, it extracts the size of a pointer and sets the variable
-"ptrsize" to 4 or 8.  For any facilities listed by message HHC01417I,
-a variable named by the facility name is set to 1, for example,
-cmpxchg1=1.  Variables are specified in the expression by a dollar
-sign followed by the variable name; they are read only.
 
-Example of conditional directives:
+Predefined variables
+--------------------
 
-mainsize 2147483648b
-*If $ptrsize = 4
-*Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
-*Error   HHC02388E Configure storage error -1
-*Else # 64 bit
-*Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
-*Fi
+Predefined variables are specified as arguments to redtest.rexx and extracted
+from the HHC01417I features messages.  The runtest script (not to be confused
+with the runtest command above) sets the value of the "$ptrsize" variable to
+either 4 or 8 by passing the value to redtest.rexx on the command line.  Any
+number of user defined variables can be defined the same way by simply passing
+their name and value on the command line to redtest.rexx.  Refer to runtest's
+help display for how to do this.
+
+Other variables are defined directly by redtest.rexx itself based on Hercules
+HHC01417I startup messages. For example, the variable $cmpxchg1 is set to 1
+if "cmpxchg1" appears in the message "HHC01417I Machine dependent assists:".
+The variable $locking_model is set to 'error' if message "HHC01417I Using
+Error-Checking Mutex Locking Model" is seen, etc.
+
+All variables are either boolean, numeric or string type and are read only.
+The list of currently supported pre-defined variables are:
+
+  Boolean:
+
+    $can_esa390_mode
+    $can_s370_mode
+    $can_zarch_mode
+    $CCKD_BZIP2
+    $cmpxchg1
+    $cmpxchg16
+    $cmpxchg4
+    $cmpxchg8
+    $CONFIG_INCLUDE
+    $CONFIG_SYMBOLS
+    $externalgui
+    $fetch_dw
+    $HAO
+    $HDL
+    $HET_BZIP2
+    $HTTP
+    $IEEE
+    $IPV6
+    $NLS
+    $OORexx
+    $regex
+    $Regina
+    $shared_devices
+    $SIGABEND
+    $sqrtl
+    $store_dw
+    $syncio
+    $SYSTEM_SYMBOLS
+    $ZLIB
+
+  Numeric:
+
+    $max_cpu_engines
+
+  String:
+
+    $hatomics         C11, msvcIntrinsics, atomicIntrinsics, syncBuiltins
+    $keepalive        Full, Partial, Basic
+    $libraries        shared, static
+    $locking_model    Error, Normal, Recursive
+    $threading_model  Fish, POSIX
+
+
+Example conditional directives variable usage:
+
+  mainsize 2147483648b
+  *If $ptrsize = 4
+  *Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+  *Error   HHC02388E Configure storage error -1
+  *Else # 64 bit
+  *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+  *Fi
 
 
 Creating test files that can run on z/CMS as well as under Hercules

@@ -16,7 +16,42 @@ Signal On novalue
 
 Parse Arg In opts
 
-values. = ''
+values.                = ''
+values.keepalive       = 'Full'
+values.threading_model = ''
+values.locking_model   = ''
+values.libraries       = ''
+values.hatomics        = ''
+values.cmpxchg1        = 0
+values.cmpxchg4        = 0
+values.cmpxchg8        = 0
+values.cmpxchg16       = 0
+values.fetch_dw        = 0
+values.store_dw        = 0
+values.max_cpu_engines = 0
+values.can_s370_mode   = 0
+values.can_esa390_mode = 0
+values.can_zarch_mode  = 0
+values.syncio          = 0
+values.shared_devices  = 0
+values.HDL             = 0
+values.externalgui     = 0
+values.SIGABEND        = 0
+values.NLS             = 0
+values.HAO             = 0
+values.regex           = 0
+values.IPV6            = 0
+values.HTTP            = 0
+values.IEEE            = 0
+values.sqrtl           = 0
+values.CCKD_BZIP2      = 0
+values.HET_BZIP2       = 0
+values.ZLIB            = 0
+values.OORexx          = 0
+values.Regina          = 0
+values.CONFIG_INCLUDE  = 0
+values.SYSTEM_SYMBOLS  = 0
+values.CONFIG_SYMBOLS  = 0
 
 quiet = 0                             /* Log OK tests too            */
 
@@ -34,11 +69,7 @@ Do while opts \= ''
          Say 'Not variable assignment in argument string: ' optval
 
       Otherwise
-
-         values.varname = varvalue
-
-         If \quiet Then
-            Say 'Variable' varname 'set to "'varvalue'".'
+         Call setvar varname varvalue
    End
 
 End
@@ -147,8 +178,73 @@ Select
                Parse Var rest 'dependent assists:' rest
                Do while rest \= ''
                   Parse Var rest fac rest
-                  value.fac = 1
-                  /* Say 'facility' fac */
+                  If left(fac, 9) = 'hatomics=' Then
+                     Do
+                        fac = substr(fac, 10)
+                        If fac \= 'UNKNOWN' Then
+                           Call setvar 'hatomics' fac
+                     End
+                  Else
+                     Call setvar fac 1
+               End
+            End
+         When verb = 'Modes:' Then
+            Do while rest \= ''
+               Parse Var rest arch rest
+               Select
+                  When arch = 'S/370'   Then Call setvar 'can_s370_mode'   1
+                  When arch = 'ESA/390' Then Call setvar 'can_esa390_mode' 1
+                  When arch = 'z/Arch'  Then Call setvar 'can_zarch_mode'  1
+               End
+            End
+         When verb = 'Max' Then
+            Do
+               Parse Var rest 'CPU Engines:' engines
+               Call setvar 'max_cpu_engines' engines
+            End
+         When verb = 'Using' Then
+            Select
+               When rest = 'Fish threads Threading Model'       Then Call setvar 'threading_model' 'Fish'
+               When rest = 'POSIX threads Threading Model'      Then Call setvar 'threading_model' 'POSIX'
+
+               When rest = 'Error-Checking Mutex Locking Model' Then Call setvar 'locking_model'   'Error'
+               When rest = 'Normal Mutex Locking Model'         Then Call setvar 'locking_model'   'Normal'
+               When rest = 'Recursive Mutex Locking Model'      Then Call setvar 'locking_model'   'Recursive'
+
+               When rest = 'shared libraries'                   Then Call setvar 'libraries'       'shared'
+               When rest = 'static libraries'                   Then Call setvar 'libraries'       'static'
+            End
+         When  verb = 'With' | verb = 'Without' Then
+            Do
+               If verb = 'With' Then
+                  with = 1
+               Else    
+                  with = 0
+               Select
+                  When rest = 'Partial TCP keepalive support' Then Call setvar 'keepalive'  'Partial'
+                  When rest = 'Basic TCP keepalive support'   Then Call setvar 'keepalive'  'Basic'
+                  When rest = 'TCP keepalive support'         Then Call setvar 'keepalive'  ''
+
+                  When rest = 'Syncio support'                Then Call setvar 'syncio'         with
+                  When rest = 'Shared Devices support'        Then Call setvar 'shared_devices' with
+                  When rest = 'Dynamic loading support'       Then Call setvar 'HDL'            with
+                  When rest = 'External GUI support'          Then Call setvar 'externalgui'    with
+                  When rest = 'SIGABEND handler'              Then Call setvar 'SIGABEND'       with
+                  When rest = 'National Language Support'     Then Call setvar 'NLS'            with
+                  When rest = 'Automatic Operator support'    Then Call setvar 'HAO'            with
+                  When rest = 'Regular Expressions support'   Then Call setvar 'regex'          with
+                  When rest = 'IPV6 support'                  Then Call setvar 'IPV6'           with
+                  When rest = 'HTTP Server support'           Then Call setvar 'HTTP'           with
+                  When rest = 'IEEE support'                  Then Call setvar 'IEEE'           with
+                  When rest = 'sqrtl support'                 Then Call setvar 'sqrtl'          with
+                  When rest = 'CCKD BZIP2 support'            Then Call setvar 'CCKD_BZIP2'     with
+                  When rest = 'HET BZIP2 support'             Then Call setvar 'HET_BZIP2'      with
+                  When rest = 'ZLIB support'                  Then Call setvar 'ZLIB'           with
+                  When rest = 'Object REXX support'           Then Call setvar 'OORexx'         with
+                  When rest = 'Regina REXX support'           Then Call setvar 'Regina'         with
+                  When rest = 'CONFIG_INCLUDE support'        Then Call setvar 'CONFIG_INCLUDE' with
+                  When rest = 'SYSTEM_SYMBOLS support'        Then Call setvar 'SYSTEM_SYMBOLS' with
+                  When rest = 'CONFIG_SYMBOLS support'        Then Call setvar 'CONFIG_SYMBOLS' with
                End
             End
          Otherwise
@@ -199,6 +295,17 @@ Select
       lastmsg.? = l
       lastmsg.0 = ?
 End
+Return
+
+/*********************************************************************/
+/* Set variable value                                                */
+/*********************************************************************/
+
+setvar:
+Parse Arg varname varvalue
+values.varname = varvalue
+If \quiet Then
+   Say 'Variable' varname 'set to "'values.varname'".'
 Return
 
 /*********************************************************************/
@@ -573,7 +680,7 @@ If active                             /* In nested suppress?         */
 Return
 
 syntax:
-Say 'Syntax error in *If test:' condition('D')
+Say 'Syntax error in *If test:' expr
 Return
 
 /*********************************************************************/
