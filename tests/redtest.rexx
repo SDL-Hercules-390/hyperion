@@ -12,186 +12,209 @@
 /* Thus the *Done message may overtake, e.g., message 809.           */
 /*********************************************************************/
 
-Signal on novalue
+Signal On novalue
 
-parse arg in opts
+Parse Arg In opts
+
 values. = ''
+
 quiet = 0                             /* Log OK tests too            */
 
-Do while opts\=''
-   parse var opts w opts
-   parse var w var '=' +0 eq +1 value
+Do while opts \= ''
+
+   Parse Var opts optval opts
+   Parse Var optval varname '=' +0 eq +1 varvalue
+
    Select
-      When w = 'quiet'
-         Then quiet = 1
-      when eq \= '='
-         then say 'Not variable assignment in argument string: ' w
-      otherwise
-         values.var = value
-         If \quiet
-            Then say 'Variable' var 'is set to "'value'".'
+
+      When optval = 'quiet' Then
+         quiet = 1
+
+      When eq \= '=' Then
+         Say 'Not variable assignment in argument string: ' optval
+
+      Otherwise
+
+         values.varname = varvalue
+
+         If \quiet Then
+            Say 'Variable' varname 'set to "'varvalue'".'
    End
+
 End
 
-testcase = '<unknown>'
+testcase  = '<unknown>'
+ifstack   = ''
+
 comparing = 0
-fails. = 0                            /* .0 is OK .1 is failures     */
-catast = 0                            /* Catastrophic failures       */
-done = 0                              /* Test cases started          */
-stardone = 0                          /* *Done orders met            */
-lineno = 0                            /* Line number in input file   */
-ifnest=0                              /* If/then/else nesting        */
-ifstack = ''
-active = 1                            /* We do produce output        */
-hadelse = 0
+hadelse   = 0
+fails.    = 0                         /* .0 is OK .1 is failures     */
+catast    = 0                         /* Catastrophic failures       */
+done      = 0                         /* Test cases started          */
+stardone  = 0                         /* *Done orders met            */
+lineno    = 0                         /* Line number in input file   */
+ifnest    = 0                         /* If/then/else nesting        */
+active    = 1                         /* We do produce output        */
 
 /*********************************************************************/
 /* Process the test output.                                          */
 /*********************************************************************/
 
-do while lines(in) > 0
+Do While lines(in) > 0
    l = readline()
    If l \= ''
-      Then call procline l
-end
+      Then Call procline l
+End
 
 Select
    When fails.1 = 0 & catast = 0
       Then msg = 'All OK.'
-   otherwise
+   Otherwise
       msg = fails.1 'failed;' fails.0 'OK.'
-end
+End
 
-say 'Done' done 'tests. ' msg
+Say 'Done' done 'tests. ' msg
+
 If catast > 0
-   Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
-if done \= stardone then say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
-exit fails.1
+   Then Say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
+
+If done \= stardone Then Say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
+
+Exit  fails.1
 
 /*********************************************************************/
 /* Read a line of input and strip timestamp, if any.                 */
 /*********************************************************************/
 
 readline:
-do forever
+
+Do forever
+
    l = ''
+
    If 0 = lines(in)
-      Then return ''                  /* EOF                         */
+      Then Return ''                  /* EOF                         */
+
    lineno = lineno + 1
-   l = linein(in)
-   /* Another  way  to  handle  a prefix to the response might be to */
-   /* look for HHC.                                                  */
-   parse value word(l, 1) with fn '(' line ')' +0 rpar
-   If rpar = ')'
-      Then
-         Do
-            parse var l . l           /* Drop debug ID               */
-            l = strip(l)
-         end
-   parse var l ?msg ?verb ?rest
+   l      = linein(in)
+
+   /*  Another way to handle a prefix to the response
+       might be to look for HHC.
+   */
+
+   Parse Value word(l, 1) With fn '(' line ')' +0 rpar
+
+   If rpar = ')' Then
+      Do
+         Parse Var l . l              /* Drop debug ID               */
+         l = strip(l)
+      End
+
+   Parse Var l ?msg ?verb ?rest
    p = verify(?msg, "0123456789:")    /* Leading timestamp?          */
+
    If p = 0                           /* Just a timestamp or nothing */
-      Then iterate
+      Then Iterate
    If p > 1                           /* Timestamp prefix            */
       Then l = substr(l, p)           /* Toss it                     */
    If left(l, 3) \='HHC'
-      Then iterate                    /* Not a message               */
+      Then Iterate                    /* Not a message               */
    If ?msg = 'HHC00007I'              /* Where issued                */
-      Then iterate
+      Then Iterate
    If ?msg \= 'HHC01603I'
-      Then leave                      /* Not a comment               */
+      Then Leave                      /* Not a comment               */
    If length(?verb) > 1 & left(?verb, 1) = '*'
-      Then leave                      /* Potential order.            */
-end
-return l
+      Then Leave                      /* Potential order.            */
+End
+Return l
 
 /*********************************************************************/
 /* Process the line                                                  */
 /*********************************************************************/
 
 procline:
-parse arg l
-parse var l msg verb rest
+
+Parse Arg l
+Parse Var l msg verb rest
 
 Select
-   When left(msg, 3) \= 'HHC'
-      Then nop                        /* Toss all non-messages.      */
-   When msg = 'HHC00801I'
-      Then
+   When left(msg, 3) \= 'HHC' Then
+      nop                             /* Toss all non-messages.      */
+   When msg = 'HHC01417I' Then
+      Select
+         When verb = 'Machine' Then
+            Do
+               Parse Var rest 'dependent assists:' rest
+               Do while rest \= ''
+                  Parse Var rest fac rest
+                  value.fac = 1
+                  /* Say 'facility' fac */
+               End
+            End
+         Otherwise
+            nop
+      End
+   When msg = 'HHC00801I' Then
+      Parse Var rest ' code ' havepgm . ' ilc'
+   When msg = 'HHC00803I' Then     /* Program interrupt loop      */
+      havewait = 1
+   When msg = 'HHC00809I' Then
+      Call waitstate
+   When msg = 'HHC01405E' Then
+      Call test 0, l
+   When msg = 'HHC01603I' Then
+      If left(verb, 1) = '*'
+         Then Call order
+   When msg = 'HHC02269I' Then
+      Call gprs
+   When msg = 'HHC02277I' Then
+      Parse Var rest . prefix .
+   When (msg = 'HHC02290I' | msg = 'HHC02291I') Then
+      If comparing Then
          Do
-            parse var rest ' code ' havepgm . ' ilc'
-         End
-   When msg = 'HHC00803I'          /* Program interrupt loop      */
-      Then havewait = 1
-   When msg = 'HHC00809I'
-      Then call waitstate
-   When msg = 'HHC01405E'
-      then call test 0, l
-   When msg = 'HHC01417I'
-      Then
-         If verb = 'Machine'
-            Then
-               Do
-                  parse var rest 'dependent assists:' rest
-                  Do while rest \= ''
-                     parse var rest fac rest
-                     value.fac = 1
-                     /* say 'facility' fac */
+            Parse Var rest 'K:' key .
+            If key = ''
+               Then
+                  Do
+                     Parse Var rest display +36 /* Save for compare order */
+                     lastaddr = verb
+                  end
+               Else
+                  Do
+                     keyaddr = substr(verb, 3)
+                     lastkey = key
                   End
-               End
-   When msg = 'HHC01603I'
-      Then
-         If left(verb, 1) = '*'
-            Then call order
-   When msg = 'HHC02269I'
-      then call gprs
-   When msg = 'HHC02277I'
-      Then parse var rest . prefix .
-   When (msg = 'HHC02290I' | msg = 'HHC02291I')
-      Then
-         If comparing
-            Then
-               Do
-                  parse var rest 'K:' key .
-                  If key = ''
-                     Then
-                        Do
-                           parse var rest display +36 /* Save for compare order */
-                           lastaddr = verb
-                        end
-                     else
-                        Do
-                           keyaddr = substr(verb, 3)
-                           lastkey = key
-                        End
-               End
-   When left(msg, 8) = 'HHC02332'
-      Then
-         Do
-            If \timeoutOk
-               Then catast = catast + 1
-            call test timeoutOk, 'Test case timed out in wait.',,
-               'This is likely an error in Hercules.  Please report'
-         end
+         End
+   When left(msg, 8) = 'HHC02332' Then
+      Do
+         If \timeoutOk
+            Then catast = catast + 1
+         Call test timeoutOk, 'Test case timed out in wait.',,
+            'This is likely an error in Hercules.  Please report'
+      End
    When \comparing /* Toss other messages, particularly during start */
       Then nop
-   otherwise                     /* Something else.  Store for *Hmsg */
+   Otherwise                     /* Something else.  Store for *Hmsg */
       ? = lastmsg.0 + 1
       lastmsg.? = l
       lastmsg.0 = ?
-end
-return
+End
+Return
 
 /*********************************************************************/
 /* Decode orders.                                                    */
 /*********************************************************************/
 
 order:
+
 info = ''
 rest = strip(rest)
+
 If left(rest, 1) = '"'
-   Then parse var rest '"' info '"' rest
+   Then Parse Var rest '"' info '"' rest
+
 Select
+
    When verb = '*'                    /* Comment                     */
       Then nop
    When verb = '*Testcase'
@@ -204,12 +227,11 @@ Select
       Then call endif
    when \active
       Then nop
-   When verb = '*Compare'
-      Then
-         Do
-            comparing = 1
-            lastmsg.0 = 0
-         End
+   When verb = '*Compare' Then
+      Do
+         comparing = 1
+         lastmsg.0 = 0
+      End
    When verb = '*Want'
       Then call want
    When verb = '*Error'
@@ -224,10 +246,9 @@ Select
       Then call wantgpr
    When verb = '*Key'
       Then call wantkey
-   When verb = '*Message'
-      Then
-         If active
-            Then say rest
+   When verb = '*Message' Then
+      If active
+         Then Say rest
    When verb = '*Prefix'
       Then call wantprefix
    When verb = '*Program'
@@ -236,83 +257,85 @@ Select
       Then call endtest
    When verb = '*Timeout'
       then timeoutOk = 1
-   otherwise
-      say 'Bad directive: ' verb
+   Otherwise
+      Say 'Bad directive: ' verb
       rv = 16
-end
-return
+End
+Return
 
 /*********************************************************************/
 /* Initialise variable store for new test case                       */
 /*********************************************************************/
 
 begtest:
-done = done + 1
-testcase = rest
-comparing = 0
-havewait = 0
-oks = 0
-wantpgm = ''
-havepgm = ''
-rv = 0
-pgmok = 0                             /* Program check not expected  */
-gpr.=''
-lastkey = ''
-keyaddr = '<unknown>'
-lastaddr = '<unknown>'
-prefix = ''
-lastmsg.0 = 0
-lasterror.0 = 0
-lasterror = ''
-lastinfo.0 = 0
-lastinfo = ''
-expl.0 = 0
-timeoutOk = 0
-lastmsg.0 = 0
 
-return
+done        = done + 1
+testcase    = rest
+comparing   = 0
+havewait    = 0
+oks         = 0
+wantpgm     = ''
+havepgm     = ''
+rv          = 0
+pgmok       = 0                       /* Program check not expected  */
+gpr.        = ''
+lastkey     = ''
+keyaddr     = '<unknown>'
+lastaddr    = '<unknown>'
+prefix      = ''
+lastmsg.0   = 0
+lasterror.0 = 0
+lasterror   = ''
+lastinfo.0  = 0
+lastinfo    = ''
+expl.0      = 0
+timeoutOk   = 0
+lastmsg.0   = 0
+
+Return
 
 /*********************************************************************/
 /* Wind up a test.                                                   */
 /*********************************************************************/
 
 endtest:
-stardone = stardone + 1
+
+stardone    = stardone + 1
 unprocessed = ''                      /* No read ahead stored        */
-nowait = rest = 'nowait'
+nowait = (rest = 'nowait')
 
 If \havewait & \nowait
-   Then call lookahead             /* Perhaps *Done overtook message */
+   Then Call lookahead             /* Perhaps *Done overtook message */
 
 Select
    When havepgm \= ''
       Then call figurePgm
-   otherwise
-end
+   Otherwise
+End
 
-If \havewait & \nowait
-   Then
-      Do
-         say '>>>>> line' lineno': No wait state encountered.'
-         rv = rv + 1
-      end
+If \havewait & \nowait Then
+   Do
+      Say '>>>>> line' lineno': No wait state encountered.'
+      rv = rv + 1
+   End
 Select
    When rv = 0
       Then msg ='All pass.'
    When rv = 1
       Then msg ='One failure.'
-   otherwise
+   Otherwise
       msg = rv 'failures.'
-end
+End
 
 If \quiet | rv \= 0
-   Then say 'Test' testcase'. ' oks 'OK compares. ' msg
+   Then Say 'Test' testcase'. ' oks 'OK compares. ' msg
 
-fail = rv \= 0
+fail       = rv \= 0
 fails.fail = fails.fail + 1           /* Ok or fail                  */
+
 If unprocessed \= ''
-   Then call procline unprocessed
-return
+   Then Call procline unprocessed
+Return
 
 /*********************************************************************/
 /* Test  case has ended, but we have not seen a disabled PSW message */
@@ -323,42 +346,54 @@ return
 /*********************************************************************/
 
 lookahead:
-do while lines(in) > 0
+
+Do While lines(in) > 0
+
    unprocessed = readline()
+
    If wordpos(?msg, 'HHC00809I HHC00803I') > 0
       Then leave
    If havepgm = ''                    /* Saw a program check?        */
-      Then return                  /* Return to process *Done if not */
-   call procline unprocessed
-end
-/* say '*** wait leapfrogged. ***' lineno */
-call procline unprocessed
+      Then Return                  /* Return to process *Done if not */
+
+   Call procline unprocessed
+
+End
+
+/* Say '*** wait leapfrogged. ***' lineno */
+Call procline unprocessed
 unprocessed = ''
-return
+
+Return
 
 /*********************************************************************/
 /* Compare storage display against wanted contents.                  */
 /*********************************************************************/
 
 want:
-wantres = rest = display
-call test wantres, 'Storage at' lastaddr 'compare mismatch. ' info
-If \wantres
-   Then
-      Do
-         say '... Want:' strip(rest)
-         say '... Have:' strip(display)
-      End
-return
+
+wantres = (rest = display)
+
+Call test wantres, 'Storage at' lastaddr 'compare mismatch. ' info
+
+If \wantres Then
+   Do
+      Say '... Want:' strip(rest)
+      Say '... Have:' strip(display)
+   End
+Return
 
 /*********************************************************************/
 /* Verify contents of a general register.                            */
 /*********************************************************************/
 
 wantgpr:
-parse upper var rest r want '#' .
-call test gpr.r = want, 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
-return
+
+Parse Upper Var rest r want '#' .
+
+Call test gpr.r = want, 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
+
+Return
 
 /*********************************************************************/
 /* Verify  that  the  key  of  the  last page frame displayed is the */
@@ -366,93 +401,117 @@ return
 /*********************************************************************/
 
 wantkey:
-parse upper var rest want '#' .
-If lastkey = ''
-   Then call test 0, 'No key saved from r command.'
-   Else call test lastkey = want, 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
-return
+
+Parse Upper Var rest want '#' .
+
+If lastkey = '' Then
+   Call test 0, 'No key saved from r command.'
+Else
+   Call test lastkey = want, 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
+
+Return
 
 /*********************************************************************/
 /* Verify that the prefix register contains the specified value.     */
 /*********************************************************************/
 
 wantprefix:
-parse upper var rest want '#' .
-If prefix = ''
-   Then call test 0, 'No prefix register saved from pr command.'
-   Else call test prefix = want, 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
-return
+
+Parse Upper Var rest want '#' .
+
+If prefix = '' Then
+   Call test 0, 'No prefix register saved from pr command.'
+Else
+   Call test prefix = want, 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
+
+Return
 
 /*********************************************************************/
 /* Verify the last issued message.                                   */
 /*********************************************************************/
 
 msg:
-parse arg msgtype
-If lastmsg.0 = 0
-   Then
-      Do
-         call test 0, 'No message saved for' rest
-         return
-      End
-If datatype(word(rest, 1), 'Whole')
-   Then parse var rest mnum rest
-   Else mnum = 0
+
+Parse Arg msgtype
+
+If lastmsg.0 = 0 Then
+   Do
+      Call test 0, 'No message saved for' rest
+      Return
+   End
+
+If datatype(word(rest, 1), 'Whole') Then
+   Parse var rest mnum rest
+Else
+   mnum = 0
 
 ix = lastmsg.0 - mnum
 
-If ix <= 0
-   Then call test 0, 'No message stored for number' mnum
-   else call test lastmsg.ix = rest, msgtype 'message mismatch. ' info ,,
+If ix <= 0 Then
+   Call test 0, 'No message stored for number' mnum
+Else
+   Call test lastmsg.ix = rest, msgtype 'message mismatch. ' info ,,
       'Want:' rest, 'Got: ' lastmsg.ix
-return
+
+Return
 
 /*********************************************************************/
 /* Verify the last issue informational message                       */
 /*********************************************************************/
 
 imsg:
-If lastinfo = ''
-   Then call test 0, 'No informational message saved for' rest
-   Else call test lastinfo = rest, 'Informational message mismatch. ' info ,,
+
+If lastinfo = '' Then
+   Call test 0, 'No informational message saved for' rest
+Else
+   Call test lastinfo = rest, 'Informational message mismatch. ' info ,,
       'Want:' rest, 'Got: ' lastinfo
-return
+
+Return
 
 /*********************************************************************/
 /* Decode disabled wait state message.                               */
 /*********************************************************************/
 
 waitstate:
+
 havewait = 1
-parse var rest 'wait state' psw1 psw2
-cond = psw2 = 0 | (right(psw2, 4) = 'DEAD' & havepgm \= '' & havepgm = wantpgm)
-call test cond, 'Received unexpected wait state: ' psw1 psw2
-return
+Parse Var rest 'wait state' psw1 psw2
+cond = (psw2 = 0) | (right(psw2, 4) = 'DEAD' & havepgm \= '' & havepgm = wantpgm)
+Call test cond, 'Received unexpected wait state: ' psw1 psw2
+
+Return
 
 /*********************************************************************/
 /* Save general registers for later test.                            */
 /*********************************************************************/
 
 gprs:
+
 If verb = 'General'
    Then return
+
 todo = verb rest
-Do while todo \= ''
-   parse var todo 'R' r '=' val todo
+
+Do While todo \= ''
+   Parse Var todo 'R' r '=' val todo
    r = x2d(r)
    gpr.r = val
 End
-return
+
+Return
 
 /*********************************************************************/
 /* Save explain text in explain array.                               */
 /*********************************************************************/
 
 explain:
+
 ? = expl.0 + 1
 expl.? = rest
 expl.0 = ?
-return
+
+Return
 
 /*********************************************************************/
 /* Process  a  program check, which is identified by the IA field of */
@@ -460,15 +519,17 @@ return
 /*********************************************************************/
 
 figurePgm:
+
 Select
    When havepgm \= '' & wantpgm \= ''
-      Then call test havepgm = wantpgm, 'Expect pgm type' wantpgm', but have type' havepgm'.'
+      Then Call test havepgm = wantpgm, 'Expect pgm type' wantpgm', but have type' havepgm'.'
    When havepgm \= ''
-      Then call test 0, 'Unexpected pgm type' havepgm' havepgm.'
+      Then Call test 0, 'Unexpected pgm type' havepgm' havepgm.'
    Otherwise
-      call test 0, 'Expect pgm type' wantpgm', but none happened.'
-end
-return
+      Call test 0, 'Expect pgm type' wantpgm', but none happened.'
+End
+
+Return
 
 /*********************************************************************/
 /* Evaluate  the  condition  on a If to determine whether to perform */
@@ -476,94 +537,121 @@ return
 /*********************************************************************/
 
 doif:
+
 expr = rest
 test = ''
-Do while rest \= ''
-   parse var rest rl '$' +0 dolvar rest
+
+Do While rest \= ''
+   Parse Var rest rl '$' +0 dolvar rest
    test = test rl
+
    If dolvar = ''
       Then leave
-   parse var dolvar +1 vname .
-   val = values.vname
-   If \datatype(val, "Whole")
-      Then val = '"'val'"'
-   test = test val
+
+   Parse Var dolvar +1 varname .
+   varvalue = values.varname
+
+   If \datatype(varvalue, "Whole")
+      Then varvalue = '"'varvalue'"'
+
+   test = test varvalue
 End
-signal on syntax
-signal off novalue
-interpret 'res =' test
-signal on  novalue
+
+Signal On syntax
+Signal Off novalue
+
+interpret 'res = ' test
+
+Signal On  novalue
+
 ifstack = active hadelse ifstack
 ifnest = ifnest + 1
+
 If active                             /* In nested suppress?         */
-   Then active = res = 1
-return
+   Then active = (res = 1)
+
+Return
 
 syntax:
-say 'Syntax error in *If test:' condition('D')
-return
+Say 'Syntax error in *If test:' condition('D')
+Return
 
 /*********************************************************************/
 /* Process Else.  Flip active if no else has been seen.              */
 /*********************************************************************/
 
 doElse:
+
 Select
    When ifnest <= 0
-      Then say 'No *If is active.'
+      Then Say 'No *If is active.'
    When hadelse
-      Then say '*Else already seen on level' ifnnest '.  Stack:' ifstack
-   otherwise
-      parse var ifstack prevact .   /* Nested if in suppressed code? */
+      Then Say '*Else already seen on level' ifnnest '.  Stack:' ifstack
+   Otherwise
+      Parse Var ifstack prevact .   /* Nested if in suppressed code? */
       hadelse = 1
       active = prevact & (1 && active)
-end
-return
+End
+
+Return
 
 /*********************************************************************/
 /* End of if.  Unstack.                                              */
 /*********************************************************************/
 
 endif:
-If ifnest <= 0
-   Then
-      Do
-         say 'No *If is active.'
-         return
-      End
+
+If ifnest <= 0 Then
+   Do
+      Say 'No *If is active.'
+      Return
+   End
+
 ifnest = ifnest - 1
-parse var ifstack active hadelse ifstack
-return
+Parse Var ifstack active hadelse ifstack
+
+Return
 
 /*********************************************************************/
 /* Display message about a failed test.                              */
 /*********************************************************************/
 
 test:
+
 If \active                            /* suppress any noise          */
-   Then return
+   Then Return
+
 ! = '>>>>> line' right(lineno, 5)':'
 !! = left(' ', length(!))
-If arg(1)
-   Then oks = oks + 1
-   Else
-      Do
-         say ! arg(2)
-         do ? = 3 to arg()
-            say !! arg(?)
-         end
-         rv = rv + 1
-         Do ? = 1 to expl.0           /* Further explanation         */
-            say !! expl.?
-         End
+
+If arg(1) Then
+   oks = oks + 1
+Else
+   Do
+      Say ! arg(2)
+
+      Do ? = 3 to arg()
+         Say !! arg(?)
       End
+
+      rv = rv + 1
+
+      Do ? = 1 to expl.0              /* Further explanation         */
+         Say !! expl.?
+      End
+   End
+
 expl.0 = 0                            /* Be quiet next time          */
-return
+
+Return
 
 novalue:
-parse source . . fn ft fm .
-say 'Novalue in' fn ft fm '-- variable' condition('D')
-say right(sigl, 6) '>>>' sourceline(sigl)
-say '  This is often caused by missing or misspelled *Testcase'
-say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
-signal value lets_get_a_traceback
+
+Parse Source . . fn ft fm .
+
+Say 'Novalue in' fn ft fm '-- variable' condition('D')
+Say right(sigl, 6) '>>>' sourceline(sigl)
+Say '  This is often caused by missing or misspelled *Testcase'
+Say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
+
+Signal Value lets_get_a_traceback
