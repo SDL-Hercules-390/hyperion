@@ -2488,7 +2488,8 @@ a real System/390.  The configuration file is an ASCII text file.
         bytes when it is opened.
         If the <code>noclear</code> argument is not specified, then
         any previous content of the file is destroyed when the file
-        is opened for output.
+        is opened (i.e. the file is set to empty as soon as it is
+        opened).
         <p>
 
     </dl>
@@ -2538,23 +2539,25 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dt><code>noclear</code>
     <dd><p>
-        Specifies that the output file will not be cleared to zero
-        bytes when it is opened.
-        If the <code>noclear</code> argument is not specified, then
-        any previous content of the file is destroyed when the file
-        is opened for output.
+        Specifies that the output file will not be truncated to zero
+        bytes when it is opened. If the <code>noclear</code> argument
+        is not specified, then any previous content of the file is
+        destroyed when the file is opened (i.e. the file is set to empty
+        as soon as it is opened).
         <p>
 
     <dt><code>fcbcheck</code>
     <dd><p>
-        Specifies that an attempt to skip to a FCB channel for which no
-        line number has been set will cause the command to be rejected
+        This option is only valid for 3211 printer devices.
+        It specifies that an attempt to skip to a FCB channel for which
+        no line number has been set will cause the command to be rejected
         with a unit check. This is the default.
         <p>
 
     <dt><code>nofcbcheck</code>
     <dd><p>
-        Specifies that an attempt to skip to a FCB channel for which no
+        This option is only valid for 3211 printer devices.
+        It specifies that an attempt to skip to a FCB channel for which no
         line number has been set will cause the next line of output to be
         printed on the next line on the printer output. The opposite,
         <code>fcbcheck</code>, is the default.
@@ -2563,27 +2566,79 @@ a real System/390.  The configuration file is an ASCII text file.
     <dt><code>rawcc</code>
     <dd><p>
         Specifies that printer output CCWs are not to be interpreted, but
-        simply dumped in hex to the printer output file. This is useful for
-        debugging. Default is to interpret printer CCWs normally.
+        simply dumped in hex to the printer output file. This is a debugging
+        aid. The default is to process CCWs normally.
+        <p>
+
+    <dt><code>lpi=</code>
+    <dd><p>
+        Specifies the number of vertical lines per inch. The only valid values
+        are either 6 or 8. The default is 6.
+        <p>
+
+    <dt><code>lpp=</code>
+    <dd><p>
+        Specifies the number of vertical lines per page. The default is 66.
+        <p>
+
+    <dt><code>index=</code>
+    <dd><p>
+        This option is only valid for 3211 printer devices.
+        It specifies how many columns to indent each print line. The default is 0.
         <p>
 
     <dt><code>fcb=</code>
     <dd><p>
-        Specifies an initial FCB image to use for this printer. The argument
-        must be exactly 26 digits long, and consist of digits from 0 to 9.
-        The first pair of digits specifies the number of lines on a printed
-        page. It is followed by 12 pairs of digits which specify, for FCB
-        channels 1-12, the line number on the page that the FCB channel
+        This option is only valid for 3211 printer devices.
+        It specifies an initial FCB image to use for this printer.
+        <p>
+        This option has two different formats: old and new. The old format
+        argument must be exactly 26 digits long, and consist of digits from
+        0 to 9. The first pair of digits specifies the number of lines
+        on a printed page. It is followed by 12 pairs of digits which specify,
+        for FCB channels 1-12, the line number on the page that the FCB channel
         corresponds to. Use <code>00</code> to leave the line number unset
-        for a channel (see <code>fcbcheck</code> above). The default is
-        <code>fcb=66010713192531374361495561</code>.
+        for that channel (see <code>fcbcheck</code> above).
+        <p>
+        The new format is specified as a series of "chan:line" values separated
+        from each other with a comma, where 'chan' indicates the channel number and
+        'line' indicates the line number for that channel. To leave the line number
+        unset for a channel either specify '00' for the line number or simply
+        don't specify that channel in your list.
+        <p>
+        Note that the lines per page value is not supported with the new format.
+        Instead, you must specify your desired lines per page value separately
+        via the above 'lpp=' option.
+        <p>
+        The default value for each format is:
+        <p>
+        <blockquote>
+            Old format: &nbsp; &nbsp; <code>lpi=6 fcb=66010713192531374361495561</code><br>
+            New format: &nbsp; <code>lpi=6 lpp=66 fcb=01:01,02:07,03:13,04:19,05:25,06:31,07:37,08:43,09:61,10:49,11:55,12:61</code>.
+        </blockquote>
         <p>
 
+    <dt><code>cctape=</code>
+    <dd><p>
+        This option is only valid for 1403 printer devices.
+        It defines the carriage control tape to use for this printer.
+        <p>
+        The option is specified as a series of "line=chan" arguments
+        surrounded by parentheses where 'line' identifies the carriage control
+        tape's line number and 'chan' indicates the channel punch for that
+        line. More than one channel punch may be specified for a line by
+        surounding the list of channel punches within parentheses.
+        The default value is:
+        <p>
+        <blockquote>
+            <code>cctape=(1=1,61=(9,12),7=2,13=3,19=4,25=5,31=6,37=7,43=8,49=10,55=11)</code>.
+        </blockquote>
+        <p>
     </dl>
 
     <p>
 
-    If the filename begins with the vertical bar '&#124;' pipe character,
+    If the printer filename begins with a vertical bar '&#124;' pipe character,
     then it is removed and the remainder of the filename is interpreted as
     a command line (the name of a program or batch file followed by any
     necessary arguments) to which to "pipe" the printer output to.
@@ -2594,12 +2649,12 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
     If the "print-to-pipe" command line contains arguments, then quotes
-    must be placed around the entire filename string including the
-    vertical bar, for example:
+    must be placed around the entire filename, including the vertical bar,
+    since any tokens following the filename are parsed as Hercules printer
+    device options:
     <pre>
     000E 1403 "|/usr/bin/lpr -Phplj" crlf          <em>(for Unix)</em>
-    000E 1403 "|c:\utils\pr -s -PLPT1:" crlf       <em>(for Windows)</em>
-    </pre>
+    000E 1403 "|c:\utils\pr -s -PLPT1:" crlf       <em>(for Windows)</em></pre>
     The above example uses the pr program downloaded
     from <a href="http://www.atnetsend.net/computing/">
     http://www.atnetsend.net/computing/</a>
@@ -2608,14 +2663,14 @@ a real System/390.  The configuration file is an ASCII text file.
     the command line must be enclosed in apostrophes instead of quotes,
     for example:
     <pre>
-    000E 1403 '|"c:\Program Files\My Utils\pr" -s -PLPT1:' crlf
-    </pre>
+    000E 1403 '|"c:\Program Files\My Utils\pr" -s -PLPT1:' crlf</pre>
     <p>
-    Tim Pinkawa has an example which shows how the print-to-pipe feature
-    can be used to create output in PDF format:
-    <a href="http://www.timpinkawa.net/hercules/prtspool.html">
-    http://www.timpinkawa.net/hercules/prtspool.html</a>
-    <p>
+    <a href="http://www.timpinkawa.net/hercules/prtspool.html">Tim Pinkawa</a>
+    has an example which shows how the print-to-pipe feature can be used to
+    create output in PDF format. For Windows users, "Fish" provides a very nice
+    PDF spooler for Hercules called
+    "<a href="http://www.softdevlabs.com/hercprt">HercPrt</a>".
+    <p><br>
 
 <hr width="50%"><p>
 

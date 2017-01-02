@@ -163,10 +163,10 @@ static void cardpch_query_device (DEVBLK *dev, char **devclass,
 
     snprintf (buffer, buflen-1, "%s%s%s%s%s IO[%"PRIu64"]",
                 dev->filename,
-                (dev->ascii ? " ascii" : " ebcdic"),
-                ((dev->ascii && dev->crlf) ? " crlf" : ""),
-                (dev->notrunc ? " notrunc" : ""),
-                (dev->stopdev    ? " (stopped)"    : ""),
+                (dev->ascii                ? " ascii"     : " ebcdic"),
+                ((dev->ascii && dev->crlf) ? " crlf"      : ""),
+                (dev->notrunc              ? " noclear"   : ""),
+                (dev->stopdev              ? " (stopped)" : ""),
                 dev->excps );
 
 } /* end function cardpch_query_device */
@@ -205,10 +205,8 @@ BYTE            c;                      /* Output character          */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
         open_flags = O_WRONLY | O_CREAT /* | O_SYNC */ |  O_BINARY;
-        if (dev->notrunc != 1)
-        {
+        if (!dev->notrunc)
             open_flags |= O_TRUNC;
-        }
         rc = HOPEN (dev->filename, open_flags,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)

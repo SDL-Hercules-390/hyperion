@@ -1335,31 +1335,27 @@ struct DEVBLK {                         /* Device configuration block*/
                                            in print buffer           */
         pid_t   ptpcpid;                /* print-to-pipe child pid   */
         u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
-        u_int   diaggate:1;             /* 1=Diagnostic gate command */
-        u_int   fold:1;                 /* 1=Fold to upper case      */
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopdev:1;              /* T=stopped; F=started      */
         u_int   notrunc:1;              /* 1=do not truncate at open */
-
-        u_int   fcbsupp:1;              /* fcb support flag          */
-        u_int   cc:1;                   /* emit line controls        */
-        u_int   rawcc:1;                /* emit just cc(hex) and data*/
-        u_int   fcbcheck:1;             /* signal FCB errors         */
-        u_int   nofcbcheck:1;           /* ignore FCB errors         */
-        u_int   ccpend:1;               /* cc process pending        */
-        u_int   chskip:1;               /* cc process pending        */
-
-        int     print;                  /* optimize for print   0    */
-        int     browse;                 /* optimize for browse  1    */
+        u_int   rawcc:1;                /* Debugging: 1=write hex cc
+                                           else process cc normally  */
+        u_int   fcbcheck:1;             /* 1=signal FCB errors, else
+                                           ignore FCB errors.        */
+        u_int   diaggate:1;             /* 1=Diagnostic gate command */
+        u_int   fold:1;                 /* 1=Fold to upper case      */
+        u_int   ffpend:1;               /* Form Feed pending         */
+        u_int   sp0after:1;             /* Did write without spacing */
+        u_int   skpimmed:1;             /* Processing Skip Immediate */
 
         int     lpi;                    /* lines per inch 6/8        */
         int     index;                  /* 3211 indexing             */
         int     lpp;                    /* lines per page            */
-        int     ffchan ;                /* ff when skip here         */
-#define FCBSIZE 256
+#define FCBSIZE 180                     /* Forms Control Buffer size */
         int     fcb[FCBSIZE+1];         /* FCB image                 */
+        U16     cctape[FCBSIZE];        /* Carriage Control Tape     */
         int     fcbisdef;               /* FCB is default            */
-
+        int     chan12line;             /* Line number of channel 12 */
         int     prevline;               /* previous line number      */
         int     currline;               /* curr line number          */
         int     destline;               /* destination  line number  */

@@ -992,7 +992,6 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     int      wlpi;
     int      windex;
     int      wlpp;
-    int      wffchan;
     int      wfcb[FCBSIZE+1];
     char     *ptr, *nxt;
 
@@ -1026,6 +1025,13 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
+    if (dev->devtype != 0x3211)
+    {
+        // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+        WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "command 'fcb'", dev->devtype);
+        return -1;
+    }
+
     if ( argc == 2 )
     {
         fcb_dump(dev, wbuf, sizeof(wbuf));
@@ -1042,7 +1048,6 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     wlpi = dev->lpi;
     windex = dev->index;
     wlpp = dev->lpp;
-    wffchan = dev->ffchan;
     for (line = 0; line <= FCBSIZE; line++)
         wfcb[line] = dev->fcb[line];
 
@@ -1094,21 +1099,7 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
             }
             continue;
         }
-#if 0
-        if (strncasecmp("ffchan=", argv[iarg], 7) == 0)
-        {
-            ptr = argv[iarg]+7;
-            errno = 0;
-            wffchan = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 ||  wffchan < 1 || wffchan > 12)
-            {
-                jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                return -1;
-            }
-            continue ;
-        }
-#endif
+
         if (strncasecmp("fcb=", argv[iarg], 4) == 0)
         {
             for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
@@ -1190,7 +1181,6 @@ int fcb_cmd(int argc, char *argv[], char *cmdline)
     dev->lpi = wlpi;
     dev->index = windex ;
     dev->lpp = wlpp;
-    dev->ffchan = wffchan;
     for (line = 0; line <= FCBSIZE; line++)
         dev->fcb[line] = wfcb[line];
 

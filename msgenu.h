@@ -844,6 +844,7 @@ Examples:
 #define HHC01106 "%1d:%04X Printer: pipe receiver with pid %d starting"
 #define HHC01107 "%1d:%04X Printer: pipe receiver with pid %d terminating"
 #define HHC01108 "%1d:%04X Printer: unable to execute file %s: %s"
+#define HHC01109 "%1d:%04X Printer: %s incompatible with device type %04X"
 
 // reserve 012xx for card devices
 #define HHC01200 "%1d:%04X Card: error in function %s: %s"
