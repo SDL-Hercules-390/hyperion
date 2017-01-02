@@ -8,7 +8,7 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
-/* System/370 line printer devices with fcb support and more         */
+/* System/370 line printer devices with fcb support and more.        */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -43,26 +43,23 @@
  */
 
 static BYTE printer_immed_commands[256]=
-/*
- *0 1 2 3 4 5 6 7 8 9 A B C D E F
-*/
-
-{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};
+/*0 1 2 3 4 5 6 7 8 9 A B C D E F*/
+{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*0*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*1*/
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*2*/
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*3*/
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*4*/
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*5*/
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*6*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*7*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*8*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*9*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*A*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*B*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*C*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*D*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*E*/
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};/*F*/
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -77,7 +74,7 @@ int chan;
 int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
 int havechan;
 
-#define LINENUM(n)  ( 1 + ( ( (n)-1) % dev->lpp))
+#define LINENUM(n)  (1 + (((n)-1) % dev->lpp))
 
 #define WRITE_LINE() \
 do { \
@@ -87,9 +84,9 @@ do { \
         dev->bufoff = 0; \
         dev->bufres = BUFF_SIZE; \
     } /* end if(!data-chained) */ \
-    if ( dev->index > 1 ) \
+    if (dev->index > 1) \
     { \
-        for (i = 1; i < (U32)dev->index; i++) \
+        for (i=1; i < (U32)dev->index; i++) \
         { \
             dev->buf[dev->bufoff] = SPACE; \
             dev->bufoff++; \
@@ -100,7 +97,7 @@ do { \
     num = (count < (U32)dev->bufres) ? count : (U32)dev->bufres; \
     *residual = count - num; \
     /* Copy data from channel buffer to print buffer */ \
-    for (i = 0; i < num; i++) \
+    for (i=0; i < num; i++) \
     { \
         c = guest_to_host(iobuf[i]); \
         if (dev->fold) c = toupper(c); \
@@ -118,7 +115,7 @@ do { \
         /* Write print line */ \
         write_buffer (dev, (char *)dev->buf, i, unitstat); \
         if (*unitstat != 0) return; \
-        if ( dev->crlf ) \
+        if (dev->crlf) \
         { \
             write_buffer (dev, "\r", 1, unitstat); \
             if (*unitstat != 0) return; \
@@ -164,7 +161,7 @@ do { \
     { \
         if ( dev->nofcbcheck ) \
         { \
-            if ( ( code & 0x02 ) != 0 ) \
+            if ((code & 0x02) != 0) \
             { \
                 write_buffer (dev, "\n", 1, unitstat); \
                 if (*unitstat != 0) return; \
@@ -506,7 +503,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             ptr = argv[iarg]+4;
             errno = 0;
             dev->lpp = (int) strtoul(ptr,&nxt,10);
-            if (errno != 0 || nxt == ptr || *nxt != 0 ||dev->lpp > FCBSIZE)
+            if (errno != 0 || nxt == ptr || *nxt != 0 || dev->lpp > FCBSIZE)
             {
                 j = ptr - argv[iarg];
                 WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
@@ -563,7 +560,6 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         break;
                     ptr = nxt + 1;
                 }
-
             }
             else
             {
@@ -581,7 +577,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         return -1;
                     }
                     chan += 1;
-                    if ( chan > 12 )
+                    if (chan > 12)
                     {
                         j = ptr - argv[iarg];
                         WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
@@ -592,7 +588,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
                         break;
                     ptr = nxt + 1;
                 }
-                if ( chan != 12 )
+                if (chan != 12)
                 {
                     j = 5;
                     WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
@@ -601,7 +597,7 @@ int   sockdev = 0;                     /* 1 == is socket device     */
             }
 
             continue;
-        }
+        } /* "fcb=" */
 
         WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg]);
         return -1;
@@ -828,7 +824,7 @@ int             rc;                     /* Return code               */
 static void
 write_buffer (DEVBLK *dev, char *buf, int len, BYTE *unitstat)
 {
-int             rc;                     /* Return code               */
+int rc;
 
     /* Write data to the printer file */
     if (dev->bs)
@@ -959,23 +955,34 @@ char            wbuf[150];
 
     switch (code) {
 
-    case 0x01: /* Write     No Space             */
-    case 0x09: /* Write and Space 1 Line         */
-    case 0x11: /* Write and Space 2 Lines        */
-    case 0x19: /* Write and Space 3 Lines        */
+    /*---------------------------------------------------------------*/
+    /* NOP                                                           */
+    /*---------------------------------------------------------------*/
+    case 0x03: /* No Operation                   */
 
-    case 0x89: /* Write and Skip to Channel 1    */
-    case 0x91: /* Write and Skip to Channel 2    */
-    case 0x99: /* Write and Skip to Channel 3    */
-    case 0xA1: /* Write and Skip to Channel 4    */
-    case 0xA9: /* Write and Skip to Channel 5    */
-    case 0xB1: /* Write and Skip to Channel 6    */
-    case 0xB9: /* Write and Skip to Channel 7    */
-    case 0xC1: /* Write and Skip to Channel 8    */
-    case 0xC9: /* Write and Skip to Channel 9    */
-    case 0xD1: /* Write and Skip to Channel 10   */
-    case 0xD9: /* Write and Skip to Channel 11   */
-    case 0xE1: /* Write and Skip to Channel 12   */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* WRITE DATA THEN MOVE CARRIAGE COMMANDS                        */
+    /*---------------------------------------------------------------*/
+    case 0x01:  /*  Write Without Spacing         */
+    case 0x09:  /*  Write and Space 1 Line        */
+    case 0x11:  /*  Write and Space 2 Lines       */
+    case 0x19:  /*  Write and Space 3 Lines       */
+    case 0x89:  /*  Write and Skip to Channel 1   */
+    case 0x91:  /*  Write and Skip to Channel 2   */
+    case 0x99:  /*  Write and Skip to Channel 3   */
+    case 0xA1:  /*  Write and Skip to Channel 4   */
+    case 0xA9:  /*  Write and Skip to Channel 5   */
+    case 0xB1:  /*  Write and Skip to Channel 6   */
+    case 0xB9:  /*  Write and Skip to Channel 7   */
+    case 0xC1:  /*  Write and Skip to Channel 8   */
+    case 0xC9:  /*  Write and Skip to Channel 9   */
+    case 0xD1:  /*  Write and Skip to Channel 10  */
+    case 0xD9:  /*  Write and Skip to Channel 11  */
+    case 0xE1:  /*  Write and Skip to Channel 12  */
+
         if (dev->rawcc)
         {
             sprintf(hex,"%02x",code);
@@ -988,7 +995,7 @@ char            wbuf[150];
             return;
         }
 
-        if ( dev->browse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0) )
+        if (dev->browse && dev->ccpend && ((chained & CCW_FLAGS_CD) == 0))
         {
             dev->ccpend = 0;
             /* dev->currline++; */
@@ -998,10 +1005,10 @@ char            wbuf[150];
         WRITE_LINE();
         if ((flags & CCW_FLAGS_CD) == 0)
         {
-            if    ( code <= 0x80 ) /* line control */
+            if (code <= 0x80) /* line control? */
             {
                 coun = code / 8;
-                if ( coun == 0 )
+                if (coun == 0)
                 {
                     dev->chskip = 1;
                     if ( dev->browse )
@@ -1023,7 +1030,7 @@ char            wbuf[150];
                     *unitstat = CSW_CE | CSW_DE;
                 return;
             }
-            else  /*code >  0x80*/ /* chan control */
+            else /* code > 0x80: chan control */
             {
                 /*
                 if ( dev->browse )
@@ -1033,8 +1040,8 @@ char            wbuf[150];
                     if (*unitstat != 0) return;
                 }
                 */
-                chan = ( code - 128 ) / 8;
-                if ( chan == 1 )
+                chan = (code - 128) / 8;
+                if (chan == 1)
                 {
                     write_buffer(dev, "\r", 1, unitstat);
                     if (*unitstat != 0)
@@ -1050,26 +1057,25 @@ char            wbuf[150];
         *unitstat = CSW_CE | CSW_DE;
         return;
 
-    case 0x03: /* No Operation                   */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
+    /*---------------------------------------------------------------*/
+    /* CONTROL IMMEDIATE COMMANDS                                    */
+    /*---------------------------------------------------------------*/
+    case 0x0B:  /*  Space 1 Line       Immediate  */
+    case 0x13:  /*  Space 2 Lines      Immediate  */
+    case 0x1B:  /*  Space 3 Lines      Immediate  */
+    case 0x8B:  /*  Skip to Channel 1  Immediate  */
+    case 0x93:  /*  Skip to Channel 2  Immediate  */
+    case 0x9B:  /*  Skip to Channel 3  Immediate  */
+    case 0xA3:  /*  Skip to Channel 4  Immediate  */
+    case 0xAB:  /*  Skip to Channel 5  Immediate  */
+    case 0xB3:  /*  Skip to Channel 6  Immediate  */
+    case 0xBB:  /*  Skip to Channel 7  Immediate  */
+    case 0xC3:  /*  Skip to Channel 8  Immediate  */
+    case 0xCB:  /*  Skip to Channel 9  Immediate  */
+    case 0xD3:  /*  Skip to Channel 10 Immediate  */
+    case 0xDB:  /*  Skip to Channel 11 Immediate  */
+    case 0xE3:  /*  Skip to Channel 12 Immediate  */
 
-    case 0x0B: /*           Space 1 Line         */
-    case 0x13: /*           Space 2 Lines        */
-    case 0x1B: /*           Space 3 Lines        */
-
-    case 0x8B: /*           Skip to Channel 1    */
-    case 0x93: /*           Skip to Channel 2    */
-    case 0x9B: /*           Skip to Channel 3    */
-    case 0xA3: /*           Skip to Channel 4    */
-    case 0xAB: /*           Skip to Channel 5    */
-    case 0xB3: /*           Skip to Channel 6    */
-    case 0xBB: /*           Skip to Channel 7    */
-    case 0xC3: /*           Skip to Channel 8    */
-    case 0xCB: /*           Skip to Channel 9    */
-    case 0xD3: /*           Skip to Channel 10   */
-    case 0xDB: /*           Skip to Channel 11   */
-    case 0xE3: /*           Skip to Channel 12   */
         if (dev->rawcc)
         {
             sprintf(hex,"%02x",code);
@@ -1082,7 +1088,7 @@ char            wbuf[150];
             return;
         }
 
-        if    ( code <= 0x80 ) /* line control */
+        if (code <= 0x80) /* line control? */
         {
             coun = code / 8;
             dev->ccpend = 0;
@@ -1091,7 +1097,7 @@ char            wbuf[150];
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
         }
-        else  /*code >  0x80*/ /* chan control */
+        else /* code > 0x80: chan control */
         {
             /*
             if ( dev->browse && dev->ccpend)
@@ -1103,7 +1109,7 @@ char            wbuf[150];
                 if (*unitstat != 0) return;
             }
             */
-            chan = ( code - 128 ) / 8;
+            chan = (code - 128) / 8;
             SKIP_TO_CHAN();
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
@@ -1248,7 +1254,7 @@ char            wbuf[150];
 
     case 0x12:
     /*---------------------------------------------------------------*/
-    /* DIAGNOSTIC READ fcb                                           */
+    /* DIAGNOSTIC READ FCB                                           */
     /*---------------------------------------------------------------*/
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
         if (dev->devtype == 0x1403 || dev->diaggate == 0)
@@ -1257,7 +1263,23 @@ char            wbuf[150];
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
+        /*
+            The read FCB command, normally for diagnostic purposes,
+            transfers the carriage codes to the channel, where they
+            may be analyzed or compared. The number of data bytes
+            transferred is controlled by the count field in the CCW.
 
+            For example, to check the carriage setting in the first
+            address position for the presence or absence of a flag
+            bit to determine the carriage space setting of six or
+            eight lines per inch, set the count field to 1.
+
+            NOTE: To maintain vertical forms alignment, issue the
+            read FCB command, only after skipping to a channel code
+            stored in FCB address one. If read FCB is given at any
+            other position, the form becomes misaligned because the
+            FCB returns to address position one.
+        */
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
