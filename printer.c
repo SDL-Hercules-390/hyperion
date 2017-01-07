@@ -439,7 +439,7 @@ static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 char *ptr;                              /* Work variable for parsing */
 char *nxt;                              /* Work variable for parsing */
-int   iarg,i,j;                         /* Some array subscripts     */
+int   iarg, i, j;                       /* Some array subscripts     */
 U8    sockdev = FALSE;                  /* TRUE == is socket device  */
 
     /* For re-initialisation, close the existing file, if any, and raise attention */
@@ -501,7 +501,7 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
     /* Initialize Carriage Control Tape and FCB */
     memset( &dev->cctape, 0, sizeof( dev->cctape ));
     memset( &dev->fcb,    0, sizeof( dev->fcb    ));
-    for (i=0; i < arraysize( cctape ); i++)
+    for (i=0; i < (int) arraysize( cctape ); i++)
     {
         const U16 chan12mask = 0x8000 >> (12 - 1);
         dev->cctape[i] = cctape[i];
