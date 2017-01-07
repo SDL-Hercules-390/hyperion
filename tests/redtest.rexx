@@ -195,11 +195,12 @@ Select
                   When arch = 'S/370'   Then Call setvar 'can_s370_mode'   1
                   When arch = 'ESA/390' Then Call setvar 'can_esa390_mode' 1
                   When arch = 'z/Arch'  Then Call setvar 'can_zarch_mode'  1
+                  Otherwise nop
                End
             End
          When verb = 'Max' Then
             Do
-               Parse Var rest 'CPU Engines:' engines
+               Parse Var rest 'CPU Engines: ' engines
                Call setvar 'max_cpu_engines' engines
             End
          When verb = 'Using' Then
@@ -213,6 +214,7 @@ Select
 
                When rest = 'shared libraries'                   Then Call setvar 'libraries'       'shared'
                When rest = 'static libraries'                   Then Call setvar 'libraries'       'static'
+               Otherwise nop
             End
          When  verb = 'With' | verb = 'Without' Then
             Do
@@ -245,6 +247,7 @@ Select
                   When rest = 'CONFIG_INCLUDE support'        Then Call setvar 'CONFIG_INCLUDE' with
                   When rest = 'SYSTEM_SYMBOLS support'        Then Call setvar 'SYSTEM_SYMBOLS' with
                   When rest = 'CONFIG_SYMBOLS support'        Then Call setvar 'CONFIG_SYMBOLS' with
+                  Otherwise nop
                End
             End
          Otherwise
@@ -417,7 +420,7 @@ If \havewait & \nowait
 Select
    When havepgm \= ''
       Then call figurePgm
-   Otherwise
+   Otherwise nop
 End
 
 If \havewait & \nowait Then
