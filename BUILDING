@@ -45,7 +45,6 @@ The following package(s) is(are) optional but highly recommended:
 
      Package   Version  (or greater!)
     ----------------------------------
-     libgcrypt   0.4.4  (or greater!)   (for z990 crypto instructions)
      zlib            ?                  (for ZLIB compression)
      libbz2          ?                  (for BZIP2 compression)
 

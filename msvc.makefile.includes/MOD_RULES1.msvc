@@ -23,11 +23,8 @@ $(O)hercmisc.res: hercmisc.rc hercver.rc2
 $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yc"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**
 
-!IFNDEF NOCRYPTO
 {crypto}.c{$(OBJDIR)}.obj::
     $(cc) $(cdebug) $(cflags) /Icrypto /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
-
-!ENDIF
 
 $(O)dfp.obj: dfp.c
     $(cc) $(cdebug) $(cflags) /I. $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c

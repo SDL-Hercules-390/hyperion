@@ -354,53 +354,65 @@
 				Name="Hercules"
 				>
 				<Filter
-					Name="Crypto"
+					Name="crypto"
 					>
 					<File
-						RelativePath=".\crypto\Makefile.am"
+						RelativePath=".\crypto\LICENSE.txt"
+						>
+					</File>
+					<File
+						RelativePath=".\crypto\README.txt"
 						>
 					</File>
 					<Filter
-						Name="Header Files"
+						Name="include"
 						>
 						<File
-							RelativePath=".\crypto\aes.h"
+							RelativePath=".\crypto\include\crypto.h"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\des.h"
+							RelativePath=".\crypto\include\rijndael.h"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\sha1.h"
+							RelativePath=".\crypto\include\sha1.h"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\sha256.h"
+							RelativePath=".\crypto\include\sha2.h"
+							>
+						</File>
+						<File
+							RelativePath=".\crypto\include\sshdes.h"
 							>
 						</File>
 					</Filter>
 					<Filter
-						Name="Source Files"
+						Name="lib"
 						>
 						<File
-							RelativePath=".\crypto\aes.c"
+							RelativePath=".\crypto\lib\crypto32.lib"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\des.c"
+							RelativePath=".\crypto\lib\crypto32.pdb"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\dyncrypt.c"
+							RelativePath=".\crypto\lib\crypto64.lib"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\sha1.c"
+							RelativePath=".\crypto\lib\crypto64.pdb"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\sha256.c"
+							RelativePath=".\crypto\lib\libcrypto32.a"
+							>
+						</File>
+						<File
+							RelativePath=".\crypto\lib\libcrypto64.a"
 							>
 						</File>
 					</Filter>
@@ -837,6 +849,10 @@
 						</File>
 						<File
 							RelativePath=".\dyn76.c"
+							>
+						</File>
+						<File
+							RelativePath=".\dyncrypt.c"
 							>
 						</File>
 						<File
@@ -1513,7 +1529,7 @@
 						>
 					</File>
 					<Filter
-						Name="Include"
+						Name="include"
 						>
 						<File
 							RelativePath=".\decNumber\include\decContext.h"
@@ -1545,7 +1561,7 @@
 						</File>
 					</Filter>
 					<Filter
-						Name="Lib"
+						Name="lib"
 						>
 						<File
 							RelativePath=".\decNumber\lib\decNumber32.lib"
@@ -1563,18 +1579,14 @@
 							RelativePath=".\decNumber\lib\decNumber64.pdb"
 							>
 						</File>
-						<Filter
-							Name="pkgconfig"
+						<File
+							RelativePath=".\decNumber\lib\libdecNumber32.a"
 							>
-							<File
-								RelativePath=".\decNumber\lib\pkgconfig\decNumber32.pc"
-								>
-							</File>
-							<File
-								RelativePath=".\decNumber\lib\pkgconfig\decNumber64.pc"
-								>
-							</File>
-						</Filter>
+						</File>
+						<File
+							RelativePath=".\decNumber\lib\libdecNumber64.a"
+							>
+						</File>
 					</Filter>
 				</Filter>
 				<Filter
@@ -1593,7 +1605,7 @@
 						>
 					</File>
 					<Filter
-						Name="Include"
+						Name="include"
 						>
 						<File
 							RelativePath=".\SoftFloat\include\softfloat.h"
@@ -1605,8 +1617,16 @@
 						</File>
 					</Filter>
 					<Filter
-						Name="Lib"
+						Name="lib"
 						>
+						<File
+							RelativePath=".\SoftFloat\lib\libSoftFloat32.a"
+							>
+						</File>
+						<File
+							RelativePath=".\SoftFloat\lib\libSoftFloat64.a"
+							>
+						</File>
 						<File
 							RelativePath=".\SoftFloat\lib\SoftFloat32.lib"
 							>
@@ -1623,21 +1643,9 @@
 							RelativePath=".\SoftFloat\lib\SoftFloat64.pdb"
 							>
 						</File>
-						<Filter
-							Name="pkgconfig"
-							>
-							<File
-								RelativePath=".\SoftFloat\lib\pkgconfig\SoftFloat32.pc"
-								>
-							</File>
-							<File
-								RelativePath=".\SoftFloat\lib\pkgconfig\SoftFloat64.pc"
-								>
-							</File>
-						</Filter>
 					</Filter>
 					<Filter
-						Name="Doc"
+						Name="doc"
 						>
 						<File
 							RelativePath=".\SoftFloat\doc\SoftFloat-history.html"
@@ -1665,7 +1673,7 @@
 						>
 					</File>
 					<Filter
-						Name="Include"
+						Name="include"
 						>
 						<File
 							RelativePath=".\telnet\include\telnet.h"
@@ -1673,8 +1681,16 @@
 						</File>
 					</Filter>
 					<Filter
-						Name="Lib"
+						Name="lib"
 						>
+						<File
+							RelativePath=".\telnet\lib\libtelnet32.a"
+							>
+						</File>
+						<File
+							RelativePath=".\telnet\lib\libtelnet64.a"
+							>
+						</File>
 						<File
 							RelativePath=".\telnet\lib\telnet32.lib"
 							>
@@ -2864,23 +2880,7 @@
 				Name="tests"
 				>
 				<File
-					RelativePath=".\tests\asmtst.xedit"
-					>
-				</File>
-				<File
 					RelativePath=".\tests\awsbsf.aws"
-					>
-				</File>
-				<File
-					RelativePath=".\tests\bldhtc.exec"
-					>
-				</File>
-				<File
-					RelativePath=".\tests\bldhtc.rexx"
-					>
-				</File>
-				<File
-					RelativePath=".\tests\cvttst.rexx"
 					>
 				</File>
 				<File
@@ -3069,10 +3069,6 @@
 					<Filter
 						Name="txt"
 						>
-						<File
-							RelativePath=".\tests\agf.txt"
-							>
-						</File>
 						<File
 							RelativePath=".\tests\alsi.txt"
 							>
@@ -3726,15 +3722,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\mhi.assemble"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\mvcle.assemble"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\pfpo-esa.assemble"
 							>
 						</File>
 						<File
@@ -3746,7 +3734,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\stfl.assemble"
+							RelativePath=".\tests\wild.assemble"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zeos.assemble"
 							>
 						</File>
 						<Filter
@@ -3785,15 +3777,7 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\mhi.listing"
-								>
-							</File>
-							<File
 								RelativePath=".\tests\mvcle.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\pfpo-esa.listing"
 								>
 							</File>
 							<File
@@ -3805,7 +3789,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\stfl.listing"
+								RelativePath=".\tests\wild.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\zeos.listing"
 								>
 							</File>
 						</Filter>
@@ -3946,6 +3934,38 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\kimd-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\klmd-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\km-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kmac-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kmc-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kmctr-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kmf-hw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\kmo-hw.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\leapfrog.tst"
 							>
 						</File>
@@ -3974,11 +3994,23 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\privop.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\problem.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\runtest0.tst"
 							>
 						</File>
 						<File
 							RelativePath=".\tests\runtest4.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\semipriv.tst"
 							>
 						</File>
 						<File
@@ -4007,6 +4039,14 @@
 						</File>
 						<File
 							RelativePath=".\tests\timeout.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\wild.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\zeos.tst"
 							>
 						</File>
 						<Filter
@@ -4146,7 +4186,27 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\mhi.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\pfpo.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\privop.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\problem.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\semipriv.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\stfl.asm"
 							>
 						</File>
 						<Filter
@@ -4245,7 +4305,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\mhi.list"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\pfpo.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\privop.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\problem.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\semipriv.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stfl.list"
 								>
 							</File>
 						</Filter>

@@ -8,12 +8,6 @@
 #
 # ***************************************************************************
 
-!IFNDEF NOCRYPTO
-DYNCRYPT_DLL = $(X)dyncrypt.dll
-!ELSE
-DYNCRYPT_DLL =
-!ENDIF
-
 MODULES = \
     $(X)dyngui.dll   \
     $(X)hdt1052c.dll \
@@ -31,7 +25,7 @@ MODULES = \
     $(X)hdtzfcp.dll  \
     $(X)dyninst.dll  \
     $(X)s37x.dll     \
-    $(DYNCRYPT_DLL)
+    $(X)dyncrypt.dll
 
 EXECUTABLES = \
     $(X)cckdcdsk.exe \

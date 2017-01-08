@@ -13,11 +13,7 @@
 HDLPRE hdl_preload[] =
 {
     { "hdteq",              HDL_LOAD_NOMSG                     },
-#if defined(_MSVC_)
     { "dyncrypt",           HDL_LOAD_NOMSG                     },
-#else
-    { "crypto/dyncrypt",    HDL_LOAD_NOMSG                     },
-#endif
 #if 0
     { "dyn_test1",          HDL_LOAD_DEFAULT                   },
     { "/foo/dyn_test2",     HDL_LOAD_NOMSG                     },

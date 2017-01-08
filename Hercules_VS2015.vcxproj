@@ -134,7 +134,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG makefile.msvc 32 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>./msvc.debug.AMD64.bin\</OutDir>
@@ -144,7 +144,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-X64 makefile.msvc 64 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>./msvc.dllmod.bin\</OutDir>
@@ -154,7 +154,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL makefile.msvc 32 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>./msvc.AMD64.bin\</OutDir>
@@ -164,7 +164,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-X64 makefile.msvc 64 clean -title "** The unofficial SoftDevLabs version of Hercules **"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>_FEATURE_INTEGRATED_3270_CONSOLE;FEATURE_SERVICE_PROCESSOR;FEATURE_EXTENDED_STORAGE_KEYS;OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_QUEUED_DIRECT_IO;_FEATURE_SIE;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -174,7 +174,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_DEBUG;DEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -184,7 +184,7 @@
     <NMakeCleanCommandLine>makefile.bat DEBUG-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_DEBUG;DEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -194,7 +194,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;NDEBUG;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -204,7 +204,7 @@
     <NMakeCleanCommandLine>makefile.bat RETAIL-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;NDEBUG;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -214,7 +214,7 @@
     <NMakeCleanCommandLine>makefile.bat ALL-ALL makefile.msvc 32 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_MSVC_;CPU=i386;HOST_ARCH=i386;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -224,7 +224,7 @@
     <NMakeCleanCommandLine>makefile.bat ALL-ALL makefile.msvc 64 clean "$(SolutionDir)"</NMakeCleanCommandLine>
     <NMakeOutput>$(OutDir)</NMakeOutput>
     <NMakePreprocessorDefinitions>OPTION_HTTP_SERVER;_DAT_C;FEATURE_PROGRAM_DIRECTED_REIPL;FEATURE_EMULATE_VM;ENABLE_IPV6;OPTION_CMPSC_2012;FEATURE_BINARY_FLOATING_POINT;WIN32;_WIN64;_MSVC_;CPU=AMD64;HOST_ARCH=AMD64;OPTION_DYNAMIC_LOAD;HDL_BUILD_SHARED;OPTION_FTHREADS;EXTERNALGUI;FEATURE_CHANNEL_SUBSYSTEM;FEATURE_CANCEL_IO_FACILITY;FEATURE_ESAME;FEATURE_CONFIGURATION_TOPOLOGY_FACILITY;OPTION_HAO;HAVE_REGINA_REXXSAA_H;OPTION_CMDTGT;_FEATURE_SYSTEM_CONSOLE;FEATURE_CHSC;OPTION_PTTRACE;FEATURE_COMPRESSION;ENABLE_REGINA_REXX;ENABLE_OBJECT_REXX;FEATURE_S370_CHANNEL;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>crypto;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>crypto\include;decNumber\include;SoftFloat\include;telnet\include;$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
@@ -315,11 +315,7 @@
     <ClCompile Include="control.c" />
     <ClCompile Include="cpu.c" />
     <ClCompile Include="crypto.c" />
-    <ClCompile Include="crypto\aes.c" />
-    <ClCompile Include="crypto\des.c" />
-    <ClCompile Include="crypto\dyncrypt.c" />
-    <ClCompile Include="crypto\sha1.c" />
-    <ClCompile Include="crypto\sha256.c" />
+    <ClCompile Include="dyncrypt.c" />
     <ClCompile Include="ctcadpt.c" />
     <ClCompile Include="ctc_ctci.c" />
     <ClCompile Include="ctc_lcs.c" />
@@ -450,6 +446,22 @@
     <ClCompile Include="zfcp.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="crypto\lib\crypto32.pdb" />
+    <None Include="crypto\lib\crypto64.pdb" />
+    <None Include="crypto\lib\libcrypto32.a" />
+    <None Include="crypto\lib\libcrypto64.a" />
+    <None Include="decNumber\lib\decNumber32.pdb" />
+    <None Include="decNumber\lib\decNumber64.pdb" />
+    <None Include="decNumber\lib\libdecNumber32.a" />
+    <None Include="decNumber\lib\libdecNumber64.a" />
+    <None Include="SoftFloat\lib\SoftFloat32.pdb" />
+    <None Include="SoftFloat\lib\SoftFloat64.pdb" />
+    <None Include="SoftFloat\lib\libSoftFloat32.a" />
+    <None Include="SoftFloat\lib\libSoftFloat64.a" />
+    <None Include="telnet\lib\telnet32.pdb" />
+    <None Include="telnet\lib\telnet64.pdb" />
+    <None Include="telnet\lib\libtelnet32.a" />
+    <None Include="telnet\lib\libtelnet64.a" />
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="all-all.jobs" />
@@ -470,19 +482,14 @@
     <None Include="CHANGES" />
     <None Include="configure.ac" />
     <None Include="COPYRIGHT" />
-    <None Include="crypto\Makefile.am" />
+    <None Include="crypto\LICENSE.txt" />
+    <None Include="crypto\README.txt" />
     <None Include="debug-all.jobs" />
     <None Include="decNumber\decnumber.pdf" />
     <None Include="decNumber\ERRATA" />
     <None Include="decNumber\ICU-license.html" />
-    <None Include="decNumber\lib\decNumber32.pdb" />
-    <None Include="decNumber\lib\decNumber64.pdb" />
-    <None Include="decNumber\lib\pkgconfig\decNumber32.pc" />
-    <None Include="decNumber\lib\pkgconfig\decNumber64.pc" />
     <None Include="telnet\README.txt" />
     <None Include="telnet\LICENSE.txt" />
-    <None Include="telnet\lib\telnet32.pdb" />
-    <None Include="telnet\lib\telnet64.pdb" />
     <None Include="dynmake.bat" />
     <None Include="hercules.cnf" />
     <None Include="hercules.cnf.rexx" />
@@ -667,20 +674,12 @@
     <None Include="SoftFloat\doc\SoftFloat-history.html" />
     <None Include="SoftFloat\doc\SoftFloat-source.html" />
     <None Include="SoftFloat\doc\SoftFloat.html" />
-    <None Include="SoftFloat\lib\pkgconfig\SoftFloat32.pc" />
-    <None Include="SoftFloat\lib\pkgconfig\SoftFloat64.pc" />
-    <None Include="SoftFloat\lib\SoftFloat32.pdb" />
-    <None Include="SoftFloat\lib\SoftFloat64.pdb" />
     <None Include="SoftFloat\README.html" />
-    <None Include="tests\a.core" />
     <None Include="tests\agf.assemble" />
     <None Include="tests\agf.listing" />
     <None Include="tests\agf.tst" />
-    <None Include="tests\asmtst.xedit" />
     <None Include="tests\awsbsf.aws" />
     <None Include="tests\awsbsf.tst" />
-    <None Include="tests\b.core" />
-    <None Include="tests\bctr.core" />
     <None Include="tests\bfp-001-divtoint.asm" />
     <None Include="tests\bfp-001-divtoint.core" />
     <None Include="tests\bfp-001-divtoint.list" />
@@ -773,8 +772,6 @@
     <None Include="tests\bfp-023-threads.core" />
     <None Include="tests\bfp-023-threads.list" />
     <None Include="tests\bfp-023-threads.sptst" />
-    <None Include="tests\bldhtc.exec" />
-    <None Include="tests\bldhtc.rexx" />
     <None Include="tests\cipher.assemble" />
     <None Include="tests\cipher.listing" />
     <None Include="tests\cipher.tst" />
@@ -789,7 +786,6 @@
     <None Include="tests\csxtr.assemble" />
     <None Include="tests\csxtr.listing" />
     <None Include="tests\csxtr.tst" />
-    <None Include="tests\cvttst.rexx" />
     <None Include="tests\dc-float.asm" />
     <None Include="tests\digest.assemble" />
     <None Include="tests\digest.listing" />
@@ -803,9 +799,14 @@
     <None Include="tests\invpsw.assemble" />
     <None Include="tests\invpsw.listing" />
     <None Include="tests\invpsw.tst" />
-    <None Include="tests\l.core" />
-    <None Include="tests\la.core" />
-    <None Include="tests\la2.core" />
+    <None Include="tests\kimd-hw.tst" />
+    <None Include="tests\klmd-hw.tst" />
+    <None Include="tests\km-hw.tst" />
+    <None Include="tests\kmac-hw.tst" />
+    <None Include="tests\kmc-hw.tst" />
+    <None Include="tests\kmctr-hw.tst" />
+    <None Include="tests\kmf-hw.tst" />
+    <None Include="tests\kmo-hw.tst" />
     <None Include="tests\leapfrog.assemble" />
     <None Include="tests\leapfrog.listing" />
     <None Include="tests\leapfrog.tst" />
@@ -814,22 +815,28 @@
     <None Include="tests\logicimm.tst" />
     <None Include="tests\mainsize.tst" />
     <None Include="tests\Makefile.am" />
-    <None Include="tests\mhi.assemble" />
-    <None Include="tests\mhi.listing" />
+    <None Include="tests\mhi.asm" />
+    <None Include="tests\mhi.core" />
+    <None Include="tests\mhi.list" />
     <None Include="tests\mhi.tst" />
     <None Include="tests\mkcore.rexx" />
-    <None Include="tests\mvc.core" />
     <None Include="tests\mvcle.assemble" />
     <None Include="tests\mvcle.listing" />
     <None Include="tests\mvcle.tst" />
-    <None Include="tests\pfpo-esa.assemble" />
-    <None Include="tests\pfpo-esa.listing" />
     <None Include="tests\pfpo.asm" />
     <None Include="tests\pfpo.core" />
     <None Include="tests\pfpo.list" />
     <None Include="tests\pfpo.tst" />
     <None Include="tests\pr.subtst" />
     <None Include="tests\pr.tst" />
+    <None Include="tests\privop.asm" />
+    <None Include="tests\privop.core" />
+    <None Include="tests\privop.list" />
+    <None Include="tests\privop.tst" />
+    <None Include="tests\problem.asm" />
+    <None Include="tests\problem.core" />
+    <None Include="tests\problem.list" />
+    <None Include="tests\problem.tst" />
     <None Include="tests\README" />
     <None Include="tests\redtest.rexx" />
     <None Include="tests\runtest" />
@@ -837,7 +844,10 @@
     <None Include="tests\runtest.subtst" />
     <None Include="tests\runtest0.tst" />
     <None Include="tests\runtest4.tst" />
-    <None Include="tests\sieve.core" />
+    <None Include="tests\semipriv.asm" />
+    <None Include="tests\semipriv.core" />
+    <None Include="tests\semipriv.list" />
+    <None Include="tests\semipriv.tst" />
     <None Include="tests\sigp.assemble" />
     <None Include="tests\sigp.listing" />
     <None Include="tests\sigp.tst" />
@@ -847,14 +857,19 @@
     <None Include="tests\sske.tst" />
     <None Include="tests\sske370.tst" />
     <None Include="tests\sske390.tst" />
-    <None Include="tests\st.core" />
-    <None Include="tests\stfl.assemble" />
+    <None Include="tests\stfl.asm" />
     <None Include="tests\stfl.core" />
-    <None Include="tests\stfl.listing" />
+    <None Include="tests\stfl.list" />
     <None Include="tests\stfl.tst" />
     <None Include="tests\tapebsf.subtst" />
     <None Include="tests\tests.conf" />
     <None Include="tests\timeout.tst" />
+    <None Include="tests\wild.assemble" />
+    <None Include="tests\wild.listing" />
+    <None Include="tests\wild.tst" />
+    <None Include="tests\zeos.assemble" />
+    <None Include="tests\zeos.listing" />
+    <None Include="tests\zeos.tst" />
     <None Include="util\awssl-v19g" />
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />
@@ -895,10 +910,11 @@
     <ClInclude Include="comm3705.h" />
     <ClInclude Include="commadpt.h" />
     <ClInclude Include="cpuint.h" />
-    <ClInclude Include="crypto\aes.h" />
-    <ClInclude Include="crypto\des.h" />
-    <ClInclude Include="crypto\sha1.h" />
-    <ClInclude Include="crypto\sha256.h" />
+    <ClInclude Include="crypto\include\crypto.h" />
+    <ClInclude Include="crypto\include\rijndael.h" />
+    <ClInclude Include="crypto\include\sha1.h" />
+    <ClInclude Include="crypto\include\sha2.h" />
+    <ClInclude Include="crypto\include\sshdes.h" />
     <ClInclude Include="ctcadpt.h" />
     <ClInclude Include="ctc_ptp.h" />
     <ClInclude Include="dasdblks.h" />
@@ -1167,6 +1183,8 @@
     <Text Include="_TODO.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="crypto\lib\crypto32.lib" />
+    <Library Include="crypto\lib\crypto64.lib" />
     <Library Include="decNumber\lib\decNumber32.lib" />
     <Library Include="decNumber\lib\decNumber64.lib" />
     <Library Include="SoftFloat\lib\SoftFloat32.lib" />

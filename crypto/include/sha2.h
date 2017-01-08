@@ -1,12 +1,4 @@
-/* SHA256.H     (c) Bernard van der Helm, 2003-2011                  */
-/*              z/Architecture crypto instructions                   */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
-
 /* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
-/* modified for use with dyncrypt */
 
 /*
  * FILE:        sha2.h
@@ -91,9 +83,14 @@ void SHA512_Update(SHA512_CTX *, const u_int8_t *, size_t)
 void SHA512_Final(u_int8_t[SHA512_DIGEST_LENGTH], SHA512_CTX *)
      /* __attribute__((__bounded__(__minbytes__,1,SHA512_DIGEST_LENGTH))) */;
 
-/* Context structure definitions for dyncrypt */
-typedef SHA256_CTX sha256_context;
-typedef SHA384_CTX sha384_context;
-typedef SHA512_CTX sha512_context;
+/* PROGRAMMING NOTE: The below functions are used internally by the library
+ * and forms the core of its algorithms. Most programs should normally use
+ * the SHAxxx_Init(), SHAxxx_Update(), and SHAxxx_Final() functions instead
+ * of calling SHAxxx_Transform() or SHAxxx_Last() directly. They are only
+ * exposed here in case you have a legitimate need to call them directly.
+ */
+void SHA256_Transform(SHA256_CTX *, const u_int8_t *);
+void SHA512_Transform(SHA512_CTX *, const u_int8_t *);
+void SHA512_Last(SHA512_CTX *);
 
 #endif /* _SHA2_H */

@@ -2935,27 +2935,32 @@ telnet_headers="${telnet_incdir}/telnet.h"
 
 #------------------------------------------------------------------------------
 
+crypto_pkgname=crypto
+crypto_pkgdir=${crypto_pkgname}
+crypto_libname=lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}
+crypto_incdir=${crypto_pkgdir}/include
+crypto_libdir=${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+crypto_libpath=${crypto_libdir}/${crypto_libname}.a
+crypto_headers="${crypto_incdir}/aes.h     \
+                ${crypto_incdir}/crypto.h  \
+                ${crypto_incdir}/sha1.h    \
+                ${crypto_incdir}/sha256.h  \
+                ${crypto_incdir}/sshdes.h"
 
-# PROGRAMMING NOTE: the following is temporary until such time as
-# dyncrypt can be converted to an external package. The problem stems
-# from the fact that dyncrypt code lives within its own subdirectory
-# and gets built separately from Hercules itself (i.e. it has its own
-# Makefile.am), thereby causing #include "telnet.h" to fail because
-# there is no "telnet/include" directory within the 'crypto' directory.
+#------------------------------------------------------------------------------
 
-## extpkg_incdirs="-I${decnumber_incdir} \
-##                 -I${softfloat_incdir} \
-##                 -I${telnet_incdir}"
-
-extpkg_incdirs="-I${decnumber_incdir} -I../${decnumber_incdir} \
-                -I${softfloat_incdir} -I../${softfloat_incdir} \
-                -I${telnet_incdir}    -I../${telnet_incdir}"
-
-extpkg_headers="${decnumber_headers}  \
+extpkg_headers="${crypto_headers}     \
+                ${decnumber_headers}  \
                 ${softfloat_headers}  \
                 ${telnet_headers}"
 
-extpkg_libs="${decnumber_libpath}  \
+extpkg_incdirs="-I${crypto_incdir}    \
+                -I${decnumber_incdir} \
+                -I${softfloat_incdir} \
+                -I${telnet_incdir}"
+
+extpkg_libs="${crypto_libpath}     \
+             ${decnumber_libpath}  \
              ${softfloat_libpath}  \
              ${telnet_libpath}"
 
@@ -2989,7 +2994,7 @@ AC_SUBST(HQA_INC)
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile] )
+AC_OUTPUT([  Makefile  util/Makefile  html/Makefile  man/Makefile  m4/Makefile  ])
 
 ###############################################################################
 #   (end-of-file)

@@ -1,12 +1,4 @@
-/* AES.H        (c) Bernard van der Helm, 2003-2011                  */
-/*              z/Architecture crypto instructions                   */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
-
 /* $OpenBSD: rijndael.h,v 1.11 2005/05/25 05:47:53 markus Exp $ */
-/* modified for use by dyncrypt */
 
 /**
  * rijndael-alg-fst.h
@@ -62,11 +54,5 @@ int     rijndaelKeySetupEnc(unsigned int [], const unsigned char [], int);
 int     rijndaelKeySetupDec(unsigned int [], const unsigned char [], int);
 void    rijndaelEncrypt(const unsigned int [], int, const unsigned char [],
             unsigned char []);
-
-/* Additional definitions for dyncrypt */
-typedef rijndael_ctx    aes_context;
-#define aes_set_key     rijndael_set_key
-#define aes_encrypt     rijndael_encrypt
-#define aes_decrypt     rijndael_decrypt
 
 #endif /* __RIJNDAEL_H */

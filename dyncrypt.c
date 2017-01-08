@@ -28,10 +28,10 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#include "aes.h"
-#include "des.h"
+#include "rijndael.h"
 #include "sha1.h"
-#include "sha256.h"
+#include "sha2.h"
+#include "sshdes.h"
 
 /*----------------------------------------------------------------------------*/
 /* Sanity compile check                                                       */
@@ -175,6 +175,25 @@ static const int kmctr_pblens[32] =
 
 #ifndef __STATIC_FUNCTIONS__
 #define __STATIC_FUNCTIONS__
+/*----------------------------------------------------------------------------*/
+/* Fetch, store and swap functions needed by external package                 */
+/*----------------------------------------------------------------------------*/
+U32 crypto_fetch32( const void* ptr )
+{
+    return fetch_fw( ptr );
+}
+void crypto_store32( void* ptr, U32 value )
+{
+    store_fw( ptr, value );
+}
+U32 crypto_cswap32( U32 value )
+{
+    return CSWAP32( value );
+}
+U64 crypto_cswap64( U64 value )
+{
+    return CSWAP64( value );
+}
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
 /* GCM multiplication over GF(2^128)                                          */
@@ -309,7 +328,7 @@ static int get_msa(REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha1_getcv(sha1_context *ctx, BYTE icv[20])
+static void sha1_getcv(SHA1_CTX *ctx, BYTE icv[20])
 {
   int i, j;
 
@@ -325,7 +344,7 @@ static void sha1_getcv(sha1_context *ctx, BYTE icv[20])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha1_seticv(sha1_context *ctx, BYTE icv[20])
+static void sha1_seticv(SHA1_CTX *ctx, BYTE icv[20])
 {
   int i, j;
 
@@ -342,7 +361,7 @@ static void sha1_seticv(sha1_context *ctx, BYTE icv[20])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha256_getcv(sha256_context *ctx, BYTE icv[32])
+static void sha256_getcv(SHA256_CTX *ctx, BYTE icv[32])
 {
   int i, j;
 
@@ -358,7 +377,7 @@ static void sha256_getcv(sha256_context *ctx, BYTE icv[32])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha256_seticv(sha256_context *ctx, BYTE icv[32])
+static void sha256_seticv(SHA256_CTX *ctx, BYTE icv[32])
 {
   int i, j;
 
@@ -376,7 +395,7 @@ static void sha256_seticv(sha256_context *ctx, BYTE icv[32])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha512_getcv(sha512_context *ctx, BYTE icv[64])
+static void sha512_getcv(SHA512_CTX *ctx, BYTE icv[64])
 {
   int i, j;
 
@@ -396,7 +415,7 @@ static void sha512_getcv(sha512_context *ctx, BYTE icv[64])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha512_seticv(sha512_context *ctx, BYTE icv[64])
+static void sha512_seticv(SHA512_CTX *ctx, BYTE icv[64])
 {
   int i, j;
 
@@ -448,7 +467,7 @@ void shift_left(BYTE *dst, BYTE* src, int len)
 static int unwrap_aes(BYTE *key, int keylen)
 {
   BYTE buf[16];
-  aes_context context;
+  rijndael_ctx context;
   BYTE cv[16];
   int i;
 
@@ -460,21 +479,21 @@ static int unwrap_aes(BYTE *key, int keylen)
     release_rwlock(&sysblk.wklock);
     return(1);
   }
-  aes_set_key(&context, sysblk.wkaes_reg, 256);
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
   release_rwlock(&sysblk.wklock);
   switch(keylen)
   {
     case 16:
     {
-      aes_decrypt(&context, key, key);
+      rijndael_decrypt(&context, key, key);
       break;
     }
     case 24:
     {
-      aes_decrypt(&context, &key[8], buf);
+      rijndael_decrypt(&context, &key[8], buf);
       memcpy(&key[8], &buf[8], 8);
       memcpy(cv, key, 8);
-      aes_decrypt(&context, key, key);
+      rijndael_decrypt(&context, key, key);
       for(i = 0; i < 8; i++)
         key[i + 16] = buf[i] ^ cv[i];
       break;
@@ -482,14 +501,116 @@ static int unwrap_aes(BYTE *key, int keylen)
     case 32:
     {
       memcpy(cv, key, 16);
-      aes_decrypt(&context, key, key);
-      aes_decrypt(&context, &key[16], &key[16]);
+      rijndael_decrypt(&context, key, key);
+      rijndael_decrypt(&context, &key[16], &key[16]);
       for(i = 0; i < 16; i++)
         key[i + 16] ^= cv[i];
       break;
     }
   }
   return(0);
+}
+
+/*----------------------------------------------------------------------------*/
+/* Internal DES helper functions                                              */
+/*----------------------------------------------------------------------------*/
+typedef BYTE CHAR8[8];
+
+typedef struct {
+    DESContext sched[1];
+} des_context;
+
+typedef struct {
+    DESContext sched[3];
+} des3_context;
+
+void des_set_key(des_context *ctx, CHAR8 key)
+{
+    DESContext *sched = ctx->sched;
+    word32 kL, kR;
+    kL = fetch_fw(key);
+    kR = fetch_fw(key+4);
+    des_key_setup(kL, kR, &sched[0]);
+}
+
+void des_encrypt(des_context *ctx, CHAR8 input, CHAR8 output)
+{
+    DESContext *sched = ctx->sched;
+    word32 out[2], xL, xR;
+    xL = fetch_fw(input);
+    xR = fetch_fw(input+4);
+    des_encipher(out, xL, xR, sched);
+    store_fw(output, out[0]);
+    store_fw(output+4, out[1]);
+}
+
+void des_decrypt(des_context *ctx, CHAR8 input, CHAR8 output)
+{
+    DESContext *sched = ctx->sched;
+    word32 out[2], xL, xR;
+    xL = fetch_fw(input);
+    xR = fetch_fw(input+4);
+    des_decipher(out, xL, xR, sched);
+    store_fw(output, out[0]);
+    store_fw(output+4, out[1]);
+}
+
+void des3_set_2keys(des3_context *ctx, CHAR8 k1, CHAR8 k2)
+{
+    DESContext *sched = ctx->sched;
+    word32 kL, kR;
+    kL = fetch_fw(k1);
+    kR = fetch_fw(k1+4);
+    des_key_setup(kL, kR, &sched[0]);
+    des_key_setup(kL, kR, &sched[2]);
+    kL = fetch_fw(k2);
+    kR = fetch_fw(k2+4);
+    des_key_setup(kL, kR, &sched[1]);
+}
+
+void des3_set_3keys(des3_context *ctx, CHAR8 k1, CHAR8 k2, CHAR8 k3)
+{
+    DESContext *sched = ctx->sched;
+    word32 kL, kR;
+    kL = fetch_fw(k1);
+    kR = fetch_fw(k1+4);
+    des_key_setup(kL, kR, &sched[0]);
+    kL = fetch_fw(k2);
+    kR = fetch_fw(k2+4);
+    des_key_setup(kL, kR, &sched[1]);
+    kL = fetch_fw(k3);
+    kR = fetch_fw(k3+4);
+    des_key_setup(kL, kR, &sched[2]);
+}
+
+void des3_encrypt(des3_context *ctx, CHAR8 input, CHAR8 output)
+{
+    DESContext *sched = ctx->sched;
+    word32 out[2], xL, xR;
+    xL = fetch_fw(input);
+    xR = fetch_fw(input+4);
+    des_encipher(out, xL, xR, sched);
+    xL = out[0]; xR = out[1];
+    des_decipher(out, xL, xR, sched+1);
+    xL = out[0]; xR = out[1];
+    des_encipher(out, xL, xR, sched+2);
+    store_fw(output, out[0]);
+    store_fw(output+4, out[1]);
+}
+
+void des3_decrypt(des3_context *ctx, CHAR8 input, CHAR8 output)
+{
+    DESContext *sched = ctx->sched;
+    word32 out[2], xL, xR;
+    xL = fetch_fw(input);
+    xR = fetch_fw(input+4);
+    des_decipher(out, xL, xR, sched+2);
+    xL = out[0]; xR = out[1];
+    des_encipher(out, xL, xR, sched+1);
+    xL = out[0]; xR = out[1];
+    des_decipher(out, xL, xR, sched);
+    store_fw(output, out[0]);
+    store_fw(output+4, out[1]);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -537,39 +658,39 @@ static int unwrap_dea(BYTE *key, int keylen)
 static void wrap_aes(BYTE *key, int keylen)
 {
   BYTE buf[16];
-  aes_context context;
+  rijndael_ctx context;
   BYTE cv[16];
   int i;
 
   obtain_rdlock(&sysblk.wklock);
   memcpy(&key[keylen], sysblk.wkvpaes_reg, 32);
-  aes_set_key(&context, sysblk.wkaes_reg, 256);
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
   release_rwlock(&sysblk.wklock);
   switch(keylen)
   {
     case 16:
     {
-      aes_encrypt(&context, key, key);
+      rijndael_encrypt(&context, key, key);
       break;
     }
     case 24:
     {
-      aes_encrypt(&context, key, cv);
+      rijndael_encrypt(&context, key, cv);
       memcpy(buf, &key[16], 8);
       zeromem(&buf[8], 8);
       for(i = 0; i < 16; i++)
         buf[i] ^= cv[i];
-      aes_encrypt(&context, buf, buf);
+      rijndael_encrypt(&context, buf, buf);
       memcpy(key, cv, 8);
       memcpy(&key[8], buf, 16);
       break;
     }
     case 32:
     {
-      aes_encrypt(&context, key, key);
+      rijndael_encrypt(&context, key, key);
       for(i = 0; i < 16; i++)
         key[i + 16] ^= key[i];
-      aes_encrypt(&context, &key[16], &key[16]);
+      rijndael_encrypt(&context, &key[16], &key[16]);
       break;
     }
   }
@@ -906,26 +1027,18 @@ static BYTE exp_table[128][16] =
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/
-/* Needed functions from sha1.c and sha256.c.                                 */
-/* We do our own counting and padding, we only need the hashing.              */
-/*----------------------------------------------------------------------------*/
-void sha1_process(sha1_context *ctx, BYTE data[64]);
-void sha256_process(sha256_context *ctx, BYTE data[64]);
-void sha512_process(sha512_context *ctx, BYTE data[128]);
-
-/*----------------------------------------------------------------------------*/
 /* Compute intermediate message digest (KIMD) FC 1-3                          */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 {
-  sha1_context sha1_ctx;
+  SHA1_CTX sha1_ctx;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-  sha256_context sha256_ctx;
+  SHA256_CTX sha256_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  sha512_context sha512_ctx;
+  SHA512_CTX sha512_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
   int crypted;
@@ -1036,7 +1149,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
     {
       case 1: /* sha-1 */
       {
-        sha1_process(&sha1_ctx, message_block);
+        SHA1Transform(sha1_ctx.state, message_block);
         sha1_getcv(&sha1_ctx, parameter_block);
         break;
       }
@@ -1044,7 +1157,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
-        sha256_process(&sha256_ctx, message_block);
+        SHA256_Transform(&sha256_ctx, message_block);
         sha256_getcv(&sha256_ctx, parameter_block);
         break;
       }
@@ -1053,7 +1166,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
       case 3: /* sha-512 */
       {
-        sha512_process(&sha512_ctx, message_block);
+        SHA512_Transform(&sha512_ctx, message_block);
         sha512_getcv(&sha512_ctx, parameter_block);
         break;
       }
@@ -1182,14 +1295,14 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 {
-  sha1_context sha1_ctx;
+  SHA1_CTX sha1_ctx;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-  sha256_context sha256_ctx;
+  SHA256_CTX sha256_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  sha512_context sha512_ctx;
+  SHA512_CTX sha512_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
   int fc;
@@ -1316,14 +1429,14 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
     {
       case 1: /* sha-1 */
       {
-        sha1_process(&sha1_ctx, message_block);
+        SHA1Transform(sha1_ctx.state, message_block);
         break;
       }
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
-        sha256_process(&sha256_ctx, message_block);
+        SHA256_Transform(&sha256_ctx, message_block);
         break;
       }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1331,7 +1444,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
       case 3: /* sha-512 */
       {
-        sha512_process(&sha512_ctx, message_block);
+        SHA512_Transform(&sha512_ctx, message_block);
         break;
       }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
@@ -1355,7 +1468,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   {
     case 1: /* sha-1 */
     {
-      sha1_process(&sha1_ctx, message_block);
+      SHA1Transform(sha1_ctx.state, message_block);
       sha1_getcv(&sha1_ctx, parameter_block);
       break;
     }
@@ -1363,7 +1476,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      sha256_process(&sha256_ctx, message_block);
+      SHA256_Transform(&sha256_ctx, message_block);
       sha256_getcv(&sha256_ctx, parameter_block);
       break;
     }
@@ -1372,7 +1485,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
     case 3: /* sha-512 */
     {
-      sha512_process(&sha512_ctx, message_block);
+      SHA512_Transform(&sha512_ctx, message_block);
       sha512_getcv(&sha512_ctx, parameter_block);
       break;
     }
@@ -1575,7 +1688,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int keylen;
   BYTE message_block[16];
@@ -1629,7 +1742,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
   /* Set the cryptographic keys */
-  aes_set_key(&context, parameter_block, keylen * 8);
+  rijndael_set_key(&context, parameter_block, keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
@@ -1645,9 +1758,9 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 
     /* Do the job */
     if(modifier_bit)
-      aes_decrypt(&context, message_block, message_block);
+      rijndael_decrypt(&context, message_block, message_block);
     else
-      aes_encrypt(&context, message_block, message_block);
+      rijndael_encrypt(&context, message_block, message_block);
 
     /* Store the output */
     ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs) & ADDRESS_MAXWRAP(regs), r1, regs);
@@ -1687,7 +1800,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int i;
   int keylen;
@@ -1746,7 +1859,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Set the cryptographic keys */
-  aes_set_key(&context, parameter_block, keylen * 8);
+  rijndael_set_key(&context, parameter_block, keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
@@ -1764,9 +1877,9 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
     for(i = 0; i < 16; i++)
       message_block[i] ^= parameter_block[parameter_blocklen - 16 + i];
     if(modifier_bit)
-      aes_decrypt(&context, message_block, message_block);
+      rijndael_decrypt(&context, message_block, message_block);
     else
-      aes_encrypt(&context, message_block, message_block);
+      rijndael_encrypt(&context, message_block, message_block);
     for(i = 0; i < 16; i++)
       message_block[i] ^= parameter_block[parameter_blocklen - 16 + i];
 
@@ -1987,7 +2100,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int i;
   int keylen;
@@ -2044,7 +2157,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], keylen * 8);
+  rijndael_set_key(&context, &parameter_block[16], keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
@@ -2061,7 +2174,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
       message_block[i] ^= parameter_block[i];
 
     /* Calculate the output chaining value */
-    aes_encrypt(&context, message_block, parameter_block);
+    rijndael_encrypt(&context, message_block, parameter_block);
 
     /* Store the output chaining value */
     ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -2333,7 +2446,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int i;
   int keylen;
@@ -2393,7 +2506,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], keylen * 8);
+  rijndael_set_key(&context, &parameter_block[16], keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
@@ -2413,7 +2526,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
 
       /* Save, decrypt and XOR */
       memcpy(ocv, message_block, 16);
-      aes_decrypt(&context, message_block, message_block);
+      rijndael_decrypt(&context, message_block, message_block);
       for(i = 0; i < 16; i++)
         message_block[i] ^= parameter_block[i];
     }
@@ -2422,7 +2535,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
       /* XOR, encrypt and save */
       for(i = 0; i < 16; i++)
         message_block[i] ^= parameter_block[i];
-      aes_encrypt(&context, message_block, message_block);
+      rijndael_encrypt(&context, message_block, message_block);
       memcpy(ocv, message_block, 16);
     }
 
@@ -2782,7 +2895,7 @@ static void ARCH_DEP(kmctr_dea)(int r1, int r2, int r3, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   BYTE countervalue_block[16];
   int crypted;
   int i;
@@ -2838,7 +2951,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, parameter_block, keylen * 8);
+  rijndael_set_key(&context, parameter_block, keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
@@ -2857,7 +2970,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
 
     /* Do the job */
     /* Encrypt and XOR */
-    aes_encrypt(&context, countervalue_block, countervalue_block);
+    rijndael_encrypt(&context, countervalue_block, countervalue_block);
     for(i = 0; i < 16; i++)
       countervalue_block[i] ^= message_block[i];
 
@@ -3100,7 +3213,7 @@ static void ARCH_DEP(kmf_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int i;
   int keylen;
@@ -3162,14 +3275,14 @@ static void ARCH_DEP(kmf_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], keylen * 8);
+  rijndael_set_key(&context, &parameter_block[16], keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   modifier_bit = GR0_m(regs);
   r1_is_not_r2 = r1 != r2;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += lcfb)
   {
-    aes_encrypt(&context, parameter_block, output_block);
+    rijndael_encrypt(&context, parameter_block, output_block);
     ARCH_DEP(vfetchc)(message_block, lcfb - 1, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMF_DEBUG
@@ -3415,7 +3528,7 @@ static void ARCH_DEP(kmo_dea)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int crypted;
   int i;
   int keylen;
@@ -3471,13 +3584,13 @@ static void ARCH_DEP(kmo_aes)(int r1, int r2, REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[16], keylen * 8);
+  rijndael_set_key(&context, &parameter_block[16], keylen * 8);
 
   /* Try to process the CPU-determined amount of data */
   r1_is_not_r2 = r1 != r2;
   for(crypted = 0; crypted < PROCESS_MAX; crypted += 16)
   {
-    aes_encrypt(&context, parameter_block, parameter_block);
+    rijndael_encrypt(&context, parameter_block, parameter_block);
     ARCH_DEP(vfetchc)(message_block, 15, GR_A(r2, regs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #ifdef OPTION_KMO_DEBUG
@@ -3743,7 +3856,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 {
-  aes_context context;
+  rijndael_ctx context;
   int i;
   BYTE k[16];
   int keylen;
@@ -3794,7 +3907,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   }
 
   /* Set the cryptographic key */
-  aes_set_key(&context, &parameter_block[40], keylen * 8);
+  rijndael_set_key(&context, &parameter_block[40], keylen * 8);
 
   /* Check validity ML value */
   if(parameter_block[0] > 128)
@@ -3821,7 +3934,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 
   /* Calculate subkeys */
   zeromem(k, 16);
-  aes_encrypt(&context, k, k);
+  rijndael_encrypt(&context, k, k);
 
   /* Calculate subkeys Kx and Ky */
   if(!(k[0] & 0x80))
@@ -3854,7 +3967,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
     parameter_block[i + 8] ^= k[i];
     parameter_block[i + 8] ^= parameter_block[i + 24];
   }
-  aes_encrypt(&context, &parameter_block[8], &parameter_block[8]);
+  rijndael_encrypt(&context, &parameter_block[8], &parameter_block[8]);
 
 #ifdef OPTION_PCC_DEBUG
   LOGBYTE("cmac  :", &parameter_block[8], 16);
@@ -3873,7 +3986,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
 static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
 {
   BYTE *bsn;
-  aes_context context;
+  rijndael_ctx context;
   BYTE *ibi;
   int keylen;
   BYTE mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
@@ -3930,8 +4043,8 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   }
 
   /* Encrypt tweak */
-  aes_set_key(&context, parameter_block, keylen * 8);
-  aes_encrypt(&context, tweak, tweak);
+  rijndael_set_key(&context, parameter_block, keylen * 8);
+  rijndael_encrypt(&context, tweak, tweak);
 
   /* Check block sequential number (j) == 0 */
   if(!memcmp(bsn, zero, 16))

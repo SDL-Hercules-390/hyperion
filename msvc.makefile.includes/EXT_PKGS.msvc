@@ -23,6 +23,9 @@ arch_suffix = 32d
 !ENDIF
 !ENDIF
 
+#----------------------------------------------------------------------
+#                     extpkg: External Packages
+#----------------------------------------------------------------------
 
 #--------------
 #  decNumber
@@ -67,3 +70,18 @@ telnet_libpath  =  $(telnet_libdir)\$(telnet_libname).lib
 
 LIBS    =  $(LIBS)        "$(telnet_libpath)"
 cflags  =  $(cflags)  /I  "$(telnet_incdir)"
+
+
+#--------------
+#  crypto
+#--------------
+
+crypto_pkgname  =  crypto
+crypto_pkgdir   =  $(crypto_pkgname)
+crypto_libname  =  $(crypto_pkgname)$(arch_suffix)
+crypto_incdir   =  $(crypto_pkgdir)\include
+crypto_libdir   =  $(crypto_pkgdir)\lib
+crypto_libpath  =  $(crypto_libdir)\$(crypto_libname).lib
+
+LIBS    =  $(LIBS)        "$(crypto_libpath)"
+cflags  =  $(cflags)  /I  "$(crypto_incdir)"

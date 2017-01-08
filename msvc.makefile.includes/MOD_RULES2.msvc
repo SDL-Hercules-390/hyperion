@@ -134,14 +134,12 @@ $(X)s37x.dll:     $(O)s37xmod.obj \
 # ---------------------------------------------------------------------
 # Additional loadable modules
 
-!IFNDEF NOCRYPTO
 crypto: $(X)dyncrypt.dll
 
-$(X)dyncrypt.dll: $(dyncrypt_OBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+$(X)dyncrypt.dll: $(O)dyncrypt.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
-
-!ENDIF
 
 # ---------------------------------------------------------------------
 # Main product executables
