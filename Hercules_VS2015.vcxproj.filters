@@ -20,15 +20,6 @@
     <Filter Include="Source Files\Hercules">
       <UniqueIdentifier>{c020b304-3066-488c-aea1-9f30223c312a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Hercules\crypto">
-      <UniqueIdentifier>{4653e16b-d033-47f4-b003-b9fbb97274ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\crypto\include">
-      <UniqueIdentifier>{b5b5a601-14fd-4393-8599-bf81ca3e50cc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\crypto\lib">
-      <UniqueIdentifier>{07be66ad-c4b3-4579-914d-d5f2695ed7c9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Hercules\Devices">
       <UniqueIdentifier>{5b6be5ce-c818-43d9-a3bd-39b41776792e}</UniqueIdentifier>
     </Filter>
@@ -88,36 +79,6 @@
     </Filter>
     <Filter Include="Source Files\Hercules\Emulation\Header Files">
       <UniqueIdentifier>{ab161548-c943-44f0-8d63-aba7f82ec735}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber">
-      <UniqueIdentifier>{0d3e0ef3-cda1-4750-ade8-298488709fa1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber\include">
-      <UniqueIdentifier>{71207f0b-bcaa-45ed-8f25-a19e44617899}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\decNumber\lib">
-      <UniqueIdentifier>{ae985d69-6d37-4f13-8e97-3eede9beb92e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\telnet">
-      <UniqueIdentifier>{AA385C27-3D78-451f-BA4F-0CB6253CBFCC}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\telnet\include">
-      <UniqueIdentifier>{8997E620-7FB4-473f-B680-86BA1781AB20}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\telnet\lib">
-      <UniqueIdentifier>{7E51CA54-4311-406d-9C9D-ED79986330BB}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\SoftFloat">
-      <UniqueIdentifier>{ae8c97c2-b99e-4278-8133-84ce76e383bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\SoftFloat\include">
-      <UniqueIdentifier>{5f24ada2-815a-48ed-8e4f-4b3d32516b62}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\SoftFloat\lib">
-      <UniqueIdentifier>{082567a4-eda5-4b90-b8fe-c933fdf8c036}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Hercules\SoftFloat\doc">
-      <UniqueIdentifier>{30692132-b2a1-4703-8b95-c538fa9065d2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{e43a3a50-9486-4c11-87cf-f6deefff2a82}</UniqueIdentifier>
@@ -216,6 +177,48 @@
     </Filter>
     <Filter Include="Other Files\scripts">
       <UniqueIdentifier>{30b441cd-d7f4-4ae7-95f1-24489de483b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs">
+      <UniqueIdentifier>{a493de40-1aef-4d34-8bec-2205bf525e6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\crypto">
+      <UniqueIdentifier>{4653e16b-d033-47f4-b003-b9fbb97274ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\crypto\include">
+      <UniqueIdentifier>{b5b5a601-14fd-4393-8599-bf81ca3e50cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\crypto\lib">
+      <UniqueIdentifier>{07be66ad-c4b3-4579-914d-d5f2695ed7c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\decNumber">
+      <UniqueIdentifier>{0d3e0ef3-cda1-4750-ade8-298488709fa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\decNumber\include">
+      <UniqueIdentifier>{71207f0b-bcaa-45ed-8f25-a19e44617899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\decNumber\lib">
+      <UniqueIdentifier>{ae985d69-6d37-4f13-8e97-3eede9beb92e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\SoftFloat">
+      <UniqueIdentifier>{ae8c97c2-b99e-4278-8133-84ce76e383bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\SoftFloat\include">
+      <UniqueIdentifier>{5f24ada2-815a-48ed-8e4f-4b3d32516b62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\SoftFloat\lib">
+      <UniqueIdentifier>{082567a4-eda5-4b90-b8fe-c933fdf8c036}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\SoftFloat\doc">
+      <UniqueIdentifier>{30692132-b2a1-4703-8b95-c538fa9065d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\telnet">
+      <UniqueIdentifier>{AA385C27-3D78-451f-BA4F-0CB6253CBFCC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\telnet\include">
+      <UniqueIdentifier>{8997E620-7FB4-473f-B680-86BA1781AB20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Hercules\ExtPkgs\telnet\lib">
+      <UniqueIdentifier>{7E51CA54-4311-406d-9C9D-ED79986330BB}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -723,85 +726,85 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </None>
     <None Include="crypto\lib\crypto64.pdb">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </None>
     <None Include="crypto\lib\libcrypto32.a">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </None>
     <None Include="crypto\lib\libcrypto64.a">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </None>
     <None Include="decNumber\lib\decNumber32.pdb">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </None>
     <None Include="decNumber\lib\decNumber64.pdb">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </None>
     <None Include="decNumber\lib\libdecNumber32.a">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </None>
     <None Include="decNumber\lib\libdecNumber64.a">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </None>
     <None Include="SoftFloat\lib\SoftFloat32.pdb">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </None>
     <None Include="SoftFloat\lib\SoftFloat64.pdb">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </None>
     <None Include="SoftFloat\lib\libSoftFloat32.a">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </None>
     <None Include="SoftFloat\lib\libSoftFloat64.a">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </None>
     <None Include="telnet\lib\telnet32.pdb">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </None>
     <None Include="telnet\lib\telnet64.pdb">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </None>
     <None Include="telnet\lib\libtelnet32.a">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </None>
     <None Include="telnet\lib\libtelnet64.a">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </None>
     <None Include="crypto\LICENSE.txt">
-      <Filter>Source Files\Hercules\crypto</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto</Filter>
     </None>
     <None Include="crypto\README.txt">
-      <Filter>Source Files\Hercules\crypto</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto</Filter>
     </None>
     <None Include="decNumber\decnumber.pdf">
-      <Filter>Source Files\Hercules\decNumber</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
     <None Include="decNumber\ERRATA">
-      <Filter>Source Files\Hercules\decNumber</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
     <None Include="decNumber\ICU-license.html">
-      <Filter>Source Files\Hercules\decNumber</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
     <None Include="telnet\README.txt">
-      <Filter>Source Files\Hercules\telnet</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet</Filter>
     </None>
     <None Include="telnet\LICENSE.txt">
-      <Filter>Source Files\Hercules\telnet</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet</Filter>
     </None>
     <None Include="SoftFloat\README.html">
-      <Filter>Source Files\Hercules\SoftFloat</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </None>
     <None Include="SoftFloat\doc\SoftFloat-history.html">
-      <Filter>Source Files\Hercules\SoftFloat\doc</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\doc</Filter>
     </None>
     <None Include="SoftFloat\doc\SoftFloat-source.html">
-      <Filter>Source Files\Hercules\SoftFloat\doc</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\doc</Filter>
     </None>
     <None Include="SoftFloat\doc\SoftFloat.html">
-      <Filter>Source Files\Hercules\SoftFloat\doc</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\doc</Filter>
     </None>
     <None Include=".gitattributes">
       <Filter>Resource Files</Filter>
@@ -2054,19 +2057,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto\include\crypto.h">
-      <Filter>Source Files\Hercules\crypto\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="crypto\include\rijndael.h">
-      <Filter>Source Files\Hercules\crypto\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="crypto\include\sha1.h">
-      <Filter>Source Files\Hercules\crypto\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="crypto\include\sha2.h">
-      <Filter>Source Files\Hercules\crypto\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="crypto\include\sshdes.h">
-      <Filter>Source Files\Hercules\crypto\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
     <ClInclude Include="cnsllogo.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
@@ -2399,45 +2402,45 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decContext.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decimal128.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decimal32.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decimal64.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decNumber.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decPacked.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decQuad.h">
-      <Filter>Source Files\Hercules\decNumber\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
     <ClInclude Include="telnet\include\telnet.h">
-      <Filter>Source Files\Hercules\telnet\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\include</Filter>
     </ClInclude>
     <ClInclude Include="SoftFloat\include\softfloat.h">
-      <Filter>Source Files\Hercules\SoftFloat\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
     </ClInclude>
     <ClInclude Include="SoftFloat\include\softfloat_types.h">
-      <Filter>Source Files\Hercules\SoftFloat\include</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="decNumber\readme.txt">
-      <Filter>Source Files\Hercules\decNumber</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </Text>
     <Text Include="SoftFloat\LICENSE.txt">
-      <Filter>Source Files\Hercules\SoftFloat</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </Text>
     <Text Include="SoftFloat\README.txt">
-      <Filter>Source Files\Hercules\SoftFloat</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </Text>
     <Text Include="_TODO.txt">
       <Filter>Other Files\DOC</Filter>
@@ -2922,28 +2925,28 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="crypto\lib\crypto32.lib">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </Library>
     <Library Include="crypto\lib\crypto64.lib">
-      <Filter>Source Files\Hercules\crypto\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
     </Library>
     <Library Include="decNumber\lib\decNumber32.lib">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </Library>
     <Library Include="decNumber\lib\decNumber64.lib">
-      <Filter>Source Files\Hercules\decNumber\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
     </Library>
     <Library Include="SoftFloat\lib\SoftFloat32.lib">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </Library>
     <Library Include="SoftFloat\lib\SoftFloat64.lib">
-      <Filter>Source Files\Hercules\SoftFloat\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
     </Library>
     <Library Include="telnet\lib\telnet32.lib">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </Library>
     <Library Include="telnet\lib\telnet64.lib">
-      <Filter>Source Files\Hercules\telnet\lib</Filter>
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>

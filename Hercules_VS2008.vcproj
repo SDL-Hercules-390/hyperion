@@ -354,70 +354,6 @@
 				Name="Hercules"
 				>
 				<Filter
-					Name="crypto"
-					>
-					<File
-						RelativePath=".\crypto\LICENSE.txt"
-						>
-					</File>
-					<File
-						RelativePath=".\crypto\README.txt"
-						>
-					</File>
-					<Filter
-						Name="include"
-						>
-						<File
-							RelativePath=".\crypto\include\crypto.h"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\include\rijndael.h"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\include\sha1.h"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\include\sha2.h"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\include\sshdes.h"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="lib"
-						>
-						<File
-							RelativePath=".\crypto\lib\crypto32.lib"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\lib\crypto32.pdb"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\lib\crypto64.lib"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\lib\crypto64.pdb"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\lib\libcrypto32.a"
-							>
-						</File>
-						<File
-							RelativePath=".\crypto\lib\libcrypto64.a"
-							>
-						</File>
-					</Filter>
-				</Filter>
-				<Filter
 					Name="Devices"
 					>
 					<Filter
@@ -1510,203 +1446,271 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="decNumber"
+					Name="ExtPkgs"
 					>
-					<File
-						RelativePath=".\decNumber\decnumber.pdf"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\ERRATA"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\ICU-license.html"
-						>
-					</File>
-					<File
-						RelativePath=".\decNumber\readme.txt"
-						>
-					</File>
 					<Filter
-						Name="include"
+						Name="crypto"
 						>
 						<File
-							RelativePath=".\decNumber\include\decContext.h"
+							RelativePath=".\crypto\LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\include\decimal128.h"
+							RelativePath=".\crypto\README.txt"
 							>
 						</File>
-						<File
-							RelativePath=".\decNumber\include\decimal32.h"
+						<Filter
+							Name="include"
 							>
-						</File>
-						<File
-							RelativePath=".\decNumber\include\decimal64.h"
+							<File
+								RelativePath=".\crypto\include\crypto.h"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\include\rijndael.h"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\include\sha1.h"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\include\sha2.h"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\include\sshdes.h"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="lib"
 							>
-						</File>
-						<File
-							RelativePath=".\decNumber\include\decNumber.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\include\decPacked.h"
-							>
-						</File>
-						<File
-							RelativePath=".\decNumber\include\decQuad.h"
-							>
-						</File>
+							<File
+								RelativePath=".\crypto\lib\crypto32.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\crypto32.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\crypto64.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\crypto64.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\libcrypto32.a"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\libcrypto64.a"
+								>
+							</File>
+						</Filter>
 					</Filter>
 					<Filter
-						Name="lib"
+						Name="decNumber"
 						>
 						<File
-							RelativePath=".\decNumber\lib\decNumber32.lib"
+							RelativePath=".\decNumber\decnumber.pdf"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\lib\decNumber32.pdb"
+							RelativePath=".\decNumber\ERRATA"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\lib\decNumber64.lib"
+							RelativePath=".\decNumber\ICU-license.html"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\lib\decNumber64.pdb"
+							RelativePath=".\decNumber\readme.txt"
 							>
 						</File>
-						<File
-							RelativePath=".\decNumber\lib\libdecNumber32.a"
+						<Filter
+							Name="include"
 							>
-						</File>
-						<File
-							RelativePath=".\decNumber\lib\libdecNumber64.a"
+							<File
+								RelativePath=".\decNumber\include\decContext.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decimal128.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decimal32.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decimal64.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decNumber.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decPacked.h"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\include\decQuad.h"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="lib"
 							>
-						</File>
-					</Filter>
-				</Filter>
-				<Filter
-					Name="SoftFloat"
-					>
-					<File
-						RelativePath=".\SoftFloat\LICENSE.txt"
-						>
-					</File>
-					<File
-						RelativePath=".\SoftFloat\README.html"
-						>
-					</File>
-					<File
-						RelativePath=".\SoftFloat\README.txt"
-						>
-					</File>
-					<Filter
-						Name="include"
-						>
-						<File
-							RelativePath=".\SoftFloat\include\softfloat.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\include\softfloat_types.h"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="lib"
-						>
-						<File
-							RelativePath=".\SoftFloat\lib\libSoftFloat32.a"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\lib\libSoftFloat64.a"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\lib\SoftFloat32.lib"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\lib\SoftFloat32.pdb"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\lib\SoftFloat64.lib"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat\lib\SoftFloat64.pdb"
-							>
-						</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber32.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber32.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber64.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber64.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\libdecNumber32.a"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\libdecNumber64.a"
+								>
+							</File>
+						</Filter>
 					</Filter>
 					<Filter
-						Name="doc"
+						Name="SoftFloat"
 						>
 						<File
-							RelativePath=".\SoftFloat\doc\SoftFloat-history.html"
+							RelativePath=".\SoftFloat\LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\doc\SoftFloat-source.html"
+							RelativePath=".\SoftFloat\README.html"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\doc\SoftFloat.html"
+							RelativePath=".\SoftFloat\README.txt"
 							>
 						</File>
+						<Filter
+							Name="include"
+							>
+							<File
+								RelativePath=".\SoftFloat\include\softfloat.h"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\include\softfloat_types.h"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="lib"
+							>
+							<File
+								RelativePath=".\SoftFloat\lib\libSoftFloat32.a"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\libSoftFloat64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat32.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat32.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat64.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat64.pdb"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="doc"
+							>
+							<File
+								RelativePath=".\SoftFloat\doc\SoftFloat-history.html"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\doc\SoftFloat-source.html"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\doc\SoftFloat.html"
+								>
+							</File>
+						</Filter>
 					</Filter>
-				</Filter>
-				<Filter
-					Name="telnet"
-					>
-					<File
-						RelativePath=".\telnet\LICENSE.txt"
-						>
-					</File>
-					<File
-						RelativePath=".\telnet\README.txt"
-						>
-					</File>
 					<Filter
-						Name="include"
+						Name="telnet"
 						>
 						<File
-							RelativePath=".\telnet\include\telnet.h"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="lib"
-						>
-						<File
-							RelativePath=".\telnet\lib\libtelnet32.a"
+							RelativePath=".\telnet\LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\telnet\lib\libtelnet64.a"
+							RelativePath=".\telnet\README.txt"
 							>
 						</File>
-						<File
-							RelativePath=".\telnet\lib\telnet32.lib"
+						<Filter
+							Name="include"
 							>
-						</File>
-						<File
-							RelativePath=".\telnet\lib\telnet32.pdb"
+							<File
+								RelativePath=".\telnet\include\telnet.h"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="lib"
 							>
-						</File>
-						<File
-							RelativePath=".\telnet\lib\telnet64.lib"
-							>
-						</File>
-						<File
-							RelativePath=".\telnet\lib\telnet64.pdb"
-							>
-						</File>
+							<File
+								RelativePath=".\telnet\lib\libtelnet32.a"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\libtelnet64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet32.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet32.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet64.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet64.pdb"
+								>
+							</File>
+						</Filter>
 					</Filter>
 				</Filter>
 			</Filter>
