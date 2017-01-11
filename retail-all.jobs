@@ -1,5 +1,5 @@
 
 * Parallel-build all "Release" Configurations for all Platforms...
 
-VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Release|Win32"     /time  /nologo
-VCBUILD   %VCBUILDOPT%   "Hercules.vcproj"   "Release|x64"       /time  /nologo
+VCBUILD   %VCBUILDOPT%   "Hercules_VS2008.vcproj"   "Release|Win32"     /time  /nologo
+VCBUILD   %VCBUILDOPT%   "Hercules_VS2008.vcproj"   "Release|x64"       /time  /nologo
