@@ -1,9 +1,9 @@
-/* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
+/*	$OpenBSD: sha2.h,v 1.5 2014/11/16 17:39:09 tedu Exp $	*/
 
 /*
- * FILE:        sha2.h
- * AUTHOR:      Aaron D. Gifford <me@aarongifford.com>
- *
+ * FILE:	sha2.h
+ * AUTHOR:	Aaron D. Gifford <me@aarongifford.com>
+ * 
  * Copyright (c) 2000-2001, Aaron D. Gifford
  * All rights reserved.
  *
@@ -18,7 +18,7 @@
  * 3. Neither the name of the copyright holder nor the names of contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTOR(S) ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -34,63 +34,90 @@
  * $From: sha2.h,v 1.1 2001/11/08 00:02:01 adg Exp adg $
  */
 
-
 #ifndef _SHA2_H
 #define _SHA2_H
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
-#define SHA256_BLOCK_LENGTH             64
-#define SHA256_DIGEST_LENGTH            32
-#define SHA256_DIGEST_STRING_LENGTH     (SHA256_DIGEST_LENGTH * 2 + 1)
-#define SHA384_BLOCK_LENGTH             128
-#define SHA384_DIGEST_LENGTH            48
-#define SHA384_DIGEST_STRING_LENGTH     (SHA384_DIGEST_LENGTH * 2 + 1)
-#define SHA512_BLOCK_LENGTH             128
-#define SHA512_DIGEST_LENGTH            64
-#define SHA512_DIGEST_STRING_LENGTH     (SHA512_DIGEST_LENGTH * 2 + 1)
+#define SHA256_BLOCK_LENGTH		64
+#define SHA256_DIGEST_LENGTH		32
+#define SHA256_DIGEST_STRING_LENGTH	(SHA256_DIGEST_LENGTH * 2 + 1)
+#define SHA384_BLOCK_LENGTH		128
+#define SHA384_DIGEST_LENGTH		48
+#define SHA384_DIGEST_STRING_LENGTH	(SHA384_DIGEST_LENGTH * 2 + 1)
+#define SHA512_BLOCK_LENGTH		128
+#define SHA512_DIGEST_LENGTH		64
+#define SHA512_DIGEST_STRING_LENGTH	(SHA512_DIGEST_LENGTH * 2 + 1)
 
 
-/*** SHA-256/384/512 Context Structures *******************************/
-typedef struct _SHA256_CTX {
-        u_int32_t       state[8];
-        u_int64_t       bitcount;
-        u_int8_t        buffer[SHA256_BLOCK_LENGTH];
-} SHA256_CTX;
-typedef struct _SHA512_CTX {
-        u_int64_t       state[8];
-        u_int64_t       bitcount[2];
-        u_int8_t        buffer[SHA512_BLOCK_LENGTH];
-} SHA512_CTX;
+/*** SHA-256/384/512 Context Structure *******************************/
+typedef struct _SHA2_CTX {
+	union {
+		u_int32_t	st32[8];
+		u_int64_t	st64[8];
+	} state;
+	u_int64_t	bitcount[2];
+	u_int8_t	buffer[SHA512_BLOCK_LENGTH];
+} SHA2_CTX;
 
-typedef SHA512_CTX SHA384_CTX;
+#if defined( CRYPTO_EXTPKG_MOD )
 
-void SHA256_Init(SHA256_CTX *);
-void SHA256_Update(SHA256_CTX *, const u_int8_t *, size_t)
-     /* __attribute__((__bounded__(__string__,2,3))) */;
-void SHA256_Final(u_int8_t[SHA256_DIGEST_LENGTH], SHA256_CTX *)
-     /* __attribute__((__bounded__(__minbytes__,1,SHA256_DIGEST_LENGTH))) */;
+#ifndef __BEGIN_DECLS
+  #ifdef  __cplusplus
+    #define __BEGIN_DECLS           extern "C" {
+    #define __END_DECLS             }
+  #else
+    #define __BEGIN_DECLS
+    #define __END_DECLS
+  #endif
+#endif
 
-void SHA384_Init(SHA384_CTX *);
-void SHA384_Update(SHA384_CTX *, const u_int8_t *, size_t)
-     /* __attribute__((__bounded__(__string__,2,3))) */;
-void SHA384_Final(u_int8_t[SHA384_DIGEST_LENGTH], SHA384_CTX *)
-     /* __attribute__((__bounded__(__minbytes__,1,SHA384_DIGEST_LENGTH))) */;
+#ifdef __GNUC__
+  #define __attribute__(x)          __attribute__(x)
+#else
+  #define __attribute__(x)          /* (nothing) */
+#endif
 
-void SHA512_Init(SHA512_CTX *);
-void SHA512_Update(SHA512_CTX *, const u_int8_t *, size_t)
-     /* __attribute__((__bounded__(__string__,2,3))) */;
-void SHA512_Final(u_int8_t[SHA512_DIGEST_LENGTH], SHA512_CTX *)
-     /* __attribute__((__bounded__(__minbytes__,1,SHA512_DIGEST_LENGTH))) */;
+/**********************************************************************
+ *
+ *                        PROGRAMMING NOTE
+ *
+ * The below functions are used internally by the library and forms
+ * the core of its algorithms.
+ *
+ * Most programs would normally use the SHAxxxInit(), SHAxxxUpdate(),
+ * and SHAxxxFinal() functions instead of calling SHAxxxTransform()
+ * or SHAxxxLast() directly.
+ *
+ * They are only exposed here in case you have a legitimate need to
+ * call them directly.
+ *
+ *********************************************************************/
 
-/* PROGRAMMING NOTE: The below functions are used internally by the library
- * and forms the core of its algorithms. Most programs should normally use
- * the SHAxxx_Init(), SHAxxx_Update(), and SHAxxx_Final() functions instead
- * of calling SHAxxx_Transform() or SHAxxx_Last() directly. They are only
- * exposed here in case you have a legitimate need to call them directly.
- */
-void SHA256_Transform(SHA256_CTX *, const u_int8_t *);
-void SHA512_Transform(SHA512_CTX *, const u_int8_t *);
-void SHA512_Last(SHA512_CTX *);
+void SHA256Transform(u_int32_t *, const u_int8_t *);
+void SHA512Transform(u_int64_t *, const u_int8_t *);
+void SHA512Last(SHA2_CTX *);
+
+#endif // defined( CRYPTO_EXTPKG_MOD )
+
+__BEGIN_DECLS
+void SHA256Init(SHA2_CTX *);
+void SHA256Update(SHA2_CTX *, const void *, size_t)
+	__attribute__((__bounded__(__string__,2,3)));
+void SHA256Final(u_int8_t[SHA256_DIGEST_LENGTH], SHA2_CTX *)
+	__attribute__((__bounded__(__minbytes__,1,SHA256_DIGEST_LENGTH)));
+
+void SHA384Init(SHA2_CTX *);
+void SHA384Update(SHA2_CTX *, const void *, size_t)
+	__attribute__((__bounded__(__string__,2,3)));
+void SHA384Final(u_int8_t[SHA384_DIGEST_LENGTH], SHA2_CTX *)
+	__attribute__((__bounded__(__minbytes__,1,SHA384_DIGEST_LENGTH)));
+
+void SHA512Init(SHA2_CTX *);
+void SHA512Update(SHA2_CTX *, const void *, size_t)
+	__attribute__((__bounded__(__string__,2,3)));
+void SHA512Final(u_int8_t[SHA512_DIGEST_LENGTH], SHA2_CTX *)
+	__attribute__((__bounded__(__minbytes__,1,SHA512_DIGEST_LENGTH)));
+__END_DECLS
 
 #endif /* _SHA2_H */
