@@ -21,10 +21,10 @@
 #include "inline.h"
 
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
-#include "decimal128.h"
-#include "decimal64.h"
-#include "decimal32.h"
-#include "decPacked.h"
+#include "decNumber/include/decimal128.h"
+#include "decNumber/include/decimal64.h"
+#include "decNumber/include/decimal32.h"
+#include "decNumber/include/decPacked.h"
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
 #if defined(FEATURE_FPS_ENHANCEMENT)

@@ -2898,12 +2898,31 @@ fi
 #                       External Packages support
 ###############################################################################
 
+extpkg_ldflags = ""
+extpkg_ldadd   = ""
+
+#------------------------------------------------------------------------------
+
+crypto_pkgname=crypto
+crypto_pkgdir=${crypto_pkgname}
+crypto_incdir=${crypto_pkgdir}/include
+crypto_headers="${crypto_incdir}/aes.h     \
+                ${crypto_incdir}/crypto.h  \
+                ${crypto_incdir}/sha1.h    \
+                ${crypto_incdir}/sha256.h  \
+                ${crypto_incdir}/sshdes.h"
+
+crypto_libdir=${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+crypto_libname=lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a
+
+extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${crypto_libdir}"
+extpkg_ldadd="$extpkg_ldadd ${srcdir}/${crypto_libdir}/${crypto_libname}"
+
+#------------------------------------------------------------------------------
+
 decnumber_pkgname=decNumber
 decnumber_pkgdir=${decnumber_pkgname}
-decnumber_libname=lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}
 decnumber_incdir=${decnumber_pkgdir}/include
-decnumber_libdir=${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-decnumber_libpath=${decnumber_libdir}/${decnumber_libname}.a
 decnumber_headers="${decnumber_incdir}/decContext.h  \
                    ${decnumber_incdir}/decimal128.h  \
                    ${decnumber_incdir}/decimal32.h   \
@@ -2912,78 +2931,56 @@ decnumber_headers="${decnumber_incdir}/decContext.h  \
                    ${decnumber_incdir}/decPacked.h   \
                    ${decnumber_incdir}/decQuad.h"
 
+decnumber_libdir=${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+decnumber_libname=lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a
+
+extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${decnumber_libdir}"
+extpkg_ldadd="$extpkg_ldadd ${srcdir}/${decnumber_libdir}/${decnumber_libname}"
+
 #------------------------------------------------------------------------------
 
 softfloat_pkgname=SoftFloat
 softfloat_pkgdir=${softfloat_pkgname}
-softfloat_libname=lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}
 softfloat_incdir=${softfloat_pkgdir}/include
-softfloat_libdir=${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-softfloat_libpath=${softfloat_libdir}/${softfloat_libname}.a
 softfloat_headers="${softfloat_incdir}/softfloat.h \
                    ${softfloat_incdir}/softfloat_types.h"
+
+softfloat_libdir=${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+softfloat_libname=lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a
+
+extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${softfloat_libdir}"
+extpkg_ldadd="$extpkg_ldadd ${srcdir}/${softfloat_libdir}/${softfloat_libname}"
 
 #------------------------------------------------------------------------------
 
 telnet_pkgname=telnet
 telnet_pkgdir=${telnet_pkgname}
-telnet_libname=lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}
 telnet_incdir=${telnet_pkgdir}/include
-telnet_libdir=${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-telnet_libpath=${telnet_libdir}/${telnet_libname}.a
 telnet_headers="${telnet_incdir}/telnet.h"
 
-#------------------------------------------------------------------------------
+telnet_libdir=${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}
+telnet_libname=lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a
 
-crypto_pkgname=crypto
-crypto_pkgdir=${crypto_pkgname}
-crypto_libname=lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}
-crypto_incdir=${crypto_pkgdir}/include
-crypto_libdir=${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-crypto_libpath=${crypto_libdir}/${crypto_libname}.a
-crypto_headers="${crypto_incdir}/aes.h     \
-                ${crypto_incdir}/crypto.h  \
-                ${crypto_incdir}/sha1.h    \
-                ${crypto_incdir}/sha256.h  \
-                ${crypto_incdir}/sshdes.h"
+extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${telnet_libdir}"
+extpkg_ldadd="$extpkg_ldadd ${srcdir}/${telnet_libdir}/${telnet_libname}"
 
-#------------------------------------------------------------------------------
+###############################################################################
+#          Pass values to other subdirectory Makefile.am files
+###############################################################################
 
 extpkg_headers="${crypto_headers}     \
                 ${decnumber_headers}  \
                 ${softfloat_headers}  \
                 ${telnet_headers}"
 
-extpkg_incdirs="-I${crypto_incdir}    \
-                -I${decnumber_incdir} \
-                -I${softfloat_incdir} \
-                -I${telnet_incdir}"
-
-extpkg_libs="${crypto_libpath}     \
-             ${decnumber_libpath}  \
-             ${softfloat_libpath}  \
-             ${telnet_libpath}"
-
-###############################################################################
-#          Pass values to other subdirectory Makefile.am files
-###############################################################################
-
-EXTPKG_INCDIRS=$extpkg_incdirs
-AC_SUBST(EXTPKG_INCDIRS)
-
 EXTPKG_HEADERS=$extpkg_headers
 AC_SUBST(EXTPKG_HEADERS)
 
-EXTPKG_LIBS=$extpkg_libs
-AC_SUBST(EXTPKG_LIBS)
+EXTPKG_LDFLAGS=$extpkg_ldflags
+AC_SUBST(EXTPKG_LDFLAGS)
 
-#------------------------------------------------------------------------------
-
-PKG_LIB_SUFFIX=$hc_cv_pkg_lib_suffix
-AC_SUBST(PKG_LIB_SUFFIX)
-
-PKG_LIB_SUBDIR=$hc_cv_pkg_lib_subdir
-AC_SUBST(PKG_LIB_SUBDIR)
+EXTPKG_LDADD=$extpkg_ldadd
+AC_SUBST(EXTPKG_LDADD)
 
 #------------------------------------------------------------------------------
 

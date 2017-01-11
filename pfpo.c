@@ -27,10 +27,10 @@
 #include "opcode.h"
 #include "inline.h"
 
-#include "decimal128.h"
-#include "decimal64.h"
-#include "decimal32.h"
-#include "decPacked.h"
+#include "decNumber/include/decimal128.h"
+#include "decNumber/include/decimal64.h"
+#include "decNumber/include/decimal32.h"
+#include "decNumber/include/decPacked.h"
 
 #if defined(FEATURE_PFPO)
 

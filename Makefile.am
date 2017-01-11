@@ -7,11 +7,9 @@ AUTOMAKE_OPTIONS = foreign 1.5
 
 #------------------------------------------------------------------------------
 
-extpkg_incdirs = @EXTPKG_INCDIRS@
 extpkg_headers = @EXTPKG_HEADERS@
-extpkg_libs    = @EXTPKG_LIBS@
-pkg_lib_suffix = @PKG_LIB_SUFFIX@
-pkg_lib_subdir = @PKG_LIB_SUBDIR@
+extpkg_ldflags = @EXTPKG_LDFLAGS@
+extpkg_ldadd   = @EXTPKG_LDADD@
 hqa_inc        = @HQA_INC@
 lns            = @LN_S@
 ldadd          = @LIBS@
@@ -24,7 +22,6 @@ ACLOCAL_AMFLAGS = \
 
 AM_CPPFLAGS =       \
   -I$(top_srcdir)   \
-  $(extpkg_incdirs) \
   -I$(hqa_inc)
 
 #------------------------------------------------------------------------------
@@ -145,23 +142,25 @@ if OPTION_DYNAMIC_LOAD
 DYNSRC  =
 LTDL    =  ltdl.c
 
-DYNMOD_LD_FLAGS = \
-  -module         \
-  -no-undefined   \
-  $(XSTATIC)      \
-  -export-dynamic \
-  -avoid-version
+DYNMOD_LD_FLAGS =   \
+  -module           \
+  -no-undefined     \
+  $(XSTATIC)        \
+  -export-dynamic   \
+  -avoid-version    \
+  $(extpkg_ldflags)
 
-DYNMOD_LD_ADD =   \
-  libherc.la      \
-  libhercs.la     \
-  libhercu.la     \
+DYNMOD_LD_ADD =     \
+  libherc.la        \
+  libhercs.la       \
+  libhercu.la       \
+  $(extpkg_ldadd)   \
   $(ldadd)
 
-LIB_LD_FLAGS =    \
-  -export-dynamic \
-   $(XSTATIC)     \
-   -no-undefined  \
+LIB_LD_FLAGS =      \
+  -export-dynamic   \
+   $(XSTATIC)       \
+   -no-undefined    \
    -avoid-version
 
 #------------------------------------------------------------------------------
@@ -169,8 +168,8 @@ else
 
 DYNSRC           =  $(dyndev_SRC)
 LTDL             =
-DYNMOD_LD_FLAGS  =
-DYNMOD_LD_ADD    =
+DYNMOD_LD_FLAGS  =  $(extpkg_ldflags)
+DYNMOD_LD_ADD    =  $(extpkg_ldadd)
 
 LIB_LD_FLAGS =   \
   $(XSTATIC)     \
@@ -268,7 +267,7 @@ if OPTION_DYNAMIC_LOAD
 
 dyncrypt_la_SOURCES = dyncrypt.c
 dyncrypt_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
-dyncrypt_la_LIBADD  = $(DYNMOD_LD_ADD) $(extpkg_libs)
+dyncrypt_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 dyngui_la_SOURCES   = dyngui.c
 dyngui_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
@@ -308,7 +307,7 @@ hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
 hdt3270_la_SOURCES  = console.c
 hdt3270_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
-hdt3270_la_LIBADD   = $(DYNMOD_LD_ADD) $(extpkg_libs)
+hdt3270_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
 hdt3420_la_SOURCES  = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c w32stape.c
 hdt3420_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
@@ -513,7 +512,7 @@ libherc_la_LIBADD = \
   libhercu.la       \
   libherct.la       \
   libhercd.la       \
-  $(extpkg_libs)    \
+  $(extpkg_ldadd)   \
   $(ldadd)
 
 #--------------------------------------------------------
@@ -529,7 +528,7 @@ if OPTION_DYNAMIC_LOAD
 if BUILD_SHARED
 
 HLDFLAGS = -dlopen self
-HDEPS    = $(extpkg_libs)
+HDEPS    = $(extpkg_ldadd)
 
 else
 
@@ -574,7 +573,7 @@ HDEPS =               \
   libherc.la          \
   libherct.la         \
   libhercd.la         \
-  $(extpkg_libs)
+  $(extpkg_ldadd)
 
 endif
 
@@ -582,7 +581,7 @@ endif
 else
 
 HLDFLAGS =
-HDEPS    = $(extpkg_libs)
+HDEPS    = $(extpkg_ldadd)
 
 endif
 #------------------------------------------------------------------------------
@@ -594,7 +593,7 @@ hercules_SOURCES = \
 hercules_LDADD =  \
   libherc.la      \
   libhercs.la     \
-  $(extpkg_libs)  \
+  $(extpkg_ldadd) \
   $(ldadd)
 
 hercules_LDFLAGS = $(HLDFLAGS)
@@ -614,7 +613,7 @@ herclin_SOURCES = \
 herclin_LDADD =   \
   libherc.la      \
   libhercs.la     \
-  $(extpkg_libs)  \
+  $(extpkg_ldadd) \
   $(ldadd)
 
 herclin_LDFLAGS = $(HLDFLAGS)
@@ -982,8 +981,7 @@ noinst_HEADERS =          \
   w32mtio.h               \
   w32stape.h              \
   w32util.h               \
-  zfcp.h                  \
-  $(extra_dynamic_SRC)
+  zfcp.h
 
 ###############################################################################
 #                         B U I L D   R U L E S

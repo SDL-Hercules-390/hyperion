@@ -833,7 +833,16 @@
   echo Wscript.Echo "1"                             >> %check_mttof_vbs%
   echo End If                                       >> %check_mttof_vbs%
   for /f %%i in ('cscript //nologo                     %check_mttof_vbs% 2^>^&1') do set ok=%%i
-  del                                                  %check_mttof_vbs%
+
+  ::  Temporary HACK: for some reason the temporary file is sometimes
+  ::  not getting deleted.  I suspect it might be my antivirus but am
+  ::  unable to figure it out.  Hopefully the below hack will help to
+  ::  reduce the likelihood of occurrence.
+
+  timeout /t 1 /nobreak     &&  @REM Sleep for one second before
+                                @REM trying to delete temp file.
+  del %check_mttof_vbs%
+
   %TRACE% "mttof=%mttof%, ttof=%ttof%: ok=%ok%"
 
   if not "%ok%" == "1" (

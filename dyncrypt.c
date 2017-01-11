@@ -28,10 +28,11 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#include "rijndael.h"
-#include "sha1.h"
-#include "sha2.h"
-#include "sshdes.h"
+#define CRYPTO_EXTPKG_MOD
+#include "crypto/include/rijndael.h"
+#include "crypto/include/sha1.h"
+#include "crypto/include/sha2.h"
+#include "crypto/include/sshdes.h"
 
 /*----------------------------------------------------------------------------*/
 /* Sanity compile check                                                       */
@@ -176,7 +177,7 @@ static const int kmctr_pblens[32] =
 #ifndef __STATIC_FUNCTIONS__
 #define __STATIC_FUNCTIONS__
 /*----------------------------------------------------------------------------*/
-/* Fetch, store and swap functions needed by external package                 */
+/* Library functions required to be defined external to the crypto library    */
 /*----------------------------------------------------------------------------*/
 U32 crypto_fetch32( const void* ptr )
 {
@@ -193,6 +194,15 @@ U32 crypto_cswap32( U32 value )
 U64 crypto_cswap64( U64 value )
 {
     return CSWAP64( value );
+}
+void crypto_secure0( void* p, size_t n )
+{
+#if defined( _MSVC_ )
+    SecureZeroMemory( p, n );
+#else // (portable C solution for non-buggy compilers)
+    volatile unsigned char* v = (volatile unsigned char*) p;
+    while( n-- ) *v++ = 0;
+#endif
 }
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
 /*----------------------------------------------------------------------------*/
@@ -361,32 +371,32 @@ static void sha1_seticv(SHA1_CTX *ctx, BYTE icv[20])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha256_getcv(SHA256_CTX *ctx, BYTE icv[32])
+static void sha256_getcv(SHA2_CTX *ctx, BYTE icv[32])
 {
   int i, j;
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
-    icv[j++] = (ctx->state[i] & 0x00ff0000) >> 16;
-    icv[j++] = (ctx->state[i] & 0x0000ff00) >> 8;
-    icv[j++] = (ctx->state[i] & 0x000000ff);
+    icv[j++] = (ctx->state.st32[i] & 0xff000000) >> 24;
+    icv[j++] = (ctx->state.st32[i] & 0x00ff0000) >> 16;
+    icv[j++] = (ctx->state.st32[i] & 0x0000ff00) >> 8;
+    icv[j++] = (ctx->state.st32[i] & 0x000000ff);
   }
 }
 
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha256_seticv(SHA256_CTX *ctx, BYTE icv[32])
+static void sha256_seticv(SHA2_CTX *ctx, BYTE icv[32])
 {
   int i, j;
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    ctx->state[i] = icv[j++] << 24;
-    ctx->state[i] |= icv[j++] << 16;
-    ctx->state[i] |= icv[j++] << 8;
-    ctx->state[i] |= icv[j++];
+    ctx->state.st32[i]  = icv[j++] << 24;
+    ctx->state.st32[i] |= icv[j++] << 16;
+    ctx->state.st32[i] |= icv[j++] << 8;
+    ctx->state.st32[i] |= icv[j++];
   }
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -395,40 +405,40 @@ static void sha256_seticv(SHA256_CTX *ctx, BYTE icv[32])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha512_getcv(SHA512_CTX *ctx, BYTE icv[64])
+static void sha512_getcv(SHA2_CTX *ctx, BYTE icv[64])
 {
   int i, j;
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    icv[j++] = (ctx->state[i] & 0xff00000000000000LL) >> 56;
-    icv[j++] = (ctx->state[i] & 0x00ff000000000000LL) >> 48;
-    icv[j++] = (ctx->state[i] & 0x0000ff0000000000LL) >> 40;
-    icv[j++] = (ctx->state[i] & 0x000000ff00000000LL) >> 32;
-    icv[j++] = (ctx->state[i] & 0x00000000ff000000LL) >> 24;
-    icv[j++] = (ctx->state[i] & 0x0000000000ff0000LL) >> 16;
-    icv[j++] = (ctx->state[i] & 0x000000000000ff00LL) >> 8;
-    icv[j++] = (ctx->state[i] & 0x00000000000000ffLL);
+    icv[j++] = (ctx->state.st64[i] & 0xff00000000000000LL) >> 56;
+    icv[j++] = (ctx->state.st64[i] & 0x00ff000000000000LL) >> 48;
+    icv[j++] = (ctx->state.st64[i] & 0x0000ff0000000000LL) >> 40;
+    icv[j++] = (ctx->state.st64[i] & 0x000000ff00000000LL) >> 32;
+    icv[j++] = (ctx->state.st64[i] & 0x00000000ff000000LL) >> 24;
+    icv[j++] = (ctx->state.st64[i] & 0x0000000000ff0000LL) >> 16;
+    icv[j++] = (ctx->state.st64[i] & 0x000000000000ff00LL) >> 8;
+    icv[j++] = (ctx->state.st64[i] & 0x00000000000000ffLL);
   }
 }
 
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha512_seticv(SHA512_CTX *ctx, BYTE icv[64])
+static void sha512_seticv(SHA2_CTX *ctx, BYTE icv[64])
 {
   int i, j;
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    ctx->state[i] = (U64) icv[j++] << 56;
-    ctx->state[i] |= (U64) icv[j++] << 48;
-    ctx->state[i] |= (U64) icv[j++] << 40;
-    ctx->state[i] |= (U64) icv[j++] << 32;
-    ctx->state[i] |= (U64) icv[j++] << 24;
-    ctx->state[i] |= (U64) icv[j++] << 16;
-    ctx->state[i] |= (U64) icv[j++] << 8;
-    ctx->state[i] |= (U64) icv[j++];
+    ctx->state.st64[i]  = (U64) icv[j++] << 56;
+    ctx->state.st64[i] |= (U64) icv[j++] << 48;
+    ctx->state.st64[i] |= (U64) icv[j++] << 40;
+    ctx->state.st64[i] |= (U64) icv[j++] << 32;
+    ctx->state.st64[i] |= (U64) icv[j++] << 24;
+    ctx->state.st64[i] |= (U64) icv[j++] << 16;
+    ctx->state.st64[i] |= (U64) icv[j++] << 8;
+    ctx->state.st64[i] |= (U64) icv[j++];
   }
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
@@ -1034,11 +1044,11 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   SHA1_CTX sha1_ctx;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-  SHA256_CTX sha256_ctx;
+  SHA2_CTX sha2_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  SHA512_CTX sha512_ctx;
+  SHA2_CTX sha512_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
   int crypted;
@@ -1120,7 +1130,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      sha256_seticv(&sha256_ctx, parameter_block);
+      sha256_seticv(&sha2_ctx, parameter_block);
       break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1157,8 +1167,8 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
-        SHA256_Transform(&sha256_ctx, message_block);
-        sha256_getcv(&sha256_ctx, parameter_block);
+        SHA256Transform(sha2_ctx.state.st32, message_block);
+        sha256_getcv(&sha2_ctx, parameter_block);
         break;
       }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1166,7 +1176,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
       case 3: /* sha-512 */
       {
-        SHA512_Transform(&sha512_ctx, message_block);
+        SHA512Transform(sha512_ctx.state.st64, message_block);
         sha512_getcv(&sha512_ctx, parameter_block);
         break;
       }
@@ -1298,11 +1308,11 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
   SHA1_CTX sha1_ctx;
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-  SHA256_CTX sha256_ctx;
+  SHA2_CTX sha2_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-  SHA512_CTX sha512_ctx;
+  SHA2_CTX sha512_ctx;
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
   int fc;
@@ -1386,7 +1396,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      sha256_seticv(&sha256_ctx, parameter_block);
+      sha256_seticv(&sha2_ctx, parameter_block);
       break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1436,7 +1446,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
       case 2: /* sha-256 */
       {
-        SHA256_Transform(&sha256_ctx, message_block);
+        SHA256Transform(sha2_ctx.state.st32, message_block);
         break;
       }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1444,7 +1454,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
       case 3: /* sha-512 */
       {
-        SHA512_Transform(&sha512_ctx, message_block);
+        SHA512Transform(sha512_ctx.state.st64, message_block);
         break;
       }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
@@ -1476,8 +1486,8 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2: /* sha-256 */
     {
-      SHA256_Transform(&sha256_ctx, message_block);
-      sha256_getcv(&sha256_ctx, parameter_block);
+      SHA256Transform(sha2_ctx.state.st32, message_block);
+      sha256_getcv(&sha2_ctx, parameter_block);
       break;
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
@@ -1485,7 +1495,7 @@ static void ARCH_DEP(klmd_sha)(int r1, int r2, REGS *regs)
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
     case 3: /* sha-512 */
     {
-      SHA512_Transform(&sha512_ctx, message_block);
+      SHA512Transform(sha512_ctx.state.st64, message_block);
       sha512_getcv(&sha512_ctx, parameter_block);
       break;
     }

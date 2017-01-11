@@ -16,7 +16,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "telnet.h"         // Need telnet_t
+#include "telnet/include/telnet.h"      // Need telnet_t
 
 /*-------------------------------------------------------------------*/
 /* Typedefs for CPU bitmap fields                                    */
