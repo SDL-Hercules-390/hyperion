@@ -71,17 +71,23 @@ static ARCHTAB archtab[] =
 #if defined(_370)
 /* S/370 - ALS0 */
 ARCHLVL(_ARCH_370_NAME,  ARCH_370, ALS0)
+ARCHLVL("370",           ARCH_370, ALS0)
 ARCHLVL("S370",          ARCH_370, ALS0)
 ARCHLVL("S/370",         ARCH_370, ALS0)
 ARCHLVL("ALS0",          ARCH_370, ALS0)
 #endif
 
+/* Note  that  XA  and  XB  are not offered; neither is G3 (debut of */
+/* relative/immediate).                                              */
+
 #if defined(_390)
 /* ESA/390 - ALS1 */
 ARCHLVL(_ARCH_390_NAME,  ARCH_390, ALS1)
+ARCHLVL("ESA",           ARCH_390, ALS1)
 ARCHLVL("ESA390",        ARCH_390, ALS1)
 ARCHLVL("S/390",         ARCH_390, ALS1)
 ARCHLVL("S390",          ARCH_390, ALS1)
+ARCHLVL("390",           ARCH_390, ALS1)
 ARCHLVL("ALS1",          ARCH_390, ALS1)
 #endif
 
