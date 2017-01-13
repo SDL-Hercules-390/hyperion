@@ -2565,9 +2565,23 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
             case 4:
             case 5:
             case 7:
+
+#if 0   // Bob Polmanter <wably@sbcglobal.net>
+        // hyperion issue 186 (https://github.com/hercules-390/hyperion/issues/186)
+
                 ocrs[j]=crs[j];
                 rcrs[j]=crs[j];
-                break;
+
+#else   // Bob Polmanter <wably@sbcglobal.net>
+        // hyperion issue 186 (https://github.com/hercules-390/hyperion/issues/186)
+
+                DEBUG_SASSISTX( LCTL,WRMSG( HHC90000, "D",
+                    "SASSIST LCTL Reject : let CP handle DAS ctl regs" ));
+                return 1;
+
+#endif  // Bob Polmanter <wably@sbcglobal.net>
+        // hyperion issue 186 (https://github.com/hercules-390/hyperion/issues/186)
+
             case 6: /* VCR6 Ignored on real machine */
                 ocrs[j]=crs[j];
                 break;
