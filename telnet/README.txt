@@ -1,8 +1,12 @@
 =====================================================================
-  libtelnet - TELNET protocol handling library
+                            telnet
+            Simple RFC-complient TELNET implementation
+                            v1.0.0
 =====================================================================
 
- http://github.com/seanmiddleditch/libtelnet
+ Source code:
+  https://github.com/seanmiddleditch/libtelnet
+  https://github.com/Fish-Git/telnet
 
  Sean Middleditch
  sean@sourcemud.org
@@ -644,3 +648,5 @@ telnet-proxy will display status information about the data passing
 through both ends of the tunnel.  telnet-proxy can only support a
 single tunnel at a time.  It will continue running until an error
 occurs or a terminating signal is sent to the proxy process.
+
+=====================================================================

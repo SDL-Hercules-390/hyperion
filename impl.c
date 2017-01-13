@@ -839,6 +839,7 @@ int     rc;
     */
     display_version       ( stdout, 0, "Hercules" );
     display_build_options ( stdout, 0 );
+    display_extpkg_vers   ( stdout, 0 );
 
     /* Report whether Hercules is running in "elevated" mode or not */
 #if defined( _MSVC_ ) // (remove this test once non-Windows version of "is_elevated()" is coded)

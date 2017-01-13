@@ -29,6 +29,7 @@
 #include "opcode.h"
 #include "inline.h"
 #define CRYPTO_EXTPKG_MOD
+#include "crypto/include/crypto_version.h"
 #include "crypto/include/rijndael.h"
 #include "crypto/include/sha1.h"
 #include "crypto/include/sha2.h"
@@ -5202,19 +5203,29 @@ END_INSTRUCTION_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-  WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2016 by Bernard van der Helm"); // Copyright notice
-  WRMSG(HHC00151, "I", "Message Security Assist"); // Feature notice
+  char pkgvers[ 80 ];
+
+  // "%s module loaded%s"
+  WRMSG( HHC00150, "I", "Crypto", " (c) Copyright 2003-2016 by Bernard van der Helm"); // Copyright notice
+
+  MSGBUF( pkgvers, "Built with crypto external package version %s", crypto_version() );
+  // "%s"
+  WRMSG( HHC01417, "I", pkgvers );
+
+  // "Activated facility: %s"
+  WRMSG( HHC00151, "I", "Message Security Assist"); // Feature notice
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
-  WRMSG(HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice
+  WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice
 #else
   #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
-    WRMSG(HHC00151, "I", "Message Security Assist Extension 1, 2 and 3"); // Feature notice
+    WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2 and 3"); // Feature notice
   #else
     #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
-      WRMSG(HHC00151, "I", "Message Security Assist Extension 1 and 2"); // Feature notice
+      WRMSG( HHC00151, "I", "Message Security Assist Extension 1 and 2"); // Feature notice
     #else
       #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-        WRMSG(HHC00151, "I", "Message Security Assist Extension 1"); // Feature notice
+        WRMSG( HHC00151, "I", "Message Security Assist Extension 1"); // Feature notice
       #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
     #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
   #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */

@@ -314,6 +314,8 @@ DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE* f, int httpfd )
 
     get_hostinfo_str(pHostInfo, host_info_str, sizeof(host_info_str));
 
+    /* "Running on ..." */
+
     if (httpfd)
         hprintf( httpfd, MSG( HHC01417, "I", host_info_str ));
     else

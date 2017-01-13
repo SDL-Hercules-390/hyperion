@@ -845,9 +845,6 @@
     <None Include="README.COMMADPT">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.DECNUMBER">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
     <None Include="README.DYNMOD">
       <Filter>Other Files\DOC\README</Filter>
     </None>
@@ -905,16 +902,10 @@
     <None Include="README.SETUID">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.SOFTFLOAT">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
     <None Include="README.SUN">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.TAPE">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
-    <None Include="README.TELNET">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.WIN64">
@@ -2059,6 +2050,9 @@
     <ClInclude Include="crypto\include\crypto.h">
       <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
+    <ClInclude Include="crypto\include\crypto_version.h">
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
+    </ClInclude>
     <ClInclude Include="crypto\include\rijndael.h">
       <Filter>Source Files\Hercules\ExtPkgs\crypto\include</Filter>
     </ClInclude>
@@ -2416,6 +2410,9 @@
     <ClInclude Include="decNumber\include\decNumber.h">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
+    <ClInclude Include="decNumber\include\decnumber_version.h">
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
+    </ClInclude>
     <ClInclude Include="decNumber\include\decPacked.h">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber\include</Filter>
     </ClInclude>
@@ -2424,6 +2421,12 @@
     </ClInclude>
     <ClInclude Include="telnet\include\telnet.h">
       <Filter>Source Files\Hercules\ExtPkgs\telnet\include</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet\include\telnet_version.h">
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\include</Filter>
+    </ClInclude>
+    <ClInclude Include="SoftFloat\include\softfloat_version.h">
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
     </ClInclude>
     <ClInclude Include="SoftFloat\include\softfloat.h">
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>

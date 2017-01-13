@@ -1467,6 +1467,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\crypto\include\crypto_version.h"
+								>
+							</File>
+							<File
 								RelativePath=".\crypto\include\rijndael.h"
 								>
 							</File>
@@ -1555,6 +1559,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\decNumber\include\decnumber_version.h"
+								>
+							</File>
+							<File
 								RelativePath=".\decNumber\include\decPacked.h"
 								>
 							</File>
@@ -1616,6 +1624,10 @@
 							</File>
 							<File
 								RelativePath=".\SoftFloat\include\softfloat_types.h"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\include\softfloat_version.h"
 								>
 							</File>
 						</Filter>
@@ -1680,6 +1692,10 @@
 							>
 							<File
 								RelativePath=".\telnet\include\telnet.h"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\include\telnet_version.h"
 								>
 							</File>
 						</Filter>
@@ -1823,10 +1839,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\README.DECNUMBER"
-						>
-					</File>
-					<File
 						RelativePath=".\README.DYNMOD"
 						>
 					</File>
@@ -1903,19 +1915,11 @@
 						>
 					</File>
 					<File
-						RelativePath=".\README.SOFTFLOAT"
-						>
-					</File>
-					<File
 						RelativePath=".\README.SUN"
 						>
 					</File>
 					<File
 						RelativePath=".\README.TAPE"
-						>
-					</File>
-					<File
-						RelativePath=".\README.TELNET"
 						>
 					</File>
 					<File

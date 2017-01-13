@@ -18,19 +18,15 @@
 #include "hercules.h"
 #include "machdep.h"
 
-/*--------------------------------------------------*/
-/*   "Unusual" (i.e. noteworthy) build options...   */
-/*--------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*           "Unusual" (i.e. noteworthy) build options...            */
+/*-------------------------------------------------------------------*/
 
 static const char *build_info[] = {
 
-/*  Report custom build information provided by invoker through
- *  ./configure process.
- */
-
-#if defined(CUSTOM_BUILD_STRING)
-    CUSTOM_BUILD_STRING,
-#endif
+/*-------------------------------------------------------------------*/
+/*                        Built with:                                */
+/*-------------------------------------------------------------------*/
 
     "Built with: "
 
@@ -304,6 +300,10 @@ static const char *build_info[] = {
   #define QSTR_HOST_ARCH         HOST_ARCH
 #endif
 
+/*-------------------------------------------------------------------*/
+/*                        Build type:                                */
+/*-------------------------------------------------------------------*/
+
     "Build type: "
 
 #if   defined(_AIX)
@@ -498,6 +498,9 @@ static const char *build_info[] = {
  *
  */
 
+/*-------------------------------------------------------------------*/
+/*                   Mode and Max CPU Engines:                       */
+/*-------------------------------------------------------------------*/
 
 /* Report emulation modes */
 
@@ -519,10 +522,18 @@ static const char *build_info[] = {
 
     "Max CPU Engines: " QSTR(MAX_CPU_ENGINES),
 
+/*-------------------------------------------------------------------*/
+/*                            Using:                                 */
+/*-------------------------------------------------------------------*/
+
+#if defined(HDL_BUILD_SHARED)
+    "Using   shared libraries",
+#else
+    "Using   static libraries",
+#endif
+
 #if !defined(_MSVC_)
-  #if defined(NO_SETUID)
-    "Without setuid support",
-  #else
+  #if !defined(NO_SETUID)
     "Using   "
     #if defined(HAVE_SETRESUID)
      "setresuid()"
@@ -551,6 +562,16 @@ static const char *build_info[] = {
     "Using   (undefined) Mutex Locking Model",
 #endif
 
+/*-------------------------------------------------------------------*/
+/*                        With / Without:                            */
+/*-------------------------------------------------------------------*/
+
+#if !defined(_MSVC_)
+  #if defined(NO_SETUID)
+    "Without setuid support",
+  #endif
+#endif
+
 #if defined(OPTION_SYNCIO)
     "With    Syncio support",
 #else
@@ -567,12 +588,6 @@ static const char *build_info[] = {
     "With    Dynamic loading support",
 #else
     "Without Dynamic loading support",
-#endif
-
-#if defined(HDL_BUILD_SHARED)
-    "Using   shared libraries",
-#else
-    "Using   static libraries",
 #endif
 
 #if defined(EXTERNALGUI)
@@ -686,7 +701,12 @@ static const char *build_info[] = {
 
     "Without National Language Support",
 
+/*-------------------------------------------------------------------*/
+/*                 Machine dependent assists:                        */
+/*-------------------------------------------------------------------*/
+
     "Machine dependent assists:"
+
 #if !defined( ASSIST_CMPXCHG1  ) \
  && !defined( ASSIST_CMPXCHG4  ) \
  && !defined( ASSIST_CMPXCHG8  ) \
@@ -787,6 +807,19 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
     else
         WRMSG( HHC01414, "I", HERCULES_COPYRIGHT );
 
+    /* Log custom title, if any */
+
+#if defined(CUSTOM_BUILD_STRING)
+
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
+        else
+            fprintf( f, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
+    else
+        WRMSG( HHC01417, "I", CUSTOM_BUILD_STRING );
+#endif
+
     /* Log build date/time */
 
     // "Build date: %s at %s"
@@ -800,6 +833,38 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
         WRMSG( HHC01415, "I", __DATE__, __TIME__ );
 
 } /* end function display_version */
+
+/*-------------------------------------------------------------------*/
+/*              Display External Package versions                    */
+/*-------------------------------------------------------------------*/
+
+#include "decNumber/include/decnumber_version.h"
+#include "SoftFloat/include/softfloat_version.h"
+#include "telnet/include/telnet_version.h"
+
+static void _do_display_extpkg_vers( FILE* f, int httpfd,
+                                     const char* pkg,
+                                     const char* vers )
+{
+    char pkgvers[ 80 ];
+
+    MSGBUF( pkgvers, "Built with %s external package version %s", pkg, vers );
+
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, MSG( HHC01417, "I", pkgvers ));
+        else
+            fprintf( f, MSG( HHC01417, "I", pkgvers ));
+    else
+        WRMSG( HHC01417, "I", pkgvers );
+}
+
+DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
+{
+    _do_display_extpkg_vers( f, httpfd, "decNumber", decnumber_version() );
+    _do_display_extpkg_vers( f, httpfd, "SoftFloat", softfloat_version() );
+    _do_display_extpkg_vers( f, httpfd, "telnet",    telnet_version()    );
+}
 
 /*-------------------------------------------------------------------*/
 /* Display build options                                             */
@@ -832,6 +897,8 @@ DLL_EXPORT void display_build_options( FILE* f, int httpfd )
                 WRMSG( HHC01417, "I", *ppszBldInfoStr );
         }
     }
+
+    /* "Running on ..." */
 
     if (f != stdout)
         if (httpfd)

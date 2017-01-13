@@ -630,7 +630,6 @@
     <None Include="README.BSD" />
     <None Include="README.CMPSC" />
     <None Include="README.COMMADPT" />
-    <None Include="README.DECNUMBER" />
     <None Include="README.DYNMOD" />
     <None Include="README.ECPSVM" />
     <None Include="README.EXTPKG" />
@@ -652,10 +651,8 @@
     <None Include="README.RXVT4APL" />
     <None Include="README.S37X" />
     <None Include="README.SETUID" />
-    <None Include="README.SOFTFLOAT" />
     <None Include="README.SUN" />
     <None Include="README.TAPE" />
-    <None Include="README.TELNET" />
     <None Include="README.WIN64" />
     <None Include="RELEASE.NOTES" />
     <None Include="retail-all.jobs" />
@@ -911,6 +908,7 @@
     <ClInclude Include="commadpt.h" />
     <ClInclude Include="cpuint.h" />
     <ClInclude Include="crypto\include\crypto.h" />
+    <ClInclude Include="crypto\include\crypto_version.h" />
     <ClInclude Include="crypto\include\rijndael.h" />
     <ClInclude Include="crypto\include\sha1.h" />
     <ClInclude Include="crypto\include\sha2.h" />
@@ -926,9 +924,11 @@
     <ClInclude Include="decNumber\include\decimal32.h" />
     <ClInclude Include="decNumber\include\decimal64.h" />
     <ClInclude Include="decNumber\include\decNumber.h" />
+    <ClInclude Include="decNumber\include\decnumber_version.h" />
     <ClInclude Include="decNumber\include\decPacked.h" />
     <ClInclude Include="decNumber\include\decQuad.h" />
     <ClInclude Include="telnet\include\telnet.h" />
+    <ClInclude Include="telnet\include\telnet_version.h" />
     <ClInclude Include="devtype.h" />
     <ClInclude Include="ecpsvm.h" />
     <ClInclude Include="esa390.h" />
@@ -1000,6 +1000,7 @@
     <ClInclude Include="sllib.h" />
     <ClInclude Include="sockdev.h" />
     <ClInclude Include="SoftFloat\include\softfloat.h" />
+    <ClInclude Include="SoftFloat\include\softfloat_version.h" />
     <ClInclude Include="SoftFloat\include\softfloat_types.h" />
     <ClInclude Include="sr.h" />
     <ClInclude Include="tapedev.h" />
