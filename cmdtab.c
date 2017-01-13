@@ -446,35 +446,6 @@ DLL_EXPORT int HercCmdLine (char* pszCmdLine)
 /* end DoCallHercCmdLine */
 
 /*-------------------------------------------------------------------*/
-/* HelpMessage - print help text for message hhcnnnnna               */
-/*-------------------------------------------------------------------*/
-int HelpMessage(char *msg)
-{
-    char *help[][4] = {
-      { HMSG(HHC01415),
-        "This message displays the build data and time of the Hercules executables.",
-        "Information.",
-        "None." },
-
-      { NULL, NULL, NULL, NULL }
-    };
-
-    int i;
-    char id[9];
-
-    strlcpy(id, "HHC",sizeof(id));
-    strncpy(&id[3], &msg[3], 5);
-    id[8] = 0;
-
-    for(i = 0; help[i][0] && strncmp(help[i][0], id, 8); i++);
-    if(help[i][0])
-      WRMSG(HHC00017, "I", help[i][0], help[i][1], help[i][2], help[i][3]);
-    else
-      WRMSG(HHC01607, "I", id);
-    return(-1);
-}
-
-/*-------------------------------------------------------------------*/
 /* Sort COMMAND table ascending by command/statement                 */
 /*-------------------------------------------------------------------*/
 static int SortCmdTab( const void* p1, const void* p2 )
@@ -660,22 +631,11 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
             }
         }
 
-        /* If command not found, check if message help (e.g. "help HHCnnnnn[s]") */
         if (rc == 1)  /* (not found?) */
         {
-            /* "help HHCnnnnn" or "help HHCnnnnns" */
-            if (strncasecmp( argv[1], "HHC", 3 ) == 0
-                && (strlen( argv[1] ) == 8 ||
-                    strlen( argv[1] ) == 9))
-            {
-                rc = HelpMessage( argv[1] );
-            }
-            else
-            {
-                // "Unknown herc command '%s', no help available"
-                WRMSG( HHC01604, "I", argv[1] );
-                rc = -1;
-            }
+            // "Unknown command %s, no help available"
+            WRMSG( HHC01604, "I", argv[1] );
+            rc = -1;
         }
     }
     return rc;
