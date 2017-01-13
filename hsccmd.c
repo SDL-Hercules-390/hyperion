@@ -968,6 +968,7 @@ int rc = 0;
     {
         display_version( stdout, 0, "Hercules" );
         display_build_options( stdout, 0 );
+        display_extpkg_vers  ( stdout, 0 );
     }
 
     return rc;

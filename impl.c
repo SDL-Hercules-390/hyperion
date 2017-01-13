@@ -1310,6 +1310,7 @@ int     c = 0;                        /* Next option flag            */
                 {
                     display_version( stdout, 0, "Hercules" );
                     display_build_options( stdout, 0 );
+                    display_extpkg_vers  ( stdout, 0 );
                 }
                 else
                 {
