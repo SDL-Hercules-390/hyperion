@@ -226,11 +226,20 @@ else
 
   # Extract the short git hash of the repository (usually the last commit)
 
-  git_hash=-g$(git --work-tree=. rev-parse --short HEAD)
+  git_hash=-g$(git rev-parse --short HEAD)
 
   # Count the number of commits and use that as our "build" number
 
-  VERS_BLD=$(git log --pretty=format:'' | wc -l)
+  # PROGRAMMING NOTE: we purposely do NOT use the simpler, newer, easier,
+  # slightly faster and harder to get wrong rev-list "--count" technique
+  # since the git that comes with some still in use older distros likely
+  # doesn't understand the "--count" option.  Thus, we use the slightly
+  # slower, older, more complex and much easier to get wrong technique
+  # of piping the output of "log --pretty..." into "wc -l".  Please also
+  # note that, unlike many broken implementations that are out there, we
+  # correctly use "tformat" and not "format" to ensure an accurate count.
+
+  VERS_BLD=$(git log --pretty=tformat:'' | wc -l)
 
 fi
 

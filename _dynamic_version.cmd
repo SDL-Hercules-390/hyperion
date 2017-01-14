@@ -726,49 +726,21 @@
   ::  Extract the short git hash of the repository (usually the last commit)
 
   set "git_hash=-gHHHHHHH"
-  for /f %%a in ('%git% --work-tree=. rev-parse --short HEAD') do set "git_hash=-g%%a"
+  for /f %%a in ('%git% rev-parse --short HEAD') do set "git_hash=-g%%a"
 
   ::  Count the number of commits and use that as our "build" number
 
-  call :fullpath "wc.exe"
-  if "%fullpath%" == "" goto :set_VERSION_try_GIT_no_wc
+  :: PROGRAMMING NOTE: Windows does not come with "wc" so we cannot
+  :: use the typical technique of piping "git log --pretty=..." into
+  :: "wc -l" to count the number of commits (which most implementations
+  :: get wrong anyway since they typically use "--pretty=format" instead
+  :: of "--pretty=tformat" thereby causing "wc -l" to return a count one
+  :: less than the actual number of commits) so we need to use a different
+  :: technique instead.  Luckily, most Windows versions of git are more
+  :: modern than the gits that come with most older Linux distros and
+  :: thus very likely support the newer rev-list "--count" option.
 
-  %TRACE% Using wc.exe to count total commits ...
-
-  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc.exe -l`) do set "VERS_BLD=%%a"
-
-  goto :set_VERSION_try_GIT_done
-
-:set_VERSION_try_GIT_no_wc
-
-  %TRACE% Counting total commits ourself, the hard way ...
-
-  :: PROGRAMMING NOTE: MS batch "for /f" always skips blank lines.
-  :: Thus we use --pretty=format:"x" rather than --pretty=format:""
-  :: so each output line is non-empty so "for /f" can count them.
-
-  :: Technique: build a temporary batch file containing code to
-  :: count the lines in the git log output file and then run it.
-
-  call :tempfn  git_log  .log
-  call :tempfn  wcl_cmd  .cmd
-
-  %git% log --pretty=format:"x" > "%temp%\%git_log%"
-
-  if exist "%temp%\%wcl_cmd%" del "%temp%\%wcl_cmd%"
-
-  echo @echo off                                                  >> "%temp%\%wcl_cmd%"
-  echo set /a "VERS_BLD=0"                                        >> "%temp%\%wcl_cmd%"
-  echo for /f "tokens=*" %%%%a in (%%~1) do set /a "VERS_BLD+=1"  >> "%temp%\%wcl_cmd%"
-
-  call "%temp%\%wcl_cmd%"  "%temp%\%git_log%"
-
-  del "%temp%\%wcl_cmd%"
-  del "%temp%\%git_log%"
-
-  goto :set_VERSION_try_GIT_done
-
-:set_VERSION_try_GIT_done
+  for /f %%a in ('%git% rev-list --count HEAD') do set "VERS_BLD=%%a"
 
   set "modified_str=%git_hash%%modified_str%"
   set "git_hash="
