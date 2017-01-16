@@ -512,46 +512,71 @@ BYTE           *pos;                    /* -> Next position in buffer*/
 /*-------------------------------------------------------------------*/
 int syntax( const char* pgm )
 {
-    char usage[8192];
-    char buflfs[64];
+    int zlib  = 0;
+    int bzip2 = 0;
+    int lfs   = 0;
+
+    char zbuf[80];
+    char bzbuf[80];
+    char lfsbuf[80];
+
+    zbuf[0] = 0;
+    bzbuf[0] = 0;
+    lfsbuf[0] = 0;
+
 #ifdef CCKD_COMPRESS_ZLIB
-    char *bufz = "            -z     compress using zlib [default]\n";
-#else
-    char *bufz = "";
+    zlib = 1;
 #endif
+
 #ifdef CCKD_COMPRESS_BZIP2
-    char *bufbz = "            -bz2   compress using bzip2\n";
-#else
-    char *bufbz = "";
+    bzip2 = 1;
 #endif
 
-    strncpy( buflfs,
-            (sizeof(off_t) > 4) ?
-                "            -lfs   create single large output file\n" : "",
-            sizeof( buflfs));
+    if (sizeof(off_t) > 4)
+        lfs = 1;
 
-    if (strcasecmp(pgm, "ckd2cckd") == 0)
-        // "Usage: ckd2cckd ...
-        MSGBUF( usage ,MSG( HHC02435, "I", bufz, bufbz ) );
+#define HHC02435I  "HHC02435I "     // ckd2cckd
+#define HHC02436I  "HHC02436I "     // cckd2ckd
+#define HHC02437I  "HHC02437I "     // fba2cfba
+#define HHC02438I  "HHC02438I "     // cfba2fba
+#define HHC02439I  "HHC02439I "     // dasdcopy
 
-    else if (strcasecmp(pgm, "cckd2ckd") == 0)
-        // "Usage: cckd2ckd ...
-        MSGBUF( usage ,MSG( HHC02436, "I", buflfs ) );
+#define Z_HELP     "  -z       compress using zlib [default]"
+#define BZ_HELP    "  -bz2     compress using bzip2"
+#define LFS_HELP   "  -lfs     create single large output file"
 
-    else if (strcasecmp(pgm, "fba2cfba") == 0)
-        // "Usage: fba2cfba ...
-        MSGBUF( usage ,MSG( HHC02437, "I", bufz, bufbz ) );
-
-    else if (strcasecmp(pgm, "cfba2fba") == 0)
-        // "Usage: cfba2fba ...
-        MSGBUF( usage ,MSG( HHC02438, "I", buflfs ) );
-
+    if (strcasecmp( pgm,                   "ckd2cckd"    ) == 0)
+    {
+        if (zlib)  MSGBUF(  zbuf, "%s%s\n", HHC02435I,  Z_HELP );
+        if (bzip2) MSGBUF( bzbuf, "%s%s\n", HHC02435I, BZ_HELP );
+        WRMSG(                              HHC02435, "I", zbuf, bzbuf );
+    }
+    else if (strcasecmp( pgm,             "cckd2ckd"     ) == 0)
+    {
+        if (lfs) MSGBUF( lfsbuf, "%s%s\n", HHC02436I, LFS_HELP );
+        WRMSG(                             HHC02436, "I", lfsbuf );
+    }
+    else if (strcasecmp( pgm,              "fba2cfba"    ) == 0)
+    {
+        if (zlib)  MSGBUF(  zbuf, "%s%s\n", HHC02437I,  Z_HELP );
+        if (bzip2) MSGBUF( bzbuf, "%s%s\n", HHC02437I, BZ_HELP );
+        WRMSG(                              HHC02437, "I", zbuf, bzbuf );
+    }
+    else if (strcasecmp( pgm,             "cfba2fba"     ) == 0)
+    {
+        if (lfs) MSGBUF( lfsbuf, "%s%s\n", HHC02438I, LFS_HELP );
+        WRMSG(                             HHC02438, "I", lfsbuf );
+    }
     else
-        // "Usage: %s ...
-        MSGBUF( usage ,MSG( HHC02439, "I", pgm, bufz, bufbz, buflfs ) );
+    {
+        if (zlib)  MSGBUF(   zbuf, "%s%s\n", HHC02439I,   Z_HELP );
+        if (bzip2) MSGBUF(  bzbuf, "%s%s\n", HHC02439I,  BZ_HELP );
+        if (lfs)   MSGBUF( lfsbuf, "%s%s\n", HHC02439I, LFS_HELP );
+        WRMSG(                               HHC02439, "I", pgm, zbuf, bzbuf, lfsbuf );
+    }
 
-    fprintf( stdout, "%s", usage );
     return -1;
+
 } /* end function syntax */
 
 /*-------------------------------------------------------------------*/

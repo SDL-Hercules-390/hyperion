@@ -155,6 +155,10 @@ static void print_status (char *devname, long stat)
 /*-------------------------------------------------------------------*/
 static int print_usage()
 {
+    // "HHC02760I Usage..."
+
+#define MSGNUM  "HHC02760I "
+
     char usage[4096];
 
 #if defined( _MSVC_ )
@@ -166,50 +170,50 @@ static int print_usage()
     MSGBUF( usage,
 
 //       1...5...10...15...20...25...30...35...40...45...50...55...60...65...70...75...80
-        "Usage:\n\n"
-
-        "   %s  [tapedrive] [awsfile] or\n"
-        "   %s  [awsfile] [tapedrive]\n\n"
-
-        "Where:\n\n"
-
-        "   tapedrive    specifies the device filename of the SCSI tape drive.\n"
-        "                Must begin with \"%s\" to be recognized.\n"
-        "   awsfile      specifies the filename of the AWS emulated tape file.\n\n"
-
-        "The first filename is the input; the second is the output.\n\n"
-
-        "If the input file is a SCSI tape, it is read and processed until physical EOD\n"
-        "(end-of-data) is reached (i.e. it does not stop whenever multiple tapemarks or\n"
-        "filemarks are read; it continues processing until the SCSI tape drive says\n"
-        "there is no more data on the tape). The resulting AWS eumulated tape O/P file,\n"
-        "when specified for the filename on a Hercules tape device configuration\n"
-        "statement, can then be used instead in order for the Hercules guest O/S to\n"
-        "read the exact same data without having to have a SCSI tape drive physically\n"
-        "attached to the host system. This allows you to easily transfer SCSI tape data\n"
-        "to other systems that may not have SCSI tape drives attached to them by simply\n"
-        "using the AWS emulated tape file instead, or allows systems without SCSI tape\n"
-        "drives to create tape output (in the form of an AWS tape file) which can then\n"
-        "be copied to a SCSI tape (via %s) by a system which DOES have one.\n\n"
-
-        "The possible return codes and their meaning are:\n\n"
-
-        "   %2d           Successful completion.\n"
-        "   %2d           Invalid arguments or no arguments given.\n"
-        "   %2d           Unable to open SCSI tape drive device file.\n"
-        "   %2d           Unable to open AWS emulated tape file.\n"
-        "   %2d           Unrecoverable I/O error setting variable length block\n"
-        "                processing for SCSI tape device.\n"
-        "   %2d           Unrecoverable I/O error rewinding SCSI tape device.\n"
-        "   %2d           Unrecoverable I/O error obtaining status of SCSI device.\n"
-        "   %2d           Unrecoverable I/O error reading block header\n"
-        "                from AWS emulated tape file.\n"
-        "   %2d           Unrecoverable I/O error reading data block.\n"
-        "   %2d           AWS emulated tape block size too large.\n"
-        "   %2d           Unrecoverable I/O error writing tapemark.\n"
-        "   %2d           Unrecoverable I/O error writing block header\n"
-        "                to AWS emulated tape file.\n"
-        "   %2d           Unrecoverable I/O error writing data block.\n"
+        "Usage:\n"
+        MSGNUM "\n"
+        MSGNUM "   %s  [tapedrive] [awsfile] or\n"
+        MSGNUM "   %s  [awsfile] [tapedrive]\n"
+        MSGNUM "\n"
+        MSGNUM "Where:\n"
+        MSGNUM "\n"
+        MSGNUM "   tapedrive    specifies the device filename of the SCSI tape drive.\n"
+        MSGNUM "                Must begin with \"%s\" to be recognized.\n"
+        MSGNUM "   awsfile      specifies the filename of the AWS emulated tape file.\n"
+        MSGNUM "\n"
+        MSGNUM "The first filename is the input; the second is the output.\n"
+        MSGNUM "\n"
+        MSGNUM "If the input file is a SCSI tape, it is read and processed until physical EOD\n"
+        MSGNUM "(end-of-data) is reached (i.e. it does not stop whenever multiple tapemarks or\n"
+        MSGNUM "filemarks are read; it continues processing until the SCSI tape drive says\n"
+        MSGNUM "there is no more data on the tape). The resulting AWS eumulated tape O/P file,\n"
+        MSGNUM "when specified for the filename on a Hercules tape device configuration\n"
+        MSGNUM "statement, can then be used instead in order for the Hercules guest O/S to\n"
+        MSGNUM "read the exact same data without having to have a SCSI tape drive physically\n"
+        MSGNUM "attached to the host system. This allows you to easily transfer SCSI tape data\n"
+        MSGNUM "to other systems that may not have SCSI tape drives attached to them by simply\n"
+        MSGNUM "using the AWS emulated tape file instead, or allows systems without SCSI tape\n"
+        MSGNUM "drives to create tape output (in the form of an AWS tape file) which can then\n"
+        MSGNUM "be copied to a SCSI tape (via %s) by a system which DOES have one.\n"
+        MSGNUM "\n"
+        MSGNUM "The possible return codes and their meaning are:\n"
+        MSGNUM "\n"
+        MSGNUM "   %2d           Successful completion.\n"
+        MSGNUM "   %2d           Invalid arguments or no arguments given.\n"
+        MSGNUM "   %2d           Unable to open SCSI tape drive device file.\n"
+        MSGNUM "   %2d           Unable to open AWS emulated tape file.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error setting variable length block\n"
+        MSGNUM "                processing for SCSI tape device.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error rewinding SCSI tape device.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error obtaining status of SCSI device.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error reading block header\n"
+        MSGNUM "                from AWS emulated tape file.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error reading data block.\n"
+        MSGNUM "   %2d           AWS emulated tape block size too large.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error writing tapemark.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error writing block header\n"
+        MSGNUM "                to AWS emulated tape file.\n"
+        MSGNUM "   %2d           Unrecoverable I/O error writing data block.\n"
 
         ,pgm
         ,pgm

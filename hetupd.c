@@ -68,7 +68,7 @@ static void
 usage( char *name )
 {
 #ifdef  HET_BZIP2
-    char *bufbz = "                -b   use BZLIB compression\n";
+    char *bufbz = "                -b    use BZLIB compression\n";
 #else
     char *bufbz = "";
 #endif

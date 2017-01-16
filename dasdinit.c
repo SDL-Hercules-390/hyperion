@@ -259,27 +259,30 @@ argexit ( int code, char *m )
         break;
     default:
         {
+            // HHC02448 "Usage: dasdinit ...."
+
 #ifdef HAVE_LIBZ
-         char *bufz = "            -z     build compressed dasd image file using zlib\n";
+         char *bufz = "HHC02448I   -z        build compressed dasd image file using zlib\n";
 #else
          char *bufz = "";
 #endif
+
 #ifdef CCKD_BZIP2
-         char *bufbz = "            -bz2   build compressed dasd image file using bzip2\n";
+         char *bufbz = "HHC02448I   -bz2      build compressed dasd image file using bzip2\n";
 #else
          char *bufbz = "";
 #endif
-         char  buflfs[80];
 
-            strlcpy( buflfs,
-                    (sizeof(off_t) > 4) ?
-                    "            -lfs   build a large (uncompressed) dasd file (if supported)\n" : "",
-                    sizeof( buflfs ) );
+         char* buflfs = "";
 
-            // HHC02448 "Usage: dasdinit ...."
+         if (sizeof(off_t) > 4)
+            buflfs = "HHC02448I   -lfs      build a large (uncompressed) dasd file (if supported)\n";
+
             WRMSG( HHC02448, "I", bufz, bufbz, buflfs );
         }
         break;
     }
+
     exit(code);
+
 } /* end function argexit */

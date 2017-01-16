@@ -1091,7 +1091,7 @@ S32 vtimer=0;
     if(regs->ecps_vtmrpt)
     {
         vtimer=ecps_vtimer(regs);
-        STORE_FW(regs->ecps_vtmrpt, itimer);
+        STORE_FW(regs->ecps_vtmrpt, vtimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/
 

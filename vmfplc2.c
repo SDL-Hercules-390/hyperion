@@ -100,19 +100,7 @@ void host_to_guest_str(unsigned char *d,char *s)
     }
 }
 
-/* Generic 'usage' routine in case of incorrect */
-/* invocation.                                  */
-int usage(char *cmd)
-{
-    char    *bcmd;
-
-    bcmd=basename(cmd);
-    fprintf(stderr,"Usage :\n");
-    fprintf(stderr,"\t%s DUMP filelist tapefile\n",bcmd);
-    fprintf(stderr,"\t%s LOAD tapefile\n",bcmd);
-    fprintf(stderr,"\t%s SCAN tapefile\n",bcmd);
-    return 0;
-}
+static char* pgm;
 
 /* Parse the command line */
 int parse_parms(int ac, char **av, struct options *opts)
@@ -120,7 +108,7 @@ int parse_parms(int ac, char **av, struct options *opts)
     opts->cmd=basename(av[0]);
     if(ac<2)
     {
-        usage(av[0]);
+        WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
         return 1;
     }
     do
@@ -140,8 +128,9 @@ int parse_parms(int ac, char **av, struct options *opts)
             opts->verb=VMFPLC2LOAD;
             break;
         }
-        fprintf(stderr,"Invalid function %s\n",av[1]);
-        usage(av[0]);
+        // "Invalid function %s"
+        WRMSG( HHC02621, "E", av[1] );
+        WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
         return 1;
     } while(0);
     switch(opts->verb)
@@ -150,8 +139,9 @@ int parse_parms(int ac, char **av, struct options *opts)
         case VMFPLC2LOAD:
         if(ac<3)
         {
-            fprintf(stderr,"Tape file not specified\n");
-            usage(av[0]);
+            // "%s not specified"
+            WRMSG( HHC02622, "E", "tape file" );
+            WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
         opts->tapefile=av[2];
@@ -159,14 +149,16 @@ int parse_parms(int ac, char **av, struct options *opts)
         case VMFPLC2DUMP:
         if(ac<3)
         {
-            fprintf(stderr,"file list not specified\n");
-            usage(av[0]);
+            // "%s not specified"
+            WRMSG( HHC02622, "E", "file list" );
+            WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
         if(ac<4)
         {
-            fprintf(stderr,"Tape file not specified\n");
-            usage(av[0]);
+            // "%s not specified"
+            WRMSG( HHC02622, "E", "tape file" );
+            WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
         opts->procfile=av[2];
@@ -222,12 +214,14 @@ char *validate_cmsfile(char *fn,char *ft,char *fm)
     }
     if((i=validate_fnft(fn))!=0)
     {
-        sprintf(msg,"Invalid character in CMS file name at position %d",i);
+        // "Invalid character in CMS file %s at position %d"
+        MSGBUF( msg, MSG( HHC02628, "E", "name", i ));
         return msg;
     }
     if((i=validate_fnft(ft))!=0)
     {
-        sprintf(msg,"Invalid character in CMS file type at position %d",i);
+        // "Invalid character in CMS file %s at position %d"
+        MSGBUF( msg, MSG( HHC02628, "E", "type", i ));
         return msg;
     }
     if(!isalpha(fm[0]))
@@ -346,28 +340,6 @@ struct TAPE_BLOCKS *init_blocks(size_t blksz,size_t modulo,unsigned char *hdr,in
     tbs->blk_modulo=modulo;
     return tbs;
 }
-
-#if 0
-/* DEBUGGING FUNCTION */
-static void hexdump(unsigned char *bfr,int sz)
-{
-    int i;
-    for(i=0;i<sz;i++)
-    {
-        if(i%16==0)
-        {
-            if(i) printf("\n");
-            printf("%4.4X :",i);
-        }
-        if(i%4==0)
-        {
-            printf(" ");
-        }
-        printf("%2.2X",bfr[i]);
-    }
-    if(i%16) printf("\n");
-}
-#endif
 
 /* Add a chunk of data to a collection of tape blocks */
 void append_data(struct TAPE_BLOCKS *tbs,unsigned char *bfr,size_t sz)
@@ -616,7 +588,8 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
     }
     if(recfm!='V')
     {
-        fprintf(stderr,"Structured input files for output to RECFM F files not supported (yet)\n");
+        // "%s not supported (yet)"
+        WRMSG( HHC02623, "E", "Structured input files for output to RECFM F files" );
         return NULL; /* Structured files only for RECFM V for the time being */
     }
     recs=initrecs(recfm,*recl,plcd_hdr,5);
@@ -626,7 +599,8 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
         rc=(int)fread(bfr,1,rsz,ifile);
         if(rc!=rsz)
         {
-            fprintf(stderr,"Expected %d bytes from file %s, but only %d file read\n",rsz,infile,rc);
+            // "Expected %d bytes from file %s, but only %d file read"
+            WRMSG( HHC02629, "E", rsz, infile, rc );
             return NULL;
         }
         addrecs(recs,bfr,rsz);
@@ -651,7 +625,8 @@ struct TAPE_BLOCKS *load_file(char *infile,char *filefmt,char recfm,int *recl,in
             blks=load_structured_file(infile,recfm,recl,recc,filesz);
             break;
         default:
-            fprintf(stderr,"*** INTERNAL ERROR 0001\n");
+            // "INTERNAL ERROR %s"
+            WRMSG( HHC02634, "E", "0001" );
             return NULL;
     }
     return blks;
@@ -706,8 +681,7 @@ struct FST_BLOCK *format_fst(char *fn,char *ft,char *fm,char recfm,int lrecl,int
     fstb->fst.dt[1]=to_dcb(ttm->tm_mday);
     fstb->fst.dt[2]=to_dcb(ttm->tm_hour);
     fstb->fst.dt[3]=to_dcb(ttm->tm_min);
-    snprintf(bfr,3,"%2.2u",ttm->tm_year%100);
-    bfr[2]=0;
+    MSGBUF( bfr, "%2.2u", ttm->tm_year % 100 );
     host_to_guest_str(fstb->fst.year,bfr);
 
     fstb->fst.adt[0]=to_dcb(ttm->tm_year%100);
@@ -876,13 +850,17 @@ int process_entry(struct options *opts,char *orec,int recno)
     }
     if(badentry)
     {
-        fprintf(stderr,">>> %s\n",orec);
-        fprintf(stderr,"*** Bad entry at line %d in file \"%s\"\n",recno,opts->procfile);
-        fprintf(stderr,"*** Cause : %s\n",msg);
+        // ">>> %s"
+        WRMSG( HHC02631, "E", orec );
+        // "    Bad entry at line %d in file \"%s\""
+        WRMSG( HHC02632, "E", recno, opts->procfile );
+        // "    \"%s\""
+        WRMSG( HHC02633, "E", msg );
         free(rec);
         return 1;
     }
-    printf(" %-8s %-8s %-2s\n",fn,ft,fm);
+    // "%-8s %-8s %-2s"
+    WRMSG( HHC02626, "I", fn, ft, fm );
     blks=load_file(infile,filefmt,recfm[0],&reclen,&reccount,&filesz);
     if(blks==NULL)
     {
@@ -927,14 +905,17 @@ int process_procfile(struct options *opts)
         rec[strlen(rec)-1]=0;
         if ( process_entry(opts,rec,recno) != 0 )
         {
-            fprintf(stderr,"*** Entry ignored\n\n");
+            // "%s"
+            WRMSG( HHC02627, "I", "Entry ignored" );
+            WRMSG( HHC02627, "I", "" );
             errcount++;
         }
     }
     fclose(pfile);
     if(errcount>0)
     {
-        fprintf(stderr,"%d errors encountered\n",errcount);
+        // "%d errors encountered"
+        WRMSG( HHC02630, "I", errcount );
     }
     write_tape_mark(opts);
     write_tape_mark(opts);
@@ -960,7 +941,8 @@ int open_tapefile(struct options *opts,int w)
 /* Perform vmfplc2 DUMP operation */
 int dodump(struct options *opts)
 {
-    printf(" DUMPING.....\n");
+    // "%s"
+    WRMSG( HHC02625, "I", "DUMPING..." );
     open_tapefile(opts,1);
     return process_procfile(opts);
 }
@@ -969,7 +951,8 @@ int dodump(struct options *opts)
 int doload(struct options *opts)
 {
     UNREFERENCED(opts);
-    printf("LOAD function not implemented yet\n");
+    // "%s function not implemented (yet)"
+    WRMSG( HHC02624, "E", "LOAD" );
     return 0;
 }
 
@@ -977,7 +960,8 @@ int doload(struct options *opts)
 int doscan(struct options *opts)
 {
     UNREFERENCED(opts);
-    printf("SCAN function not implemented yet\n");
+    // "%s function not implemented (yet)"
+    WRMSG( HHC02624, "E", "SCAN" );
     return 0;
 }
 
@@ -987,7 +971,7 @@ int main(int argc,char **argv)
     int             rc;
     struct options  opts;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "VM/CMS VMFPLC2 Utility", NULL );
+    INITIALIZE_UTILITY( UTILITY_NAME, "VM/CMS VMFPLC2 Utility", &pgm );
 
     if(parse_parms(argc,argv,&opts)!=0)
     {

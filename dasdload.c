@@ -135,26 +135,36 @@ int  infolvl = 1;
 static void
 argexit ( int code, char *pgm )
 {
-    char usage[512];
-    char buflfs[64];
+    // "HHC02496I Usage: ..."
+
 #ifdef CCKD_COMPRESS_ZLIB
-    char *bufz =  "            -z     compress using zlib [default]\n";
+    char *bufz =  "  -z     compress using zlib [default]\n";
 #else
     char *bufz = "";
 #endif
+
+#define MSG_NUM     "HHC02496I "
+
 #ifdef CCKD_COMPRESS_BZIP2
-    char *bufbz = "            -bz2   compress using bzip2\n";
+  #ifdef CCKD_COMPRESS_ZLIB
+    char *bufbz = MSG_NUM "  -bz2   compress using bzip2\n";
+  #else
+    char *bufbz =         "  -bz2   compress using bzip2\n";
+  #endif
 #else
     char *bufbz = "";
 #endif
 
-    strncpy( buflfs,
-            (sizeof(off_t) > 4) ?
-                  "            -lfs   create single large output file\n" : "",
-            sizeof( buflfs));
+    char*  buflfs = "";
 
-    MSGBUF( usage ,MSG( HHC02496, "I", pgm, bufz, bufbz, buflfs ) );
-    fprintf( stderr, "%s", usage );
+    if (sizeof(off_t) > 4)
+#if defined( CCKD_COMPRESS_ZLIB ) || defined( CCKD_COMPRESS_BZIP2 )
+        buflfs = MSG_NUM "  -lfs   create single large output file\n";
+#else
+        buflfs =         "  -lfs   create single large output file\n";
+#endif
+
+    FWRMSG( stderr, HHC02496, "I", pgm, bufz, bufbz, buflfs );
 
     exit(code);
 } /* end function argexit */

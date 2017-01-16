@@ -1446,102 +1446,103 @@ Examples:
 #define HHC02433 "Read error on file %s: %s %d stat=%2.2X, null %s substituted"
 #define HHC02434 "Write error on file %s: %s %d stat=%2.2X"
 #define HHC02435 "Usage: ckd2cckd [-options] ifile ofile\n" \
-       "          Copy a ckd dasd file to a compressed ckd dasd file\n" \
-       "            ifile  input ckd dasd file\n" \
-       "            ofile  output compressed ckd dasd file\n" \
-       "          options:\n" \
-       "            -h     display this help and quit\n" \
-       "            -q     quiet mode, don't display status\n" \
-       "            -r     replace the output file if it exists\n" \
+       "HHC02435I Copy a ckd dasd file to a compressed ckd dasd file\n" \
+       "HHC02435I   ifile    input ckd dasd file\n" \
+       "HHC02435I   ofile    output compressed ckd dasd file\n" \
+       "HHC02435I options:\n" \
+       "HHC02435I   -h       display this help and quit\n" \
+       "HHC02435I   -q       quiet mode, don't display status\n" \
+       "HHC02435I   -r       replace the output file if it exists\n" \
        "%s" \
        "%s" \
-       "            -0     don't compress track images\n" \
-       "            -cyls n  size of output file\n" \
-       "            -a     output file will have alt cyls"
+       "HHC02435I   -0       don't compress track images\n" \
+       "HHC02435I   -cyls n  size of output file\n" \
+       "HHC02435I   -a       output file will have alt cyls"
 #define HHC02436 "Usage: cckd2ckd [-options] ifile [sf=sfile] ofile\n" \
-       "          Copy a compressed ckd file to a ckd file\n" \
-       "            ifile  input compressed ckd dasd file\n" \
-       "            sfile  input compressed ckd shadow file\n" \
-       "                   (optional)\n" \
-       "            ofile  output ckd dasd file\n" \
-       "          options:\n" \
-       "            -h     display this help and quit\n" \
-       "            -q     quiet mode, don't display status\n" \
-       "            -r     replace the output file if it exists\n" \
+       "HHC02436I Copy a compressed ckd file to a ckd file\n" \
+       "HHC02436I   ifile    input compressed ckd dasd file\n" \
+       "HHC02436I   sfile    input compressed ckd shadow file (optional)\n" \
+       "HHC02436I   ofile    output ckd dasd file\n" \
+       "HHC02436I options:\n" \
+       "HHC02436I   -h       display this help and quit\n" \
+       "HHC02436I   -q       quiet mode, don't display status\n" \
+       "HHC02436I   -r       replace the output file if it exists\n" \
        "%s" \
-       "            -cyls n size of output file\n" \
-       "            -a     output file will have alt cyls"
+       "HHC02436I   -cyls n  size of output file\n" \
+       "HHC02436I   -a       output file will have alt cyls"
 #define HHC02437 "Usage: fba2cfba [-options] ifile ofile\n" \
-       "          Copy a fba dasd file to a compressed fba dasd file\n" \
-       "            ifile  input fba dasd file\n" \
-       "            ofile  output compressed fba dasd file\n" \
-       "          options:\n" \
-       "            -h     display this help and quit\n" \
-       "            -q     quiet mode, don't display status\n" \
-       "            -r     replace the output file if it exists\n" \
+       "HHC02437I Copy a fba dasd file to a compressed fba dasd file\n" \
+       "HHC02437I   ifile    input fba dasd file\n" \
+       "HHC02437I   ofile    output compressed fba dasd file\n" \
+       "HHC02437I options:\n" \
+       "HHC02437I   -h       display this help and quit\n" \
+       "HHC02437I   -q       quiet mode, don't display status\n" \
+       "HHC02437I   -r       replace the output file if it exists\n" \
        "%s" \
        "%s" \
-       "            -0     don't compress track images\n" \
-       "            -blks n size of output file"
+       "HHC02437I   -0       don't compress track images\n" \
+       "HHC02437I   -blks n  size of output file"
 #define HHC02438 "Usage: cfba2fba [-options] ifile [sf=sfile] ofile\n" \
-       "          Copy a compressed fba file to a fba file\n" \
-       "            ifile  input compressed fba dasd file\n" \
-       "            sfile  input compressed fba shadow file\n" \
-       "                   (optional)\n" \
-       "            ofile  output fba dasd file\n" \
-       "          options:\n" \
-       "            -h     display this help and quit\n" \
-       "            -q     quiet mode, don't display status\n" \
-       "            -r     replace the output file if it exists\n" \
+       "HHC02438I Copy a compressed fba file to a fba file\n" \
+       "HHC02438I   ifile    input compressed fba dasd file\n" \
+       "HHC02438I   sfile    input compressed fba shadow file (optional)\n" \
+       "HHC02438I   ofile    output fba dasd file\n" \
+       "HHC02438I options:\n" \
+       "HHC02438I   -h       display this help and quit\n" \
+       "HHC02438I   -q       quiet mode, don't display status\n" \
+       "HHC02438I   -r       replace the output file if it exists\n" \
        "%s" \
-       "            -blks n  size of output file"
+       "HHC02438I   -blks n  size of output file"
 #define HHC02439 "Usage: %s [-options] ifile [sf=sfile] ofile\n" \
-       "          Copy a dasd file to another dasd file\n" \
-       "            ifile  input dasd file\n" \
-       "            sfile  input shadow file [optional]\n" \
-       "            ofile  output dasd file\n" \
-       "          options:\n" \
-       "            -h     display this help and quit\n" \
-       "            -q     quiet mode, don't display status\n" \
-       "            -r     replace the output file if it exists\n" \
+       "HHC02439I Copy a dasd file to another dasd file\n" \
+       "HHC02439I   ifile    input dasd file\n" \
+       "HHC02439I   sfile    input shadow file [optional]\n" \
+       "HHC02439I   ofile    output dasd file\n" \
+       "HHC02439I options:\n" \
+       "HHC02439I   -h       display this help and quit\n" \
+       "HHC02439I   -q       quiet mode, don't display status\n" \
+       "HHC02439I   -r       replace the output file if it exists\n" \
        "%s" \
        "%s" \
-       "            -0     don't compress output\n" \
-       "            -blks n  size of output fba file\n" \
-       "            -cyls n  size of output ckd file\n" \
-       "            -a     output ckd file will have alt cyls\n" \
+       "HHC02439I   -0       don't compress output\n" \
+       "HHC02439I   -blks n  size of output fba file\n" \
+       "HHC02439I   -cyls n  size of output ckd file\n" \
+       "HHC02439I   -a       output ckd file will have alt cyls\n" \
        "%s" \
-       "                   even if it exceeds 2G in size\n" \
-       "            -o type  output file type (CKD, CCKD, FBA, CFBA)"
+       "HHC02439I   -o type  output file type (CKD, CCKD, FBA, CFBA)"
 //dasdinit.c
 #define HHC02444 "Member %s is not a single text record"
 #define HHC02445 "Invalid, unsupported or missing %s: %s"
 #define HHC02446 "Invalid number of arguments"
 #define HHC02447 "Option '-linux' is only supported fo device type 3390"
 #define HHC02448 "Usage: dasdinit [-options] filename devtype[-model] [volser] [size]\n" \
-       "          Builds an empty dasd image file\n" \
-       "          options:\n" \
+       "HHC02448I Builds an empty dasd image file\n" \
+       "HHC02448I options:\n" \
+       "HHC02448I\n" \
        "%s" \
        "%s" \
-       "            -0     build compressed dasd image file with no compression\n" \
+       "HHC02448I   -0        build compressed dasd image file with no compression\n" \
        "%s" \
-       "            -a     build dasd image file that includes alternate cylinders\n" \
-       "                   (option ignored if size is manually specified)\n" \
-       "            -r     build 'raw' dasd image file  (no VOL1 or IPL track)\n" \
-       "            -b     make wait PSW in IPL1 record a BC-mode PSW\n" \
-       "                   (default is EC-mode PSW)\n" \
-       "            -m     enable wait PSW in IPL1 record for machine checks\n" \
-       "                   (default is disabled for machine checks)\n" \
-       "            -linux  null track images will look like linux dasdfmt'ed images\n" \
-       "                   (3390 device type only)\n\n" \
-       "            filename  name of dasd image file to be created\n" \
-       "            devtype  CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n" \
-       "                   FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336\n" \
-       "            model  device model (implies size) (opt)\n" \
-       "            volser  volume serial number (1-6 characters)\n" \
-       "                   (specified only if '-r' option not used)\n" \
-       "            size   number of CKD cylinders or 512-byte FBA sectors\n" \
-       "                   (required if model not specified else optional)"
+       "HHC02448I   -a        build dasd image file that includes alternate cylinders\n" \
+       "HHC02448I             (option ignored if size is manually specified)\n" \
+       "HHC02448I   -r        build 'raw' dasd image file\n" \
+       "HHC02448I             (no VOL1 or IPL track)\n" \
+       "HHC02448I   -b        make wait PSW in IPL1 record a BC-mode PSW\n" \
+       "HHC02448I             (default is EC-mode PSW)\n" \
+       "HHC02448I   -m        enable wait PSW in IPL1 record for machine checks\n" \
+       "HHC02448I             (default is disabled for machine checks)\n" \
+       "HHC02448I   -linux    null track images will look like linux dasdfmt'ed images\n" \
+       "HHC02448I             (3390 device type only)\n" \
+       "HHC02448I\n" \
+       "HHC02448I   filename  name of dasd image file to be created\n" \
+       "HHC02448I   devtype   CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n" \
+       "HHC02448I             FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336\n" \
+       "HHC02448I\n" \
+       "HHC02448I   model     device model (implies size) (opt)\n" \
+       "HHC02448I   volser    volume serial number (1-6 characters)\n" \
+       "HHC02448I             (specified only if '-r' option not used)\n" \
+       "HHC02448I   size      number of CKD cylinders or 512-byte FBA sectors\n" \
+       "HHC02448I             (required if model not specified else optional)"
 #define HHC02449 "DASD operation failed"
 #define HHC02450 "Member %s type %s skipped"
 #define HHC02451 "Too many members"
@@ -1611,19 +1612,18 @@ Examples:
        "HHC02495I   -2      intermediate checking\n" \
        "HHC02495I   -3      maximal checking"
 #define HHC02496 "Usage: %s [options] ctlfile outfile [n]\n" \
-       "          options:\n" \
-       "            -0     no compression (default)\n" \
-       "            -a     output disk will include alternate cylinders\n" \
-       "            -b     make wait PSW in IPL1 record a BC-mode PSW\n" \
-       "                   (default is EC-mode PSW)\n" \
-       "            -m     enable wait PSW in IPL1 record for machine checks\n" \
-       "                   (default is disabled for machine checks)\n" \
-       "%s%s%s" \
-       "\n" \
-       "          ctlfile  name of input control file\n" \
-       "          outfile  name of DASD image file to be created\n" \
-       "\n" \
-       "          n        msglevel 'n' is a digit 0 - 5 re: output verbosity"
+       "HHC02496I options:\n" \
+       "HHC02496I   -0     no compression (default)\n" \
+       "HHC02496I   -a     output disk will include alternate cylinders\n" \
+       "HHC02496I   -b     make wait PSW in IPL1 record a BC-mode PSW\n" \
+       "HHC02496I          (default is EC-mode PSW)\n" \
+       "HHC02496I   -m     enable wait PSW in IPL1 record for machine checks\n" \
+       "HHC02496I          (default is disabled for machine checks)\n" \
+       "HHC02496I %s%s%s" \
+       "HHC02496I\n" \
+       "HHC02496I ctlfile  name of input control file\n" \
+       "HHC02496I outfile  name of DASD image file to be created\n" \
+       "HHC02496I n        msglevel 'n' is a digit 0 - 5 indicating output verbosity"
 #define HHC02497 "Usage: %s [-f] [-level] file1 [file2 ... ]\n" \
        "HHC02497I   file    name of CCKD file\n" \
        "HHC02497I Options:\n" \
@@ -1756,6 +1756,29 @@ Examples:
 #define HHC02606 "Track %d rec[%02X/%d] kl[%d]"
 #define HHC02607 "Track %d rec[%02X/%d] dl[%d]"
 #define HHC02608 "End of track"
+//efine HHC02609 - HHC02619 (available)
+
+// vmfplc2
+#define HHC02620 "Usage: %s verb [outfile] tapefile\n" \
+       "HHC02620I   verb      desired action (DUMP, LOAD or SCAN)\n" \
+       "HHC02620I   outfile   filename of output dump file (DUMP only)\n" \
+       "HHC02620I   tapefile  filename of input tape file"
+#define HHC02621 "Invalid function %s"
+#define HHC02622 "%s not specified"
+#define HHC02623 "%s not supported (yet)"
+#define HHC02624 "%s function not implemented (yet)"
+#define HHC02625 "%s" // "DUMPING...", "SCANNING...", "LOADING...", etc
+#define HHC02626 "%-8s %-8s %-2s"
+#define HHC02627 "%s" // "Entry ignored", etc.
+#define HHC02628 "Invalid character in CMS file %s at position %d"
+#define HHC02629 "Expected %d bytes from file %s, but only %d file read"
+#define HHC02630 "%d errors encountered"
+#define HHC02631 ">>> %s"
+#define HHC02632 "    Bad entry at line %d in file \"%s\""
+#define HHC02633 "    \"%s\""
+#define HHC02634 "INTERNAL ERROR %s"
+
+//efine HHC02635 - HHC02699 (available)
 
 #define HHC02700 "SCSI tapes are not supported with this build"
 #define HHC02701 "Abnormal termination"
@@ -1805,19 +1828,19 @@ Examples:
        "HHC02729I   -i        create an IEHINITT formatted tape (default: on)\n" \
        "HHC02729I   -n        create an NL tape"
 #define HHC02730 "Usage: %s [options] source [dest]\n" \
-       "\n" \
-       "            Options:\n" \
-       "                -1   compress fast\n" \
-       "                     ...\n" \
-       "                -9   compress best\n" \
-       "%s" \
-       "                -c n set chunk size to \"n\"\n" \
-       "                -d   decompress source tape\n" \
-       "                -h   display usage summary\n" \
-       "                -r   rechunk\n" \
-       "                -s   strict AWSTAPE specification (chunksize=4096,no compression)\n" \
-       "                -v   verbose (debug) information\n" \
-       "                -z   use ZLIB compression\n"
+       "HHC02730I\n" \
+       "HHC02730I   Options:\n" \
+       "HHC02730I       -1    compress fast\n" \
+       "HHC02730I             ...\n" \
+       "HHC02730I       -9    compress best\n" \
+       "HHC02730I %s" \
+       "HHC02730I       -c n  set chunk size to \"n\"\n" \
+       "HHC02730I       -d    decompress source tape\n" \
+       "HHC02730I       -h    display usage summary\n" \
+       "HHC02730I       -r    rechunk\n" \
+       "HHC02730I       -s    strict AWSTAPE specification (chunksize=4096,no compression)\n" \
+       "HHC02730I       -v    verbose (debug) information\n" \
+       "HHC02730I       -z    use ZLIB compression\n"
 #define HHC02731 "          (tapemark)"
 #define HHC02732 "Bytes read:    %"PRId64" (%3.1f MB), Blocks=%u, avg=%u"
 #define HHC02733 "Bytes written: %"PRId64" (%3.1f MB)"
