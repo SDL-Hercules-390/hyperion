@@ -35,6 +35,10 @@ EXECUTABLES = \
     $(X)conspawn.exe \
     $(X)dasdcat.exe  \
     $(X)dasdconv.exe \
+    $(X)ckd2cckd.exe \
+    $(X)cckd2ckd.exe \
+    $(X)fba2cfba.exe \
+    $(X)cfba2fba.exe \
     $(X)dasdcopy.exe \
     $(X)dasdinit.exe \
     $(X)dasdisup.exe \

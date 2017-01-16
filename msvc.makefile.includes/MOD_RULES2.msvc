@@ -134,8 +134,6 @@ $(X)s37x.dll:     $(O)s37xmod.obj \
 # ---------------------------------------------------------------------
 # Additional loadable modules
 
-crypto: $(X)dyncrypt.dll
-
 $(X)dyncrypt.dll: $(O)dyncrypt.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
@@ -176,6 +174,18 @@ $(X)dasdcat.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 $(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)ckd2cckd.exe: $(X)dasdcopy.exe
+    copy /b /v /y $(X)dasdcopy.exe $(X)ckd2cckd.exe > NUL
+
+$(X)cckd2ckd.exe: $(X)dasdcopy.exe
+    copy /b /v /y $(X)dasdcopy.exe $(X)cckd2ckd.exe > NUL
+
+$(X)fba2cfba.exe: $(X)dasdcopy.exe
+    copy /b /v /y $(X)dasdcopy.exe $(X)fba2cfba.exe > NUL
+
+$(X)cfba2fba.exe: $(X)dasdcopy.exe
+    copy /b /v /y $(X)dasdcopy.exe $(X)cfba2fba.exe > NUL
 
 $(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
