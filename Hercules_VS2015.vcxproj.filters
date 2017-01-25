@@ -1205,10 +1205,19 @@
     <None Include="all-all.jobs">
       <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
     </None>
+    <None Include="all-all.msbuild.jobs">
+      <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
+    </None>
     <None Include="debug-all.jobs">
       <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
     </None>
+    <None Include="debug-all.msbuild.jobs">
+      <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
+    </None>
     <None Include="retail-all.jobs">
+      <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
+    </None>
+    <None Include="retail-all.msbuild.jobs">
       <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
     </None>
     <None Include="Hercules.sln">

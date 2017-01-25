@@ -1,0 +1,5 @@
+
+* Parallel-build all "Debug" Configurations for all Platforms...
+
+MSBUILD   "Hercules_VS2015.vcxproj"  %MSBUILDOPT%  /p:Configuration=Debug;Platform=Win32
+MSBUILD   "Hercules_VS2015.vcxproj"  %MSBUILDOPT%  /p:Configuration=Debug;Platform=x64

@@ -1,0 +1,5 @@
+
+* Parallel-build all "Release" Configurations for all Platforms...
+
+MSBUILD   "Hercules_VS2015.vcxproj"  %MSBUILDOPT%  /p:Configuration=Release;Platform=Win32
+MSBUILD   "Hercules_VS2015.vcxproj"  %MSBUILDOPT%  /p:Configuration=Release;Platform=x64

@@ -465,6 +465,7 @@
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="all-all.jobs" />
+    <None Include="all-all.msbuild.jobs" />
     <None Include="autoconf\config.guess" />
     <None Include="autoconf\config.rpath" />
     <None Include="autoconf\config.sub" />
@@ -485,6 +486,7 @@
     <None Include="crypto\LICENSE.txt" />
     <None Include="crypto\README.txt" />
     <None Include="debug-all.jobs" />
+    <None Include="debug-all.msbuild.jobs" />
     <None Include="decNumber\decnumber.pdf" />
     <None Include="decNumber\ERRATA" />
     <None Include="decNumber\ICU-license.html" />
@@ -656,6 +658,7 @@
     <None Include="README.WIN64" />
     <None Include="RELEASE.NOTES" />
     <None Include="retail-all.jobs" />
+    <None Include="retail-all.msbuild.jobs" />
     <None Include="scripts\cmpsc.cnf" />
     <None Include="scripts\cmpsc.rexx" />
     <None Include="scripts\hbasic1.rexx" />

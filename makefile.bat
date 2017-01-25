@@ -1,11 +1,18 @@
 @if defined TRACEON (@echo on) else (@echo off)
 
   setlocal
+
   set "TRACE=if defined DEBUG echo"
   set "return=goto :EOF"
   set "break=goto :break"
   set "exit=goto :exit"
   set "rc=0"
+
+  set "nx0=%~nx0"             && @REM (our name and extension)
+  set "nx0_cmdline=%0 %*"     && @REM (save original cmdline used)
+
+  echo %nx0% begun on %date% at %time: =0%
+  echo %nx0_cmdline%
   goto :parse_args
 
 ::*****************************************************************************
@@ -942,15 +949,37 @@
   call "%VSTOOLSDIR%vsvars32.bat"
 
   call :ifallorclean %extra_nmake_args%
-  if defined # (
-    set "VCBUILDOPT=/clean"
-  ) else if defined @ (
-    set "VCBUILDOPT=/rebuild"
+
+  if %vsver% LEQ %vs2008% (
+
+    @REM  VS2008 and earlier: use VCBUILD
+
+    if defined # (
+      set "VCBUILDOPT=/clean"
+    ) else if defined @ (
+      set "VCBUILDOPT=/rebuild"
+    ) else (
+      set "VCBUILDOPT=/nocolor"
+    )
+
+    set "runjobs_file=%CFG%-%targ_arch%.jobs"
+
   ) else (
-    set "VCBUILDOPT=/nocolor"
+
+    @REM  VS2010 and greater: use MSBUILD
+
+    if defined # (
+      set "MSBUILDOPT=/target:Clean"
+    ) else if defined @ (
+      set "MSBUILDOPT=/target:Rebuild"
+    ) else (
+      set "MSBUILDOPT=/target:Build"
+    )
+
+    set "runjobs_file=%CFG%-%targ_arch%.msbuild.jobs"
   )
 
-  "%runjobs_cmd%" %CFG%-%targ_arch%.jobs
+  "%runjobs_cmd%" %runjobs_file%
   set "rc=%errorlevel%"
   %exit%
 
@@ -967,5 +996,7 @@
 ::                               EXIT
 ::-----------------------------------------------------------------------------
 :exit
+
+  echo %nx0% ended on %date% at %time: =0%, rc=%rc%
 
   endlocal & exit /b %rc%

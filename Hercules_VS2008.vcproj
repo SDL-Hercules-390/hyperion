@@ -2566,11 +2566,23 @@
 							>
 						</File>
 						<File
+							RelativePath=".\all-all.msbuild.jobs"
+							>
+						</File>
+						<File
 							RelativePath=".\debug-all.jobs"
 							>
 						</File>
 						<File
+							RelativePath=".\debug-all.msbuild.jobs"
+							>
+						</File>
+						<File
 							RelativePath=".\retail-all.jobs"
+							>
+						</File>
+						<File
+							RelativePath=".\retail-all.msbuild.jobs"
 							>
 						</File>
 					</Filter>
