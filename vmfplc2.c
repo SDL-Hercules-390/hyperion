@@ -129,7 +129,7 @@ int parse_parms(int ac, char **av, struct options *opts)
             break;
         }
         // "Invalid function %s"
-        WRMSG( HHC02621, "E", av[1] );
+        FWRMSG( stderr, HHC02621, "E", av[1] );
         WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
         return 1;
     } while(0);
@@ -140,7 +140,7 @@ int parse_parms(int ac, char **av, struct options *opts)
         if(ac<3)
         {
             // "%s not specified"
-            WRMSG( HHC02622, "E", "tape file" );
+            FWRMSG( stderr, HHC02622, "E", "tape file" );
             WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
@@ -150,14 +150,14 @@ int parse_parms(int ac, char **av, struct options *opts)
         if(ac<3)
         {
             // "%s not specified"
-            WRMSG( HHC02622, "E", "file list" );
+            FWRMSG( stderr, HHC02622, "E", "file list" );
             WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
         if(ac<4)
         {
             // "%s not specified"
-            WRMSG( HHC02622, "E", "tape file" );
+            FWRMSG( stderr, HHC02622, "E", "tape file" );
             WRMSG( HHC02620, "I", pgm ); // "Usage: %s ...
             return 1;
         }
@@ -589,7 +589,7 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
     if(recfm!='V')
     {
         // "%s not supported (yet)"
-        WRMSG( HHC02623, "E", "Structured input files for output to RECFM F files" );
+        FWRMSG( stderr, HHC02623, "E", "Structured input files for output to RECFM F files" );
         return NULL; /* Structured files only for RECFM V for the time being */
     }
     recs=initrecs(recfm,*recl,plcd_hdr,5);
@@ -600,7 +600,7 @@ struct TAPE_BLOCKS *load_structured_file(char *infile,char recfm,int *recl,int *
         if(rc!=rsz)
         {
             // "Expected %d bytes from file %s, but only %d file read"
-            WRMSG( HHC02629, "E", rsz, infile, rc );
+            FWRMSG( stderr, HHC02629, "E", rsz, infile, rc );
             return NULL;
         }
         addrecs(recs,bfr,rsz);
@@ -626,7 +626,7 @@ struct TAPE_BLOCKS *load_file(char *infile,char *filefmt,char recfm,int *recl,in
             break;
         default:
             // "INTERNAL ERROR %s"
-            WRMSG( HHC02634, "E", "0001" );
+            FWRMSG( stderr, HHC02634, "E", "0001" );
             return NULL;
     }
     return blks;
@@ -851,11 +851,11 @@ int process_entry(struct options *opts,char *orec,int recno)
     if(badentry)
     {
         // ">>> %s"
-        WRMSG( HHC02631, "E", orec );
+        FWRMSG( stderr, HHC02631, "E", orec );
         // "    Bad entry at line %d in file \"%s\""
-        WRMSG( HHC02632, "E", recno, opts->procfile );
+        FWRMSG( stderr, HHC02632, "E", recno, opts->procfile );
         // "    \"%s\""
-        WRMSG( HHC02633, "E", msg );
+        FWRMSG( stderr, HHC02633, "E", msg );
         free(rec);
         return 1;
     }
@@ -952,7 +952,7 @@ int doload(struct options *opts)
 {
     UNREFERENCED(opts);
     // "%s function not implemented (yet)"
-    WRMSG( HHC02624, "E", "LOAD" );
+    FWRMSG( stderr, HHC02624, "E", "LOAD" );
     return 0;
 }
 
@@ -961,7 +961,7 @@ int doscan(struct options *opts)
 {
     UNREFERENCED(opts);
     // "%s function not implemented (yet)"
-    WRMSG( HHC02624, "E", "SCAN" );
+    FWRMSG( stderr, HHC02624, "E", "SCAN" );
     return 0;
 }
 

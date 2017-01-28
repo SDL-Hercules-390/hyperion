@@ -143,7 +143,7 @@ Examples:
 #define MSGBUF( _buf, ... )     snprintf(_buf, sizeof(_buf), ## __VA_ARGS__ )
 #define MSG( id, s, ... )       #id s " "  id "\n", ## __VA_ARGS__
 #define MSG_C( id, s, ... )     #id s " "  id  "",  ## __VA_ARGS__
-#define HMSG( id )              #id   "x " id "\n"
+
 #if defined( EXTERNALGUI )
   #define EXTGUIMSG( ... )      do { if (extgui) fprintf( stderr, ## __VA_ARGS__ ); } while (0)
 #else
@@ -1408,6 +1408,8 @@ Examples:
        "HHC02405I Return code is 0 if successful or 1 if any errors."
 #define HHC02406 "Member '%s' not found in dataset '%s' on volume '%s'"
 #define HHC02407 "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
+//efine HHC02408 - HHC02409 (available)
+
 //dasdconv.c
 #define HHC02410 "Usage: %s [options] infile outfile\n" \
        "HHC02410I   infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
@@ -1439,6 +1441,8 @@ Examples:
 #define HHC02421 "Cylinder count %u is outside range %u-%u"
 #define HHC02422 "Converting %04X volume %s: %u cyls, %u trks/cyl, %u bytes/trk"
 #define HHC02423 "DASD operation completed"
+//efine HHC02424 - HHC02429 (available)
+
 //dasdcopy.c
 #define HHC02430 "CKD lookup failed: device type %04X cyls %d"
 #define HHC02431 "FBA lookup failed: blks %d"
@@ -1592,7 +1596,7 @@ Examples:
 #define HHC02481 "     EXTENT --begin-- ---end---"
 #define HHC02482 "TYPE NUMBER CCCC HHHH CCCC HHHH"
 #define HHC02483 "  %02X   %02X   %04X %04X %04X %04X"
-#define HHC02484 "Extent Information:"
+#define HHC02484 "%s"
 #define HHC02485 "Dataset %s on volume %s sequence %d"
 #define HHC02486 "Creation Date: %s; Expiration Date: %s"
 #define HHC02487 "Dsorg=%s recfm=%s lrecl=%d blksize=%d"
@@ -1600,8 +1604,8 @@ Examples:
 #define HHC02489 "%s: unable to allocate ASCII buffer"
 #define HHC02490 "%s: convert_tt() track %5.5d/x'%04X', rc %d"
 #define HHC02491 "%s: extent number parameter invalid %d; utility ends"
-#define HHC02492 "Option %s specified"
-#define HHC02493 "Filename %s specified for %s"
+//efine HHC02492 (available)
+//efine HHC02493 (available)
 #define HHC02494 "Requested number of extents %d exceeds maximum %d; utility ends"
 #define HHC02495 "Usage: %s [-f] [-n] file1 [file2 ...]\n" \
        "HHC02495I   file    name of CCKD file\n" \
@@ -1632,7 +1636,7 @@ Examples:
        "HHC02497I   -1      normal  checking\n" \
        "HHC02497I   -2      intermediate checking\n" \
        "HHC02497I   -3      maximal checking" 
-
+//efine HHC02498 (available)
 #define HHC02499 "Hercules utility %s - %s;"
 
 // reserve 025xx for dasd* utilities
@@ -1777,8 +1781,73 @@ Examples:
 #define HHC02632 "    Bad entry at line %d in file \"%s\""
 #define HHC02633 "    \"%s\""
 #define HHC02634 "INTERNAL ERROR %s"
+//efine HHC02635 - HHC02644 (available)
 
-//efine HHC02635 - HHC02699 (available)
+// dmap2hrc
+#define HHC02645 "Usage: %s infile\n" \
+       "HHC02645I\n" \
+       "HHC02645I   infile    name of P/390 DEVMAP input file\n" \
+       "HHC02645I\n" \
+       "HHC02645I The converted output is always written to stdout.\n" \
+       "HHC02645I Use standard redirection to create a file instead.\n" \
+       "HHC02645I\n" \
+       "HHC02645I Return code:\n" \
+       "HHC02645I\n" \
+       "HHC02645I   0   Successful completion\n" \
+       "HHC02645I   1   Invalid argument(s)\n" \
+       "HHC02645I   2   Error opening input file\n" \
+       "HHC02645I   3   Error reading header\n" \
+       "HHC02645I   4   Error reading controller record\n" \
+       "HHC02645I   5   Incomplete controller record\n" \
+       "HHC02645I   6   Error reading device record\n" \
+       "HHC02645I   7   Incomplete device record\n" \
+       "HHC02645I   8   Premature end of input file"
+#define HHC02646 "Error opening %s: %s"
+#define HHC02647 "Error reading %s record%s from %s: %s"
+#define HHC02648 "Incomplete %s record on %s"
+#define HHC02649 "End of input file."
+#define HHC02650 "Premature end of input file"
+//efine HHC02651 - HHC02659 (available)
+
+// dasdseq
+#define HHC02660 "Usage: %s %s%s%s%s"
+#define HHC02661 "Reading volume label..."
+#define HHC02662 "reading Format 3 DSCB - CCHHR %04X%04X%02X"
+#define HHC02663 "Error reading volume label, rc %d"
+#define HHC02664 "Error: volume label is %d bytes long, not 80 bytes long"
+#define HHC02665 "VTOC F4 at cyl %d head %d rec %d"
+#define HHC02666 "Reading VTOC F4 DSCB..."
+#define HHC02667 "Error reading F4 DSCB, rc %d"
+#define HHC02668 "Erroneous key length %d or data length %d"
+#define HHC02669 "%d extent(s) found; all are in Format 1 DSCB"
+#define HHC02670 "VTOC format id byte invalid (DS4IDFMT) %2.2X,\n" \
+       "HHC02670E VTOC key invalid, or multi-extent VTOC"
+#define HHC02671 "VTOC start CCHH=%2.2X%2.2X %2.2X%2.2X end CCHH=%2.2X%2.2X %2.2X%2.2X"
+#define HHC02672 "%s mode enabled"
+#define HHC02673 "%s file%s '%s'"
+#define HHC02674 "%s=%s"
+#define HHC02675 "%s=%d"
+#define HHC02676 "Absolute CC %d HH %d [%04X%04X] Track %d/%X"
+#define HHC02677 "%s" // debug
+#define HHC02678 "Dataset '%s'"
+#define HHC02679 "Utility verbose %d"
+#define HHC02680 "Dataset has %d extent(s):"
+#define HHC02681 "%s" // verbose
+#define HHC02682 "  %02X   %02X   %04X %04X %04X %04X"
+#define HHC02683 "DS1LSTAR[%02X%02X%02X] lstartrack(%d) lstarrec(%d) lstarvalid(%d)"
+#define HHC02684 "DS1LSTAR[%02X%02X%02X] track(%02X) record(%02X)"
+#define HHC02685 "Convert TT %5.5d/x'%04X' CCHH[%04X%04X]"
+#define HHC02686 "Reading track %5.5d/x'%04X' record %d/x'%X' CCHHR[%04X%04X%02X]"
+#define HHC02687 "%s track %5.5d/x'%04X' rec %d"
+#define HHC02688 "read %d bytes"
+#define HHC02689 "offset %d length %d rec %d"
+#define HHC02690 "buffer offset %d rec %d:"
+#define HHC02691 "ascii> '%s'"
+#define HHC02692 "searching VTOC for '%s'"
+#define HHC02693 "search_key_equal rc %d"
+#define HHC02694 "writing %s"
+#define HHC02695 "Closed output file %s"
+//efine HHC02696 - HHC02699 (available)
 
 #define HHC02700 "SCSI tapes are not supported with this build"
 #define HHC02701 "Abnormal termination"

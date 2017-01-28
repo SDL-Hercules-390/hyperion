@@ -348,14 +348,6 @@ int             n;                      /* Integer work area         */
         *ppbuf += n;
     }
 
-    /* Issue progress message */
-   #if 0
-    fprintf (stderr,
-        "+%4.4X cyl=%4.4X head=%4.4X rec=%2.2X"
-        " kl=%2.2X dl=%4.4X trkbal=%d\n",
-        (BYTE*)hrec-buf, *pcc, *phh, *prn, klen, dlen, *plen);
-   #endif
-
     return 0;
 } /* end function find_input_record */
 
@@ -655,7 +647,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if ((cyl % 10) == 0)
         {
             EXTGUIMSG( "CYL=%u\n", cyl );
-            if (quiet == 0)
+            if (!quiet)
                 fprintf (stderr, "Writing cylinder %u\r", cyl);
         }
 

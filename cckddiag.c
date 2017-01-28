@@ -265,7 +265,8 @@ BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int xop) {
     if (rh->klen && xop) {
         // "Track %d rec[%02X/%d] kl[%d]"
         WRMSG( HHC02606, "I", trk, rh->rec, rh->rec, rh->klen );
-        data_dump(buf, rh->klen); printf("\n");
+        data_dump(buf, rh->klen);
+        printf("\n");
     }
     return (BYTE *)buf + rh->klen;          /* skip past KEY field */
 }
@@ -280,7 +281,8 @@ int     dl;
     if (dl && xop) {
         // "Track %d rec[%02X/%d] dl[%d]"
         WRMSG( HHC02607, "I", trk, rh->rec, rh->rec, dl );
-        data_dump(buf, dl); printf("\n");
+        data_dump(buf, dl);
+        printf("\n");
     }
     return buf + dl;                        /* skip past DATA field */
 }

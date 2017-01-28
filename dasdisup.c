@@ -15,14 +15,12 @@
 /* where: ckdfile is the name of the CKD image file                  */
 /*-------------------------------------------------------------------*/
 
-
 #include "hstdinc.h"
 
 #include "hercules.h"
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdisup"
-
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -88,11 +86,6 @@ static int process_dirblk( CIFBLK *cif, int noext, DSXTENT extent[],
                            BYTE *dirblk, MEMINFO memtab[], int *nmem );
 static int resolve_xctltab( CIFBLK *cif, int noext, DSXTENT extent[],
                             MEMINFO *memp, MEMINFO memtab[], int nmem );
-// See Below
-#if FALSE
-static int process_member( CIFBLK *cif, int noext, DSXTENT extent[],
-                           BYTE *memname, BYTE *ttr);
-#endif
 
 /*-------------------------------------------------------------------*/
 /* DASDISUP main entry point                                         */
@@ -210,129 +203,6 @@ int             nmem = 0;               /* Number of array entries   */
     return rc;
 
 } /* end function main */
-
-#if FALSE
-/*-------------------------------------------------------------------*/
-/* Subroutine to process a member                                    */
-/* Input:                                                            */
-/*      cif     -> CKD image file descriptor structure               */
-/*      noext   Number of extents in dataset                         */
-/*      extent  Dataset extent array                                 */
-/*      memname Member name (ASCIIZ)                                 */
-/*      ttr     Member TTR                                           */
-/*                                                                   */
-/* Return value is 0 if successful, or -1 if error                   */
-/*-------------------------------------------------------------------*/
-static int
-process_member (CIFBLK *cif, int noext, DSXTENT extent[],
-                BYTE *memname, BYTE *ttr)
-{
-int             rc;                     /* Return code               */
-int             len;                    /* Record length             */
-int             trk;                    /* Relative track number     */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
-int             rec;                    /* Record number             */
-BYTE           *buf;                    /* -> Data block             */
-FILE           *ofp;                    /* Output file pointer       */
-BYTE            ofname[256];            /* Output file name          */
-int             offset;                 /* Offset of record in buffer*/
-BYTE            card[81];               /* Logical record (ASCIIZ)   */
-char            pathname[MAX_PATH];     /* ofname in host path format*/
-
-    /* Build the output file name */
-    memset (ofname, 0, sizeof(ofname));
-    strncpy (ofname, memname, 8);
-    string_to_lower (ofname);
-    strlcat (ofname, ".mac", sizeof(ofname));
-
-    /* Open the output file */
-    hostpath(pathname, ofname, sizeof(pathname));
-    ofp = fopen (pathname, "w");
-    if (ofp == NULL)
-    {
-        fprintf (stderr,
-                "Cannot open %s: %s\n",
-                ofname, strerror(errno));
-        return -1;
-    }
-
-    /* Point to the start of the member */
-    trk = (ttr[0] << 8) | ttr[1];
-    rec = ttr[2];
-
-    fprintf (stdout,
-            "Member %s TTR=%4.4X%2.2X\n",
-            memname, trk, rec);
-
-    /* Read the member */
-    while (1)
-    {
-        /* Convert relative track to cylinder and head */
-        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
-        if (rc < 0) return -1;
-
-//      fprintf (stdout,
-//              "CCHHR=%4.4X%4.4X%2.2X\n",
-//              cyl, head, rec);
-
-        /* Read a data block */
-        rc = read_block (cif, cyl, head, rec, NULL, NULL, &buf, &len);
-        if (rc < 0) return -1;
-
-        /* Move to next track if record not found */
-        if (rc > 0)
-        {
-            trk++;
-            rec = 1;
-            continue;
-        }
-
-        /* Exit at end of member */
-        if (len == 0) break;
-
-        /* Check length of data block */
-        if (len % 80 != 0)
-        {
-            fprintf (stdout,
-                    "Bad block length %d at cyl %d head %d rec %d\n",
-                    len, cyl, head, rec);
-            return -1;
-        }
-
-        /* Process each record in the data block */
-        for (offset = 0; offset < len; offset += 80)
-        {
-            if (asciiflag)
-            {
-                make_asciiz (card, sizeof(card), buf + offset, 72);
-                fprintf (ofp, "%s\n", card);
-            }
-            else
-            {
-                fwrite (buf+offset, 80, 1, ofp);
-            }
-
-            if (ferror(ofp))
-            {
-                fprintf (stdout,
-                        "Error writing %s: %s\n",
-                        ofname, strerror(errno));
-                return -1;
-            }
-        } /* end for(offset) */
-
-        /* Point to the next data block */
-        rec++;
-
-    } /* end while */
-
-    /* Close the output file and exit */
-    fclose (ofp);
-    return 0;
-
-} /* end function process_member */
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a directory block                           */

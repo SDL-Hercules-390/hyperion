@@ -236,9 +236,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
         rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
         if (rc < 0) return -1;
 
-//      fprintf (stderr,
-//              "CCHHR=%4.4X%4.4X%2.2X\n",
-//              cyl, head, rec);
+        TRACE( "CCHHR=%4.4X%4.4X%2.2X\n", cyl, head, rec );
 
         /* Read a data block */
         rc = read_block (cif, cyl, head, rec, NULL, NULL, &buf, &len);

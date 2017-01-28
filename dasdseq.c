@@ -33,8 +33,12 @@
 
 #define UTILITY_NAME    "dasdseq"
 
-typedef struct _DASD_VOL_LABEL {
+//---------------------------------------------------------------------
+//                          Structs
+//---------------------------------------------------------------------
 
+typedef struct _DASD_VOL_LABEL
+{
         /* dasd cyl 0 trk 0 record 3                            */
         /* identifies volser, owner, and VTOC location          */
         /* recorded in EBCDIC; 80 bytes in length               */
@@ -64,7 +68,15 @@ typedef struct _DADSM {
         DSXTENT         f1ext[MAX_EXTENTS];     // dsn extent info
 } DADSM;
 
-// function prototypes
+//---------------------------------------------------------------------
+//                       Function prototypes
+//---------------------------------------------------------------------
+
+void showhelp   (   char            *pgm    );
+int parsecmd    (   int              argc,
+                    char           **argv,
+                    DADSM           *dadsm,
+                    char            *pgm    );
 void sayext     (   int              max,
                     DSXTENT         *extent );
 void showf1     (   FORMAT1_DSCB    *f1dscb,
@@ -81,11 +93,6 @@ void makext     (   int              i,
                     int              startcyl,
                     int              starttrk,
                     int              size   );
-void showhelp   (   char            *pgm    );
-int parsecmd    (   int              argc,
-                    char           **argv,
-                    DADSM           *dadsm,
-                    char            *pgm    );
 int getlabel    (   CIFBLK          *cif,
                     DASD_VOL_LABEL  *glbuf,
                     int              verbose );
@@ -107,184 +114,360 @@ int dadsm_setup (   CIFBLK          *cif,
                     char            *pdsn[],
                     DADSM           *dadsm,
                     int              verbose );
-//----------------------------------------------------------------------------------
-//  Globals
-//----------------------------------------------------------------------------------
-        int     local_verbose = 0;      // verbose setting
-        int     copy_verbose = 0;       // verbose setting for copyfile
-        char    *din;                   // dasd image filename
-        char    *sfn;                   // shadow file parm
-        int     absvalid = 0;           // 1 = -abs specified, use CCHH not dsn
-        char    *argdsn;                // MVS dataset name
-        int     expert = 0;             // enable -abs help
-        int     tran_ascii = 0;         // 1 = ascii output
+
+//---------------------------------------------------------------------
+//                           Globals
+//---------------------------------------------------------------------
+
+int     local_verbose = 0;      // verbose setting
+int     copy_verbose = 0;       // verbose setting for copyfile
+char    *din;                   // dasd image filename
+char    *sfn;                   // shadow file parm
+int     absvalid = 0;           // 1 = -abs specified, use CCHH not dsn
+char    *argdsn;                // MVS dataset name
+int     expert = 0;             // enable -abs help
+int     tran_ascii = 0;         // 1 = ascii output
 
 #ifdef DEBUG
-        int     debug = 1;              // enable debug code
+int     debug = 1;              // enable debug code
 #else
-        int     debug = 0;              // disable debug code
+int     debug = 0;              // disable debug code
 #endif
 
-//----------------------------------------------------------------------------------
-//  Main
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
+//                            showhelp
+//---------------------------------------------------------------------
 
-int main(int argc, char **argv)
+void showhelp(char *pgm)
 {
-    char           *pgm;                    /* less any extension (.ext) */
-    char            msgbuf[512];            /* message build work area   */
-    DADSM           dadsm;                  // DADSM workarea
-    FILE           *fout = NULL;            // output file
-    CIFBLK         *cif;
-    int             dsn_recs_written = 0;
-    int             bail;
-    int             dsorg;
-    int             rc;
-    char            pathname[MAX_PATH];
+    char part1[256];
+    char part2[512];
+    char part3[4096];
+    char part4[1024];
 
-    INITIALIZE_UTILITY( UTILITY_NAME,  "Sequential DSN unload", &pgm );
-
-    if (debug) WRMSG( HHC90000, "D", "DEBUG enabled" );
-
-//  Parse command line
-
-    memset(&dadsm, 0, sizeof(dadsm));           // init DADSM workarea
-    rc = parsecmd(argc, argv, &dadsm, pgm);
-    if (rc) exit(rc);
-
-//  Open CKD image
-
-    cif = open_ckd_image(din, sfn, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL);
-    if (!cif || cif == NULL )
-        return -1;
-
-//  Unless -abs specified (in which case trust the expert user):
-//  Retrieve extent information for the dataset
-//  Display dataset attributes
-//  Verify dataset has acceptable attributes
-
-    if (!absvalid) {
-        rc = dadsm_setup(cif, &argdsn, &dadsm, local_verbose);
-        if (rc) {
-            close_ckd_image(cif);
-            exit(rc);
-        }
-        if (local_verbose) {
-            fprintf(stderr, "\n");
-            showf1(&dadsm.f1buf, dadsm.f1ext, copy_verbose);
-            fprintf(stderr, "\n");
-        }
-        bail = 1;
-        dsorg = (dadsm.f1buf.ds1dsorg[0] << 8) | (dadsm.f1buf.ds1dsorg[1]);
-        if (dsorg & (DSORG_PS * 256)) {
-            if ((dadsm.f1buf.ds1recfm & RECFM_FORMAT) == RECFM_FORMAT_F)
-                bail = 0;
-            if ((dadsm.f1buf.ds1recfm & RECFM_FORMAT) == RECFM_FORMAT_V) {
-                bail = 1;               // not yet
-                // "Dataset is not RECFM %s; utility ends"
-                FWRMSG( stderr, HHC02472, "S", "F[B]" );
-            }
-        } else
-            // "Dataset is not DSORG %s; utility ends"
-            FWRMSG( stderr, HHC02473, "S", "PS" );
-        if (bail) {
-            close_ckd_image(cif);
-            exit(21);
-        }
-    }
-
-//  Open output dataset (EBCDIC requires binary open)
-
-    hostpath(pathname, argdsn, sizeof(pathname));
-
-    fout = fopen(pathname, (tran_ascii) ? "wb" : "w");
-    if (fout == NULL) {
-        // "File %s; %s error: %s"
-        FWRMSG( stderr, HHC02468, "E", argdsn, "fopen()", strerror( errno ));
-        close_ckd_image(cif);
-        exit(22);
-    }
-    if (local_verbose)
+    if (expert)
     {
-        MSGBUF( msgbuf, "writing %s", argdsn );
-        WRMSG( HHC90000, "D", msgbuf );
+        strlcpy( part1,
+            "[-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
+            "HHC02660I   -debug    optional - Enables debug mode, additional debug help appears\n"
+            , sizeof( part1 ));
     }
-
-//  Write dasd data to output dataset
-
-    dsn_recs_written = fbcopy(fout, cif, &dadsm, tran_ascii, copy_verbose);
-    if (dsn_recs_written == -1)
-        // "Error processing %s"
-        FWRMSG( stderr, HHC02474, "E", argdsn );
     else
-        // "Records written to %s: %d"
-        WRMSG( HHC02475, "I", argdsn, dsn_recs_written );
-
-//  Close output dataset, dasd image and return to caller
-
-    fclose(fout);
-    if (local_verbose > 2)
     {
-        MSGBUF( msgbuf, "Closed output file %s", argdsn );
-        WRMSG( HHC90000, "D", msgbuf );
+        strlcpy( part1,
+            "[-expert] [-ascii] image [sf=shadow] filespec\n"
+            , sizeof( part1 ));
     }
 
-    if (local_verbose > 3)
+    strlcpy( part2,
+        "HHC02660I   -expert   optional - Additional help describes expert operands\n"
+        "HHC02660I   -ascii    optional - translate output file to ascii, trim trailing blanks\n"
+        "HHC02660I   image     required - [path/]filename of dasd image file (dasd volume)\n"
+        "HHC02660I   shadow    optional - [path/]filename of shadow file (note sf=)\n"
+        , sizeof( part2 ));
+
+    if (expert)
     {
-        WRMSG( HHC90000, "D", "CIFBLK" );
-        data_dump((void *) cif, sizeof(CIFBLK));
+        MSGBUF( part3,
+            "HHC02660I   ALL EXPERT FACILITIES ARE EXPERIMENTAL\n"
+            "HHC02660I   attr      optional - dataset attributes (only useful with -abs)\n"
+            "HHC02660I             attr syntax: [-recfm fb] [-lrecl aa]\n"
+            "HHC02660I             -recfm designates RECFM, reserved for future support\n"
+            "HHC02660I             fb - fixed, blocked (only RECFM currently supported)\n"
+            "HHC02660I             -lrecl designates dataset LRECL\n"
+            "HHC02660I             aa - decimal logical record length (default 80)\n"
+            "HHC02660I                  Blocksize need not be specified; dasdseq handles whatever\n"
+            "HHC02660I                  block size comes off the volume.\n"
+            "HHC02660I   filespec  required (optional sub-operands in the following order):\n"
+            "HHC02660I                  [-heads xx]\n"
+            "HHC02660I                  [-abs cc hh tt] [...] [-abs cc hh tt ]\n"
+            "HHC02660I                  filename\n"
+            "HHC02660I             When -abs is -not- specified,\n"
+            "HHC02660I                  Filename specifies the MVS DSORG=PS dataset on the volume.\n"
+            "HHC02660I                  The dasd image volume containing the dataset must have a valid VTOC\n"
+            "HHC02660I                  structure, and a F1 DSCB describing the dataset.\n"
+            "HHC02660I                  Specifying -debug will (eventually) display extent information.\n"
+            "HHC02660I             When -abs is specified, each -abs group specifies one dataset extent.\n"
+            "HHC02660I                  For multi-extent datasets, -abs groups may be repeated as needed,\n"
+            "HHC02660I                  in the order in which the dataset's extents occur.\n"
+            "HHC02660I                  A maximum of %d extents are supported.\n"
+            "HHC02660I                  No VTOC structure is implied, a F1 DSCB will not be sought.\n"
+            "HHC02660I                  Dasdseq will frequently report 'track not found in extent table'\n"
+            "HHC02660I                  (along with a message from fbcopy about rc -1 from convert_tt)\n"
+            "HHC02660I                  due to potentially missing EOF markers in the extent, and the\n"
+            "HHC02660I                  fact that the F1 DSCB DS1LSTAR field is not valid.\n"
+            "HHC02660I                  Check your output file before you panic.\n"
+            "HHC02660I                  Fbcopy ignores EOF, in case you are attempting to recovery PDS\n"
+            "HHC02660I                  member(s) from a damaged dasd volume, preferring to wait until\n"
+            "HHC02660I                  all tracks in the extent have been processed.\n"
+            "HHC02660I                  Tracks containing PDS members may have more than one EOF per track.\n"
+            "HHC02660I                  Expect a lot of associated manual effort with -abs.\n"
+            "HHC02660I             -heads defines # tracks per cylinder on device;\n"
+            "HHC02660I             xx - decimal number of heads per cylinder on device\n"
+            "HHC02660I                  default xx = 15 (valid for 3380s, 3390s)\n"
+            "HHC02660I             -abs indicates the beginning of each extent's location in terms of\n"
+            "HHC02660I                  absolute dasd image location.\n"
+            "HHC02660I             cc - decimal cylinder number (relative zero)\n"
+            "HHC02660I             hh - decimal head number (relative zero)\n"
+            "HHC02660I             tt - decimal number of tracks in extent\n"
+            "HHC02660I             filename will be the filename of the output file in the current directory;\n"
+            "HHC02660I                  output filename in the same case as the command line filename.\n"
+            , MAX_EXTENTS );
+    }
+    else
+    {
+        strlcpy( part3,
+            "HHC02660I   filespec  required - MVS dataset name of DSORG=PS dataset, output filename\n"
+            , sizeof( part3 ));
     }
 
-    close_ckd_image(cif);
+    if (debug)
+    {
+        strlcpy( part4,
+            "HHC02660I Debugging options (at end of dasdseq command)\n"
+            "HHC02660I   [verbose [x [y [z]]]]\n"
+            "HHC02660I   verbose   debug output level (default = 0 when not specified)\n"
+            "HHC02660I       x  main program (default = 1 when verbose specified)\n"
+            "HHC02660I       y  copyfile + showf1\n"
+            "HHC02660I       z  dasdutil\n"
+            "HHC02660I       Higher numbers produces more output"
+            , sizeof( part4 ));
+    }
+    else
+        strlcpy( part4, "" , sizeof( part4 ));
 
-    if (local_verbose > 2 )
-        WRMSG( HHC90000, "D", "Closed image file" );
+    // HHC02660 "Usage: %s %s%s%s%s"
+    WRMSG( HHC02660, "I", pgm, part1, part2, part3, part4 );
 
-    return rc;
+}
 
-} /* main */
+//---------------------------------------------------------------------
+//    parse command line and place results into program globals
+//---------------------------------------------------------------------
 
+int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
+{
+        int     util_verbose = 0;       // Hercules dasdutil.c diagnostic level
+        int     heads = 15;             // # heads per cylinder on device
+        int     extnum = 0;             // extent number for makext()
+        int     abscyl = 0;             // absolute CC (default 0)
+        int     abshead = 0;            // absolute HH (default 0)
+        int     abstrk = 1;             // absolute tracks (default 1)
+        int     lrecl = 80;             // default F1 DSCB lrecl
+        char    msgbuf[128];            // message work area
 
+    //  Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec
 
-void sayext(int max, DSXTENT *extent) {
-        int     i;
-        // "     EXTENT --begin-- ---end---"
-        WRMSG( HHC02481, "I");
-        // "TYPE NUMBER CCCC HHHH CCCC HHHH"
-        WRMSG( HHC02482, "I");
-        for (i = 0; i < max; i++) {
-            U32 bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
-            U16 btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
-            U32 ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
-            U16 etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
-            // "  %02X   %02X   %04X %04X %04X %04X"
-            WRMSG( HHC02483, "I",
-                extent[i].xttype, extent[i].xtseqn, bcyl, btrk, ecyl, etrk );
+    argv++;                             // skip dasdseq command argv[0]
+    if ((*argv) && (strcasecmp(*argv, "-debug") == 0))
+    {
+        argv++;
+        debug = 1;
+        // "%s mode enabled"
+        WRMSG( HHC02672, "D", "Debug" );
+    }
+    if ((*argv) && (strcasecmp(*argv, "-expert") == 0))
+    {
+        argv++;
+        expert = 1;
+        // "% mode enabled"
+        if (debug) WRMSG( HHC02672, "I", "EXPERT" );
+    }
+    if ((*argv) && (strcasecmp(*argv, "-ascii") == 0))
+    {
+        argv++;
+        tran_ascii = 1;
+        // "%s mode enabled"
+        if (debug) WRMSG( HHC02672, "I", "ASCII translation" );
+    }
+    if (*argv) din = *argv++;           // dasd image filename
+    if (debug)
+    {
+        // "%s file%s '%s'"
+        WRMSG( HHC02673, "D", "Image", "", din );
+    }
+    if (*argv && strlen(*argv) > 3 && !memcmp(*argv, "sf=", 3))
+    {
+        sfn = *argv++;                  // shadow file parm
+    }
+    else
+        sfn = NULL;
+    if (debug)
+    {
+        // "%s file%s '%s'"
+        WRMSG( HHC02673, "D", "SHADOW", "(s)", sfn );
+    }
+    dadsm->f1buf.ds1recfm =
+                RECFM_FORMAT_F | RECFM_BLOCKED; // recfm FB for fbcopy
+    if ((*argv) && (strcasecmp(*argv, "-recfm") == 0))
+    {
+        argv++;                                 // skip -recfm
+        if ((*argv) && (strcasecmp(*argv, "fb") == 0))
+        {
+            argv++;                             // skip fb
+            // "%s=%s"
+            if (debug) WRMSG( HHC02674, "D", "RECFM", "FB" );
         }
-} /* sayext */
+        else
+        {
+            // "Invalid argument: %s"
+            argv++;                             // skip bad recfm
+            MSGBUF( msgbuf, "-recfm %s", *argv );
+            WRMSG( HHC02465, "I", msgbuf);
+        }
+    }
+    if ((*argv) && (strcasecmp(*argv, "-lrecl") == 0))
+    {
+        argv++;                                         // skip -lrecl
+        if (*argv) lrecl = atoi(*argv++);               // lrecl value
+        if (debug)
+        {
+            // "%s=%d"
+            WRMSG( HHC02675, "D", "LRECL", lrecl );
+        }
+    }
+    dadsm->f1buf.ds1lrecl[0] = lrecl >> 8;      // for fbcopy
+    dadsm->f1buf.ds1lrecl[1] = lrecl - ((lrecl >> 8) << 8);
+    if ((*argv) && (strcasecmp(*argv, "-heads") == 0))
+    {
+        argv++;                                 // skip -heads
+        if (*argv) heads = atoi(*argv++);       // heads value
+    }
+    if (debug)
+    {
+        // "%s=%d"
+        WRMSG( HHC02675, "D", "HEADS", heads );
+    }
+    if ((*argv) && (strcasecmp(*argv, "-abs") == 0))
+    {
+        absvalid = 1;                               // CCHH valid
+        while ((*argv) && (strcasecmp(*argv, "-abs") == 0))
+        {
+            argv++;                                 // skip -abs
+            abscyl = 0; abshead = 0; abstrk = 1;    // defaults
+            if (*argv) abscyl = atoi(*argv++);      // abs cc
+            if (*argv) abshead = atoi(*argv++);     // abs hh
+            if (*argv) abstrk = atoi(*argv++);      // abs tracks
 
-//----------------------------------------------------------------------------------
-//  Display selected F1 DSCB information
-//----------------------------------------------------------------------------------
+            // Build extent entry for -abs group
+            makext(extnum, heads,
+                    (DSXTENT *) &dadsm->f1ext, abscyl, abshead, abstrk);
+            extnum++;
+            dadsm->f1buf.ds1noepv = extnum;         // for fbcopy
+            if (debug)
+            {
+                // "Absolute CC %d HH %d [%04X%04X] Track %d/%X"
+                WRMSG( HHC02676, "D", abscyl, abshead, abscyl, abshead, abstrk, abstrk);
+            }
+            if (extnum > MAX_EXTENTS)
+            {
+                // "Requested number of extents %d exceeds maximum %d; utility ends"
+                FWRMSG( stderr, HHC02494, "S", extnum, MAX_EXTENTS);
+                exit(3);
+            }
+        }
+        // if (debug) sayext(MAX_EXTENTS, dadsm->f1ext);// show extent table
+    }
+    if (debug)
+    {
+        // "%s"
+        WRMSG( HHC02677, "D", "Completed Format 1 DSCB:" );
+        data_dump(&dadsm->f1buf, sizeof(FORMAT1_DSCB));
+    }
+    if (*argv) argdsn = *argv++;        // [MVS dataset name/]output filename
+    if (debug)
+    {
+        // "Dataset '%s'"
+        WRMSG( HHC02678, "D", argdsn );
+    }
+    if ((*argv) && (            // support deprecated 'ascii' operand
+                (strcasecmp(*argv, "ascii") == 0) ||
+                (strcasecmp(*argv, "-ascii") == 0)
+                )
+        )
+    {
+        argv++;
+        tran_ascii = 1;
+        // "%s mode enabled"
+        if (debug) WRMSG( HHC02672, "D", "ASCII translation" );
+    }
+    set_verbose_util(0);                // default util verbosity
+    if ((*argv) && (strcasecmp(*argv, "verbose") == 0))
+    {
+        local_verbose = 1;
+        argv++;
+        if (*argv) local_verbose = atoi(*argv++);
+        if (*argv) copy_verbose = atoi(*argv++);
+        if (*argv)
+        {
+            util_verbose = atoi(*argv++);
+            set_verbose_util(util_verbose);
+            if (debug)
+            {
+                // "Utility verbose %d"
+                WRMSG( HHC02679, "D", util_verbose );
+            }
+        }
+    }
+
+    //  If the user specified expert mode without -abs, give help & exit
+    //  Additionally, if the user has "extra" parms, show help & exit
+    //  No "extraneous parms" message is issued, since some of the code
+    //  above forces *argv to be true when it wants help displayed
+
+    if ((argc < 3) || (*argv) || ((expert) && (!absvalid)))
+    {
+        showhelp(pgm);                     // show syntax before bailing
+        exit(2);
+    }
+    return 0;
+}
+
+//---------------------------------------------------------------------
+//                            sayext
+//---------------------------------------------------------------------
+
+void sayext(int max, DSXTENT *extent)
+{
+    int     i;
+    // "     EXTENT --begin-- ---end---"
+    WRMSG( HHC02481, "I");
+    // "TYPE NUMBER CCCC HHHH CCCC HHHH"
+    WRMSG( HHC02482, "I");
+    for (i=0; i < max; i++)
+    {
+        U32 bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
+        U16 btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
+        U32 ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
+        U16 etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+        // "  %02X   %02X   %04X %04X %04X %04X"
+        WRMSG( HHC02483, "I",
+            extent[i].xttype, extent[i].xtseqn, bcyl, btrk, ecyl, etrk );
+    }
+}
+
+//---------------------------------------------------------------------
+//              Display selected F1 DSCB information
+//---------------------------------------------------------------------
 
 void showf1(    FORMAT1_DSCB    *f1dscb,
                 DSXTENT         extent[],
-                int             verbose) {
-
-        int     i, dsorg, lrecl, blksize, volseq, x, y, num_extents;
-        char    volser[sizeof(f1dscb->ds1dssn) + 1];
-        char    dsn[sizeof(f1dscb->ds1dsnam) + 1];
-        char    txtcredt[9];                            // creation date
-        char    txtexpdt[9] = "(n/a)";                  // expiration date
-        char    txtscr[20];
-        char    txtsyscd[14];
-        char    txtdsorg[5] = "";                       // dsorg text
-        char    txtrecfm[5] = "";                       // recfm text
-        char    msgbuf[128];                            // message work area
+                int             verbose)
+{
+    int     i, dsorg, lrecl, blksize, volseq, x, y, num_extents;
+    char    volser[sizeof(f1dscb->ds1dssn) + 1];
+    char    dsn[sizeof(f1dscb->ds1dsnam) + 1];
+    char    txtcredt[9];                            // creation date
+    char    txtexpdt[9] = "(n/a)";                  // expiration date
+    char    txtscr[20];
+    char    txtsyscd[14];
+    char    txtdsorg[5] = "";                       // dsorg text
+    char    txtrecfm[5] = "";                       // recfm text
 
     if (verbose > 2)
     {
-        WRMSG( HHC90000, "D", "showf1(): Format 1 DSCB" );
+        // "%s"
+        WRMSG( HHC02681, "I", "Format 1 DSCB:" );
         data_dump(f1dscb, sizeof(FORMAT1_DSCB));
     }
 
@@ -295,90 +478,105 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
     volseq = (f1dscb->ds1volsq[0] << 8) | (f1dscb->ds1volsq[1]);
     x = f1dscb->ds1credt[0] + 1900;
     y = (f1dscb->ds1credt[1] << 8) | f1dscb->ds1credt[2];
-    sprintf(txtcredt, "%4.4d", x);
-    strlcat(txtcredt, ".", sizeof(txtcredt));
-    sprintf(txtscr, "%3.3d", y);
-    strlcat(txtcredt, txtscr,sizeof(txtcredt));
-    if (f1dscb->ds1expdt[0] || f1dscb->ds1expdt[1] || f1dscb->ds1expdt[2]) {
+
+    MSGBUF( txtcredt, "%4.4d", x );
+    strlcat (txtcredt, ".", sizeof( txtcredt));
+
+    MSGBUF( txtscr, "%3.3d", y );
+    strlcat( txtcredt, txtscr, sizeof( txtcredt ));
+
+    if (f1dscb->ds1expdt[0] || f1dscb->ds1expdt[1] || f1dscb->ds1expdt[2])
+    {
         x = f1dscb->ds1expdt[0] + 1900;
         y = (f1dscb->ds1expdt[1] << 8) | f1dscb->ds1expdt[2];
-        sprintf(txtexpdt, "%4.4d", x);
-        strlcat(txtexpdt, ".",sizeof(txtexpdt));
-        sprintf(txtscr, ".%3.3d", y);
-        strlcat(txtexpdt, txtscr,sizeof(txtexpdt));
+
+        MSGBUF( txtexpdt, "%4.4d", x );
+        strlcat( txtexpdt, ".", sizeof( txtexpdt ));
+
+        MSGBUF( txtscr, ".%3.3d", y );
+        strlcat( txtexpdt, txtscr, sizeof( txtexpdt ));
     }
+
     num_extents = f1dscb->ds1noepv;
-//  Field ignored: ds1nobdb (# bytes used in last PDS dir blk)
+    //  Field ignored: ds1nobdb (# bytes used in last PDS dir blk)
     make_asciiz(txtsyscd, sizeof(txtsyscd),
                 f1dscb->ds1syscd, sizeof(f1dscb->ds1syscd));
 
     dsorg = (f1dscb->ds1dsorg[0] << 8) | (f1dscb->ds1dsorg[1]);
-    if (dsorg & (DSORG_IS * 256))               strcpy(txtdsorg, "IS");
-    if (dsorg & (DSORG_PS * 256))               strcpy(txtdsorg, "PS");
-    if (dsorg & (DSORG_DA * 256))               strcpy(txtdsorg, "DA");
-    if (dsorg & (DSORG_PO * 256))               strcpy(txtdsorg, "PO");
-    if (dsorg &  DSORG_AM)                      strcpy(txtdsorg, "VS");
-    if (txtdsorg[0] == '\0')                    strcpy(txtdsorg, "??");
-    if (dsorg & (DSORG_U * 256))                strlcat(txtdsorg, "U",sizeof(txtdsorg));
 
-    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strcpy(txtrecfm, "F");
-    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strcpy(txtrecfm, "V");
+    if (dsorg & (DSORG_IS * 256))               strlcpy( txtdsorg, "IS", sizeof( txtdsorg ));
+    if (dsorg & (DSORG_PS * 256))               strlcpy( txtdsorg, "PS", sizeof( txtdsorg ));
+    if (dsorg & (DSORG_DA * 256))               strlcpy( txtdsorg, "DA", sizeof( txtdsorg ));
+    if (dsorg & (DSORG_PO * 256))               strlcpy( txtdsorg, "PO", sizeof( txtdsorg ));
+    if (dsorg &  DSORG_AM)                      strlcpy( txtdsorg, "VS", sizeof( txtdsorg ));
+    if (txtdsorg[0] == '\0')                    strlcpy( txtdsorg, "??", sizeof( txtdsorg ));
+
+    if (dsorg & (DSORG_U * 256))                strlcat( txtdsorg, "U",  sizeof( txtdsorg ));
+
+    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strlcpy( txtrecfm, "F", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strlcpy( txtrecfm, "V", sizeof( txtrecfm ));
     if ((f1dscb->ds1recfm & RECFM_FORMAT_U) == RECFM_FORMAT_U)
-                                                strcpy(txtrecfm, "U");
-    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strlcat(txtrecfm, "B",sizeof(txtrecfm));
-    if (f1dscb->ds1recfm & RECFM_SPANNED)       strlcat(txtrecfm, "S",sizeof(txtrecfm));
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strlcat(txtrecfm, "A",sizeof(txtrecfm));
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strlcat(txtrecfm, "M",sizeof(txtrecfm));
-    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strlcat(txtrecfm, "T",sizeof(txtrecfm));
+                                                strlcpy( txtrecfm, "U", sizeof( txtrecfm ));
 
-//  Field ignored: ds1optcd (option codes, same as in DCB)
-    blksize = (f1dscb->ds1blkl[0] << 8) | f1dscb->ds1blkl[1];
-    lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
+    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strlcat( txtrecfm, "B", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_SPANNED)       strlcat( txtrecfm, "S", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strlcat( txtrecfm, "A", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strlcat( txtrecfm, "M", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strlcat( txtrecfm, "T", sizeof( txtrecfm ));
 
-//  Field ignored: ds1keyl (key length)
-//  Field ignored: ds1rkp (relative key position)
-//  Field ignored: ds1dsind (data set indicators)
-//  Field ignored: ds1scalo (secondary allocation)
-//  Field ignored: ds1lstar (pointer to last written block; ttr)
-//  Field ignored: ds1trbal (bytes remaining on last track used)
-//  Extent information was passed to us, so we ignore what's in F1DSCB
+    //  Field ignored: ds1optcd (option codes, same as in DCB)
+
+    blksize = (f1dscb->ds1blkl[0]  << 8) | f1dscb->ds1blkl[1];
+    lrecl   = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
+
+    //  Field ignored: ds1keyl (key length)
+    //  Field ignored: ds1rkp (relative key position)
+    //  Field ignored: ds1dsind (data set indicators)
+    //  Field ignored: ds1scalo (secondary allocation)
+    //  Field ignored: ds1lstar (pointer to last written block; ttr)
+    //  Field ignored: ds1trbal (bytes remaining on last track used)
+    //  Extent information was passed to us, so we ignore what's in F1DSCB
 
     // "Dataset %s on volume %s sequence %d"
-    WRMSG( HHC02485, "I", dsn, volser, volseq );
-
     // "Creation Date: %s; Expiration Date: %s"
-    WRMSG( HHC02486, "I", txtcredt, txtexpdt );
-
     // "Dsorg=%s recfm=%s lrecl=%d blksize=%d"
-    WRMSG( HHC02487, "I", txtdsorg, txtrecfm, lrecl, blksize );
-
     // "System code %s"
+
+    WRMSG( HHC02485, "I", dsn, volser, volseq );
+    WRMSG( HHC02486, "I", txtcredt, txtexpdt );
+    WRMSG( HHC02487, "I", txtdsorg, txtrecfm, lrecl, blksize );
     WRMSG( HHC02488, "I", txtsyscd );
 
     if (verbose > 1)
     {
-        MSGBUF( msgbuf, "Dataset has %d extent(s)\n", num_extents);
-        WRMSG( HHC90000, "D", msgbuf );
+        int bcyl, btrk, ecyl, etrk;
+
+        // "Dataset has %d extent(s)"
+        WRMSG( HHC02680, "I", num_extents );
+
         if (verbose > 2)
             data_dump((void *)extent, sizeof(DSXTENT) * MAX_EXTENTS);
 
-        WRMSG( HHC90000, "D", "Extent Information:" );
-        WRMSG( HHC90000, "D", "     EXTENT --begin-- ---end---" );
-        WRMSG( HHC90000, "D", "TYPE NUMBER CCCC HHHH CCCC HHHH" );
-        for (i = 0; i < num_extents; i++) {
-            int bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
-            int btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
-            int ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
-            int etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
-            MSGBUF( msgbuf, "  %02X   %02X   %04X %04X %04X %04X",
-                extent[i].xttype, extent[i].xtseqn, bcyl, btrk, ecyl, etrk);
-            WRMSG( HHC90000, "D", msgbuf );
+        // "%s"
+        WRMSG( HHC02681, "I", "Extent Information:" );
+        WRMSG( HHC02681, "I", "     EXTENT --begin-- ---end---" );
+        WRMSG( HHC02681, "I", "TYPE NUMBER CCCC HHHH CCCC HHHH" );
+
+        for (i=0; i < num_extents; i++)
+        {
+            bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
+            btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
+            ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
+            etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+
+            // "  %02X   %02X   %04X %04X %04X %04X"
+            WRMSG( HHC02682, "I", extent[i].xttype, extent[i].xtseqn,
+                bcyl, btrk, ecyl, etrk );
         }
     }
-    return;
-} /* showf1 */
+}
 
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //  Copy DSORG=PS RECFM=F[B] dataset to output file
 //
 //  Input:
@@ -406,30 +604,30 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
 //
 //      2003-01-14 jmm DS1LSTAR may be zero; if so, ignore DS1LSTAR and
 //      hope for valid EOF.
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int fbcopy(     FILE            *fout,
                 CIFBLK          *cif,
                 DADSM           *dadsm,
                 int             tran,
-                int             verbose) {
-
-        FORMAT1_DSCB    *f1dscb = &dadsm->f1buf;
-        DSXTENT         extent[MAX_EXTENTS];
-        int     rc;
-        u_int   trk = 0, trkconv = 999;
-        U8      rec = 1;
-        U32     cyl = 0;
-        U8      head = 0;
-        int     rc_rb;
-        U16     len, offset;
-        int     rc_copy = 0;
-        int     recs_written = 0, lrecl, num_extents;
-        u_int   lstartrack = 0, lstarrec = 0, lstarvalid = 0;
-        BYTE    *buffer;
-        char    *pascii = NULL;
-        char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
-        char    msgbuf[128];                            // message work area
+                int             verbose)
+{
+    FORMAT1_DSCB    *f1dscb = &dadsm->f1buf;
+    DSXTENT         extent[MAX_EXTENTS];
+    int     rc;
+    u_int   trk = 0, trkconv = 999;
+    U8      rec = 1;
+    U32     cyl = 0;
+    U8      head = 0;
+    int     rc_rb;
+    U16     len, offset;
+    int     rc_copy = 0;
+    int     recs_written = 0, lrecl, num_extents;
+    u_int   lstartrack = 0, lstarrec = 0, lstarvalid = 0;
+    BYTE    *buffer;
+    char    *pascii = NULL;
+    char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
+    char    msgbuf[128];                            // message work area
 
     // Kludge to avoid rewriting this code (for now):
     memcpy(&extent, (void *)&(dadsm->f1ext), sizeof(extent));
@@ -439,8 +637,9 @@ int fbcopy(     FILE            *fout,
 
     if (absvalid)
     {
-        strcpy(zdsn, argdsn);
-        if (debug) WRMSG( HHC90000, "D", "fbcopy(): absvalid" );
+        strlcpy( zdsn, argdsn, sizeof( zdsn ));
+        // "%s"
+        if (debug) WRMSG( HHC02677, "D", "absvalid" );
     }
     else
     {
@@ -458,34 +657,28 @@ int fbcopy(     FILE            *fout,
 
     if (debug)
     {
-        MSGBUF( msgbuf, "fbcopy(): zdsn %s", zdsn );
-        WRMSG( HHC90000, "D", msgbuf );
+        // HHC02674 "%s=%s"
+        // HHC02675 "%s=%d"
 
-        MSGBUF( msgbuf, "fbcopy(): num_extents %d", num_extents);
-        WRMSG( HHC90000, "D", msgbuf );
+        WRMSG( HHC02674, "D", "zdsn",        zdsn        );
+        WRMSG( HHC02675, "D", "num_extents", num_extents );
+        WRMSG( HHC02675, "D", "lrecl",       lrecl       );
 
-        MSGBUF( msgbuf, "fbcopy(): lrecl %d", lrecl);
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "fbcopy(): Format 1 DSCB");
-        WRMSG( HHC90000, "D", msgbuf );
-
+        // "%s"
+        WRMSG( HHC02677, "D", "Format 1 DSCB:" );
         data_dump(f1dscb, sizeof(FORMAT1_DSCB));
-        sayext(num_extents, (void *)&extent);
+
+        sayext( num_extents, (void*) &extent );
     }
 
-    if (verbose)                // DS1LSTAR = last block written TTR
+    if (verbose)    // DS1LSTAR = last block written TTR
     {
-        MSGBUF( msgbuf,
-                "fbcopy(): DS1LSTAR[%02X%02X%02X] lstartrack(%d) "
-                "lstarrec(%d) lstarvalid(%d)",
-                f1dscb->ds1lstar[0], f1dscb->ds1lstar[1], f1dscb->ds1lstar[2],
-                lstartrack, lstarrec, lstarvalid);
-        WRMSG( HHC90000, "D", msgbuf );
-
+        // HHC02683 "DS1LSTAR[%02X%02X%02X] lstartrack(%d) lstarrec(%d) lstarvalid(%d)"
+        WRMSG( HHC02683, "I",f1dscb->ds1lstar[0], f1dscb->ds1lstar[1],
+            f1dscb->ds1lstar[2], lstartrack, lstarrec, lstarvalid );
     }
 
-    if (tran)               // need ASCII translation buffer?
+    if (tran)   // need ASCII translation buffer?
     {
         pascii = malloc(lrecl + 1);
         if (pascii == NULL)
@@ -496,29 +689,29 @@ int fbcopy(     FILE            *fout,
         }
     }
 
-    while (1)               // output records until something stops us
+    while (1)   // output records until something stops us
     {
-            //  Honor DS1LSTAR when valid
+        //  Honor DS1LSTAR when valid
 
         if ((lstarvalid) && (trk == lstartrack) && (rec > lstarrec))
         {
             if (verbose)
             {
-                WRMSG( HHC90000, "D", "fbcopy(): DS1LSTAR indicates EOF" );
-                MSGBUF( msgbuf, "fbcopy(): DS1LSTAR[%02X%02X%02X] "
-                                "track(%02X) record(%02X)",
-                        f1dscb->ds1lstar[0], f1dscb->ds1lstar[1],
-                        f1dscb->ds1lstar[2], trk, rec);
-                WRMSG( HHC90000, "D", msgbuf );
+                // "%s"
+                WRMSG( HHC02681, "I", "DS1LSTAR indicates EOF" );
+                // HHC02684 "DS1LSTAR[%02X%02X%02X] track(%02X) record(%02X)"
+                WRMSG( HHC02684, "I", f1dscb->ds1lstar[0], f1dscb->ds1lstar[1],
+                    f1dscb->ds1lstar[2], trk, rec );
             }
             rc_copy = recs_written;
             break;
         }
 
-//  Convert TT to CCHH for upcoming read_block call
+        //  Convert TT to CCHH for upcoming read_block call
 
-        if (trkconv != trk) {           // avoid converting for each block
-            trkconv = trk;              // current track converted
+        if (trkconv != trk)     // avoid converting for each block
+        {
+            trkconv = trk;      // current track converted
             rc = convert_tt(trk, num_extents, extent, cif->heads, &cyl, &head);
             if (rc < 0)
             {
@@ -532,20 +725,17 @@ int fbcopy(     FILE            *fout,
             }
             if (verbose > 1)
             {
-                MSGBUF( msgbuf, "fbcopy(): convert TT %5.5d/x'%04X' CCHH[%04X%04X]",
-                        trk, trk, cyl, head);
-                WRMSG( HHC90000, "D", msgbuf );
+                // "Convert TT %5.5d/x'%04X' CCHH[%04X%04X]"
+                WRMSG( HHC02685, "I", trk, trk, cyl, head );
             }
         }
 
-//  Read block from dasd
+        //  Read block from dasd
 
         if (verbose > 2)
         {
-            MSGBUF( msgbuf, "fbcopy reading track %5.5d/x'%04X' "
-                "record %d/x'%X' CCHHR[%04X%04X%02X]",
-                 trk, trk, rec, rec, cyl, head, rec);
-            WRMSG( HHC90000, "D", msgbuf );
+            // "Reading track %5.5d/x'%04X' record %d/x'%X' CCHHR[%04X%04X%02X]"
+            WRMSG( HHC02686, "I", trk, trk, rec, rec, cyl, head, rec );
         }
         rc_rb = read_block(cif, cyl, head, rec, NULL, NULL, &buffer, &len);
         if (rc_rb < 0)          // error
@@ -558,34 +748,35 @@ int fbcopy(     FILE            *fout,
             break;
         }
 
-//  Handle end of track return from read_block
+        //  Handle end of track return from read_block
 
-        if (rc_rb > 0) {                        // end of track
+        if (rc_rb > 0)      // end of track
+        {
             if (verbose > 2)
             {
-                MSGBUF( msgbuf, "fbcopy(): End Of Track %5.5d/x'%04X' rec %d",
-                        trk, trk, rec);
-                WRMSG( HHC90000, "D", msgbuf );
+                // "%s track %5.5d/x'%04X' rec %d"
+                WRMSG( HHC02687, "I", "End of", trk, trk, rec );
             }
-            trk++;                              // next track
-            rec = 1;                            // record 1 on new track
+            trk++;          // next track
+            rec = 1;        // record 1 on new track
             continue;
         }
 
-//  Check for dataset EOF
+        //  Check for dataset EOF
 
-        if (len == 0) {                         // EOF
+        if (len == 0)       // EOF
+        {
             if (verbose)
             {
-                MSGBUF( msgbuf, "fbcopy(): EOF track %5.5d/x'%04X' rec %d",
-                        trk, trk, rec);
-                WRMSG( HHC90000, "D", msgbuf );
+                // "%s track %5.5d/x'%04X' rec %d"
+                WRMSG( HHC02687, "I", "EOF", trk, trk, rec );
             }
-            if (absvalid)                       // capture as much -abs data as possible
+            if (absvalid)   // capture as much -abs data as possible
             {
                 if (verbose)
                 {
-                    WRMSG( HHC90000, "D", "fbcopy(): ignoring -abs EOF" );
+                    // "%s"
+                    WRMSG( HHC02681, "I", "Ignoring -abs EOF" );
                 }
             }
             else
@@ -596,59 +787,56 @@ int fbcopy(     FILE            *fout,
         }
         if (verbose > 3)
         {
-            MSGBUF( msgbuf, "fbcopy(): read %d bytes", len);
-            WRMSG( HHC90000, "D", msgbuf );
+            // "read %d bytes"
+            WRMSG( HHC02688, "I", len );
         }
         if (verbose > 2)
         {
-            WRMSG( HHC90000, "D", "fbcopy(): BUFFER DUMP" );
-            data_dump(buffer, len);
-            WRMSG( HHC90000, "D", "fbcopy(): BUFFER END DUMP" );
+            // "%s"
+            WRMSG( HHC02681, "I", "BEGIN OF BUFFER DUMP >" );
+            data_dump( buffer, len );
+            WRMSG( HHC02681, "I", "< END OF BUFFER DUMP" );
         }
 
-//  Deblock input dasd block, write records to output dataset
+        //  Deblock input dasd block, write records to output dataset
 
-        for (offset = 0; offset < len; offset += lrecl) {
+        for (offset=0; offset < len; offset += lrecl)
+        {
             if (verbose > 3)
             {
-                MSGBUF( msgbuf, "fbcopy(): offset %d length %d rec %d",
-                        offset, lrecl, recs_written);
-                WRMSG( HHC90000, "D", msgbuf );
+                // "offset %d length %d rec %d"
+                WRMSG( HHC02689, "I", offset, lrecl, recs_written );
             }
 
-            if (tran)                   // ASCII output
+            if (tran)   // ASCII output
             {
-                memset(pascii, 0, lrecl + 1);
-                make_asciiz(pascii, lrecl + 1, buffer + offset, lrecl);
+                memset( pascii, 0, lrecl + 1 );
+                make_asciiz( pascii, lrecl + 1, buffer + offset, lrecl );
                 if (verbose > 4)
                 {
-                    MSGBUF( msgbuf, "fbcopy(): buffer offset %d rec %d",
-                                offset, rec);
-                    WRMSG( HHC90000, "D", msgbuf );
-                    data_dump(buffer + offset, lrecl);
+                    // "buffer offset %d rec %d:"
+                    WRMSG( HHC02690, "I", offset, rec );
+                    data_dump( buffer + offset, lrecl );
                 }
+                // "ascii> '%s'"
+                WRMSG( HHC02691, "I", pascii );
                 if (verbose > 3)
-                {
-                    MSGBUF( msgbuf, "fbcopy(): ascii> '%s'", pascii);
-                    WRMSG( HHC90000, "D", msgbuf );
-                    data_dump(pascii, lrecl);
-                }
-                fprintf(fout, "%s\n", pascii);
-
+                    data_dump( pascii, lrecl );
             }
-            else                // EBCDIC output
+            else    // EBCDIC output
             {
                 if (verbose > 3)
                 {
-                    WRMSG( HHC90000, "D", "fbcopy(): EBCDIC buffer" );
-                    data_dump(buffer + offset, lrecl);
+                    // "%s"
+                    WRMSG( HHC02681, "I", "EBCDIC buffer:" );
+                    data_dump( buffer + offset, lrecl );
                 }
                 fwrite(buffer + offset, lrecl, 1, fout);
             }
             if (ferror(fout))
             {
                 // "File %s; %s error: %s"
-                FWRMSG( stderr, HHC02468, "E", zdsn, "fwrite()", strerror(errno) );
+                FWRMSG( stderr, HHC02468, "E", zdsn, "fwrite()", strerror( errno ));
                 rc_copy = -1;
             }
             recs_written++;
@@ -656,17 +844,19 @@ int fbcopy(     FILE            *fout,
         if (rc_copy != 0)
             break;
         else
-            rec++;                      // next record on track
-    } /* while (1) */
+            rec++;          // next record on track
+    }
+    /* end while (1) */
+
     if (pascii)
-        free(pascii);                   // release ASCII conversion buffer
+        free(pascii);       // release ASCII conversion buffer
+
     return rc_copy;
+}
 
-} /* fbcopy */
-
-//----------------------------------------------------------------------------------
-//  Given extent information, place it into appropriate extent table entry
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
+//    Place extent information into appropriate extent table slot
+//---------------------------------------------------------------------
 
 void makext(
         int i,                  // extent #
@@ -674,292 +864,40 @@ void makext(
         DSXTENT *extent,        // extent table entry
         int startcyl,           // start cylinder
         int starttrk,           // start track
-        int size) {             // extent size in tracks
-
-        int endcyl = ((startcyl * heads) + starttrk + size - 1) / heads;
-        int endtrk = ((startcyl * heads) + starttrk + size - 1) % heads;
-
-        if (i > (MAX_EXTENTS - 1))
-        {
-            // "%s: extent number parameter invalid %d; utility ends"
-            FWRMSG( stderr, HHC02491, "S", "makext()", i );
-            exit(4);
-        }
-
-        extent[i].xttype = 1;                   // extent type
-        extent[i].xtseqn = i;                   // extent # (relative zero)
-
-        extent[i].xtbcyl[0] = startcyl >> 8;                    // begin cyl
-        extent[i].xtbcyl[1] = startcyl - ((startcyl / 256) * 256);
-        extent[i].xtbtrk[0] = starttrk >> 8;
-        extent[i].xtbtrk[1] = starttrk - ((starttrk / 256) * 256);
-
-        extent[i].xtecyl[0] = endcyl >> 8;                      // end cyl
-        extent[i].xtecyl[1] = endcyl - ((endcyl / 256) * 256);
-        extent[i].xtetrk[0] = endtrk >> 8;
-        extent[i].xtetrk[1] = endtrk - ((endtrk / 256) * 256);  // end track
-        return;
-} /* makext */
-
-//----------------------------------------------------------------------------------
-// showhelp - display syntax help
-//----------------------------------------------------------------------------------
-
-void showhelp(char *pgm) {
-
-    fprintf(stderr, (expert) ?
-        "Usage: %s [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec\n"
-        "  -debug    optional - Enables debug mode, additional debug help appears\n"
-        :
-        "Usage: %s [-expert] [-ascii] image [sf=shadow] filespec\n", pgm );
-    fprintf(stderr,
-        "  -expert   optional - Additional help describes expert operands\n"
-        "  -ascii    optional - translate output file to ascii, trim trailing blanks\n"
-        "  image     required - [path/]filename of dasd image file (dasd volume)\n"
-        "  shadow    optional - [path/]filename of shadow file (note sf=)\n");
-    if (expert)
-        fprintf(stderr,
-        "  ALL EXPERT FACILITIES ARE EXPERIMENTAL\n"
-        "  attr      optional - dataset attributes (only useful with -abs)\n"
-        "            attr syntax: [-recfm fb] [-lrecl aa]\n"
-        "            -recfm designates RECFM, reserved for future support\n"
-        "            fb - fixed, blocked (only RECFM currently supported)\n"
-        "            -lrecl designates dataset LRECL\n"
-        "            aa - decimal logical record length (default 80)\n"
-        "                 Blocksize need not be specified; dasdseq handles whatever\n"
-        "                 block size comes off the volume.\n"
-        "  filespec  required (optional sub-operands in the following order):\n"
-        "                 [-heads xx]\n"
-        "                 [-abs cc hh tt] [...] [-abs cc hh tt ]\n"
-        "                 filename\n"
-        "            When -abs is -not- specified,\n"
-        "                 Filename specifies the MVS DSORG=PS dataset on the volume.\n"
-        "                 The dasd image volume containing the dataset must have a valid VTOC\n"
-        "                 structure, and a F1 DSCB describing the dataset.\n"
-        "                 Specifying -debug will (eventually) display extent information.\n"
-        "            When -abs is specified, each -abs group specifies one dataset extent.\n"
-        "                 For multi-extent datasets, -abs groups may be repeated as needed,\n"
-        "                 in the order in which the dataset's extents occur.\n"
-        "                 A maximum of %d extents are supported.\n"
-        "                 No VTOC structure is implied, a F1 DSCB will not be sought.\n"
-        "                 Dasdseq will frequently report 'track not found in extent table'\n"
-        "                 (along with a message from fbcopy about rc -1 from convert_tt)\n"
-        "                 due to potentially missing EOF markers in the extent, and the\n"
-        "                 fact that the F1 DSCB DS1LSTAR field is not valid.\n"
-        "                 Check your output file before you panic.\n"
-        "                 Fbcopy ignores EOF, in case you are attempting to recovery PDS\n"
-        "                 member(s) from a damaged dasd volume, preferring to wait until\n"
-        "                 all tracks in the extent have been processed.\n"
-        "                 Tracks containing PDS members may have more than one EOF per track.\n"
-        "                 Expect a lot of associated manual effort with -abs.\n"
-        "            -heads defines # tracks per cylinder on device;\n"
-        "            xx - decimal number of heads per cylinder on device\n"
-        "                 default xx = 15 (valid for 3380s, 3390s)\n"
-        "            -abs indicates the beginning of each extent's location in terms of\n"
-        "                 absolute dasd image location.\n"
-        "            cc - decimal cylinder number (relative zero)\n"
-        "            hh - decimal head number (relative zero)\n"
-        "            tt - decimal number of tracks in extent\n"
-        "            filename will be the filename of the output file in the current directory;\n"
-        "                 output filename in the same case as the command line filename.\n",
-                        MAX_EXTENTS);
-    else fprintf(stderr,
-        "  filespec  required - MVS dataset name of DSORG=PS dataset, output filename\n");
-    if (debug)
-        fprintf(stderr, "\n"
-                "Debugging options (at end of dasdseq command)\n"
-                "  [verbose [x [y [z]]]]\n\n"
-                "  verbose   debug output level (default = 0 when not specified)\n"
-                "      x  main program (default = 1 when verbose specified)\n"
-                "      y  copyfile + showf1\n"
-                "      z  dasdutil\n"
-                "      Higher numbers produces more output\n");
-    return;
-} /* showhelp */
-
-//----------------------------------------------------------------------------------
-// parsecmd - parse command line; results stored in program globals
-//----------------------------------------------------------------------------------
-
-int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
+        int size)               // extent size in tracks
 {
-        int     util_verbose = 0;       // Hercules dasdutil.c diagnostic level
-        int     heads = 15;             // # heads per cylinder on device
-        int     extnum = 0;             // extent number for makext()
-        int     abscyl = 0;             // absolute CC (default 0)
-        int     abshead = 0;            // absolute HH (default 0)
-        int     abstrk = 1;             // absolute tracks (default 1)
-        int     lrecl = 80;             // default F1 DSCB lrecl
-        char    msgbuf[128];            // message work area
+    int endcyl = ((startcyl * heads) + starttrk + size - 1) / heads;
+    int endtrk = ((startcyl * heads) + starttrk + size - 1) % heads;
 
-//  Usage: dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec
-
-    argv++;                             // skip dasdseq command argv[0]
-    if ((*argv) && (strcasecmp(*argv, "-debug") == 0))
+    if (i > (MAX_EXTENTS - 1))
     {
-        argv++;
-        debug = 1;
-        WRMSG( HHC90000, "D", "DEBUG Enabled" );
-    }
-    if ((*argv) && (strcasecmp(*argv, "-expert") == 0))
-    {
-        argv++;
-        expert = 1;
-        if (debug) WRMSG( HHC90000, "D", "EXPERT Mode Enabled" );
-    }
-    if ((*argv) && (strcasecmp(*argv, "-ascii") == 0))
-    {
-        argv++;
-        tran_ascii = 1;
-        if (debug) WRMSG( HHC90000, "D", "ASCII Translation Mode Enabled" );
-    }
-    if (*argv) din = *argv++;           // dasd image filename
-    if (debug)
-    {
-        MSGBUF( msgbuf, "IMAGE file '%s'", din );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-    if (*argv && strlen(*argv) > 3 && !memcmp(*argv, "sf=", 3))
-    {
-        sfn = *argv++;                  // shadow file parm
-    }
-    else
-        sfn = NULL;
-    if (debug)
-    {
-        MSGBUF( msgbuf, "SHADOW file(s) '%s'", sfn );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-    dadsm->f1buf.ds1recfm =
-                RECFM_FORMAT_F | RECFM_BLOCKED; // recfm FB for fbcopy
-    if ((*argv) && (strcasecmp(*argv, "-recfm") == 0))
-    {
-        argv++;                                 // skip -recfm
-        if ((*argv) && (strcasecmp(*argv, "fb") == 0))
-        {
-            argv++;                             // skip fb
-            if (debug) WRMSG( HHC90000, "D", "RECFM=FB" );
-        }
-        else
-        {
-            // "Invalid argument: %s"
-            argv++;                             // skip bad recfm
-            MSGBUF( msgbuf, "-recfm %s", *argv );
-            WRMSG( HHC02465, "I", msgbuf);
-        }
-    }
-    if ((*argv) && (strcasecmp(*argv, "-lrecl") == 0))
-    {
-        argv++;                                         // skip -lrecl
-        if (*argv) lrecl = atoi(*argv++);               // lrecl value
-        if (debug)
-        {
-            MSGBUF( msgbuf, "LRECL=%d", lrecl );
-            WRMSG( HHC90000, "D", msgbuf );
-        }
-    }
-    dadsm->f1buf.ds1lrecl[0] = lrecl >> 8;      // for fbcopy
-    dadsm->f1buf.ds1lrecl[1] = lrecl - ((lrecl >> 8) << 8);
-    if ((*argv) && (strcasecmp(*argv, "-heads") == 0))
-    {
-        argv++;                                 // skip -heads
-        if (*argv) heads = atoi(*argv++);       // heads value
-    }
-    if (debug)
-    {
-        MSGBUF( msgbuf, "HEADS=%d", heads );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-    if ((*argv) &&
-        (strcasecmp(*argv, "-abs") == 0))
-    {
-        absvalid = 1;                               // CCHH valid
-        while ((*argv) && (strcasecmp(*argv, "-abs") == 0))
-        {
-            argv++;                                 // skip -abs
-            abscyl = 0; abshead = 0; abstrk = 1;    // defaults
-            if (*argv) abscyl = atoi(*argv++);      // abs cc
-            if (*argv) abshead = atoi(*argv++);     // abs hh
-            if (*argv) abstrk = atoi(*argv++);      // abs tracks
-            // Build extent entry for -abs group
-            makext(extnum, heads,
-                    (DSXTENT *) &dadsm->f1ext, abscyl, abshead, abstrk);
-            extnum++;
-            dadsm->f1buf.ds1noepv = extnum;         // for fbcopy
-            if (debug)
-            {
-                MSGBUF( msgbuf, "Absolute CC %d HH %d [%04X%04X] Track %d/%X",
-                                abscyl, abshead, abscyl, abshead, abstrk, abstrk);
-                WRMSG( HHC90000, "D", msgbuf );
-            }
-            if (extnum > MAX_EXTENTS)
-            {
-                // "Requested number of extents %d exceeds maximum %d; utility ends"
-                WRMSG( HHC02494, "S", extnum, MAX_EXTENTS);
-                exit(3);
-            }
-
-        }
-//          if (debug) sayext(MAX_EXTENTS, dadsm->f1ext);// show extent table
-    }
-    if (debug)
-    {
-        WRMSG( HHC90000, "D", "parsecmd(): Completed Format 1 DSCB" );
-        data_dump(&dadsm->f1buf, sizeof(FORMAT1_DSCB));
-    }
-    if (*argv) argdsn = *argv++;        // [MVS dataset name/]output filename
-    if (debug)
-    {
-        MSGBUF( msgbuf, "Dataset '%s'", argdsn );
-        WRMSG( HHC90000, "D", msgbuf );
-    }
-    if ((*argv) && (            // support deprecated 'ascii' operand
-                (strcasecmp(*argv, "ascii") == 0) ||
-                (strcasecmp(*argv, "-ascii") == 0)
-                )
-        )
-    {
-        argv++;
-        tran_ascii = 1;
-        if (debug) WRMSG( HHC90000, "D",
-                            "parsecmd(): ASCII translation enabled" );
-    }
-    set_verbose_util(0);                // default util verbosity
-    if ((*argv) && (strcasecmp(*argv, "verbose") == 0))
-    {
-        local_verbose = 1;
-        argv++;
-        if (*argv) local_verbose = atoi(*argv++);
-        if (*argv) copy_verbose = atoi(*argv++);
-        if (*argv)
-        {
-            util_verbose = atoi(*argv++);
-            set_verbose_util(util_verbose);
-            if (debug)
-            {
-                MSGBUF( msgbuf, "Utility verbose %d", util_verbose );
-                WRMSG( HHC90000, "D", msgbuf );
-            }
-        }
+        // "%s: extent number parameter invalid %d; utility ends"
+        FWRMSG( stderr, HHC02491, "S", "makext()", i );
+        exit(4);
     }
 
-//  If the user specified expert mode without -abs, give help & exit
-//  Additionally, if the user has "extra" parms, show help & exit
-//  No "extraneous parms" message is issued, since some of the code
-//  above forces *argv to be true when it wants help displayed
+    extent[i].xttype = 1;       // extent type
+    extent[i].xtseqn = i;       // extent # (relative zero)
 
-    if ((argc < 3) || (*argv) || ((expert) && (!absvalid)))
-    {
-        showhelp(pgm);                     // show syntax before bailing
-        exit(2);
-    }
-    return 0;
+    // begin cyl
 
-} /* parsecmd */
+    extent[i].xtbcyl[0] = startcyl >> 8;
+    extent[i].xtbcyl[1] = startcyl - ((startcyl / 256) * 256);
+    extent[i].xtbtrk[0] = starttrk >> 8;
+    extent[i].xtbtrk[1] = starttrk - ((starttrk / 256) * 256);
 
-//----------------------------------------------------------------------------------
-//  getlabel - retrieve label record from dasd volume image
-//----------------------------------------------------------------------------------
+    // end cyl
+
+    extent[i].xtecyl[0] = endcyl >> 8;
+    extent[i].xtecyl[1] = endcyl - ((endcyl / 256) * 256);
+    extent[i].xtetrk[0] = endtrk >> 8;
+    extent[i].xtetrk[1] = endtrk - ((endtrk / 256) * 256);  // end track
+    return;
+}
+
+//---------------------------------------------------------------------
+//     getlabel - retrieve label record from dasd volume image
+//---------------------------------------------------------------------
 //
 //  Input:
 //      cif             ptr to opened CIFBLK of dasd image
@@ -977,45 +915,51 @@ int parsecmd(int argc, char **argv, DADSM *dadsm, char *pgm)
 //      The volume label record always resides at CCHHR 0000 0000 03.
 //      The dasd volume label record contains the CCHHR of the VTOC.
 //      The volume label record is copied to the caller's buffer.
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int getlabel(
                 CIFBLK          *cif,
                 DASD_VOL_LABEL  *glbuf,
                 int             verbose)
 {
-        int     rc;
-        U16     len;
-        void    *plabel;
+    int     rc;
+    U16     len;
+    void    *plabel;
 
     if (verbose)
     {
-        fprintf(stderr, "getlabel reading volume label\n");
+        // "Reading volume label..."
+        WRMSG( HHC02661, "I" );
     }
+
     rc = read_block(cif, 0, 0, 3, NULL, NULL, (void *) &plabel, &len);
     if (rc)
     {
-        fprintf(stderr, "getlabel error reading volume label, rc %d\n", rc);
+        // "Error reading volume label, rc %d"
+        FWRMSG( stderr, HHC02663, "E", rc );
         return 1;
     }
     if (len != sizeof(DASD_VOL_LABEL))
     {
-        fprintf(stderr, "getlabel error: volume label %d, not 80 bytes long\n", len);
+        // "Error: volume label is %d bytes long, not 80 bytes long"
+        FWRMSG( stderr, HHC02664, "E", len );
         return 2;
     }
+
     memcpy((void *)glbuf, plabel, sizeof(DASD_VOL_LABEL));
+
     if (verbose > 1)
     {
-        fprintf(stderr, "getlabel volume label\n");
+        // "%s"
+        WRMSG( HHC02681, "I", "Volume label:" );
         data_dump(glbuf, len);
     }
     return 0;
+}
 
-} /* getlabel */
-
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //  getF4dscb - retrieve Format 4 DSCB - VTOC self-descriptor record
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //
 //  Input:
 //      cif             ptr to opened CIFBLK of dasd image containing dataset
@@ -1037,94 +981,107 @@ int getlabel(
 //      the first record in the VTOC.  The F4 provides VTOC extent information,
 //      anchors free space DSCBs, and provides information about the device on
 //      which the VTOC resides.
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int getF4dscb(
                 CIFBLK          *cif,
                 FORMAT4_DSCB    *f4dscb,
                 DASD_VOL_LABEL  *volrec,
                 DSXTENT         *vtocx,
-                int             verbose) {
+                int             verbose)
+{
+    char    vtockey[sizeof(f4dscb->ds4keyid)];
+    void    *f4key, *f4data;
+    U8      f4kl;
+    U16     f4dl;
+    int     rc;
+    U32     cyl;
+    U8      head, rec;
 
-        char    vtockey[sizeof(f4dscb->ds4keyid)];
-        void    *f4key, *f4data;
-        U8      f4kl;
-        U16     f4dl;
-        int     rc;
-        U32     cyl;
-        U8      head, rec;
-
-//  Extract VTOC's CCHHR from volume label
+    //  Extract VTOC's CCHHR from volume label
 
     cyl = (volrec->volvtoc[0] << 8) | volrec->volvtoc[1];
     head = (volrec->volvtoc[2] << 8) | volrec->volvtoc[3];
     rec = volrec->volvtoc[4];
-    if (verbose > 1)
-        fprintf(stderr, "getF4dscb VTOC F4 at cyl %d head %d rec %d\n", cyl, head, rec);
 
-//  Read VTOC's Format 4 DSCB (VTOC self-descriptor)
+    if (verbose > 1)
+    {
+        // "VTOC F4 at cyl %d head %d rec %d"
+        WRMSG( HHC02665, "I", cyl, head, rec);
+    }
+
+    //  Read VTOC's Format 4 DSCB (VTOC self-descriptor)
 
     if (verbose)
-        fprintf(stderr, "getF4dscb reading VTOC F4 DSCB\n");
-    rc = read_block(cif, cyl, head, rec, (void *) &f4key, &f4kl, (void *) &f4data, &f4dl);
-    if (rc) {
-        fprintf(stderr, "getF4dscb error reading F4 DSCB, rc %d\n", rc);
+    {
+        // "Reading VTOC F4 DSCB..."
+        WRMSG( HHC02666, "I" );
+    }
+
+    rc = read_block( cif, cyl, head, rec, (void*) &f4key, &f4kl, (void*) &f4data, &f4dl );
+    if (rc)
+    {
+        // "Error reading F4 DSCB, rc %d"
+        FWRMSG( stderr, HHC02667, "E", rc );
         return 1;
     }
 
-//  Verify correct key and data length
+    //  Verify correct key and data length
 
     if ((f4kl != sizeof(f4dscb->ds4keyid)) ||
-        (f4dl != (sizeof(FORMAT4_DSCB) - sizeof(f4dscb->ds4keyid)))) {
-        fprintf(stderr, "getF4dscb erroneous key length %d or data length %d\n",
-                f4kl, f4dl);
+        (f4dl != (sizeof(FORMAT4_DSCB) - sizeof(f4dscb->ds4keyid))))
+    {
+        // "Erroneous key length %d or data length %d"
+        FWRMSG( stderr, HHC02668, "E", f4kl, f4dl );
         return 2;
     }
 
-//  Return data to caller
+    //  Return data to caller
 
     memcpy((void *) &f4dscb->ds4keyid, f4key, f4kl);    // copy F4 key into buffer
     memcpy((void *) &f4dscb->ds4fmtid, f4data, f4dl);   // copy F4 data into buffer
     memcpy((void *) vtocx, (void *)&f4dscb->ds4vtoce,
         sizeof(f4dscb->ds4vtoce));                      // copy VTOC extent entry
-    if (verbose > 1) {
-        fprintf(stderr, "getF4dscb F4 DSCB\n");
+    if (verbose > 1)
+    {
+        // "%s"
+        WRMSG( HHC02681, "I", "F4 DSCB:" );
         data_dump((void *) f4dscb, sizeof(FORMAT4_DSCB));
     }
 
-//  Verify DS4FMTID byte = x'F4', DS4KEYID key = x'04', and DS4NOEXT = x'01'
-//  Do this after copying data to caller's buffer so we can use struct fields
-//  rather than having to calculate offset to verified data; little harm done
-//  if it doesn't verify since we're toast if they're bad.
+    //  Verify DS4FMTID byte = x'F4', DS4KEYID key = x'04', and DS4NOEXT = x'01'
+    //  Do this after copying data to caller's buffer so we can use struct fields
+    //  rather than having to calculate offset to verified data; little harm done
+    //  if it doesn't verify since we're toast if they're bad.
 
     memset(vtockey, 0x04, sizeof(vtockey));
     if ((f4dscb->ds4fmtid != 0xf4) ||
         (f4dscb->ds4noext != 0x01) ||
-        (memcmp(&f4dscb->ds4keyid, vtockey, sizeof(vtockey)))) {
-        fprintf(stderr, "getF4dscb "
-                "VTOC format id byte invalid (DS4IDFMT) %2.2X, \n"
-                "VTOC key invalid, or multi-extent VTOC\n",
-                f4dscb->ds4fmtid);
+        (memcmp(&f4dscb->ds4keyid, vtockey, sizeof(vtockey))))
+    {
+        // "VTOC format id byte invalid (DS4IDFMT) %2.2X,\n"
+        // "VTOC key invalid, or multi-extent VTOC"
+        FWRMSG( stderr, HHC02670, "E", f4dscb->ds4fmtid );
         return 3;
     }
 
-//  Display VTOC extent info (always one extent, never more)
+    //  Display VTOC extent info (always one extent, never more)
 
-    if (verbose > 1) {
-        fprintf (stderr, "getF4dscb "
-                "VTOC start CCHH=%2.2X%2.2X %2.2X%2.2X "
-                       "end CCHH=%2.2X%2.2X %2.2X%2.2X\n",
-                vtocx->xtbcyl[0], vtocx->xtbcyl[1],
-                vtocx->xtbtrk[0], vtocx->xtbtrk[1],
-                vtocx->xtecyl[0], vtocx->xtecyl[1],
-                vtocx->xtetrk[0], vtocx->xtetrk[1]);
+    if (verbose > 1)
+    {
+        // "VTOC start CCHH=%2.2X%2.2X %2.2X%2.2X end CCHH=%2.2X%2.2X %2.2X%2.2X"
+        WRMSG( HHC02671, "I",
+            vtocx->xtbcyl[0], vtocx->xtbcyl[1],
+            vtocx->xtbtrk[0], vtocx->xtbtrk[1],
+            vtocx->xtecyl[0], vtocx->xtecyl[1],
+            vtocx->xtetrk[0], vtocx->xtetrk[1]);
     }
     return 0;
-} /* getF4dscb */
+}
 
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //  getF1dscb - retrieve Format 1 DSCB
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //
 //  Input:
 //      cif             ptr to opened CIFBLK of dasd image containing dataset
@@ -1145,37 +1102,36 @@ int getF4dscb(
 //          resides (the extent information).  The first 3 possible extents are
 //          described in the F1 DSCB.  If additional extents are allocated, they
 //          are described by F3 DSCBs referred to by the F1 DSCB.
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int getF1dscb(
                 CIFBLK          *cif,
                 char            *pdsn[],
                 FORMAT1_DSCB    *f1dscb,
                 DSXTENT         *vtocext[],
-                int             verbose) {
+                int             verbose)
+{
+    char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // zASCII dsn
+    BYTE    edsn[sizeof(f1dscb->ds1dsnam)];         // EBCDIC dsn
+    void    *f1key, *f1data;
+    U8      f1kl;
+    U16     f1dl;
+    U32     cyl;
+    U8      head;
+    U8      rec;
+    int     rc;
+    int     vtocextents = 1;        // VTOC has only one extent
 
-        char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // zASCII dsn
-        BYTE    edsn[sizeof(f1dscb->ds1dsnam)];         // EBCDIC dsn
-        void    *f1key, *f1data;
-        U8      f1kl;
-        U16     f1dl;
-        U32     cyl;
-        U8      head;
-        U8      rec;
-        int     rc;
-        int     vtocextents = 1;        // VTOC has only one extent
-        char    msgbuf[128];            // message work area
-
-//  Locate dataset's F1 DSCB
+    //  Locate dataset's F1 DSCB
 
     memset(zdsn, 0, sizeof(zdsn));
-    strncpy(zdsn, *pdsn, sizeof(zdsn) - 1);
-    string_to_upper(zdsn);
-    convert_to_ebcdic(edsn, sizeof(edsn), zdsn);
+    strlcpy( zdsn, *pdsn, sizeof( zdsn ));
+    string_to_upper( zdsn );
+    convert_to_ebcdic( edsn, sizeof( edsn ), zdsn );
     if (verbose)
     {
-        MSGBUF( msgbuf, "getF1dscb(): searching VTOC for '%s'", zdsn );
-        WRMSG( HHC90000, "D", msgbuf );
+        // "searching VTOC for '%s'"
+        WRMSG( HHC02692, "I", zdsn );
     }
     rc = search_key_equal(cif, edsn, sizeof(edsn),
                         vtocextents, (DSXTENT *)vtocext,
@@ -1184,21 +1140,27 @@ int getF1dscb(
     {
         if (verbose)
         {
-            MSGBUF( msgbuf, "getF1dscb(): search_key_equal rc %d", rc );
-            WRMSG( HHC90000, "D", msgbuf );
-            WRMSG( HHC90000, "D", "getF1dscb(): KEY" );
+            // "search_key_equal rc %d"
+            WRMSG( HHC02693, "I", rc );
+            // "%s"
+            WRMSG( HHC02681, "I", "KEY:" );
             data_dump(edsn, sizeof(edsn));
         }
         if (rc == 1)
+        {
             // "Dataset %s not found"
             FWRMSG( stderr, HHC02476, "E", zdsn);
+        }
         return 1;
     }
 
-//  Read F1 DSCB describing dataset
+    //  Read F1 DSCB describing dataset
 
     if (verbose)
-        WRMSG( HHC90000, "D", "getF1dscb(): reading Format 1 DSCB" );
+    {
+        // "%s"
+        WRMSG( HHC02681, "I", "reading Format 1 DSCB" );
+    }
     rc = read_block(cif, cyl, head, rec,
                 (void *)&f1key, &f1kl,
                 (void *) &f1data, &f1dl);
@@ -1210,7 +1172,7 @@ int getF1dscb(
         return 2;
     }
 
-//  Return data to caller
+    //  Return data to caller
 
     if ((f1kl == sizeof(f1dscb->ds1dsnam)) &&
         (f1dl == (sizeof(FORMAT1_DSCB) - sizeof(f1dscb->ds1dsnam))))
@@ -1229,14 +1191,15 @@ int getF1dscb(
 
     if (verbose > 1)
     {
-        WRMSG( HHC90000, "D", "getF1dscb(): Format 1 DSCB" );
+        // "%s"
+        WRMSG( HHC02681, "I", "Format 1 DSCB:" );
         data_dump((void *) f1dscb, sizeof(FORMAT1_DSCB));
     }
 
-//  Verify DS1FMTID byte = x'F1'
-//  Do this after copying data to caller's buffer so we can use struct fields
-//  rather than having to calculate offset to verified data; little harm done
-//  if it doesn't verify since we're toast if it's bad.
+    //  Verify DS1FMTID byte = x'F1'
+    //  Do this after copying data to caller's buffer so we can use struct fields
+    //  rather than having to calculate offset to verified data; little harm done
+    //  if it doesn't verify since we're toast if it's bad.
 
     if (f1dscb->ds1fmtid != 0xf1)
     {
@@ -1245,11 +1208,11 @@ int getF1dscb(
         return 4;
     }
     return 0;
-} /* getF1dscb */
+}
 
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //  getF3dscb - Retrieve Format 3 DSCB
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //
 //  Input:
 //      cif             ptr to opened CIFBLK of dasd image containing dataset
@@ -1279,21 +1242,20 @@ int getF1dscb(
 //  Warning:    I haven't tested the "chase the F3 chain" code, as I have no
 //              reasonable way to do so.  The highest level of MVS I can run under
 //              Hercules is MVS38j.
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int getF3dscb(
                 CIFBLK          *cif,
                 BYTE            *f3cchhr,
                 FORMAT3_DSCB    *f3dscb,
-                int             verbose) {
-
-        int     rc;
-        U32     cyl;
-        U8      head, rec;
-        void    *f3key, *f3data;
-        U8      f3kl;
-        U16     f3dl;
-        char    msgbuf[128];
+                int             verbose)
+{
+    int     rc;
+    U32     cyl;
+    U8      head, rec;
+    void    *f3key, *f3data;
+    U8      f3kl;
+    U16     f3dl;
 
     cyl = (f3cchhr[0] << 8) | f3cchhr[1];
     head = (f3cchhr[2] << 8) | f3cchhr[3];
@@ -1301,9 +1263,8 @@ int getF3dscb(
 
     if (verbose)
     {
-        MSGBUF( msgbuf, "getF3dscb(): reading Format 3 DSCB - CCHHR %04X%04X%02X",
-                cyl, head, rec );
-        WRMSG( HHC90000, "D", msgbuf );
+        // "reading Format 3 DSCB - CCHHR %04X%04X%02X"
+        WRMSG( HHC02662, "I", cyl, head, rec );
     }
 
     rc = read_block (cif, cyl, head, rec,
@@ -1329,14 +1290,15 @@ int getF3dscb(
 
     if (verbose > 1)
     {
-        WRMSG( HHC90000, "D", "getF3dscb(): Format 3 DSCB" );
+        // "%s"
+        WRMSG( HHC02681, "I", "Format 3 DSCB:" );
         data_dump((void *) f3dscb, sizeof(FORMAT3_DSCB));
     }
 
-//  Verify DS3FMTID byte = x'F3'
-//  Do this after copying data to caller's buffer so we can use struct fields
-//  rather than having to calculate offset to verified data; little harm done
-//  if it doesn't verify since we're toast if it's bad.
+    //  Verify DS3FMTID byte = x'F3'
+    //  Do this after copying data to caller's buffer so we can use struct fields
+    //  rather than having to calculate offset to verified data; little harm done
+    //  if it doesn't verify since we're toast if it's bad.
 
     if (f3dscb->ds3fmtid != 0xf3)
     {
@@ -1345,11 +1307,11 @@ int getF3dscb(
         return 2;
     }
     return 0;
-} /* getF3dscb */
+}
 
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //  dadsm_setup - retrieve volume label & DSCBs sufficient to describe dataset
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 //
 //      This routine reads the volume label rec, the VTOC F4 DSCB, the F1 DSCB
 //      for the dataset, and any F3 DSCB(s) associated with the dataset.
@@ -1369,32 +1331,30 @@ int getF3dscb(
 //  Returns: 0 OK, else error
 //
 //  Notes:
-//----------------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 int dadsm_setup(
                 CIFBLK          *cif,
                 char            *pdsn[],
                 DADSM           *dadsm,
-                int             verbose) {
+                int             verbose)
+{
+    DSXTENT         *f1x;
+    BYTE            *pcchhr;
+    int             numx = MAX_EXTENTS;     // # extent slots available
+    int             rc;
 
-        DSXTENT         *f1x;
-        BYTE            *pcchhr;
-        int             numx = MAX_EXTENTS;     // # extent slots available
-        int             rc;
-        char            msgbuf[128];
-
-
-//  Read dasd volume label record
+    //  Read dasd volume label record
 
     rc = getlabel(cif, &dadsm->volrec, verbose);
     if (rc) return rc;
 
-//  Read F4 DSCB, save VTOC extent info
+    //  Read F4 DSCB, save VTOC extent info
 
     rc = getF4dscb(cif, &dadsm->f4buf, &dadsm->volrec, &dadsm->f4ext, verbose);
     if (rc) return rc;
 
-//  Read F1 DSCB, save first three extents from F1 DSCB
+    //  Read F1 DSCB, save first three extents from F1 DSCB
 
     rc = getF1dscb(cif, pdsn, &dadsm->f1buf, (void *)&dadsm->f4ext, verbose);
     if (rc) return rc;
@@ -1414,19 +1374,19 @@ int dadsm_setup(
     {
         if (verbose > 1)
         {
-            MSGBUF( msgbuf, "dadsm_setup(): %d extent(s) found; all are in Format 1 DSCB",
-                dadsm->f1numx );
-            WRMSG( HHC90000, "D", msgbuf );
+            // "%d extent(s) found; all are in Format 1 DSCB"
+            WRMSG( HHC02669, "I", dadsm->f1numx );
         }
         return 0;
     }
 
-//  When more than 3 extents, get additional extent info from F3 DSCB(s).
-//  Chase the F3 chain starting with the CCHHR in the F1, accumulating
-//  extent information for the dataset as we progress.
+    //  When more than 3 extents, get additional extent info from F3 DSCB(s).
+    //  Chase the F3 chain starting with the CCHHR in the F1, accumulating
+    //  extent information for the dataset as we progress.
 
     pcchhr = (BYTE *)&dadsm->f1buf.ds1ptrds;            // @ F1 ptr to F3
-    while (pcchhr[0] || pcchhr[1] || pcchhr[2] || pcchhr[3] || pcchhr[4]) {
+    while (pcchhr[0] || pcchhr[1] || pcchhr[2] || pcchhr[3] || pcchhr[4])
+    {
         rc = getF3dscb(cif, pcchhr, &dadsm->f3buf, verbose);
         if (rc) return rc;
         numx -= 4;                              // use extent slots
@@ -1450,5 +1410,139 @@ int dadsm_setup(
         pcchhr = (BYTE *)&dadsm->f3buf.ds3ptrds;        // @ next F3 CCHHR
     }
     return 0;
-} /* dadsm_setup */
+}
 
+//---------------------------------------------------------------------
+//                            Main
+//---------------------------------------------------------------------
+
+int main(int argc, char **argv)
+{
+    char           *pgm;                    /* less any extension (.ext) */
+    DADSM           dadsm;                  // DADSM workarea
+    FILE           *fout = NULL;            // output file
+    CIFBLK         *cif;
+    int             dsn_recs_written = 0;
+    int             bail;
+    int             dsorg;
+    int             rc;
+    char            pathname[MAX_PATH];
+
+    INITIALIZE_UTILITY( UTILITY_NAME,  "Sequential DSN unload", &pgm );
+
+    if (debug) WRMSG( HHC02677, "D", "DEBUG enabled" );
+
+    //  Parse command line
+
+    memset(&dadsm, 0, sizeof(dadsm));           // init DADSM workarea
+    rc = parsecmd(argc, argv, &dadsm, pgm);
+    if (rc) exit(rc);
+
+    //  Open CKD image
+
+    cif = open_ckd_image(din, sfn, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL);
+    if (!cif || cif == NULL )
+        return -1;
+
+    //  Unless -abs specified (in which case trust the expert user):
+    //  Retrieve extent information for the dataset
+    //  Display dataset attributes
+    //  Verify dataset has acceptable attributes
+
+    if (!absvalid)
+    {
+        rc = dadsm_setup(cif, &argdsn, &dadsm, local_verbose);
+        if (rc)
+        {
+            close_ckd_image(cif);
+            exit(rc);
+        }
+        if (local_verbose)
+        {
+            FWRMSG( stderr, HHC02484, "I", "" );
+            showf1(&dadsm.f1buf, dadsm.f1ext, copy_verbose);
+            FWRMSG( stderr, HHC02484, "I", "" );
+        }
+        bail = 1;
+        dsorg = (dadsm.f1buf.ds1dsorg[0] << 8) | (dadsm.f1buf.ds1dsorg[1]);
+        if (dsorg & (DSORG_PS * 256))
+        {
+            if ((dadsm.f1buf.ds1recfm & RECFM_FORMAT) == RECFM_FORMAT_F)
+                bail = 0;
+            if ((dadsm.f1buf.ds1recfm & RECFM_FORMAT) == RECFM_FORMAT_V)
+            {
+                bail = 1;               // not yet
+                // "Dataset is not RECFM %s; utility ends"
+                FWRMSG( stderr, HHC02472, "S", "F[B]" );
+            }
+        }
+        else
+        {
+            // "Dataset is not DSORG %s; utility ends"
+            FWRMSG( stderr, HHC02473, "S", "PS" );
+        }
+        if (bail)
+        {
+            close_ckd_image(cif);
+            exit(21);
+        }
+    }
+
+    //  Open output dataset (EBCDIC requires binary open)
+
+    hostpath(pathname, argdsn, sizeof(pathname));
+
+    fout = fopen(pathname, (tran_ascii) ? "wb" : "w");
+    if (fout == NULL)
+    {
+        // "File %s; %s error: %s"
+        FWRMSG( stderr, HHC02468, "E", argdsn, "fopen()", strerror( errno ));
+        close_ckd_image(cif);
+        exit(22);
+    }
+    if (local_verbose)
+    {
+        // "writing %s"
+        WRMSG( HHC02694, "I", argdsn );
+    }
+
+    //  Write dasd data to output dataset
+
+    dsn_recs_written = fbcopy(fout, cif, &dadsm, tran_ascii, copy_verbose);
+    if (dsn_recs_written == -1)
+    {
+        // "Error processing %s"
+        FWRMSG( stderr, HHC02474, "E", argdsn );
+    }
+    else
+    {
+        // "Records written to %s: %d"
+        WRMSG( HHC02475, "I", argdsn, dsn_recs_written );
+    }
+
+    //  Close output dataset, dasd image and return to caller
+
+    fclose(fout);
+    if (local_verbose > 2)
+    {
+        // "Closed output file %s"
+        WRMSG( HHC02695, "I", argdsn );
+    }
+
+    if (local_verbose > 3)
+    {
+        // "%s"
+        WRMSG( HHC02681, "I", "CIFBLK:" );
+        data_dump((void *) cif, sizeof(CIFBLK));
+    }
+
+    close_ckd_image(cif);
+
+    if (local_verbose > 2 )
+    {
+        // "%s"
+        WRMSG( HHC02681, "I", "Closed image file" );
+    }
+
+    return rc;
+}
