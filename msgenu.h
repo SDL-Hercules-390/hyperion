@@ -1737,6 +1737,7 @@ Examples:
 #define HHC02593 "VOL1 record not readable or locatable"
 
 // reserve 026xx for utilites
+// cckddiag
 #define HHC02600 "Usage: %s [options] file\n" \
        "HHC02600I   file      name of CCKD file\n" \
        "HHC02600I Options:\n" \
@@ -1752,15 +1753,21 @@ Examples:
        "HHC02600I   -x        hex display track key/data\n" \
        "HHC02600I Offset option:\n" \
        "HHC02600I   -o oo ll  hex display data at offset oo of length ll"
-#define HHC02601 "Press enter to continue"
+#define HHC02601 "%s" // action/info
 #define HHC02602 "From %s: Storage allocation of size %d using %s failed"
-#define HHC02603 "In %s: lseek() to pos 0x%08x error: %s"
-#define HHC02604 "In %s: read() error: %s"
+#define HHC02603 "lseek() to pos 0x%08x error: %s"
+#define HHC02604 "%s%s" // error
 #define HHC02605 "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
-#define HHC02606 "Track %d rec[%02X/%d] kl[%d]"
-#define HHC02607 "Track %d rec[%02X/%d] dl[%d]"
-#define HHC02608 "End of track"
-//efine HHC02609 - HHC02619 (available)
+#define HHC02606 "Track %d rec[%02X/%d] %s[%d]:"
+#define HHC02607 "error opening file %s: %s"
+#define HHC02608 "DASD table entry not found for devtype 0x%2.2X"
+#define HHC02609 "CC %d HH %d = reltrk %d; L1 index = %d, L2 index = %d"
+#define HHC02610 "L1 index %d = L2TAB offset %d (0x%8.8X)"
+#define HHC02611 "L2 index %d = L2TAB entry: %d bytes:"
+#define HHC02612 "TRKHDR track %d:"
+#define HHC02613 "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
+#define HHC02614 "%s - %d (decimal) bytes:"
+//efine HHC02615 - HHC02619 (available)
 
 // vmfplc2
 #define HHC02620 "Usage: %s verb [outfile] tapefile\n" \
@@ -2215,8 +2222,8 @@ Examples:
 #define HHC90400 "MAKBUF() malloc %s buffer of %d bytes at %p"
 #define HHC90401 "READPOS seeking %d (0x%8.8X)"
 #define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
-#define HHC90403 "SHOWTRK Compressed track header and data"
-#define HHC90404 "SHOWTRK Decompressed track header and data"
+#define HHC90403 "SHOWTRK Compressed track header and data:"
+#define HHC90404 "SHOWTRK Decompressed track header and data:"
 #define HHC90405 "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90406 "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90407 "%s device has %d heads/cylinder"
