@@ -1369,7 +1369,6 @@
 #define store_cmd_desc          "Store CPU status at absolute zero"
 #define suspend_cmd_desc        "Suspend hercules"
 #define symptom_cmd_desc        "Alias for traceopt"
-#define syncio_cmd_desc         "Display syncio devices statistics"
 #define sysclear_cmd_desc       "System Clear Reset manual operation"
 #define sysclear_cmd_help       \
                                 \
@@ -1796,8 +1795,5 @@ COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        
 #if defined( OPTION_SHOWDVOL1 )
 COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
 #endif /* defined( OPTION_SHOWDVOL1 ) */
-#ifdef OPTION_SYNCIO
-COMMAND( "syncio",                  syncio_cmd,             SYSCMDNOPER,        syncio_cmd_desc,        NULL                )
-#endif // OPTION_SYNCIO
 
 /*------------------------------(EOF)--------------------------------*/

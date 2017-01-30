@@ -280,11 +280,6 @@ char           *strtok_str = NULL;      /* save last position        */
             return rc;
     }
 
-#ifdef OPTION_SYNCIO
-    /* Default to synchronous I/O */
-    dev->syncio = 1;
-#endif // OPTION_SYNCIO
-
     /* No active track or cache entry */
     dev->bufcur = dev->cache = -1;
 
@@ -351,24 +346,6 @@ char           *strtok_str = NULL;      /* save last position        */
             cu = strtok_r (NULL, " \t", &strtok_str);
             continue;
         }
-#if 1 /*#ifdef OPTION_SYNCIO -- remove completely once syncio deprecation lifespan expires*/
-        if (strcasecmp ("nosyncio", argv[i]) == 0 ||
-            strcasecmp ("nosyio",   argv[i]) == 0)
-        {
-#ifdef OPTION_SYNCIO
-            dev->syncio = 0;
-#endif // OPTION_SYNCIO
-            continue;
-        }
-        if (strcasecmp ("syncio", argv[i]) == 0 ||
-            strcasecmp ("syio",   argv[i]) == 0)
-        {
-#ifdef OPTION_SYNCIO
-            dev->syncio = 1;
-#endif // OPTION_SYNCIO
-            continue;
-        }
-#endif // OPTION_SYNCIO
 
         WRMSG (HHC00402, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
         return -1;
@@ -865,9 +842,6 @@ int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
 off_t           offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
-#ifdef OPTION_SYNCIO
-int             active;                 /* 1=Synchronous I/O active  */
-#endif // OPTION_SYNCIO
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     logdevtr (dev, MSG(HHC00424, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->bufcur));
@@ -884,25 +858,9 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     if (trk >= 0 && trk == dev->bufcur)
         return 0;
 
-#ifdef OPTION_SYNCIO
-    /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
-    active = dev->syncio_active;
-    if (dev->ckdtrkof || trk <= 0)
-        dev->syncio_active = 0;
-#endif // OPTION_SYNCIO
-
     /* Write the previous track image if modified */
     if (dev->bufupd)
     {
-#ifdef OPTION_SYNCIO
-        /* Retry if synchronous I/O */
-        if (dev->syncio_active)
-        {
-            dev->syncio_retry = 1;
-            return -1;
-        }
-#endif // OPTION_SYNCIO
-
         logdevtr (dev, MSG(HHC00425, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufcur));
 
         dev->bufupd = 0;
@@ -992,22 +950,8 @@ ckd_read_track_retry:
         dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
              (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
-#ifdef OPTION_SYNCIO
-        dev->syncio_active = active;
-#endif // OPTION_SYNCIO
-
         return 0;
      }
-
-#ifdef OPTION_SYNCIO
-    /* Retry if synchronous I/O */
-    if (dev->syncio_active)
-    {
-        cache_unlock(CACHE_DEVBUF);
-        dev->syncio_retry = 1;
-        return -1;
-    }
-#endif // OPTION_SYNCIO
 
     /* Wait if no available cache entry */
     if (o < 0)
@@ -1038,10 +982,6 @@ ckd_read_track_retry:
     /* Calculate the track offset */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
          (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
-
-#ifdef OPTION_SYNCIO
-    dev->syncio_active = active;
-#endif // OPTION_SYNCIO
 
     logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1,
         dev->ckdtrkoff, dev->ckdtrksz));
@@ -2210,11 +2150,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
 
     /* Reset flags at start of CCW chain */
-#ifdef OPTION_SYNCIO
-    if (chained == 0 && !dev->syncio_retry)
-#else // OPTION_NOSYNCIO
     if (chained == 0)
-#endif // OPTION_SYNCIO
     {
         dev->ckdlocat = 0;
         dev->ckdspcnt = 0;
@@ -2246,12 +2182,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdxecyl = dev->ckdcyls - 1;
         dev->ckdxehead = dev->ckdheads - 1;
     }
-#ifdef OPTION_SYNCIO
-    /* Reset ckdlmask on retry of LRE */
-    else if (dev->syncio_retry && code == 0x4B)
-        dev->ckdlmask = 0;
-    dev->syncio_retry = 0;
-#endif // OPTION_SYNCIO
 
     /* Reset index marker flag if sense or control command,
        or any write command (other search ID or search key),
@@ -4731,12 +4661,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Seek to the required track */
         rc = ckd_seek (dev, cyl, head, &trkhdr, unitstat);
         if (rc < 0)
-        {
-#ifdef OPTION_SYNCIO
-            if (dev->syncio_retry) dev->ckdlcount = 0;
-#endif // OPTION_SYNCIO
             break;
-        }
 
         /* Set normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -5277,12 +5202,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* Seek to the required track */
     rc = ckd_seek (dev, cyl, head, &trkhdr, unitstat);
     if (rc < 0)
-    {
-#ifdef OPTION_SYNCIO
-        if (dev->syncio_retry) dev->ckdlcount = 0;
-#endif // OPTION_SYNCIO
         break;
-    }
 
     /* Set normal status */
     *unitstat = CSW_CE | CSW_DE;
@@ -5996,11 +5916,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
 
     } /* end switch(code) */
-
-#ifdef OPTION_SYNCIO
-    /* Return if synchronous I/O needs to be retried asynchronously */
-    if (dev->syncio_retry) return;
-#endif // OPTION_SYNCIO
 
     /* Reset the flags which ensure correct positioning for write
        commands */

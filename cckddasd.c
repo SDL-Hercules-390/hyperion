@@ -102,9 +102,6 @@ DLL_EXPORT void   *cckd_sf_comp(void *data);
 DLL_EXPORT void   *cckd_sf_chk(void *data);
 DLL_EXPORT void   *cckd_sf_stats(void *data);
 DLL_EXPORT void    cckd_sf_parse_sfn( DEVBLK* dev, char* sfn );
-#ifdef OPTION_SYNCIO
-int     cckd_disable_syncio(DEVBLK *dev);
-#endif // OPTION_SYNCIO
 void    cckd_lock_devchain(int flag);
 void    cckd_unlock_devchain();
 void*   cckd_gcol(void* arg);
@@ -479,11 +476,7 @@ int             trk = 0;                /* Last active track         */
     dev->bufoff = 0;
     dev->bufoffhi = cckd->ckddasd ? dev->ckdtrksz : CFBA_BLOCK_SIZE;
 
-#ifdef OPTION_SYNCIO
-    /* Check for merge - synchronous i/o should be disabled */
-#else // OPTION_NOSYNCIO
     /* Check for merge */
-#endif // OPTION_SYNCIO
     obtain_lock(&cckd->cckdiolock);
     if (cckd->merging)
     {
@@ -826,9 +819,6 @@ int             rc;                     /* Return code               */
 int             len;                    /* Compressed length         */
 BYTE           *newbuf;                 /* Uncompressed buffer       */
 int             cache;                  /* New active cache entry    */
-#ifdef OPTION_SYNCIO
-int             syncio;                 /* Syncio indicator          */
-#endif // OPTION_SYNCIO
 
     cckd = dev->cckd_ext;
 
@@ -838,13 +828,6 @@ int             syncio;                 /* Syncio indicator          */
         dev->buflen = cckd_trklen (dev, dev->buf);
         cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
     }
-
-#ifdef OPTION_SYNCIO
-    /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
-    syncio = dev->syncio_active;
-    if (dev->ckdtrkof || trk == 0)
-        dev->syncio_active = 0;
-#endif // OPTION_SYNCIO
 
     /* Reset buffer offsets */
     dev->bufoff = 0;
@@ -857,27 +840,12 @@ int             syncio;                 /* Syncio indicator          */
         if ((dev->buf[0] & CCKD_COMPRESS_MASK) != 0
          && (dev->buf[0] & dev->comps) == 0)
         {
-#ifdef OPTION_SYNCIO
-#if 0
-            /* Return if synchronous i/o */
-            if (dev->syncio_active)
-            {
-                cckd_trace (dev, "read  trk   %d syncio compressed", trk);
-                cckdblk.stats_synciomisses++;
-                dev->syncio_retry = 1;
-                return -1;
-            }
-#endif
-#endif // OPTION_SYNCIO
             len = cache_getval(CACHE_DEVBUF, dev->cache);
             newbuf = cckd_uncompress (dev, dev->buf, len, dev->ckdtrksz, trk);
             if (newbuf == NULL) {
                 ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 dev->bufcur = dev->cache = -1;
-#ifdef OPTION_SYNCIO
-                dev->syncio_active = syncio;
-#endif // OPTION_SYNCIO
                 return -1;
             }
             cache_setbuf (CACHE_DEVBUF, dev->cache, newbuf, dev->ckdtrksz);
@@ -896,11 +864,7 @@ int             syncio;                 /* Syncio indicator          */
         return 0;
     }
 
-    cckd_trace (dev, "read  trk   %d (%s)", trk,
-#ifdef OPTION_SYNCIO
-                dev->syncio_active ? "synchronous" :
-#endif // OPTION_SYNCIO
-                "asynchronous");
+    cckd_trace (dev, "read  trk   %d (%s)", trk, "asynchronous");
 
     /* read the new track */
     dev->bufupd = 0;
@@ -930,9 +894,6 @@ int             syncio;                 /* Syncio indicator          */
     else
         rc = 0;
 
-#ifdef OPTION_SYNCIO
-    dev->syncio_active = syncio;
-#endif // OPTION_SYNCIO
     return rc;
 } /* end function cckd_read_track */
 
@@ -1061,19 +1022,6 @@ int             maxlen;                 /* Size for cache entry      */
         if ((cbuf[0] & CCKD_COMPRESS_MASK) != 0
          && (cbuf[0] & dev->comps) == 0)
         {
-#ifdef OPTION_SYNCIO
-#if 0
-            /* Return if synchronous i/o */
-            if (dev->syncio_active)
-            {
-                cckd_trace (dev, "read blkgrp  %d syncio compressed",
-                            blkgrp);
-                cckdblk.stats_synciomisses++;
-                dev->syncio_retry = 1;
-                return -1;
-            }
-#endif
-#endif // OPTION_SYNCIO
             len = cache_getval(CACHE_DEVBUF, dev->cache) + CKDDASD_TRKHDR_SIZE;
             newbuf = cckd_uncompress (dev, cbuf, len, maxlen, blkgrp);
             if (newbuf == NULL) {
@@ -1098,11 +1046,7 @@ int             maxlen;                 /* Size for cache entry      */
         return 0;
     }
 
-    cckd_trace (dev, "read blkgrp  %d (%s)", blkgrp,
-#ifdef OPTION_SYNCIO
-                dev->syncio_active ? "synchronous" :
-#endif // OPTION_SYNCIO
-                "asynchronous");
+    cckd_trace (dev, "read blkgrp  %d (%s)", blkgrp, "asynchronous");
 
     /* Read the new blkgrp */
     dev->bufupd = 0;
@@ -1270,26 +1214,6 @@ cckd_read_trk_retry:
             return fnd;
         }
 
-#ifdef OPTION_SYNCIO
-        /* If synchronous I/O and I/O is active then return
-           with syncio_retry bit on */
-        if (dev->syncio_active)
-        {
-            if (cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_IOBUSY)
-            {
-                cckd_trace (dev, "%d rdtrk[%d] %d syncio %s", ra, fnd, trk,
-                            cache_getflag(CACHE_DEVBUF, fnd) & CCKD_CACHE_READING ?
-                            "reading" : "writing");
-                cckdblk.stats_synciomisses++;
-                dev->syncio_retry = 1;
-                cache_unlock (CACHE_DEVBUF);
-                release_lock (&cckd->cckdiolock);
-                return -1;
-            }
-            else cckdblk.stats_syncios++;
-        }
-#endif // OPTION_SYNCIO
-
         /* Mark the new entry active */
         cache_setflag(CACHE_DEVBUF, fnd, ~0, CCKD_CACHE_ACTIVE | CCKD_CACHE_USED);
         cache_setage(CACHE_DEVBUF, fnd);
@@ -1337,19 +1261,6 @@ cckd_read_trk_retry:
         return fnd;
 
     } /* cache hit */
-
-#ifdef OPTION_SYNCIO
-    /* If not readahead and synchronous I/O then retry */
-    if (!ra && dev->syncio_active)
-    {
-        cache_unlock(CACHE_DEVBUF);
-        release_lock (&cckd->cckdiolock);
-        cckd_trace (dev, "%d rdtrk[%d] %d syncio cache miss", ra, lru, trk);
-        cckdblk.stats_synciomisses++;
-        dev->syncio_retry = 1;
-        return -1;
-    }
-#endif // OPTION_SYNCIO
 
     cckd_trace (dev, "%d rdtrk[%d] %d cache miss", ra, lru, trk);
 
@@ -3937,9 +3848,6 @@ void *cckd_sf_add (void *data)
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-#ifdef OPTION_SYNCIO
-int             syncio;                 /* Saved syncio bit          */
-#endif // OPTION_SYNCIO
 
     if (dev == NULL)
     {
@@ -3962,18 +3870,10 @@ int             syncio;                 /* Saved syncio bit          */
         return NULL;
     }
 
-#ifdef OPTION_SYNCIO
-    /* Disable synchronous I/O for the device */
-    syncio = cckd_disable_syncio(dev);
-#endif // OPTION_SYNCIO
-
     /* Schedule updated track entries to be written */
     obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
-#ifdef OPTION_SYNCIO
-        dev->syncio = syncio;
-#endif // OPTION_SYNCIO
         release_lock (&cckd->cckdiolock);
         WRMSG (HHC00318, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
         return NULL;
@@ -4021,9 +3921,6 @@ cckd_sf_add_exit:
     cckd->merging = 0;
     if (cckd->cckdwaiters)
         broadcast_condition (&cckd->cckdiocond);
-#ifdef OPTION_SYNCIO
-    dev->syncio = syncio;
-#endif // OPTION_SYNCIO
     release_lock (&cckd->cckdiolock);
 
     cckd_sf_stats (dev);
@@ -4037,9 +3934,6 @@ void *cckd_sf_remove (void *data)
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-#ifdef OPTION_SYNCIO
-int             syncio;                 /* Saved syncio bit          */
-#endif // OPTION_SYNCIO
 int             rc;                     /* Return code               */
 int             from_sfx, to_sfx;       /* From/to file index        */
 int             fix;                    /* nullfmt index             */
@@ -4090,18 +3984,10 @@ BYTE            buf[65536];             /* Buffer                    */
     cckd_trace (dev, "merge starting: %s %s",
                 merge ? "merge" : "nomerge", force ? "force" : "");
 
-#ifdef OPTION_SYNCIO
-    /* Disable synchronous I/O for the device */
-    syncio = cckd_disable_syncio(dev);
-#endif // OPTION_SYNCIO
-
     /* Schedule updated track entries to be written */
     obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
-#ifdef OPTION_SYNCIO
-        dev->syncio = syncio;
-#endif // OPTION_SYNCIO
         release_lock (&cckd->cckdiolock);
         WRMSG (HHC00322, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
@@ -4123,9 +4009,6 @@ BYTE            buf[65536];             /* Buffer                    */
 
     if (cckd->sfn == 0)
     {
-#ifdef OPTION_SYNCIO
-        dev->syncio = syncio;
-#endif // OPTION_SYNCIO
         release_lock (&cckd->filelock);
         WRMSG (HHC00323, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         cckd->merging = 0;
@@ -4336,9 +4219,6 @@ sf_remove_exit:
     cckd->merging = 0;
     if (cckd->cckdwaiters)
         broadcast_condition (&cckd->cckdiocond);
-#ifdef OPTION_SYNCIO
-    dev->syncio = syncio;
-#endif // OPTION_SYNCIO
     cckd_trace (dev, "merge complete%s","");
     release_lock (&cckd->cckdiolock);
 
@@ -4374,9 +4254,6 @@ void *cckd_sf_comp (void *data)
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-#ifdef OPTION_SYNCIO
-int             syncio;                 /* Saved syncio bit          */
-#endif // OPTION_SYNCIO
 int             rc;                     /* Return code               */
 
     if (dev == NULL)
@@ -4400,18 +4277,10 @@ int             rc;                     /* Return code               */
         return NULL;
     }
 
-#ifdef OPTION_SYNCIO
-    /* Disable synchronous I/O for the device */
-    syncio = cckd_disable_syncio(dev);
-#endif // OPTION_SYNCIO
-
     /* schedule updated track entries to be written */
     obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
-#ifdef OPTION_SYNCIO
-        dev->syncio = syncio;
-#endif // OPTION_SYNCIO
         release_lock (&cckd->cckdiolock);
         WRMSG (HHC00329, "W",  SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
@@ -4447,9 +4316,6 @@ int             rc;                     /* Return code               */
     cckd->merging = 0;
     if (cckd->cckdwaiters)
         broadcast_condition (&cckd->cckdiocond);
-#ifdef OPTION_SYNCIO
-    dev->syncio = syncio;
-#endif // OPTION_SYNCIO
     release_lock (&cckd->cckdiolock);
 
     /* Display the shadow file statistics */
@@ -4465,9 +4331,6 @@ void *cckd_sf_chk (void *data)
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-#ifdef OPTION_SYNCIO
-int             syncio;                 /* Saved syncio bit          */
-#endif // OPTION_SYNCIO
 int             rc;                     /* Return code               */
 int             level = 2;              /* Check level               */
 
@@ -4498,18 +4361,10 @@ int             level = 2;              /* Check level               */
     level = cckd->sflevel;
     cckd->sflevel = 0;
 
-#ifdef OPTION_SYNCIO
-    /* Disable synchronous I/O for the device */
-    syncio = cckd_disable_syncio(dev);
-#endif // OPTION_SYNCIO
-
     /* schedule updated track entries to be written */
     obtain_lock (&cckd->cckdiolock);
     if (cckd->merging)
     {
-#ifdef OPTION_SYNCIO
-        dev->syncio = syncio;
-#endif // OPTION_SYNCIO
         release_lock (&cckd->cckdiolock);
         WRMSG (HHC00331, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, cckd->sfn, cckd_sf_name(dev, cckd->sfn));
         return NULL;
@@ -4545,9 +4400,6 @@ int             level = 2;              /* Check level               */
     cckd->merging = 0;
     if (cckd->cckdwaiters)
         broadcast_condition (&cckd->cckdiocond);
-#ifdef OPTION_SYNCIO
-    dev->syncio = syncio;
-#endif // OPTION_SYNCIO
     release_lock (&cckd->cckdiolock);
 
     /* Display the shadow file statistics */
@@ -4641,27 +4493,6 @@ int             freenbr=0;              /* Total number free spaces  */
 //  release_lock (&cckd->filelock);
     return NULL;
 } /* end function cckd_sf_stats */
-
-#ifdef OPTION_SYNCIO
-/*-------------------------------------------------------------------*/
-/* Disable synchronous I/O for a device                              */
-/*-------------------------------------------------------------------*/
-int cckd_disable_syncio(DEVBLK *dev)
-{
-    if (!dev->syncio) return 0;
-    obtain_lock(&dev->lock);
-    while (dev->syncio_active)
-    {
-        release_lock(&dev->lock);
-        usleep(500);
-        obtain_lock(&dev->lock);
-    }
-    dev->syncio = 0;
-    release_lock(&dev->lock);
-    cckd_trace (dev, "syncio disabled%s","");
-    return 1;
-}
-#endif // OPTION_SYNCIO
 
 /*-------------------------------------------------------------------*/
 /* Lock/unlock the device chain                                      */
@@ -5614,12 +5445,6 @@ void cckd_command_stats()
     MSGBUF( msgbuf, "  readaheads%9"PRId64" misses...%10"PRId64,
                     cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses );
     WRMSG( HHC00347, "I", msgbuf );
-
-#ifdef OPTION_SYNCIO
-    MSGBUF( msgbuf, "  syncios..%10"PRId64" misses...%10"PRId64,
-                    cckdblk.stats_syncios, cckdblk.stats_synciomisses );
-    WRMSG( HHC00347, "I", msgbuf );
-#endif // OPTION_SYNCIO
 
     MSGBUF( msgbuf, "  switches.%10"PRId64" l2 reads.%10"PRId64" strs wrt.%10"PRId64,
                     cckdblk.stats_switches, cckdblk.stats_l2reads, cckdblk.stats_stresswrites );

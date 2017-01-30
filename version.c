@@ -572,12 +572,6 @@ static const char *build_info[] = {
   #endif
 #endif
 
-#if defined(OPTION_SYNCIO)
-    "With    Syncio support",
-#else
-    "Without Syncio support",
-#endif
-
 #if defined(OPTION_SHARED_DEVICES)
     "With    Shared Devices support",
 #else

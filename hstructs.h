@@ -305,10 +305,6 @@ struct REGS {                           /* Processor registers       */
       */
         ALIGN_8
         int     intwait;                /* 1=Waiting on intlock      */
-#ifdef OPTION_SYNCIO
-        int     syncio;                 /* 1=Synchronous i/o active  */
-#endif // OPTION_SYNCIO
-
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
@@ -1017,9 +1013,6 @@ struct DEVBLK {                         /* Device configuration block*/
         BLOCK_HEADER;                   /* Name of block - DEVBLK    */
 
         DEVBLK *nextdev;                /* -> next device block      */
-#ifdef OPTION_SYNCIO
-        REGS   *regs;                   /* -> REGS if syncio         */
-#endif // OPTION_SYNCIO
         LOCK    lock;                   /* Device block lock         */
         int     allocated;              /* Device block free/in use  */
 
@@ -1166,9 +1159,6 @@ struct DEVBLK {                         /* Device configuration block*/
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
-#ifdef OPTION_SYNCIO
-                syncio:2,               /* 1=Synchronous I/Os allowed*/
-#endif // OPTION_SYNCIO
 #if defined( OPTION_SHARED_DEVICES )
                 shareable:1,            /* 1=Device is shareable     */
 #endif // defined( OPTION_SHARED_DEVICES )
@@ -1206,18 +1196,9 @@ struct DEVBLK {                         /* Device configuration block*/
          (_dev)->pcipending  || \
          (_dev)->attnpending || \
          (_dev)->tschpending)
+
 #define INITIAL_POWERON_370() \
     ( !sysblk.ipled && ARCH_370 == sysblk.arch_mode )
-#ifdef OPTION_SYNCIO
-        int     syncio_active;          /* 1=Synchronous I/O active  */
-        int     syncio_retry;           /* 1=Retry I/O asynchronously*/
-
-        /*  Synchronous I/O                                          */
-
-        U32     syncio_addr;            /* Synchronous i/o ccw addr  */
-        U64     syncios;                /* Number synchronous I/Os   */
-        U64     asyncios;               /* Number asynchronous I/Os  */
-#endif // OPTION_SYNCIO
 
         /*  Execute Channel Pgm Counts */
         U64     excps;                  /* Number of channel pgms Ex */
@@ -1865,10 +1846,6 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_cachemisses;    /* Cache misses       */
         U64              stats_readaheads;     /* Readaheads         */
         U64              stats_readaheadmisses;/* Readahead misses   */
-#ifdef OPTION_SYNCIO
-        U64              stats_syncios;        /* Synchronous i/os   */
-        U64              stats_synciomisses;   /* Missed syncios     */
-#endif // OPTION_SYNCIO
         U64              stats_iowaits;        /* Waits for i/o      */
         U64              stats_cachewaits;     /* Waits for cache    */
         U64              stats_stresswrites;   /* Writes under stress*/

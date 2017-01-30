@@ -231,62 +231,58 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*  HQA Scenario    12     With Shared Devices, With Syncio          */
+/*  HQA Scenario    12     *UNASSIGNED*                              */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 12  // With Shared Devices, With Syncio
+#if HQA_SCENARIO == 12  // *UNASSIGNED*
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 12\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 12 (*UNASSIGNED*)\n"
 
-  #define OPTION_SHARED_DEVICES
-  #undef  OPTION_NO_SHARED_DEVICES
-  #define OPTION_SYNCIO
+//#define xxx...
+//#undef  xxx...
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/*  HQA Scenario    13     Without Shared Devices, With Syncio       */
+/*  HQA Scenario    13     *UNASSIGNED*                              */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 13  // Without Shared Devices, With Syncio
+#if HQA_SCENARIO == 13  // *UNASSIGNED*
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 13\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 13 (*UNASSIGNED*)\n"
 
-  #undef  OPTION_SHARED_DEVICES
-  #define OPTION_NO_SHARED_DEVICES
-  #define OPTION_SYNCIO
+//#define xxx...
+//#undef  xxx...
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/*  HQA Scenario    14     With Shared Devices, Without Syncio       */
+/*  HQA Scenario    14     With Shared Devices                       */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 14  // With Shared Devices, Without Syncio
+#if HQA_SCENARIO == 14  // With Shared Devices
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 14\n"
 
   #define OPTION_SHARED_DEVICES
   #undef  OPTION_NO_SHARED_DEVICES
-  #define OPTION_NOSYNCIO
 
 #endif
 
 /*-------------------------------------------------------------------*/
-/*  HQA Scenario    15     Without Shared Devices, Without Syncio    */
+/*  HQA Scenario    15     Without Shared Devices                    */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 15  // Without Shared Devices, Without Syncio
+#if HQA_SCENARIO == 15  // Without Shared Devices
 
   #undef  CUSTOM_BUILD_STRING
   #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 15\n"
 
   #undef  OPTION_SHARED_DEVICES
   #define OPTION_NO_SHARED_DEVICES
-  #define OPTION_NOSYNCIO
 
 #endif
 

@@ -6306,54 +6306,6 @@ char buf[4096];
 }
 
 
-#ifdef OPTION_SYNCIO
-/*-------------------------------------------------------------------*/
-/* syncio command - list syncio devices statistics                   */
-/*-------------------------------------------------------------------*/
-int syncio_cmd(int argc, char *argv[], char *cmdline)
-{
-    DEVBLK*   dev;
-    U64       syncios = 0, asyncios = 0;
-    int       found = 0;
-
-    UNREFERENCED(cmdline);
-
-    if ( argc > 1 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        return -1;
-    }
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-    {
-        if (!dev->syncio) continue;
-
-        found = 1;
-
-        WRMSG(HHC02239, "I",  SSID_TO_LCSS(dev->ssid), dev->devnum, dev->syncios,
-                dev->asyncios
-            );
-
-        syncios  += dev->syncios;
-        asyncios += dev->asyncios;
-    }
-
-    if (!found)
-    {
-        WRMSG(HHC02313, "I");
-        return 1;
-    }
-    else
-        WRMSG(HHC02240, "I",
-               syncios, asyncios,
-               ((syncios * 100) / (syncios + asyncios + 1))
-            );
-
-    return 0;
-}
-#endif // OPTION_SYNCIO
-
-
 void *device_thread(void *arg);
 
 /*-------------------------------------------------------------------*/
@@ -6409,7 +6361,6 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 
 /*-------------------------------------------------------------------*/

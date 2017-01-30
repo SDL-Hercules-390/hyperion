@@ -272,12 +272,6 @@ SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
-#ifdef OPTION_SYNCIO
-  #define DEVREGS(_dev) devregs(_dev)
-  CONF_DLL_IMPORT REGS *devregs(DEVBLK *dev);
-#else // OPTION_NOSYNCIO
-  #define DEVREGS(_dev) NULL
-#endif // OPTION_SYNCIO
 int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
         char *addargv[], int numconfdev);
 int  detach_device (U16 lcss, U16 devnum);

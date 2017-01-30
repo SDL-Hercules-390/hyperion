@@ -216,12 +216,6 @@ char   *strtok_str = NULL;              /* save last position        */
                        | ((U32)(cdevhdr.cyls[1]) << 8)
                        |  (U32)(cdevhdr.cyls[0]);
 
-#ifdef OPTION_SYNCIO
-        /* Default to synchronous I/O */
-//FIXME: syncio is reported to be broken for fba
-//      dev->syncio = 1;
-#endif // OPTION_SYNCIO
-
         /* process the remaining arguments */
         for (i = 1; i < argc; i++)
         {
@@ -239,24 +233,6 @@ char   *strtok_str = NULL;              /* save last position        */
                 cu = strtok_r (NULL, " \t", &strtok_str);
                 continue;
             }
-#if 1 /*#ifdef OPTION_SYNCIO -- remove completely once syncio deprecation lifespan expires*/
-            if (strcasecmp ("nosyncio", argv[i]) == 0
-             || strcasecmp ("nosyio",   argv[i]) == 0)
-            {
-#ifdef OPTION_SYNCIO
-                dev->syncio = 0;
-#endif // OPTION_SYNCIO
-                continue;
-            }
-            if (strcasecmp ("syncio", argv[i]) == 0
-             || strcasecmp ("syio",   argv[i]) == 0)
-            {
-#ifdef OPTION_SYNCIO
-                dev->syncio = 1;
-#endif // OPTION_SYNCIO
-                continue;
-            }
-#endif // OPTION_SYNCIO
 
             WRMSG (HHC00503, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
             return -1;
@@ -460,15 +436,6 @@ int     copylen;                        /* Length left to copy       */
     bufoff = 0;
     copylen = len;
 
-#ifdef OPTION_SYNCIO
-    /* Access multiple block groups asynchronously */
-    if (dev->syncio_active && copylen > blklen)
-    {
-        dev->syncio_retry = 1;
-        return -1;
-    }
-#endif // OPTION_SYNCIO
-
     /* Copy from the device buffer to the target buffer */
     while (copylen > 0)
     {
@@ -533,15 +500,6 @@ int     copylen;                        /* Length left to copy       */
     bufoff = 0;
     copylen = len;
 
-#ifdef OPTION_SYNCIO
-    /* Access multiple block groups asynchronously */
-    if (dev->syncio_active && copylen > blklen)
-    {
-        dev->syncio_retry = 1;
-        return -1;
-    }
-#endif // OPTION_SYNCIO
-
     /* Copy to the device buffer from the target buffer */
     while (copylen > 0)
     {
@@ -585,15 +543,6 @@ off_t           offset;                 /* File offsets              */
     /* Write the previous block group if modified */
     if (dev->bufupd)
     {
-#ifdef OPTION_SYNCIO
-        /* Retry if synchronous I/O */
-        if (dev->syncio_active)
-        {
-            dev->syncio_retry = 1;
-            return -1;
-        }
-#endif // OPTION_SYNCIO
-
         dev->bufupd = 0;
 
         /* Seek to the old block group offset */
@@ -671,16 +620,6 @@ fba_read_blkgrp_retry:
         dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
         return 0;
     }
-
-#ifdef OPTION_SYNCIO
-    /* Retry if synchronous I/O */
-    if (dev->syncio_active)
-    {
-        cache_unlock(CACHE_DEVBUF);
-        dev->syncio_retry = 1;
-        return -1;
-    }
-#endif // OPTION_SYNCIO
 
     /* Wait if no available cache entry */
     if (o < 0)

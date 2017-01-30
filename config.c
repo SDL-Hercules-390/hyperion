@@ -633,9 +633,6 @@ DEVBLK**dvpp;
     dev->chanset = lcss;
     dev->chptype[0] = CHP_TYPE_EIO; /* Interim - default to emulated */
     dev->fd = -1;
-#ifdef OPTION_SYNCIO
-    dev->syncio = 0;
-#endif // OPTION_SYNCIO
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
     dev->ioint.priority = -1;
@@ -1595,27 +1592,6 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     return dev;
 } /* end function find_device_by_subchan */
 
-#ifdef OPTION_SYNCIO
-/*-------------------------------------------------------------------*/
-/* Returns a CPU register context for the device, or else NULL       */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT REGS *devregs(DEVBLK *dev)
-{
-    /* If a register context already exists then use it */
-    if (dev->regs)
-        return dev->regs;
-
-    /* Otherwise attempt to determine what it should be */
-    {
-        int i;
-        TID tid = thread_id();                        /* Our own thread id     */
-        for (i=0; i < sysblk.maxcpu; i++)
-            if (equal_threads(tid,sysblk.cputid[i]))  /* Are we a cpu thread?  */
-                return sysblk.regs[i];                /* yes, use its context  */
-    }
-    return NULL;    /* Not CPU thread. Return NULL register context  */
-}
-#endif // OPTION_SYNCIO
 
 /*-------------------------------------------------------------------*/
 /* Function to Parse a LCSS specification in a device number spec    */

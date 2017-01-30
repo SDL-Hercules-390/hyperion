@@ -2014,10 +2014,6 @@ device_reset (DEVBLK *dev)
 
     clear_subchannel_busy(dev);
 
-#if defined(OPTION_SYNCIO)
-    dev->syncio = dev->syncio_active = dev->syncio_retry =
-#endif
-
     dev->reserved = dev->pending = dev->pcipending =
     dev->attnpending = dev->startpending = 0;
 #if defined( OPTION_SHARED_DEVICES )
@@ -2499,85 +2495,6 @@ ScheduleIORequest ( DEVBLK *dev )
 }
 
 
-#if defined(OPTION_SYNCIO)
-/*-------------------------------------------------------------------*/
-/*  EXECUTE SYNCIO                                                   */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/*  Execute I/O synchronously.                                       */
-/*                                                                   */
-/*                                                                   */
-/*  Format:                                                          */
-/*                                                                   */
-/*      execute_syncio (regs, dev)                                   */
-/*                                                                   */
-/*                                                                   */
-/*  Entry Conditions:                                                */
-/*                                                                   */
-/*      dev->lock       must be held                                 */
-/*                                                                   */
-/*                                                                   */
-/*  Locks Used:                                                      */
-/*                                                                   */
-/*    sysblk.intlock                                                 */
-/*                                                                   */
-/*                                                                   */
-/*  Returns:                                                         */
-/*                                                                   */
-/*  0 - Success                                                      */
-/*  2 - Unable to start I/O operation synchronously                  */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-int
-execute_syncio (REGS* regs, DEVBLK* dev)
-{
-    int result = 2;
-
-    /* Initiate synchronous I/O */
-    dev->s370start = 0;
-    dev->syncio_active = 1;
-#if defined( OPTION_SHARED_DEVICES )
-    dev->shioactive = DEV_SYS_LOCAL;
-#endif // defined( OPTION_SHARED_DEVICES )
-    dev->regs = regs;
-    release_lock (&dev->lock);
-
-    /* syncio is set with intlock held.  This allows SYNCHRONIZE_CPUS
-     * to consider this CPU waiting while performing synchronous I/O.
-     */
-    if (regs->cpubit != sysblk.started_mask)
-    {
-        OBTAIN_INTLOCK(regs);
-        regs->hostregs->syncio = 1;
-        RELEASE_INTLOCK(regs);
-    }
-
-    call_execute_ccw_chain(sysblk.arch_mode, dev);
-
-    if (regs->hostregs->syncio)
-    {
-        OBTAIN_INTLOCK(regs);
-        regs->hostregs->syncio = 0;
-        RELEASE_INTLOCK(regs);
-    }
-
-    /* Return if retry not required */
-    obtain_lock (&dev->lock);
-    dev->regs = NULL;
-    dev->syncio_active = 0;
-    if (!dev->syncio_retry)
-        result = 0;
-
-
-    /* syncio_retry gets turned off after the execute ccw device
-     * handler routine is called for the first time.
-     */
-
-    return (result);
-}
-#endif /*defined(OPTION_SYNCIO)*/
-
-
 /*-------------------------------------------------------------------*/
 /*  SCHEDULE IOQ                                                     */
 /*-------------------------------------------------------------------*/
@@ -2621,54 +2538,6 @@ schedule_ioq (const REGS *regs, DEVBLK *dev)
         signal_condition(&sysblk.ioqcond);
         return (result);
     }
-
-#if defined(OPTION_SYNCIO)
-    {
-        int syncio;                     /* 1=Do synchronous I/O      */
-
-        /* Schedule the I/O.  The various methods are a direct
-         * correlation to the interest in the subject:
-         * [1] Synchronous I/O.  Attempts to complete the channel
-         *     program in the cpu thread to avoid any threads overhead.
-         * [2] Device threads.  Queue the I/O and signal a device
-         *     thread. Eliminates the overhead of thead creation and
-         *     termination.
-         * [3] Original.  Create a thread to execute this I/O.
-         */
-
-        /* Determine if we can do synchronous I/O */
-        if (!regs)
-            syncio = 0;
-        else if (dev->syncio == 1)
-            syncio = 1;
-        else if (dev->syncio == 2 &&
-                 fetch_fw(dev->orb.ccwaddr) < dev->mainlim)
-        {
-            dev->code = dev->mainstor[fetch_fw(dev->orb.ccwaddr)];
-            syncio = IS_CCW_TIC(dev->code)      ||
-                     IS_CCW_SENSE(dev->code)    ||
-                     IS_CCW_IMMEDIATE(dev, dev->code);
-        }
-        else
-            syncio = 0;
-
-        if (syncio
-#if defined( OPTION_SHARED_DEVICES )
-            && dev->shioactive == DEV_SYS_NONE
-#endif // defined( OPTION_SHARED_DEVICES )
-#ifdef OPTION_IODELAY_KLUDGE
-         && sysblk.iodelay < 1
-#endif /*OPTION_IODELAY_KLUDGE*/
-           )
-        {
-            result = execute_syncio((REGS*)regs, dev);
-            if (result == 0)
-                return (result);
-        }
-    }
-
-    /* Otherwise, schedule normally */
-#endif /*defined(OPTION_SYNCIO)*/
 
     if (dev->s370start && regs != NULL)
     {
@@ -3955,11 +3824,6 @@ int     rc;                             /* Return code               */
 
     obtain_lock (&dev->lock);
 
-#ifdef OPTION_SYNCIO
-    dev->regs = NULL;
-    dev->syncio_active = dev->syncio_retry = 0;
-#endif // OPTION_SYNCIO
-
 #if defined(_FEATURE_IO_ASSIST)
     if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
@@ -4173,11 +4037,7 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wait for the device to become available */
-    if (dev->shareable
-#ifdef OPTION_SYNCIO
-        && !dev->syncio_active
-#endif // OPTION_SYNCIO
-    )
+    if (dev->shareable)
     {
         shared_iowait( dev );
     }
@@ -4275,11 +4135,7 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
     store_fw(dev->scsw.ccwaddr, 0);
 
     /* Call the i/o start exit */
-#ifdef OPTION_SYNCIO
-    if (!dev->syncio_retry && dev->hnd->start)
-#else // OPTION_NOSYNCIO
     if (dev->hnd->start)
-#endif // OPTION_SYNCIO
     {
         release_lock (&dev->lock);
         (dev->hnd->start) (dev);
@@ -4310,33 +4166,8 @@ resume_suspend:
     /* Turn off the start pending bit in the SCSW */
     dev->scsw.flag2 &= ~SCSW2_AC_START;
 
-#ifdef OPTION_SYNCIO
-    /* Check for retried synchronous I/O */
-    if (dev->syncio_retry)
-    {
-        dev->syncios--; dev->asyncios++;
-        ccwaddr = dev->syncio_addr;
-        dev->code = dev->prevcode;
-        dev->prevcode = 0;
-        dev->chained &= ~CCW_FLAGS_CD;
-        dev->prev_chained = 0;
-        logdevtr (dev, MSG(HHC01334, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
-    }
-    else
-#endif // OPTION_SYNCIO
-    {
-        dev->chained = dev->prev_chained =
-        dev->code    = dev->prevcode     = dev->ccwseq = 0;
-    }
-
-#ifdef OPTION_SYNCIO
-    /* Check for synchronous I/O */
-    if (dev->syncio_active)
-    {
-        dev->syncios++;
-        logdevtr (dev, MSG(HHC01335, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ccwaddr));
-    }
-#endif // OPTION_SYNCIO
+    dev->chained = dev->prev_chained =
+    dev->code    = dev->prevcode     = dev->ccwseq = 0;
 
 #if defined(_FEATURE_IO_ASSIST)
  #define _IOA_MBO sysblk.zpb[dev->pmcw.zone].mbo
@@ -4474,10 +4305,6 @@ execute_halt:
         ccw = dev->mainstor + ccwaddr;
 
         /* Increment to next CCW address */
-#ifdef OPTION_SYNCIO
-        if ((dev->chained & CCW_FLAGS_CD) == 0)
-            dev->syncio_addr = ccwaddr;
-#endif // OPTION_SYNCIO
         ccwaddr += 8;
 
         /* If prefetch, update prefetch table */
@@ -4590,12 +4417,7 @@ execute_halt:
         /* At this point, the CCW now has "control" of the I/O       */
         /* operation (SA22-7201 p. 15-24, PCI). Signal I/O interrupt */
         /* if PCI flag is set                                        */
-        if (
-#ifdef OPTION_SYNCIO
-            !dev->syncio_retry &&
-#endif // OPTION_SYNCIO
-            (flags & CCW_FLAGS_PCI) /*-- Debug &&
-            !prefetch.seq --*/)
+        if (flags & CCW_FLAGS_PCI)   /* -- Debug && !prefetch.seq -- */
         {
             ARCH_DEP(raise_pci) (dev, ccwkey, ccwfmt, ccwaddr);
         }
@@ -4713,21 +4535,6 @@ execute_halt:
         }                                                       /*@MW*/
 #endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
 
-#ifdef OPTION_SYNCIO
-        /* If synchronous I/O and a syncio 2 device and not an
-           immediate CCW then retry asynchronously */
-        if (1
-            && dev->syncio_active
-            && dev->syncio == 2
-            && !dev->is_immed
-            && !IS_CCW_SENSE(dev->code)
-        )
-        {
-            dev->syncio_retry = 1;
-            return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
-        }
-#endif // OPTION_SYNCIO
-
         /* Suspend supported prior to GA22-7000-10 for the S/370     */
         /* Suspend channel program if suspend flag is set */
         if (flags & CCW_FLAGS_SUSP)
@@ -4742,15 +4549,6 @@ execute_halt:
                     goto prefetch;
                 goto breakchain;
             }
-
-#ifdef OPTION_SYNCIO
-            /* Retry if synchronous I/O */
-            if (dev->syncio_active)
-            {
-                dev->syncio_retry = 1;
-                return execute_ccw_chain_clear_busy_and_return( dev, iobuf, &iobuf_initial, NULL );
-            }
-#endif // OPTION_SYNCIO
 
             IODELAY(dev);
 
@@ -4832,10 +4630,6 @@ execute_halt:
                 if (unlikely(dev->ccwtrace || dev->ccwstep || tracethis))
                     WRMSG (HHC01310, "I", SSID_TO_LCSS(dev->ssid),
                                           dev->devnum);
-
-#ifdef OPTION_SYNCIO
-                if (dev->regs) dev->regs->hostregs->syncio = 0;
-#endif // OPTION_SYNCIO
 
                 /* Present the interrupt and return */
                 if (dev->scsw.flag3 & SCSW3_SC_PEND)
@@ -4984,11 +4778,7 @@ execute_halt:
             /* Process Initial-Status-Interruption Request           */
             /* SA22-7201-05:                                         */
             /*  p. 16-11, Zero Condition Code                        */
-#ifdef OPTION_SYNCIO
-            if ((dev->scsw.flag1 & SCSW1_I) && !dev->syncio_retry)
-#else // OPTION_NOSYNCIO
             if (dev->scsw.flag1 & SCSW1_I)
-#endif // OPTION_SYNCIO
             {
                 obtain_lock (&dev->lock);
 
@@ -5171,19 +4961,6 @@ prefetch:
                               &more, &unitstat, &residual);
             dev->iobuf.length = 0;
             dev->iobuf.data = 0;
-
-#ifdef OPTION_SYNCIO
-            /* Check if synchronous I/O needs to be retried */
-            if (dev->syncio_active && dev->syncio_retry)
-                return execute_ccw_chain_clear_busy_unlock_and_return( dev, iobuf, &iobuf_initial, NULL );
-            /*
-             * NOTE: syncio_retry is left on for asynchronous I/O
-             * until after the first call to the execute ccw device
-             * handler. This allows the device handler to realize that
-             * the I/O is being retried asynchronously.
-             */
-            dev->syncio_retry = 0;
-#endif // OPTION_SYNCIO
 
             /* Check for Command Retry (suggested by Jim Pierson) */
             if ( --cmdretry && unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
@@ -5469,13 +5246,7 @@ breakchain:
         if (chanstat != 0
             || (unitstat & ~CSW_SM) != (CSW_CE | CSW_DE))
         {
-            if (firstccw &&
-                !dev->is_immed &&
-                (dev->scsw.flag1 & SCSW1_I)
-#ifdef OPTION_SYNCIO
-                && !dev->syncio_retry
-#endif // OPTION_SYNCIO
-            )
+            if (firstccw && !dev->is_immed && (dev->scsw.flag1 & SCSW1_I))
             {
                 /* Set the zero condition-code flag in the SCSW */
                 dev->scsw.flag1 |= SCSW1_Z;
@@ -5599,10 +5370,6 @@ breakchain:
             goto execute_halt;
         goto execute_clear;
     }
-
-#ifdef OPTION_SYNCIO
-    if (dev->regs) dev->regs->hostregs->syncio = 0;
-#endif // OPTION_SYNCIO
 
     /* Present the interrupt and return */
     queue_io_interrupt_and_update_status_locked( dev, TRUE );

@@ -873,14 +873,6 @@ DEVINITTAB*     pDevInitTab;
     dev->sstat = dev->stape_online ? 0 : GMT_DR_OPEN( -1 );
 #endif
 
-#ifdef OPTION_SYNCIO
-    /* Initialize syncio fields */
-    if (dev->tapedevt == TAPEDEVT_SCSITAPE)
-        dev->syncio = 0;  // (SCSI i/o too slow; causes Machine checks)
-    else
-        dev->syncio = 2;  // (aws/het/etc are fast; syncio likely safe)
-#endif
-
     /* Request a maximum sized device I/O buffer */
     dev->bufsize = MAX_BLKLEN;
 

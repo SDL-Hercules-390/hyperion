@@ -23,7 +23,7 @@
 
 #ifdef _MSVC_
   #define UNREACHABLE_CODE(ret)     __assume(0)
-#else                        
+#else
   #define UNREACHABLE_CODE(ret)     BREAK_INTO_DEBUGGER(); ret
 #endif
 
@@ -485,11 +485,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 /* Returns when all other CPU threads are blocked on intlock         */
 /*-------------------------------------------------------------------*/
-#ifdef OPTION_SYNCIO
-  #define AT_SYNCPOINT(_regs)    ((_regs)->intwait || (_regs)->syncio)
-#else // OPTION_NOSYNCIO
-  #define AT_SYNCPOINT(_regs)    ((_regs)->intwait)
-#endif // OPTION_SYNCIO
+#define AT_SYNCPOINT(_regs) ((_regs)->intwait)
 
 /*-------------------------------------------------------------------*/
 /*      Synchronize CPUS                                             */

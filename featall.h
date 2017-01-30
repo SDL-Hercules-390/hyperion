@@ -87,12 +87,6 @@
 #define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
 //#define OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
 
-#if defined(OPTION_SYNCIO) && defined(OPTION_NOSYNCIO)
-  #error Either OPTION_SYNCIO or OPTION_NOSYNCIO must be specified, not both
-#elif !defined(OPTION_SYNCIO) && !defined(OPTION_NOSYNCIO)
-  #define OPTION_SYNCIO                 /* Synchronous local DASD    */
-#endif
-
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */

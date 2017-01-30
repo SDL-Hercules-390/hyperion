@@ -520,10 +520,10 @@ a real System/390.  The configuration file is an ASCII text file.
     bind to (listen for connections on). If not specified the server
     will accept connections from any host interface.
     <p>
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
     <p>
-    
+
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
@@ -2144,7 +2144,7 @@ a real System/390.  The configuration file is an ASCII text file.
     To use this device, a tn3270 client must connect to the host machine
     via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a>
     statement. A valid tn3270 device type, such as IBM-3278, must be used.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a tn3270 client.
     <p>
 
@@ -2246,8 +2246,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Use tn3270 client software to connect to the SYSG console device via the port number
     specified on the <a href="#CNSLPORT">CNSLPORT</a> statement, just as you would connect
     to a regular local non-SNA 3270 device.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
-    for additional information about setting up a tn3270 client. 
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    for additional information about setting up a tn3270 client.
     <p>
 
     The SYSG console configuration statement recognizes optional arguments which specify
@@ -2337,7 +2337,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     To use this device, a telnet client must connect to the host machine
     via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a> statement.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
     for additional information about setting up a telnet or tn3270 client.
     <p>
 
@@ -4142,39 +4142,6 @@ ROUTE  00  172.21.3.32  255.255.255.224
         of the <a href="cckddasd.html">Compressed Dasd Emulation</a> web page.
         <p>
 
-    <dt><code>[no]syncio</code>
-    <dd><p>
-        Syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
-        wherein guest i/o requests are completed "synchronously" during the
-        actual emulated execution of the SIO/SSCH (start-i/o / start subchannel)
-        instruction rather than being deferred and executed asynchronously in
-        a separate device i/o thread.
-        <p>
-
-        Only i/o which are known to be able to be completed without actually
-        needing to perform any actual host i/o are completed synchronously (e.g.
-        whenever the data being requested is found to already be in cache). If
-        the requested data is not found in the cache, then an actual host i/o
-        will need to be done and the request is passed to a device i/o thread
-        to be completed asyncronously instead.
-        <p>
-
-        syncio is the default for ckd. syncio statistics may be displayed via
-        the Hercules <code>syncio</code> panel command.
-        <p>
-
-        <!-- No longer applicable with current versions of Linux
-        <b>Note:</b> If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
-        you might also want to take a look at the <a href="#IODELAY">IODELAY</a>
-        configuration file statement as well.
-        <p>
-        -->
-
-        <p>
-        <code>syncio</code> may be abbreviated as
-        <code>syio</code>
-        <p>
-
     <dt><code>readonly</code>
     <dd><p>
         Readonly returns "write inhibited" sense when a write is attempted.
@@ -4313,19 +4280,6 @@ ROUTE  00  172.21.3.32  255.255.255.224
         CKD devices. Please refer to the preceding CKD section for information
         regarding use of the <code>sf=</code> shadow file option.
         <p>
-
-    <dt><code>[no]syncio</code>
-    <dd><p>
-        Syncio enables possible 'synchronous' i/o and is explained in detail in
-        the preceding CKD dasd section. Note however that syncio is currently
-        disabled by default for FBA dasd due to an as yet unresolved problem
-        and must therefore be specifically enabled if you wish to use it for FBA
-        dasd.
-        <p>
-
-        <p>
-        <code>syncio</code> may be abbreviated as
-        <code>syio</code>
 
     </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>

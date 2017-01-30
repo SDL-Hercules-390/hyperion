@@ -1800,9 +1800,6 @@ int      off;                           /* Offset into record        */
         /* Make this system active on the device */
         dev->shioactive = id;
         dev->busy = 1;
-#ifdef OPTION_SYNCIO
-        dev->syncio_active = dev->syncio_retry = 0;
-#endif // OPTION_SYNCIO
         sysblk.shrdcount++;
         shrdtrc(dev,"server_request active id=%d\n", id);
 
