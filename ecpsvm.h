@@ -132,8 +132,8 @@ typedef struct _ECPSVM_MICBLOK
 /* Total time spent in problem state (2's complement) */
 #define PROBTIME 0x328
 
-/* PSA + 69D : APSTAT2 - Machine check recov & PTLB Required */
-#define APSTAT2  0x69D
+/* PSA + 69B : APSTAT2 - Machine check recov & PTLB Required */
+#define APSTAT2  0x69B     /* 2017-01-18 corrected offset from 0x69D to 0x69B */
 #define CPMCHLK  0x10
 #define CPPTLBR  0x02
 
@@ -355,6 +355,29 @@ typedef struct _ECPSVM_VMALIST
 /* ECBLOK Specifics */
 #define EXTSHCR0 0x40
 #define EXTSHCR1 0x44
+#define EXTSHLEN 0x48
+
+/* ARCHTECT field displacements  (see ARCHTECT in DMKVAT)  */
+#define PINVBIT 0x08
+#define PAGTLEN 0x12
+
+/* Field displacements to support CP trace entries by relevant CP assists */
+#define TRACSTRT 0x0C
+#define TRACEND  0x10
+#define TRACCURR 0x14
+#define TRACFLG1 0x400
+#define TRAC67   0x04
+#define TRACFLG2 0x401
+#define TRAC0A   0x804
+#define TRCFREE  0x86
+#define TRCFRET  0x87
+#define TRCRUN   0x8A
+#define FREESAVE 0x280
+#define FREER0   0x280
+#define FREER1   0x284
+#define FREER14  0x2b8
+
+
 
 typedef struct _ECPSVM_STAT
 {
