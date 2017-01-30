@@ -640,7 +640,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
 /*-------------------------------------------------------------------*/
 /*                 SEND DATA TO TELNET CLIENT                        */
 /*-------------------------------------------------------------------*/
-static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len ) 
+static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len )
 {
     BYTE success = TRUE;
 

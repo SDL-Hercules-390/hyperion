@@ -20,7 +20,7 @@ HHCLG001E Error redirecting stdout: <em>error</em>
   <dd>The stdout stream could not be redirected to the system logger,
 the error is described by <code><em>error</em></code>.
   <dt>Issued by
-  <dd>logger.c, function logger_thread 
+  <dd>logger.c, function logger_thread
   </dl>
 <dt><code><a name="HHCLG002E">
 HHHCLG002E Error reading syslog pipe: <em>error</em>
@@ -129,7 +129,7 @@ HHCLG014E log not active
   <dd>logger.c, function log_sethrdcpy
   </dl>
 <dt><code><a name="HHCLG015I">
-HHCLG015I log closed    
+HHCLG015I log closed
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -146,7 +146,7 @@ HHCLG016E Error opening logfile <em>filename</em>: <em>error</em>
   <dt>Meaning
   <dd>The new log file requested by a <em>log</em> command could not be opened.
       <code><em>error</em></code> is the description of the error code
-      returned by the open call.          
+      returned by the open call.
   <dt>Action
   <dd>Reissue the <em>log</em> command with the correct filename.
   <dt>Issued by
@@ -160,7 +160,7 @@ HHCLG017S log file fdopen failed for <em>filename</em>: <em>error</em>
   <dd>The logger was unable to obtain the file descriptor for the new
       log file requested by a <em>log</em> command.
       <code><em>error</em></code> is the description of the error code
-      returned by the fdopen call.          
+      returned by the fdopen call.
   <dt>Action
   <dd>Reissue the <em>log</em> command with the correct filename.
   <dt>Issued by

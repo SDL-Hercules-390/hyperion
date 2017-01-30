@@ -1973,8 +1973,8 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // at the other side and vice-versa
         parm.addr.sin_port = htons(pDEVBLK->ctce_rport + 1 );
         parm.addr.sin_addr = pDEVBLK->ctce_ipaddr;
-        
-        // We connect() but with a timeout value of 1000000 usec = 1 sec 
+
+        // We connect() but with a timeout value of 1000000 usec = 1 sec
         rc = CTCE_Connect_Timeout( parm.listenfd[0],
             ( struct sockaddr * )&parm.addr,
             sizeof( parm.addr), 1000000 );
@@ -3474,8 +3474,9 @@ int CTCE_Connect_Timeout(int                    sockfd,
         do
         {
             rc = select( sockfd + 1, &read_set, &write_set, NULL,
-          		   usec ? &connect_timeout : NULL );
-        } while( (rc < 0) && ( HSO_errno == HSO_EINTR ) );
+                         usec ? &connect_timeout : NULL );
+        }
+        while( (rc < 0) && ( HSO_errno == HSO_EINTR ) );
 
         if( rc == 0 )
         {

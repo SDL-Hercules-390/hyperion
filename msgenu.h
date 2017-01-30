@@ -1427,7 +1427,7 @@ Examples:
        "HHC02411I   -1      normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n" \
        "HHC02411I   -2      extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
        "HHC02411I   -3      maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
-       "HHC02411I   -4      recover everything without using meta-data" 
+       "HHC02411I   -4      recover everything without using meta-data"
 
 #define HHC02412 "Error in function %s: %s"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
@@ -1635,7 +1635,7 @@ Examples:
        "HHC02497I   -0      minimal checking (default)\n" \
        "HHC02497I   -1      normal  checking\n" \
        "HHC02497I   -2      intermediate checking\n" \
-       "HHC02497I   -3      maximal checking" 
+       "HHC02497I   -3      maximal checking"
 //efine HHC02498 (available)
 #define HHC02499 "Hercules utility %s - %s;"
 

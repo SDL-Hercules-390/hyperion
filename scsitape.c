@@ -59,7 +59,7 @@ static int int_nbio_scsitape_open( const char* fn, BYTE* ro )
 /*-------------------------------------------------------------------*/
 static int get_max_blocksize( DEVBLK *dev, int* maxblk )
 {
-    //                       2M       2M-1     256K    256K-1  128K 
+    //                       2M       2M-1     256K    256K-1  128K
     static int blksize[] = { 2097152, 2097151, 262144, 262143, 131072,
     //                       128K-1  64K    64K-1  32K    32K-1
                              131071, 65536, 65535, 32768, 32767 };

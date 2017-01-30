@@ -59,13 +59,13 @@ HHCDG001I dyngui.dll - </b><i>name</i><b> - version </b><i>vers</i><b> initiated
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   The dyngui loadable module was successfully loaded and initiated.
 
   <p><dt>Action<dd>
-  
+
   None. This message is informational only.
-  
+
   <p></dl><br>
 
 <!-- ----------------------------------------------------------- -->
@@ -75,13 +75,13 @@ HHCDG002I dyngui.dll terminated
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   The dyngui loadable module was successfully terminated.
 
   <p><dt>Action<dd>
-  
+
   None. This message is informational only.
-  
+
   <p></dl><br>
 
 <!-- ----------------------------------------------------------- -->
@@ -91,14 +91,14 @@ HHCDG003S select failed on input stream: </b><i>errmsg</i><b>
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   The socket select function call failed on the input stream.
   <tt><i>errmsg</i></tt>&nbsp; describes the exact error.
 
   <p><dt>Action<dd>
-  
+
   None; this is a fatal error; the system is immediately terminated.
-  
+
   <p></dl><br>
 
 <!-- ----------------------------------------------------------- -->
@@ -108,14 +108,14 @@ HHCDG004S read failed on input stream: </b><i>errmsg</i><b>
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   An unrecoverable i/o error occurred while reading from the input stream.
   <tt><i>errmsg</i></tt>&nbsp; describes the exact error.
 
   <p><dt>Action<dd>
-  
+
   None; this is a fatal error; the system is immediately terminated.
-  
+
   <p></dl><br>
 
 <!-- ----------------------------------------------------------- -->
@@ -125,20 +125,20 @@ HHCDG005E Device query buffer overflow! (device=</b><i>xxxx</i><b>)
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   The device query buffer is not large enough to hold all of the information
   returned by the device handler. <tt><i>xxxx</i></tt>&nbsp; is the device
   whose information was being queried at the time the error occurred.
 
   <p><dt>Action<dd>
-  
+
   The system attempts to continue functioning, but unpredictable results may
   occur (i.e. the system could crash). You should report this error to the
   Hercules developers immediately so that they can build you a new dyngui.dll
   with a larger device query buffer. Since the dyngui.dll is an unloadable
   module however, you will need to restart Hercules in order to begin using
   the newly fixed version of dyngui.dll.
-  
+
   <p></dl><br>
 
 <!-- ----------------------------------------------------------- -->
@@ -148,13 +148,13 @@ HHCDG006S malloc pszInputBuff failed: </b><i>errmsg</i><b>
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   There was not enough virtual memory on the host system to satisfy the
   malloc request for the input stream buffer. <tt><i>errmsg</i></tt>&nbsp;
   describes the exact error.
 
   <p><dt>Action<dd>
-  
+
   None; this is a fatal error; the system is immediately terminated. You
   should increase the size of your host system's virtual memory allocation
   so that there is enough for Hercules to run, or else decrease the amount of
@@ -170,13 +170,13 @@ HHCDG007S malloc pszCommandBuff failed: </b><i>errmsg</i><b>
 </b></a></tt><dd><dl>
 
   <p><dt>Meaning<dd>
-  
+
   There was not enough virtual memory on the host system to satisfy the
   malloc request for the command processing buffer. <tt><i>errmsg</i></tt>&nbsp;
   describes the exact error.
 
   <p><dt>Action<dd>
-  
+
   None; this is a fatal error; the system is immediately terminated. You
   should increase the size of your host system's virtual memory allocation
   so that there is enough for Hercules to run, or else decrease the amount of

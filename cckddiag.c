@@ -806,7 +806,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 (int) (cdevhdr.numl2tab * sizeof( CCKD_L2ENT )) );
             data_dump( l2, (cdevhdr.numl2tab * sizeof( CCKD_L2ENT )));
         }
-              
+
         // "L2 index %d = L2TAB entry: %d bytes:"
         printf("\n");
         WRMSG( HHC02611, "I", l2ndx, (int) sizeof( CCKD_L2ENT ));

@@ -67,7 +67,7 @@ are more sensitive to failures and corruption may occur.
 
 <p>
 An compressed CKD or FBA dasd can have more than one physical file.  The
-additional files are called <em>shadow files</em>.  
+additional files are called <em>shadow files</em>.
 The function is implemented as a kind of
 <i>snapshot</i>, where a new shadow file can be created on demand.
 An emulated dasd is represented by a <em>base</em> file and 0 or more
@@ -585,7 +585,7 @@ the <b>cckd</b> command explained below.
 <tr><td valign="top"><b>freepend=</b>n&nbsp</td>
     <td>Specifies the <em>free pending</em> value for freed space.  When a
         track or block group image is written the space it previously occupied
-        is freed.  This space will not be available for future 
+        is freed.  This space will not be available for future
         allocations until <em>n</em> garbage collection intervals have completed.
         In the event of a catastrophic failure, previously written track or
         block group images should be recoverable if the current image has

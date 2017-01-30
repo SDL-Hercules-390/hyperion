@@ -35,14 +35,14 @@
  *  TBDR and TBEDR) completely updated by "Fish" (David B. Trout)
  *  Aug 2011 to use SoftFloat Floating-Point package by John R. Hauser
  *  (http://www.jhauser.us/arithmetic/SoftFloat.html).
- * June 2016: All instructions (except convert to/from HFP/BFP and 
- *  Load Positive/Negative/Complement) completely updated by Stephen 
- *  R. Orso to use the updated Softfloat 3a library by John R. Hauser 
+ * June 2016: All instructions (except convert to/from HFP/BFP and
+ *  Load Positive/Negative/Complement) completely updated by Stephen
+ *  R. Orso to use the updated Softfloat 3a library by John R. Hauser
  *  (link above).  Added interpretation of M3 and M4 operands for
- *  those instructions that support same, conditioned on 
- *  FEATURE_FLOATING_POINT_EXTENSION_FACILITY.  All changes are based 
- *  on the -10 edition of the z/Architecture Principles of Operation, 
- *  SA22-7832.  
+ *  those instructions that support same, conditioned on
+ *  FEATURE_FLOATING_POINT_EXTENSION_FACILITY.  All changes are based
+ *  on the -10 edition of the z/Architecture Principles of Operation,
+ *  SA22-7832.
  */
 
 
@@ -156,7 +156,7 @@ static const float32_t   float32_default_qnan = { 0x7FC00000 };
 /* Map of IBM M3 rounding mode values to those used by Softfloat                                        */
 static const BYTE map_m3_to_sf_rm[8] = { 0,                         /* M3 0: Use FPC BFP Rounding Mode  */
                                     softfloat_round_near_maxMag,    /* M3 1: RNTA                       */
-                                    0,                              /* M3 2: invalid; detected in edits */ 
+                                    0,                              /* M3 2: invalid; detected in edits */
                                     softfloat_round_stickybit,      /* M3 3: RFS,                       */
                                     softfloat_round_near_even,      /* M3 4: RNTE                       */
                                     softfloat_round_minMag,         /* M3 5: RZ                         */
@@ -167,7 +167,7 @@ static const BYTE map_m3_to_sf_rm[8] = { 0,                         /* M3 0: Use
 
 /* Map of IBM fpc BFP rounding mode values to those used by Softfloat                                   */
 /* This table depends on FPS Support instructions to set the BFP rounding mode to only valid values     */
-static const BYTE map_fpc_brm_to_sf_rm[8] = { 
+static const BYTE map_fpc_brm_to_sf_rm[8] = {
                                     softfloat_round_near_even,      /* FPC BRM 0: RNTE                  */
                                     softfloat_round_minMag,         /* FPC BRM 5: RZ                    */
                                     softfloat_round_max,            /* FPC BRM 6: RP                    */
@@ -266,11 +266,11 @@ static void ieee_trap( REGS *regs, BYTE dxc)
 {
     regs->dxc = dxc;                   /*  Save DXC in PSA         */
     regs->fpc &= ~FPC_DXC;             /*  Clear any previous DXC  */
-    regs->fpc |= ((U32)dxc << 8);      
+    regs->fpc |= ((U32)dxc << 8);
     regs->program_interrupt(regs, PGM_DATA_EXCEPTION);
 }
 
-static void ieee_cond_trap( REGS *regs, U32 ieee_traps ) 
+static void ieee_cond_trap( REGS *regs, U32 ieee_traps )
 {
     /* ieee_cond_trap is called before instruction completion for Xi    */
     /* and Xz traps, resulting in instruction suppression.              */
@@ -294,7 +294,7 @@ static void ieee_cond_trap( REGS *regs, U32 ieee_traps )
     else if (ieee_traps & FPC_MASK_IMZ)
         ieee_trap(regs, DXC_IEEE_DIV_ZERO);
     else if (ieee_traps & FPC_MASK_IMO)
-        ieee_trap(regs, !(softfloat_exceptionFlags & softfloat_flag_inexact) ?  DXC_IEEE_OF_EXACT : 
+        ieee_trap(regs, !(softfloat_exceptionFlags & softfloat_flag_inexact) ?  DXC_IEEE_OF_EXACT :
                         softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_OF_INEX_INCR :
                                                                                 DXC_IEEE_OF_INEX_TRUNC);
     else if (ieee_traps & FPC_MASK_IMU)
@@ -302,7 +302,7 @@ static void ieee_cond_trap( REGS *regs, U32 ieee_traps )
                         softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_UF_INEX_INCR :
                                                                                 DXC_IEEE_UF_INEX_TRUNC);
     else if (ieee_traps & FPC_MASK_IMX)
-        ieee_trap(regs, softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_INEXACT_INCR : 
+        ieee_trap(regs, softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_INEXACT_INCR :
                                                                                 DXC_IEEE_INEXACT_TRUNC);
 }
 
@@ -425,7 +425,7 @@ static INLINE U32 ieee_exception_test_oux(REGS *regs)
 
     if (regs->fpc & FPC_MASK)           /* some flags and some traps enabled.  Figure it out  */
     {
-        if ((softfloat_exceptionFlags & softfloat_flag_tiny) && regs->fpc & FPC_MASK_IMU) 
+        if ((softfloat_exceptionFlags & softfloat_flag_tiny) && regs->fpc & FPC_MASK_IMU)
             softfloat_exceptionFlags |= softfloat_flag_underflow;   /* if tiny and underflow trappable, raise underflow  */
                                                                     /* per SA22-7832-10 page 9-20  */
         IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);
@@ -1114,7 +1114,7 @@ DEF_INST(add_bfp_ext_reg)
 
     PUT_FLOAT128_CC( ans, r1, regs );                       /* Store result from Add */
     IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception */
-                                             | FPC_MASK_IMU 
+                                             | FPC_MASK_IMU
                                              | FPC_MASK_IMX);
 }
 
@@ -1191,7 +1191,7 @@ DEF_INST(add_bfp_short_reg)
     int r1, r2;
     float32_t op1, op2, ans;
     int ieee_trap_conds = 0;                /* start out with no traps detected   */
-    
+
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -1547,7 +1547,7 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
 #else
     if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
-        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);  
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
     SET_SF_RM_FROM_M3(m3);              /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
@@ -1654,7 +1654,7 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     S64 op2;
     float64_t op1;
     U32 ieee_trap_conds = 0;
-    
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
 
@@ -1779,12 +1779,12 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     op2_dataclass = float128_class(op2);
 
     softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan 
+    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
         | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
     {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
         op1 = -0x7FFFFFFF - 1;
         newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);   
+        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
     {
@@ -3018,7 +3018,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fp_int_bfp_ext_reg)
 {
-    int r1, r2; 
+    int r1, r2;
     BYTE m3, m4;
     float128_t op;
     U32 ieee_trap_conds = 0;
@@ -3029,7 +3029,7 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
-    
+
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -3071,7 +3071,7 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
     int r1, r2;
     float32_t op2;
     float64_t op1;
-    
+
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op2, r2, regs );
@@ -3083,7 +3083,7 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
         FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
         SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
     }
-    
+
     op1 = f32_to_f64(op2);
     PUT_FLOAT64_NOCC( op1, r1, regs );
 
@@ -3310,7 +3310,7 @@ DEF_INST(load_complement_bfp_short_reg)
 {
     int r1, r2;
     float32_t op;
-    
+
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3343,7 +3343,7 @@ DEF_INST(load_positive_bfp_long_reg)
 {
     int r1, r2;
     float64_t op;
-    
+
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3359,7 +3359,7 @@ DEF_INST(load_positive_bfp_short_reg)
 {
     int r1, r2;
     float32_t op;
-    
+
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3685,7 +3685,7 @@ DEF_INST(multiply_bfp_long_reg)
     RRE(inst, regs, r1, r2);
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-    
+
     softfloat_exceptionFlags = 0;
     SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                  */
     ans = f64_mul( op1, op2 );
@@ -3774,7 +3774,7 @@ DEF_INST(multiply_bfp_short_to_long_reg)
         else
             ans = f64_mul(iop1, iop2);
     }
-    
+
     if (softfloat_exceptionFlags)
     {
         IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
@@ -3905,7 +3905,7 @@ DEF_INST(multiply_add_bfp_long_reg)
 {
     int r1, r2, r3;
     float64_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0; 
+    U32 ieee_trap_conds =0;
 
     RRF_R(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
@@ -3970,7 +3970,7 @@ DEF_INST(multiply_add_bfp_short_reg)
     int r1, r2, r3;
     float32_t op1, op2, op3, ans;
     U32 ieee_trap_conds =0;
-    
+
     RRF_R(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4297,11 +4297,11 @@ DEF_INST(squareroot_bfp_short)
     RXE(inst, regs, r1, b2, effective_addr2);
     BFPINST_CHECK(regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-    
+
     softfloat_exceptionFlags = 0;
     SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
     op1 = f32_sqrt( op2 );
-    
+
     if (softfloat_exceptionFlags)
     {
         IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
@@ -4571,7 +4571,7 @@ DEF_INST(divide_integer_bfp_long_reg)
     RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
-        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);  
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     BFPRM_CHECK(m4,regs);                                   /* Ensure valid rounding mask value                     */
     GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
     op1_data_class = float64_class(op1);                    /* Determine and save op1 data class                    */
@@ -4615,7 +4615,7 @@ DEF_INST(divide_integer_bfp_long_reg)
         rem = f64_mulAdd(quo, op2, op1);                            /* Calculate remainder                              */
         quo.v ^= 0x8000000000000000ULL;                             /* Return sign of integer quotient to original value*/
         if (!(rem.v & 0x7fffffffffffffffULL))                       /* Is remainder zero?                               */
-            rem.v = (op1.v & 0x8000000000000000ULL) | (rem.v & 0x7fffffffffffffffULL);               
+            rem.v = (op1.v & 0x8000000000000000ULL) | (rem.v & 0x7fffffffffffffffULL);
                                                                     /* ..yes, ensure remainder sign matches dividend    */
 
         if (!softfloat_exceptionFlags)                              /* If no exceptions, check for partial results      */
@@ -4933,7 +4933,7 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* and the quotient is zero with a signed determined by the signs of the operands.  */
     /* Exclusive Or sets the sign correctly.                                            */
     /* ******************************************************************************** */
-    else 
+    else
     {
         rem = op1;                                          /* remainder is operand 1                       */
         quo.v = (op1.v ^ op2.v) & 0x80000000;               /* quotient zero, sign is exclusive or of operand signs   */
