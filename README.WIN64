@@ -1,7 +1,24 @@
 -------------------------------------------------------------------------------
 
 
-                    HERCULES FOR WIN64 README FILE
+                              IMPORTANT NOTE
+
+
+    This README details how to build the Release version of Hyperion
+    for a 64-bit Windows environment.
+
+    If you need to build the Debug version of Hyperion in this environment,
+    you will need to also build the Debug versions of each of the external
+    packages that are used by Hyperion in the build process.  Please refer
+    to the "README.EXTPKGS" document for the simple instructions on how to
+    build the Debug versions of these packages.  Release version ("normal") 
+    builds of Hyperion do not need this extra step.
+
+
+-------------------------------------------------------------------------------
+
+
+                      HERCULES FOR WIN64 README FILE
 
 
 There is only one 64-bit architecture supported by 64-bit Windows: the

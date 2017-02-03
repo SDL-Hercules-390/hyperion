@@ -2,7 +2,9 @@
                     HERCULES "External Packages" README
 -------------------------------------------------------------------------------
 
+
                               OVERVIEW
+
 
 This version of Hercules 4.0 Hyperion links with several "external package"
 static libraries.
@@ -20,21 +22,174 @@ Each external package is built separately from the Hercules emulator and then
 "installed" into the appropriate Hercules repository subdirectory.  Building
 Hercules itself should not change.
 
-Two such external packages that this Hercules 4.0 Hyperion links with are
-the "decNumber" and "SoftFloat" packages.  Over time additional Hercules
-functionality will be moved out of the emulator into their own separately
-maintained and built external package repositories, eventually reducing the
-Hercules emulator itself to just its core function: accurate emulation of
-the System/370, ESA/390, and z architectures.
+Currently, there are four such external packages this Hercules 4.0 Hyperion
+links with.  These packages are the "crypto", "decNumber", "SoftFloat", and
+"telnet" packages.  Each of these package names correspond to an existing
+subdirectory of Hyperion.  Over time additional Hercules functionality will
+be moved out of the emulator into their own separately maintained and built
+external package repositories, eventually reducing the Hercules emulator to
+just its core functionality: accurate emulation of the System/370, ESA/390,
+and z architectures.
 
 If you wish to build a non-Intel x86 architecture version of Hercules, you
 will need to build and install all external packages for your architecture
 first, before building Hercules. For instructions on how to do this, refer
 to the BUILDING document in each package's source code repository.
 
-For more information on each external package please refer to each of their
-README.XXXXX documents as well as the detailed documentation contained in
-each of their repositories. The URL for each external package's repository
-is in each of their corresponding README.XXXX documents.
+If you're only interested in building a normal optimized "Release" version
+of Hyperion then you do NOT need to do anything extra regarding the external
+packages.  Optimized "Release" versions of all external package static link
+libraries are provided with the distribution.  Simply build Hyperion just as
+you normally would.
+
+If you wish to build an unoptimized "Debug" version of Hyperion however (so
+you can set breakpoints, examine variables and step into and out of functions
+with your favorite source level debugger (e.g. Visual Studio or GDB)), then
+you will need to manually build "Debug" versions of all external packages so
+your Debug version of Hyperion can link with them.
+
+The procedure for building a Debug version of each of the external packages
+is outlined below.
+
+The four repositories for the external packages can be located at these URLs:
+
+
+    https://github.com/Fish-Git/crypto
+    https://github.com/Fish-Git/decNumber-icu-368
+    https://github.com/Fish-Git/SoftFloat-3a
+    https://github.com/Fish-Git/telnet
+
+
+More information about each of these packages can be found within each of the
+individual repositories.
+
+-------------------------------------------------------------------------------
+
+
+                  BUILDING THE EXTERNAL PACKAGES FOR A
+                  WINDOWS-BASED HYPERION "DEBUG" VERSION
+
+
+  NOTE:  The following procedure is explained from a Windows
+         point of view, but the procedure for Linux is virtually
+         identical.  If you are reasonably skilled at Linux you
+         should have no trouble making the needed adjustments.
+
+
+If you wish to build the Debug version of Hyperion, you must build the debug
+version of the external packages.  Due to Microsoft licensing rules, only the
+Release versions of the external packages can be distributed with Hyperion.
+
+Building the packages is a fairly simple and straightforward process and the
+steps are outlined and then detailed below.  These steps presume you are using
+Windows and that you need both the x86 and x64 Debug versions of the external
+packages.
+
+
+                        SUMMARY OF THE STEPS INVOLVED
+
+
+  1.  Download and install CMake.
+  2.  Download each of the four external package source repositories.
+  3.  Make the directories to hold the source repositories.
+  4.  Make work directories for each repository.
+  5.  Build and install each external package via the 'build' command.
+
+
+For the purposes of this example, it is presumed that you have downloaded the
+Hyperion repository and placed it into the \hyperion directory.  Then we will
+follow the process to build the external packages and have them installed into
+\hyperion. 
+
+
+                            DETAILED INSTRUCTIONS
+
+
+1. Download and install CMake.  Cmake is a tool that is used to build the
+   packages from their source repositories.  Download Cmake at this URL:
+
+      https://cmake.org/
+
+   Either download the .msi installer package or the .zip file and install
+   Cmake.  It is simple and installs in seconds.
+
+
+2. Download each of the four external package source repositories from the URLs
+   above.  In this example, the .zip file will be downloaded for each package.
+
+
+3. Make the directories that will be used to contain the source repositories
+   you just downloaded.  For best results, the lowest level directory name
+   should be the same as the external package name.  For example:
+
+      chdir  \
+      mkdir  \repo        (for "repository")
+      chdir  \repo
+
+      mkdir  \crypto
+      mkdir  \decNumber
+      mkdir  \SoftFloat
+      mkdir  \telnet
+
+
+   Then unzip each of the repository .zip downloads into the correspondingly
+   named source repository directory you just created.
+
+
+4. Make the work directories that the build process will use:
+
+      chdir  \
+      mkdir  \work
+      chdir  \work
+
+      mkdir  \crypto
+      mkdir  \decNumber
+      mkdir  \SoftFloat
+      mkdir  \telnet
+
+
+5.  Now build each external package by making the package's "work" directory
+    become the current directory and then issuing the "build" command(*) plus
+    a few parameters, in order to build and install the package:
+
+
+        chdir  \work\crypto
+
+        \repo\crypto\build  --all  --install  \hyperion\crypto
+
+
+    Some output will be generated, but in a few moments it will be completed.
+    OK, crypto is done!  Now simply repeat step 5 for each of the remaining
+    external packages:
+
+
+        chdir \work\decNumber
+        \repo\decNumber\build --all --install \hyperion\decNumber
+
+
+        chdir \work\SoftFloat
+        \repo\SoftFloat\build --all --install \hyperion\Softfloat
+
+
+        chdir \work\telnet
+        \repo\telnet\build --all --install \hyperion\telnet
+
+
+That concludes the necessary steps to build the external packages.  You now
+have the 32-bit and 64-bit versions of the Debug and Release builds of the
+external packages.  If you desire, you may delete both the \repo and \work
+directories as they are no longer needed.
+
+If you clone the \hyperion directory or download a newer Hyperion repository
+in the future however, be sure to copy over the contents of the external
+package directories inside \hyperion to your new clone so you won't have to
+rebuild them again.  You would only need to rebuild an external package when
+it is updated/changed, which they rarely are since they are fairly stable.
+
+
+---------------
+
+(*)  Use "build --help" (Linux) or "build /?" (Windows) for more information
+     regarding the build script's parameters.
 
 -------------------------------------------------------------------------------
