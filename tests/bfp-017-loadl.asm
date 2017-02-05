@@ -13,10 +13,10 @@
 *                        bfp-017-loadl.asm 
 *
 *        This assembly-language source file is part of the
-*        Hercules Decimal Floating Point Validation Package 
+*        Hercules Binary Floating Point Validation Package 
 *                        by Stephen R. Orso
 *
-* Copyright 2016 by Stephen R Orso.  All rights reserved.
+* Copyright 2016 by Stephen R Orso.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
