@@ -1680,7 +1680,6 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 #define CCKD_RELEASE           3
 #define CCKD_MODLVL            1
 
-#define CCKD_NOFUDGE           1         /* [deprecated]             */
 #define CCKD_BIGENDIAN         2
 #define CCKD_SPERRS            32        /* Space errors detected    */
 #define CCKD_ORDWR             64        /* Opened read/write since

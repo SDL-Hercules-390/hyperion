@@ -886,8 +886,8 @@ Examples:
 #define HHC01331 "%1d:%04X CHAN: clear subchannel"
 #define HHC01332 "%1d:%04X CHAN: halt subchannel"
 #define HHC01333 "%1d:%04X CHAN: resume subchannel: cc=%d"
-#define HHC01334 "%1d:%04X CHAN: asynchronous I/O ccw addr %8.8x"
-#define HHC01335 "%1d:%04X CHAN: synchronous  I/O ccw addr %8.8x"
+//efine HHC01334 (available)
+//efine HHC01335 (available)
 #define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
 
 /* hchan.c */
@@ -1238,8 +1238,8 @@ Examples:
 #define HHC02236 "IPL rejected: All CPU's must be stopped"
 #define HHC02237 "Not all devices shown (max %d)"
 #define HHC02238 "Device numbers can only be redefined within the same Logical Channel SubSystem"
-#define HHC02239 "%1d:%04X synchronous: %12"PRId64" asynchronous: %12"PRId64
-#define HHC02240 "Total synchronous: %13"PRId64" asynchronous: %12"PRId64"  %3"PRId64"%%"
+//efine HHC02239 (available)
+//efine HHC02240 (available)
 #define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"
 #define HHC02243 "%1d:%04X reinit rejected; drive not empty"

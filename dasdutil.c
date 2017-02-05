@@ -1260,7 +1260,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.vrm[1] = CCKD_RELEASE;
         cdevhdr.vrm[2] = CCKD_MODLVL;
         if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
-        cdevhdr.options |= (CCKD_ORDWR | CCKD_NOFUDGE);
+        cdevhdr.options |= CCKD_ORDWR;
         cdevhdr.numl1tab = (volcyls * heads + 255) / 256;
         cdevhdr.numl2tab = 256;
         cdevhdr.cyls[3] = (volcyls >> 24) & 0xFF;
@@ -2107,7 +2107,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     cdevhdr.vrm[1] = CCKD_RELEASE;
     cdevhdr.vrm[2] = CCKD_MODLVL;
     if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
-    cdevhdr.options |= (CCKD_ORDWR | CCKD_NOFUDGE);
+    cdevhdr.options |= CCKD_ORDWR;
     cdevhdr.numl1tab = numl1tab;
     cdevhdr.numl2tab = 256;
     cdevhdr.cyls[3] = (sectors >> 24) & 0xFF;
