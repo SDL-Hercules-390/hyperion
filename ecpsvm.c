@@ -891,6 +891,12 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     FW1=EVM_L(dl+24);
     for(vmb=EVM_L(FW1);vmb!=FW1;vmb=EVM_L(vmb))
     {
+        if(EVM_LH(vmb+VMPSW) & 0x0002)
+        {
+            DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 : VMB @ %6.6X Not eligible : User in virtual PSW wait",vmb));
+            DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
+            continue;
+        }
         if(!(EVM_IC(vmb+VMDSTAT) & VMRUN))
         {
             DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 : VMB @ %6.6X Not eligible : VMRUN not set",vmb));
