@@ -65,15 +65,16 @@ individual repositories.
 
 -------------------------------------------------------------------------------
 
-
-                  BUILDING THE EXTERNAL PACKAGES FOR A
-                  WINDOWS-BASED HYPERION "DEBUG" VERSION
-
-
   NOTE:  The following procedure is explained from a Windows
          point of view, but the procedure for Linux is virtually
          identical.  If you are reasonably skilled at Linux you
          should have no trouble making the needed adjustments.
+
+-------------------------------------------------------------------------------
+
+
+                  BUILDING THE EXTERNAL PACKAGES FOR A
+                  WINDOWS-BASED HYPERION "DEBUG" VERSION
 
 
 If you wish to build the Debug version of Hyperion, you must build the debug

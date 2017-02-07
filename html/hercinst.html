@@ -53,21 +53,27 @@ are a part of the Hercules repository).
 
 <br /><br />
 
-Currently all of the external package static link libraries are for the x86
-architecture only (both 32-bit x86 and 64-bit x64 for both Windows and Linux)
-so you should not have to do antyhing special.  Simply build like normal as
-explained in the sections below.
+Currently all of the external package static link libraries are for the Intel
+x86/x64 architectures only (32-bit and 64-bit) for both Windows and Linux,
+so for normal Release mode (non-Debug) builds of Hercules you should not have
+do antyhing special.  Simply build like normal as explained in the sections
+below. Again, this is only for normal Release mode (non-Debug) x86/x64 builds
+of Hercules.
 
 <br /><br />
 
-If you wish to build a <i>non-x86 architecture</i> version of Hercules however,
-you will need to build and install all external packages for your architecture
-first, before building Hercules. Non-x86 builds of external packages must be
-installed into their own separate architectural subdirectory beneath each of
-Hercules's main external package subdirectories (e.g. decNumber/sparc, etc).
-The Hercules configure.ac script currently understands the following foreign
-architectures: arm, mips, ppc, sparc, xscale and unknown. For additional
-information refer to the
+If you wish to build an unoptimized "Debug" version of Hyperion however (so
+you can set breakpoints, examine variables and step into and out of functions
+with your favorite source level debugger (e.g. Visual Studio or GDB)), -OR-
+you need to build a non-Intel (x86/x64) architecture version of Hercules (such
+as arm, mips, ppc, sparc, xscale, etc) however, then you will need to manually
+build the "Debug" and/or non-x86/x64 architecture versions of all external
+packages first, before your Debug or non-Intel version of Hyperion will be
+able to link with them.
+
+<br /><br />
+
+For more detailed External Package build information please refer to the
 <a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
 document.
 
