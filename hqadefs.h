@@ -231,16 +231,15 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*  HQA Scenario    12     *UNASSIGNED*                              */
+/*  HQA Scenario    12     NO_IEEE_SUPPORT                           */
 /*-------------------------------------------------------------------*/
 
-#if HQA_SCENARIO == 12  // *UNASSIGNED*
+#if HQA_SCENARIO == 12  // NO_IEEE_SUPPORT
 
   #undef  CUSTOM_BUILD_STRING
-  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 12 (*UNASSIGNED*)\n"
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 12\n"
 
-//#define xxx...
-//#undef  xxx...
+  #define NO_IEEE_SUPPORT
 
 #endif
 

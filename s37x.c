@@ -138,17 +138,22 @@ INST37X_TABLE_START(b2)
  /*B25D*/ INST37X (compare_logical_string,0x5d)
  /*B25E*/ INST37X (search_string,0x5e)
  /*B263*/ INST37X (cmpsc_2012,0x63)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
  /*B299*/ INST37X (set_bfp_rounding_mode_2bit,0x99)
  /*B29C*/ INST37X (store_fpc,0x9c)
  /*B29D*/ INST37X (load_fpc,0x9d)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
  /*B2A5*/ INST37X (translate_extended,0xa5)
  /*B2A6*/ INST37X (convert_utf16_to_utf8,0xa6)
  /*B2A7*/ INST37X (convert_utf8_to_utf16,0xa7)
-// /*B2B8*/ INST37X (set_bfp_rounding_mode_3bit,0xb8)                                /*810*/
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)         /*810*/
+// /*B2B8*/ INST37X (set_bfp_rounding_mode_3bit,0xb8)             /*810*/
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
 // /*B2BD*/ INST37X (load_fpc_and_signal,0xbd)
 INST37X_TABLE_END(b2)
 
 INST37X_TABLE_START(b3)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
  /*B300*/ INST37X (load_positive_bfp_short_reg,0x00)
  /*B301*/ INST37X (load_negative_bfp_short_reg,0x01)
  /*B302*/ INST37X (load_and_test_bfp_short_reg,0x02)
@@ -181,6 +186,7 @@ INST37X_TABLE_START(b3)
  /*B31D*/ INST37X (divide_bfp_long_reg,0x1d)
  /*B31E*/ INST37X (multiply_add_bfp_long_reg,0x1e)
  /*B31F*/ INST37X (multiply_subtract_bfp_long_reg,0x1f)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
  /*B324*/ INST37X (load_lengthened_float_short_to_long_reg,0x24)
  /*B325*/ INST37X (load_lengthened_float_long_to_ext_reg,0x25)
  /*B326*/ INST37X (load_lengthened_float_short_to_ext_reg,0x26)
@@ -196,6 +202,7 @@ INST37X_TABLE_START(b3)
  /*B33D*/ INST37X (multiply_unnormal_float_long_to_ext_high_reg,0x3d)
  /*B33E*/ INST37X (multiply_add_float_long_reg,0x3e)
  /*B33F*/ INST37X (multiply_subtract_float_long_reg,0x3f)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
  /*B340*/ INST37X (load_positive_bfp_ext_reg,0x40)
  /*B341*/ INST37X (load_negative_bfp_ext_reg,0x41)
  /*B342*/ INST37X (load_and_test_bfp_ext_reg,0x42)
@@ -210,19 +217,27 @@ INST37X_TABLE_START(b3)
  /*B34B*/ INST37X (subtract_bfp_ext_reg,0x4b)
  /*B34C*/ INST37X (multiply_bfp_ext_reg,0x4c)
  /*B34D*/ INST37X (divide_bfp_ext_reg,0x4d)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+#if defined(FEATURE_FPS_EXTENSIONS)
 // /*B350*/ INST37X (convert_float_long_to_bfp_short_reg,0x50)
 // /*B351*/ INST37X (convert_float_long_to_bfp_long_reg,0x51)
- /*B353*/ INST37X (divide_integer_bfp_short_reg,0x53)
- /*B357*/ INST37X (load_fp_int_bfp_short_reg,0x57)
 // /*B358*/ INST37X (convert_bfp_short_to_float_long_reg,0x58)
 // /*B359*/ INST37X (convert_bfp_long_to_float_long_reg,0x59)
+// /*B365*/ INST37X (load_float_ext_reg,0x65)
+// /*B374*/ INST37X (load_zero_float_short_reg,0x74)
+// /*B375*/ INST37X (load_zero_float_long_reg,0x75)
+// /*B376*/ INST37X (load_zero_float_ext_reg,0x76)
+#endif // defined(FEATURE_FPS_EXTENSIONS)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
+ /*B353*/ INST37X (divide_integer_bfp_short_reg,0x53)
+ /*B357*/ INST37X (load_fp_int_bfp_short_reg,0x57)
  /*B35B*/ INST37X (divide_integer_bfp_long_reg,0x5b)
  /*B35F*/ INST37X (load_fp_int_bfp_long_reg,0x5f)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
  /*B360*/ INST37X (load_positive_float_ext_reg,0x60)
  /*B361*/ INST37X (load_negative_float_ext_reg,0x61)
  /*B362*/ INST37X (load_and_test_float_ext_reg,0x62)
  /*B363*/ INST37X (load_complement_float_ext_reg,0x63)
-// /*B365*/ INST37X (load_float_ext_reg,0x65)
  /*B366*/ INST37X (load_rounded_float_ext_to_short_reg,0x66)
  /*B367*/ INST37X (load_fp_int_float_ext_reg,0x67)
  /*B369*/ INST37X (compare_float_ext_reg,0x69)
@@ -230,26 +245,29 @@ INST37X_TABLE_START(b3)
 // /*B371*/ INST37X (load_negative_fpr_long_reg,0x71)
 // /*B372*/ INST37X (copy_sign_fpr_long_reg,0x72)
 // /*B373*/ INST37X (load_complement_fpr_long_reg,0x73)
-// /*B374*/ INST37X (load_zero_float_short_reg,0x74)
-// /*B375*/ INST37X (load_zero_float_long_reg,0x75)
-// /*B376*/ INST37X (load_zero_float_ext_reg,0x76)
  /*B377*/ INST37X (load_fp_int_float_short_reg,0x77)
  /*B37F*/ INST37X (load_fp_int_float_long_reg,0x7f)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
  /*B384*/ INST37X (set_fpc,0x84)
-// /*B385*/ INST37X (set_fpc_and_signal,0x85)
  /*B38C*/ INST37X (extract_fpc,0x8c)
-// /*B390*/ INST37X (convert_u32_to_bfp_short_reg,0x90)                              /*810*/
-// /*B391*/ INST37X (convert_u32_to_bfp_long_reg,0x91)                               /*810*/
-// /*B392*/ INST37X (convert_u32_to_bfp_ext_reg,0x92)                                /*810*/
- /*B394*/ INST37X (convert_fix32_to_bfp_short_reg,0x94)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+// /*B385*/ INST37X (set_fpc_and_signal,0x85)
+#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)         /*810*/
+// /*B390*/ INST37X (convert_u32_to_bfp_short_reg,0x90)           /*810*/
+// /*B391*/ INST37X (convert_u32_to_bfp_long_reg,0x91)            /*810*/
+// /*B392*/ INST37X (convert_u32_to_bfp_ext_reg,0x92)             /*810*/
+// /*B39C*/ INST37X (convert_bfp_short_to_u32_reg,0x9c)           /*810*/
+// /*B39D*/ INST37X (convert_bfp_long_to_u32_reg,0x9d)            /*810*/
+// /*B39E*/ INST37X (convert_bfp_ext_to_u32_reg,0x9e)             /*810*/
+#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
+#if defined(FEATURE_BINARY_FLOATING_POINT)
+/*B394*/ INST37X (convert_fix32_to_bfp_short_reg,0x94)
  /*B395*/ INST37X (convert_fix32_to_bfp_long_reg,0x95)
  /*B396*/ INST37X (convert_fix32_to_bfp_ext_reg,0x96)
  /*B398*/ INST37X (convert_bfp_short_to_fix32_reg,0x98)
  /*B399*/ INST37X (convert_bfp_long_to_fix32_reg,0x99)
  /*B39A*/ INST37X (convert_bfp_ext_to_fix32_reg,0x9a)
-// /*B39C*/ INST37X (convert_bfp_short_to_u32_reg,0x9c)                              /*810*/
-// /*B39D*/ INST37X (convert_bfp_long_to_u32_reg,0x9d)                               /*810*/
-// /*B39E*/ INST37X (convert_bfp_ext_to_u32_reg,0x9e)                                /*810*/
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
  /*B3B4*/ INST37X (convert_fixed_to_float_short_reg,0xb4)
  /*B3B5*/ INST37X (convert_fixed_to_float_long_reg,0xb5)
  /*B3B6*/ INST37X (convert_fixed_to_float_ext_reg,0xb6)
@@ -389,6 +407,7 @@ INST37X_TABLE_START(ec)
 INST37X_TABLE_END(ec)
 
 INST37X_TABLE_START(ed)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
  /*ED04*/ INST37X (load_lengthened_bfp_short_to_long,0x04)
  /*ED05*/ INST37X (load_lengthened_bfp_long_to_ext,0x05)
  /*ED06*/ INST37X (load_lengthened_bfp_short_to_ext,0x06)
@@ -415,6 +434,7 @@ INST37X_TABLE_START(ed)
  /*ED1D*/ INST37X (divide_bfp_long,0x1d)
  /*ED1E*/ INST37X (multiply_add_bfp_long,0x1e)
  /*ED1F*/ INST37X (multiply_subtract_bfp_long,0x1f)
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
  /*ED24*/ INST37X (load_lengthened_float_short_to_long,0x24)
  /*ED25*/ INST37X (load_lengthened_float_long_to_ext,0x25)
  /*ED26*/ INST37X (load_lengthened_float_short_to_ext,0x26)
