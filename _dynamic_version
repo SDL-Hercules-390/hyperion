@@ -263,7 +263,7 @@ fi
 # Construct a quoted VERSION string value
 
 QUOTE='"'
-VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}${git_hash}${modified_str}${QUOTE}"
+VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}-SDL${git_hash}${modified_str}${QUOTE}"
 
 
 # Finally, output the dynamically generated header file itself

@@ -2302,11 +2302,13 @@ if test "$hc_cv_opt_capabilities" = "yes"; then
   fi
 fi
 
+hc_cv_opt_custom_build_str="** The unofficial SoftDevLabs version of Hercules **"
+
 AC_ARG_ENABLE( custom,
 
     AC_HELP_STRING( [--enable-custom=STRING],
 
-        [provide a custom description for this build]
+        [override the default custom description of this build]
     ),
     [
         hc_cv_opt_custom_build_str=${enableval}

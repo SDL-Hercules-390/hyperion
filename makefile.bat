@@ -2,6 +2,8 @@
 
   setlocal
 
+  set CUSTOM_BUILD_STRING="** The unofficial SoftDevLabs version of Hercules **"
+
   set "TRACE=if defined DEBUG echo"
   set "return=goto :EOF"
   set "break=goto :break"
