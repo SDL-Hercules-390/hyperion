@@ -1404,9 +1404,9 @@ DEF_INST(ecpsvm_tpage_lock)
 
 /* Common routine for E60A VIST and E60B VIPT */
 /* This routine invalidates one complete shadow page table */
-/* On entry:  archtect points to the ARCHTECT structure within DMKVAT
+/* On entry:  archtect points to the ARCHTECT structure within DMKVAT */
 /*            pindex contains the index value for the correct ARCHTECT structure to use */
-/*            General register 6 points to the shadow segment table entry pointing to the page table to invalidate*/
+/*            General register 6 points to the shadow segment table entry pointing to the page table to invalidate */
 void ecpsvm_zappage(REGS *regs, VADR archtect, VADR pindex)
 {
     VADR ptr_segtabl;
@@ -1463,11 +1463,11 @@ DEF_INST(ecpsvm_inval_segtab)
     pindex=regs->GR_L(9);
 
     /* invalidate this segment, then set up and go invalidate the page table for this segment */
-    for (ptr_segtabl; ptr_segtabl<ptr_segtabl_end; ptr_segtabl+=4)
+    for (; ptr_segtabl < ptr_segtabl_end; ptr_segtabl += 4)
     {
-        EVM_ST(EVM_L(ptr_segtabl) | 0x00000001, ptr_segtabl);
-        regs->GR_L(6)=ptr_segtabl;
-        ecpsvm_zappage(regs, effective_addr1, pindex);
+        EVM_ST( EVM_L( ptr_segtabl ) | 0x00000001, ptr_segtabl );
+        regs->GR_L(6) = ptr_segtabl;
+        ecpsvm_zappage( regs, effective_addr1, pindex );
     }
 
     /* Indicate Purge TLB required and return via GR8 */
