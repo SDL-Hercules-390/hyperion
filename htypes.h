@@ -22,23 +22,12 @@
 /* Standard fixed size integer and boolean types                     */
 /*-------------------------------------------------------------------*/
 
-#ifdef HAVE_INTTYPES_H
+#if defined( HAVE_INTTYPES_H )
   #include <inttypes.h>
-#endif
-
-#ifdef HAVE_STDBOOL_H
-  #include <stdbool.h>
-#else
-  #define                       _Bool    int
-  #define bool                  _Bool
-  #define true                  1
-  #define false                 0
-  #define __bool_true_false_are_defined  1
-#endif
-
-#ifdef HAVE_STDINT_H
+#elif defined( HAVE_STDINT_H )
   #include <stdint.h>
 #else
+
   typedef char                  int8_t;
   typedef short                 int16_t;
   typedef int                   int32_t;
@@ -56,15 +45,20 @@
   typedef unsigned int          uint_fast16_t;
   typedef unsigned int          uint_fast32_t;
   typedef unsigned long long    uint_fast64_t;
+
 #endif
-#define int32_t                 int32_t /* used by external packages */
+
+#define int32_t                 int32_t         /* (used by extpkgs) */
+
 #ifndef HAVE_U_INT8_T
   typedef uint8_t               u_int8_t;
   typedef uint16_t              u_int16_t;
   typedef uint32_t              u_int32_t;
   typedef uint64_t              u_int64_t;
 #endif
-#ifndef _BSDTYPES_DEFINED
+
+#ifndef   _BSDTYPES_DEFINED
+  #define _BSDTYPES_DEFINED
   #ifndef HAVE_U_CHAR
     typedef unsigned char       u_char;
   #endif
@@ -77,16 +71,26 @@
   #ifndef HAVE_U_LONG
     typedef unsigned long       u_long;
   #endif
-  #define _BSDTYPES_DEFINED
 #endif
+
 #ifdef _MSVC_
-  typedef  int32_t              pid_t;
-  typedef  int32_t              mode_t;
-  typedef uint32_t              in_addr_t;
+  typedef    int32_t            pid_t;
+  typedef    int32_t            mode_t;
+  typedef   uint32_t            in_addr_t;
   #ifndef   _SSIZE_T_DEFINED
-    typedef  SSIZE_T            ssize_t;
     #define _SSIZE_T_DEFINED
+    typedef  SSIZE_T            ssize_t;
   #endif
+#endif
+
+#ifdef HAVE_STDBOOL_H
+  #include <stdbool.h>
+#else
+  #define                       _Bool    int
+  #define bool                  _Bool
+  #define true                  1
+  #define false                 0
+  #define __bool_true_false_are_defined  1
 #endif
 
 /*-------------------------------------------------------------------*/

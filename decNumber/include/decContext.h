@@ -35,9 +35,9 @@
 /*                                                                    */
 /* ------------------------------------------------------------------ */
 
-#if !defined(DECCONTEXT)
+#ifndef   DECCONTEXT
   #define DECCONTEXT
-  #define DECCNAME     "decContext"                     /* Short name */
+  #define DECCNAME     "decContext"                   /* Short name   */
   #define DECCFULLNAME "Decimal Context Descriptor"   /* Verbose name */
   #define DECCAUTHOR   "Mike Cowlishaw"               /* Who to blame */
 
@@ -48,23 +48,26 @@
       #include <stdbool.h>
     #else
       /* minimum stdbool.h #defines needed by decNumber */ 
-      #define bool    _Bool
-      #define false   0
-      #define true    1
-      #define __bool_true_false_are_defined   1
+      #define                       _Bool    int
+      #define bool                  _Bool
+      #define true                  1
+      #define false                 0
+      #define __bool_true_false_are_defined  1
     #endif
-    #ifdef HAVE_STDINT_H
+    #if defined( HAVE_INTTYPES_H )
+      #include <inttypes.h>
+    #elif defined( HAVE_STDINT_H )
       #include <stdint.h>
     #else
       /* minimum stdint.h typedefs needed by decNumber */ 
-      typedef unsigned char  uint8_t; 
-      typedef          char   int8_t; 
-      typedef unsigned short uint16_t; 
-      typedef          short  int16_t; 
-      typedef unsigned int   uint32_t; 
-      typedef          int    int32_t; 
-      typedef unsigned long long uint64_t; 
-      typedef          long long int64_t; 
+      typedef unsigned char         uint8_t; 
+      typedef          char          int8_t; 
+      typedef unsigned short       uint16_t; 
+      typedef          short        int16_t; 
+      typedef unsigned int         uint32_t; 
+      typedef          int          int32_t; 
+      typedef unsigned long long   uint64_t; 
+      typedef          long long    int64_t; 
     #endif
   #endif
 
