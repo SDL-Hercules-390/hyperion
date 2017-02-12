@@ -812,12 +812,17 @@ int     rc;
        This causes all subsequent logmsg's to be redirected to
        the logger facility for handling by virtue of stdout/stderr
        being redirected to the logger facility.
+
+       NOTE that the logger facility must ALWAYS be initialized
+       since other threads depend on it to be able to retrieve
+       log messages. This is true regardless of whether or not
+       the log messages are being redirected to a hardcopy file.
+
+       The HAO thread (Hercules Automatic Operator) for example
+       becomes essentially useless if it's unable to retrieve
+       log messages to see whether they match any of its rules.
     */
-    if (!sysblk.daemon_mode
-#if defined( EXTERNALGUI )
-        || extgui
-#endif
-    ) logger_init();
+    logger_init();
 
     /*
        Setup the initial codepage
