@@ -572,6 +572,7 @@ static void hao_clear(void)
 /*---------------------------------------------------------------------------*/
 static void* hao_thread(void* dummy)
 {
+    static int did_waiting_msg = FALSE;
     char*  msgbuf  = NULL;
     int    msgidx  = -1;
     int    msgamt  = 0;
@@ -581,17 +582,32 @@ static void* hao_thread(void* dummy)
 
     UNREFERENCED(dummy);
 
-    /* Do not start HAO if no logger is active
-     * the next hao command will restart the thread
-     */
-    if(!logger_isactive())
-    {
-        haotid = 0;
-        return NULL;
-    }
-
     // "Thread id "TIDPAT", prio %2d, name %s started"
     WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), "Hercules Automatic Operator");
+
+    /* PROGRAMMING NOTE: because we are dependent on the logger thread (to
+     * feed us log messages) we must NOT proceed until the logger facility
+     * becomes active.
+     */
+    // ZZ FIXME: The below is an WORKAROUND that needs redesigned.
+    // It works for now but is NOT the proper way to accomplish this.
+    while (!sysblk.shutdown && !logger_isactive())
+    {
+        if (!did_waiting_msg)
+        {
+            did_waiting_msg = TRUE;
+            // "HAO thread waiting for logger facility to become active"
+            WRMSG( HHC00090, "W" );
+        }
+        usleep( 50 * 1000 );    /* (wait for a bit) */
+    }
+
+    if (!sysblk.shutdown && did_waiting_msg)
+    {
+        // "Logger facility now active; HAO thread proceeding"
+        WRMSG( HHC00091, "I" );
+        did_waiting_msg = FALSE;
+    }
 
     /* Do until shutdown */
     while(!sysblk.shutdown && msgamt >= 0)

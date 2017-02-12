@@ -227,8 +227,9 @@ Examples:
 #define HHC00087 "The defined Hercules Automatic Operator rule(s) are:"
 #define HHC00088 "Index %02d: target %s -> command %s"
 #define HHC00089 "The are no HAO rules defined"
-
-// reserve 90-99 for hao.c
+#define HHC00090 "HAO thread waiting for logger facility to become active"
+#define HHC00091 "Logger facility now active; HAO thread proceeding"
+// reserve 92-99 for hao.c
 
 #define HHC00100 "Thread id "TIDPAT", prio %2d, name %s started"
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name %s ended"
