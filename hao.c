@@ -65,8 +65,16 @@ static     void* hao_thread(void* dummy);
 /*---------------------------------------------------------------------------*/
 static int hao_initialize()
 {
+    static int already_did_this = FALSE;
+    static int rc;
     int i = 0;
-    int rc;
+
+    /* PROGRAMMING NOTE: this is a ONE TIME initialization function.
+     * If initialization fails for any reason we DO NOT try again.
+     */
+    if (already_did_this)       /* if we already attempted this, then */
+        return rc;              /* return same return code as before. */
+    already_did_this = TRUE;    /* So we don't try doing this again.  */
 
     initialize_lock( &ao_lock );
 
@@ -87,16 +95,20 @@ static int hao_initialize()
     rc = create_thread( &haotid, JOINABLE, hao_thread, NULL, "hao_thread" );
     if (rc)
     {
-        i = FALSE;
+        rc = FALSE;
         // "Error in function create_thread(): %s"
         WRMSG( HHC00102, "E", strerror( rc ));
+        haotid = 0;
     }
     else
-        i = TRUE;
+    {
+        rc = TRUE;
+        ASSERT( haotid != 0 );
+    }
 
     release_lock( &ao_lock );
 
-    return(i);
+    return rc; /* TRUE/FALSE */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -111,9 +123,17 @@ DLL_EXPORT void hao_command(char *cmd)
     char work[HAO_WKLEN];
     char work2[HAO_WKLEN];
 
-    /* initialise hao */
-    if(!haotid && !hao_initialize())
-        WRMSG(HHC01404, "S");
+    /* Perform one-time initialization */
+    if (!hao_initialize())
+    {
+        static int didthis = FALSE;
+        if (!didthis)
+        {
+            didthis = TRUE;
+            // "Could not create the Automatic Operator thread"
+            WRMSG(HHC01404, "S");
+        }
+    }
 
     /* copy and strip spaces */
     hao_cpstrp(work, cmd);
