@@ -645,29 +645,39 @@ static void* hao_thread(void* dummy)
 static int hao_ignoremsg(const char *msg)
 {
     int msglen;
+    const char* msgnum;
 
     msglen = strlen( msg );
 
+    if (MLVL( DEBUG ) && msglen >= MLVL_DEBUG_PFXIDX)
+    {
+        msgnum = msg + MLVL_DEBUG_PFXIDX;
+        msglen = strlen( msgnum );
+    }
+    else
+        msgnum = msg;
+
     /* Ignore our own messages (HHC0007xx, HHC0008xx and HHC0009xx
        are reserved so that hao.c can recognize its own messages) */
+
     if (0
-        || !strncasecmp( msg, "HHC0007", 7 )
-        || !strncasecmp( msg, "HHC0008", 7 )
-        || !strncasecmp( msg, "HHC0009", 7 )
+        || !strncasecmp( msgnum, "HHC0007", 7 )
+        || !strncasecmp( msgnum, "HHC0008", 7 )
+        || !strncasecmp( msgnum, "HHC0009", 7 )
     )
         return TRUE;  /* (it's one of our hao messages; ignore it) */
 
     /* To be extra safe, ignore any messages with the string "hao" in them */
     if (0
-        || !strncasecmp( msg, "HHC00013I Herc command: 'hao ",      29 )
-        || !strncasecmp( msg, "HHC00013I Herc command: 'herc hao ", 34 )
-        || !strncasecmp( msg, "HHC01603I hao ",                     14 )
-        || !strncasecmp( msg, "HHC01603I herc hao ",                19 )
+        || !strncasecmp( msgnum, "HHC00013I Herc command: 'hao ",      29 )
+        || !strncasecmp( msgnum, "HHC00013I Herc command: 'herc hao ", 34 )
+        || !strncasecmp( msgnum, "HHC01603I hao ",                     14 )
+        || !strncasecmp( msgnum, "HHC01603I herc hao ",                19 )
     )
         return TRUE;  /* (it's one of our hao messages; ignore it) */
 
     /* Same idea but for messages logged as coming from the .rc file */
-    if (!strncasecmp( msg, "> hao ", 6 ))
+    if (!strncasecmp( msgnum, "> hao ", 6 ))
         return TRUE;
 
     return FALSE;   /* (message appears to be one we should process) */
