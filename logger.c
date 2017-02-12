@@ -249,15 +249,24 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
     char* pLeft = (char*)pBuff;
     int   nLeft = (int)nBytes;
 
-    /* (ignore any errors; we did the best we could) */
-    if (nLeft)
+    /* daemon_mode only (wherein both stdout/stderr have both
+       been redirected): don't write to hardcopy during shutdown
+       to prevent duplicate messages from occurring when stderr
+       is redirected to stdout (or vice versa) via the command
+       line (e.g. 2>&1).
+
+       The duplicate messages occur because during shutdown
+       all messages are issued to stderr and we redirect stderr
+       to stdout during shutdown.  This causes log messages
+       (written to stdout) to be written to the logfile as well
+       as to stderr too, which, due to our redirection, ends up
+       being written again to the very same (hardcopy) file.
+       The below test prevents this from happening.
+    */
+    if (nLeft && (!sysblk.daemon_mode || !sysblk.shutdown))
     {
-        if ( fwrite( pLeft, nLeft, 1, logger_hrdcpy ) != 1 )
-        {
-            // "Logger: error in function %s: %s"
-            fprintf(logger_hrdcpy, MSG(HHC02102, "E", "fwrite()",
-                strerror(errno)));
-        }
+        /* (ignore any errors; we did the best we could) */
+        fwrite( pLeft, nLeft, 1, logger_hrdcpy );
     }
 
     if ( sysblk.shutdown )
