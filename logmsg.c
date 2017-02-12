@@ -353,7 +353,7 @@ static void vfwritemsg( FILE* f, const char* filename, int line, const char* fun
         size_t newsiz, pfxsiz, leftsize, rightsiz;
 
         MSGBUF( wrk, "%s(%d)", TRIMLOC( filename ), line );
-        MSGBUF( prefix, "%-17.17s ", wrk );
+        MSGBUF( prefix, MLVL_DEBUG_PFXFMT, wrk );
 
         pfxsiz = strlen( prefix );
 

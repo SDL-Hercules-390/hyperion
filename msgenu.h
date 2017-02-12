@@ -151,6 +151,14 @@ Examples:
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                   MLVL(DEBUG) message prefix                      */
+/*-------------------------------------------------------------------*/
+
+#define MLVL_DEBUG_PFXLEN       17
+#define MLVL_DEBUG_PFXFMT       "%-" QSTR( MLVL_DEBUG_PFXLEN ) "." QSTR( MLVL_DEBUG_PFXLEN ) "s "
+#define MLVL_DEBUG_PFXIDX       (MLVL_DEBUG_PFXLEN + 1 /* space sep */)
+
+/*-------------------------------------------------------------------*/
 /*                       HERCULES MESSAGES                           */
 /*-------------------------------------------------------------------*/
 
@@ -902,7 +910,7 @@ Examples:
 #define HHC01401 "CTRL_C_EVENT received: %s"
 #define HHC01402 "CTRL_CLOSE_EVENT received: %s"
 #define HHC01403 "%s received: %s"
-#define HHC01404 "Cannot create the Automatic Operator thread"
+#define HHC01404 "Could not create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
 #define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"

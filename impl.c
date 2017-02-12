@@ -75,7 +75,7 @@ static LOGCALLBACK  log_callback = NULL;
 struct cfgandrcfile
 {
    const char * filename;             /* Or NULL                     */
-   const char * const envname; /* Name of environment variable to test */
+   const char * const envname;        /* Name of environ var to test */
    const char * const defaultfile;    /* Default file                */
    const char * const whatfile;       /* config/restart, for message */
 };
@@ -95,8 +95,8 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
 
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
-static char   *dll_load[MAX_DLL_TO_LOAD];    /* Pointers to modnames */
-static int     dll_count = -1;        /* index into array            */
+static char   *dll_load[MAX_DLL_TO_LOAD];   /* Pointers to modnames  */
+static int     dll_count = -1;              /* index into array      */
 #endif
 
 /* forward define process_script_file (ISW20030220-3) */
@@ -506,15 +506,15 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 /*-------------------------------------------------------------------*/
 static void* process_rc_file (void* dummy)
 {
-char    pathname[MAX_PATH];             /* (work)                    */
+    char  pathname[MAX_PATH];
 
     UNREFERENCED(dummy);
 
-    /* We have a .rc file to run                                 */
+    /* We have a .rc file to run */
     hostpath(pathname, cfgorrc[want_rc].filename, sizeof(pathname));
 
     /* Wait for panel thread to engage */
-// ZZ FIXME:THIS NEED TO GO
+// ZZ FIXME:THIS NEEDS TO GO
     if (!sysblk.daemon_mode)
         while (!sysblk.panel_init)
             usleep( 10 * 1000 );
@@ -523,7 +523,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
     process_script_file(pathname, 1);
         // (else error message already issued)
 
-    return NULL;                      /* End the .rc thread.         */
+    return NULL;    /* End the .rc thread */
 }
 
 /*-------------------------------------------------------------------*/
@@ -547,7 +547,7 @@ int     rc;
     _setmaxstdio(2048);
 #endif
 
-    /* Initialize EYE-CATCHERS for SYSBLK       */
+    /* Initialize EYE-CATCHERS for SYSBLK */
     memset(&sysblk.blknam,SPACE,sizeof(sysblk.blknam));
     memset(&sysblk.blkver,SPACE,sizeof(sysblk.blkver));
     memset(&sysblk.blkend,SPACE,sizeof(sysblk.blkend));
@@ -582,7 +582,7 @@ int     rc;
     rc = process_args(argc, argv);
     if (rc)
     {
-        /* HHC02343 "Terminating due to %d argument errors"          */
+        // "Terminating due to %d argument errors"
         WRMSG(HHC02343, "S", rc);
         exit(rc);        /* Serously bad arguments?  Stop right here */
     }
@@ -663,7 +663,7 @@ int     rc;
     /* set default system state to reset */
     sysblk.sys_reset = TRUE;
 
-    /* set default SHCMDOPT enabled     */
+    /* set default SHCMDOPT enabled */
     sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
 
     /* Save process ID */
@@ -730,7 +730,7 @@ int     rc;
 
 #if defined( OPTION_SHUTDOWN_CONFIRMATION )
     /* Set the quitmout value */
-    sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value        */
+    sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value */
 #endif
 
 #if defined(OPTION_SHARED_DEVICES)
@@ -806,7 +806,7 @@ int     rc;
        logger_logfile_write function relies on its setting.
     */
     if (!isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO))
-        sysblk.daemon_mode = 1;       /* Leave -d intact             */
+        sysblk.daemon_mode = 1;       /* Leave -d intact */
 
     /* Initialize the logmsg pipe and associated logger thread.
        This causes all subsequent logmsg's to be redirected to
@@ -829,8 +829,9 @@ int     rc;
        external gui can see the version which was previously possibly
        only displayed to the actual physical screen the first time we
        did it further above (depending on whether we're running in
-       daemon_mode (external gui mode) or not). This it the call that
-       the panel thread or the one the external gui actually "sees".
+       daemon_mode (external gui mode) or not). This is the call that
+       the panel thread or external gui actually "sees".
+
        The first call further above wasn't seen by either since it
        was issued before logger_init was called and thus got written
        directly to the physical screen whereas this one will be inter-
@@ -1143,17 +1144,18 @@ int     rc;
         return(1);
     }
 
-    /* Process  the  .rc  file  synchronously  when  in daemon mode. */
-    /* Otherwise Start up the RC file processing thread.             */
+    /* Process the .rc file synchronously when in daemon mode. */
+    /* Otherwise Start up the RC file processing thread.       */
     if (cfgorrc[want_rc].filename)
     {
-        if (sysblk.daemon_mode) process_rc_file(NULL);
+        if (sysblk.daemon_mode)
+            process_rc_file( NULL );
         else
         {
-            rc = create_thread(&rctid,DETACHED,
-                          process_rc_file,NULL,"process_rc_file");
+            rc = create_thread( &rctid, DETACHED,
+                process_rc_file, NULL, "process_rc_file" );
             if (rc)
-                WRMSG(HHC00102, "E", strerror(rc));
+                WRMSG( HHC00102, "E", strerror( rc ));
         }
     }
 
@@ -1175,12 +1177,14 @@ int     rc;
         panel_display();  /* Returns only AFTER Hercules is shutdown */
     else
     {
+        /* We're in daemon mode... */
 #if defined(OPTION_DYNAMIC_LOAD)
         if (daemon_task)
             daemon_task();/* Returns only AFTER Hercules is shutdown */
         else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         {
+            /* daemon mode without any daemon_task */
             process_script_file("-", 1);
 
             /* We come here only when the user did ctl-d on a tty or */
@@ -1218,7 +1222,7 @@ static int
 process_args(int argc, char *argv[])
 {
 int     arg_error = 0;                  /* 1=Invalid arguments       */
-int     c = 0;                        /* Next option flag            */
+int     c = 0;                          /* Next option flag          */
 
     /* Set program name */
     if ( argc > 0 && strlen(argv[0]) )
@@ -1269,7 +1273,7 @@ int     c = 0;                        /* Next option flag            */
 
     for (; EOF != c ;)
     {
-        c =                       /* Work area for getopt        */
+        c =                       /* Work area for getopt */
 #if defined(HAVE_GETOPT_LONG)
             getopt_long( argc, argv, shortopts, longopts, NULL );
 #else
@@ -1473,7 +1477,7 @@ error:
         WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), symsub, dlsub);
 
     }
-    else             /* Check for config and rc file, but don't open */
+    else /* Check for config and rc file, but don't open */
     {
         int i;
         struct stat st;
@@ -1481,26 +1485,26 @@ error:
 
         for (i = 0; cfgorrccount > i; i++)
         {
-            if (!cfgorrc[i].filename) /* No value specified          */
+            if (!cfgorrc[i].filename)       /* No value specified */
                 cfgorrc[i].filename = getenv(cfgorrc[i].envname);
-            if (!cfgorrc[i].filename) /* No environment var          */
+            if (!cfgorrc[i].filename)       /* No environment var */
             {
                 rv = stat(cfgorrc[i].defaultfile, &st);
                 if (!rv) cfgorrc[i].filename = cfgorrc[i].defaultfile;
                 continue;
             }
-            if (!cfgorrc[i].filename[0]                 /* Null name */
+            if (!cfgorrc[i].filename[0]     /* Null name */
                 || !strcasecmp(cfgorrc[i].filename, "None"))
             {
-               cfgorrc[i].filename = NULL;          /* Suppress file */
+               cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
-            /* File specified explicitly or by environment           */
+            /* File specified explicitly or by environment */
             rv = stat(cfgorrc[i].filename, &st);
             if (-1 == rv)
             {
-                /* HHC02342 "%s file %s not found:  %s"              */
+                // "%s file %s not found:  %s"
                 WRMSG (HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror(errno));
                 arg_error++;
