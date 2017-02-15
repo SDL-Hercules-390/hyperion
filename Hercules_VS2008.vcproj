@@ -1499,6 +1499,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\crypto\lib\crypto32d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\crypto32d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\crypto\lib\crypto64.lib"
 								>
 							</File>
@@ -1507,11 +1515,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\crypto\lib\crypto64d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\crypto64d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\crypto\lib\libcrypto32.a"
 								>
 							</File>
 							<File
+								RelativePath=".\crypto\lib\libcrypto32d.a"
+								>
+							</File>
+							<File
 								RelativePath=".\crypto\lib\libcrypto64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\crypto\lib\libcrypto64d.a"
 								>
 							</File>
 						</Filter>
@@ -1583,6 +1607,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\decNumber\lib\decNumber32d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber32d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\decNumber\lib\decNumber64.lib"
 								>
 							</File>
@@ -1591,11 +1623,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\decNumber\lib\decNumber64d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\decNumber64d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\decNumber\lib\libdecNumber32.a"
 								>
 							</File>
 							<File
+								RelativePath=".\decNumber\lib\libdecNumber32d.a"
+								>
+							</File>
+							<File
 								RelativePath=".\decNumber\lib\libdecNumber64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\decNumber\lib\libdecNumber64d.a"
 								>
 							</File>
 						</Filter>
@@ -1639,7 +1687,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\SoftFloat\lib\libSoftFloat32d.a"
+								>
+							</File>
+							<File
 								RelativePath=".\SoftFloat\lib\libSoftFloat64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\libSoftFloat64d.a"
 								>
 							</File>
 							<File
@@ -1651,11 +1707,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat32d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat32d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\SoftFloat\lib\SoftFloat64.lib"
 								>
 							</File>
 							<File
 								RelativePath=".\SoftFloat\lib\SoftFloat64.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat64d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\SoftFloat\lib\SoftFloat64d.pdb"
 								>
 							</File>
 						</Filter>
@@ -1707,7 +1779,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\telnet\lib\libtelnet32d.a"
+								>
+							</File>
+							<File
 								RelativePath=".\telnet\lib\libtelnet64.a"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\libtelnet64d.a"
 								>
 							</File>
 							<File
@@ -1719,11 +1799,27 @@
 								>
 							</File>
 							<File
+								RelativePath=".\telnet\lib\telnet32d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet32d.pdb"
+								>
+							</File>
+							<File
 								RelativePath=".\telnet\lib\telnet64.lib"
 								>
 							</File>
 							<File
 								RelativePath=".\telnet\lib\telnet64.pdb"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet64d.lib"
+								>
+							</File>
+							<File
+								RelativePath=".\telnet\lib\telnet64d.pdb"
 								>
 							</File>
 						</Filter>
@@ -2546,6 +2642,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\msvc.makefile.includes\VERSION.msvc"
+							>
+						</File>
+						<File
 							RelativePath=".\msvc.makefile.includes\ZLIB_DIR.msvc"
 							>
 						</File>
@@ -2618,18 +2718,6 @@
 				<Filter
 					Name="other"
 					>
-					<File
-						RelativePath=".\_build"
-						>
-					</File>
-					<File
-						RelativePath=".\_build.bat"
-						>
-					</File>
-					<File
-						RelativePath=".\_build.tail"
-						>
-					</File>
 					<File
 						RelativePath=".\_dynamic_version"
 						>

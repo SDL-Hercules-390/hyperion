@@ -447,21 +447,37 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\lib\crypto32.pdb" />
+    <None Include="crypto\lib\crypto32d.pdb" />
     <None Include="crypto\lib\crypto64.pdb" />
-    <None Include="crypto\lib\libcrypto32.a" />
-    <None Include="crypto\lib\libcrypto64.a" />
+    <None Include="crypto\lib\crypto64d.pdb" />
     <None Include="decNumber\lib\decNumber32.pdb" />
+    <None Include="decNumber\lib\decNumber32d.pdb" />
     <None Include="decNumber\lib\decNumber64.pdb" />
-    <None Include="decNumber\lib\libdecNumber32.a" />
-    <None Include="decNumber\lib\libdecNumber64.a" />
+    <None Include="decNumber\lib\decNumber64d.pdb" />
     <None Include="SoftFloat\lib\SoftFloat32.pdb" />
+    <None Include="SoftFloat\lib\SoftFloat32d.pdb" />
     <None Include="SoftFloat\lib\SoftFloat64.pdb" />
-    <None Include="SoftFloat\lib\libSoftFloat32.a" />
-    <None Include="SoftFloat\lib\libSoftFloat64.a" />
+    <None Include="SoftFloat\lib\SoftFloat64d.pdb" />
     <None Include="telnet\lib\telnet32.pdb" />
+    <None Include="telnet\lib\telnet32d.pdb" />
     <None Include="telnet\lib\telnet64.pdb" />
+    <None Include="telnet\lib\telnet64d.pdb" />
+    <None Include="crypto\lib\libcrypto32.a" />
+    <None Include="crypto\lib\libcrypto32d.a" />
+    <None Include="crypto\lib\libcrypto64.a" />
+    <None Include="crypto\lib\libcrypto64d.a" />
+    <None Include="decNumber\lib\libdecNumber32.a" />
+    <None Include="decNumber\lib\libdecNumber32d.a" />
+    <None Include="decNumber\lib\libdecNumber64.a" />
+    <None Include="decNumber\lib\libdecNumber64d.a" />
+    <None Include="SoftFloat\lib\libSoftFloat32.a" />
+    <None Include="SoftFloat\lib\libSoftFloat32d.a" />
+    <None Include="SoftFloat\lib\libSoftFloat64.a" />
+    <None Include="SoftFloat\lib\libSoftFloat64d.a" />
     <None Include="telnet\lib\libtelnet32.a" />
+    <None Include="telnet\lib\libtelnet32d.a" />
     <None Include="telnet\lib\libtelnet64.a" />
+    <None Include="telnet\lib\libtelnet64d.a" />
     <None Include=".gitattributes" />
     <None Include=".gitignore" />
     <None Include="all-all.jobs" />
@@ -624,6 +640,7 @@
     <None Include="msvc.makefile.includes\REXX_DIRS.msvc" />
     <None Include="msvc.makefile.includes\REXX_FLAGS.msvc" />
     <None Include="msvc.makefile.includes\REXX_RULES.msvc" />
+    <None Include="msvc.makefile.includes\VERSION.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_DIR.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_FLAGS.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_RULES.msvc" />
@@ -884,9 +901,6 @@
     <None Include="util\tapeconv.jcl" />
     <None Include="util\voldsext.cmd" />
     <None Include="util\zzsacard.bin" />
-    <None Include="_build" />
-    <None Include="_build.bat" />
-    <None Include="_build.tail" />
     <None Include="_dynamic_version" />
     <None Include="_dynamic_version.cmd" />
   </ItemGroup>
@@ -1188,13 +1202,21 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="crypto\lib\crypto32.lib" />
+    <Library Include="crypto\lib\crypto32d.lib" />
     <Library Include="crypto\lib\crypto64.lib" />
+    <Library Include="crypto\lib\crypto64d.lib" />
     <Library Include="decNumber\lib\decNumber32.lib" />
+    <Library Include="decNumber\lib\decNumber32d.lib" />
     <Library Include="decNumber\lib\decNumber64.lib" />
+    <Library Include="decNumber\lib\decNumber64d.lib" />
     <Library Include="SoftFloat\lib\SoftFloat32.lib" />
+    <Library Include="SoftFloat\lib\SoftFloat32d.lib" />
     <Library Include="SoftFloat\lib\SoftFloat64.lib" />
+    <Library Include="SoftFloat\lib\SoftFloat64d.lib" />
     <Library Include="telnet\lib\telnet32.lib" />
+    <Library Include="telnet\lib\telnet32d.lib" />
     <Library Include="telnet\lib\telnet64.lib" />
+    <Library Include="telnet\lib\telnet64d.lib" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="hercdasd.ico" />

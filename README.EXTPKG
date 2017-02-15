@@ -9,6 +9,12 @@
 This version of Hercules 4.0 Hyperion links with several "external package"
 static libraries.
 
+Unless you have a need to modify or debug an external package, you do *NOT*
+need to build any of the external packages in order to build Hercules. Just
+build Hercules like normal. Hercules is distributed with pre-built external
+packages as part of its source code repository eliminating the need to build
+any of the external packages yourself. Just build Hercules and you're done.
+
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
 hosts the package's static library (along with a few accompanying files) in
@@ -36,20 +42,7 @@ will need to build and install all external packages for your architecture
 first, before building Hercules. For instructions on how to do this, refer
 to the BUILDING document in each package's source code repository.
 
-If you're only interested in building a normal optimized "Release" version
-of Hyperion then you do NOT need to do anything extra regarding the external
-packages.  Optimized "Release" versions of all external package static link
-libraries are provided with the distribution.  Simply build Hyperion just as
-you normally would.
-
-If you wish to build an unoptimized "Debug" version of Hyperion however (so
-you can set breakpoints, examine variables and step into and out of functions
-with your favorite source level debugger (e.g. Visual Studio or GDB)), then
-you will need to manually build "Debug" versions of all external packages so
-your Debug version of Hyperion can link with them.
-
-The procedure for building a Debug version of each of the external packages
-is outlined below.
+The procedure for building each of the external packages is outlined below.
 
 The four repositories for the external packages can be located at these URLs:
 
@@ -60,40 +53,39 @@ The four repositories for the external packages can be located at these URLs:
     https://github.com/Fish-Git/telnet
 
 
-More information about each of these packages can be found within each of the
-individual repositories.
-
--------------------------------------------------------------------------------
-
-  NOTE:  The following procedure is explained from a Windows
-         point of view, but the procedure for Linux is virtually
-         identical.  If you are reasonably skilled at Linux you
-         should have no trouble making the needed adjustments.
+More information about each of these packages can be found within each of
+the individual repositories.
 
 -------------------------------------------------------------------------------
 
 
-                  BUILDING THE EXTERNAL PACKAGES FOR A
-                  WINDOWS-BASED HYPERION "DEBUG" VERSION
+                          LINUX (non-Windows)
 
 
-If you wish to build the Debug version of Hyperion, you must build the debug
-version of the external packages.  Due to Microsoft licensing rules, only the
-Release versions of the external packages can be distributed with Hyperion.
+  The procedure detailed below is explained from a Windows point of view,
+  but the procedure for Linux is virtually identical.  If you are reasonably
+  skilled at Linux you should have no trouble making the needed adjustments.
+
+
+-------------------------------------------------------------------------------
+
+
+                      BUILDING THE EXTERNAL PACKAGES
+                      FOR A WINDOWS-BASED HYPERION
+
 
 Building the packages is a fairly simple and straightforward process and the
 steps are outlined and then detailed below.  These steps presume you are using
-Windows and that you need both the x86 and x64 Debug versions of the external
-packages.
+Windows and that you need both the x86 and x64 builds of the external packages.
 
 
                         SUMMARY OF THE STEPS INVOLVED
 
 
   1.  Download and install CMake.
-  2.  Download each of the four external package source repositories.
-  3.  Make the directories to hold the source repositories.
-  4.  Make work directories for each repository.
+  2.  Make the directories to hold the source repositories.
+  3.  Download each of the four external package source repositories.
+  4.  Make work directories for each package to be used for building.
   5.  Build and install each external package via the 'build' command.
 
 
@@ -115,13 +107,9 @@ follow the process to build the external packages and have them installed into
    Cmake.  It is simple and installs in seconds.
 
 
-2. Download each of the four external package source repositories from the URLs
-   above.  In this example, the .zip file will be downloaded for each package.
-
-
-3. Make the directories that will be used to contain the source repositories
-   you just downloaded.  For best results, the lowest level directory name
-   should be the same as the external package name.  For example:
+2. Make the directories that will be used to contain the source repositories.
+   For best results, the lowest level directory name should be the same as
+   the external package name.  For example:
 
       chdir  \
       mkdir  \repo        (for "repository")
@@ -132,6 +120,9 @@ follow the process to build the external packages and have them installed into
       mkdir  \SoftFloat
       mkdir  \telnet
 
+
+2. Download each of the four external package source repositories from the URLs
+   above.  In this example, the .zip file will be downloaded for each package.
 
    Then unzip each of the repository .zip downloads into the correspondingly
    named source repository directory you just created.
@@ -185,7 +176,7 @@ If you clone the \hyperion directory or download a newer Hyperion repository
 in the future however, be sure to copy over the contents of the external
 package directories inside \hyperion to your new clone so you won't have to
 rebuild them again.  You would only need to rebuild an external package when
-it is updated/changed, which they rarely are since they are fairly stable.
+it is updated or changed which they rarely are since they are fairly stable.
 
 
 ---------------
