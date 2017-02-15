@@ -16,7 +16,6 @@
 #define _HERCULES_H_
 
 #include "hercules.h"
-#include "_dynamic_version.h"  /* created by _dynamic_version script */
 
 #ifndef _VERSION_C_
 #ifndef _HUTIL_DLL_
@@ -27,6 +26,20 @@
 #else   /* _LOGGER_C_ */
 #define VER_DLL_IMPORT DLL_EXPORT
 #endif /* _LOGGER_C_ */
+
+#if !defined( _MSVC_ )
+
+  // Due to autotool's insistance of defining 'VERSION' for us
+  // via a #define within the 'config.h' header (the value of
+  // which is derives from the 'configure.ac's "AM_INIT_AUTOMAKE"
+  // statement) instead of letting us define it ourselves, we
+  // must undefine it to the value that our '_dynamic_version'
+  // script determied it should be (which it saved for us in the
+  // 'DYNAMIC_VERSION' variable for obvious reasons).
+
+  #undef  VERSION
+  #define VERSION   DYNAMIC_VERSION
+#endif
 
 #if !defined(VERSION)
   #if defined(VERS_MAJ) && defined(VERS_INT) && defined(VERS_MIN) && defined(VERS_BLD)

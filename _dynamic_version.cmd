@@ -15,7 +15,7 @@
   echo.
   echo     NAME
   echo.
-  echo         %~n0  --  Create Hercules "_dynamic_version.h" header file
+  echo         %~n0  --  Defines the  Hercules VERSION related variables
   echo.
   echo     SYNOPSIS
   echo.
@@ -27,29 +27,13 @@
   echo.
   echo     OPTIONS
   echo.
-  echo         /c         Create the header file
-  echo         /t         Test option (does NOT write to the file).
+  echo         /?         Display this help information
   echo.
   echo     NOTES
   echo.
   echo         %~n0 is a Hercules build script that's automatically
-  echo         invoked by the "makefile.bat" script to dynamically create
-  echo         the "_dynamic_version.h" header file containing the Hercules
-  echo         version constants (#define values). The "_dynamic_version.h"
-  echo         header file is then #included by the "version.h" header file.
-  echo.
-  echo         The Hercules file "configure.ac" MUST exist in the current
-  echo         directory.  That is to say, %~n0 is designed to be
-  echo         run from the main Hercules souce code directory.
-  echo.
-  echo         The /c option must be used to actually create the header file.
-  echo         The /t will only display the header file contents that WOULD
-  echo         have been created by the /c option, but without creating or
-  echo         overlaying whatever file that may already exist.
-  echo.
-  echo         If both /c and /t are specified then the /t option overrides
-  echo         the /c option. That is to say, when the /t option is specified,
-  echo         the output file will NEVER be created or overwritten in any way.
+  echo         invoked by the "makefile.bat" script to dynamically define
+  echo         the set of variables related to Hercules's VERSION string.
   echo.
   echo     EXIT STATUS
   echo.
@@ -62,117 +46,10 @@
   echo.
   echo     VERSION
   echo.
-  echo         1.0      (May 6, 2016)
+  echo         2.0      (February 15, 2017)
 
   set /a "rc=1"
   %exit%
-
-::-----------------------------------------------------------------------------
-::                         CREATE_DYN_VERS_HDR
-::-----------------------------------------------------------------------------
-:create_dyn_vers_hdr
-
-  set "line1=/*  _DYNAMIC_VERSION.H (C) Copyright "Fish" (David B. Trout), 2016   */"
-  set "line2=/*      Dynamically generated Hercules VERSION #defines              */"
-  set "line3=/*                                                                   */"
-  set "line4=/*   Released under "The Q Public License Version 1"                 */"
-  set "line5=/*   (http://www.hercules-390.org/herclic.html) as modifications     */"
-  set "line6=/*   to Hercules.                                                    */"
-  set "line7="
-  set "line8=/*-------------------------------------------------------------------*/"
-  set "line9=/* This header file defines the Hercules version constants. It is    */"
-  set "line10=/* dynamically generated during the build by the _dynamic_version    */"
-  set "line11=/* script (on Windows by the "_dynamic_version.cmd" batch file)      */"
-  set "line12=/* and is #included automatically by the "version.h" header.         */"
-  set "line13=/*-------------------------------------------------------------------*/"
-  set "line14="
-  set "line15=#undef  VERS_MAJ"
-  set "line16=#define VERS_MAJ    %VERS_MAJ%"
-  set "line17="
-  set "line18=#undef  VERS_INT"
-  set "line19=#define VERS_INT    %VERS_INT%"
-  set "line20="
-  set "line21=#undef  VERS_MIN"
-  set "line22=#define VERS_MIN    %VERS_MIN%"
-  set "line23="
-  set "line24=#undef  VERS_BLD"
-  set "line25=#define VERS_BLD    %VERS_BLD%"
-  set "line26="
-  set "line27=#undef  VERSION"
-  set "line28=#define VERSION     %VERSION%"
-
-  set "numlines=28"
-
-  if defined create_file goto :create_file
-
-  if not defined test_only (
-    call :help
-    %return%
-  )
-
-  @REM test_only: just echo the lines
-
-  setlocal enabledelayedexpansion
-  for /L %%i in (1,1,%numlines%) do (
-    if not defined line%%i (
-      echo.
-    ) else (
-      echo !line%%i!
-    )
-  )
-  endlocal
-
-  %return%
-
-:create_file
-
-  ::  PROGRAMMING NOTE: in order to ensure nmake's dependency tracking is
-  ::  handled correctly, we always output to "tmpfile" and then compare it
-  ::  with the existing file. Only if they are different do we then delete
-  ::  the old file and rename the new file to replace it. After doing so,
-  ::  we then "touch" the "version.h" header file so nmake knows it is out
-  ::  of date and must therefore rebuild any files that depend on it.
-
-
-  call :tempfn  tmpfile  .h
-  if exist "%tmpfile%" del "%tmpfile%"
-
-  setlocal enabledelayedexpansion
-  for /L %%i in (1,1,%numlines%) do (
-    if not defined line%%i (
-      echo.>> "!tmpfile!"
-    ) else (
-      echo !line%%i! >> "!tmpfile!"
-    )
-  )
-  endlocal
-
-  if not exist "%outfile%" goto :new_file
-  fc.exe "%tmpfile%" "%outfile%" > nul 2>&1
-  if %errorlevel% NEQ 0 goto :new_file
-  del "%tmpfile%"
-  goto :echo_version
-
-:new_file
-
-  move /y "%tmpfile%" "%outfile%" > nul 2>&1
-
-  @REM Windows's magic "touch" syntax!
-
-  @REM "https://technet.microsoft.com/en-us/library/bb490886.aspx"
-  @REM "https://blogs.msdn.microsoft.com/oldnewthing/20130710-00/?p=3843/"
-
-  copy "%touchfile%"+,, > nul 2>&1
-
-:echo_version
-
-  setlocal enabledelayedexpansion
-  echo.
-  echo Hercules VERSION = !VERSION! (!VERS_MAJ!.!VERS_INT!.!VERS_MIN!.!VERS_BLD!)
-  echo.
-  endlocal
-
-  %return%
 
 ::-----------------------------------------------------------------------------
 ::                               INIT
@@ -191,16 +68,8 @@
 
   set /a "rc=0"
   set /a "maxrc=0"
-  set "basedir=%cd%"
 
-  set "infile=configure.ac"
-  set "outfile=_dynamic_version.h"
-  set "touchfile=version.h"
-
-  @REM  Options as listed in help...
-
-  set "create_file="
-  set "test_only="
+  set "configure_ac=configure.ac"
 
   goto :parse_args
 
@@ -211,56 +80,12 @@
 
   set /a "rc=0"
 
-  if /i "%~1" == ""        goto :help
   if /i "%~1" == "?"       goto :help
   if /i "%~1" == "/?"      goto :help
   if /i "%~1" == "-?"      goto :help
   if /i "%~1" == "--help"  goto :help
 
   goto :parse_options_loop
-
-::-----------------------------------------------------------------------------
-::                              tempfn
-::-----------------------------------------------------------------------------
-:tempfn
-
-  setlocal
-  set "var_name=%~1"
-  set "file_ext=%~2"
-  set "%var_name%="
-  set "@="
-  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
-    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
-      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%file_ext%"
-    )
-  )
-  endlocal && set "%var_name%=%@%"
-  %return%
-
-::-----------------------------------------------------------------------------
-::                              isfile
-::-----------------------------------------------------------------------------
-:isfile
-
-  if not exist "%~1" (
-    set "isfile="
-    %return%
-  )
-  set "isfile=%~a1"
-  if defined isfile (
-    if /i "%isfile:~0,1%" == "d" set "isfile="
-  )
-  %return%
-
-::-----------------------------------------------------------------------------
-::                             isreadonly
-::-----------------------------------------------------------------------------
-:isreadonly
-  set "@=%~a1"
-  set "isreadonly=1"
-  if /i "%@:~1,1%" == "r" %return%
-  set "isreadonly="
-  %return%
 
 ::-----------------------------------------------------------------------------
 ::                              isnum
@@ -386,8 +211,7 @@
 
   @REM  Options that are just switches...
 
-  if /i "%optname%" == "c" goto :parse_c_opt
-  if /i "%optname%" == "t" goto :parse_t_opt
+  ::  (we have none)
 
   goto :parse_unknown_opt
 
@@ -395,15 +219,7 @@
   @REM  Options that are just switches
   @REM ------------------------------------
 
-:parse_c_opt
-
-  set "create_file=1"
-  goto :parse_options_loop
-
-:parse_t_opt
-
-  set "test_only=1"
-  goto :parse_options_loop
+  ::  (we have none)
 
   @REM ------------------------------------
   @REM      Positional arguments
@@ -411,7 +227,8 @@
 
 :parse_positional_opts
 
-  @REM  We don't support any positional arguments!
+  ::  (we have none)
+
   goto :parse_unknown_opt
 
   @REM ------------------------------------
@@ -426,12 +243,6 @@
 
 :options_loop_end
 
-  %TRACE% Debug: values after parsing:
-  %TRACE%.
-  %TRACE% create_file = %create_file%
-  %TRACE% test_only   = %test_only%
-  %TRACE%.
-
   goto :validate_args
 
 ::-----------------------------------------------------------------------------
@@ -439,47 +250,13 @@
 ::-----------------------------------------------------------------------------
 :validate_args
 
-  if defined create_file (
-    if defined test_only (
-      echo WARNING: both /t and /c specified; /c being ignored  1>&2
-      set "create_file="
-    )
-  )
-
-  if not defined create_file (
-    if not defined test_only (
-      goto :help
-    )
-  )
-
-  call :isfile "%infile%"
-  if not defined isfile (
-    echo ERROR: required input file "%infile%" not found. 1>&2
-    set /a "rc=1"
-  )
-
-  if defined create_file (
-    call :isfile "%outfile%"
-    if defined isfile (
-      call :isreadonly  "%outfile%"
-      if defined isreadonly (
-        echo ERROR: output file "%outfile%" is read-only. 1>&2
-        set /a "rc=1"
-      )
-    )
-  )
+  ::  (no options so no validation)
 
   goto :validate_args_done
 
 :validate_args_done
 
   if not "%rc%" == "0" %exit%
-
-  %TRACE% Debug: values after validation:
-  %TRACE%.
-  %TRACE% create_file = %create_file%
-  %TRACE% test_only   = %test_only%
-  %TRACE%.
 
   if defined DEBUG %exit%
   goto :BEGIN
@@ -488,45 +265,6 @@
 ::                               BEGIN
 ::-----------------------------------------------------------------------------
 :BEGIN
-
-  call :set_VERSION
-  call :create_dyn_vers_hdr
-  %exit%
-
-::-----------------------------------------------------------------------------
-::                           update_maxrc
-::-----------------------------------------------------------------------------
-:update_maxrc
-
-  REM maxrc remains negative once it's negative!
-
-  if %maxrc% GEQ 0 (
-    if %rc% LSS 0 (
-      set /a "maxrc=%rc%"
-    ) else (
-      if %rc% GTR 0 (
-        if %rc% GTR %maxrc% (
-          set /a "maxrc=%rc%"
-        )
-      )
-    )
-  )
-
-  %return%
-
-::-----------------------------------------------------------------------------
-::                                EXIT
-::-----------------------------------------------------------------------------
-:exit
-
-  call :update_maxrc
-  popd
-  endlocal & exit /b %maxrc%
-
-::-----------------------------------------------------------------------------
-                              set_VERSION
-::-----------------------------------------------------------------------------
-:set_VERSION
 
   ::  The following logic determines the Hercules version number,
   ::  git or svn commit/revision information, and sets variables
@@ -541,18 +279,18 @@
 
   :: -------------------------------------------------------------------
   ::  First, extract the first three components of the Hercules version
-  ::  from the "%infile%" file by looking for the three VERS_MAJ=n
+  ::  from the "%configure_ac%" file by looking for the three VERS_MAJ=n
   ::  VERS_INT=n and VERS_MIN=n statements.
   :: -------------------------------------------------------------------
 
-  for /f "delims==# tokens=1-3" %%a in ('type %infile% ^| find /i "VERS_"') do (
+  for /f "delims==# tokens=1-3" %%a in ('type %configure_ac% ^| find /i "VERS_"') do (
     if /i "%%a" == "VERS_MAJ" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MAJ=%%n"
     if /i "%%a" == "VERS_INT" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_INT=%%n"
     if /i "%%a" == "VERS_MIN" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MIN=%%n"
    )
 
   %TRACE%.
-  %TRACE%   After %infile% parse
+  %TRACE%   After %configure_ac% parse
   %TRACE%.
   %TRACE% VERS_MAJ         = %VERS_MAJ%
   %TRACE% VERS_INT         = %VERS_INT%
@@ -827,6 +565,48 @@
   %TRACE% VERSION          = %VERSION%
   %TRACE%.
 
+  %exit%
+
+::-----------------------------------------------------------------------------
+::                           update_maxrc
+::-----------------------------------------------------------------------------
+:update_maxrc
+
+  REM maxrc remains negative once it's negative!
+
+  if %maxrc% GEQ 0 (
+    if %rc% LSS 0 (
+      set /a "maxrc=%rc%"
+    ) else (
+      if %rc% GTR 0 (
+        if %rc% GTR %maxrc% (
+          set /a "maxrc=%rc%"
+        )
+      )
+    )
+  )
+
   %return%
+
+::-----------------------------------------------------------------------------
+::                                EXIT
+::-----------------------------------------------------------------------------
+:exit
+
+  call :update_maxrc
+  popd
+
+  ::  PROGRAMMING NOTE: since 'VERSION' is a quoted string we can't use the
+  ::  normal set "var=value" set command syntax since that would result in
+  ::  a syntax error (i.e. set "var="value"").  Therefore, not quotes.
+  ::
+  ::  HOWEVER, not using quotes on a set command is dangerous since the set
+  ::  command blindly sets the specified variable to whatever follows the
+  ::  equal sign, including any accidental trailing blanks.  Thus we must
+  ::  surround the entire set command itself within parentheses to delimit
+  ::  to the batch file parser the start and end of the command (and thus
+  ::  the actual end of the value the variable is being 'set' to as well).
+
+  endlocal && (set VERSION=%VERSION%) && set "VERS_MAJ=%VERS_MAJ%" && set "VERS_INT=%VERS_INT%" && set "VERS_MIN=%VERS_MIN%" && set "VERS_BLD=%VERS_BLD%" && exit /b %maxrc%
 
 ::-----------------------------------------------------------------------------

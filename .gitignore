@@ -151,4 +151,3 @@ autoconf/compile
 allTests.*
 
 # Dynamically generated files
-_dynamic_version.h

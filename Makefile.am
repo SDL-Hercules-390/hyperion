@@ -37,10 +37,27 @@ SUBDIRS =     \
   .
 
 #------------------------------------------------------------------------------
-# Invoke shell script to dynamically build "_dynamic_version.h" header
+# Invoke shell script to dynamically define version variables
 #------------------------------------------------------------------------------
 
-DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
+VERS_MAJ := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_MAJ)
+VERS_INT := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_INT)
+VERS_MIN := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_MIN)
+VERS_BLD := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERS_BLD)
+
+  # PROGRAMMING NOTE: Due to autotool's insistance of defining 'VERSION'
+  # for us via a #define within the 'config.h' header (the value of which
+  # is derives from the 'configure.ac's "AM_INIT_AUTOMAKE" statement)
+  # instead of letting us define it ourselves (which we would prefer),
+  # we must undefine it here and then redefine it to the value that our
+  # '_dynamic_version' script determied it should be set to (which it saved
+  # for us in the 'DYNAMIC_VERSION' variable for obvious reasons).
+
+DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir) VERSION )
+
+# Now simply pass those version defines on the command-line...
+
+AM_CPPFLAGS += -D DYNAMIC_VERSION=\"$(DYNAMIC_VERSION)\" -D VERS_MAJ=$(VERS_MAJ) -D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D VERS_BLD=$(VERS_BLD)
 
 #------------------------------------------------------------------------------
 
@@ -739,9 +756,6 @@ vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 #------------------------------------------------------------------------------
 
 EXTRA_DIST =                  \
-  _build                      \
-  _build.bat                  \
-  _build.tail                 \
   _dynamic_version            \
   _dynamic_version.cmd        \
   _TODO.txt                   \

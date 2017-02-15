@@ -732,13 +732,15 @@
 
   :: All Hercules version logic moved to "_dynamic_version.cmd" script
 
-  call _dynamic_version.cmd  /c
+  call _dynamic_version.cmd
   set "rc=%errorlevel%"
-  if "%rc%" == "0" (
-    if defined CUSTOM_BUILD_STRING (
-      echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%
-    )
+
+  echo VERSION = %VERSION%  (%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%)
+
+  if defined CUSTOM_BUILD_STRING (
+    echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%
   )
+
   %return%
 
 

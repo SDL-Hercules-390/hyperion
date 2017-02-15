@@ -34,8 +34,6 @@
 #define ISPRERELEASE    NONE
 #endif
 
-#include "_dynamic_version.h"  /* created by _dynamic_version script */
-
 #if !defined(VERSION) || !defined(VERS_MAJ) || !defined(VERS_INT) || !defined(VERS_MIN) || !defined(VERS_BLD)
   #error VERSION not defined properly
 #endif

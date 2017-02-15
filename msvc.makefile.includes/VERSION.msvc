@@ -1,0 +1,13 @@
+# --------------------------------------------------------------------------
+#                Add VERSION defines to build flags
+# --------------------------------------------------------------------------
+#
+#  PROGRAMMING NOTE: the below $(varname) makefile variables are defined
+#  (and thus passed to this makefile) by the setting of the corresponding
+#  environment variable with the same name via the 'makefile.bat' script
+#  (which gets them from the '_dynamic_version.cmd' script).
+#
+# --------------------------------------------------------------------------
+
+rcflags = $(rcflags) -D VERSION=\"$(VERSION)\" -D VERS_MAJ=$(VERS_MAJ) -D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D VERS_BLD=$(VERS_BLD)
+cflags  = $(cflags)  -D VERSION=\"$(VERSION)\" -D VERS_MAJ=$(VERS_MAJ) -D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D VERS_BLD=$(VERS_BLD)

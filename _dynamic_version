@@ -6,78 +6,11 @@
 
 orig_dir="$(pwd)"
 top_srcdir="$1"
+vers_part="$2"
 cd "$top_srcdir"
 
 INFILE=configure.ac
-OUTFILE=_dynamic_version.h
-TMPFILE=/tmp/_dyn_version_tmp.h
-TOUCHFILE=version.h
 MIN_GIT_VERSION="1.8"   # (earlier versions of git return inaccurate results)
-
-#------------------------------------------------------------------------------
-#                         create_dyn_vers_hdr
-#------------------------------------------------------------------------------
-
-create_dyn_vers_hdr()
-{
-  cat <<END_OF_HEADER > $TMPFILE
-/*  _DYNAMIC_VERSION.H (C) Copyright "Fish" (David B. Trout), 2016   */
-/*      Dynamically generated Hercules VERSION #defines              */
-/*                                                                   */
-/*   Released under "The Q Public License Version 1"                 */
-/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
-/*   Hercules.                                                       */
-
-/*-------------------------------------------------------------------*/
-/* This header file defines the Hercules version constants. It is    */
-/* dynamically generated during the build by the _dynamic_version    */
-/* script (on Windows by the "_dynamic_version.cmd" batch file)      */
-/* and is #included automatically by the "version.h" header.         */
-/*-------------------------------------------------------------------*/
-
-#undef  VERS_MAJ
-#define VERS_MAJ    ${VERS_MAJ}
-
-#undef  VERS_INT
-#define VERS_INT    ${VERS_INT}
-
-#undef  VERS_MIN
-#define VERS_MIN    ${VERS_MIN}
-
-#undef  VERS_BLD
-#define VERS_BLD    ${VERS_BLD}
-
-#undef  VERSION
-#define VERSION     ${VERSION}
-END_OF_HEADER
-
-  # PROGRAMMING NOTE: in order to ensure make's dependency tracking is
-  # handled correctly, we always output to $TMPFILE and then compare it
-  # with the existing file. Only if they are different do we then delete
-  # the old file and rename the new file to replace it. After doing so,
-  # we then touch the "version.h" header file so make knows it is out-
-  # of-date and must therefore rebuild any files that depend on it.
-
-  if [ ! -f $OUTFILE ]; then
-    CMP_RC=1
-  else
-    cmp --silent $TMPFILE $OUTFILE
-    CMP_RC=$?
-  fi
-
-  if [ $CMP_RC -eq 0 ]; then
-    rm $TMPFILE
-  else
-
-    if [ -f $OUTFILE ]; then
-      rm $OUTFILE
-    fi
-
-    mv $TMPFILE $OUTFILE
-    touch $TOUCHFILE
-
-  fi
-}
 
 #-----------------------------------------------------------
 #              vercomp  --  compare versions
@@ -266,9 +199,28 @@ QUOTE='"'
 VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}-SDL${git_hash}${modified_str}${QUOTE}"
 
 
-# Finally, output the dynamically generated header file itself
+# Finally, return (via echo) the desired version component back to the caller
 
-create_dyn_vers_hdr
-echo DYNAMIC_VERSION
+if   test "$vers_part" == "VERS_MAJ"; then
+                     echo $VERS_MAJ
+                     
+elif test "$vers_part" == "VERS_INT"; then
+                     echo $VERS_INT
+                     
+elif test "$vers_part" == "VERS_MIN"; then
+                     echo $VERS_MIN
+                     
+elif test "$vers_part" == "VERS_BLD"; then
+                     echo $VERS_BLD
+                     
+elif test "$vers_part" == "VERSION"; then
+                     echo $VERSION
+else
+                     echo $VERSION
+fi
+
+
+#  DONE!  Exit back to caller...
+
 cd "$orig_dir"
 exit 0

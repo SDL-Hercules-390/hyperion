@@ -387,8 +387,6 @@ Procfile            text
 # Build (root directory)
 *.ac                text    eol=lf
 *.am                text    eol=lf
-_build              text    eol=lf
-_build.tail         text    eol=lf
 _dynamic_version    text    eol=lf
 makefile*.msvc      text    eol=crlf
 

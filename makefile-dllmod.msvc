@@ -42,6 +42,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\IPV6_FLAGS.msvc
 !INCLUDE $(INCDIR)\HQA_FLAGS.msvc
 !INCLUDE $(INCDIR)\HERC_FLAGS.msvc
+!INCLUDE $(INCDIR)\VERSION.msvc
 !INCLUDE $(INCDIR)\EXT_PKGS.msvc
 # ---------------------------------------------------------------------
 
