@@ -1086,8 +1086,4 @@ uninstall-hook:
 #---------------------------------------------------------------------------
 
 check:
-if APPLE
-	$(top_srcdir)/tests/runtest          $(top_srcdir)/tests
-else
-	$(top_srcdir)/tests/runtest -p .libs $(top_srcdir)/tests
-endif
+	$(top_srcdir)/tests/runtest  $(top_srcdir)/tests
