@@ -3002,6 +3002,30 @@
     <Library Include="telnet\lib\telnet64.lib">
       <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </Library>
+    <Library Include="telnet\lib\telnet32d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
+    </Library>
+    <Library Include="telnet\lib\telnet64d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
+    </Library>
+    <Library Include="SoftFloat\lib\SoftFloat64d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
+    </Library>
+    <Library Include="SoftFloat\lib\SoftFloat32d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\lib</Filter>
+    </Library>
+    <Library Include="decNumber\lib\decNumber32d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
+    </Library>
+    <Library Include="decNumber\lib\decNumber64d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\decNumber\lib</Filter>
+    </Library>
+    <Library Include="crypto\lib\crypto32d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
+    </Library>
+    <Library Include="crypto\lib\crypto64d.lib">
+      <Filter>Source Files\Hercules\ExtPkgs\crypto\lib</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <Image Include="hercdasd.ico">
