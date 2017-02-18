@@ -1203,25 +1203,41 @@ DLL_EXPORT int drop_all_caps(void)
 }
 #endif /* defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES) */
 
-#if defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
 /* Trim path information from __FILE__ macro value                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* trimloc( const char* loc )
 {
     /*
-    ** Under certain unknown circumstances MSVC sometimes
-    ** sets the __FILE__ macro to a full path filename
-    ** rather than just the filename only. The following
-    ** compensates for this condition.
+    ** The __FILE__ macro expands to a path by which the preprocessor
+    ** opened the file, not the short name specified in "#include" or
+    ** as the input file name argument.  For example, __FILE__ might
+    ** expand to "/usr/local/include/myheader.h", not "myheader.h".
+    ** The following compensates for this condition by returning just
+    ** the base name.
+    **
+    ** PROGRAMMING NOTE: we cannot use the basename() function here
+    ** because:
+    **
+    **
+    **    "The basename() function may modify the string
+    **     pointed to by path, and may return a pointer to
+    **     internal storage. The returned pointer might be
+    **     invalidated or the storage might be overwritten
+    **     by a subsequent call to basename()."
+    **
+    **    "The basename() function need not be thread-safe."
+    **
+    **
+    ** The below implementation avoids both issues by just returning
+    ** a pointer indexed into the current string constant.
     */
-    char* p = strrchr( loc, '\\' );
-    if (!p) p = strrchr( loc, '/' );
+    char* p = strrchr( loc, '\\' );         /* Windows */
+    if (!p) p = strrchr( loc, '/' );        /* non-Windows */
     if (p)
         loc = p+1;
     return loc;
 }
-#endif /* defined( _MSVC_ ) */
 
 /*********************************************************************/
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
