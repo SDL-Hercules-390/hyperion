@@ -59,7 +59,7 @@ static     void* hao_thread(void* dummy);
 /*---------------------------------------------------------------------------*/
 /* void hao_initialize(void)                                                 */
 /*                                                                           */
-/* This function is called by the 'hao_command()' function. It initializes   *
+/* This function is called by the 'hao_command()' function. It initializes   */
 /* all global variables. PLEASE NOTE: This is a BOOLEAN function, returning  */
 /* TRUE or FALSE indicating success or failure.                              */
 /*---------------------------------------------------------------------------*/
