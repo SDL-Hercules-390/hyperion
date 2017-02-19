@@ -3125,7 +3125,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         case 0x18: /* Prepare for Read Subsystem Data */
 
             /* Command reject if bytes 1-5 not zero */
-            if (memcmp(&iobuf[1], "\x00\x00\x00\x00\x00", 5) != 0)
+            /* except when suborder is Query Host Access */
+            /* when only bytes 1-3 should be zero */
+            if (iobuf[6] == 0x1C)
+                j = 3;
+            else
+                j = 5;
+            if (memcmp(&iobuf[1], "\x00\x00\x00\x00\x00", j) != 0)
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_4);
@@ -3159,6 +3165,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
                 break;
+
             case 0x03:  /* Read attention message for this path-group for
                            the addressed device Return a "No Message"
                            message */
@@ -3189,6 +3196,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[8] = 0x00;               /* Flags = 00            */
                 dev->ckdssdlen = 9;            /* Len of prepared data  */
                 break;
+
             case 0x0E: /* Unit address configuration */
                 /* Prepare unit address configuration record */
                 memset (iobuf, 0, 512);
@@ -3204,6 +3212,58 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
                 /* Indicate the length of subsystem data prepared */
                 dev->ckdssdlen = 256;
+                break;
+
+            case 0x1C: /* Query Host Access */
+                /*------------------------------------------------------*/
+                /* PROGRAMMING NOTE: 2017-02-14 Ian                     */
+                /*                                                      */
+                /* IBM OA40720 PROBLEM DESCRIPTION says:-               */
+                /*                                                      */
+                /*   This provides new function support for DS8870      */
+                /*   Query Host Access function                         */
+                /*                                                      */
+                /*   The MVS System DEVSERV QDASD command was enhanced  */
+                /*   to support a new keyword 'QHA' which allows user   */
+                /*   to query host access information for a CKD volume. */
+                /*   The host access information includes a list of     */
+                /*   Path Group IDs or systems that have a device       */
+                /*   grouped (online) and/or ungrouped (offline) or     */
+                /*   Reserved. In addition, the Path Status Flags, z/OS */
+                /*   Sysplex name, and Maximum number of Cylinders per  */
+                /*   Volume supported by the host are also returned for */
+                /*   each Path Group entry.                             */
+                /*                                                      */
+                /* Linux support for QHA was added to kernel 4.6 with   */
+                /* patch 8712731 in March 2016.                         */
+                /*                                                      */
+                /* iobuf[4]-[5] contains the device being queried.      */
+                /* Other than the Linux kernel source (see structures   */
+                /* dasd_psf_query_host_access and                       */
+                /* dasd_ckd_host_information in                         */
+                /* drivers/s390/block/dasd_eckd.h) I haven't discovered */
+                /* any documentation explaining the contents of the     */
+                /* response.                                            */
+                /*------------------------------------------------------*/
+
+#define QHA_RESPONSE_SIZE  16+4+32   /* 16 = the first 16-bytes of the  */
+                                     /*      dasd_psf_query_host_access */
+                                     /*      structure.                 */
+                                     /*  4 = the first 4-bytes of the   */
+                                     /*      dasd_ckd_host_information  */
+                                     /*      structure.                 */
+                                     /* 32 = an arbitrary entry length  */
+
+                /* Indicate the length of prepared host access response */
+                dev->ckdssdlen = QHA_RESPONSE_SIZE;
+
+                /* Prepare host access response */
+                memset (iobuf, 0, QHA_RESPONSE_SIZE);
+
+                iobuf[17] = 0x20;              /* Entry size = 32       */
+                iobuf[18] = 0x00;              /* Entry...              */
+                iobuf[19] = 0x01;              /* ...count = 1          */
+
                 break;
 
             default: /* Unknown suborder code */
