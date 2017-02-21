@@ -752,6 +752,8 @@ struct SYSBLK {
             u_int level:16;
             u_int debug:1;
             u_int available:1;
+            u_int enabletrap:1;
+            u_int freetrap:1;
         } ecpsvm;                       /* ECPS:VM structure         */
 //
 #endif

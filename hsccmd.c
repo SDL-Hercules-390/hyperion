@@ -7759,9 +7759,29 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
     else if ( CMD(argv[1],yes,3) && argc == 2 )
     {
         sysblk.ecpsvm.available = TRUE;
+        sysblk.ecpsvm.enabletrap = TRUE;
         if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "enabled" );
+            WRMSG( HHC02204, "I", argv[0], "enabled, trap support enabled" );
         return 0;
+    }
+    else if ( CMD(argv[1],yes,3) && argc == 3 )
+    {
+        sysblk.ecpsvm.available = TRUE;
+        if ( CMD(argv[2],notrap,6))
+        {
+            sysblk.ecpsvm.enabletrap = FALSE;
+            if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], "enabled, trap support disabled" );
+            return 0;
+        }
+        if ( CMD(argv[2],trap,4))
+        {
+            sysblk.ecpsvm.enabletrap = TRUE;
+            if ( MLVL(VERBOSE) )
+            WRMSG( HHC02204, "I", argv[0], "enabled, trap support enabled" );
+            return 0;
+        }
+
     }
     else if ( CMD(argv[1],level,5) && !MLVL(VERBOSE))
     {
@@ -7777,6 +7797,7 @@ int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
         }
         sysblk.ecpsvm.level = lvl;
         sysblk.ecpsvm.available = TRUE;
+        sysblk.ecpsvm.enabletrap = FALSE;
         if ( MLVL(VERBOSE) )
         {
             char msgbuf[40];

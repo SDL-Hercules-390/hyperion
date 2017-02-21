@@ -75,8 +75,10 @@ typedef struct _ECPSVM_MICBLOK
 #define MICIUCV  0x10   /* IUCV ASSIST */
 } ECPSVM_MICBLOK;
 
-/* PSA Usefull Values */
+/* PSA Useful Values */
+#define PGMOPSW  0x028
 #define IOOPSW   0x038
+#define PGMINT   0x08C
 
 #define QUANTUMR 0x04C  /* Usefull little unused space for MVCing NEW ITIMER */
 #define INTTIMER 0x050
@@ -119,10 +121,11 @@ typedef struct _ECPSVM_MICBLOK
 /* ASYSVM : PSA+37C */
 #define ASYSVM 0x37C
 
-/* PSA + X'3D4' - ASSISTS STUFF */
-#define CPCREG0 0x3D4
-#define CPCREG6 0x3D8
-#define CPCREG8 0x3DC
+/* PSA + X'3D0'-X'3EC' - ASSISTS STUFF */
+#define APAGCP   0x3D0
+#define CPCREG0  0x3D4
+#define CPCREG6  0x3D8
+#define CPCREG8  0x3DC
 #define TIMEDISP 0x3E0
 #define ASVCLIST 0x3E4
 #define AVMALIST 0x3E8
@@ -144,47 +147,111 @@ typedef struct _ECPSVM_MICBLOK
 /* PSA + 6D0 : STACKVM - GPR11 Backup for dispatcher */
 #define STACKVM 0x6D0
 
-/* CP ASSIST SVC (Not VM Assist SVC) LIST */
+/* CP ASSIST SVC (Not VM Assist SVC) LIST pointed to by ASVCLIST */
 /* ASSISTS FOR CP LINK/RETURN SVCs */
-/* DMKSVCNS */
-/* Address found @ PSA+3E4 */
-typedef struct _ECPSVM_SVCLIST
-{
-    DW NEXTSAVE;        /* Pointer to next Save Area + 8 */
-    DW SLCADDR;         /* V=R Start */
-    DW DMKSVCHI;        /* DMKFREHI */
-    DW DMKSVCLO;        /* DMKFRELO + SAVEAREA LENGTH */
-} ECPSVM_SVCLIST;
+/* ASVCLIST points to DMKSVCNS */
+/* Displacements from DMKSVCNS (defined in DMKSVC) */
+#define NEXTSAVE  0        /* Pointer to next Save Area */
+#define SLCADDR   4        /* V=R Start */
+#define DMKSVCHI  8        /* DMKFREHI */
+#define DMKSVCLO 12        /* DMKFRELO - SAVEAREA LENGTH */
+
 
 /* VM ASSIST LISTS */
 /* ENTRYPOINT TO VARIOUS PRIVOP SIM FASTPATH */
-/* (DMKPRVMA) */
-/* Address found @ PSA+3E8 */
+/* AVMALIST points to DMKPRVMA */
+/* Displacements from DMKPRVMA (defined in DMKPRV) */
+#define VSIVS 0     /* EP To DMKVSIVS (Fastpath SIO/SIOF) */
+#define VSIEX 4     /* Base addr for VSIVS */
+#define DSPCH 8     /* Scheduler - Fast path for LPSW/SSM/STNSM/STOSM */
+#define TMRCC 12    /* SCKC EP */
+#define TMR   16    /* Timer ops base */
+#define TMRSP 20    /* SPT EP */
+#define VATAT 24    /* ARCHITECT */
+#define DSPB  28    /* Slow Path Dispatcher - PSW Revalidate required */
+#define PRVVS 32    /* VSIVS COUNT */
+#define PRVVL 36    /* LPSW Count */
+#define PRVVM 40    /* SSM/STxSM COUNT */
+#define PRVVC 44    /* SCKC COUNT */
+#define RESERVED 48;
+#define PRVVP 52;   /* SPT COUNT */
 
-typedef struct _ECPSVM_VMALIST
-{
-    DW VSIVS;   /* EP To DMKVSIVS (Fastpath SIO/SIOF) */
-    DW VSIEX;   /* Base addr for VSIVS */
-    DW DSPCH;   /* Scheduler - Fast path for LPSW/SSM/STNSM/STOSM */
-    DW TMRCC;   /* SCKC EP */
-    DW TMR;     /* Timer ops base */
-    DW TMRSP;   /* SPT EP */
-    DW VATAT;   /* ARCHITECT */
-    DW DSPB;    /* Slow Path Dispatcher - PSW Revalidate required */
-    DW PRVVS;   /* VSIVS COUNT */
-    DW PRVVL;   /* LPSW Count */
-    DW PRVVM;   /* SSM/STxSM COUNT */
-    DW PRVVC;   /* SCKC COUNT */
-    DW RESERVED;
-    DW PRVVP;   /* SPT COUNT */
-} ECPSVM_VMALIST;
+
+/* CP 'SAVEAREA' block definitions */
+#define SAVENEXT  0
+#define SAVERETN  0
+#define SAVEREGS  0x10
+#define SAVER12   0x04
+#define SAVER13   0x08
+#define SAVER8    0x30
+#define SAVER10   0x38
+
+/* Fields for CCW translation (part of SAVEAREA dsect in DMKCCW) */
+
+#define PRVCOMND  0x0C
+#define PRVFLAG   0x0D
+/* Bits defined in PRVFLAG */
+#define SMCOM     0x01
+#define FWDTIC    0x04
+
+#define VIRCOMND  0x0E
+#define VIRFLAG   0x0F
+#define MEMO1     0x41
+/* Bits defined in MEMO1 */
+#define HADISAM   0x01
+#define HADUTIC   0x02
+
+#define MEMO2     0x42
+/* Bits defined in MEMO2 */
+#define STRTNEW   0x40
+
+#define FIRSTRCW  0x44
+#define THISRCW   0x58
+#define DEVTABLE  0x50
+
+/* CCW related bits */
+#define CD        0x80
+#define CC        0x40
+#define IDA       0x04
+#define CDTIC     0x18
+
+/* RCWCCW block definitions */
+#define RCWPNT    0x00
+#define RCWCOMND  0x00
+#define RCWVCAW   0x04
+#define RCWFLAG   0x04
+#define RCWCTL    0x05
+/* Bits in RCWCTL */
+#define RCWIO     0x80
+#define RCWGEN    0x40
+#define RCWHMR    0x20
+#define RCW2311   0x04
+#define RCWSHR    0x01
+
+#define RCWCNT    0x06
+#define RCWVCNT   0x08
+#define RCWRCNT   0x0A
+#define RCWCCNT   0x0E
+#define RCWHSIZ   0x10
+
+/* CORTABLE definitions */
+#define CORFLAG   0x08
+/* Bits defined in CORFLAG */
+#define CORSHARE  0x08
+
+/* IOBLOK Displacements */
+#define IOBCAW    0x20
+#define IOBSPEC2  0x39
+/* Flags in IOBSPEC2 */
+#define IOBUNREL  0x20
+#define IOBCLN    0x40
 
 /* VMBLOK Displacements */
 #define VMQFPNT         0x000
 #define VMQBPNT         0x004
 #define VMPNT           0x008
 #define VMECEXT         0x00C
-#define VMVCR0 VMECEXT
+#define VMVCR0  VMECEXT
 #define VMSEG           0x010
 #define VMSIZE          0x014
 #define VMCHSTRT        0x018
@@ -339,7 +406,7 @@ typedef struct _ECPSVM_VMALIST
 #define VMUSER          0x110
 #define VMACCNT         0x118
 #define VMDIST          0x120
-
+#define VMPRGIL         0x156
 
 #define VMMICRO         0x17C
 #define VMMCR6 VMMICRO
@@ -350,6 +417,60 @@ typedef struct _ECPSVM_VMALIST
 #define VMNOECPS        0x1A7
 
 #define VMSTKCNT        0x1CC
+
+/* Virtual Device Blocks Key Fields */
+#define VCHSTAT  0x06
+   /* Flags defined in VCHSTAT */
+#define VCHBUSY  0x80
+#define VCHCEPND 0x40
+
+#define VCHTYPE  0x07
+   /* Flags defined in VCHTYPE */
+#define VCHSEL   0x80
+
+#define VCUINTS  0x04
+   /* Flags defined in VCUINTS */
+#define CUE      0x20
+
+#define VCUSTAT  0x06
+   /* Flags defined in VCUSTAT */
+#define VCUCHBSY 0x80
+#define VCUCEPND 0x40
+#define VCUBUSY  0x20
+#define VCUCUEPN 0x08
+
+#define VCUTYPE  0x07
+   /* Flags defined in VCUTYPE */
+#define VCUSHRD  0x80
+#define VCUCTCA  0x40
+
+#define VDEVINTS  0x02
+#define VDEVTYPC  0x04
+/* Flags defined in VDEVTYPC */
+#define CLASDASD  0x04
+#define CLASGRAF  0x40
+
+#define VDEVTYPE  0x05
+/* Flags defined in VDEVTYPE */
+#define TYP3277   0x04
+#define TYP3278   0x01
+
+#define VDEVSTAT  0x06
+   /* Flags defined in VDEVSTAT */
+#define VDEVCHBS  0x80
+#define VDEVCHAN  0x40
+#define VDEVBUSY  0x20
+#define VDEVDED   0x01
+
+#define VDEVFLAG  0x07
+   /* Flags defined in VDEVFLAG */
+#define VDEVUC    0x01
+
+#define VDEVRELN  0x10
+#define VDEVFLG2  0x38
+   /* Flags defined in VDEVFLG2 */
+#define VDEVRRF   0x80
+
 
 
 /* ECBLOK Specifics */
@@ -366,9 +487,11 @@ typedef struct _ECPSVM_VMALIST
 #define TRACEND  0x10
 #define TRACCURR 0x14
 #define TRACFLG1 0x400
+#define TRAC02   0x40
 #define TRAC67   0x04
 #define TRACFLG2 0x401
-#define TRAC0A   0x804
+#define TRAC0A   0x80
+#define TRCSVC   0x82
 #define TRCFREE  0x86
 #define TRCFRET  0x87
 #define TRCRUN   0x8A
