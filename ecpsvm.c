@@ -4275,12 +4275,13 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     {
         WRMSG(HHC01702,"I");
     }
+    // "| %-9s | %8d | %8d |  %3d%% |"
     WRMSG(HHC01701,"I",
             "Total",
             callt,
             hitt,
             callt ? (hitt*100)/callt
-                  : 100);
+                  : 0 );
     WRMSG(HHC01702,"I");
     if(haveunsup)
     {
@@ -4567,23 +4568,32 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
     return(NULL);
 }
 
-void ecpsvm_command(int ac,char **av)
+int ecpsvm_command( int ac, char **av )
 {
-    ECPSVM_CMDENT *ce;
-    WRMSG(HHC01719,"I");
-    if(ac==1)
+    ECPSVM_CMDENT  *ce;
+
+    // "ECPS:VM Command processor invoked"
+    WRMSG( HHC01719, "I" );
+
+    if (ac <= 1)
     {
-        WRMSG(HHC01720,"E");
-        return;
+        // "No ECPS:VM subcommand. Type \"ecpsvm help\" for a list of valid subcommands"
+        WRMSG( HHC01720, "E" );
+        return -1;
     }
-    ce=ecpsvm_getcmdent(av[1]);
-    if(ce==NULL)
+
+    if (!(ce = ecpsvm_getcmdent( av[1] )))
     {
-        WRMSG(HHC01721,"E",av[1]);
-        return;
+        // "Unknown ECPS:VM subcommand %s"
+        WRMSG( HHC01721, "E", av[1] );
+        return -1;
     }
-    ce->fun(ac-1,av+1);
-    WRMSG(HHC01722,"I");
+
+    ce->fun( ac-1, av+1 );
+
+    // "ECPS:VM Command processor complete"
+    WRMSG( HHC01722, "I" );
+    return 0;
 }
 
 #endif /* ifdef FEATURE_ECPSVM */

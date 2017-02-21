@@ -80,8 +80,8 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #define MAX_DEVLIST_DEVICES  1024
 
-#if defined(FEATURE_ECPSVM)
-extern void ecpsvm_command( int argc, char **argv );
+#if defined( FEATURE_ECPSVM )
+extern int ecpsvm_command( int argc, char **argv );
 #endif
 int HercCmdLine ( char *cmdline );
 int exec_cmd(int argc, char *argv[],char *cmdline);
@@ -7742,74 +7742,110 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* ecpsvm - ECPS:VM command                                          */
 /*-------------------------------------------------------------------*/
-int ecpsvm_cmd(int argc, char *argv[], char *cmdline)
+int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
 {
-    UNREFERENCED(cmdline);
+    int rc = 0;
+    char msgbuf[64];
 
-    if ( CMD(argv[0],evm,3) || CMD(argv[0],ecps:vm,7) )
+    UNREFERENCED( cmdline );
+
+    // EVM      ...     (deprecated)
+    // ECPS:VM  ...     (deprecated)
+    if (0
+        || CMD( argv[0], evm,     3 )
+        || CMD( argv[0], ecps:vm, 7 )
+    )
+    {
+        // "Command %s is deprecated, use %s instead"
         WRMSG( HHC02256, "W", argv[0], "ecpsvm" );
+        // (fall through to process their command anyway)
+    }
 
-    if ( CMD(argv[1],no,2) && argc == 2 )
+    // ECPSVM NO
+    if (argc == 2 && CMD( argv[1], no, 2 ))
     {
         sysblk.ecpsvm.available = FALSE;
-        if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "disabled" );
-        return 0;
-    }
-    else if ( CMD(argv[1],yes,3) && argc == 2 )
-    {
-        sysblk.ecpsvm.available = TRUE;
-        sysblk.ecpsvm.enabletrap = TRUE;
-        if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "enabled, trap support enabled" );
-        return 0;
-    }
-    else if ( CMD(argv[1],yes,3) && argc == 3 )
-    {
-        sysblk.ecpsvm.available = TRUE;
-        if ( CMD(argv[2],notrap,6))
+
+        if (MLVL( VERBOSE ))
         {
-            sysblk.ecpsvm.enabletrap = FALSE;
-            if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "enabled, trap support disabled" );
-            return 0;
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], "disabled" );
         }
-        if ( CMD(argv[2],trap,4))
+    }
+    // ECPSVM YES [TRAP|NOTRAP]
+    else if (argc >= 3 && CMD( argv[1], yes, 3 ))
+    {
+        int err = 0;
+
+        sysblk.ecpsvm.available = TRUE;
+
+        if (argc == 2)
         {
             sysblk.ecpsvm.enabletrap = TRUE;
-            if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], "enabled, trap support enabled" );
-            return 0;
+            MSGBUF( msgbuf, "%s", "enabled" );
+        }
+        else // (argc == 3)
+        {
+            if (CMD( argv[2], trap, 4 ))
+            {
+                sysblk.ecpsvm.enabletrap = TRUE;
+                MSGBUF( msgbuf, "%s", "enabled, trap support enabled" );
+            }
+            else if (CMD( argv[2], notrap, 6 ))
+            {
+                sysblk.ecpsvm.enabletrap = FALSE;
+                MSGBUF( msgbuf, "%s", "enabled, trap support disabled" );
+            }
+            else
+            {
+                err = 1;
+                // "Unknown ECPS:VM subcommand %s"
+                WRMSG( HHC01721, "E", argv[2] );
+                rc = -1;
+            }
         }
 
+        if (!err && MLVL( VERBOSE ))
+        {
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], msgbuf );
+        }
     }
-    else if ( CMD(argv[1],level,5) && !MLVL(VERBOSE))
+    // ECPSVM LEVEL n
+    else if (argc >= 2 && CMD( argv[1], level, 5 ))
     {
         int lvl = 20;
-        if ( argc == 3 )
+
+        if (argc == 3)
         {
-            BYTE    c;
-            if (sscanf(argv[2], "%d%c", &lvl, &c) != 1)
+            BYTE c;
+
+            if (sscanf( argv[2], "%d%c", &lvl, &c ) != 1)
             {
+                // "Invalid ECPS:VM level value : %s. Default of 20 used"
                 WRMSG( HHC01723, "W", argv[2] );
                 lvl = 20;
             }
         }
-        sysblk.ecpsvm.level = lvl;
-        sysblk.ecpsvm.available = TRUE;
+
+        sysblk.ecpsvm.level      = lvl;
+        sysblk.ecpsvm.available  = TRUE;
         sysblk.ecpsvm.enabletrap = FALSE;
-        if ( MLVL(VERBOSE) )
+
+        if (MLVL( VERBOSE ))
         {
-            char msgbuf[40];
             MSGBUF( msgbuf, "enabled: level %d", lvl );
+            // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], msgbuf );
         }
-        return 0;
     }
     else
-        ecpsvm_command(argc,argv);
+    {
+        // Some other subcommand (help, stats, enable, debug, etc)
+        rc = ecpsvm_command( argc, argv );
+    }
 
-    return 0;
+    return rc;
 }
 #endif
 
