@@ -63,20 +63,26 @@ are more sensitive to failures and corruption may occur.
 
 <p>
 <hr noshade>
+
 <p><h2><a NAME="shadowfiles">Shadow Files</a></h2>
 
 <p>
-An compressed CKD or FBA dasd can have more than one physical file.  The
-additional files are called <em>shadow files</em>.
-The function is implemented as a kind of
-<i>snapshot</i>, where a new shadow file can be created on demand.
+
+A compressed CKD or FBA dasd can have more than one physical file.
+The additional files are called <em>shadow files</em>.
+The function is implemented as a kind of <i>snapshot</i>, where
+a new shadow file can be created on demand.
 An emulated dasd is represented by a <em>base</em> file and 0 or more
 shadow files.  All files are opened <em>read-only</em>
 except for the <em>current</em> file, which is opened <em>read-write</em>.
+
 <p>
+
 Shadow files are specified by the <b>sf=</b><i>shadow-file-name</i> parameter
 on the device statement for the compressed DASD device.
+
 <p class="note">
+
     Please note that the specified shadow filename does <u>not</u> have to
     actually exist. The <i>shadow-file-name</i> operand of the <i>sf=</i>
     parameter is simply a filename <i><u>template</u></i> that will be used
@@ -85,12 +91,40 @@ on the device statement for the compressed DASD device.
     them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command. Please
     refer to the discussion of the <b>sf</b> command several paragraphs
     below for more information.
+
 <p>
-The shadow file name
-should have spot where the shadow file number will be set.  This is
-either the character preceding the last period after the last slash or the
-last character if there is no period.  For example:<br><br>
-<code>0100 3390 disks/linux1.dsk sf=shadows/linux1_*.dsk</code>
+
+The <b>shadow file name</b> should have spot where the shadow file number will be set.
+This is either the character immediately preceding the filename extension
+or the last character of the file name itself if there is no extension.
+<p>
+For example, the following device statement:<br>
+<pre>
+    0001  2311  VOL111.model-x.ext   sf=VOL111_Shadow_0.model-x.ext
+</pre>
+will cause a shadow file named:
+<pre>
+                                        VOL111_Shadow_0.model-1.ext
+</pre>
+to be created, whereas the following slightly different device statement:
+<pre>
+    0002  2311  VOL222.model-x.ext   sf=VOL222.model-x_Shadow_0.ext
+</pre>
+will cause a shadow file with the following name to be created:
+<pre>
+                                        VOL222.model-x_Shadow_1.ext
+</pre>
+
+<p>
+
+Please notice the placement of the shadow file number in the two examples:
+it is always immediately before the <i>last</i> period of the filename.
+In earlier versions of Hercules the shadow file number was
+erroneously placed immediately before the <i>first</i> period of the
+filename instead of the last period. In newer versions of Hyperion 
+this has been corrected to place the number immediately before the
+<i>last</i> period, as it was originally intended.
+
 <p>
 There can be up to 8 shadow files in use at any time for an
 emulated dasd device.  The base file is designated file<b>[0]</b> and
@@ -103,9 +137,9 @@ image.
 A shadow file contains all the changes made to the emulated dasd
 since it was created, until the next shadow file is created.  The moment
 of the shadow file's creation can be thought of as a <em>snapshot</em>
-of the current emulated dasd at that time, because if the shadow file is
-later removed, then the emulated dasd reverts back to the state it was at
-when the <em>snapshot</em> was taken.
+of the current emulated dasd as it existed at that point in time, because
+if the shadow file is later removed, then the emulated dasd reverts back
+to the state it was in at the moment the snapshot was taken.
 <p>
 Using shadow files, you can keep the base file on a read-only device
 such as cdrom, or change the base file attributes to read-only,
