@@ -107,7 +107,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#LDMOD">LDMOD</a>      dyncrypt
 
     <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
-    <a href="#ECPSVM">ECPSVM</a>     no
+    <a href="#ECPSVM">ECPSVM</a>     no  notrap
 
     <a href="#SCSIMOUNT">SCSIMOUNT</a>  no
     <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
@@ -735,24 +735,38 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ECPSVM"></a>
-<dt><code>ECPSVM &nbsp; YES &#124; NO &#124; LEVEL <em>nn</em></code>
+<dt><code>ECPSVM &nbsp; YES &#124; <u>NO</u> &#124; LEVEL <em>nn</em> &nbsp;&nbsp; [ TRAP &#124; NOTRAP ]</code>
 <dd><p>
     Specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
-    support is to be enabled. If <code>YES</code> is specified, then the support
-    level reported to the operating system is <code>20</code>. The purpose of
-    ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
-    facilities to perform hypervisor functions (CP Assists) and virtual
-    machine simulation (VM Assists). Although this feature does not affect
-    VM Operating system products operating in XA, ESA or z/Architecture mode,
-    it will affect VM/370 and VM/SP products running under VM/XA, VM/ESA or z/VM.
+    support is to be enabled.
+    <p>
+    If <code>YES</code> is specified, then the support level reported to the
+    operating system is <code>20</code>. The purpose of ECPS:VM is to provide
+    to the VM/370 Operating system a set of shortcut facilities to perform
+    hypervisor functions (CP Assists) and virtual machine simulation (VM Assists).
+    <p>
+    Although this feature does not affect VM Operating system products operating in
+    XA, ESA or z/Architecture mode, it <i>will</i> affect VM/370 and VM/SP products
+    running under VM/XA, VM/ESA or z/VM.
+    <p>
     Running VM/370 and VM/SP products under VM/XA, VM/ESA or z/VM should be
     done with ECPS:VM disabled. ECPS:VM should not be enabled in an AP or MP
-    environment. ECPS:VM has no effect on non-VM operating systems. It is
+    environment either. ECPS:VM has no effect on non-VM operating systems. It is
     however recommended to disable ECPS:VM when running native non-VM operating
-    systems. If a specific LEVEL is specified, this value will be reported
-    to the operating system when it issues a Store ECPS:VM level, but it
-    doesn't otherwise alter the ECPS:VM facility operations. This is a partial
-    implementation.
+    systems.
+    <p>
+    If a specific LEVEL is specified, this value will be reported to the operating
+    system when it issues a Store ECPS:VM level, but it doesn't otherwise alter
+    the ECPS:VM facility operations.
+    <p>
+    This is a <i>partial</i> (but mostly complete) implementation.
+    <p>
+    It is however <i>not</i> a 100% complete implementation.
+    <p>
+    Please refer to the
+    <a href="https://github.com/fish-git/hyperion/blob/master/README.ECPSVM">README.ECPSVM</a>
+    document for more detailed information,
+    including an explanation of the <code>TRAP</code> and <code>NOTRAP</code> options.
     <p>
 
 <a name="ENGINES"></a>
@@ -2679,11 +2693,11 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><em>Tape devices</em>
 <dd><p>
     Five types of tape emulation are supported (see further below): &nbsp;
-    <a href="#AWS"><b>AWS</b></a>, &nbsp;
-    <a href="#HET"><b>HET</b></a>, &nbsp;
-    <a href="#FAKETAPE"><b>FakeTape</b></a>, &nbsp;
-    <a href="#OMA"><b>Optical Media Attach (OMA)</b></a>, &nbsp; and &nbsp;
-    <a href="#SCSI"><b>real SCSI</b></a> .
+    <a href="#AWS">AWS</a>, &nbsp;
+    <a href="#HET">HET</a>, &nbsp;
+    <a href="#FAKETAPE">FakeTape</a>, &nbsp;
+    <a href="#OMA">Optical Media Attach (OMA)</a>, &nbsp; and &nbsp;
+    <a href="#SCSI">real SCSI</a> .
     <p>
 
     The only required parameter is the device filename. All other parameters
@@ -2717,10 +2731,11 @@ a real System/390.  The configuration file is an ASCII text file.
     <b>SCSI tape</b> device should <b>not</b> be given in a file list.</i>
     <p>
 
-    Refer to the distributed source-code's "<b>README.TAPE</b>" document for
-    additional information regarding system and application programming for tape
-    devices and instructions regarding use of the emulated <b>ACF</b> (Automatic
-    Cartridge Feeder) and <a href="#AUTOMOUNT">AUTOMOUNT</a> features
+    Refer to the distributed source-code's
+    <a href="https://github.com/fish-git/hyperion/blob/master/README.TAPE">README.TAPE</a>
+    document for additional information regarding system and application programming
+    for tape devices and instructions regarding use of the emulated <b>ACF</b>
+    (Automatic Cartridge Feeder) and <a href="#AUTOMOUNT">AUTOMOUNT</a> features
     for virtual (non-SCSI) tape devices.
     <p>
 
