@@ -5521,6 +5521,8 @@ ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 IOINT  *io, *io2;                       /* -> I/O interrupt entry    */
 DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
+int     dotsch = 1;                     /* perform TSCH after int    */
+                                        /* except for THININT        */
 
     UNREFERENCED_370(ioparm);
     UNREFERENCED_370(iointid);
@@ -5654,7 +5656,7 @@ retry:
     if (unlikely(FACILITY_ENABLED(QDIO_THININT, regs)
         && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
     {
-        *ioid = *ioparm = 0;
+        dotsch = 0;     /* Do not require TSCH after INT */
 
         *iointid = 0x80000000
              | (
@@ -5721,7 +5723,7 @@ retry:
     }
 
     /* TEST SUBCHANNEL is now required to clear the interrupt */
-    dev->tschpending = 1;
+    dev->tschpending = dotsch;
 
     /* Perform additional architecture post processing and cleanup */
     switch (sysblk.arch_mode)
