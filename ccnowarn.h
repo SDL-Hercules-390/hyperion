@@ -98,6 +98,10 @@
     #define POP_GCC_WARNINGS()                       /* (do nothing) */
   #endif
 
+  /* I am tired of BOGUS warnings about = {0} struct initialization! */
+  DISABLE_GCC_WARNING( "-Wmissing-field-initializers" )
+  DISABLE_GCC_WARNING( "-Wmissing-braces" )
+
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
   /*-----------------------------------------------------------------*/
