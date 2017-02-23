@@ -205,7 +205,11 @@
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+static const BYTE   eighthex00[]    = {0x00,0x00,0x00,0x00,
+                                       0x00,0x00,0x00,0x00};
+
+static const BYTE   eighthexFF[]    = {0xff,0xff,0xff,0xff,
+                                       0xff,0xff,0xff,0xff};
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -813,7 +817,7 @@ int ckd_trklen (DEVBLK *dev, BYTE *buf)
 int             sz;                     /* Size so far               */
 
     for (sz = CKDDASD_TRKHDR_SIZE;
-         memcmp (buf + sz, &eighthexFF, 8) != 0; )
+         memcmp (buf + sz, eighthexFF, 8) != 0; )
     {
         /* add length of count, key, and data fields */
         sz += CKDDASD_RECHDR_SIZE +
@@ -1924,7 +1928,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
     if (rc < 0) return -1;
 
     /* Return total count key and data size */
@@ -2002,7 +2006,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
     if (rc < 0) return -1;
 
     /* Set the device orientation fields */
@@ -3124,14 +3128,54 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         case 0x18: /* Prepare for Read Subsystem Data */
 
-            /* Command reject if bytes 1-5 not zero */
-            /* except when suborder is Query Host Access */
-            /* when only bytes 1-3 should be zero */
-            if (iobuf[6] == 0x1C)
-                j = 3;
-            else
-                j = 5;
-            if (memcmp(&iobuf[1], "\x00\x00\x00\x00\x00", j) != 0)
+            // Reject invalid parameter bytes...
+
+            if (0
+                //---------------------------------------------------
+                //  Flag byte must be zero
+                //---------------------------------------------------
+                || iobuf[1]
+
+                //---------------------------------------------------
+                //  If byte 6 == 01 then byte 7 can only be 00 or FF.
+                //  For any other byte 6 value, byte 7 must be 00.
+                //---------------------------------------------------
+
+                || (iobuf[6] == 0x01 && (iobuf[7] != 0x00 && iobuf[7] != 0xff))
+                || (iobuf[6] != 0x01 && (iobuf[7] != 0x00))
+
+                //---------------------------------------------------
+                //  If byte 6 == 00, 02, 04, or 06-FF, then
+                //  bytes 8-11 are reserved and must be zero.
+                //---------------------------------------------------
+                || ((0
+                     || iobuf[6] == 0x00
+                     || iobuf[6] == 0x02
+                     || iobuf[6] == 0x04
+                     || iobuf[6] >= 0x06    // (06 through FF)
+                    )
+                    && mem_ne( &iobuf[8], eighthex00, 4 )
+                   )
+
+                //---------------------------------------------------
+                //  If byte 6 == 01, then byte 8 must be 00 or 01
+                //  and bytes 9-11 are reserved and must be zero.
+                //---------------------------------------------------
+                || (1
+                    && iobuf[6] == 0x01
+                    && (0
+                        || (iobuf[8] != 0x00 && iobuf[8] != 0x01)
+                        || mem_ne( &iobuf[9], eighthex00, 3 )
+                       )
+                   )
+
+                //---------------------------------------------------
+                //  If byte 6 == 1C, bytes 2-3 must be zero.
+                //  Otherwise bytes 2-5 must always be zero.
+                //---------------------------------------------------
+                || (iobuf[6] == 0x1C && mem_ne( &iobuf[2], eighthex00, 2 ))
+                || (iobuf[6] != 0x1C && mem_ne( &iobuf[2], eighthex00, 4 ))
+            )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_4);
@@ -3206,14 +3250,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 dev->ckdssdlen = 512;
                 break;
 
-            case 0x41: /* Feature codes */
-                /* Prepare feature codes record */
-                memset (iobuf, 0, 256);
-
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = 256;
-                break;
-
             case 0x1C: /* Query Host Access */
                 /*------------------------------------------------------*/
                 /* PROGRAMMING NOTE: 2017-02-14 Ian                     */
@@ -3264,6 +3300,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 iobuf[18] = 0x00;              /* Entry...              */
                 iobuf[19] = 0x01;              /* ...count = 1          */
 
+                break;
+
+            case 0x41: /* Feature codes */
+                /* Prepare feature codes record */
+                memset (iobuf, 0, 256);
+
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = 256;
                 break;
 
             default: /* Unknown suborder code */
