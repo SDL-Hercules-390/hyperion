@@ -563,7 +563,6 @@ DEF_INST(ecpsvm_lock_page)
     return;
 }
 
-
 /* Unlock Page common code (ULKPG/FCCWS) */
 /* effective_addr1 : PTR_PL -> +0 - Maxsize, +4 Coretable */
 /* effective_addr2 : Page address to be unlocked */
@@ -619,7 +618,6 @@ static int ecpsvm_unlockpage1(REGS *regs,VADR effective_addr1,VADR effective_add
     return(0);
 }
 
-
 /* E603 ULKPG Instruction */
 /* ULKPG D1(R1,B1),D2(R2,B2) */
 /* 1st operand : PTR_PL -> +0 - Maxsize, +4 Coretable */
@@ -636,7 +634,6 @@ DEF_INST(ecpsvm_unlock_page)
     BR14;
     return;
 }
-
 
 /* Core Function "DECCW1":  Decode First CCW.
    This function is used by assists E604 DNCCW, and E60C DFCCW.
@@ -771,7 +768,6 @@ BYTE prevccwop;
     return(0);
 }
 
-
 /* E604 DNCCW Instruction
    "Decode the next CCW"
 
@@ -818,7 +814,6 @@ VADR el;
     CPASSIST_HIT(DNCCW);
     return;
 }
-
 
 /* E605 FCCWS Instruction
    Free CCW Storage (DMKUNTFR)
@@ -1006,7 +1001,6 @@ BYTE B_IOBSPEC2;
     CPASSIST_HIT(FCCWS);
     return;
 }
-
 
 /* Common routine for SCNVU Function */
 int  ecpsvm_do_scnvu(REGS *regs,VADR effective_addr1,VADR effective_addr2, U32 vdev)
@@ -2510,7 +2504,6 @@ DEF_INST(ecpsvm_locate_rblock)
     CPASSIST_HIT(SCNRU);
 }
 
-
 /* E60F CCWGN Instruction
    CCWGN : "General CCW Processing"
 
@@ -2752,7 +2745,6 @@ BYTE B_VDEVTYPC;
     CPASSIST_HIT(CCWGN);
     return;
 }
-
 
 /* E610 UXCCW Instruction       */
 /* Untranslate CCW              */
@@ -3326,8 +3318,6 @@ int ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     return(0);
 }
 
-
-
 /* Common code for SVC assists */
 
 /* CP LINK (SVC 8 Supervisor state) */
@@ -3515,7 +3505,6 @@ int     ecpsvm_doassistsvc(REGS *regs,int svccode)
     return(0);
 }
 
-
 /* 0A - SVC Assist Main Entry */
 int     ecpsvm_dosvc(REGS *regs,int svccode)
 {
@@ -3546,7 +3535,6 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     }
     return ecpsvm_doassistsvc(regs,svccode);        /* problem state:  do VM assist for SVCs */
 }
-
 
 /* 82 - LPSW Instruction Assist */
 int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
@@ -3592,8 +3580,8 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     return(0);
 }
 
-/* the ecpsvm_virttmr_ext( ) function is not called or executed */
-/*
+/* The ecpsvm_virttmr_ext( ) function is not called or executed */
+#if 0 // please leave this code in place for reference
 int ecpsvm_virttmr_ext(REGS *regs)
 {
     char buf[256];
@@ -3625,9 +3613,7 @@ int ecpsvm_virttmr_ext(REGS *regs)
     DEBUG_SASSISTX(VTIMER,WRMSG(HHC90000, "D", "SASSIST VTIMER Please, do"));
     return(0);
 }
-*/
-
-
+#endif // please leave this code in place for reference
 
 /*****************************************/
 /* 9C00-9C01 SIO/SIOF Instruction Assist */
@@ -3667,15 +3653,13 @@ BYTE B_VDEVSTAT;
 BYTE B_VDEVFLG2;
 BYTE work;
 
-
-
     SASSIST_PROLOG(SIO);
     UNREFERENCED(b2);
 
     /* Reject if MICEVMA says not to do SIO sim */
     if(!(micevma & MICSIO))
     {
-        DEBUG_SASSISTX(SIO,WRMSG("HHC90000","D","SASSIST SIO reject : SIO disabled in MICEVMA"));
+        DEBUG_SASSISTX( SIO, WRMSG( HHC90000, "D", "SASSIST SIO reject : SIO disabled in MICEVMA" ));
         return(1);
     }
     /* From this point forward, we are rather committed as we need to change the machine state.
@@ -4252,7 +4236,7 @@ static void ecpsvm_showstats2( ECPSVM_STAT *ar, size_t count )
 
             // "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
             WRMSG( HHC01701, "I", nname, ar[i].call, ar[i].hit,
-                    ar[i].call ? (ar[i].hit * 100ULL) / ar[i].call : 0ULL );
+                    ar[i].call ? (ar[i].hit * 100) / ar[i].call : 0 );
         }
         else
             notshown++;
@@ -4265,7 +4249,7 @@ static void ecpsvm_showstats2( ECPSVM_STAT *ar, size_t count )
     }
     // "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
     WRMSG( HHC01701, "I", "Total", callt, hitt,
-            callt ? (hitt * 100ULL) / callt : 0ULL );
+            callt ? (hitt * 100) / callt : 0 );
     // "+-----------+------------+------------+-------+"
     WRMSG( HHC01702, "I" );
 
