@@ -4214,120 +4214,121 @@ int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 
 /* Misc functions for statistics */
 
-static int ecpsvm_sortstats(const void *a,const void *b)
+static int ecpsvm_sortstats( const void *a, const void *b )
 {
-    ECPSVM_STAT *ea,*eb;
-    ea=(ECPSVM_STAT *)a;
-    eb=(ECPSVM_STAT *)b;
-    return(eb->call-ea->call);
+    ECPSVM_STAT *ea, *eb;
+
+    ea = (ECPSVM_STAT*) a;
+    eb = (ECPSVM_STAT*) b;
+
+    return (int) (eb->call - ea->call);
 }
 
-static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
+static void ecpsvm_showstats2( ECPSVM_STAT *ar, size_t count )
 {
     char nname[32];
-    int  havedisp=0;
-    int  notshown=0;
-    size_t unsupcc=0;
-    int haveunsup=0;
-    int callt=0;
-    int hitt=0;
+    U64  callt    = 0;
+    U64  hitt     = 0;
+    U64  unsupcc  = 0;
+    U64  notshown = 0;
+
     size_t i;
-    for(i=0;i<count;i++)
+
+    for (i=0; i < count; i++)
     {
-        if(ar[i].call)
+        if (ar[i].call)
         {
-            callt+=ar[i].call;
-            hitt+=ar[i].hit;
-            if(!ar[i].support)
-            {
-                unsupcc+=ar[i].call;
-                haveunsup++;
-            }
-            havedisp=1;
-            snprintf(nname,sizeof(nname),"%s%s",ar[i].name,ar[i].support ? "" : "*");
-            nname[sizeof(nname)-1] = '\0';
-            if(!ar[i].enabled)
-            {
-                strlcat(nname,"-",sizeof(nname));
-            }
-            if(ar[i].debug)
-            {
-                strlcat(nname,"%",sizeof(nname));
-            }
-            if(ar[i].total)
-            {
-                strlcat(nname,"+",sizeof(nname));
-            }
-            WRMSG(HHC01701,"I",
-                    nname,
-                    ar[i].call,
-                    ar[i].hit,
-                    ar[i].call ?
-                            (ar[i].hit*100LL)/ar[i].call :
-                            100);
+            callt += ar[i].call;
+            hitt  += ar[i].hit;
+
+            if (!ar[i].support)
+                unsupcc += ar[i].call;
+
+            MSGBUF( nname, "%s%s", ar[i].name, ar[i].support ? "" : "*" );
+
+            if (!ar[i].enabled) strlcat( nname, "-", sizeof( nname ));
+            if ( ar[i].debug)   strlcat( nname, "%", sizeof( nname ));
+            if ( ar[i].total)   strlcat( nname, "+", sizeof( nname ));
+
+            // "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
+            WRMSG( HHC01701, "I", nname, ar[i].call, ar[i].hit,
+                    ar[i].call ? (ar[i].hit * 100ULL) / ar[i].call : 0ULL );
         }
         else
-        {
             notshown++;
-        }
     }
-    if(havedisp)
+
+    if (callt)
     {
-        WRMSG(HHC01702,"I");
+        // "+-----------+------------+------------+-------+"
+        WRMSG( HHC01702, "I" );
     }
-    // "| %-9s | %8d | %8d |  %3d%% |"
-    WRMSG(HHC01701,"I",
-            "Total",
-            callt,
-            hitt,
-            callt ? (hitt*100)/callt
-                  : 0 );
-    WRMSG(HHC01702,"I");
-    if(haveunsup)
+    // "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
+    WRMSG( HHC01701, "I", "Total", callt, hitt,
+            callt ? (hitt * 100ULL) / callt : 0ULL );
+    // "+-----------+------------+------------+-------+"
+    WRMSG( HHC01702, "I" );
+
+    if (unsupcc)
     {
-        WRMSG(HHC01703,"I");
+        // "* : Unsupported, - : Disabled, %% - Debug"
+        WRMSG( HHC01703, "I" );
     }
-    if(notshown)
+    if (notshown)
     {
-        WRMSG(HHC01704,"I",notshown);
+        // "%"PRIu64" entries not shown and never invoked"
+        WRMSG( HHC01704, "I", notshown );
     }
-    if(unsupcc)
+    if (unsupcc)
     {
-        WRMSG(HHC01705,"I",(int)unsupcc);
+        // "%"PRIu64" call(s) were made to unsupported functions"
+        WRMSG( HHC01705, "I", unsupcc );
     }
     return;
 }
 
 /* SHOW STATS */
-void ecpsvm_showstats(int ac,char **av)
+void ecpsvm_showstats( int ac, char **av )
 {
     size_t      asize;
     ECPSVM_STAT *ar;
 
-    UNREFERENCED(ac);
-    UNREFERENCED(av);
-    if(sysblk.ecpsvm.freetrap)
+    UNREFERENCED( ac );
+    UNREFERENCED( av );
+
+    if (sysblk.ecpsvm.freetrap)
     {
-        WRMSG(HHC01724,"I");        /* CP FREE/FRET trap in effect */
+        // "ECPS:VM Operating with CP FREE/FRET trap in effect"
+        WRMSG( HHC01724, "I" );
     }
+
+    // "+-----------+------------+------------+-------+"
+    WRMSG( HHC01702, "I" );
+    // "| %-9s | %10s | %10s | %-5s |"
+    WRMSG( HHC01706, "I", "VM ASSIST", "Calls  ", "Hits  ", "Ratio" );
+    // "+-----------+------------+------------+-------+"
     WRMSG(HHC01702,"I");
-    WRMSG(HHC01706,"I","VM ASSIST","Calls","Hits","Ratio");
-    WRMSG(HHC01702,"I");
-    ar=malloc(sizeof(ecpsvm_sastats));
-    memcpy(ar,&ecpsvm_sastats,sizeof(ecpsvm_sastats));
-    asize=sizeof(ecpsvm_sastats)/sizeof(ECPSVM_STAT);
-    qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
-    ecpsvm_showstats2(ar,asize);
-    free(ar);
-    WRMSG(HHC01702,"I");
-    WRMSG(HHC01706,"I","CP ASSIST","Calls","Hits","Ratio");
-    WRMSG(HHC01702,"I");
-    ar=malloc(sizeof(ecpsvm_cpstats));
-    memcpy(ar,&ecpsvm_cpstats,sizeof(ecpsvm_cpstats));
-    asize=sizeof(ecpsvm_cpstats)/sizeof(ECPSVM_STAT);
-    qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
-    ecpsvm_showstats2(ar,asize);
-    free(ar);
+
+    ar = malloc( sizeof( ecpsvm_sastats ));
+    memcpy( ar, &ecpsvm_sastats, sizeof( ecpsvm_sastats ));
+    asize = sizeof( ecpsvm_sastats ) / sizeof( ECPSVM_STAT );
+    qsort( ar, asize, sizeof( ECPSVM_STAT ), ecpsvm_sortstats );
+    ecpsvm_showstats2( ar, asize );
+    free( ar );
+
+    // "+-----------+------------+------------+-------+"
+    WRMSG( HHC01702, "I" );
+    // "| %-9s | %10s | %10s | %-5s |"
+    WRMSG( HHC01706, "I", "CP ASSIST", "Calls  ", "Hits  ", "Ratio" );
+    // "+-----------+------------+------------+-------+"
+    WRMSG( HHC01702, "I" );
+
+    ar = malloc( sizeof( ecpsvm_cpstats ));
+    memcpy( ar, &ecpsvm_cpstats, sizeof( ecpsvm_cpstats ));
+    asize = sizeof( ecpsvm_cpstats ) / sizeof( ECPSVM_STAT );
+    qsort( ar, asize, sizeof( ECPSVM_STAT ), ecpsvm_sortstats );
+    ecpsvm_showstats2( ar, asize );
+    free( ar );
 }
 
 ECPSVM_STAT *ecpsvm_findstat(char *feature,char **fclass)

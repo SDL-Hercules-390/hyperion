@@ -1080,12 +1080,12 @@ Examples:
 /* ecpsvm.c */
 // reserve 017xx for ecps:vm support
 #define HHC01700 "Abend condition detected in DISP2 instruction"
-#define HHC01701 "| %-9s | %8d | %8d |  %3d%% |"
-#define HHC01702 "+-----------+----------+----------+-------+"
+#define HHC01701 "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
+#define HHC01702 "+-----------+------------+------------+-------+"
 #define HHC01703 "* : Unsupported, - : Disabled, %% - Debug"
-#define HHC01704 "%d entry/entries not shown and never invoked"
-#define HHC01705 "%d call(s), was/where made to unsupported functions"
-#define HHC01706 "| %-9s | %-8s | %-8s | %-5s |"
+#define HHC01704 "%"PRIu64" entries not shown and never invoked"
+#define HHC01705 "%"PRIu64" call(s) were made to unsupported functions"
+#define HHC01706 "| %-9s | %10s | %10s | %-5s |"
 #define HHC01707 "ECPS:VM %s feature %s%s%s"
 #define HHC01708 "All ECPS:VM %s features %s%s"
 #define HHC01709 "ECPS:VM global debug %s"

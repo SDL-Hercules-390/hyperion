@@ -505,8 +505,8 @@ typedef struct _ECPSVM_MICBLOK
 typedef struct _ECPSVM_STAT
 {
     char *name;
-    U32   call;
-    U32   hit;
+    U64   call;
+    U64   hit;
     u_int support:1;
     u_int enabled:1;
     u_int debug:1;
