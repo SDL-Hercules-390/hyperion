@@ -311,23 +311,6 @@ static const char* sig2str( BYTE sig ) {
     return buf;
 }
 
-/*-------------------------------------------------------------------*/
-/* STORCHK macro: check storage access & update ref & change bits.   */
-/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
-/* Storage key ref & change bits are only updated if successful.     */
-/*-------------------------------------------------------------------*/
-#define STORCHK(_addr,_len,_key,_acc,_dev) \
-  (((((_addr) + (_len)) > (_dev)->mainlim) \
-    || (((_dev)->orb.flag5 & ORB5_A) \
-      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
-        && ((_addr) < sysblk.addrlimval)) \
-      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH) \
-        && (((_addr) + (_len)) > sysblk.addrlimval)) ) )) ? CSW_PROGC : \
-   ((_key) && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_KEY) != (_key)) \
-&& ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
-  ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
-    ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
-
 
 /*-------------------------------------------------------------------*/
 /* Register local MAC address                                        */
@@ -1505,7 +1488,7 @@ typedef short QRC;              /* Internal function return code     */
 
 #define QRC_SUCCESS      0      /* Successful completion             */
 #define QRC_EIOERR      -1      /* Device i/o error reading/writing  */
-#define QRC_ESTORCHK    -2      /* STORCHK failure (Prot Key Chk)    */
+#define QRC_ESTORCHK    -2      /* QDIO_STORCHK failure (Key Chk)    */
 #define QRC_ENOSPC      -3      /* Out of Storage Blocks             */
 #define QRC_EPKEOF      -4      /* EOF while looking for packets     */
 #define QRC_EPKTYP      -5      /* Unsupported output packet type    */
@@ -1779,7 +1762,7 @@ static QRC copy_fragment_to_storage( DEVBLK* dev, QDIO_SBAL *sbal,
             FETCH_FW( *sbrem, sbal->sbale[*sb].length );
             if (!*sbrem)
                 return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
-            if (STORCHK(sba,(*sbrem)-1,sbalk,STORKEY_CHANGE,dev))
+            if (QDIO_STORCHK(sba,(*sbrem)-1,sbalk,STORKEY_CHANGE,dev,DBGTRC))
                 return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
             *sbrem -= *sboff;
 
@@ -1861,7 +1844,7 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
             FETCH_FW( sblen, sbal->sbale[*sb].length );
             if (!sblen)
                 return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,*sb);
-            if (STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev))
+            if (QDIO_STORCHK( sba, sblen-1, sbalk, STORKEY_CHANGE, dev,DBGTRC))
                 return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,*sb);
 
             /* Point to new data source */
@@ -2121,7 +2104,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         FETCH_FW( sblen, sbal->sbale[sb].length );
         if (!sblen)
             return SBALE_ERROR( QRC_EZEROBLK, dev,sbal,sbalk,sb);
-        if (STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev ))
+        if (QDIO_STORCHK( sba, sblen-1, sbalk, STORKEY_REF, dev, DBGTRC ))
             return SBALE_ERROR( QRC_ESTORCHK, dev,sbal,sbalk,sb);
 
         /* Get pointer to OSA header */
@@ -2243,9 +2226,9 @@ int did_read = 0;                       /* Indicates some data read  */
                     FETCH_DW( sbala, sl->sbala[bn] );
 
                     /* Verify Storage Block Address List is accessible */
-                    if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
+                    if(QDIO_STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev, DBGTRC ))
                     {
-                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
+                        DBGTRC(dev, "QDIO_STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
                         qrc = QRC_ESTORCHK;
                     }
                     else
@@ -2372,9 +2355,9 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                     FETCH_DW( sbala, sl->sbala[bn] );
 
                     /* Verify Storage Block Address List is accessible */
-                    if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
+                    if(QDIO_STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev, DBGTRC ))
                     {
-                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
+                        DBGTRC(dev, "QDIO_STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
                         qrc = QRC_ESTORCHK;
                     }
                     else
@@ -3076,26 +3059,28 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
 /*-------------------------------------------------------------------*/
 static int qeth_set_sci ( DEVBLK *dev, void *desc )
 {
-CHSC_REQ21 *req21 = (void *)desc;
-RADR alsi, dsci;
-BYTE ks, kc;
-U16 opc;
+CHSC_REQ21*  req21 = (void*) desc;
+RADR         alsi,  dsci;
+BYTE         ks, kc;
+U16          opc;
 
-    FETCH_HW(opc,req21->opcode);
+    FETCH_HW( opc, req21->opcode );
 
-    if(opc)
+    if (opc)
         return 3; // Invalid operation code
 
-    FETCH_DW(alsi, req21->alsi);
+    FETCH_DW( alsi, req21->alsi );
     ks = req21->sk & CHSC_REQ21_KS;
 
-    FETCH_DW(dsci, req21->dsci);
+    FETCH_DW( dsci, req21->dsci );
     kc = (req21->sk & CHSC_REQ21_KC) << 4;
 
-    if(alsi && dsci)
+    if (alsi && dsci)
     {
-        if(STORCHK(alsi,0,ks,STORKEY_CHANGE,dev)
-          || STORCHK(dsci,0,kc,STORKEY_CHANGE,dev))
+        if (0
+            || QDIO_STORCHK( alsi, 0, ks, STORKEY_CHANGE, dev, DBGTRC )
+            || QDIO_STORCHK( dsci, 0, kc, STORKEY_CHANGE, dev, DBGTRC )
+        )
         {
             dev->qdio.thinint = 0;
             return 3;
@@ -3108,17 +3093,17 @@ U16 opc;
         dev->qdio.thinint = 0;
 
 #if 0
-    dev->pmcw.flag4 &= ~PMCW4_ISC;
-    dev->pmcw.flag4 |= (req21->isc & CHSC_REQ21_ISC_MASK) << 3;
+    dev->pmcw.flag4  &= ~PMCW4_ISC;
+    dev->pmcw.flag4  |= (req21->isc & CHSC_REQ21_ISC_MASK) << 3;
     dev->pmcw.flag25 &= ~PMCW25_VISC;
     dev->pmcw.flag25 |= (req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
 #endif
 
     dev->qdio.alsi = alsi;
-    dev->qdio.ks = ks;
+    dev->qdio.ks   = ks;
 
     dev->qdio.dsci = dsci;
-    dev->qdio.kc = kc;
+    dev->qdio.kc   = kc;
 
     return 0;
 }
@@ -3654,7 +3639,7 @@ U32 num;                                /* Number of bytes to move   */
         FETCH_DW(dev->qdio.qiba,qdr->qiba);
         dev->qdio.qibk = qdr->qkey & 0xF0;
 
-        if(!(accerr = STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev)))
+        if(!(accerr = QDIO_STORCHK(dev->qdio.qiba,sizeof(QDIO_QIB)-1,dev->qdio.qibk,STORKEY_CHANGE,dev,DBGTRC)))
         {
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
@@ -3666,36 +3651,38 @@ U32 num;                                /* Number of bytes to move   */
 
         qdes = qdr->qdf0;
 
-        for(i = 0; i < dev->qdio.i_qcnt; i++)
+        for (i=0; i < dev->qdio.i_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.i_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.i_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.i_slsbla[i],qdes->slsba);
-            dev->qdio.i_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.i_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.i_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.i_slsbla[i], qdes->slsba );
+
+            dev->qdio.i_slibk[i]  =  qdes->keyp1 & 0xF0;
+            dev->qdio.i_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.i_sbalk[i]  =  qdes->keyp2 & 0xF0;
             dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(QDIO_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
+            accerr |= QDIO_STORCHK( dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1, dev->qdio.i_slsblk[i], STORKEY_CHANGE, dev, DBGTRC );
+            accerr |= QDIO_STORCHK( dev->qdio.i_sla[i],   sizeof(QDIO_SL)-1,   dev->qdio.i_slk[i],    STORKEY_REF,    dev, DBGTRC );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*) qdes+( qdr->iqdsz << 2 ));
         }
 
-        for(i = 0; i < dev->qdio.o_qcnt; i++)
+        for (i=0; i < dev->qdio.o_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.o_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.o_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.o_slsbla[i],qdes->slsba);
-            dev->qdio.o_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.o_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.o_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.o_slsbla[i], qdes->slsba );
+
+            dev->qdio.o_slibk[i]  =  qdes->keyp1 & 0xF0;
+            dev->qdio.o_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.o_sbalk[i]  =  qdes->keyp2 & 0xF0;
             dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(QDIO_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
+            accerr |= QDIO_STORCHK( dev->qdio.o_slsbla[i], sizeof(QDIO_SLSB)-1, dev->qdio.o_slsblk[i], STORKEY_CHANGE, dev, DBGTRC );
+            accerr |= QDIO_STORCHK( dev->qdio.o_sla[i],    sizeof(QDIO_SL)-1,   dev->qdio.o_slk[i],    STORKEY_REF,    dev, DBGTRC );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*) qdes+( qdr->oqdsz << 2 ));
         }
 
         /* Initialize All Queues */

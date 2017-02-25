@@ -2,26 +2,22 @@
 /*              (C) Copyright Harold Grovesteen, 2011                */
 /*              Queued Direct Input Output                           */
 /*                                                                   */
-
 /*      This module contains the Signal Adapter instruction          */
 /*      and QEBSM EQBS and SQBS instructions                         */
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_QDIO_C_)
+#ifndef _QDIO_C_
 #define _QDIO_C_
 #endif
 
+#ifndef _HENGINE_DLL_
+#define _HENGINE_DLL_
+#endif
+
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "qdio.h"
-
 #include "inline.h"
 
 #undef PTIO
@@ -42,7 +38,6 @@ DEVBLK *dev;                            /* -> device block           */
     S(inst, regs, b2, effective_addr2);
 
 //  ARCH_DEP(display_inst) (regs, inst);
-
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -106,7 +101,6 @@ DEVBLK *dev;                            /* -> device block           */
                          & ~(FACILITY_ENABLED(QEBSM,regs) ? SIGA_TOKEN : 0)
 #endif /*defined(FEATURE_QEBSM)*/
                          ) {
-
     case SIGA_FC_R:
         if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
@@ -161,7 +155,6 @@ DEVBLK *dev;                            /* -> device block           */
     }
 
     release_lock (&dev->lock);
-
 }
 
 
@@ -188,10 +181,8 @@ U64     slsba;                 /* Storage list state block address   */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    FACILITY_CHECK(QEBSM, regs);
-
 //  ARCH_DEP(display_inst) (regs, inst);
-
+    FACILITY_CHECK(QEBSM, regs);
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -256,12 +247,9 @@ U64     slsba;                 /* Storage list state block address   */
             nextstate = ARCH_DEP(wfetchb)((VADR)(slsba+bidx), USE_REAL_ADDR, regs);
     }
 
-
     regs->GR_L(r1) = bidx;              /* Return buffer state index */
     regs->GR_L(r3) = count;    /* Return number of unchanged buffers */
     regs->psw.cc = count ? 1 : 0;
-
-    return;
 }
 
 
@@ -286,10 +274,8 @@ U64     slsba;                /* Storage list state block address    */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    FACILITY_CHECK(QEBSM, regs);
-
 //  ARCH_DEP(display_inst) (regs, inst);
-
+    FACILITY_CHECK(QEBSM, regs);
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -352,14 +338,12 @@ U64     slsba;                /* Storage list state block address    */
                     ARCH_DEP(wstoreb)
                         (SLSBE_INPUT_ACKED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
                     break;
-
 #if 0
                 case SLSBE_OUTPUT_COMPLETED:
                     ARCH_DEP(wstoreb)
                         (SLSBE_OUTPUT_PRIMED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
                     break;
 #endif
-
             }
 
         bidx++; bidx &= 0x7F;              /* Advance and wrap index */
@@ -373,9 +357,6 @@ U64     slsba;                /* Storage list state block address    */
     regs->GR_LHLCL(r2) = state;
     regs->GR_L(r3) = count;
     regs->psw.cc = count ? 1 : 0;
-
-    return;
-
 }
 #endif /*defined(FEATURE_QEBSM)*/
 
@@ -390,13 +371,9 @@ int     r1, unused;            /* Register numbers                   */
     RRE0(inst, regs, r1, unused);
 
 //  ARCH_DEP(display_inst) (regs, inst);
-
     FACILITY_CHECK(SVS, regs);
-
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     ODD_CHECK(r1, regs);
 
     switch(regs->GR_L(1)) {
@@ -426,5 +403,124 @@ int     r1, unused;            /* Register numbers                   */
  #define  _GEN_ARCH _ARCHMODE3
  #include "qdio.c"
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Dummy debug trace callback function in case NULL is passed        */
+/*-------------------------------------------------------------------*/
+static inline void qdio_notrace( DEVBLK* dev, char* fmt, ... )
+{
+    UNREFERENCED( dev );
+    UNREFERENCED( fmt );
+}
+
+/*-------------------------------------------------------------------*/
+/*                   qdio_storage_access_check                       */
+/*-------------------------------------------------------------------*/
+/* Check storage access. Returns 0 if successful or CSW_PROGC or     */
+/* CSW_PROTC if error. NOTE: only storage access is checked. The     */
+/* caller should update the storage key as appropriate upon return.  */
+/*-------------------------------------------------------------------*/
+static inline int qdio_storage_access_check
+(
+    U64      addr,              /* Storage address being accessed    */
+    size_t   len,               /* Length of storage being accessed  */
+    int      key,               /* Storage access key                */
+    int      acc,               /* Access type (STORKEY_REF/_CHANGE) */
+    DEVBLK*  dev,               /* Pointer to device block           */
+    QDIOTRC* dbg                /* Optional debug trace callback     */
+)
+{
+    if (!dbg)
+         dbg = qdio_notrace;
+
+    if ((addr + len) > dev->mainlim)
+    {
+        dbg( dev, "Address %"PRIx64" + %"PRIx64
+                  " beyond end of storage\n", addr, (U64) len );
+        return CSW_PROGC;                           /* Beyond EOS    */
+    }
+
+    if (dev->orb.flag5 & ORB5_A)                    /* Check limits? */
+    {
+        if (dev->pmcw.flag5 & PMCW5_LM_LOW)         /* Lower limit?  */
+        {
+            if (addr < sysblk.addrlimval)           /* Below limit?  */
+            {
+                dbg( dev, "Address %"PRIx64
+                          " below limit of %"PRIx64"\n",
+                     addr, sysblk.addrlimval );
+                return CSW_PROGC;
+            }
+        }
+
+        if (dev->pmcw.flag5 & PMCW5_LM_HIGH)        /* Upper limit?  */
+        {
+            if ((addr + len) > sysblk.addrlimval)   /* Above limit?  */
+            {
+                dbg( dev, "Address %"PRIx64" + %"PRIx64
+                          " above limit of %"PRIx64"\n",
+                     addr, (U64) len, sysblk.addrlimval );
+                return CSW_PROGC;
+            }
+        }
+    }
+
+    /* Key 0 is allowed to access all of storage in any manner. */
+    if (key == 0)
+        return 0;
+
+    /* This may not be described anywhere and could be wrong, but
+       apparently z/VM TC/IP expects Key 14 to allow access to all
+       of storage, including storage frames with key 0.
+    */
+    if ((key & STORKEY_KEY) == 0xE0)    /* Key 14 special case? */
+        return 0;
+
+    /* If storage keys match then access to storage is allowed. */
+    if (key == (STORAGE_KEY( addr,dev ) & STORKEY_KEY))
+        return 0;
+
+    /* Check for attempt to fetch protected storage. */
+    if ((acc & STORKEY_REF) && (STORAGE_KEY( addr, dev ) & STORKEY_FETCH))
+    {
+        dbg( dev, "Fetch protected: key: %x, storkey: %x, acc: %x\n",
+             key, STORAGE_KEY( addr, dev ), acc );
+        return CSW_PROTC;
+    }
+
+    /* Check for attempt to modify protected storage. */
+    if (acc & STORKEY_CHANGE)
+    {
+        dbg( dev, "Key mismatch: key: %x, storkey: %x, acc: %x\n",
+             key, STORAGE_KEY( addr, dev ), acc );
+        return CSW_PROTC;
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*             qdio_storage_access_check_and_update                  */
+/*-------------------------------------------------------------------*/
+/* Check storage access and update reference and change bits.        */
+/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
+/* Storage key ref & change bits are only updated if successful.     */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int qdio_storage_access_check_and_update
+(
+    U64      addr,              /* Storage address being accessed    */
+    size_t   len,               /* Length of storage being accessed  */
+    int      key,               /* Storage access key                */
+    int      acc,               /* Access type (STORKEY_REF/_CHANGE) */
+    DEVBLK*  dev,               /* Pointer to device block           */
+    QDIOTRC* dbg                /* Optional debug trace callback     */
+)
+{
+    int  rc;
+    if ((rc = qdio_storage_access_check( addr, len, key, acc, dev, dbg )) == 0)
+        STORAGE_KEY( addr, dev ) |= (acc & (STORKEY_REF | STORKEY_CHANGE));
+    return rc;
+}
 
 #endif /*!defined(_GEN_ARCH)*/
