@@ -18,7 +18,7 @@ any of the external packages yourself. Just build Hercules and you're done.
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
 hosts the package's static library (along with a few accompanying files) in
-a separate "external package subdirectory". All of the package's source code
+a separate external package subdirectory). All of the package's source code
 is kept in its own separate source code repository.  The Hercules repository
 no longer contains any source code for these external packages; only their
 static link libraries and whatever header files may be needed to call into
