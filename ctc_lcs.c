@@ -2616,9 +2616,13 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         case 'm':
 
-            if( ParseMAC( optarg, mac ) != 0 )
+            if (0
+                || ParseMAC( optarg, mac ) != 0 // (invalid format)
+                || !(mac[0] & 0x02)             // (locally assigned MAC bit not ON)
+                ||  (mac[0] & 0x01)             // (broadcast bit is ON)
+            )
             {
-                // "%1d:%04X CTC: option %s value %s invalid"
+                // "%1d:%04X %s: Option %s value %s invalid"
                 WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                        "MAC address", optarg );
                 return -1;
@@ -2880,7 +2884,11 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             pLCSPORT = &pLCSBLK->Port[sPort];
 
-            if( ParseMAC( argv[0], pLCSPORT->MAC_Address ) != 0 )
+            if (0
+                || ParseMAC( argv[0], pLCSPORT->MAC_Address ) != 0
+                || !(pLCSPORT->MAC_Address[0] & 0x02)
+                ||  (pLCSPORT->MAC_Address[0] & 0x01)
+            )
             {
                 // "CTC: invalid %s %s in statement %s in file %s: %s"
                 WRMSG( HHC00955, "E", "MAC", argv[0], "HWADD", pszOATName, szBuff );

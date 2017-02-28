@@ -2799,10 +2799,14 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
 #if defined(OPTION_W32_CTCI)
         case 'm':
-            if (ParseMAC( optarg, mac ) != 0 ||
-                strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
+            if (0
+                || strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1
+                || ParseMAC( optarg, mac ) != 0 // (invalid format)
+                || !(mac[0] & 0x02)             // (locally assigned MAC bit not ON)
+                ||  (mac[0] & 0x01)             // (broadcast bit is ON)
+            )
             {
-                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                // "%1d:%04X %s: Option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "MAC address", optarg );
                 return -1;

@@ -1332,7 +1332,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
-                // "%1d:%04X CTC: option '%s' value '%s' invalid"
+                // "%1d:%04X %s: option '%s' value '%s' invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "dll i/o buffer size", optarg );
                 return -1;
@@ -1342,9 +1342,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'm':
-            if( ParseMAC( optarg, mac ) != 0 )
+            if (0
+                || ParseMAC( optarg, mac ) != 0 // (invalid format)
+                || !(mac[0] & 0x02)             // (locally assigned MAC bit not ON)
+                ||  (mac[0] & 0x01)             // (broadcast bit is ON)
+            )
             {
-                // "%1d:%04X CTC: option '%s' value '%s' invalid"
+                // "%1d:%04X %s: Option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "MAC address", optarg );
                 return -1;

@@ -3264,15 +3264,16 @@ a real System/390.  The configuration file is an ASCII text file.
                 <dd><p>
                     where <code><em>'MAC address'</em></code> is the optional hardware address
                     for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
-                    The default value is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
+                    The default value is '02:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
                     is constructed from the last 3 octets of the specified
                     <code><i>guestip</i></code>.
                     <p>
                     <i>
-                    Note: The MAC address you specify for this option must be unique
-                    as seen by all other devices on your network. It should never,
-                    for example, be the same as the host adapter MAC address specified
-                    on the <code><em>-n</em></code> parameter.
+                    <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
+                    assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
+                    on in the first byte, and MUST be unique as seen by all other devices on
+                    your network segment. It should never, for example, be the same as the host
+                    adapter MAC address specified on the <code><em>-n</em></code> parameter.
                     </i>
                     <p>
 
@@ -3548,15 +3549,16 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
             where <code><em>'MAC address'</em></code> is the optional hardware address
             for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
-            The default value is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
+            The default value is '02:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
             is constructed from the last 3 octets of the specified
             <code><i>guestip</i></code>.
             <p>
             <i>
-            Note: The MAC address you specify for this option must be unique
-            as seen by all other devices on your network. It should never,
-            for example, be the same as the host adapter MAC address specified
-            on the <code><em>-n</em></code> parameter.
+            <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
+            assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
+            on in the first byte, and MUST be unique as seen by all other devices on
+            your network segment. It should never, for example, be the same as the host
+            adapter MAC address specified on the <code><em>-n</em></code> parameter.
             </i>
             <p>
             Note: If you use the <code>--oat</code> option, do not specify an address
@@ -3673,6 +3675,18 @@ ROUTE  00  172.21.3.32  255.255.255.224
                         virtual adapter (port). The first parameter after HWADD
                         specifies the relative adapter (port) to which the address
                         is applied.
+
+                        <p>
+
+                        <i>
+                        <b>Note:</b> The MAC address you specify for this option MUST have
+                        the 02 locally assigned MAC bit on in the first byte, must
+                        NOT have the 01 broadcast bit on in the first byte, and MUST
+                        be unique as seen by all other devices on your network segment.
+                        It should never, for example, be the same as the host adapter
+                        MAC address specified on the <code><em>-n</em></code> parameter,
+                        nor the same as the HWADD defined for any other port.
+                        </i>
 
                         <p>
 
@@ -3835,14 +3849,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd><p>
                     where <em>'MAC address'</em> is the optional hardware address for
                     the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
-                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
+                    is '02:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
                     from the last 3 octets of the specified <code><i>guestip</i></code>.
                     <p>
                     <i>
-                    Note: The MAC address you specify for this option must be unique
-                    as seen by all other devices on your network. It should never,
-                    for example, be the same as the host adapter MAC address specified
-                    on the <code><em>-n</em></code> parameter.
+                    <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
+                    assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
+                    on in the first byte, and MUST be unique as seen by all other devices on
+                    your network segment. It should never, for example, be the same as the host
+                    adapter MAC address specified on the <code><em>-n</em></code> parameter.
                     </i>
                     <p>
 
@@ -4012,10 +4027,11 @@ ROUTE  00  172.21.3.32  255.255.255.224
                     will be 02:00:5E:81:02:03.
                     <p>
                     <i>
-                    Note: The MAC address you specify for this option must be unique
-                    as seen by all other devices on your network. It should never,
-                    for example, be the same as the real host adapter's MAC address
-                    as identified by the <code><em>iface</em></code> parameter.
+                    <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
+                    assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
+                    on in the first byte, and MUST be unique as seen by all other devices on
+                    your network segment. It should never, for example, be the same as the host
+                    adapter MAC address specified on the <code><em>iface</em></code> parameter.
                     </i>
                     <p>
 
