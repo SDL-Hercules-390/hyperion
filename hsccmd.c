@@ -2650,7 +2650,6 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                      dev->devtype == 0x1731 )
                 {
                     grp = dev->group->grp_data;
-                    grp->debug = onoff;
                     grp->debugmask = mask;
                 }
             }
@@ -2679,8 +2678,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             for ( i=0; i < pDEVGRP->acount; i++ )
             {
                 grp = dev->group->grp_data;
-                grp->debug = onoff;
-                    grp->debugmask = mask;
+                grp->debugmask = mask;
             }
 
             {

@@ -25,6 +25,7 @@
 #define OSA_GROUP_SIZE          3     /* Devices per OSA Adapter     */
 #define OSA_PORTNO              0     /* OSA Port Number             */
 #define OSA_MAXMAC             32     /* Max supported MAC addresses */
+#define OSA_MAXIPV6            32     /* Max supported IPv6 addresses*/
 #define OSA_TIMEOUTUS       50000     /* Read select timeout (usecs) */
 
 #define QTOKEN1        0xD8C5E3F1     /* QETH token 1 (QET1 ebcdic)  */
@@ -120,6 +121,17 @@ typedef struct _OSA_MAC {
 
 
 /*-------------------------------------------------------------------*/
+/* OSA IPv6 address structure                                        */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IPV6 {
+        BYTE    addr[16];
+        int     type;
+#define IPV6_TYPE_NONE     0x00
+#define IPV6_TYPE_INUSE    0x01
+} OSA_IPV6;
+
+
+/*-------------------------------------------------------------------*/
 /* OSA Group Structure                                               */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_GRP {
@@ -148,16 +160,19 @@ typedef struct _OSA_GRP {
 
     char *ttchpid;              /* chpid                             */
 
-    BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */
-    BYTE  ipaddr6[16];          /* Network format IPv6 address       */
-    U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */
-    U32   hipaddr4;             /* Host format IPv4 address          */
+    BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */  /* Needed??? */
+/*  BYTE  ipaddr6[16]; */       /* Network format IPv6 address       */
+    U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */  /* Needed??? */
 
-    OSA_MAC mac[OSA_MAXMAC];    /* Locally recognised MAC addresses  */
+    U32   hipaddr4;             /* Locally recognised IPv4 address   */
+
+ OSA_IPV6 ipaddr6[OSA_MAXIPV6]; /* Locally recognised IPv6 addresses */
+
+  OSA_MAC mac[OSA_MAXMAC];      /* Locally recognised MAC addresses  */
+
     int   promisc;              /* Adapter is in promiscuous mode    */
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
-    u_int debug;                /* Debug mode                        */
     u_int debugmask;            /* Debug mask                        */
 #define DBGQETHPACKET   0x00000001  /* Packet                        */
                                     /* (i.e. the Ethernet frames     */
