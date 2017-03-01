@@ -5,94 +5,9 @@
 # --------------------------------------------------------------------------
 #
 #  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
-#  and attempt to determine the Visual Studio compiler version
+#  and determine target processor type.
 #
 # ***************************************************************************
-
-# Use environment variables to determine the Visual Studio compiler level
-
-#
-#       Add support for new Visual Studio versions here...
-#
-#       Don't forget to update the 'targetver.h' header too!
-#       Don't forget to update the 'makefile.bat' file also!
-
-vers_vs2015=14
-vers_vs2013=12
-vers_vs2012=11
-vers_vs2010=10
-vers_vs2008=9
-vers_vs2005=8
-
-#
-#       Add support for new Visual Studio versions here...
-#
-#       Don't forget to update the 'targetver.h' header too!
-#       Don't forget to update the 'makefile.bat' file also!
-
-!IFDEF VS140COMNTOOLS
-!MESSAGE Makefile presuming VS2015 Community Edition (VS14 = _MSC_VER 1900)
-vsversion=$(vers_vs2015)
-!ELSEIFDEF VS120COMNTOOLS
-!MESSAGE Makefile presuming  VS2013 Express (VS12 = _MSC_VER 1800)
-vsversion=$(vers_vs2013)
-!ELSEIFDEF VS110COMNTOOLS
-!MESSAGE Makefile presuming  VS2012 Express (VS11 = _MSC_VER 1700)
-vsversion=$(vers_vs2012)
-!ELSEIFDEF VS100COMNTOOLS
-!MESSAGE Makefile presuming  VS2010 Express (VS10 = _MSC_VER 1600)
-vsversion=$(vers_vs2010)
-!ELSEIFDEF VS90COMNTOOLS
-!MESSAGE Makefile presuming  VS2008 Express (VS9 = _MSC_VER 1500)
-vsversion=$(vers_vs2008)
-!ELSEIFDEF VS80COMNTOOLS
-!MESSAGE Makefile presuming  VS2005 Express (VS8 = _MSC_VER 1400)
-vsversion=$(vers_vs2005)
-!ELSE
-!ERROR This build requires at least Visual Studio 8 (VS2005 Express) or later
-!ENDIF
-
-###############################################################################
-#
-#                                TargetVer
-#
-#  The following defines determines the minimum Windows platform on which
-#  the application can run. Set APPVER and TARGETOS as needed and win32.mak
-#  will then define '_WIN32_WINNT' and other values accordingly.
-#
-#  Note that Hyperion NO LONGER SUPPORTS Win9x or any version of Windows NT
-#  less than or equal to 32-bit Windows XP, or any version of Visual Studio
-#  less than or equal to Visual Studio 2005.
-#
-#  The Hyperion minimum supported Windows platform is now Windows XP x64
-#  or Windows Server 2003 or greater, and Visual Studio 2008 (MSVC 9.0)
-#  or greater is required to build Hercules.
-#
-#  ALSO PLEASE NOTE that since neither Windows XP x64 nor Windows Server
-#  2003 are supported any longer by Microsoft either (extended support for
-#  both ended on April 2014 and July 2015 respectively), Hyperion support
-#  for them will be dropped in the VERY near future as well.
-#
-#  All Hercules users running either of these operating systems are STRONGLY
-#  encouraged to upgrade as soon as possible to Windows Vista or Windows 7
-#  Professional SP1 x64 or greater (Windows 7 being the preferred choice).
-#
-###############################################################################
-
-# VS <  9.0 (VS2005 or earlier): unsupported
-# VS >= 9.0 (VS2008 or greater): required (VS2008 or greater)
-
-!IF $(vsversion) < $(vers_vs2008)
-!ERROR Hercules requires Visual Studio 9 (VS2008 Express) or later.
-!ELSE
-APPVER   = 5.02     # Windows Server 2003 (or Windows XP 64-Bit) or greater
-TARGETOS = WINNT
-!ENDIF
-
-# -------------------------------------------------
-# NOTE! must set the 'NODEBUG' variable properly
-#       BEFORE calling win32.mak since it uses it.
-# -------------------------------------------------
 
 !IFNDEF CFG
 NODEBUG = 1

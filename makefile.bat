@@ -316,7 +316,7 @@
 ::
 ::        Add support for new Visual Studio versions here...
 ::
-::        Don't forget to update the 'CONFIG.msvc' file too!
+::        Don't forget to update the 'VSVERS.msvc' file too!
 ::        Don't forget to update the 'targetver.h' header too!
 ::
 ::-----------------------------------------------------------------------------
@@ -383,7 +383,7 @@
 ::
 ::        Add support for new Visual Studio versions here...
 ::
-::        Don't forget to update the 'CONFIG.msvc' file too!
+::        Don't forget to update the 'VSVERS.msvc' file too!
 ::        Don't forget to update the 'targetver.h' header too!
 ::
 ::        Note: Additional sanity checks are required to deal with
@@ -855,6 +855,10 @@
 
   if not defined fullpath goto :win32_mak_missing
 
+  echo.
+  echo ------------------------------ WIN32.MAK -------------------------------
+  echo.
+  echo  ^<win32.mak^> will be !INCLUDEd from "%fullpath%"...
   echo.
   echo --------------------------------- MAKE ---------------------------------
   echo.

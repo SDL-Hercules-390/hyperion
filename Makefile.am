@@ -809,31 +809,35 @@ EXTRA_DIST =                  \
   Makefile.am                 \
   makefile.bat                \
   makefile.msvc               \
-  msvc.makefile.includes/BZIP2_DIR.msvc       \
-  msvc.makefile.includes/BZIP2_FLAGS.msvc     \
-  msvc.makefile.includes/BZIP2_RULES.msvc     \
+  msvc.makefile.includes/VSVERS.msvc          \
+  msvc.makefile.includes/TARGETVER.msvc       \
   msvc.makefile.includes/CONFIG.msvc          \
-  msvc.makefile.includes/DEBUG_RETAIL.msvc    \
-  msvc.makefile.includes/HERC_FLAGS.msvc      \
-  msvc.makefile.includes/HQA_DIR.msvc         \
-  msvc.makefile.includes/HQA_FLAGS.msvc       \
-  msvc.makefile.includes/IPV6_FLAGS.msvc      \
-  msvc.makefile.includes/MOD_RULES1.msvc      \
-  msvc.makefile.includes/MOD_RULES2.msvc      \
+  msvc.makefile.includes/OUTPUT_DIRS.msvc     \
   msvc.makefile.includes/MODULES.msvc         \
   msvc.makefile.includes/OBJ_CODE.msvc        \
-  msvc.makefile.includes/OUTDIR_RULES.msvc    \
-  msvc.makefile.includes/OUTPUT_DIRS.msvc     \
-  msvc.makefile.includes/PCRE_DIR.msvc        \
-  msvc.makefile.includes/PCRE_FLAGS.msvc      \
-  msvc.makefile.includes/PCRE_RULES.msvc      \
-  msvc.makefile.includes/PRIM_RULES.msvc      \
-  msvc.makefile.includes/REXX_DIRS.msvc       \
-  msvc.makefile.includes/REXX_FLAGS.msvc      \
-  msvc.makefile.includes/REXX_RULES.msvc      \
   msvc.makefile.includes/ZLIB_DIR.msvc        \
+  msvc.makefile.includes/BZIP2_DIR.msvc       \
+  msvc.makefile.includes/PCRE_DIR.msvc        \
+  msvc.makefile.includes/REXX_DIRS.msvc       \
+  msvc.makefile.includes/HQA_DIR.msvc         \
+  msvc.makefile.includes/DEBUG_RETAIL.msvc    \
   msvc.makefile.includes/ZLIB_FLAGS.msvc      \
+  msvc.makefile.includes/BZIP2_FLAGS.msvc     \
+  msvc.makefile.includes/PCRE_FLAGS.msvc      \
+  msvc.makefile.includes/REXX_FLAGS.msvc      \
+  msvc.makefile.includes/IPV6_FLAGS.msvc      \
+  msvc.makefile.includes/HQA_FLAGS.msvc       \
+  msvc.makefile.includes/HERC_FLAGS.msvc      \
+  msvc.makefile.includes/VERSION.msvc         \
+  msvc.makefile.includes/EXT_PKGS.msvc        \
+  msvc.makefile.includes/PRIM_RULES.msvc      \
+  msvc.makefile.includes/OUTDIR_RULES.msvc    \
+  msvc.makefile.includes/MOD_RULES1.msvc      \
+  msvc.makefile.includes/MOD_RULES2.msvc      \
   msvc.makefile.includes/ZLIB_RULES.msvc      \
+  msvc.makefile.includes/BZIP2_RULES.msvc     \
+  msvc.makefile.includes/PCRE_RULES.msvc      \
+  msvc.makefile.includes/REXX_RULES.msvc      \
   README.AIX                  \
   README.APL360               \
   README.BSD                  \

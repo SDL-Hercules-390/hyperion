@@ -1436,6 +1436,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\vsvers.h"
+							>
+						</File>
+						<File
 							RelativePath=".\w32dl.h"
 							>
 						</File>
@@ -2642,7 +2646,15 @@
 							>
 						</File>
 						<File
+							RelativePath=".\msvc.makefile.includes\TARGETVER.msvc"
+							>
+						</File>
+						<File
 							RelativePath=".\msvc.makefile.includes\VERSION.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\VSVERS.msvc"
 							>
 						</File>
 						<File

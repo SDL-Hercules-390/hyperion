@@ -20,9 +20,10 @@
     #include <config.h>         /* Hercules build configuration      */
   #endif /*  _CONFIG_H*/
 #endif
-  #include "hqainc.h" // User override of build configuration/settings
+  #include "hqainc.h"           /* User build settings overrides     */
 #ifdef WIN32
-  #include "targetver.h" // Earliest/Oldest Windows platform supported
+  #include "vsvers.h"           /* Visual Studio compiler constants  */
+  #include "targetver.h"        /* Minimum Windows platform          */
 #endif
 
 #if !defined(_REENTRANT)

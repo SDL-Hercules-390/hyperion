@@ -8,6 +8,8 @@
 INCDIR = msvc.makefile.includes
 
 # ---------------------------------------------------------------------
+!INCLUDE $(INCDIR)\VSVERS.msvc
+!INCLUDE $(INCDIR)\TARGETVER.msvc
 !INCLUDE $(INCDIR)\CONFIG.msvc
 !INCLUDE $(INCDIR)\OUTPUT_DIRS.msvc
 !INCLUDE $(INCDIR)\MODULES.msvc
