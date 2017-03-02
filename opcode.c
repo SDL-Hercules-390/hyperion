@@ -904,6 +904,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(query_sampling_information)
 #endif /*!defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
 
+#if !defined(FEATURE_STORE_CPU_MULTIPLE_COUNTER_FACILITY)
+ UNDEF_INST(store_cpu_counter_multiple)
+#endif /* !defined(FEATURE_STORE_CPU_MULTIPLE_COUNTER_FACILITY) */
+
 
 #if !defined(FEATURE_EXTENDED_TRANSLATION)
  UNDEF_INST(translate_extended)
@@ -4343,7 +4347,7 @@ static zz_func opcode_ebxx[0x100][GEN_MAXARCH] = {
  /*EB14*/ GENx___x___x900 (compare_and_swap_y,RSY,"CSY"),
  /*EB15*/ GENx___x___x___ ,
  /*EB16*/ GENx___x___x___ ,
- /*EB17*/ GENx___x___x___ ,
+ /*EB17*/ GENx___x___x900  (store_cpu_counter_multiple,RSY,"STCCTM"),	/* STCCTM - store-CPU-counter-multiple facility */
  /*EB18*/ GENx___x___x___ ,
  /*EB19*/ GENx___x___x___ ,
  /*EB1A*/ GENx___x___x___ ,
