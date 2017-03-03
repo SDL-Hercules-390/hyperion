@@ -359,51 +359,6 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->ckdtrks = 0;
     dev->ckdcyls = 0;
 
-#if defined( OPTION_SHOWDVOL1 )
-    /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
-    {
-        CIFBLK* pCIF;
-        char dasdvol[7] = {0};
-        if (!dev->showdvol1) /* (first time here for this open?) */
-        {
-            char* sfname = NULL;
-            if (dev->dasdsfn)
-            {
-                /* (N.B. must NOT have end quote, ONLY begin quote) */
-                int sfnlen = (int)(strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1);
-                sfname = malloc( sfnlen );
-                strlcpy( sfname, "sf=\"", sfnlen );
-                strlcat( sfname, dev->dasdsfn, sfnlen );
-            }
-            pCIF = open_ckd_image( dev->filename, sfname, O_RDONLY | O_BINARY,
-                IMAGE_OPEN_DVOL1 | IMAGE_OPEN_QUIET );
-            if (sfname)
-                free( sfname );
-            if (pCIF)
-            {
-                BYTE *vol1data;
-                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 }; /* "VOL1" Standard OS volume marker */
-                const BYTE cmse[4] = { 0xC3, 0xD4, 0xE2, 0x7E }; /* "CMS=" CMS */
-                const BYTE cms1[4] = { 0xC3, 0xD4, 0xE2, 0xF1 }; /* "CMS1" CMS EDF */
-                const BYTE dir1[4] = { 0xC4, 0xC9, 0xD9, 0xF1 }; /* "DIR1" Recognized by VM */
-                const BYTE lnx1[4] = { 0xD3, 0xD5, 0xE7, 0xF1 }; /* "LNX1" Linux */
-                rc = read_block( pCIF, 0, 0, 3, NULL, NULL, &vol1data, NULL );
-                if (rc == 0)
-                    if (0
-                        || memcmp( vol1data, vol1, 4 ) == 0
-                        || memcmp( vol1data, cmse, 4 ) == 0
-                        || memcmp( vol1data, cms1, 4 ) == 0
-                        || memcmp( vol1data, dir1, 4 ) == 0
-                        || memcmp( vol1data, lnx1, 4 ) == 0
-                    )
-                        make_asciiz( dasdvol, 7, vol1data+4, 6 );
-                close_image_file( pCIF );
-                strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
-            }
-        }
-    }
-#endif /* defined( OPTION_SHOWDVOL1 ) */
-
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
         if (!dev->quiet)
@@ -683,31 +638,17 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKDDASD_EXT    *cckd;
-    char            devname[ 6 + 1 + MAX_PATH + 1 ] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
-    switch (sysblk.showdvol1)
-    {
-    default:
-    case SHOWDVOL1_NO:
-        MSGBUF( devname, "%s", dev->filename );
-        break;
-    case SHOWDVOL1_YES:
-        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
-        break;
-    case SHOWDVOL1_ONLY:
-        MSGBUF( devname, "%-6.6s", dev->dasdvol );
-        break;
-    }
-
     cckd = dev->cckd_ext;
+
     if (!cckd)
     {
         if ( dev->ckdnumfd > 1)
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] [%d segs] IO[%"PRIu64"]",
-                      devname,
+                      dev->filename,
                       dev->ckdcyls,
                       dev->ckdnumfd,
                       dev->excps );
@@ -715,7 +656,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
         else
         {
             snprintf( buffer, buflen-1, "%s [%d cyls] IO[%"PRIu64"]",
-                      devname,
+                      dev->filename,
                       dev->ckdcyls,
                       dev->excps );
         }
@@ -723,7 +664,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
     else
     {
         snprintf( buffer, buflen-1, "%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
-                  devname,
+                  dev->filename,
                   dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );

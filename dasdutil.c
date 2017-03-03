@@ -534,7 +534,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev->fd = -1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
-    dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
     dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
 
     /* If the filename has a `:' then it may be a remote device */
@@ -781,7 +780,6 @@ int             argc=0;                 /*  device open              */
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
-    dev->showdvol1 = (option & IMAGE_OPEN_DVOL1)    ? 1 : 0;
     dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
 
     /* Set the device type */

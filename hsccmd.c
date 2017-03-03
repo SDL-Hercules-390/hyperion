@@ -790,58 +790,6 @@ int log_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-#if defined( OPTION_SHOWDVOL1 )
-/*-------------------------------------------------------------------*/
-/* showdvol1 command - toggle displaying of dasd vol1 in device list */
-/*-------------------------------------------------------------------*/
-int showdvol1_cmd(int argc, char *argv[], char *cmdline)
-{
-    int rc = 0;
-    UNREFERENCED(cmdline);
-
-    if ( argc < 2 )
-    {
-        /* No operand given: show current setting */
-        WRMSG( HHC02203, "I", argv[0],
-            sysblk.showdvol1 == SHOWDVOL1_NO   ? "NO"   :
-            sysblk.showdvol1 == SHOWDVOL1_YES  ? "YES"  :
-            sysblk.showdvol1 == SHOWDVOL1_ONLY ? "ONLY" :
-                                                 "???"  );
-    }
-    else
-    {
-        char *cmd = argv[0];
-
-        while (argc > 1)
-        {
-            argv++;
-            argc--;
-
-            if (CMD( argv[0],                YES,  1)) {
-                sysblk.showdvol1 = SHOWDVOL1_YES;
-                WRMSG( HHC02204, "I", cmd,  "YES"  );  // "%-14s set to %s"
-            }
-            else if (CMD( argv[0],           NO,   1)) {
-                sysblk.showdvol1 = SHOWDVOL1_NO;
-                WRMSG( HHC02204, "I", cmd,  "NO"   );  // "%-14s set to %s"
-            }
-            else if (CMD( argv[0],           ONLY, 1)) {
-                sysblk.showdvol1 = SHOWDVOL1_ONLY;
-                WRMSG( HHC02204, "I", cmd,  "ONLY" );  // "%-14s set to %s"
-            }
-            else
-            {
-                WRMSG( HHC02205, "E", argv[0], "" );   // "Invalid argument '%s'%s"
-                rc = -1;
-                break;
-            }
-        } /* while (argc > 1) */
-    }
-    return rc;
-}
-#endif /* defined( OPTION_SHOWDVOL1 ) */
-
-
 /*-------------------------------------------------------------------*/
 /* logopt command - change log options                               */
 /*-------------------------------------------------------------------*/

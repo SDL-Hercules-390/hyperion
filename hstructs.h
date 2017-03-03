@@ -732,12 +732,8 @@ struct SYSBLK {
                                         /*   legacy devices          */
                 haveiplparm:1,          /* IPL PARM a la VM          */
                 logoptnotime:1,         /* 1 = don't timestamp log   */
-                showdvol1:2,            /* Show dasd VOL1 in devlist */
                 nolrasoe:1;             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
-#define SHOWDVOL1_NO            0       /*   Do not show vol1 at all */
-#define SHOWDVOL1_YES           1       /*   Show vol1 AND filename  */
-#define SHOWDVOL1_ONLY          2       /*   Show vol1 NOT filename  */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
@@ -1171,7 +1167,6 @@ struct DEVBLK {                         /* Device configuration block*/
                 localhost:1,            /* 1=Remote is local         */
                 batch:1,                /* 1=Called by dasdutil      */
                 dasdcopy:1,             /* 1=Called by dasdcopy      */
-                showdvol1:1,            /* 1=showdvol1 open busy     */
                 quiet:1,                /* 1=suppress open messages  */
                 oslinux:1,              /* 1=Linux                   */
                 ccwtrace:1,             /* 1=CCW trace               */
@@ -1490,7 +1485,6 @@ struct DEVBLK {                         /* Device configuration block*/
 
         char   *dasdsfn;                /* Shadow file name          */
         char   *dasdsfx;                /* Pointer to suffix char    */
-        char    dasdvol[7];             /* dasd volume  ASCII        */
 
         /*  Device dependent fields for fbadasd                      */
 

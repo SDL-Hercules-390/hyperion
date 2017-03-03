@@ -113,7 +113,6 @@
 #endif
 
 #define OPTION_OPTINST                  /* Optimized instructions    */
-#undef  OPTION_SHOWDVOL1                /* showdvol1 support         */
 
 #if !defined(ENABLE_CONFIG_INCLUDE) && !defined(NO_CONFIG_INCLUDE)
 #define  ENABLE_CONFIG_INCLUDE          /* enable config file includes */

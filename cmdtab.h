@@ -1317,18 +1317,6 @@
 
 #endif /* defined( _MSVC ) */
 
-#define showdvol1_cmd_desc      "Enable showing of dasd volsers in device list"
-#define showdvol1_cmd_help      \
-                                \
-  "Format:   showdvol1  [ NO | YES | ONLY ]\n\n"                                      \
-                                                                                      \
-  "Indicates whether to show the dasd VOL1 labels (volser) in the device list\n"      \
-  "display. 'YES' shows the volser in addition to the usual filename, whereas\n"      \
-  "'NO' shows the device list in a traditional filename only format. The 'ONLY'\n"    \
-  "option shows only the volser; the filename is not shown at all. The default\n"     \
-  "is 'NO', which results in a traditional device list display. Enter the command\n"  \
-  "without any operands to echo the current settings to the console.\n"
-
 #define shcmdopt_cmd_desc       "Set diag8 sh option"
 #define shrd_cmd_desc           "shrd command"
 #define shrdport_cmd_desc       "Set shrdport value"
@@ -1792,8 +1780,5 @@ COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             
 #if defined( SIE_DEBUG_PERFMON )
 COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        spm_cmd_desc,           NULL                )
 #endif
-#if defined( OPTION_SHOWDVOL1 )
-COMMAND( "showdvol1",               showdvol1_cmd,          SYSCMD,             showdvol1_cmd_desc,     showdvol1_cmd_help  )
-#endif /* defined( OPTION_SHOWDVOL1 ) */
 
 /*------------------------------(EOF)--------------------------------*/

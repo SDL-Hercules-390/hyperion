@@ -366,7 +366,6 @@ DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 head
 #define IMAGE_OPEN_NORMAL   0x00000000
 #define IMAGE_OPEN_DASDCOPY 0x00000001
 #define IMAGE_OPEN_QUIET    0x00000002  /* (no msgs) */
-#define IMAGE_OPEN_DVOL1    0x00000004  /* (showdvol1 open) */
 DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
         int option);
 DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,

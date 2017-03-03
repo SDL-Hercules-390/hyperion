@@ -94,57 +94,6 @@ char   *strtok_str = NULL;              /* save last position        */
     /* Save the file name in the device block */
     hostpath(dev->filename, argv[0], sizeof(dev->filename));
 
-#if defined( OPTION_SHOWDVOL1 )
-    /* Initialize 'dev->dasdvol' field (VOL1 label == volser) */
-    {
-        CIFBLK* pCIF;
-        char dasdvol[7] = {0};
-        if (!dev->showdvol1) /* (first time here for this open?) */
-        {
-            char* sfname = NULL;
-            if (dev->dasdsfn)
-            {
-                /* (N.B. must NOT have end quote, ONLY begin quote) */
-                int sfnlen = (int)(strlen( "sf=\"" ) + strlen( dev->dasdsfn ) + 1);
-                sfname = malloc( sfnlen );
-                strlcpy( sfname, "sf=\"", sfnlen );
-                strlcat( sfname, dev->dasdsfn, sfnlen );
-            }
-            pCIF = open_fba_image( dev->filename, sfname, O_RDONLY | O_BINARY,
-                IMAGE_OPEN_DVOL1 | IMAGE_OPEN_QUIET );
-            if (sfname)
-                free( sfname );
-            if (pCIF)
-            {
-                const int vol1sector = 1;
-                const BYTE vol1[4] = { 0xE5, 0xD6, 0xD3, 0xF1 }; /* "VOL1" Standard OS volume marker */
-                const BYTE cmse[4] = { 0xC3, 0xD4, 0xE2, 0x7E }; /* "CMS=" CMS */
-                const BYTE cms1[4] = { 0xC3, 0xD4, 0xE2, 0xF1 }; /* "CMS1" CMS EDF */
-                const BYTE dir1[4] = { 0xC4, 0xC9, 0xD9, 0xF1 }; /* "DIR1" Recognized by VM */
-                const BYTE lnx1[4] = { 0xD3, 0xD5, 0xE7, 0xF1 }; /* "LNX1" Linux */
-                BYTE vol1data[10];
-                BYTE unitstat;
-                pCIF->devblk.fbamask   = 0;
-                pCIF->devblk.fbaxblkn  = 0;
-                pCIF->devblk.fbaxfirst = 0;
-                pCIF->devblk.fbaxlast  = pCIF->devblk.fbanumblk - 1;
-                pCIF->devblk.fbarba    = vol1sector * pCIF->devblk.fbablksiz;
-                rc = fba_read( &pCIF->devblk, vol1data, 10, &unitstat );
-                if (rc == 10 && (0
-                    || memcmp( vol1data, vol1, 4 ) == 0
-                    || memcmp( vol1data, cmse, 4 ) == 0
-                    || memcmp( vol1data, cms1, 4 ) == 0
-                    || memcmp( vol1data, dir1, 4 ) == 0
-                    || memcmp( vol1data, lnx1, 4 ) == 0
-                ))
-                    make_asciiz( dasdvol, 7, vol1data+4, 6 );
-                close_image_file( pCIF );
-                strlcpy( dev->dasdvol, dasdvol, sizeof( dev->dasdvol ));
-            }
-        }
-    }
-#endif /* defined( OPTION_SHOWDVOL1 ) */
-
 #if defined( OPTION_SHARED_DEVICES )
     /* Device is shareable */
     dev->shareable = 1;
@@ -351,36 +300,22 @@ void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKDDASD_EXT    *cckd;
-    char            devname[ 6 + 1 + MAX_PATH + 1 ] = {0};
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
-    switch (sysblk.showdvol1)
-    {
-    default:
-    case SHOWDVOL1_NO:
-        MSGBUF( devname, "%s", dev->filename );
-        break;
-    case SHOWDVOL1_YES:
-        MSGBUF( devname, "%-6.6s %s", dev->dasdvol, dev->filename );
-        break;
-    case SHOWDVOL1_ONLY:
-        MSGBUF( devname, "%-6.6s", dev->dasdvol );
-        break;
-    }
-
     cckd = dev->cckd_ext;
+
     if (!cckd)
     {
         snprintf( buffer, buflen-1, "%s [%"PRId64",%d] IO[%"PRIu64"]",
-                  devname,
+                  dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
         snprintf( buffer, buflen-1, "%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
-                  devname,
+                  dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,
                   dev->excps);
