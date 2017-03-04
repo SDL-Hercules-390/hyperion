@@ -1020,8 +1020,8 @@ Examples:
 /* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
 #define HHC01501 "HDL: calling %s"
-#define HHC01502 "HDL: calling %s complete"
-#define HHC01503 "HDL: calling %s skipped during windows shutdown immediate"
+#define HHC01502 "HDL: %s complete"
+//efine HHC01503 (available)
 #define HHC01504 "HDL: shutdown sequence complete"
 #define HHC01505 "HDL: path name length %d exceeds maximum of %d"
 #define HHC01506 "HDL: change request of directory to %s is ignored"
@@ -1055,6 +1055,9 @@ Examples:
 #define HHC01534 "HDL:  instruction = %s, opcode = %4.4X%s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
 #define HHC01536 "HDL: %s is not a valid directory"
+//efine HHC01537 (available)
+//efine HHC01538 (available)
+//efine HHC01539 (available)
 
 /* dyngui.c */
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"

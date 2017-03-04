@@ -119,7 +119,7 @@ HDLSHD *shdent;
             (shdent->shdcall) (shdent->shdarg);
 
             if(MLVL(DEBUG))
-                // "HDL: calling %s complete"
+                // "HDL: %s complete"
                 WRMSG( HHC01502, "I", shdent->shdname );
         }
         free(shdent);

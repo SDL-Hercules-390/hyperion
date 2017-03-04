@@ -439,7 +439,7 @@ int             i;                      /* Index                     */
         dev->hnd = &fbadasd_device_hndinfo;
 
     /* write some statistics */
-    if (!dev->batch)
+    if (!dev->batch && !cckdblk.nosfd)
         cckd_sf_stats (dev);
     release_lock (&cckd->filelock);
 
@@ -5377,28 +5377,37 @@ BYTE *buf;
 void cckd_command_help()
 {
     int i;
-    char *help[] = {
-                    "Command parameters for cckd:"
-                    ,"  comp=<n>      Override compression                 (-1,0,1,2)"
-                    ,"  compparm=<n>  Override compression parm            (-1 ... 9)"
-                    ,"  ra=<n>        Set number readahead threads         ( 1 ... 9)"
-                    ,"  raq=<n>       Set readahead queue size             ( 0 .. 16)"
-                    ,"  rat=<n>       Set number tracks to read ahead      ( 0 .. 16)"
-                    ,"  wr=<n>        Set number writer threads            ( 1 ... 9)"
-                    ,"  gcint=<n>     Set garbage collector interval (sec) ( 1 .. 60)"
-                    ,"  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
-                    ,"  freepend=<n>  Set free pending cycles              (-1 ... 4)"
-                    ,"  trace=<n>     Set trace table size             (0 ... 200000)"
-                    ,"  gcstart=<n>   Start garbage collector                (0 or 1)"
-                    ,"  nostress=<n>  Disable stress writes                  (0 or 1)"
-                    ,"  fsync=<n>     Enable fsync                           (0 or 1)"
-                    ,"  linuxnull=<n> Check for null linux tracks            (0 or 1)"
-                    ,"  opts          Display cckd options"
-                    ,"  stats         Display cckd statistics"
-                    ,"  help          Display help message"
-                    ,NULL };
+    char *help[] =
+    {
+        "Command parameters for cckd:"
+        , ""
+        , "  help          Display help message"
+        , "  stats         Display cckd statistics"
+        , "  opts          Display cckd options"
+        , ""
 
-    for( i = 0; help[i] != NULL; i++ )
+        //    ***  Please keep these in alphabetical order!  ***
+
+        , "  comp=<n>      Override compression                 (-1,0,1,2)"
+        , "  compparm=<n>  Override compression parm            (-1 ... 9)"
+        , "  freepend=<n>  Set free pending cycles              (-1 ... 4)"
+        , "  fsync=<n>     Enable fsync                           (0 or 1)"
+        , "  gcint=<n>     Set garbage collector interval (sec) ( 1 .. 60)"
+        , "  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
+        , "  gcstart=<n>   Start garbage collector                (0 or 1)"
+        , "  linuxnull=<n> Check for null linux tracks            (0 or 1)"
+        , "  nosfd=<n>     Disable stats report at close          (0 or 1)"
+        , "  nostress=<n>  Disable stress writes                  (0 or 1)"
+        , "  ra=<n>        Set number readahead threads         ( 1 ... 9)"
+        , "  raq=<n>       Set readahead queue size             ( 0 .. 16)"
+        , "  rat=<n>       Set number tracks to read ahead      ( 0 .. 16)"
+        , "  trace=<n>     Set trace table size             (0 ... 200000)"
+        , "  wr=<n>        Set number writer threads            ( 1 ... 9)"
+
+        , NULL 
+    };
+
+    for (i=0; help[i] != NULL; i++ )
         WRMSG(HHC00345, "I", help[i] );
 
 } /* end function cckd_command_help */
@@ -5410,16 +5419,48 @@ void cckd_command_opts()
 {
     char msgbuf[128];
 
-    MSGBUF( msgbuf, "cckd opts: comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,wr=%d,gcint=%d",
-                    cckdblk.comp == 0xff ? -1 : cckdblk.comp,
-                    cckdblk.compparm, cckdblk.ramax,
-                    cckdblk.ranbr, cckdblk.readaheads,
-                    cckdblk.wrmax, cckdblk.gcwait );
+    MSGBUF( msgbuf, "cckd opts:"
+
+        // ***  Please keep these in alphabetical order!  ***
+
+        " "   "comp=%d"
+        ","   "compparm=%d"
+        ","   "freepend=%d"
+        ","   "fsync=%d"
+        ","   "gcint=%d"
+        ","   "gcparm=%d"
+
+        , cckdblk.comp == 0xff ? -1 : cckdblk.comp
+        , cckdblk.compparm
+        , cckdblk.freepend
+        , cckdblk.fsync
+        , cckdblk.gcwait
+        , cckdblk.gcparm
+    );
     WRMSG( HHC00346, "I", msgbuf );
 
-    MSGBUF( msgbuf, "           gcparm=%d,nostress=%d,freepend=%d,fsync=%d,linuxnull=%d,trace=%d",
-                    cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
-                    cckdblk.fsync, cckdblk.linuxnull, cckdblk.itracen );
+    MSGBUF( msgbuf, "          "
+
+        // ***  Please keep these in alphabetical order!  ***
+
+        " "   "linuxnull=%d"
+        ","   "nosfd=%d"
+        ","   "nostress=%d"
+        ","   "ra=%d"
+        ","   "raq=%d"
+        ","   "rat=%d"
+        ","   "trace=%d"
+        ","   "wr=%d"
+
+        , cckdblk.linuxnull
+        , cckdblk.nosfd
+        , cckdblk.nostress
+        , cckdblk.ramax
+        , cckdblk.ranbr
+        , cckdblk.readaheads
+        , cckdblk.itracen
+        , cckdblk.wrmax
+    );
     WRMSG( HHC00346, "I", msgbuf );
 
     return;
@@ -5559,6 +5600,7 @@ int   rc;
             return -1;
         }
         /* If rc == 1 && c == 0, then "keyword=value" syntax */
+        /* Please keep the below tests in alphabetical order! */
         else if ( CMD(kw,comp,4) )
         {
             if (val < -1 || (val > 0 && (val & ~cckdblk.comps)))
@@ -5596,104 +5638,6 @@ int   rc;
                 opts = 1;
             }
         }
-        else if ( CMD(kw,ra,2) )
-        {
-            if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.ramax = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,raq,3) )
-        {
-            if (val < 0 || val > CCKD_MAX_RA_SIZE)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.ranbr = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,rat,3) )
-        {
-            if (val < 0 || val > CCKD_MAX_RA_SIZE)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.readaheads = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,wr,2) )
-        {
-            if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.wrmax = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,gcint,5) )
-        {
-            if (val < 1 || val > 60)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.gcwait = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,gcparm,6) )
-        {
-            if (val < -8 || val > 8)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.gcparm = val;
-                opts = 1;
-            }
-        }
-        else if ( CMD(kw,nostress,8) )
-        {
-            if (val < 0 || val > 1)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.nostress = val;
-                opts = 1;
-            }
-        }
         else if ( CMD(kw,freepend,8) )
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND)
@@ -5722,9 +5666,9 @@ int   rc;
                 opts = 1;
             }
         }
-        else if ( CMD(kw,trace,5) )
+        else if ( CMD(kw,gcint,5) )
         {
-            if (val < 0 || val > CCKD_MAX_TRACE)
+            if (val < 1 || val > 60)
             {
                 // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
@@ -5732,42 +5676,13 @@ int   rc;
             }
             else
             {
-                /* Disable tracing in case it's already active */
-                CCKD_TRACE *p = cckdblk.itrace;
-                cckdblk.itrace = NULL;
-                if (p)
-                {
-                    SLEEP (1);
-                    cckdblk.itrace = cckdblk.itracep = cckdblk.itracex = NULL;
-                    cckdblk.itracen = 0;
-                    free (p);
-                }
-
-                /* Get a new trace table */
-                if (val > 0)
-                {
-                    p = calloc (val, sizeof(CCKD_TRACE));
-                    if (p)
-                    {
-                        cckdblk.itracen = val;
-                        cckdblk.itracex = p + val;
-                        cckdblk.itracep = p;
-                        cckdblk.itrace  = p;
-                    }
-                    else
-                    {
-                        char buf[64];
-                        MSGBUF( buf, "calloc(%d, %d)", val, (int)sizeof(CCKD_TRACE));
-                        // "%1d:%04X CCKD file: error in function %s: %s"
-                        WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
-                    }
-                }
+                cckdblk.gcwait = val;
                 opts = 1;
             }
         }
-        else if ( CMD(kw,linuxnull,5) )
+        else if ( CMD(kw,gcparm,6) )
         {
-            if (val < 0 || val > 1)
+            if (val < -8 || val > 8)
             {
                 // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
@@ -5775,7 +5690,7 @@ int   rc;
             }
             else
             {
-                cckdblk.linuxnull = val;
+                cckdblk.gcparm = val;
                 opts = 1;
             }
         }
@@ -5836,6 +5751,147 @@ int   rc;
                     else
                         release_lock(&cckdblk.gclock);
                 }
+            }
+        }
+        else if ( CMD(kw,linuxnull,5) )
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.linuxnull = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,nostress,8) )
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.nostress = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,nosfd,5) )
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.nosfd = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,ra,2) )
+        {
+            if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.ramax = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,raq,3) )
+        {
+            if (val < 0 || val > CCKD_MAX_RA_SIZE)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.ranbr = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,rat,3) )
+        {
+            if (val < 0 || val > CCKD_MAX_RA_SIZE)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.readaheads = val;
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,trace,5) )
+        {
+            if (val < 0 || val > CCKD_MAX_TRACE)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                /* Disable tracing in case it's already active */
+                CCKD_TRACE *p = cckdblk.itrace;
+                cckdblk.itrace = NULL;
+                if (p)
+                {
+                    SLEEP (1);
+                    cckdblk.itrace = cckdblk.itracep = cckdblk.itracex = NULL;
+                    cckdblk.itracen = 0;
+                    free (p);
+                }
+
+                /* Get a new trace table */
+                if (val > 0)
+                {
+                    p = calloc (val, sizeof(CCKD_TRACE));
+                    if (p)
+                    {
+                        cckdblk.itracen = val;
+                        cckdblk.itracex = p + val;
+                        cckdblk.itracep = p;
+                        cckdblk.itrace  = p;
+                    }
+                    else
+                    {
+                        char buf[64];
+                        MSGBUF( buf, "calloc(%d, %d)", val, (int)sizeof(CCKD_TRACE));
+                        // "%1d:%04X CCKD file: error in function %s: %s"
+                        WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
+                    }
+                }
+                opts = 1;
+            }
+        }
+        else if ( CMD(kw,wr,2) )
+        {
+            if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.wrmax = val;
+                opts = 1;
             }
         }
         else
