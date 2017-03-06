@@ -640,7 +640,9 @@
     <None Include="msvc.makefile.includes\REXX_DIRS.msvc" />
     <None Include="msvc.makefile.includes\REXX_FLAGS.msvc" />
     <None Include="msvc.makefile.includes\REXX_RULES.msvc" />
+    <None Include="msvc.makefile.includes\TARGETVER.msvc" />
     <None Include="msvc.makefile.includes\VERSION.msvc" />
+    <None Include="msvc.makefile.includes\VSVERS.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_DIR.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_FLAGS.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_RULES.msvc" />
