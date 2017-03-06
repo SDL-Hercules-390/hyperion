@@ -7771,7 +7771,7 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
         }
     }
     // ECPSVM YES [TRAP|NOTRAP]
-    else if (argc >= 3 && CMD( argv[1], yes, 3 ))
+    else if (argc >= 2 && CMD( argv[1], yes, 3 ))
     {
         int err = 0;
 
@@ -7780,7 +7780,7 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
         if (argc == 2)
         {
             sysblk.ecpsvm.enabletrap = TRUE;
-            MSGBUF( msgbuf, "%s", "enabled" );
+            MSGBUF( msgbuf, "%s", "enabled, trap support enabled" );
         }
         else // (argc == 3)
         {
@@ -7830,12 +7830,9 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
         sysblk.ecpsvm.available  = TRUE;
         sysblk.ecpsvm.enabletrap = FALSE;
 
-        if (MLVL( VERBOSE ))
-        {
-            MSGBUF( msgbuf, "enabled: level %d", lvl );
-            // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], msgbuf );
-        }
+        MSGBUF( msgbuf, "enabled: level %d", lvl );
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], msgbuf );
     }
     else
     {
