@@ -2771,16 +2771,14 @@ char    regs_msg_buf[4*512] = {0};
     /* Now display all instruction tracing messages all at once */
     if (sysblk.showregsfirst)
     {
-        /* Remove extra trailng newline from regs_msg_buf */
+        /* Remove unwanted extra trailing newline from regs_msg_buf */
         size_t len = strlen(regs_msg_buf);
         if (len)
             regs_msg_buf[len-1] = 0;
-        writemsg( __FILE__, __LINE__, __FUNCTION__, "%s%s%s%s",
-            regs_msg_buf, psw_inst_msg, op1_stor_msg, op2_stor_msg );
+        LOGMSG( "%s%s%s%s", regs_msg_buf, psw_inst_msg, op1_stor_msg, op2_stor_msg );
     }
     else
-        writemsg( __FILE__, __LINE__, __FUNCTION__, "%s%s%s%s",
-            psw_inst_msg, op1_stor_msg, op2_stor_msg, regs_msg_buf );
+        LOGMSG( "%s%s%s%s", psw_inst_msg, op1_stor_msg, op2_stor_msg, regs_msg_buf );
 
     if (!iregs->ghostregs)
         free_aligned( regs );

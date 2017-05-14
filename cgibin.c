@@ -1197,7 +1197,7 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
         return;             /* command is all blank, ignore */
     }
 
-    response = log_capture(panel_command, command);
+    panel_command_capture( command, &response );
 
     if (response == NULL)
     {

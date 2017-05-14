@@ -74,16 +74,73 @@ Examples:
   Strings:    "%s", ""
 */
 /*-------------------------------------------------------------------*/
-/*                      PRIMARY MESAGE MACROS                        */
+/*                  PRIMARY MESSAGE FUNCTIONS                        */
 /*-------------------------------------------------------------------*/
-/*
-** PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required
-** for compatibility with gcc/MSVC compilers and mustn't be removed.
-*/
-#define  WRMSG(     id, s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
-#define FWRMSG(  f, id, s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
-#define  LOGMSG(        s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
-#define FLOGMSG( f,     s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
+LOGM_DLL_IMPORT void fwritemsg( const char* filename, int line, const char* func, BYTE panel, FILE* f, const char* fmt, ... ) ATTR_PRINTF( 6, 7 );
+LOGM_DLL_IMPORT void logmsg( const char* fmt, ... ) ATTR_PRINTF( 1, 2 );
+LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
+
+/*-------------------------------------------------------------------*/
+/*                    PRIMARY MESAGE MACROS                          */
+/*-------------------------------------------------------------------*/
+/* Write message options used with below 'P' (panel) type macros     */
+/*-------------------------------------------------------------------*/
+#define WRMSG_CAPTURE       0x01            /* Allow capturing       */
+#define WRMSG_PANEL         0x02            /* Write to panel        */
+#define WRMSG_NORMAL        (WRMSG_CAPTURE | WRMSG_PANEL)
+
+/*-------------------------------------------------------------------*/
+/* The below two macros should NOT be used under normal situations.  */
+/* Use one of the macros further below instead (FWRMSG, WRMSG, etc). */
+/* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
+/* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
+/*-------------------------------------------------------------------*/
+#define PFWRITEMSG( pan, f, fmt, ... ) fwritemsg( __FILE__, __LINE__, __FUNCTION__, pan,   f,    fmt, ## __VA_ARGS__ )
+#define  PWRITEMSG( pan,    fmt, ... ) PFWRITEMSG(                                  pan, stdout, fmt, ## __VA_ARGS__ )
+
+/*-------------------------------------------------------------------*/
+/* Macros to write a message to specific FILE* or stdout by default. */
+/* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
+/* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
+/*-------------------------------------------------------------------*/
+#define FLOGMSG( f,   fmt,   ... ) PFWRITEMSG( WRMSG_NORMAL, f,    fmt,              ## __VA_ARGS__ )
+#define  LOGMSG(      fmt,   ... ) PWRITEMSG(  WRMSG_NORMAL,       fmt,              ## __VA_ARGS__ )
+#define FWRMSG(  f, id, sev, ... ) FLOGMSG(                  f, #id sev " " id "\n", ## __VA_ARGS__ )
+#define  WRMSG(     id, sev, ... ) LOGMSG(                      #id sev " " id "\n", ## __VA_ARGS__ )
+
+/*-------------------------------------------------------------------*/
+/* Macros that allow you to specify a custom write message option.   */
+/* Use these macros when you want to issue a message to the panel    */
+/* only without it appearing in DIAG8's response buffer for example. */
+/* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
+/* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
+/*-------------------------------------------------------------------*/
+#define PFLOGMSG( pan, f, fmt,     ... ) PFWRITEMSG( pan, f,    fmt,              ## __VA_ARGS__ )
+#define  PLOGMSG( pan,    fmt,     ... ) PWRITEMSG(  pan,       fmt,              ## __VA_ARGS__ )
+#define PFWRMSG(  pan, f, id, sev, ... ) PFLOGMSG(   pan, f, #id sev " " id "\n", ## __VA_ARGS__ )
+#define  PWRMSG(  pan,    id, sev, ... ) PLOGMSG(    pan,    #id sev " " id "\n", ## __VA_ARGS__ )
+
+/*-------------------------------------------------------------------*/
+/* ckddasd.c/fbadasd.c dasd I/O tracing helper macro                 */
+/*-------------------------------------------------------------------*/
+#define LOGDEVTR( id, sev, ... )                                \
+    do                                                          \
+    {                                                           \
+        if (dev->ccwtrace || dev->ccwstep)                      \
+        {                                                       \
+            /* PROGRAMMING NOTE: we must call 'fwritemsg'       \
+               directly since attempting to use the 'WRMSG'     \
+               macro instead seems to confuse gcc/clang.        \
+            */                                                  \
+            /* "%1d:%04X ....(debug trace message)... */        \
+            fwritemsg( __FILE__, __LINE__, __FUNCTION__,        \
+                WRMSG_NORMAL, stdout,                           \
+                #id sev " " id "\n",                            \
+                SSID_TO_LCSS( dev->ssid ),                      \
+                dev->devnum, ## __VA_ARGS__ );                  \
+        }                                                       \
+    }                                                           \
+    while (0)
 
 /*-------------------------------------------------------------------*/
 /*                     Message helper macros                         */

@@ -1123,7 +1123,7 @@ char    msgbuf[512];                    /* Message work area         */
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 sysblk.diag8cmd |= DIAG8CMD_RUNNING;
-                dresp=log_capture(panel_command,bufo);
+                panel_command_capture( bufo, &dresp );
                 if(dresp!=NULL)
                 {
                     freeresp=1;

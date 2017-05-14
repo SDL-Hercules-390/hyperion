@@ -24,6 +24,8 @@
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "sr.h"
 
+#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent file mask                       */
 /*-------------------------------------------------------------------*/
@@ -87,7 +89,8 @@ char   *strtok_str = NULL;              /* save last position        */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRMSG (HHC00500, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X FBA file: name missing or invalid filename length"
+        WRMSG( HHC00500, "E", LCSS_DEVNUM);
         return -1;
     }
 
@@ -105,7 +108,8 @@ char   *strtok_str = NULL;              /* save last position        */
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
         {
-            WRMSG (HHC00501, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            // "%1d:%04X FBA file %s not found or invalid"
+            WRMSG( HHC00501, "E", LCSS_DEVNUM, dev->filename );
             return -1;
         }
         else
@@ -119,7 +123,9 @@ char   *strtok_str = NULL;              /* save last position        */
         dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "open()", strerror(errno));
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "open()", strerror( errno ));
             return -1;
         }
     }
@@ -130,9 +136,13 @@ char   *strtok_str = NULL;              /* save last position        */
     {
         /* Handle read error condition */
         if (rc < 0)
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "read()", strerror( errno ));
         else
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "unexpected end of file");
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "read()", "unexpected end of file" );
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -149,9 +159,13 @@ char   *strtok_str = NULL;              /* save last position        */
         {
             /* Handle read error condition */
             if (rc < 0)
-                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", strerror(errno));
+                // "%1d:%04X FBA file %s: error in function %s: %s"
+                WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                       dev->filename, "read()", strerror( errno ));
             else
-                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", "unexpected end of file");
+                // "%1d:%04X FBA file %s: error in function %s: %s"
+                WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                       dev->filename, "read()", "unexpected end of file" );
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -183,7 +197,8 @@ char   *strtok_str = NULL;              /* save last position        */
                 continue;
             }
 
-            WRMSG (HHC00503, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
+            // "%1d:%04X FBA file: parameter %s in argument %d is invalid"
+            WRMSG( HHC00503, "E", LCSS_DEVNUM, argv[i], i + 1 );
             return -1;
         }
     }
@@ -195,7 +210,9 @@ char   *strtok_str = NULL;              /* save last position        */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "fstat()", strerror(errno));
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "fstat()", strerror( errno ));
             close (dev->fd);
             dev->fd = -1;
             return -1;
@@ -206,7 +223,9 @@ char   *strtok_str = NULL;              /* save last position        */
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
             if(rc<0)
             {
-                WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "ioctl()", strerror(errno));
+                // "%1d:%04X FBA file %s: error in function %s: %s"
+                WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                       dev->filename, "ioctl()", strerror( errno ));
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -215,7 +234,8 @@ char   *strtok_str = NULL;              /* save last position        */
             dev->fbaorigin = 0;
             dev->fbanumblk = statbuf.st_size;
             if (!dev->quiet)
-                WRMSG (HHC00504, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                // "%1d:%04X FBA file %s: REAL FBA opened"
+                WRMSG( HHC00504, "I", LCSS_DEVNUM, dev->filename );
         }
         else
 #endif // defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
@@ -232,7 +252,8 @@ char   *strtok_str = NULL;              /* save last position        */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                WRMSG (HHC00505, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[1]);
+                // "%1d:%04X FBA file %s: invalid device origin block number %s"
+                WRMSG( HHC00505, "E", LCSS_DEVNUM, dev->filename, argv[1] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -247,7 +268,8 @@ char   *strtok_str = NULL;              /* save last position        */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                WRMSG (HHC00506, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, argv[2]);
+                // "%1d:%04X FBA file %s: invalid device block count %s"
+                WRMSG( HHC00506, "E", LCSS_DEVNUM, dev->filename, argv[2] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -258,7 +280,9 @@ char   *strtok_str = NULL;              /* save last position        */
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
     if (!dev->quiet)
-        WRMSG (HHC00507, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaorigin, dev->fbanumblk);
+        // "%1d:%04X FBA file %s: origin %"PRId64", blks %d"
+        WRMSG( HHC00507, "I", LCSS_DEVNUM,
+               dev->filename, dev->fbaorigin, dev->fbanumblk );
 
     /* Set number of sense bytes */
     dev->numsense = 24;
@@ -267,7 +291,8 @@ char   *strtok_str = NULL;              /* save last position        */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        WRMSG (HHC00508, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->devtype);
+        // "%1d:%04X FBA file %s: device type %4.4X not found in dasd table"
+        WRMSG( HHC00508, "E", LCSS_DEVNUM, dev->filename, dev->devtype );
         close (dev->fd);
         dev->fd = -1;
         return -1;
@@ -486,7 +511,9 @@ off_t           offset;                 /* File offsets              */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "lseek()", strerror( errno ));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -503,7 +530,9 @@ off_t           offset;                 /* File offsets              */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle write error condition */
-            WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", strerror(errno));
+            // "%1d:%04X FBA file %s: error in function %s: %s"
+            WRMSG( HHC00502, "E", LCSS_DEVNUM,
+                   dev->filename, "write()", strerror( errno ));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             cache_lock(CACHE_DEVBUF);
@@ -543,7 +572,8 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHC00516, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, i));
+        // "%1d:%04X FBA file %s: read blkgrp %d cache hit, using cache[%d]"
+        LOGDEVTR( HHC00516, "I", dev->filename, blkgrp, i );
 
         dev->cachehits++;
         dev->cache = i;
@@ -559,14 +589,16 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHC00517, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp));
+        // "%1d:%04X FBA file %s: read blkgrp %d no available cache entry, waiting"
+        LOGDEVTR( HHC00517, "I", dev->filename, blkgrp );
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHC00518, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, blkgrp, o));
+    // "%1d:%04X FBA file %s: read blkgrp %d cache miss, using cache[%d]"
+    LOGDEVTR( HHC00518, "I", dev->filename, blkgrp, o );
 
     dev->cachemisses++;
 
@@ -581,15 +613,17 @@ fba_read_blkgrp_retry:
     offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, MSG(HHC00519, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        blkgrp, offset, fba_blkgrp_len(dev, blkgrp)));
+    // "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
+    LOGDEVTR( HHC00519, "I", dev->filename, blkgrp, offset, fba_blkgrp_len( dev, blkgrp ));
 
     /* Seek to the block group offset */
     offset = lseek (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
+        // "%1d:%04X FBA file %s: error in function %s: %s"
+        WRMSG( HHC00502, "E", LCSS_DEVNUM,
+               dev->filename, "lseek()", strerror( errno ));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -603,7 +637,9 @@ fba_read_blkgrp_retry:
     if (rc < len)
     {
         /* Handle read error condition */
-        WRMSG (HHC00502, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()", rc < 0 ? strerror(errno) : "unexpected end of file");
+        // "%1d:%04X FBA file %s: error in function %s: %s"
+        WRMSG( HHC00502, "E", LCSS_DEVNUM,
+               dev->filename, "read()", rc < 0 ? strerror( errno ) : "unexpected end of file" );
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         cache_lock(CACHE_DEVBUF);
@@ -1036,8 +1072,8 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbalcblk - dev->fbaxfirst
                       ) * dev->fbablksiz;
 
-        logdevtr (dev, MSG(HHC00520, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            dev->fbarba, dev->fbarba));
+        // "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
+        LOGDEVTR( HHC00520, "I", dev->filename, dev->fbarba, dev->fbarba );
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -1054,7 +1090,8 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            WRMSG(HHC00509, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, count);
+            // "%1d:%04X FBA file %s: define extent data too short: %d bytes"
+            WRMSG( HHC00509, "E", LCSS_DEVNUM, dev->filename, count );
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1063,7 +1100,8 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            WRMSG(HHC00510, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            // "%1d:%04X FBA file %s: second define extent in chain"
+            WRMSG( HHC00510, "E", LCSS_DEVNUM, dev->filename );
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1074,7 +1112,8 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            WRMSG(HHC00511, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbamask);
+            // "%1d:%04X FBA file %s: invalid file mask %2.2X"
+            WRMSG( HHC00511, "E", LCSS_DEVNUM, dev->filename, dev->fbamask );
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1110,7 +1149,10 @@ int     repcnt;                         /* Replication count         */
          || dev->fbaxblkn > (U32)dev->fbanumblk
          || dev->fbaxlast - dev->fbaxfirst >= dev->fbanumblk - dev->fbaxblkn)
         {
-            WRMSG(HHC00512, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->fbaxfirst, dev->fbaxlast, dev->fbaxblkn, dev->fbanumblk);
+            // "%1d:%04X FBA file %s: invalid extent: first block %d last block %d numblks %d device size %d"
+            WRMSG( HHC00512, "E", LCSS_DEVNUM,
+                   dev->filename, dev->fbaxfirst, dev->fbaxlast,
+                   dev->fbaxblkn, dev->fbanumblk );
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1460,7 +1502,9 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((off_t)rc != dev->fbaorigin)
             {
-                WRMSG(HHC00513, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, (int)dev->fbaorigin);
+                // "%1d:%04X FBA file %s: FBA origin mismatch: %d, expected %d,"
+                WRMSG( HHC00513, "E", LCSS_DEVNUM,
+                       dev->filename, rc, (int)dev->fbaorigin );
                 return -1;
             }
             break;
@@ -1468,7 +1512,9 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbanumblk)
             {
-                WRMSG(HHC00514, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbanumblk);
+                // "%1d:%04X FBA file %s: FBA numblk mismatch: %d, expected %d,"
+                WRMSG( HHC00514, "E", LCSS_DEVNUM,
+                       dev->filename, rc, dev->fbanumblk );
                 return -1;
             }
             break;
@@ -1497,7 +1543,9 @@ BYTE byte;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             if ((int)rc != dev->fbablksiz)
             {
-                WRMSG(HHC00515, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, rc, dev->fbablksiz);
+                // "%1d:%04X FBA file %s: FBA blksiz mismatch: %d, expected %d,"
+                WRMSG( HHC00515, "E", LCSS_DEVNUM,
+                       dev->filename, rc, dev->fbablksiz );
                 return -1;
             }
             break;

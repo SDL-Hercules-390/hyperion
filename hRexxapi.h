@@ -256,7 +256,7 @@ RXSTRING hRespStemName ;
 
     if ( RespStemName )
     {
-        rc = log_capture_rc( panel_command, wCommand, &wResp );
+        rc = panel_command_capture( wCommand, &wResp );
         coun = 0;
         if ( wResp )
         {
@@ -731,7 +731,7 @@ UNREFERENCED(Queuename);
 
     if ( RespStemName )
     {
-        rc = log_capture_rc( panel_command, wCommand, &wResp );
+        rc = panel_command_capture( wCommand, &wResp );
         coun = 0;
         if ( wResp )
         {

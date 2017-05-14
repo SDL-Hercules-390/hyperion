@@ -4,83 +4,71 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
-#ifndef _LOGMSG_C_
-#ifndef _HUTIL_DLL_
-#define LOG_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define LOG_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else   /* _LOGGER_C_ */
-#define LOG_DLL_IMPORT DLL_EXPORT
-#endif /* _LOGGER_C_ */
-
 #ifndef _LOGGER_C_
 #ifndef _HUTIL_DLL_
-#define LOGR_DLL_IMPORT DLL_IMPORT
+#define LOGR_DLL_IMPORT     DLL_IMPORT
 #else
-#define LOGR_DLL_IMPORT extern
-#endif
-#else
-#define LOGR_DLL_IMPORT DLL_EXPORT
-#endif
-
-#define LOG_READ  0
-#define LOG_WRITE 1
-
-extern int logger_syslogfd[2];
-
-#define LOG_NOBLOCK 0
-#define LOG_BLOCK   1
-
-#if !defined(LOG_DEFSIZE)
-#if defined(SSIZE_MAX) && SSIZE_MAX < 1048576
- #define LOG_DEFSIZE SSIZE_MAX
-#else
- #define LOG_DEFSIZE 1048576
+#define LOGR_DLL_IMPORT     extern
 #endif
 #else
-#if LOG_DEFSIZE < 65536
-#undef LOG_DEFSIZE
-#define LOG_DEFSIZE 65536
-#endif
+#define LOGR_DLL_IMPORT     DLL_EXPORT
 #endif
 
-/* Logging functions in logmsg.c */
+#ifndef _LOGMSG_C_
+#ifndef _HUTIL_DLL_
+#define LOGM_DLL_IMPORT     DLL_IMPORT
+#else
+#define LOGM_DLL_IMPORT     extern
+#endif
+#else
+#define LOGM_DLL_IMPORT     DLL_EXPORT
+#endif
 
-LOG_DLL_IMPORT void  logmsg(          char *fmt, ... ) ATTR_PRINTF(1,2);
-LOG_DLL_IMPORT void flogmsg( FILE* f, char *fmt, ... ) ATTR_PRINTF(2,3);
+/*-------------------------------------------------------------------*/
+/* Define a default minimum/maximum logger pipe buffer size          */
+/*-------------------------------------------------------------------*/
+#define MIN_LOG_DEFSIZE     (      64 * 1024)       // 64K
+#define MAX_LOG_DEFSIZE     (1 * 1024 * 1024)       // 1MB
 
-LOG_DLL_IMPORT void  writemsg(          const char* filename, int line, const char* func, const char* fmt, ... ) ATTR_PRINTF(4,5);
-LOG_DLL_IMPORT void fwritemsg( FILE* f, const char* filename, int line, const char* func, const char* fmt, ... ) ATTR_PRINTF(5,6);
+#if !defined( LOG_DEFSIZE )
+  #if defined( SSIZE_MAX) && (SSIZE_MAX < MAX_LOG_DEFSIZE)
+    #define  LOG_DEFSIZE      SSIZE_MAX
+  #else
+    #define  LOG_DEFSIZE      MAX_LOG_DEFSIZE
+  #endif
+#endif
 
-#define logdevtr( _dev, ... ) \
-do { \
-    if(dev->ccwtrace||dev->ccwstep) \
-        writemsg( __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__ ); \
-} while (0)
+#if defined( LOG_DEFSIZE )
+  #if        LOG_DEFSIZE   <  MIN_LOG_DEFSIZE
+    #undef   LOG_DEFSIZE
+    #define  LOG_DEFSIZE      MIN_LOG_DEFSIZE
+  #endif
+  #if        LOG_DEFSIZE   >  MAX_LOG_DEFSIZE
+    #undef   LOG_DEFSIZE
+    #define  LOG_DEFSIZE      MAX_LOG_DEFSIZE
+  #endif
+#endif
 
-LOGR_DLL_IMPORT void logger_init();
+/*-------------------------------------------------------------------*/
+/* log message logging facility */
 
-LOGR_DLL_IMPORT int log_read( char** msg, int* msgidx, int block );
-LOGR_DLL_IMPORT int log_line(int linenumber);
-LOGR_DLL_IMPORT void log_sethrdcpy(char *filename);
-LOGR_DLL_IMPORT void log_wakeup(void *arg);
-LOGR_DLL_IMPORT char *log_dsphrdcpy();
-LOGR_DLL_IMPORT int logger_isactive();
-LOGR_DLL_IMPORT void  logger_timestamped_logfile_write( void* pBuff, size_t nBytes );
+#define LOG_NOBLOCK     0           // log_read() block option
+#define LOG_BLOCK       1           // log_read() block option
 
-/* Log routing section */
-typedef void LOG_WRITER(void*, char*);
-typedef void LOG_CLOSER(void*);
+LOGR_DLL_IMPORT void   logger_init     ();
+LOGR_DLL_IMPORT int    log_read        ( char** msg, int* msgidx, int block );
+LOGR_DLL_IMPORT int    log_line        ( int linenumber );
+LOGR_DLL_IMPORT void   log_sethrdcpy   ( const char* filename );
+LOGR_DLL_IMPORT void   log_wakeup      ( void* arg );
+LOGR_DLL_IMPORT char*  log_dsphrdcpy   ();
+LOGR_DLL_IMPORT int    logger_isactive ();
+LOGR_DLL_IMPORT void   logger_timestamped_logfile_write( const void* pBuff, size_t nBytes );
 
-LOG_DLL_IMPORT void  log_write(         int, char*);
-LOG_DLL_IMPORT void flog_write(FILE* f, int, char*);
+/*-------------------------------------------------------------------*/
 
-/* End of log routing section */
+extern int logger_syslogfd[2];      // logger pipe file descriptors
 
-/* Log routing utility */
-typedef void* CAPTUREFUNC(void*);
-LOG_DLL_IMPORT char *log_capture(CAPTUREFUNC*, void*);
-LOG_DLL_IMPORT int log_capture_rc(CAPTUREFUNC*, char*, char**);
+#define LOG_READ           0        // read  end of logger pipe
+#define LOG_WRITE          1        // write end of logger pipe
 
 #endif /* __LOGGER_H__ */

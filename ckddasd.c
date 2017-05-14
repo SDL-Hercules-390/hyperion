@@ -37,6 +37,8 @@
 #include "sr.h"
 #include "dasdblks.h"
 
+#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
 /*-------------------------------------------------------------------*/
@@ -247,7 +249,8 @@ char           *strtok_str = NULL;      /* save last position        */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
     {
-        WRMSG (HHC00400, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X CKD file: name missing or invalid filename length"
+        WRMSG( HHC00400, "E", LCSS_DEVNUM );
         return -1;
     }
 
@@ -277,7 +280,8 @@ char           *strtok_str = NULL;      /* save last position        */
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
         {
-            WRMSG (HHC00401, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+            // "%1d:%04X CKD file %s: open error: not found"
+            WRMSG( HHC00401, "E", LCSS_DEVNUM, filename );
             return -1;
         }
         else
@@ -351,7 +355,8 @@ char           *strtok_str = NULL;      /* save last position        */
             continue;
         }
 
-        WRMSG (HHC00402, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[i], i + 1);
+        // "%1d:%04X CKD file: parameter %s in argument %d is invalid"
+        WRMSG( HHC00402, "E", LCSS_DEVNUM, argv[i], i + 1 );
         return -1;
     }
 
@@ -362,8 +367,9 @@ char           *strtok_str = NULL;      /* save last position        */
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
         if (!dev->quiet)
-            WRMSG (HHC00403, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename,
-                dev->ckdfakewr ? " with fake writing" : "");
+            // "%1d:%04X CKD file %s: opening as r/o%s"
+            WRMSG( HHC00403, "I", LCSS_DEVNUM,
+                filename, dev->ckdfakewr ? " with fake writing" : "" );
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
@@ -375,8 +381,9 @@ char           *strtok_str = NULL;      /* save last position        */
                 dev->fd = HOPEN (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                                 filename, "open()", strerror(errno));
+                // "%1d:%04X CKD file %s: error in function %s: %s"
+                WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                                 filename, "open()", strerror( errno ));
                 return -1;
             }
         }
@@ -384,7 +391,8 @@ char           *strtok_str = NULL;      /* save last position        */
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->dasdsfn != NULL)
         {
-            WRMSG (HHC00405, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+            // "%1d:%04X CKD file %s: only one base file is allowed"
+            WRMSG( HHC00405, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
@@ -392,8 +400,8 @@ char           *strtok_str = NULL;      /* save last position        */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid),
-                             dev->devnum, filename, "fstat()", strerror(errno));
+            // "%1d:%04X CKD file %s: error in function %s: %s"
+            WRMSG( HHC00404, "E", LCSS_DEVNUM, filename, "fstat()", strerror( errno ));
             return -1;
         }
 
@@ -402,9 +410,13 @@ char           *strtok_str = NULL;      /* save last position        */
         if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", strerror(errno));
+                // "%1d:%04X CKD file %s: error in function %s: %s"
+                WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                       filename, "read()", strerror( errno ));
             else
-                WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", "CKD header incomplete");
+                // "%1d:%04X CKD file %s: error in function %s: %s"
+                WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                       filename, "read()", "CKD header incomplete" );
             return -1;
         }
 
@@ -413,7 +425,8 @@ char           *strtok_str = NULL;      /* save last position        */
         {
             if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
             {
-                WRMSG (HHC00406, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+                // "%1d:%04X CKD file %s: ckd header invalid"
+                WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
                 return -1;
             }
             else
@@ -421,7 +434,8 @@ char           *strtok_str = NULL;      /* save last position        */
                 cckd = 1;
                 if (fileseq != 1)
                 {
-                    WRMSG (HHC00407, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+                    // "%1d:%04X CKD file %s: only 1 CCKD file allowed"
+                    WRMSG( HHC00407, "E", LCSS_DEVNUM, filename );
                     return -1;
                 }
             }
@@ -435,11 +449,15 @@ char           *strtok_str = NULL;      /* save last position        */
             {
                 if (rc < 0)
                 {
-                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", strerror(errno));
+                    // "%1d:%04X CKD file %s: error in function %s: %s"
+                    WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                           filename, "read()", strerror( errno ));
                 }
                 else
                 {
-                    WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, "read()", "CCKD header incomplete");
+                    // "%1d:%04X CKD file %s: error in function %s: %s"
+                    WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                           filename, "read()", "CCKD header incomplete" );
                 }
                 return -1;
             }
@@ -501,15 +519,18 @@ char           *strtok_str = NULL;      /* save last position        */
         if (devhdr.fileseq != fileseq
             && !(devhdr.fileseq == 0 && fileseq == 1))
         {
-            WRMSG (HHC00408, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+            // "%1d:%04X CKD file %s: ckd file out of sequence"
+            WRMSG( HHC00408, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
         if (devhdr.fileseq > 0)
         {
             if (!dev->quiet)
-                WRMSG (HHC00409, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, devhdr.fileseq, dev->ckdcyls,
-                    (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
+                // "%1d:%04X CKD file %s: seq %02d cyls %6d-%-6d"
+                WRMSG( HHC00409, "I", LCSS_DEVNUM,
+                       filename, devhdr.fileseq, dev->ckdcyls,
+                       (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
         /* Save device geometry of first file, or check that device
@@ -521,8 +542,9 @@ char           *strtok_str = NULL;      /* save last position        */
         }
         else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
-            WRMSG (HHC00410, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, heads, trksize,
-                    dev->ckdheads, dev->ckdtrksz);
+            // "%1d:%04X CKD file %s: found heads %d trklen %d, expected heads %d trklen %d"
+            WRMSG( HHC00410, "E", LCSS_DEVNUM,
+                   filename, heads, trksize, dev->ckdheads, dev->ckdtrksz );
             return -1;
         }
 
@@ -532,14 +554,16 @@ char           *strtok_str = NULL;      /* save last position        */
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
-            WRMSG (HHC00411, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+            // "%1d:%04X CKD file %s: ckd header inconsistent with file size"
+            WRMSG( HHC00411, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
         /* Check for correct high cylinder number */
         if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
-            WRMSG (HHC00412, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename);
+            // "%1d:%04X CKD file %s: ckd header high cylinder incorrect"
+            WRMSG( HHC00412, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
@@ -567,7 +591,8 @@ char           *strtok_str = NULL;      /* save last position        */
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)
         {
-            WRMSG (HHC00413, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, CKD_MAXFILES);
+            // "%1d:%04X CKD file %s: maximum CKD files exceeded: %d"
+            WRMSG( HHC00413, "E", LCSS_DEVNUM, filename, CKD_MAXFILES );
             return -1;
         }
 
@@ -578,14 +603,17 @@ char           *strtok_str = NULL;      /* save last position        */
 
     /* Log the device geometry */
     if (!dev->quiet)
-        WRMSG (HHC00414, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->ckdcyls,
-            dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
+        // "%1d:%04X CKD file %s: cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename,
+               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRMSG (HHC00415, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, dev->devtype);
+        // "%1d:%04X CKD file %s: device type %4.4X not found in dasd table"
+        WRMSG( HHC00415, "E", LCSS_DEVNUM,
+               filename, dev->devtype );
         return -1;
     }
 
@@ -593,7 +621,9 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRMSG (HHC00416, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, filename, cu ? cu : dev->ckdtab->cu);
+        // "%1d:%04X CKD file %s: control unit %s not found in dasd table"
+        WRMSG( HHC00416, "E", LCSS_DEVNUM,
+               filename, cu ? cu : dev->ckdtab->cu );
         return -1;
     }
 
@@ -708,8 +738,9 @@ BYTE    unitstat;                       /* Unit Status               */
 
     if (!dev->batch)
         if (!dev->quiet)
-            WRMSG (HHC00417, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->cachehits, dev->cachemisses,
-                dev->cachewaits);
+            // "%1d:%04X CKD file %s: cache hits %d, misses %d, waits %d"
+            WRMSG( HHC00417, "I", LCSS_DEVNUM,
+                   dev->filename, dev->cachehits, dev->cachemisses, dev->cachewaits );
 
     /* Close all of the CKD image files */
     for (i = 0; i < dev->ckdnumfd; i++)
@@ -789,7 +820,8 @@ off_t           offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
-    logdevtr (dev, MSG(HHC00424, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->bufcur));
+    // "%1d:%04X CKD file %s: read trk %d cur trk %d"
+    LOGDEVTR( HHC00424, "I", dev->filename, trk, dev->bufcur );
 
     /* Calculate cylinder and head */
     cyl = trk / dev->ckdheads;
@@ -806,7 +838,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     /* Write the previous track image if modified */
     if (dev->bufupd)
     {
-        logdevtr (dev, MSG(HHC00425, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufcur));
+        // "%1d:%04X CKD file %s: read track updating track %d"
+        LOGDEVTR( HHC00425, "I", dev->filename, dev->bufcur );
 
         dev->bufupd = 0;
 
@@ -816,7 +849,9 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
+            // "%1d:%04X CKD file %s: error in function %s: %s"
+            WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                   dev->filename, "lseek()", strerror( errno ));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -834,7 +869,9 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle write error condition */
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "write()", strerror(errno));
+            // "%1d:%04X CKD file %s: error in function %s: %s"
+            WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                   dev->filename, "write()", strerror( errno ));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -875,7 +912,8 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        logdevtr (dev, MSG(HHC00426, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, i));
+        // "%1d:%04X CKD file %s: read trk %d cache hit, using cache[%d]"
+        LOGDEVTR( HHC00426, "I", dev->filename, trk, i );
 
         dev->cachehits++;
         dev->cache = i;
@@ -901,14 +939,18 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        logdevtr (dev, MSG(HHC00427, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk));
+        // "%1d:%04X CKD file %s: read trk %d no available cache entry, waiting"
+        LOGDEVTR( HHC00427, "I", dev->filename, trk );
+
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto ckd_read_track_retry;
     }
 
     /* Cache miss */
-    logdevtr (dev, MSG(HHC00428, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, o));
+
+    // "%1d:%04X CKD file %s: read trk %d cache miss, using cache[%d]"
+    LOGDEVTR( HHC00428, "I", dev->filename, trk, o );
 
     dev->cachemisses++;
 
@@ -928,8 +970,8 @@ ckd_read_track_retry:
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
          (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
-    logdevtr (dev, MSG(HHC00429, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, f+1,
-        dev->ckdtrkoff, dev->ckdtrksz));
+    // "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
+    LOGDEVTR( HHC00429, "I", dev->filename, trk, f+1, dev->ckdtrkoff, dev->ckdtrksz );
 
     /* Seek to the track image offset */
     offset = (off_t)dev->ckdtrkoff;
@@ -937,7 +979,9 @@ ckd_read_track_retry:
     if (offset < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "lseek()", strerror(errno));
+        // "%1d:%04X CKD file %s: error in function %s: %s"
+        WRMSG( HHC00404, "E", LCSS_DEVNUM,
+               dev->filename, "lseek()", strerror( errno ));
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         dev->bufcur = dev->cache = -1;
@@ -954,8 +998,9 @@ ckd_read_track_retry:
         if (rc < dev->ckdtrksz)
         {
             /* Handle read error condition */
-            WRMSG (HHC00404, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "read()",
-                (rc < 0 ? strerror(errno) : "unexpected end of file"));
+            // "%1d:%04X CKD file %s: error in function %s: %s"
+            WRMSG( HHC00404, "E", LCSS_DEVNUM,
+                   dev->filename, "read()", (rc < 0 ? strerror( errno ) : "unexpected end of file" ));
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             dev->bufcur = dev->cache = -1;
@@ -977,7 +1022,11 @@ ckd_read_track_retry:
     }
 
     /* Validate the track header */
-    logdevtr (dev, MSG(HHC00430, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]));
+
+    // "%1d:%04X CKD file %s: read trk %d trkhdr %02X %02X%02X %02X%02X"
+    LOGDEVTR( HHC00430, "I", dev->filename, trk,
+        dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4] );
+
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
     if (trkhdr->bin != 0
       || trkhdr->cyl[0] != (cyl >> 8)
@@ -985,8 +1034,11 @@ ckd_read_track_retry:
       || trkhdr->head[0] != (head >> 8)
       || trkhdr->head[1] != (head & 0xFF))
     {
-        WRMSG (HHC00418, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head,
-                trkhdr->bin,trkhdr->cyl[0],trkhdr->cyl[1],trkhdr->head[0],trkhdr->head[1]);
+        // "%1d:%04X CKD file %s: invalid track header for cyl %d head %d %02X %02X%02X %02X%02X"
+        WRMSG( HHC00418, "E", LCSS_DEVNUM,
+               dev->filename, cyl, head, trkhdr->bin,
+               trkhdr->cyl[0], trkhdr->cyl[1],
+               trkhdr->head[0], trkhdr->head[1] );
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         dev->bufcur = dev->cache = -1;
@@ -1498,7 +1550,8 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    logdevtr (dev, MSG(HHC00431, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head));
+    // "%1d:%04X CKD file %s: seeking to cyl %d head %d"
+    LOGDEVTR( HHC00431, "I", dev->filename, cyl, head );
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1537,7 +1590,9 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        logdevtr (dev, MSG(HHC00432, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdlcount, dev->ckdfmask));
+        // "%1d:%04X CKD file %s: error: MT advance: locate record %d file mask %02X"
+        LOGDEVTR( HHC00432, "E", dev->filename, dev->ckdlcount, dev->ckdfmask );
+
         if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
         else
@@ -1567,7 +1622,9 @@ int             head;                   /* Next head for multitrack  */
         head -= dev->ckdheads;
         cyl++;
     }
-    logdevtr (dev, MSG(HHC00433, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, cyl, head));
+
+    // "%1d:%04X CKD file %s: MT advance to cyl(%d) head(%d)"
+    LOGDEVTR( HHC00433, "I", dev->filename, cyl, head );
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1615,7 +1672,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    logdevtr (dev, MSG(HHC00434, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, orient[dev->ckdorient]));
+    // "%1d:%04X CKD file %s: read count orientation %s"
+    LOGDEVTR( HHC00434, "I", dev->filename, orient[dev->ckdorient] );
 
     /* If orientation is at End-Of_Track then a multi-track advance
        failed previously during synchronous I/O */
@@ -1638,7 +1696,9 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
         {
             /* Handle error condition */
-            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
+            // "%1d:%04X CKD file %s: error attempting to read past end of track %d %d"
+            WRMSG( HHC00419, "E", LCSS_DEVNUM,
+                   dev->filename, dev->bufoff, dev->bufoffhi );
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1662,9 +1722,10 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         else
             dev->ckdtrkof = 0;
 
-        logdevtr (dev, MSG(HHC00435, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
-                dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof));
+        // "%1d:%04X CKD file %s: cyl %d head %d record %d kl %d dl %d of %d"
+        LOGDEVTR( HHC00435, "I",  dev->filename,
+                  dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+                  dev->ckdcurkl,  dev->ckdcurdl,   dev->ckdtrkof );
 
         /* Skip record zero if user data record required */
         if (skipr0 && rechdr->rec == 0)
@@ -1750,7 +1811,8 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    logdevtr (dev, MSG(HHC00436, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurkl));
+    // "%1d:%04X CKD file %s: read key %d bytes"
+    LOGDEVTR( HHC00436, "I", dev->filename, dev->ckdcurkl );
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1758,7 +1820,9 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (dev->bufoffhi - dev->bufoff < dev->ckdcurkl)
         {
             /* Handle error condition */
-            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
+            // "%1d:%04X CKD file %s: error attempting to read past end of track %d %d"
+            WRMSG( HHC00419, "E", LCSS_DEVNUM,
+                   dev->filename, dev->bufoff, dev->bufoffhi );
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1800,7 +1864,8 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    logdevtr (dev, MSG(HHC00437, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurdl));
+    // "%1d:%04X CKD file %s: read data %d bytes"
+    LOGDEVTR( HHC00437, "I", dev->filename, dev->ckdcurdl );
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1808,7 +1873,9 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         if (dev->bufoff + dev->ckdcurdl >= dev->bufoffhi)
         {
             /* Handle error condition */
-            WRMSG (HHC00419, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->bufoff, dev->bufoffhi);
+            // "%1d:%04X CKD file %s: error attempting to read past end of track %d %d"
+            WRMSG( HHC00419, "E", LCSS_DEVNUM,
+                   dev->filename, dev->bufoff, dev->bufoffhi );
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1926,12 +1993,16 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00438, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen));
+    // "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
+    LOGDEVTR( HHC00438, "I",  dev->filename,
+              dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen );
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        logdevtr (dev, MSG(HHC00439, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, recnum));
+        // "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
+        LOGDEVTR( HHC00439, "I",  dev->filename,
+                  dev->ckdcurcyl, dev->ckdcurhead, recnum );
         buf[0] |= 0x80;
     }
 
@@ -1974,7 +2045,8 @@ int             kdlen;                  /* Key+data length           */
     /* Unit check if not oriented to count area */
     if (dev->ckdorient != CKDORIENT_COUNT)
     {
-        WRMSG (HHC00420, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        // "%1d:%04X CKD file %s: error write kd orientation"
+        WRMSG( HHC00420, "E", LCSS_DEVNUM, dev->filename );
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1987,8 +2059,10 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00440, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
-            dev->ckdcurkl, dev->ckdcurdl));
+    // "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
+    LOGDEVTR( HHC00440, "I",  dev->filename,
+              dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
+              dev->ckdcurkl,  dev->ckdcurdl );
 
     /* Write key and data */
     rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, kdlen, unitstat);
@@ -2015,7 +2089,8 @@ int             rc;                     /* Return code               */
     if (dev->ckdorient != CKDORIENT_COUNT
         && dev->ckdorient != CKDORIENT_KEY)
     {
-        WRMSG (HHC00421, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        // "%1d:%04X CKD file %s: error write data orientation"
+        WRMSG( HHC00421, "E", LCSS_DEVNUM, dev->filename );
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2029,8 +2104,9 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    logdevtr (dev, MSG(HHC00441, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
-            dev->ckdcurdl));
+    // "%1d:%04X CKD file %s: ipdating cyl %d head %d record %d dl %d"
+    LOGDEVTR( HHC00441, "I",  dev->filename,
+              dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec, dev->ckdcurdl );
 
     /* Write data */
     rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, buf, dev->ckdcurdl, unitstat);
@@ -2087,7 +2163,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         && (code & 0x7F) != 0x16 && (code & 0x7F) != 0x12
         && (code & 0x7F) != 0x0E && (code & 0x7F) != 0x06)
     {
-        WRMSG (HHC00422, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, code);
+        // "%1d:%04X CKD file %s: data chaining not supported for CCW %02X"
+        WRMSG( HHC00422, "E", LCSS_DEVNUM, dev->filename, code );
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_1);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3538,7 +3615,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
-        logdevtr (dev, MSG(HHC00442, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdfmask));
+
+        // "%1d:%04X CKD file %s: set file mask %02X"
+        LOGDEVTR( HHC00442, "I", dev->filename, dev->ckdfmask );
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)
@@ -3705,7 +3784,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             BYTE module[45];
             str_guest_to_host( iobuf, module, (u_int)num );
-            WRMSG (HHC00423, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, module);
+            // "%1d:%04X CKD file %s: search key %s"
+            WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, module );
         }
 #endif /*OPTION_CKD_KEY_TRACING*/
 
@@ -4743,21 +4823,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 if (memcmp (&rechdr, cchhr, 5) == 0)
                     break;
 
-// NOTE: Code like this breaks VM mini-disks !!!
-#if 0
-                if (memcmp (&rechdr, cchhr, 4) != 0)
-                {
-                    WRMSG( HHC00443, "E",
-                           SSID_TO_LCSS(dev->ssid), dev->devnum,
-                           (rechdr.cyl[0] << 8) | rechdr.cyl[1],
-                           (rechdr.head[0] << 8) | rechdr.head[1],
-                           rechdr.rec,
-                           (cchhr[0] << 8) | cchhr[1],
-                           (cchhr[2] << 8) | cchhr[3],
-                           cchhr[4]);
-                    break;
-                }
-#endif
             } /* end while */
 
         } /* end switch(CKDOPER_ORIENTATION) */

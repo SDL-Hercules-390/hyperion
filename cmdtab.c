@@ -647,7 +647,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 /*-------------------------------------------------------------------*/
 static void EchoHercCmdLine( const char* cmd )
 {
-    WRMSG( HHC01603, "I", cmd );    // "%s"
+    PWRMSG( WRMSG_NORMAL, HHC01603, "I", cmd );    // "%s"
 }
 
 void* FindSCRCTL( TID tid );// (external helper function; see script.c)

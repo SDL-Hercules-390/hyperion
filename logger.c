@@ -244,7 +244,7 @@ static void logger_term(void *arg)
     }
 }
 
-static void logger_logfile_write( void* pBuff, size_t nBytes )
+static void logger_logfile_write( const void* pBuff, size_t nBytes )
 {
     char* pLeft = (char*)pBuff;
     int   nLeft = (int)nBytes;
@@ -296,7 +296,7 @@ static void logger_logfile_timestamp()
     }
 }
 
-DLL_EXPORT void logger_timestamped_logfile_write( void* pBuff, size_t nBytes )
+DLL_EXPORT void logger_timestamped_logfile_write( const void* pBuff, size_t nBytes )
 {
     if (logger_hrdcpy)
     {
@@ -601,83 +601,102 @@ DLL_EXPORT char *log_dsphrdcpy(void)
     return pzbuf;
 }
 
-DLL_EXPORT void log_sethrdcpy(char *filename)
+DLL_EXPORT void log_sethrdcpy( const char* filename )
 {
-FILE *temp_hrdcpy = logger_hrdcpy;
-FILE *new_hrdcpy;
-int   new_hrdcpyfd = -1;
+    FILE*  old_hrdcpy;
 
-    if(!filename)
+    /* If no filename specified then close the current logfile */
+    if (!filename)
     {
-        memset(logger_filename, 0, sizeof(logger_filename));
+        memset( logger_filename, 0, sizeof( logger_filename ));
 
-        if(!logger_hrdcpy)
+        if (!logger_hrdcpy)
         {
             // "Logger: log not active"
-            WRMSG(HHC02100, "E");
-            return;
+            WRMSG( HHC02100, "E" );
         }
         else
         {
-            obtain_lock(&logger_lock);
-            logger_hrdcpy = 0;
-            logger_hrdcpyfd = 0;
-            release_lock(&logger_lock);
+            /* Disable logging and close logfile */
+            obtain_lock( &logger_lock );
+            {
+                old_hrdcpy      = logger_hrdcpy;
+                logger_hrdcpy   = 0;
+                logger_hrdcpyfd = 0;
+            }
+            release_lock( &logger_lock );
+
             // "Logger: log closed"
-            fprintf(temp_hrdcpy,MSG(HHC02101, "I"));
-            fclose(temp_hrdcpy);
+            fprintf( old_hrdcpy, MSG( HHC02101, "I" ));
+            fclose(  old_hrdcpy );
+
             // "Logger: log closed"
-            WRMSG(HHC02101, "I");
-            return;
+            WRMSG( HHC02101, "I" );
         }
+        return;
     }
     else
     {
-        char pathname[MAX_PATH];
-        hostpath(pathname, filename, sizeof(pathname));
+        FILE*  new_hrdcpy;
+        int    new_hrdcpyfd;
+        char   pathname[ MAX_PATH ];
 
-        memset(logger_filename, 0, sizeof(logger_filename));
+        /* Open the new logfile */
 
-        new_hrdcpyfd = HOPEN(pathname,
+        hostpath( pathname, filename, sizeof( pathname ));
+
+        memset( logger_filename, 0, sizeof( logger_filename ));
+
+        new_hrdcpyfd = HOPEN( pathname,
                 O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
-                            S_IRUSR  | S_IWUSR | S_IRGRP);
-        if(new_hrdcpyfd < 0)
+                S_IRUSR  | S_IWUSR | S_IRGRP );
+
+        if (new_hrdcpyfd < 0)
         {
             // "Logger: error in function %s: %s"
-            WRMSG(HHC02102, "E","open()",strerror(errno));
-            return;
+            WRMSG( HHC02102, "E","open()", strerror( errno ));
         }
         else
         {
-            if(!(new_hrdcpy = fdopen(new_hrdcpyfd,"w")))
+            if (!(new_hrdcpy = fdopen( new_hrdcpyfd, "w" )))
             {
                 // "Logger: error in function %s: %s"
-                WRMSG(HHC02102,"E", "fdopen()", strerror(errno));
-                return;
+                WRMSG( HHC02102,"E", "fdopen()", strerror( errno ));
+                close( new_hrdcpyfd );
             }
             else
             {
-                setvbuf(new_hrdcpy, NULL, _IONBF, 0);
+                /* Set no buffering and switch to using new logfile */
+                setvbuf( new_hrdcpy, NULL, _IONBF, 0 );
 
-                obtain_lock(&logger_lock);
-                logger_hrdcpy = new_hrdcpy;
-                logger_hrdcpyfd = new_hrdcpyfd;
-                strlcpy(logger_filename, filename, sizeof(logger_filename));
-                release_lock(&logger_lock);
-
-                if(temp_hrdcpy)
+                obtain_lock( &logger_lock );
                 {
-                    char buf[MAX_PATH+2];
-                    char *pzbuf = buf;
+                    old_hrdcpy      = logger_hrdcpy;
+                    logger_hrdcpy   = new_hrdcpy;
+                    logger_hrdcpyfd = new_hrdcpyfd;
 
-                    if ( strchr(filename,SPACE) == NULL )
+                    strlcpy( logger_filename, filename, sizeof( logger_filename ));
+                }
+                release_lock( &logger_lock );
+
+                /* Write a message in the old logfile indicating
+                   logging was switched to a different logfile,
+                   and then close the old logfile afterwards.
+                */
+                if (old_hrdcpy)
+                {
+                    char buf[ MAX_PATH + 2 ];
+                    const char* pzbuf = buf;
+
+                    /* Quote the filename if it contains any blanks */
+                    if (!strchr( filename, SPACE ))
                         pzbuf = filename;
                     else
-                        MSGBUF(buf,"'%s'",filename);
+                        MSGBUF( buf, "'%s'", filename );
 
                     // "Logger: log switched to %s"
-                    fprintf(temp_hrdcpy, MSG(HHC02104, "I", pzbuf));
-                    fclose(temp_hrdcpy);
+                    fprintf( old_hrdcpy, MSG( HHC02104, "I", pzbuf ));
+                    fclose(  old_hrdcpy );
                 }
             }
         }
