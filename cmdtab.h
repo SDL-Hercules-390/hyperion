@@ -475,7 +475,7 @@
                                 \
   "This command is deprecated. Use \"ecpsvm\" instead.\n"
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 #define exec_cmd_desc           "Execute a Rexx script"
 #define exec_cmd_help           \
                                 \
@@ -486,7 +486,7 @@
   "it can be overridden for the current exec invocation specifying the mode\n"   \
   "as ... \"exec com rexx_exec [args...]\" for command style arguments\n"        \
   "or ... \"exec sub rexx_exec [args...]\" for subroutine style arguments\n"
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
@@ -1114,8 +1114,8 @@
 #define restart_cmd_desc        "Generate restart interrupt"
 #define resume_cmd_desc         "Resume hercules"
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
 #define rexx_cmd_desc           "Modify/Display Rexx interpreter settings"
 #define rexx_cmd_help           \
                                 \
@@ -1141,7 +1141,7 @@
   "                   - command/subroutine\n"                                    \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
-#else /* !defined(ENABLE_OBJECT_REXX) || !defined(ENABLE_REGINA_REXX) */
+#else /* !defined(HAVE_OBJECT_REXX) || !defined(HAVE_REGINA_REXX) */
 #define rexx_cmd_desc           "display Rexx interpreter settings"
 #define rexx_cmd_help           \
                                 \
@@ -1163,8 +1163,8 @@
   "                   - command/subroutine\n"                                    \
   "\n"                                                                           \
   "using reset as parameter will reset the above settings to the defaults\n"
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #define rmmod_cmd_desc          "Delete a module"
 #define sminus_cmd_desc         "Turn off instruction stepping"
@@ -1703,10 +1703,10 @@ COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        
 #endif
 #endif
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          rexx_cmd_desc,          rexx_cmd_help       )
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #if 0
 #if defined( _MSVC_ )

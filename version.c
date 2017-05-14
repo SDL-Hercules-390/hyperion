@@ -676,12 +676,12 @@ static const char *build_info[] = {
     "Without Regular Expressions support",
 #endif
 
-#if defined(ENABLE_OBJECT_REXX)
+#if defined(HAVE_OBJECT_REXX)
     "With    Object REXX support",
 #else
     "Without Object REXX support",
 #endif
-#if defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_REGINA_REXX)
     "With    Regina REXX support",
 #else
     "Without Regina REXX support",

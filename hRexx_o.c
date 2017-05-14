@@ -12,7 +12,7 @@
 #ifndef _HREXX_O_C_
 #define _HREXX_O_C_
 
-#if defined(ENABLE_OBJECT_REXX)
+#if defined(HAVE_OBJECT_REXX)
 
 #define HREXXDROPVAR            ObjectRexxDropVar
 #define HREXXFETCHVAR           ObjectRexxFetchVar
@@ -105,5 +105,5 @@ int ObjectRexxDynamicLoader()
 
 #include "hRexxapi.h"
 
-#endif /* defined(ENABLE_OBJECT_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) */
 #endif /* #ifndef _HREXX_O_C_  */

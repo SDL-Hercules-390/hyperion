@@ -15,9 +15,9 @@
 #define _HENGINE_DLL_
 #include "hercules.h"
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
 #define REXX_TRY_OOREXX( _FOUND_ ) do \
 { \
     RexxPackage = OOREXX_PACKAGE; \
@@ -65,7 +65,7 @@
     RexxExecSub = NULL; \
     RexxStatus = _DISABLED_ ; \
 } while (0) ;
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
 #include "hRexx.h"
 
@@ -76,7 +76,7 @@ void InitializePaths(char *);
 void InitializeExtensions(char *);
 void InitializeOptions(void);
 
-#if defined(ENABLE_OBJECT_REXX)
+#if defined(HAVE_OBJECT_REXX)
 int ObjectRexxDynamicLoader();
 int ObjectRexxRegisterFunctions();
 int ObjectRexxRegisterHandlers();
@@ -84,7 +84,7 @@ int ObjectRexxExecCmd();
 int ObjectRexxExecInstoreCmd();
 int ObjectRexxExecSub();
 #endif
-#if defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_REGINA_REXX)
 int ReginaRexxDynamicLoader();
 int ReginaRexxRegisterFunctions();
 int ReginaRexxRegisterHandlers();
@@ -96,7 +96,7 @@ int ReginaRexxExecSub();
 void *hRexxLibHandle = NULL;       /* Library handle */
 void *hRexxApiLibHandle = NULL;    /* Api Library handle ooRexx*/
 
-#if defined(ENABLE_OBJECT_REXX)  && !defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX)  && !defined(HAVE_REGINA_REXX)
 char *RexxPackage = OOREXX_PACKAGE;
 char *RexxLibrary = OOREXX_LIBRARY;
 char *RexxApiLibrary = OOREXX_API_LIBRARY;
@@ -107,7 +107,7 @@ int (*RexxExecCmd)() = &ObjectRexxExecCmd;
 int (*RexxExecInstoreCmd)() = &ObjectRexxExecInstoreCmd;
 int (*RexxExecSub)() = &ObjectRexxExecSub;
 
-#elif !defined(ENABLE_OBJECT_REXX) &&  defined(ENABLE_REGINA_REXX)
+#elif !defined(HAVE_OBJECT_REXX) &&  defined(HAVE_REGINA_REXX)
 char *RexxPackage = REGINA_PACKAGE;
 char *RexxLibrary = REGINA_LIBRARY;
 char *RexxApiLibrary = "";
@@ -383,13 +383,13 @@ int   wRexxMode = 0;
              ( ( argl >= 3 && argl <= 7 && HAVABBR( "disable" ) ) ||
                ( argl >= 3 && argl <= 4 && HAVABBR( "stop"    ) ) ) )
         {
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
             haveDisable = TRUE;
             continue;
-#else  /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#else  /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
             WRMSG( HHC17524, "I", RexxPackage);
             return 0;
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
         }
 
         if ( !havePath &&
@@ -454,7 +454,7 @@ int   wRexxMode = 0;
            ( ( argl >= 3 && argl <=  6 && HAVABBR( "enable" ) ) ||
              ( argl >= 3 && argl <=  5 && HAVABBR( "start"  ) ) ) )
         {
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
             if ( hRexxLibHandle )
             {
                 WRMSG( HHC17522, "I", RexxPackage);
@@ -463,10 +463,10 @@ int   wRexxMode = 0;
             haveEnable= TRUE;
             whatValue = _NEEDPACKAGE;
             continue;
-#else /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#else /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
             WRMSG( HHC17523, "I", RexxPackage);
             return 0;
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
         }
 
         WRMSG( HHC17508, "W", RexxPackage, argv[iarg], iarg + 1 );
@@ -488,7 +488,7 @@ int   wRexxMode = 0;
         RexxMode = wRexxMode;
     }
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
     if ( haveDisable )
     {
         if  ( hRexxLibHandle )
@@ -504,7 +504,7 @@ int   wRexxMode = 0;
         WRMSG( HHC17526, "I", RexxPackage);
 
     }
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
     if ( havePath )
     {
@@ -590,7 +590,7 @@ int   wRexxMode = 0;
         RexxMode = wRexxMode;
     }
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
     if ( haveEnable )
     {
         if ( strcasecmp(wPackage, "auto" ) == 0  )
@@ -646,7 +646,7 @@ int   wRexxMode = 0;
 
     }
 Enable_Rexx_Loaded:
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
     if ( !PathsInitialized )
         InitializePaths(NULL);
@@ -698,13 +698,13 @@ Enable_Rexx_Loaded:
             ( RexxMode == _COMMAND_ ) ? "(Command)" : "(Subroutine)" );
     WRMSG( HHC17500, "I", RexxPackage,Result);
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
     if ( RexxStatus == _DISABLED_ )
     {
         WRMSG( HHC17521, "I","");
         return -1;
     }
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
     rc = exec_instore_cmd("parse version _v;parse source  _s;return _v || '0a'x || _s;\n",Result);
     if  ( rc == 0 )
@@ -745,7 +745,7 @@ struct stat fstat;
     UNREFERENCED(RetRC);
     UNREFERENCED(CommandLine);
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
 
     if ( RexxStatus == _DISABLED_ )
     {
@@ -802,7 +802,7 @@ struct stat fstat;
 
     }
 exec_cmd_Rexx_Loaded:
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
     if ( argc >= 2 )
     {
@@ -955,7 +955,7 @@ short RetRC=0;
     UNREFERENCED(rc);
     UNREFERENCED(RetRC);
 
-#if defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
 
     if ( RexxStatus == _DISABLED_ )
     {
@@ -1012,7 +1012,7 @@ short RetRC=0;
 
     }
 exec_instore_cmd_Rexx_Loaded:
-#endif /* defined(ENABLE_OBJECT_REXX) && defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
 
     return (*RexxExecInstoreCmd)( Command, NULL, RetRC, Result);
 
@@ -1157,6 +1157,6 @@ char *envvar;
         RexxMode = _COMMAND_ ;
 }
 
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)  */
+#endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)  */
 
 #endif /* #ifndef _HREXX_C_  */

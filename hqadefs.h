@@ -297,7 +297,7 @@
   #undef  OBJECT_REXX_HDR_DIR
   #undef  OBJECT_REXX_HEADER1
   #undef  OBJECT_REXX_HEADER2
-  #undef  ENABLE_OBJECT_REXX
+  #undef  HAVE_OBJECT_REXX
   #undef  HAVE_REXX_H
   #undef  HAVE_OOREXXAPI_H
 
@@ -314,7 +314,7 @@
 
   #undef  REGINA_REXX_HDR_DIR
   #undef  REGINA_REXX_HEADER1
-  #undef  ENABLE_REGINA_REXX
+  #undef  HAVE_REGINA_REXX
   #undef  HAVE_REXXSAA_H
 
 #endif
@@ -331,13 +331,13 @@
   #undef  OBJECT_REXX_HDR_DIR
   #undef  OBJECT_REXX_HEADER1
   #undef  OBJECT_REXX_HEADER2
-  #undef  ENABLE_OBJECT_REXX
+  #undef  HAVE_OBJECT_REXX
   #undef  HAVE_REXX_H
   #undef  HAVE_OOREXXAPI_H
 
   #undef  REGINA_REXX_HDR_DIR
   #undef  REGINA_REXX_HEADER1
-  #undef  ENABLE_REGINA_REXX
+  #undef  HAVE_REGINA_REXX
   #undef  HAVE_REXXSAA_H
 
 #endif

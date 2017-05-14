@@ -12,7 +12,7 @@
 #ifndef _HREXX_R_C_
 #define _HREXX_R_C_
 
-#if defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_REGINA_REXX)
 
 #define HREXXDROPVAR            ReginaRexxDropVar
 #define HREXXFETCHVAR           ReginaRexxFetchVar
@@ -123,5 +123,5 @@ int ReginaRexxDynamicLoader()
 
 #include "hRexxapi.h"
 
-#endif /* defined(ENABLE_REGINA_REXX) */
+#endif /* defined(HAVE_REGINA_REXX) */
 #endif /* #ifndef _HREXX_R_C_  */

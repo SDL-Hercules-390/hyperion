@@ -581,11 +581,11 @@ void alter_display_virt (REGS *regs, int argc, char *argv[], char *cmdline);
 void disasm_stor        (REGS *regs, int argc, char *argv[], char *cmdline);
 int drop_privileges(int capa);
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 /* Functions in module hrexx.c */
-int rexx_cmd(int argc, char *argv[],char *cmdline);
-int exec_cmd(int argc, char *argv[],char *cmdline);
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX) */
+int rexx_cmd( int argc, char* argv[], char* cmdline );
+int exec_cmd( int argc, char* argv[], char* cmdline );
+#endif
 
 /* Functions in module sr.c */
 int suspend_cmd(int argc, char *argv[],char *cmdline);

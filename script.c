@@ -271,7 +271,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 char    fname[MAX_PATH];                /* normalized filename       */
 int     errorcount = 0;
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 int     shell_flg = FALSE;              /* indicate it is has a shell
                                            path specified            */
 #endif
@@ -315,7 +315,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         /* Parse the statement just read */
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
         // Test for REXX script. If first card starts with "/*" or
         // first card has shell path specification "#!" and second card
         // "/*", then we will process as a REXX script.
@@ -342,7 +342,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
                 goto rexx_done;
             }
         }
-#endif /* defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)   */
+#endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)   */
 
 #if defined( ENABLE_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
@@ -510,7 +510,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 
     } /* end for(scount) (end of configuration file statement loop) */
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
 rexx_done:
 
@@ -524,7 +524,7 @@ rexx_done:
 
     return errorcount;
 
-#endif // defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#endif // defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
 } /* end function process_config */
 
@@ -890,7 +890,7 @@ int     rc;                             /* (work)                    */
         goto script_end;
     }
 
-#if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
+#if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
     /* Skip past blanks to start of command */
     for (p = stmt; isspace( *p ); p++)
