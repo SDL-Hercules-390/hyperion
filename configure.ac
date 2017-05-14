@@ -2026,7 +2026,7 @@ AC_ARG_ENABLE( object-rexx,
 
     AC_HELP_STRING( [--enable-object-rexx],
 
-        [enable open object rexx support]
+        [enable OORexx support]
     ),
     [
         case "${enableval}" in
@@ -2303,7 +2303,7 @@ if test "$hc_cv_opt_capabilities" = "yes"; then
   fi
 fi
 
-hc_cv_opt_custom_build_str="** The unofficial SoftDevLabs version of Hercules **"
+hc_cv_opt_custom_build_str="** The SoftDevLabs version of Hercules **"
 
 AC_ARG_ENABLE( custom,
 
@@ -2368,13 +2368,13 @@ if test "$hc_cv_ena_object_rexx" = "yes" ; then
 
    if test "$hc_cv_have_rexx_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) rexx.h is not available] )
+      AC_MSG_RESULT( [ERROR: OORexx support requested but rexx.h is not available] )
       hc_error=yes
    fi
 
    if test "$hc_cv_have_oorexxapi_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
+      AC_MSG_RESULT( [ERROR: OORexx support requested but oorexxapi.h is not available] )
       hc_error=yes
    fi
 
@@ -2382,10 +2382,10 @@ fi
 
 if test "$hc_cv_ena_regina_rexx" = "yes" ; then
 
-   if test "$hc_cv_have_rexxsaa_h" != "yes" &&
+   if test "$hc_cv_have_rexxsaa_h"        != "yes"  &&
       test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
+      AC_MSG_RESULT( [ERROR: Regina Rexx support requested but rexxsaa.h is not available] )
       hc_error=yes
    fi
 

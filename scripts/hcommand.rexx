@@ -18,7 +18,7 @@ parse var _nx0 _n0 "." .
 
 /* Techniques... */
 
-technique.desc.1  = 'HREXX.RESPSTEMNAME = "foo";           Address HERCULES command'
+technique.desc.1  = 'HREXX.RESPSTEMNAME           = "foo"; Address HERCULES command'
 technique.desc.2  = 'HREXX.PERSISTENTRESPSTEMNAME = "foo"; Address HERCULES command'
 technique.desc.3  = '_rc = awscmd( command, "foo", "RETCODE" )'
 technique.desc.4  = '_rc = awscmd( command, "foo", "SYSTEM" )'

@@ -288,7 +288,6 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
     RELEASE_INTLOCK(NULL);
 
     return rc;
-
 }
 
 

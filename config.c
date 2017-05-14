@@ -49,7 +49,6 @@ int rc;
 }
 #endif /*defined(HAVE_MLOCKALL)*/
 
-
 static void configure_region_reloc()
 {
 DEVBLK *dev;
@@ -338,7 +337,6 @@ int  cpu;
         return 0;
     }
 
-
     /* New memory is obtained only if the requested and calculated size
      * is larger than the last allocated size.
      *
@@ -396,7 +394,6 @@ int  cpu;
     sysblk.xpndstor = xpndstor;
     sysblk.xpndsize = xpndsize << (SHIFT_MEBIBYTE - XSTORE_PAGESHIFT);
 
-
     /*
      *  Free prior storage in use
      *
@@ -405,7 +402,6 @@ int  cpu;
      *         allocation.
      *
      */
-
     if (dofree)
         free(dofree);
 
@@ -483,7 +479,6 @@ static void AddSubchanFastLookup( DEVBLK *dev, U16 ssid, U16 subchan )
         release_lock( &sysblk.config );
 }
 
-
 static void DelDevnumFastLookup(U16 lcss,U16 devnum)
 {
     unsigned int Channel;
@@ -498,7 +493,6 @@ static void DelDevnumFastLookup(U16 lcss,U16 devnum)
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
 }
-
 
 static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
@@ -562,7 +556,6 @@ CHPBLK**chpp;
     }
 }
 #endif
-
 
 /* NOTE: also does obtain_lock(&dev->lock); */
 static DEVBLK *get_devblk(U16 lcss, U16 devnum)
@@ -697,7 +690,6 @@ static void ret_devblk(DEVBLK *dev)
     release_lock(&dev->lock);
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block                   */
 /*-------------------------------------------------------------------*/
@@ -769,7 +761,6 @@ int     i;                              /* Loop index                */
     return 0;
 } /* end function detach_devblk */
 
-
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block by subchannel     */
 /*-------------------------------------------------------------------*/
@@ -801,7 +792,6 @@ char   str[64];
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Function to terminate all CPUs and devices                        */
@@ -944,7 +934,6 @@ int rc;
     return 0;
 }
 #endif
-
 
 int configure_herc_priority(int prio)
 {
@@ -1149,7 +1138,6 @@ int cpu;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
@@ -1284,7 +1272,6 @@ int     i;                              /* Loop index                */
     return 0;
 } /* end function attach_device */
 
-
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block by device number  */
 /*-------------------------------------------------------------------*/
@@ -1315,7 +1302,6 @@ char* str = "device";
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Function to rename a device configuration block                   */
@@ -1382,7 +1368,6 @@ DEVBLK *dev;                            /* -> Device block           */
     release_lock(&sysblk.config);
     return 0;
 } /* end function define_device */
-
 
 /*-------------------------------------------------------------------*/
 /* Function to group devblk's belonging to one device (eg OSA, LCS)  */
@@ -1491,7 +1476,6 @@ DEVBLK *tmp;
     return (dev->group && (dev->group->members == dev->group->acount));
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Function to free a device group  (i.e. all devices in the group)  */
 /*-------------------------------------------------------------------*/
@@ -1523,7 +1507,6 @@ DLL_EXPORT BYTE free_group( DEVGRP *group, int locked,
     free( group );
     return TRUE;        // group successfully freed
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
@@ -1561,7 +1544,6 @@ int Chan;
     return dev;
 } /* end function find_device_by_devnum */
 
-
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
@@ -1591,7 +1573,6 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     }
     return dev;
 } /* end function find_device_by_subchan */
-
 
 /*-------------------------------------------------------------------*/
 /* Function to Parse a LCSS specification in a device number spec    */
@@ -1628,6 +1609,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
+            // "Unspecified error occured while parsing Logical Channel Subsystem Identification"
             WRMSG(HHC01466, "E");
         }
         free(wrk);
@@ -1644,6 +1626,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
+            // "No more than 1 Logical Channel Subsystem Identification may be specified"
             WRMSG(HHC01467, "E");
         }
         free(wrk);
@@ -1654,6 +1637,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
+            // "Non-numeric Logical Channel Subsystem Identification %s"
             WRMSG(HHC01468, "E",lcss);
         }
         free(wrk);
@@ -1663,6 +1647,7 @@ parse_lcss(const char *spec,
     {
         if(verbose)
         {
+            // "Logical Channel Subsystem Identification %d exceeds maximum of %d"
             WRMSG(HHC01469, "E",lcssid,FEATURE_LCSS_MAX-1);
         }
         free(wrk);
@@ -1709,6 +1694,7 @@ parse_single_devnum__INTERNAL(const char *spec,
         {
             if(verbose)
             {
+                // "Incorrect %s near character '%c'"
                 WRMSG(HHC01470,"E","device address specification",*strptr);
             }
             free(r);
@@ -1721,19 +1707,15 @@ parse_single_devnum__INTERNAL(const char *spec,
 }
 
 DLL_EXPORT
-int
-parse_single_devnum(const char *spec,
-                    U16 *lcss,
-                    U16 *devnum)
+int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 {
-    return parse_single_devnum__INTERNAL(spec,lcss,devnum,1);
+    int verbose = TRUE;
+    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
 }
-int
-parse_single_devnum_silent(const char *spec,
-                    U16 *lcss,
-                    U16 *devnum)
+int parse_single_devnum_silent( const char* spec, U16* lcss, U16* devnum )
 {
-    return parse_single_devnum__INTERNAL(spec,lcss,devnum,0);
+    int verbose = FALSE;
+    return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
 }
 
 /*-------------------------------------------------------------------*/

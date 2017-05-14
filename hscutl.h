@@ -5,11 +5,11 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /* HSCUTL.H   --   Implementation of functions used in hercules that */
 /* may be missing on some platform ports, or other convenient mis-   */
 /* laneous global utility functions.                                 */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 
 
 #ifndef __HSCUTL_H__
@@ -107,7 +107,7 @@
 
 #endif // !defined(_MSVC_)
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 
 #if !defined(_MSVC_) && !defined(HAVE_STRERROR_R)
   HUT_DLL_IMPORT void strerror_r_init(void);
@@ -203,6 +203,14 @@ HUT_DLL_IMPORT size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+/* The following helper macros can be used in place of direct calls
+ * to either the strlcpy or strlcat functions ONLY when the destination
+ * buffer is an array. They must NEVER be used whenever the destination
+ * buffer is a pointer!
+ */
+#define STRLCPY( dst, src )     strlcpy( (dst), (src), sizeof(dst) )
+#define STRLCAT( dst, src )     strlcat( (dst), (src), sizeof(dst) )
+
 /* Subtract/add gettimeofday struct timeval */
 HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
 HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
@@ -259,7 +267,7 @@ HUT_DLL_IMPORT  int hopen( const char* path, int oflag, ... );
 HUT_DLL_IMPORT const char* trimloc( const char* loc );
 #define  TRIMLOC(_loc)     trimloc( _loc )
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
@@ -269,7 +277,7 @@ HUT_DLL_IMPORT const char* trimloc( const char* loc );
 /* and must be >= 2. If successful then the value of buf is returned */
 /* and is always zero terminated. If an error occurs or an invalid   */
 /* parameter is passed then NULL is returned instead.                */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz );
 
 /*-------------------------------------------------------------------*/
@@ -285,15 +293,29 @@ HUT_DLL_IMPORT int initialize_utility( int argc, char* argv[],
                                        char*  desc,
                                        char** pgm );
 
-/*********************************************************************/
-/* Dump  storage, usually variables on the stack, but anything goes. */
-/* 32 bytes to the line, no translation.                             */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
+/*                Reverse the bits in a BYTE                         */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT BYTE reverse_bits( BYTE b );
 
-HUT_DLL_IMPORT
-void
-dumpStorageHow( void * what, size_t length, char * msg, int reverse);
-#define dumpStorage( what, length, msg) dumpStorageHow( what, length, msg, 0 )
-#define dumpStorageReversed( what, length, msg) dumpStorageHow( what, length, msg, 1 )
+/*-------------------------------------------------------------------*/
+/* Count number of tokens in a string                                */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int tkcount( const char* str, const char* delims );
+
+/*-------------------------------------------------------------------*/
+/* Remove leading and/or trailing chars from a string and return str */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT char*  ltrim ( char* str, const char* dlm ); // (left trim)
+HUT_DLL_IMPORT char*  rtrim ( char* str, const char* dlm ); // (right trim)
+HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
+
+/* Helper macros that trims whitespace as opposed to something else */
+
+#define WHITESPACE      " \t\n\v\f\r"
+
+#define LTRIM( str )  ltrim ( (str), WHITESPACE )
+#define RTRIM( str )  rtrim ( (str), WHITESPACE )
+#define  TRIM( str )   trim ( (str), WHITESPACE )
 
 #endif /* __HSCUTL_H__ */

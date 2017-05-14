@@ -17,7 +17,7 @@ typedef struct {
 	u_int64_t	count;
 	unsigned char	buffer[SHA1_BLOCK_LENGTH];
 } SHA1_CTX;
-  
+
 void SHA1Init(SHA1_CTX * context);
 void SHA1Transform(u_int32_t state[5], const unsigned char buffer[SHA1_BLOCK_LENGTH]);
 void SHA1Update(SHA1_CTX *context, const void *data, unsigned int len);

@@ -3641,23 +3641,30 @@ static int
 read_ctrl_stmt (FILE *cfp, char *cfname, char *stmt, int sbuflen,
                 int *pstmtno)
 {
-int             stmtlen;                /* Length of input statement */
-static int      stmtno = 0;             /* Statement number          */
+    int         stmtlen;                /* Length of input statement */
+    static int  stmtno = 0;             /* Statement number          */
 
     while (1)
     {
         /* Read next record from control file */
         stmtno++;
         *pstmtno = stmtno;
-        if (fgets (stmt, sbuflen, cfp) == NULL)
+
+        if (!fgets( stmt, sbuflen, cfp ))
         {
-            /* Return code +1 if end of control file */
-            if (feof(cfp)) return +1;
+            /* Return +1 when end of control file is reached.
+               Else return -1 indicating input file error.
+            */
+            if (feof( cfp ))
+                return +1;
+
+            // (error)
             {
                 char msgbuf[64];
+
                 MSGBUF( msgbuf, "line[%d] fgets()", stmtno );
-                /* Return code -1 if control file input error */
-                XMERRF ( MSG( HHC02468, "E", cfname, msgbuf, strerror( errno ) ) );
+                // "File %s; %s error: %s"
+                XMERRF( MSG( HHC02468, "E", cfname, msgbuf, strerror( errno )));
             }
             return -1;
         }
@@ -3670,31 +3677,24 @@ static int      stmtno = 0;             /* Statement number          */
             return +1;
 
         /* Check that end of statement has been read */
-#if defined( _MSVC_ )
-        stmtlen = (int)strlen(stmt);
-#else
-        stmtlen = strlen(stmt);
-#endif
-        if (stmtlen == 0 || stmt[stmtlen-1] != '\n')
+        stmtlen = (int) strlen( stmt );
+        if (!stmtlen || stmt[ stmtlen-1 ] != '\n')
         {
-            XMERRF ( MSG( HHC02577, "E", cfname, stmtno ) );
+            // "File %s: line[%04d] error: line length is invalid"
+            XMERRF( MSG( HHC02577, "E", cfname, stmtno ));
             return -1;
         }
 
-        /* Remove trailing carriage return and line feed */
-        stmtlen--;
-        if (stmtlen > 0 && stmt[stmtlen-1] == '\r') stmtlen--;
-
-        /* Remove trailing spaces and tab characters */
-        while (stmtlen > 0 && (stmt[stmtlen-1] == SPACE
-                || stmt[stmtlen-1] == '\t')) stmtlen--;
-        stmt[stmtlen] = '\0';
+        /* Remove trailing whitespace */
+        RTRIM( stmt );
+        stmtlen = (int) strlen( stmt );
 
         /* Print the input statement */
-        XMINFF (0, MSG( HHC02567, "I", cfname, stmtno, stmt ) );
+        // "File %s[%04d]: %s"
+        XMINFF( 0, MSG( HHC02567, "I", cfname, stmtno, stmt ));
 
         /* Ignore comment statements */
-        if (stmtlen == 0 || stmt[0] == '#' || stmt[0] == '*')
+        if (!stmtlen || stmt[0] == '#' || stmt[0] == '*')
             continue;
 
         break;

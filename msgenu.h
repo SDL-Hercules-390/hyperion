@@ -866,6 +866,7 @@ Examples:
 #define HHC01207 "%1d:%04X Card: file %s: card image exceeds maximum %d bytes"
 #define HHC01208 "%1d:%04X Card: filename is missing"
 #define HHC01209 "%1d:%04X Card: parameter %s in argument %d is invalid"
+//efine HHC01210 - HHC01249 (available)
 
 // reserve 013xx for channel related messages
 /* channel.c */
@@ -898,12 +899,14 @@ Examples:
 //efine HHC01334 (available)
 //efine HHC01335 (available)
 #define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
+//efine HHC01337 - HHC01349 (available)
 
 /* hchan.c */
 #define HHC01350 "%1d:%04X CHAN: missing generic channel method"
 #define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"
 #define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"
 #define HHC01353 "%1d:%04X CHAN: generic channel is currently in development"
+//efine HHC01354 - HHC01399 (available)
 
 // reserve 014xx for initialization and shutdown
 /* impl.c */
@@ -992,7 +995,6 @@ Examples:
 #define HHC01471 "Incorrect device address range %04X < %04X"
 #define HHC01472 "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
 #define HHC01473 "Some or all devices in %04X-%04X duplicate already defined devices"
-#define HHC02198 "Device %04X type %04X subchannel %d:%04X attached"
 
 /* codepage.c c */
 #define HHC01474 "Using %s codepage conversion table %s"
@@ -1015,6 +1017,7 @@ Examples:
 #define HHC01491 "Codepage: g2h pos[%2.2X] = %2.2X; h2g pos[%2.2X] = %2.2X"
 #define HHC01492 "Codepage: h2g pos[%2.2X] = %2.2X; g2h pos[%2.2X] = %2.2X"
 #define HHC01493 "Codepage: Tables are transparent"
+//efine HHC01494 - HHC01499 (available)
 
 // reserve 015xx for Hercules dynamic loader
 /* hdl.c */
@@ -1063,10 +1066,12 @@ Examples:
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
 #define HHC01541 "HDL: dyngui.dll initiated"
 #define HHC01542 "HDL: dyngui.dll terminated"
+//efine HHC01543 - HHC01549 (available)
 
 /* hdl.c */
 #define HHC01550 "HDL: startup sequence beginning"
 #define HHC01551 "HDL: startup sequence completed"
+//efine HHC01552 - HHC01599 (available)
 
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown command %s, enter 'help' for a list of valid commands"
@@ -1079,6 +1084,9 @@ Examples:
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
 #define HHC01609 "No help available for mask %s"
 #define HHC01610 " (*)  Enter \"help <command>\" for more info."
+//efine HHC01611 - HHC01649 (available)
+
+//efine HHC01650 - HHC01699 (available)
 
 /* ecpsvm.c */
 // reserve 017xx for ecps:vm support
@@ -1107,6 +1115,9 @@ Examples:
 #define HHC01722 "ECPS:VM Command processor complete"
 #define HHC01723 "Invalid ECPS:VM level value : %s. Default of 20 used"
 #define HHC01724 "ECPS:VM Operating with CP FREE/FRET trap in effect"
+//efine HHC01725 - HHC01749 (available)
+
+//efine HHC01750 - HHC01799 (available)
 
 // reserve 018xx for http server
 #define HHC01800 "HTTP server: error in function %s: %s"
@@ -1125,12 +1136,17 @@ Examples:
 #define HHC01813 "HTTP server waiting for bind to complete; port in user by another server"
 #define HHC01814 "HTTP server: auth requires valid userid and password operands"
 #define HHC01815 "HTTP server port is %s"
+//efine HHC01816 - HHC01849 (available)
+
+//efine HHC01850 - HHC01899 (available)
 
 // reserve 019xx for diagnose calls
 /* diagnose.c */
 #define HHC01900 "Diagnose 0x308 called: System is re-ipled"
 #define HHC01901 "Checking processor %s%02X"
 #define HHC01902 "Waiting 1 second for cpu's to stop"
+//efine HHC01903 (available)
+//efine HHC01904 (available)
 
 /* vmd250.c */
 #define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
@@ -1164,6 +1180,10 @@ Examples:
 #define HHC01943 "%04X d250_list64 xcode %4.4X writebuf "F_RADR"-"F_RADR" store key %2.2X"
 #define HHC01944 "%04X d250_list64 xcode %4.4X status "F_RADR"-"F_RADR" store key %2.2X"
 #define HHC01945 "%04X d250_list64 bioe "F_RADR" status %2.2X"
+//efine HHC01946 (available)
+//efine HHC01947 (available)
+//efine HHC01948 (available)
+//efine HHC01949 (available)
 
 /* vm.c */
 #define HHC01950 "Panel command %s issued by guest %s"
@@ -1197,6 +1217,9 @@ Examples:
 #define HHC02020 "SR: value error, incorrect length"
 #define HHC02021 "SR: string error, incorrect length"
 #define HHC02022 "SR: error loading CRW queue: not enough memory for %d CRWs"
+//efine HHC02023 - HHC02049 (available)
+
+//efine HHC02050 - HHC02099 (available)
 
 // reserve 021xx for logger.c
 #define HHC02100 "Logger: log not active"
@@ -1206,9 +1229,12 @@ Examples:
 #define HHC02104 "Logger: log switched to %s"
 #define HHC02105 "Logger: log to %s"
 #define HHC02106 "Logger: log switched off"
+//efine HHC02107 - HHC02149 (available)
 
+//efine HHC02150 - HHC02196 (available)
 #define HHC02197 "Symbol name %s is reserved"
-//         02198 (moved to config.c)
+// Note HHC02198  is actually in config.c
+#define HHC02198 "Device %04X type %04X subchannel %d:%04X attached"
 #define HHC02199 "Symbol %-12s %s"
 
 // reserve 02200 - 02369 for command processing; script.c

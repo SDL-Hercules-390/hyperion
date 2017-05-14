@@ -140,7 +140,7 @@ HDLSHD *shdent;
  * If flag is TRUE, then only set new path if not already defined
  * If flag is FALSE, then always set the new path.
  */
-DLL_EXPORT char *hdl_setpath(char *path, int flag)
+DLL_EXPORT char *hdl_setpath( const char *path, int flag )
 {
     char    pathname[MAX_PATH];         /* pathname conversion  */
     char    abspath[MAX_PATH];          /* pathname conversion  */
@@ -203,15 +203,36 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     if (MLVL( VERBOSE ))
     {
         struct stat statbuf;
+#ifdef _MSVC_
+        int len; char c;
+#endif
 
         // "HDL: loadable module directory is %s"
         WRMSG( HHC01508, "I", hdl_modpath );
-
+#ifdef _MSVC_
+        // stat: If path contains the location of a directory,
+        // it cannot contain a trailing backslash. If it does,
+        // -1 will be returned and errno will be set to ENOENT.
+        c = 0;
+        len = strlen( hdl_modpath );
+        if (0
+            || hdl_modpath[len-1] == '/'
+            || hdl_modpath[len-1] == '\\'
+        )
+        {
+            c = hdl_modpath[len-1];
+            hdl_modpath[len-1] = 0;
+        }
+#endif
         if (stat( hdl_modpath, &statbuf ) != 0 || !S_ISDIR( statbuf.st_mode ))
         {
             // "HDL: %s is not a valid directory"
             WRMSG( HHC01536, "W", hdl_modpath );
         }
+#ifdef _MSVC_
+        if (c)
+            hdl_modpath[len-1] = c;
+#endif
     }
 
     return hdl_modpath;

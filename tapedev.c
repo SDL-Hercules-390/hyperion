@@ -1019,7 +1019,7 @@ int gettapetype_byname (DEVBLK *dev)
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
 
-    for (i=0; i < (int)arraysize( fmttab ); i++)
+    for (i=0; i < (int) _countof( fmttab ); i++)
     {
         rc = regcomp (&regwrk, fmttab[i].fmtreg, REG_ICASE);
         if (rc < 0)

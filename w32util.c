@@ -191,14 +191,8 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
         NULL
     );
 
-    // (remove trailing whitespace)
-    {
-        char* p = pszBuffer + dwBytesReturned - 1;
-        while ( p >= pszBuffer && isspace(*p) ) p--;
-        *++p = 0;
-    }
-
-    return pszBuffer;
+    pszBuffer[ dwBytesReturned ] = 0;
+    return RTRIM( pszBuffer );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -4565,59 +4559,140 @@ DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Windows implementation of basename() function
+//
+// The dirname() and basename() functions together yield a complete pathname.
+// The expression dirname(path) obtains the pathname of the directory where
+// basename(path) is found.
+//
+// This is not a complete implementation of basename(), but should be okay for windows.
 
-static char _basename[MAX_PATH];
-
-// Windows implementation of basename and dirname functions
 DLL_EXPORT char*  w32_basename( const char* path )
-/*
-
-    This is not a complete implementation of basename, but should work for windows
-
-*/
 {
-    char fname[_MAX_FNAME];
-    char ext[_MAX_EXT];
+    // The basename() function shall take the pathname pointed to by
+    // path and return a pointer to the final component of the pathname,
+    // deleting any trailing path separator characters.
 
-    memset( _basename, 0, sizeof(_basename) );      // zero for security reasons
-    _splitpath_s( path, NULL, 0, NULL, 0, fname, sizeof(fname), ext, sizeof(ext) ); // C4996
+    // If path is a NULL pointer or points to an empty string, basename()
+    // shall return a pointer to the string ".".
 
-    strlcpy( _basename, fname, sizeof( _basename ) );
-    strlcat( _basename, ext,   sizeof( _basename ) );
+    // The basename() function may modify the string pointed to by path,
+    // and may return a pointer to internal storage. The returned pointer
+    // might be invalidated or the storage might be overwritten by a
+    // subsequent call to basename().
 
-    if ( strlen( _basename ) == 0 || path == NULL )
-        strlcpy( _basename, ".", sizeof( _basename ) );
+    // The basename() function need not be thread-safe.
 
-    return( _basename );
+    static char _basename[  MAX_PATH ];
+
+    /* We do a memset to not leak any of previous caller's results */
+    memset( _basename, 0, sizeof( _basename ));
+
+    if (!path || !path[0])
+        strlcpy( _basename, ".", sizeof( _basename ));
+    else
+    {
+        char buffer [  MAX_PATH  ];
+        char fname  [ _MAX_FNAME ];
+        char ext    [ _MAX_EXT   ];
+
+        /* Copy path to work buffer */
+        strlcpy( buffer, path, sizeof( buffer ));
+
+        /* Remove any trailing slashes before doing splitpath */
+        rtrim( buffer, PATHSEPS );
+
+        /* Why does MSVC declare _splitpath_s as deprecated?! (C4996) */
+        _splitpath_s
+        (
+            buffer,                 // input
+            NULL, 0,                // not interested in drive component
+            NULL, 0,                // not interested in dir  component
+            fname, sizeof( fname ), // filename buffer and buffer size
+            ext,   sizeof( ext   )  // extension buffer and buffer size
+        );
+
+        strlcpy( _basename, fname, sizeof( _basename ));
+        strlcat( _basename, ext,   sizeof( _basename ));
+
+        if (!_basename[0])
+            strlcpy( _basename, ".", sizeof( _basename ));
+    }
+
+    return _basename;
 }
 
-static char _dirname[MAX_PATH];
+//////////////////////////////////////////////////////////////////////////////////////////
+// Windows implementation of dirname() function
+//
+// The dirname() and basename() functions together yield a complete pathname.
+// The expression dirname(path) obtains the pathname of the directory where
+// basename(path) is found.
+//
+// This is not a complete implementation of dirname(), but should be okay for windows.
 
 DLL_EXPORT char*  w32_dirname( const char* path )
-/*
-    This is not a complete dirname implementation, but should be ok for windows.
-
-*/
 {
-    char drive[_MAX_DRIVE];
-    char dir[_MAX_DIR];
-    char *t;
+    // The dirname() function shall return a pointer to a string
+    // that is the parent directory of path.
 
-    memset( _dirname, 0, MAX_PATH );          // zero for security reasons
-    _splitpath_s( path, drive, sizeof(drive), dir, sizeof(dir), NULL, 0, NULL, 0 ); // C4996
+    // If path is a NULL pointer, points to an empty string, or
+    // does not contain a path separator character (indicating
+    // that determining the parent directory of path would be
+    // impossible), then a pointer to the string "." is returned.
 
-    /* Remove trailing slashes */
-    t = dir + strlen(dir) -1;
-    for ( ; (*t == PATHSEPC && t > dir) ; t--) *t = '\0';
+    // The dirname() function may modify the string pointed to by path,
+    // and may return a pointer to internal storage. The returned pointer
+    // might be invalidated or the storage might be overwritten by a
+    // subsequent call to dirname().
 
-    strlcpy( _dirname, drive, sizeof(_dirname) );
-    strlcat( _dirname, dir,   sizeof(_dirname) );
+    // The dirname() function need not be thread-safe.
 
-    if ( strlen( _dirname ) == 0 || path == NULL )
-        strlcpy( _dirname, ".", sizeof(_dirname) );
+    static char _dirname [  MAX_PATH  ];
 
-    return( _dirname );
+    /* We do a memset to not leak any of previous caller's results */
+    memset( _dirname, 0, sizeof( _dirname ));
+
+    if (0
+        || !path
+        || !path[0]
+        || !strchr( path, PATHSEPC )
+    )
+        strlcpy( _dirname, ".", sizeof( _dirname ));
+    else
+    {
+        char buffer [  MAX_PATH  ];
+        char drive  [ _MAX_DRIVE ];
+        char dir    [ _MAX_DIR   ];
+
+        /* Copy path to work buffer */
+        strlcpy( buffer, path, sizeof( buffer ));
+
+        /* Remove any trailing slashes before doing splitpath */
+        rtrim( buffer, PATHSEPS );
+
+        /* Why does MSVC declare _splitpath_s as deprecated?! (C4996) */
+        _splitpath_s
+        (
+            buffer,                 // input
+            drive, sizeof( drive ), // drive buffer and buffer size
+            dir,   sizeof( dir   ), // directory buffer and buffer size
+            NULL, 0,                // not interested in filename component
+            NULL, 0                 // not interested in extension component
+        );
+
+        strlcpy( _dirname, drive, sizeof( _dirname ));
+        strlcat( _dirname, dir,   sizeof( _dirname ));
+
+        if (!_dirname[0])
+            strlcpy( _dirname, ".", sizeof( _dirname ));
+    }
+
+    return _dirname;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 {
     int i = -1;
@@ -4646,6 +4721,8 @@ DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
     return NULL;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+
 DLL_EXPORT unsigned long w32_hpagesize()
 {
     static long g_pagesize = 0;
@@ -4658,6 +4735,8 @@ DLL_EXPORT unsigned long w32_hpagesize()
     return (unsigned long) g_pagesize ;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+
 DLL_EXPORT int w32_mlock( void* addr, size_t len )
 {
     return VirtualLock( addr, len ) ? 0 : -1;
@@ -4668,8 +4747,10 @@ DLL_EXPORT int w32_munlock( void* addr, size_t len )
     return VirtualUnlock( addr, len ) ? 0 : -1;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
 // Hercules low-level file open...
 // SH_SECURE: Sets secure mode (shared read, exclusive write access).
+
 DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 {
     int pmode   = _S_IREAD | _S_IWRITE;
@@ -4695,8 +4776,10 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     return fh;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
 // Determine whether process is running "elevated" or not.
 // (returns 1==true running elevated, 0==false otherwise)
+
 DLL_EXPORT  int is_elevated()
 {
     BOOL fRet = FALSE;
@@ -4716,5 +4799,7 @@ DLL_EXPORT  int is_elevated()
 
     return fRet;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // defined( _MSVC_ )

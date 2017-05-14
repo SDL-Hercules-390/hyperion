@@ -60,16 +60,6 @@ char           *strtok_str = NULL;      /* last token position       */
         if (dev->filename[pathlen-1] == '/') break;
 
     }
-#if 0
-    // JCS thinks this is bad
-    if (pathlen < 7
-        || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
-    {
-        WRITEMSG ("%1d:%04X TDF File '%s': invalid filename: TDF files must be in the TAPES subdirectory", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+pathlen, "oma");
-        return -1;
-    }
-    pathlen -= 7;
-#endif
 
     /* Open the tape descriptor file */
     hostpath(pathname, dev->filename, sizeof(pathname));
@@ -335,21 +325,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*       NOTE: The last entry in the TDF table is ALWAYS   */
     /*              an EOT Condition                           */
     /*              This is ensured by the TDF reading routine */
-#if 0
-    if (dev->curfilen >= dev->omafiles)
-    {
-        WRITEMSG (HHC00000E, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
-
-        build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-        return -1;
-    }
-#else
     if(dev->curfilen>dev->omafiles)
     {
         dev->curfilen=dev->omafiles;
         return(0);
     }
-#endif
 
     /* Point to the current file entry in the OMA descriptor table */
     omadesc = (OMATAPE_DESC*)(dev->omadesc);

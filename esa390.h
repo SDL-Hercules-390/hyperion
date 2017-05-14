@@ -1242,13 +1242,16 @@ typedef struct _SCSW {
 #define SENSE_OR        0x04            /* Overrun                   */
 #define SENSE_US        0x04            /* Unit specify              */
 #define SENSE_CC        0x02            /* Control check             */
+#define SENSE_LDCK      0x02            /* Load Check                */
 #define SENSE_OC        0x01            /* Operation check           */
+#define SENSE_CH9       0x01            /* Channel 9                 */
 
 /* Device dependent bit settings for sense byte 1 */
 #define SENSE1_PER      0x80            /* Permanent Error           */
 #define SENSE1_ITF      0x40            /* Invalid Track Format      */
 #define SENSE1_EOC      0x20            /* End of Cylinder           */
 #define SENSE1_MTO      0x10            /* Message to Operator       */
+#define SENSE1_LPC      0x10            /* Line Position Check       */
 #define SENSE1_NRF      0x08            /* No Record Found           */
 #define SENSE1_FP       0x04            /* File Protected            */
 #define SENSE1_WRI      0x02            /* Write Inhibited           */

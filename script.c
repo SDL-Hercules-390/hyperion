@@ -189,10 +189,12 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
         } /* end for(stmtlen) */
 
-        /* Remove trailing blanks and tabs */
-        while (stmtlen > 0 && (buf[stmtlen-1] == SPACE
-                || buf[stmtlen-1] == '\t')) stmtlen--;
-        buf[stmtlen] = '\0';
+        /* Null terminate the buffer */
+        buf[ stmtlen ] = 0;
+
+        /* Remove trailing whitespace */
+        RTRIM( buf );
+        stmtlen = (int) strlen( buf );
 
 #if defined(ENABLE_SYSTEM_SYMBOLS)
 
@@ -637,7 +639,7 @@ void* FindSCRCTL( TID tid )
 /*-------------------------------------------------------------------*/
 /* List script ids - lock must *NOT* be held    (internal, external) */
 /*-------------------------------------------------------------------*/
-void ListScriptsIds()
+static void ListScriptsIds()
 {
     LIST_ENTRY*  pLink  = NULL;
     SCRCTL*      pCtl   = NULL;
@@ -730,14 +732,10 @@ int cscript_cmd( int argc, char *argv[], char *cmdline )
 
     if (!scrlist.Flink || IsListEmpty( &scrlist ))
     {
-#if 0 // TODO: decide whether old "silent failure" behavior still wanted
-        return 0;
-#else
         // "No scripts currently running"
         WRMSG( HHC02314, "E" );
         release_lock( &sysblk.scrlock );
         return -1;
-#endif
     }
 
     /* Search list for the script(s) to cancel... */
@@ -1201,7 +1199,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
     {
         // "Script %d: test: test starting"
         WRMSG( HHC02336, "I", pCtl->scr_id );
-         // "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
+        // "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
         WRMSG( HHC02339, "I", pCtl->scr_id, usecs / 1000000,
                                             usecs % 1000000 );
     }
@@ -1282,6 +1280,9 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
     {
         // "Script %d: test: timeout"
         WRMSG( HHC02332, "E", pCtl->scr_id );
+        // "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
+        WRMSG( HHC02338, "I", pCtl->scr_id, elapsed_usecs / 1000000,
+                                            elapsed_usecs % 1000000 );
         return test_abort( pCtl );
     }
 

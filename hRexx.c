@@ -1051,7 +1051,7 @@ char *envvar;
 
     if ( RexxPath )
     {
-        RexxPathMax = tkcount(RexxPath) + 8 ;
+        RexxPathMax = tkcount(RexxPath,PATHDELIM) + 8 ;
         RexxPathArray = malloc(RexxPathMax * sizeof(char*));
 
         for (RexxPathCount = 0, ptr = strtok(RexxPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
@@ -1072,7 +1072,7 @@ char *envvar;
     envvar = getenv("PATH");
     SysPath = strdup(envvar);
 
-    SysPathMax = tkcount(SysPath) + 8 ;
+    SysPathMax = tkcount(SysPath,PATHDELIM) + 8 ;
     SysPathArray = malloc(SysPathMax * sizeof(char*));
 
     for (SysPathCount= 0,ptr = strtok(SysPath,PATHDELIM); ptr; ptr = strtok(NULL, PATHDELIM))
@@ -1117,7 +1117,7 @@ char *envvar;
             Extensions = strdup(EXTENSIONS);
     }
 
-    ExtensionsMax = tkcount(Extensions) + 8;
+    ExtensionsMax = tkcount(Extensions,EXTNDELIM) + 8;
     ExtensionsArray = malloc(ExtensionsMax * sizeof(char*));
 
     ExtensionsArray[0] = "";

@@ -6,15 +6,15 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /* HSCUTL.C   --   Implementation of functions used in hercules that */
 /* may be missing on some platform ports, or other convenient mis-   */
 /* laneous global utility functions.                                 */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /* (c) 2003-2006 Ivan Warren & Others -- Released under the Q Public */
 /* License -- This file is portion of the HERCULES S/370, S/390 and  */
 /* z/Architecture emulator                                           */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -1239,7 +1239,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
     return loc;
 }
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
 /* being exactly 26 characters long (27 bytes with null terminator). */
 /* pTV points to the TIMEVAL to be formatted. If NULL is passed then */
@@ -1249,7 +1249,7 @@ DLL_EXPORT const char* trimloc( const char* loc )
 /* and must be >= 2. If successful then the value of buf is returned */
 /* and is always zero terminated. If an error occurs or an invalid   */
 /* parameter is passed then NULL is returned instead.                */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 DLL_EXPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz )
 {
     struct timeval  tv;
@@ -1431,37 +1431,114 @@ int initialize_utility( int argc, char* argv[],
     return argc;
 }
 
-/*********************************************************************/
-/* Dump an area of storage.  This is not for emulated core storage.  */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
+/*                Reverse the bits in a BYTE                         */
+/*-------------------------------------------------------------------*/
 
-DLL_EXPORT
-void
-dumpStorageHow( void * what, size_t length, char * msg, int reverse)
+static unsigned char rev_nib_bits_tab[16] =
 {
-   unsigned char * s = what;
-   static const char i2a[16] = "0123456789abcdef";
-   char dumpbuf[96];
-   int offs = 0;
+//  entry #1=0001==>1000,  entry #7=0111==>1110,  etc...
 
-   logmsg("%s:\n", msg);
-   if (reverse) s += length - 1;
-   while (0 < length)
-   {
-      char * t = dumpbuf;
-      int i;
+//  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
+    0x00, 0x08, 0x04, 0x0C, 0x02, 0x0A, 0x06, 0x0E,
 
-      for (i = 0; 0 < length && 32 > i; i++)
-      {
-         if (!(3 & i) && i) *t++ = ' ';
-         *t++ = i2a[*s >> 4];
-         *t++ = i2a[0xf & *s];
-         if (reverse) s--;
-         else s++;
-         length--;
-      }
-      *t = 0;
-      logmsg("%06x  %s\n", offs, dumpbuf);
-      offs += 32;
-   }
+//  0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+    0x01, 0x09, 0x05, 0x0D, 0x03, 0x0B, 0x07, 0x0F
+};
+/* PROGRAMMING NOTE: while using a direct index into a 256 entry table
+   might be more efficient it also takes much more scrutiny (careful
+   visual inspection) of all 256 individual table entries to ensure
+   they're all correct and is harder to see what's going on. Using a
+   simple 16 entry table on the other hand (that only swaps 4 bits)
+   not only makes it easier to see what's actually going on but also
+   is much easier to visually verify all table entries are correct
+   (and isn't significantly less inefficient when the number of bytes
+   you are reversing is relatively small, which is usually the case)
+*/
+DLL_EXPORT BYTE reverse_bits( BYTE b )
+{
+    /* Reverse the top/bottom nibbles separately,
+       then swap the two nibbles with each other.
+    */
+    return
+    (
+        rev_nib_bits_tab[ b & 0x0F ] << 4
+        |
+        rev_nib_bits_tab[ b >> 4 ]
+    );
+}
+
+/*-------------------------------------------------------------------*/
+/* Count number of tokens in a string                                */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int tkcount( const char* str, const char* delims )
+{
+    char* w;        // (work copy of passed str)
+    char* p;        // (work ptr)
+    int   k;        // (number of tokens counted)
+
+    /* Make private copy of string, keep tokenizing it until no more
+       tokens, counting as we go, then free temporary work string. */
+    w = strdup( str );
+    for (k=0, p=strtok( w, delims ); p; k++, p=strtok( NULL, delims ));
+    free( w );
+    return k;
+}
+
+/*-------------------------------------------------------------------*/
+/* Remove leading chars from a string and return str                 */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT char* ltrim( char* str, const char* dlm )   // (Left trim)
+{
+    char* p1;       // (points to first non-dlm)
+    char* p2;       // (work for shifting to remove leading dlm's)
+    const char* d;  // (iterates through dlm's)
+
+    /* Skip leading dlm's to locate first non-dlm character */
+    for (p1=str, d=dlm; *p1 && *d; )
+    {
+        if (*p1 == *d)      // (is this one of the delimiters?)
+            p1++, d=dlm;    // (yes, get past it and reset scan)
+        else
+            d++;            // (no, check next delimiter if any)
+    }
+
+    /* Shift left remaining chars left via p2 */
+    for (p2=str; *p1; *p2++ = *p1++);
+
+    /* Terminate string */
+    *p2 = 0;
+
+    return str;
+}
+
+/*-------------------------------------------------------------------*/
+/* Remove trailing chars from a string and return str                */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT char* rtrim( char* str, const char* dlm )   // (right trim)
+{
+    char* p1;       // (work ptr for iterating backward thru string)
+    const char* d;  // (work ptr for iterating through delimiters)
+
+    /* Point to last char of str */
+    p1 = str + strlen( str ) - 1;
+
+    /* Replace all trailing dlm's with nulls */
+    for (d=dlm; p1 >= str && *d; )
+    {
+        if (*p1 == *d)          // (is this one of the delimiters?)
+            *p1-- = 0, d=dlm;   // (yes, remove it and reset scan)
+        else
+            d++;                // (no, check next delimiter if any)
+    }
+
+    return str;
+}
+
+/*-------------------------------------------------------------------*/
+/* Remove leading and trailing chars from a string and return str    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT char* trim( char* str, const char* dlm )   // (trim both)
+{
+    return rtrim( ltrim( str, dlm ), dlm );
 }

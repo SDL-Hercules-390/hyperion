@@ -741,7 +741,7 @@ void get_mpfactors(BYTE *dest)
             case 65535: resmin = 256; break;
         }
 
-        for (i=0; i < arraysize(mpfactors); i++)
+        for (i=0; i < _countof( mpfactors ); i++)
         {
             /* Calculate the value of each subsequent entry as a
              * percentage of the previous entry's value for the real

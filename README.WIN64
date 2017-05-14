@@ -69,7 +69,7 @@ HOW TO COMPILE HERCULES FOR AMD64
      Studio since the Hercules provided Visual Studio Solution expects it.
 
 
-  2. Open the "Hercules.sln" Solution file.
+  2. Open the "Hercules_VS2008.sln" Solution file.
 
 
   3. Select your desired Solution Configuration (Debug or Release) and

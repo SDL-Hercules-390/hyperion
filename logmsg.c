@@ -36,61 +36,6 @@
 /*  int       rc;     will contain final size                        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-#if defined(_MSVC_)
-
-//  PROGRAMMING NOTE: the only difference between the MSVC version
-//  and *nix version of the below "BFR_VSNPRINTF" macro is the MSVC
-//  version uses "vsnprintf_s" and the *nix version uses "vsnprintf".
-
-#define  BFR_VSNPRINTF()                                            \
-                                                                    \
-    do                                                              \
-    {                                                               \
-        va_list  original_vl;                                       \
-        va_copy( original_vl, vl );                                 \
-                                                                    \
-        bfr = (char*) calloc( 1, siz );                             \
-        rc = -1;                                                    \
-                                                                    \
-        while (bfr && rc < 0)                                       \
-        {                                                           \
-            rc = _vsnprintf_s( bfr, siz, siz-1, fmt, vl );          \
-                                                                    \
-            if (rc >= 0 && rc < siz)                                \
-                break;                                              \
-                                                                    \
-            rc = -1;                                                \
-            siz += BFR_CHUNKSIZE;                                   \
-                                                                    \
-            if (siz > 65536)                                        \
-                break;                                              \
-                                                                    \
-            bfr = realloc( bfr, siz );                              \
-            va_copy( vl, original_vl );                             \
-        }                                                           \
-                                                                    \
-        if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
-        {                                                           \
-            free( bfr );                                            \
-            bfr = strdup( fmt );                                    \
-        }                                                           \
-        else                                                        \
-        {                                                           \
-            if (bfr != NULL)                                        \
-            {                                                       \
-                char* p = strdup( bfr );                            \
-                free( bfr );                                        \
-                bfr = p;                                            \
-            }                                                       \
-        }                                                           \
-    }                                                               \
-    while (0)
-
-#else
-
-//  PROGRAMMING NOTE: the only difference between the *nix version
-//  and MSVC version of the below "BFR_VSNPRINTF" macro is the *nix
-//  version uses "vsnprintf" and the MSVC version uses "vsnprintf_s".
 
 #define  BFR_VSNPRINTF()                                            \
                                                                     \
@@ -135,8 +80,6 @@
         }                                                           \
     }                                                               \
     while (0)
-
-#endif
 
 /*-------------------------------------------------------------------*/
 /*            log message capturing routing functions                */

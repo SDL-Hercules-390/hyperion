@@ -543,8 +543,8 @@
   if not defined VERS_BLD set "VERS_BLD=0"
 
   ::--------------------------------------------------------------
-  ::  Make it PAINFULLY CLEAR this is an UNOFFICIAL "SDL" version
-  ::  of 4.0 Hyperion and not an "Official" 4.0 Hyperion version
+  ::  Make it PAINFULLY CLEAR this is a *SOFTDEVLABS* version
+  ::  of 4.0 Hyperion and not the original 4.0 Hyperion version,
   ::  by appending the string "-SDL" to the end of the "VERSION".
   ::--------------------------------------------------------------
 

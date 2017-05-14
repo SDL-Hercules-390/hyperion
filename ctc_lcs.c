@@ -114,6 +114,18 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                                                             \
     LCS_EnqueueReplyFrame( (pLCSDEV), (LCSCMDHDR*) &(reply), sizeof( reply ))
 
+#define SET_CPKTTYPE( ethtyp, pkttyp )                                        \
+    do                                                                        \
+    {                                                                         \
+             if ( (ethtyp) == ETH_TYPE_IP   ) STRLCPY( (pkttyp), "IPv4"    ); \
+        else if ( (ethtyp) == ETH_TYPE_IPV6 ) STRLCPY( (pkttyp), "IPv6"    ); \
+        else if ( (ethtyp) == ETH_TYPE_ARP  ) STRLCPY( (pkttyp), "ARP"     ); \
+        else if ( (ethtyp) == ETH_TYPE_RARP ) STRLCPY( (pkttyp), "RARP"    ); \
+        else if ( (ethtyp) == ETH_TYPE_SNA  ) STRLCPY( (pkttyp), "SNA"     ); \
+        else                                  STRLCPY( (pkttyp), "unknown" ); \
+    }                                                                         \
+    while (0)
+
 // ====================================================================
 //                    find_group_device
 // ====================================================================
@@ -265,7 +277,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pLCSDev->pDEVBLK[0]->ctcxmode = 1;
         pLCSDev->pDEVBLK[0]->dev_data = pLCSDev;
         pLCSDev->pLCSBLK              = pLCSBLK;
-        strcpy( pLCSDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
+        STRLCPY( pLCSDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
 
         // If this is an IP Passthru address, we need a write address
         if( pLCSDev->bMode == LCSDEV_MODE_IP )
@@ -290,7 +302,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSDev->pDEVBLK[1]->ctcxmode = 1;
             pLCSDev->pDEVBLK[1]->dev_data = pLCSDev;
 
-            strcpy( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
+            STRLCPY( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
         }
 
         // Indicate that the DEVBLK(s) have been create sucessfully
@@ -1089,19 +1101,8 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             if( pLCSDEV->pLCSBLK->fDebug )
             {
                 FETCH_HW( hwEthernetType, pEthFrame->hwEthernetType );
-                if( hwEthernetType == ETH_TYPE_IP ) {
-                  strcpy( cPktType, "IPv4" );
-                } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
-                  strcpy( cPktType, "IPv6" );
-                } else if( hwEthernetType == ETH_TYPE_ARP ) {
-                  strcpy( cPktType, "ARP" );
-                } else if( hwEthernetType == ETH_TYPE_RARP ) {
-                  strcpy( cPktType, "RARP" );
-                } else if( hwEthernetType == ETH_TYPE_SNA ) {
-                  strcpy( cPktType, "SNA" );
-                } else {
-                  strcpy( cPktType, "unknown" );
-                }
+                SET_CPKTTYPE( hwEthernetType, cPktType );
+
                 // HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
                 WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pLCSHDR->bSlot, iEthLen, cPktType,
@@ -1579,7 +1580,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     memset( &ifr, 0, sizeof( ifr ) );
 
-    strcpy( ifr.ifr_name, pLCSPORT->szNetIfName );
+    STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
 
     pPortMAC  = (BYTE*) &pLCSPORT->MAC_Address;
 
@@ -1917,19 +1918,8 @@ static void*  LCS_PortThread( void* arg)
 
         if (pLCSPORT->pLCSBLK->fDebug)
         {
-            if( hwEthernetType == ETH_TYPE_IP ) {
-              strcpy( cPktType, "IPv4" );
-            } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
-              strcpy( cPktType, "IPv6" );
-            } else if( hwEthernetType == ETH_TYPE_ARP ) {
-              strcpy( cPktType, "ARP" );
-            } else if( hwEthernetType == ETH_TYPE_RARP ) {
-              strcpy( cPktType, "RARP" );
-            } else if( hwEthernetType == ETH_TYPE_SNA ) {
-              strcpy( cPktType, "SNA" );
-            } else {
-              strcpy( cPktType, "unknown" );
-            }
+            SET_CPKTTYPE( hwEthernetType, cPktType );
+
             // HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
             WRMSG( HHC00984, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                   pLCSPORT->bPort, iLength, cPktType, pLCSPORT->szNetIfName );
@@ -2628,7 +2618,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 return -1;
             }
 
-            strcpy( pLCSBLK->Port[0].szMACAddress, optarg );
+            STRLCPY( pLCSBLK->Port[0].szMACAddress, optarg );
             memcpy( pLCSBLK->Port[0].MAC_Address, &mac, sizeof(MAC) );
             pLCSBLK->Port[0].fLocalMAC = TRUE;
             saw_conf = 1;
@@ -2897,7 +2887,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 return -1;
             }
 
-            strcpy( pLCSPORT->szMACAddress, argv[0] );
+            STRLCPY( pLCSPORT->szMACAddress, argv[0] );
             pLCSPORT->fLocalMAC = TRUE;
         }
         else if( strcasecmp( pszKeyword, "ROUTE" ) == 0 )
@@ -3147,16 +3137,15 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             pszBuff[iLen++] = c;
         }
 
-        // Remove trailing blanks and tabs
-        while( iLen > 0 &&
-               ( pszBuff[iLen-1] == ' '  ||
-                 pszBuff[iLen-1] == '\t' ) )
-            iLen--;
+        // Null terminate buffer
+        pszBuff[ iLen ] = 0;
 
-        pszBuff[iLen] = '\0';
+        // Remove trailing whitespace
+        RTRIM( pszBuff );
+        iLen = (int) strlen( pszBuff );
 
         // Ignore comments and null statements
-        if( iLen == 0 || pszBuff[0] == '*' || pszBuff[0] == '#' )
+        if (!iLen || pszBuff[0] == '*' || pszBuff[0] == '#')
             continue;
 
         break;

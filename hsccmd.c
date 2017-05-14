@@ -17,13 +17,13 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
-/* HSCCMD.C has been split into
- *          hscemode.c          - cpu trace and display commands
- *          hscpufun.c          - cpu functions like ipl, reset
- *          hscloc.c            - locate command
- *          loadmem.c           - load core and load text
+/* HSCCMD.C has been split into:
+ *
+ *        hscemode.c        - cpu trace and display commands
+ *        hscpufun.c        - cpu functions like ipl, reset
+ *        hscloc.c          - locate command
+ *        loadmem.c         - load core and load text
  */
-
 /*
    Standard conventions are:
 
@@ -32,24 +32,19 @@
      argv[1..argc-1]  contains the optional arguments
      cmdline          contains the original command line
 
-     returncode:
+     return code:
 
-     0 = Success
+        = 0     Success
+        < 0     Error: Command not executed
+        > 1     Failure:  one or more functions could not complete
 
-     < 0 Error: Command not executed
-
-     > 1 Failure:  one or more functions could not complete
-
-   int test_cmd(int argc, char *argv[], char *cmdline)
+   int test_cmd( int argc, char* argv[], char* cmdline )
    {
-
-   .
-   .
-   .
-   return rc
-
+       .
+       .
+       .
+       return rc
    }
-
 */
 
 #include "hstdinc.h"
@@ -194,16 +189,16 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 /* ---------------------- (end $test command) ---------------------- */
 
 /* Issue generic Device not found error message */
-static inline int devnotfound_msg(U16 lcss,U16 devnum)
+static inline int devnotfound_msg( U16 lcss, U16 devnum )
 {
-    WRMSG(HHC02200,"E",lcss,devnum);
+    WRMSG( HHC02200, "E", lcss, devnum );
     return -1;
 }
 
 /* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
-    WRMSG(HHC02201,"E");
+    WRMSG( HHC02201, "E" );
 }
 
 
@@ -228,7 +223,6 @@ setOperationMode
       ((sysblk.cpuidfmt || sysblk.lparnum < 1 || sysblk.lparnum > 16) ?
        om_emif : om_mif) : om_basic;
 }
-
 
 /* Set/update all CPU IDs */
 static INLINE int
@@ -292,8 +286,6 @@ resetAllCpuIds()
     return setAllCpuIds(-1, -1, -1, -1);
 }
 
-
-
 /* Enable/Disable LPAR mode */
 static INLINE void
 enable_lparmode(const int enable)
@@ -332,11 +324,9 @@ enable_lparmode(const int enable)
     setOperationMode();
 }
 
-
 /* maxrates command - report maximum seen mips/sios rates */
 
 #ifdef OPTION_MIPS_COUNTING
-
 /*-------------------------------------------------------------------*/
 /* maxrates command                                                  */
 /*-------------------------------------------------------------------*/
@@ -476,7 +466,6 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
 #endif // OPTION_MIPS_COUNTING
 
-
 /*-------------------------------------------------------------------*/
 /* message command - Display a line of text at the console           */
 /*-------------------------------------------------------------------*/
@@ -549,7 +538,6 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* msg/msgnoh command - Display a line of text at the console        */
 /*-------------------------------------------------------------------*/
@@ -568,7 +556,6 @@ int msg_cmd(int argc,char *argv[], char *cmdline)
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* comment command - do absolutely nothing                           */
 /*-------------------------------------------------------------------*/
@@ -580,7 +567,6 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
     // Do nothing; command has already been echo'ed to console...
     return 0;   // (make compiler happy)
 }
-
 
 /*-------------------------------------------------------------------*/
 /* quit or exit command - terminate the emulator                     */
@@ -755,7 +741,6 @@ int History(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* log command - direct log output                                   */
 /*-------------------------------------------------------------------*/
@@ -788,7 +773,6 @@ int log_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* logopt command - change log options                               */
@@ -832,7 +816,6 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
     }
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* uptime command - display how long Hercules has been running       */
@@ -897,7 +880,6 @@ unsigned uptime, weeks, days, hours, mins, secs;
 #undef SECS_PER_DAY
 #undef SECS_PER_WEEK
 }
-
 
 /*-------------------------------------------------------------------*/
 /* version command - display version information                     */
@@ -1249,7 +1231,6 @@ int start_cmd(int argc, char *argv[], char *cmdline)
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* g command - turn off single stepping and start CPU                */
 /*-------------------------------------------------------------------*/
@@ -1282,7 +1263,6 @@ int g_cmd(int argc, char *argv[], char *cmdline)
     }
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* stop command - stop CPU (or printer device if argument given)     */
@@ -1340,7 +1320,6 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* quiet command - quiet PANEL                                       */
@@ -1445,7 +1424,7 @@ static char * check_define_default_automount_dir()
         {
             char buf[64];
             MSGBUF( buf, "malloc(%d)", (int)sizeof(TAMDIR));
-            WRMSG(HHC01430, "S", buf, strerror(errno));
+            WRMSG(HHC01430, "E", buf, strerror(errno));
             return NULL;
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
@@ -1574,7 +1553,6 @@ static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 
     return (0); /* ("success") */
 }
-
 
 /*-------------------------------------------------------------------*/
 /* automount_cmd - show or update AUTOMOUNT directories list         */
@@ -1919,12 +1897,9 @@ int rc;
     return 0;
 }
 
-
 #if defined( OPTION_SCSI_TAPE )
 
-
 // (helper function for 'scsimount' and 'devlist' commands)
-
 static void try_scsi_refresh( DEVBLK* dev )
 {
     // PROGRAMMING NOTE: we can only ever cause the auto-scsi-mount
@@ -1955,7 +1930,6 @@ static void try_scsi_refresh( DEVBLK* dev )
     VERIFY( dev->tmh->generic( &gen_parms ) == 0 ); // (maybe update status)
     usleep(10*1000);                                // (let thread start/end)
 }
-
 
 /*-------------------------------------------------------------------*/
 /* scsimount command - display or adjust the SCSI auto-mount option  */
@@ -2122,7 +2096,6 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-
 /*-------------------------------------------------------------------*/
 /* cckd command                                                      */
 /*-------------------------------------------------------------------*/
@@ -2149,7 +2122,6 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
     }
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* ctc command - enable/disable CTC debugging                        */
@@ -2289,7 +2261,6 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* ptp command - enable/disable PTP debugging                        */
@@ -2472,7 +2443,6 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
 
 }
 
-
 /*-------------------------------------------------------------------*/
 /* qeth command - enable/disable QETH debugging                      */
 /*-------------------------------------------------------------------*/
@@ -2649,7 +2619,6 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
 }  /* End of qeth_cmd */
 
-
 #if defined(OPTION_W32_CTCI)
 /*-------------------------------------------------------------------*/
 /* tt32 command - control/query CTCI-WIN functionality               */
@@ -2756,7 +2725,6 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     return rc;
 }
 #endif /* defined(OPTION_W32_CTCI) */
-
 
 /*-------------------------------------------------------------------*/
 /* sclproot command - set SCLP base directory                        */
@@ -2907,7 +2875,6 @@ char *strtok_str = NULL;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* sysepoch command  1900|1960 [+|-142]                              */
 /*-------------------------------------------------------------------*/
@@ -2972,7 +2939,6 @@ BYTE    c;
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* yroffset command                                                  */
 /*-------------------------------------------------------------------*/
@@ -3013,7 +2979,6 @@ BYTE    c;
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* tzoffset command                                                  */
@@ -3102,7 +3067,6 @@ char c;
 }
 #endif /*defined(HAVE_MLOCKALL)*/
 
-
 int qstor_cmd(int argc, char *argv[], char *cmdline);
 int mainsize_cmd(int argc, char *argv[], char *cmdline);
 int xpndsize_cmd(int argc, char *argv[], char *cmdline);
@@ -3189,7 +3153,6 @@ int defstore_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
@@ -3304,6 +3267,7 @@ BYTE    f = ' ', c = '\0';
     for (i = 2; (int)i < argc; ++i)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
+
 #if 0   // Interim - Storage is not locked yet in config.c
         if (strabbrev("LOCKED", check, 1) &&
             mainsize)
@@ -3332,24 +3296,25 @@ BYTE    f = ' ', c = '\0';
         sysblk.lock_mainstor = locktype;
 
     /* Update main storage size */
-    rc = configure_storage(mainsize);
-    if ( rc >= 0 )
+    rc = configure_storage( mainsize );
+    if (rc >= 0)
     {
-        if (MLVL(VERBOSE))
+        if (MLVL( VERBOSE ))
             qstor_cmd( 2, q_argv, "qstor main" );
     }
-    else if ( rc == HERRCPUONL )
+    else if (HERRCPUONL == rc)
     {
+        // "CPUs must be offline or stopped"
         WRMSG( HHC02389, "E" );
     }
     else
     {
+        // "Configure storage error %d"
         WRMSG( HHC02388, "E", rc );
     }
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* xpndsize command                                                  */
@@ -3447,6 +3412,7 @@ u_int   locktype = 0;
     for (i = 2; (int)i < argc; ++i)
     {
         strnupper(check, argv[i], (u_int)sizeof(check));
+
 #if 0   // Interim - Storage is not locked yet in config.c
         if (strabbrev("LOCKED", check, 1) && xpndsize)
         {
@@ -3472,17 +3438,15 @@ u_int   locktype = 0;
     else if (lockreq)
         sysblk.lock_xpndstor = locktype;
 
-    rc = configure_xstorage(xpndsize);
-    if ( rc >= 0 )
+    rc = configure_xstorage( xpndsize );
+    if (rc >= 0)
     {
-        if (MLVL(VERBOSE))
-        {
+        if (MLVL( VERBOSE ))
             qstor_cmd( 2, q_argv, "qstor xpnd" );
-        }
     }
     else
     {
-        if ( rc == HERRCPUONL )
+        if (HERRCPUONL == rc)
         {
             // "CPUs must be offline or stopped"
             WRMSG( HHC02389, "E" );
@@ -3496,7 +3460,6 @@ u_int   locktype = 0;
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* hercprio command                                                  */
@@ -3546,7 +3509,6 @@ BYTE c;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* cpuprio command                                                   */
 /*-------------------------------------------------------------------*/
@@ -3576,41 +3538,9 @@ BYTE c;
         }
         else
         {
-#if 0
-            int i;
-#endif
             configure_cpu_priority(cpuprio);
             if (MLVL(VERBOSE))
                 WRMSG(HHC02204, "I", argv[0], argv[1] );
-#if 0
-            for (i = 0; i < sysblk.maxcpu; i++)
-            {
-                S32 curprio;
-                TID tid;
-                int rc;
-                char cpustr[40];
-
-                if (IS_CPU_ONLINE(i))
-                {
-                    tid = sysblk.cputid[i];
-
-                    if ( tid == 0 ) continue; // the mask check should prevent this.
-
-                    curprio = get_thread_priority( tid );
-
-                    if ( curprio == cpuprio ) continue;
-
-                    rc = set_thread_priority( tid, cpuprio );
-                    if ( MLVL(VERBOSE) )
-                    {
-                        MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( i ), i );
-
-                        if ( rc == 0 )
-                            WRMSG( HHC00103, "I", tid, cpustr, curprio, cpuprio );
-                    }
-                }
-            }
-#endif
         }
     }
     else
@@ -3621,7 +3551,6 @@ BYTE c;
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* devprio command                                                  */
@@ -3665,7 +3594,6 @@ BYTE c;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* todprio command                                                  */
 /*-------------------------------------------------------------------*/
@@ -3698,31 +3626,6 @@ BYTE c;
             configure_tod_priority(todprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-
-#if 0
-            for(;;)
-            {
-                S32 curprio;
-                TID tid = sysblk.todtid;
-                int rc;
-
-                if ( tid == 0 )
-                    break;
-
-                curprio = get_thread_priority( tid );
-
-                if ( curprio == todprio )
-                    break;
-
-                rc = set_thread_priority( tid, todprio );
-                if ( MLVL(VERBOSE) )
-                {
-                    if ( rc == 0 )
-                        WRMSG( HHC00103, "I", tid, "Timer", curprio, todprio );
-                }
-                break;
-            }
-#endif
         }
     }
     else
@@ -3754,36 +3657,9 @@ BYTE c;
         }
         else
         {
-#if 0
-            char *tname[3]  = { "HTTP server",  "Console connection",   NULL };
-            TID tid[3]      = { sysblk.httptid, sysblk.cnsltid,         0 };
-            int i;
-#endif
             configure_srv_priority(srvprio);
             if (MLVL(VERBOSE))
                 WRMSG( HHC02204, "I", argv[0], argv[1] );
-#if 0
-            for ( i = 0; tname[i] != NULL; i++ )
-            {
-                S32 curprio;
-                int rc;
-
-                if ( tid[i] == 0 )
-                    continue;
-
-                curprio = tid[i] == 0 ? 0 : get_thread_priority( tid[i] );
-
-                if ( curprio == srvprio )
-                    continue;
-
-                rc = set_thread_priority( tid[i], srvprio );
-                if ( MLVL(VERBOSE) )
-                {
-                    if ( rc == 0 )
-                        WRMSG( HHC00103, "I", tid[i], tname[i], curprio, srvprio );
-                }
-            }
-#endif
         }
     }
     else if ( argc == 1 )
@@ -3801,7 +3677,6 @@ BYTE c;
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
@@ -3845,7 +3720,6 @@ BYTE c;
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* numcpu command                                                    */
@@ -4073,7 +3947,6 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #if defined(OPTION_HTTP_SERVER)
-
 /*-------------------------------------------------------------------*/
 /* httproot command - set HTTP server base directory                 */
 /*-------------------------------------------------------------------*/
@@ -4089,7 +3962,7 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 2 )
     {
-        WRMSG( HHC01455, "S", argv[0] );
+        WRMSG( HHC01455, "E", argv[0] );
         rc = -1;
     }
     else
@@ -4102,7 +3975,6 @@ int httproot_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* httpport command - set HTTP server port                           */
@@ -4119,7 +3991,7 @@ int httpport_cmd(int argc, char *argv[], char *cmdline)
 
     if ( argc > 5 )
     {
-        WRMSG( HHC01455, "S", argv[0] );
+        WRMSG( HHC01455, "E", argv[0] );
         rc = -1;
     }
     else
@@ -4152,9 +4024,7 @@ int http_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 #endif /*defined(OPTION_HTTP_SERVER)*/
-
 
 /*-------------------------------------------------------------------*/
 /* toddrag command - display or set TOD clock drag factor            */
@@ -4197,8 +4067,6 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #ifdef PANEL_REFRESH_RATE
-
-
 /*-------------------------------------------------------------------*/
 /* panrate command - display or set rate at which console refreshes  */
 /*-------------------------------------------------------------------*/
@@ -4259,9 +4127,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 #endif /*PANEL_REFRESH_RATE */
-
 
 /*-------------------------------------------------------------------*/
 /* pantitle xxxxxxxx command - set console title                     */
@@ -4297,17 +4163,16 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* shell command                                                     */
 /*-------------------------------------------------------------------*/
-int sh_cmd(int argc, char *argv[], char *cmdline)
+int sh_cmd( int argc, char* argv[], char* cmdline )
 {
     char* cmd;
     int   rc;
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
@@ -4329,103 +4194,6 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-#if 0
-/*-------------------------------------------------------------------*/
-/* dir and ls command                                                */
-/*-------------------------------------------------------------------*/
-#if defined ( _MSVC_ )
-int dir_cmd(int argc, char *argv[], char *cmdline)
-#else
-int ls_cmd(int argc, char *argv[], char *cmdline)
-#endif
-{
-    char* cmd;
-    int   rc;
-
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-
-    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
-    {
-        cmd = cmdline;
-        if (*cmd)
-        {
-            rc = herc_system(cmd);
-            return rc;
-        }
-        else
-            return -1;
-    }
-    else
-    {
-        WRMSG(HHC02227, "E");
-    }
-    return -1;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* change directory command                                          */
-/*-------------------------------------------------------------------*/
-int cd_cmd(int argc, char *argv[], char *cmdline)
-{
-    char* path;
-    char  cwd [ MAX_PATH ];
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-
-    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
-    {
-        path = cmdline + 2;
-        while (isspace(*path)) path++;
-#ifdef _MSVC_
-        {
-            char* strtok_str = NULL;
-            _chdir( strtok_r( path, "\"", &strtok_str ) );
-        }
-#else
-        chdir(path);
-#endif
-        getcwd( cwd, sizeof(cwd) );
-        WRMSG( HHC02204, "I", "working directory", cwd );
-        HDC1( debug_cd_cmd, cwd );
-        return 0;
-    }
-    else
-    {
-        WRMSG(HHC02227, "E");
-    }
-    return -1;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* print working directory command                                   */
-/*-------------------------------------------------------------------*/
-int pwd_cmd(int argc, char *argv[], char *cmdline)
-{
-    char cwd [ MAX_PATH ];
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
-    {
-        if (argc > 1)
-        {
-            WRMSG(HHC02205, "E", argv[1], ": command does not support arguments");
-            return -1;
-        }
-        getcwd( cwd, sizeof(cwd) );
-        WRMSG( HHC02204, "I", "working directory", cwd );
-        return 0;
-    }
-    else
-    {
-        WRMSG(HHC02227, "E");
-    }
-    return -1;
-}
-#endif
 
 #if defined(OPTION_LPP_RESTRICT)
 /*-------------------------------------------------------------------*/
@@ -4449,7 +4217,7 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            WRMSG(HHC02205, "S", argv[1], "");
+            WRMSG(HHC02205, "E", argv[1], "");
             return -1;
         }
     }
@@ -4470,7 +4238,6 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
     return 1;
 }
 #endif /*defined(OPTION_LPP_RESTRICT)*/
-
 
 /*-------------------------------------------------------------------*/
 /* diag8cmd command                                                  */
@@ -4568,9 +4335,9 @@ int i;
           (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
         WRMSG(HHC02203, "I", argv[0], buf);
     }
+
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* legacysenseid command                                             */
@@ -4733,7 +4500,6 @@ int codepage_cmd(int argc, char *argv[], char *cmdline)
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* model config statement                                            */
 /* operands: hardware_model [capacity_model [perm_model temp_model]] */
@@ -4828,7 +4594,6 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* plant config statement                                            */
 /*-------------------------------------------------------------------*/
@@ -4877,7 +4642,6 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* manufacturer config statement                                     */
@@ -4929,7 +4693,6 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 #if defined(OPTION_SHARED_DEVICES)
 static int default_shrdport = 3390;
@@ -5006,7 +4769,6 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* lparnum command - set or display LPAR identification number       */
@@ -5139,7 +4901,6 @@ BYTE    c;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* cpuverid command - set or display cpu version                     */
 /*-------------------------------------------------------------------*/
@@ -5191,8 +4952,6 @@ BYTE    c;
     }
     return 0;
 }
-
-
 
 /*-------------------------------------------------------------------*/
 /* cpumodel command - set or display cpu model                       */
@@ -5246,7 +5005,6 @@ BYTE    c;
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* cpuserial command - set or display cpu serial                     */
@@ -5302,7 +5060,6 @@ BYTE    c;
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* cpuidfmt command - set or display STIDP format {0|1|BASIC}        */
@@ -5434,7 +5191,6 @@ u_int     cpuidfmt;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* loadparm - set or display IPL parameter                           */
 /*-------------------------------------------------------------------*/
@@ -5462,7 +5218,6 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
 {
     int rc;
@@ -5471,7 +5226,6 @@ static int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* 
          (int)((*(DEVBLK**)pDevBlkPtr2)->devnum);
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* devlist command - list devices                                    */
@@ -5657,7 +5411,6 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* qd command - query device information                             */
@@ -5923,7 +5676,6 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* attach command - configure a device                               */
 /*-------------------------------------------------------------------*/
@@ -5942,7 +5694,6 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* detach command - remove device                                    */
@@ -6010,7 +5761,6 @@ int rc;
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* pgmtrace command - trace program interrupts                       */
 /*-------------------------------------------------------------------*/
@@ -6067,7 +5817,6 @@ BYTE    c;                              /* Character work area       */
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* ostailor command - trace program interrupts                       */
@@ -6188,7 +5937,6 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* k command - print out cckd internal trace                         */
 /*-------------------------------------------------------------------*/
@@ -6206,7 +5954,6 @@ int k_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* ds - display subchannel                                           */
@@ -6251,9 +5998,7 @@ char buf[4096];
     return 0;
 }
 
-
 void *device_thread(void *arg);
-
 /*-------------------------------------------------------------------*/
 /* devtmax command - display or set max device threads               */
 /*-------------------------------------------------------------------*/
@@ -6307,7 +6052,6 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* sf commands - shadow file add/remove/set/compress/display         */
@@ -6462,7 +6206,6 @@ int     rc;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* mounted_tape_reinit statement                                     */
 /*-------------------------------------------------------------------*/
@@ -6496,7 +6239,6 @@ int mounted_tape_reinit_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* mt command - magnetic tape commands                              */
@@ -6966,7 +6708,6 @@ char   **save_argv = NULL;
 
     return rc;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* savecore filename command - save a core image to file             */
@@ -7681,7 +7422,6 @@ int modpath_cmd(int argc, char *argv[], char *cmdline)
     }
     return 0;
 }
-
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef FEATURE_ECPSVM

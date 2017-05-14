@@ -1,21 +1,23 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
-<HTML>
-<HEAD><TITLE>
-Hercules Release Notes and Known Issues</TITLE>
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><TITLE>
+Hercules: Release Notes
+</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+<link rel="shortcut icon" href="images/favicon.ico" />
+<link rel="icon" href="images/favicon.ico" />
 <style type="text/css">
   dt {font-family: Arial; font-weight: bold; font-style: rounded;}
 </style>
-</HEAD>
-<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
-      VLINK="#008040" ALINK="#000000">
+</HEAD><BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0" VLINK="#008040" ALINK="#000000">
+
 <h1>Hercules Release Notes and Known Issues</h1>
+
 <hr noshade>
 
-
-<h2>Release notes for this version of Hercules 4.00 Hyperion</h2>
+<h2>Release notes for the SDL version of Hercules 4.00 Hyperion</h2>
 <p>
 <dl>
+
   <dt>Minimum supported Windows platform is now Windows Vista
   <dd>
   <p>
@@ -24,7 +26,8 @@ Hercules Release Notes and Known Issues</TITLE>
     to at least Windows Vista or greater, with Windows 7 being preferred.
   </p>
 
-  <dt>"MAXCPU" and "NUMCPU" statements
+
+  <dt>MAXCPU and NUMCPU statements
   <dd>
   <p>
     The combination of <a href="hercconf.html#NUMCPU">NUMCPU</a> and
@@ -38,6 +41,7 @@ Hercules Release Notes and Known Issues</TITLE>
     it defaults to 1.
   </p>
 
+
   <dt>New and improved CMPSC Compression Call 2012 instruction implementation is now the default
   <dd>
   <p>
@@ -47,6 +51,7 @@ Hercules Release Notes and Known Issues</TITLE>
     <a href="https://github.com/fish-git/hyperion/blob/master/README.CMPSC">README.CMPSC</a>
     document of the source code distribution for more information.
   </p>
+
 
   <dt>The sequence of certain system parameters may be important
   <dd>
@@ -83,6 +88,7 @@ Hercules Release Notes and Known Issues</TITLE>
     each new release of Hercules.
   </p>
 
+
   <dt>More architecturally compliant Channel Subsystem implementation
   <dd>
   <p>
@@ -112,6 +118,7 @@ Hercules Release Notes and Known Issues</TITLE>
     certain guest operating systems behave.
   </p>
 
+
   <dt>Configuration file statements and panel commands handled identically
   <dd>
   <p>
@@ -120,6 +127,7 @@ Hercules Release Notes and Known Issues</TITLE>
     entered as a panel command. Most panel commands are now also allowed as
     configuration file statements. See the documentation for full details.
   </p>
+
 
   <dt>Improved ECPSVM Support
   <dd>
@@ -130,6 +138,7 @@ Hercules Release Notes and Known Issues</TITLE>
     <a href="https://github.com/fish-git/hyperion/blob/master/README.ECPSVM">README.ECPSVM</a>
     document for more detailed information.
   </p>
+
 
   <dt>Integrated Rexx support
   <dd>
@@ -548,8 +557,9 @@ If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
 
 <p><center><hr width=15% noshade>
-<a href="index.html"><img src="images/back.gif" border=0 alt="back"></a>
-</center>
-<p class="lastupd">Last updated $Date$ $Revision$</p>
+<a href="##" onclick="history.go(-1)"><img src="images/back.gif" border=0 alt="back"></a>
+<p class="lastupd"><script language="Javascript">
+document.write( "Last updated " + document.lastModified + "" );
+</script></p>
 </BODY>
 </HTML>

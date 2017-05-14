@@ -1,6 +1,6 @@
 # The Hercules System/370, ESA/390, and z/Architecture Emulator
 
-## The unofficial SoftDevLabs version of Hercules 4.0 (Hyperion)
+## The SoftDevLabs version of Hercules 4.0 (Hyperion)
 
 **Hercules** is an open source software implementation of the mainframe
 System/370 and ESA/390 architectures, in addition to the latest 64-bit
@@ -11,10 +11,11 @@ and Mac OS X.
 Hercules is [OSI Certified Open Source Software](http://www.opensource.org/)
 licensed under the terms of the [Q Public Licence](http://fish-git.github.io/html/herclic.html).
 
-This version of Hercules 4.0 Hyperion is my unofficial development version
+This version of Hercules 4.0 Hyperion is a SoftDevLabs development version
 of the Hercules emulator and contains bleeding edge changes made by myself
-to either fix bugs that may still exist in the official version
-or other unofficial (unsanctioned) enhancements
+to either fix bugs that may still exist in either the original 4.0 version
+of Hercules Hyperion or fixes and/or enhancements to my SoftDevLabs version
+of Hercules Hyperion.
 
 Hercules was created by Roger Bowler.
 Jay Maynard "the Tron Guy" was the maintainer from 2000 to 2012.

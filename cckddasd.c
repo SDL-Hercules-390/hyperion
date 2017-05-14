@@ -5404,7 +5404,7 @@ void cckd_command_help()
         , "  trace=<n>     Set trace table size             (0 ... 200000)"
         , "  wr=<n>        Set number writer threads            ( 1 ... 9)"
 
-        , NULL 
+        , NULL
     };
 
     for (i=0; help[i] != NULL; i++ )
@@ -5560,22 +5560,27 @@ int   rc;
         /* If p == NULL, then just keyword syntax (no "=value") */
         if (!p)
         {
-            /* Parse the keyword */
+            /* Parse the keyword... */
+
+            // Display cckd help
             if ( CMD(kw,help,4 ) )
             {
                 if (!cmd) return 0;
                 cckd_command_help();
             }
+            // Display current cckd statistics
             else if ( CMD(kw,stats,4) )
             {
                 if (!cmd) return 0;
                 cckd_command_stats ();
             }
+            // Display current cckd options
             else if ( CMD(kw,opts,4) )
             {
                 if (!cmd) return 0;
                 cckd_command_opts();
             }
+            // Enable CCKD debugging
             else if ( CMD(kw,debug,5) )
             {
                 if (!cmd) return 0;
@@ -5601,6 +5606,8 @@ int   rc;
         }
         /* If rc == 1 && c == 0, then "keyword=value" syntax */
         /* Please keep the below tests in alphabetical order! */
+
+        // Compression to be used
         else if ( CMD(kw,comp,4) )
         {
             if (val < -1 || (val > 0 && (val & ~cckdblk.comps)))
@@ -5624,6 +5631,7 @@ int   rc;
                 return -1;
             }
         }
+        // Compression parameter to be used
         else if ( CMD(kw,compparm,8) )
         {
             if (val < -1 || val > 9)
@@ -5638,6 +5646,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Set the free pending value
         else if ( CMD(kw,freepend,8) )
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND)
@@ -5652,6 +5661,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Turn fsync on or off
         else if ( CMD(kw,fsync,5) )
         {
             if (val < 0 || val > 1)
@@ -5666,6 +5676,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Garbage collection interval
         else if ( CMD(kw,gcint,5) )
         {
             if (val < 1 || val > 60)
@@ -5680,6 +5691,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Garbage collection parameter
         else if ( CMD(kw,gcparm,6) )
         {
             if (val < -8 || val > 8)
@@ -5694,6 +5706,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Start garbage collector
         else if ( CMD(kw,gcstart,7) )
         {
             if (val < 0 || val > 1)
@@ -5753,6 +5766,7 @@ int   rc;
                 }
             }
         }
+        // Check for null linux tracks
         else if ( CMD(kw,linuxnull,5) )
         {
             if (val < 0 || val > 1)
@@ -5767,20 +5781,7 @@ int   rc;
                 opts = 1;
             }
         }
-        else if ( CMD(kw,nostress,8) )
-        {
-            if (val < 0 || val > 1)
-            {
-                // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
-                return -1;
-            }
-            else
-            {
-                cckdblk.nostress = val;
-                opts = 1;
-            }
-        }
+        // Turn off stats report at close
         else if ( CMD(kw,nosfd,5) )
         {
             if (val < 0 || val > 1)
@@ -5795,6 +5796,22 @@ int   rc;
                 opts = 1;
             }
         }
+        // Turn stress writes on or off
+        else if ( CMD(kw,nostress,8) )
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG(HHC00348, "E", val, kw);
+                return -1;
+            }
+            else
+            {
+                cckdblk.nostress = val;
+                opts = 1;
+            }
+        }
+        // Number readahead threads
         else if ( CMD(kw,ra,2) )
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
@@ -5809,6 +5826,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Readahead queue size
         else if ( CMD(kw,raq,3) )
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
@@ -5823,6 +5841,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Number of tracks to readahead
         else if ( CMD(kw,rat,3) )
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
@@ -5837,6 +5856,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Number of trace table entries
         else if ( CMD(kw,trace,5) )
         {
             if (val < 0 || val > CCKD_MAX_TRACE)
@@ -5880,6 +5900,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Number writer threads
         else if ( CMD(kw,wr,2) )
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
@@ -5894,6 +5915,7 @@ int   rc;
                 opts = 1;
             }
         }
+        // Unknown option
         else
         {
             // "CCKD file: invalid cckd keyword: %s"

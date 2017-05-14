@@ -529,7 +529,7 @@ static void* process_rc_file (void* dummy)
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int impl(int argc, char *argv[])
+DLL_EXPORT int impl( int argc, char* argv[] )
 {
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
@@ -548,29 +548,28 @@ int     rc;
 #endif
 
     /* Initialize EYE-CATCHERS for SYSBLK */
-    memset(&sysblk.blknam,SPACE,sizeof(sysblk.blknam));
-    memset(&sysblk.blkver,SPACE,sizeof(sysblk.blkver));
-    memset(&sysblk.blkend,SPACE,sizeof(sysblk.blkend));
-    sysblk.blkloc = swap_byte_U64((U64)((uintptr_t)&sysblk));
-    memcpy(sysblk.blknam,HDL_NAME_SYSBLK,strlen(HDL_NAME_SYSBLK));
-    memcpy(sysblk.blkver,HDL_VERS_SYSBLK,strlen(HDL_VERS_SYSBLK));
-    sysblk.blksiz = swap_byte_U32((U32)sizeof(SYSBLK));
+    memset( &sysblk.blknam, SPACE, sizeof( sysblk.blknam ));
+    memset( &sysblk.blkver, SPACE, sizeof( sysblk.blkver ));
+    memset( &sysblk.blkend, SPACE, sizeof( sysblk.blkend ));
+    sysblk.blkloc = swap_byte_U64( (U64)((uintptr_t) &sysblk ));
+    memcpy( sysblk.blknam, HDL_NAME_SYSBLK, strlen( HDL_NAME_SYSBLK ));
+    memcpy( sysblk.blkver, HDL_VERS_SYSBLK, strlen( HDL_VERS_SYSBLK ));
+    sysblk.blksiz = swap_byte_U32( (U32) sizeof( SYSBLK ));
     {
         char buf[32];
         MSGBUF( buf, "END%13.13s", HDL_NAME_SYSBLK );
-
-        memcpy(sysblk.blkend, buf, sizeof(sysblk.blkend));
+        memcpy( sysblk.blkend, buf, sizeof( sysblk.blkend ));
     }
     sysblk.msglvl = DEFAULT_MLVL;
 
     /* Initialize SETMODE and set user authority */
-    SETMODE(INIT);
+    SETMODE( INIT );
 
-    SET_THREAD_NAME("impl");
+    SET_THREAD_NAME( "impl" );
 
     /* Remain compatible with older external gui versions */
 #if defined( EXTERNALGUI )
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    if (argc >= 1 && strncmp( argv[argc-1], "EXTERNALGUI", 11 ) == 0)
     {
         extgui = TRUE;
         argc--;
@@ -579,12 +578,12 @@ int     rc;
 
     /* Scan  argv  array  up  front  and  set decoded variables.  As */
     /* nothing has been started we can just exit on serious errors.  */
-    rc = process_args(argc, argv);
+    rc = process_args( argc, argv );
     if (rc)
     {
         // "Terminating due to %d argument errors"
-        WRMSG(HHC02343, "S", rc);
-        exit(rc);        /* Serously bad arguments?  Stop right here */
+        WRMSG( HHC02343, "S", rc );
+        exit( rc );      /* Serously bad arguments?  Stop right here */
     }
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
@@ -597,7 +596,7 @@ int     rc;
 
     /* Ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
-    atexit(hdl_shut);
+    atexit( hdl_shut );
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     set_symbol( "VERSION", VERSION);

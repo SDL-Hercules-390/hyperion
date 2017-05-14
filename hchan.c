@@ -9,7 +9,7 @@
 /**CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION****/
 /* THIS CODE IS CURRENTLY IN A DEVELOPMENT STAGE AND IS NOT          */
 /* OPERATIONAL                                                       */
-/* THIS FONCTIONALITY IS NOT YET SUPPORTED                           */
+/* THIS FUNCTIONALITY IS NOT YET SUPPORTED                           */
 /**CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION****/
 
 /*-------------------------------------------------------------------*/

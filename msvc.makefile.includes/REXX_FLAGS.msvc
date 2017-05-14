@@ -18,7 +18,7 @@ oorexx_flags = $(oorexx_flags) /D ENABLE_OBJECT_REXX /I"$(OBJECT_REXX_HDR_DIR)"
 oorexx_flags = $(oorexx_flags) /D HAVE_REXX_H
 oorexx_flags = $(oorexx_flags) /D HAVE_OOREXXAPI_H
 
-!MESSAGE OBJECT REXX FLAGS $(oorexx_flags)
+!MESSAGE OORexx flags: $(oorexx_flags)
 
 cflags = $(cflags) $(oorexx_flags)
 
@@ -32,7 +32,7 @@ regina_flags =
 regina_flags = $(regina_flags) /D ENABLE_REGINA_REXX /I"$(REGINA_REXX_HDR_DIR)"
 regina_flags = $(regina_flags) /D HAVE_REXXSAA_H
 
-!MESSAGE REGINA REXX FLAGS $(regina_flags)
+!MESSAGE Regina Rexx flags: $(regina_flags)
 
 cflags = $(cflags) $(regina_flags)
 

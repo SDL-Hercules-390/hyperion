@@ -958,38 +958,38 @@ static REGS  *copy_regs (REGS *regs)
 /*-------------------------------------------------------------------*/
 const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
 {
-static const char* rsctab[] =
-{
-    "0",
-    "1",
-    "MONIT",
-    "SUBCH",
-    "CHPID",
-    "5",
-    "6",
-    "7",
-    "8",
-    "CAF",
-    "10",
-    "CSS",
-};
-static const BYTE  numrsc  =  _countof( rsctab );
+    static const char* rsctab[] =
+    {
+        "0",
+        "1",
+        "MONIT",
+        "SUBCH",
+        "CHPID",
+        "5",
+        "6",
+        "7",
+        "8",
+        "CAF",
+        "10",
+        "CSS",
+    };
+    static const BYTE  numrsc  =  _countof( rsctab );
 
-static const char* erctab[] =
-{
-    "NULL",
-    "AVAIL",
-    "INIT",
-    "TEMP",
-    "ALERT",
-    "ABORT",
-    "ERROR",
-    "RESET",
-    "MODFY",
-    "9",
-    "RSTRD",
-};
-static const BYTE  numerc  =  _countof( erctab );
+    static const char* erctab[] =
+    {
+        "NULL",
+        "AVAIL",
+        "INIT",
+        "TEMP",
+        "ALERT",
+        "ABORT",
+        "ERROR",
+        "RESET",
+        "MODFY",
+        "9",
+        "RSTRD",
+    };
+    static const BYTE  numerc  =  _countof( erctab );
 
     if (!buf)
         return NULL;
@@ -1031,9 +1031,7 @@ static const BYTE  numerc  =  _countof( erctab );
         if (n < bufsz)
             *(buf + n) = 0;             // (null terminate)
 
-        if (n > 0 &&
-            *(buf + n - 1) == ',')      // (remove trailing comma)
-            *(buf + n - 1) = 0;         // (remove trailing comma)
+        rtrim( buf, "," );              // (remove trailing comma)
     }
     else
         strlcpy( buf, "(end)", bufsz ); // (end of channel report)
@@ -1450,19 +1448,6 @@ static void FormatBytes( BYTE* data, int len, char* buf, size_t bufsz )
 
 
 /*-------------------------------------------------------------------*/
-/* Helper function to remove trailing blanks including CRLF          */
-/*-------------------------------------------------------------------*/
-static void TrimEnd( char* buf )
-{
-    size_t n; char* p;
-
-    for (n = strlen(buf), p = buf+n-1; p > buf && isspace((BYTE)*p); --p, --n)
-        ; // (nop)
-    p[1] = 0;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* Format RCD (Read Configuration Data) response                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
@@ -1509,7 +1494,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
         strlcat( buf, temp, bufsz );
     }
 
-    TrimEnd( buf );
+    RTRIM( buf );
 
     return buf;
 }
@@ -1698,7 +1683,7 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
     else
         FormatBytes( rni, len, buf, bufsz );
 
-    TrimEnd( buf );
+    RTRIM( buf );
 
     return buf;
 }
@@ -1799,7 +1784,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
         if (len)
             FormatBytes( ciw, len, buf, bufsz );
 
-        TrimEnd( buf );
+        RTRIM( buf );
     }
 
     return buf;
@@ -2602,7 +2587,7 @@ char    regs_msg_buf[4*512] = {0};
         size_t len;
         MSGBUF( psw_inst_msg, "%s Instruction fetch error\n", buf );
         display_gregs( regs, regs_msg_buf, sizeof(regs_msg_buf)-1, "HHC02269I " );
-        /* Remove extra trailng newline from regs_msg_buf */
+        /* Remove unwanted extra trailing newline from regs_msg_buf */
         len = strlen(regs_msg_buf);
         if (len)
             regs_msg_buf[len-1] = 0;

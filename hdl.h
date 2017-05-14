@@ -195,7 +195,7 @@ DLL_EXPORT
 void hdl_main();                        /* Main initialization rtn   */
 
 DLL_EXPORT
-char *hdl_setpath(char *, int);         /* Set module path           */
+char *hdl_setpath( const char*, int );  /* Set module path           */
 
 DLL_EXPORT
 void * hdl_fent(char *);                /* Find entry name           */
