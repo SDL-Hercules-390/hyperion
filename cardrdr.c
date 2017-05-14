@@ -131,7 +131,9 @@ int     attn = 0;
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)(sizeof(char) * (fc + 1)) );
-        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "Card", buf, strerror( errno ));
         return -1;
     }
 
@@ -235,7 +237,9 @@ int     attn = 0;
 
         if (access(argv[i], R_OK | F_OK) != 0)
         {
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "access()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "access()", strerror( errno ));
             return -1;
         }
         hostpath(pathname, argv[i], sizeof(pathname));
@@ -244,7 +248,9 @@ int     attn = 0;
 
         if (!dev->more_files)
         {
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "strdup()", strerror( errno ));
             return -1;
         }
 
@@ -311,7 +317,9 @@ int     attn = 0;
             }
             else if (access(argv[0], R_OK | F_OK) != 0)
             {
-                WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "access()", strerror(errno));
+                // "%1d:%04X %s: error in function %s: %s"
+                WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "Card", "access()", strerror( errno ));
                 return -1;
             }
         }
@@ -413,7 +421,9 @@ static int cardrdr_close_device ( DEVBLK *dev )
     )
     {
         int errnum = dev->bs ? get_HSO_errno() : errno;
-        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "close_socket() or fclose()", strerror(errnum));
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "Card", "close_socket() or fclose()", strerror( errnum ));
         dev->fd = -1;
         dev->fh = NULL;
         return -1;
@@ -516,8 +526,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     rc = HOPEN (dev->filename, O_RDONLY | O_BINARY);
     if (rc < 0)
     {
-        /* Handle open failure */
-        WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "open()", strerror(errno));
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "Card", "open()", strerror( errno ));
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -537,8 +548,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         len = (int)fread(buf, 1, sizeof(buf), dev->fh);
         if (len < 0)
         {
-            /* Handle read error condition */
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fread()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "fread()", strerror( errno ));
 
             /* Close the file */
             fclose(dev->fh);
@@ -569,8 +581,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         rc = fseek (dev->fh, 0, SEEK_SET);
         if (rc < 0)
         {
-            /* Handle seek error condition */
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fseek()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "fseek()", strerror( errno ));
 
             /* Close the file */
             fclose (dev->fh);
@@ -642,11 +655,13 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                   "read_socket() or fread()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "read_socket() or fread()", strerror( errno ));
         else
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                   "read_socket() or fread()", "unexpected end of file");
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "read_socket() or fread()", "unexpected end of file");
 
         /* Set unit check with equipment check */
         dev->sense[0] = SENSE_EC;
@@ -737,8 +752,9 @@ BYTE  c   = 0;                          /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            WRMSG (HHC01200, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                   "read_socket() or getc()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Card", "read_socket() or getc()", strerror( errno ));
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;

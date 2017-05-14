@@ -1153,6 +1153,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
         /*  control flags...                                         */
         unsigned int                    /* Flags                     */
+                append:1,               /* 1=append new data to end  */
                 s370start:1,            /* 1=S/370 non-BMX behavior  */
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
@@ -1315,7 +1316,6 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopdev:1;              /* T=stopped; F=started      */
-        u_int   notrunc:1;              /* 1=do not truncate at open */
         u_int   rawcc:1;                /* Debugging: 1=write hex cc
                                            else process cc normally  */
         u_int   fcbcheck:1;             /* 1=signal FCB errors, else

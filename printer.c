@@ -350,7 +350,7 @@ static void* spthread (void* arg)
     {
         char thread_name[32];
         thread_name[sizeof(thread_name)-1] = 0;
-        snprintf( thread_name, sizeof(thread_name)-1,
+        snprintf( thread_name, sizeof(thread_name),
             "spthread %1d:%04X", SSID_TO_LCSS(dev->ssid), dev->devnum );
         SET_THREAD_NAME( thread_name );
     }
@@ -435,7 +435,7 @@ static void* spthread (void* arg)
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
+static int printer_init_handler( DEVBLK* dev, int argc, char *argv[] )
 {
 char *ptr;                              /* Work variable for parsing */
 char *nxt;                              /* Work variable for parsing */
@@ -445,29 +445,29 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
     /* For re-initialisation, close the existing file, if any, and raise attention */
     if (dev->fd >= 0)
     {
-        (dev->hnd->close)(dev);
+        (dev->hnd->close)( dev );
 
-        release_lock (&dev->lock);
-        device_attention (dev, CSW_DE);
-        obtain_lock (&dev->lock);
+        release_lock( &dev->lock );
+        device_attention( dev, CSW_DE );
+        obtain_lock( &dev->lock );
     }
 
     dev->excps = 0;
 
     /* Forcibly disconnect anyone already currently connected */
-    if (dev->bs && !unbind_device_ex(dev,1))
+    if (dev->bs && !unbind_device_ex( dev, 1 ))
         return -1; // (error msg already issued)
 
     /* The first argument is the file name */
-    if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
+    if (argc == 0 || strlen( argv[0] ) >= sizeof( dev->filename ))
     {
         // "%1d:%04X Printer: file name missing or invalid"
-        WRMSG (HHC01101, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG( HHC01101, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
         return -1;
     }
 
     /* Save the file name in the device block */
-    hostpath(dev->filename, argv[0], sizeof(dev->filename));
+    hostpath( dev->filename, argv[0], sizeof( dev->filename ));
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3211;
@@ -478,7 +478,7 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
     dev->fold = 0;
     dev->crlf = 0;
     dev->stopdev = FALSE;
-    dev->notrunc = 0;
+    dev->append = 0;
     dev->ispiped = (dev->filename[0] == '|');
 
 
@@ -534,9 +534,9 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
             continue;
         }
 
-        if (strcasecmp(argv[iarg], "noclear") == 0)
+        if (strcasecmp(argv[iarg], "append") == 0)
         {
-            dev->notrunc = 1;
+            dev->append = 1;
             continue;
         }
 
@@ -844,10 +844,10 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
         return -1;
     }
 
-    if (sockdev && dev->notrunc)
+    if (sockdev && dev->append)
     {
         // "%1d:%04X Printer: option %s is incompatible"
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/noclear");
+        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/append");
         return -1;
     }
 
@@ -897,7 +897,7 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
                  dev->filename,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
-                (dev->notrunc ? " noclear"   : ""),
+                (dev->append  ? " append"    : ""),
                 (dev->rawcc   ? " rawcc"     : ""),
                 (dev->devtype == 0x3211 ?
                 (dev->fcbcheck ? " fcbcheck" : " nofcbcheck") : ""),
@@ -909,20 +909,20 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
 /*-------------------------------------------------------------------*/
 /* Subroutine to open the printer file or pipe                       */
 /*-------------------------------------------------------------------*/
-static int
-open_printer (DEVBLK *dev)
+static int open_printer( DEVBLK* dev )
 {
 pid_t           pid;                    /* Child process identifier  */
 int             open_flags;             /* File open flags           */
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
-int             rc;                     /* Return code               */
 #endif
+int             rc;                     /* Return code               */
+off_t           filesize = 0;           /* file size for ftruncate   */
 
     /* Regular open if 1st char of filename is not vertical bar */
     if (!dev->ispiped)
     {
-        int fd;
+        int    fd;
 
         /* Socket printer? */
         if (dev->bs)
@@ -930,19 +930,36 @@ int             rc;                     /* Return code               */
 
         /* Normal printer */
         open_flags = O_BINARY | O_WRONLY | O_CREAT /* | O_SYNC */;
-        if (!dev->notrunc)
+
+        if (!dev->append)
             open_flags |= O_TRUNC;
-        fd = HOPEN (dev->filename, open_flags,
-                    S_IRUSR | S_IWUSR | S_IRGRP);
-        if (fd < 0)
+
+        if ((fd = HOPEN( dev->filename, open_flags, S_IRUSR | S_IWUSR | S_IRGRP )) < 0)
         {
-            // "%1d:%04X Printer: error in function %s: %s"
-            WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "open()", strerror(errno));
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Printer", "HOPEN()", strerror( errno ));
             return -1;
+        }
+
+        if (dev->append)
+        {
+            if ((filesize = lseek( fd, 0, SEEK_END )) < 0)
+            {
+                // "%1d:%04X %s: error in function %s: %s"
+                WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "Printer", "lseek()", strerror( errno ));
+                return -1;
+            }
         }
 
         /* Save file descriptor in device block and return */
         dev->fd = fd;
+
+        /* Set new physical EOF */
+        do rc = ftruncate( dev->fd, filesize );
+        while (EINTR == rc);
+
         return 0;
     }
 
@@ -954,34 +971,35 @@ int             rc;                     /* Return code               */
     pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
     if (pid < 0)
     {
-        // "%1d:%04X Printer: error in function %s: %s"
-        WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fork()", strerror(errno));
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "Printer", "fork()", strerror( errno ));
         return -1;
     }
 
     // "%1d:%04X Printer: pipe receiver with pid %d starting"
-    WRMSG (HHC01106, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, pid);
+    WRMSG( HHC01106, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, pid );
     dev->ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
 
     /* Create a pipe */
-    rc = create_pipe (pipefd);
-    if (rc < 0)
+    if ((rc = create_pipe( pipefd )) < 0)
     {
-        // "%1d:%04X Printer: error in function %s: %s"
-        WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "create_pipe()", strerror(errno));
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "Printer", "create_pipe()", strerror( errno ));
         return -1;
     }
 
     /* Fork a child process to receive the pipe data */
-    pid = fork();
-    if (pid < 0)
+    if ((pid = fork()) < 0)
     {
         // "%1d:%04X COMM: outgoing call failed during %s command: %s"
-        WRMSG (HHC01005, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fork()", strerror(errno));
-        close_pipe ( pipefd[0] );
-        close_pipe ( pipefd[1] );
+        WRMSG( HHC01005, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "fork()", strerror( errno ));
+        close_pipe( pipefd[0] );
+        close_pipe( pipefd[1] );
         return -1;
     }
 
@@ -989,57 +1007,59 @@ int             rc;                     /* Return code               */
     if (pid == 0)
     {
         // "%1d:%04X Printer: pipe receiver with pid %d starting"
-        WRMSG (HHC01106, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, getpid());
+        WRMSG( HHC01106, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, getpid() );
 
         /* Close the write end of the pipe */
-        close_pipe ( pipefd[1] );
+        close_pipe( pipefd[1] );
 
         /* Duplicate the read end of the pipe onto STDIN */
         if (pipefd[0] != STDIN_FILENO)
         {
-            rc = dup2 (pipefd[0], STDIN_FILENO);
-            if (rc != STDIN_FILENO)
+            if ((rc = dup2( pipefd[0], STDIN_FILENO )) != STDIN_FILENO)
             {
-                // "%1d:%04X Printer: error in function %s: %s"
-                WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "dup2()", strerror(errno));
-                close_pipe ( pipefd[0] );
-                _exit(127);
+                // "%1d:%04X %s: error in function %s: %s"
+                WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "Printer", "dup2()", strerror( errno ));
+                close_pipe( pipefd[0] );
+                _exit( 127 );
             }
         } /* end if(pipefd[0] != STDIN_FILENO) */
 
         /* Close the original descriptor now duplicated to STDIN */
-        close_pipe ( pipefd[0] );
+        close_pipe( pipefd[0] );
 
         /* Redirect stderr (screen) to hercules log task */
-        dup2(STDOUT_FILENO, STDERR_FILENO);
+        dup2( STDOUT_FILENO, STDERR_FILENO );
 
         /* Relinquish any ROOT authority before calling shell */
-        SETMODE(TERM);
+        SETMODE( TERM );
 
         /* Execute the specified pipe receiver program */
-        rc = system (dev->filename+1);
+        rc = system( dev->filename+1 );
 
         if (rc == 0)
         {
             // "%1d:%04X Printer: pipe receiver with pid %d terminating"
-            WRMSG (HHC01107, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, getpid());
+            WRMSG( HHC01107, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                getpid() );
         }
         else
         {
             // "%1d:%04X Printer: unable to execute file %s: %s"
-            WRMSG (HHC01108, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename+1, strerror(errno));
+            WRMSG( HHC01108, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->filename+1, strerror( errno ));
         }
 
         /* The child process terminates using _exit instead of exit
            to avoid invoking the panel atexit cleanup routine */
-        _exit(rc);
+        _exit( rc );
 
-    } /* end if(pid==0) */
+    } /* end if (pid == 0) */
 
     /* The parent process continues as the pipe sender */
 
     /* Close the read end of the pipe */
-    close_pipe ( pipefd[0] );
+    close_pipe( pipefd[0] );
 
     /* Save pipe write descriptor in the device block */
     dev->fd = pipefd[1];
@@ -1121,9 +1141,9 @@ int fd = dev->fd;
         close_pipe (fd);
 #else /* defined( _MSVC_ ) */
         close (fd);
+#endif /* defined( _MSVC_ ) */
         // "%1d:%04X Printer: pipe receiver with pid %d terminating"
         WRMSG (HHC01107, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ptpcpid);
-#endif /* defined( _MSVC_ ) */
         dev->ptpcpid = 0;
     }
     else
@@ -1142,6 +1162,7 @@ int fd = dev->fd;
     }
 
     return 0;
+
 } /* end function printer_close_device */
 
 /*-------------------------------------------------------------------*/
@@ -1640,10 +1661,11 @@ char            wbuf[150];
             break;
         }
 
-    default:
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
+    default:
+
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_UC;
@@ -1705,8 +1727,8 @@ END_DEPENDENCY_SECTION
 
 HDL_DEVICE_SECTION;
 {
-    HDL_DEVICE(1403, printer_device_hndinfo );
-    HDL_DEVICE(3211, printer_device_hndinfo );
+    HDL_DEVICE( 1403, printer_device_hndinfo );
+    HDL_DEVICE( 3211, printer_device_hndinfo );
 }
 END_DEVICE_SECTION
 #endif

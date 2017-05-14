@@ -856,7 +856,7 @@ Examples:
 #define HHC01109 "%1d:%04X Printer: %s incompatible with device type %04X"
 
 // reserve 012xx for card devices
-#define HHC01200 "%1d:%04X Card: error in function %s: %s"
+//efine HHC01200 (available)
 #define HHC01201 "%1d:%04X Card: filename %s too long, maximum length is %d"
 #define HHC01202 "%1d:%04X Card: options ascii and ebcdic are mutually exclusive"
 #define HHC01203 "%1d:%04X Card: only one filename (sock_spec) allowed for socket device"
@@ -867,6 +867,11 @@ Examples:
 #define HHC01208 "%1d:%04X Card: filename is missing"
 #define HHC01209 "%1d:%04X Card: parameter %s in argument %d is invalid"
 //efine HHC01210 - HHC01249 (available)
+
+// reserve 01250 - 01299 for Generic device messages
+#define HHC01250 "%1d:%04X %s: error in function %s: %s"
+#define HHC01251 "%1d:%04X %s: option '%s' has been deprecated"
+//efine HHC01252 - HHC01259 (available)
 
 // reserve 013xx for channel related messages
 /* channel.c */
