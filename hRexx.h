@@ -1,163 +1,147 @@
-/* HREXX.H      (c)Copyright Enrico Sorichetti, 2012                          */
-/*              Rexx Interpreter Support                                      */
-/*                                                                            */
-/*  Released under "The Q Public License Version 1"                           */
-/*  (http://www.hercules-390.org/herclic.html) as modifications to            */
-/*  Hercules.                                                                 */
+/* HREXX.H      (C) Copyright Enrico Sorichetti, 2012                */
+/*              (C) Copyright "Fish" (David B. Trout), 2017          */
+/*              Rexx Interpreter Support                             */
+/*                                                                   */
+/*  Released under "The Q Public License Version 1"                  */
+/*  (http://www.hercules-390.org/herclic.html) as modifications to   */
+/*  Hercules.                                                        */
 
-/*  inspired by the previous Rexx implementation by Jan Jaeger                */
+/*  inspired by the previous Rexx implementation by Jan Jaeger       */
 
 #ifndef _HREXX_H_
 #define _HREXX_H_
 
-#define HAVKEYW( _T_ )       (  strcasecmp( _T_, argv[iarg]) == 0 )
-#define HAVABBR( _T_ )       ( strncasecmp( _T_, argv[iarg], argl) == 0 )
+/*-------------------------------------------------------------------*/
+/* #define some descriptive macros to make #if statements simpler    */
+/*-------------------------------------------------------------------*/
 
-// #define  CMPARG( _VALUE_ )  strcasecmp( _VALUE_, argv[iarg])
-// #define CMPARGL( _VALUE_ ) strncasecmp( _VALUE_, argv[iarg], argl)
-
-
-#if defined(PATH_MAX)
-# define MAX_PATHNAME_LENGTH PATH_MAX + 1
-#elif defined(_POSIX_PATH_MAX)
-# define MAX_PATHNAME_LENGTH _POSIX_PATH_MAX + 1
-#else
-# define MAX_PATHNAME_LENGTH 1024 + 1
+#if defined( HAVE_OBJECT_REXX )
+   #define        OBJECT_REXX       // Support for Object Rexx
 #endif
 
-#if defined(FILENAME_MAX)
-# define MAX_FILENAME_LENGTH FILENAME_MAX + 1
+#if defined( HAVE_REGINA_REXX )
+   #define        REGINA_REXX       // Support for Regina Rexx
+#endif
+
+#if defined( OBJECT_REXX ) || defined( REGINA_REXX )
+#define HAVE_REXX                   // Support for EITHER Rexx
+#endif
+
+#if defined( OBJECT_REXX ) && defined( REGINA_REXX )
+#define HAVE_BOTH_REXX              // Support for BOTH Rexxes
+#endif
+
+#if defined( HAVE_REXX ) && !defined( HAVE_BOTH_REXX )
+#define HAVE_ONLY_ONE_REXX          // Support for only ONE Rexx
+#endif
+
+#ifdef HAVE_REXX                    // if we have EITHER rexx...
+/*-------------------------------------------------------------------*/
+/* The Rexx packages this implementation supports                    */
+/*-------------------------------------------------------------------*/
+#define OOREXX_PKGNUM       0       // PkgNames[] entry number
+#define REGINA_PKGNUM       1       // PkgNames[] entry number
+#define PKGS                2       // Number of defined packages
+
+#define OOREXX_PKG          OORexx
+#define REGINA_PKG          Regina
+
+#define OOREXX_PKGNAME      QSTR( OOREXX_PKG )
+#define REGINA_PKGNAME      QSTR( REGINA_PKG )
+
+/*-------------------------------------------------------------------*/
+/* typedefs for Hercules Rexx implementation functions               */
+/*-------------------------------------------------------------------*/
+typedef int (*PFNEXECCMDFUNC)( char* scriptname, char* cmdline );
+typedef int (*PFNEXECSUBFUNC)( char* scriptname, int argc, char* argv[] );
+typedef int (*PFNHALTEXECFUNC)( pid_t pid, TID tid );
+
+/*-------------------------------------------------------------------*/
+/* Hercules Rexx implementation publicly visible global variables    */
+/*-------------------------------------------------------------------*/
+extern char*                PackageName;
+extern char*                PackageVersion;
+extern char*                PackageSource;
+extern BYTE                 MsgLevel;
+extern BYTE                 MsgPrefix;
+extern BYTE                 ErrPrefix;
+extern PFNEXECCMDFUNC       ExecCmd;
+extern PFNEXECSUBFUNC       ExecSub;
+extern PFNHALTEXECFUNC      HaltExec;
+
+/*-------------------------------------------------------------------*/
+/* Hercules Rexx implementation publicly visible functions           */
+/*-------------------------------------------------------------------*/
+extern void  InitializeRexx ();
+extern int   rexx_cmd( int argc, char* argv[], char* cmdline );
+extern int   exec_cmd( int argc, char* argv[], char* cmdline );
+
+/*-------------------------------------------------------------------*/
+/* Various platform dependent constants                              */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
+  #define EXTDELIM          ";"
+  #define EXTENSIONS        ".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx"
+  #define PATHDELIM         ";"
+  #define PATHFORMAT        "%s\\%s%s"
+#elif defined( __APPLE__ )
+  #define EXTDELIM          ":"
+  #define EXTENSIONS        ".rexx:.rex:.cmd:.rx" // APPLE is caseless
+  #define PATHDELIM         ":"
+  #define PATHFORMAT        "%s/%s%s"
+#else
+  #define EXTDELIM          ":"
+  #define EXTENSIONS        ".REXX:.rexx:.REX:.rex:.CMD:.cmd:.RX:.rx"
+  #define PATHDELIM         ":"
+  #define PATHFORMAT        "%s/%s%s"
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Various implementation constants and helper macros                */
+/*-------------------------------------------------------------------*/
+
+#define HAVKEYW( kw )   (strcasecmp(  (kw),   argv[ iarg ]       ) == 0)
+#define HAVABBR( abbr ) (strncasecmp( (abbr), argv[ iarg ], argl ) == 0)
+#define INT2VOIDP(i)    (void*)(ssize_t)(i)
+
+#if defined( FILENAME_MAX )
+  #define  MAX_FULLPATH_LEN         (FILENAME_MAX    + 1)
 #elif defined(_MAX_FNAME)
-# define MAX_FILENAME_LENGTH _MAX_FNAME + 1
+  #define  MAX_FULLPATH_LEN         (_MAX_FNAME      + 1)
 #elif defined(_POSIX_NAME_MAX)
-# define MAX_FILENAME_LENGTH _POSIX_NAME_MAX + 1
+  #define  MAX_FULLPATH_LEN         (_POSIX_NAME_MAX + 1)
 #else
-# define MAX_FILENAME_LENGTH 1024 + 1
+  #define  MAX_FULLPATH_LEN         (4095            + 1)
 #endif
 
-#ifndef MAX_ARGS_TO_REXXSTART
-#define MAX_ARGS_TO_REXXSTART   64
-#endif
+/* Some helpful Hercules Rexx implementation constants */
+#define DEF_RXSTRING_BUFSZ          256   // Default RXSTRING buf size
+#define MAX_REXXSTART_ARGS          64    // Max RexxStart arguments
+#define NUM_DIGITS_32               10    // Digits in printed 32-bit value
 
-#ifndef MAX_ARGS_TO_SUBCOMHANDLER
-#define MAX_ARGS_TO_SUBCOMHANDLER   64
-#endif
+/* The following are generic Hercules Rexx error codes */
+typedef U16              HR_ERR_T;        // Hercules Rexx error code
+#define HRERR_OK                    0     // Success
+#define HRERR_ERROR                 0x01  // Generic error
+#define HRERR_FAILURE               0x02  // Generic failure
+#define HRERR_BADARGS               1001  // Invalid arguments
+#define HRERR_NOMEM                 1002  // Out of memory
 
-#ifndef WRK_AREA_SIZE
-#define WRK_AREA_SIZE 33
-#endif
+/* The following defines are missing from both OORexx and Regina */
+#define RXFUNC_ERROR                0x01  // Error
+#define RXFUNC_FAILURE              0x02  // Failure
+#define RXFUNC_BADENTRY             40    // Invalid Entry Conditions
 
-#ifdef  _HREXX_C_
-#define _HREXX_EXTERN
-#else
-#define _HREXX_EXTERN extern
-#endif
+/* A simple Rexx "in storage" script to retrieve Rexx version/source */
+#define VER_SRC_INSTOR_SCRIPT       /* return results as 2 lines */   \
+                                    "parse version ver\n"             \
+                                    "parse source  src .\n"           \
+                                    "return ver || '0a'x || src\n"
 
-#define REGINA_PACKAGE "Regina"
-#define OOREXX_PACKAGE "ooRexx"
+/* Hercules Rexx implementation variable names */
+#define HR_ERRHNDLR_VNAME           "HREXX.ERRORHANDLER"
+#define HR_RESPSTEM_VNAME           "HREXX.RESPSTEMNAME"
+#define HR_PERSISTRESPSTEM_VNAME    "HREXX.PERSISTENTRESPSTEMNAME"
 
-#define hSubcom  "HERCULES"
-#define hSIOExit "HERCSIOE"
-
-#if     defined( _MSVC_ )
-#define EXTNDELIM             ";"
-#define EXTENSIONS            ".REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx"
-#define PATHDELIM             ";"
-#define PATHFORMAT            "%s\\%s%s"
-#define REGINA_LIBRARY        "regina.dll"
-#define OOREXX_LIBRARY        "rexx.dll"
-#define OOREXX_API_LIBRARY    "rexxapi.dll"
-
-#elif   defined ( __APPLE__ )
-#define EXTNDELIM             ":"
-#define EXTENSIONS            ".rexx:.rex:.cmd:.rx" /* APPLE is caseless */
-#define PATHDELIM             ":"
-#define PATHFORMAT            "%s/%s%s"
-#define REGINA_LIBRARY        "libregina.dylib"
-#define OOREXX_LIBRARY        "librexx.dylib"
-#define OOREXX_API_LIBRARY    "librexxapi.dylib"
-
-#else
-#define EXTNDELIM             ":"
-#define EXTENSIONS            ".REXX:.rexx:.REX:.rex:.CMD:.cmd:.RX:.rx"
-#define PATHDELIM             ":"
-#define PATHFORMAT            "%s/%s%s"
-#define REGINA_LIBRARY        "libregina.so"
-#define OOREXX_LIBRARY        "librexx.so"
-#define OOREXX_API_LIBRARY    "librexxapi.so"
-#endif
-
-#define REXX_START                  "RexxStart"
-#define REXX_REGISTER_FUNCTION      "RexxRegisterFunctionExe"
-#define REXX_DEREGISTER_FUNCTION    "RexxDeregisterFunction"
-#define REXX_REGISTER_SUBCOM        "RexxRegisterSubcomExe"
-#define REXX_DEREGISTER_SUBCOM      "RexxDeregisterSubcom"
-#define REXX_REGISTER_EXIT          "RexxRegisterExitExe"
-#define REXX_DEREGISTER_EXIT        "RexxDeregisterExit"
-#define REXX_ALLOCATE_MEMORY        "RexxAllocateMemory"
-#define REXX_FREE_MEMORY            "RexxFreeMemory"
-#define REXX_VARIABLE_POOL          "RexxVariablePool"
-
-#define HREXX_ERRORHANDLER_VARNAME            "HREXX.ERRORHANDLER"
-#define HREXX_PERSISTENTRESPSTEMNAME_VARNAME  "HREXX.PERSISTENTRESPSTEMNAME"
-#define HREXX_RESPSTEMNAME_VARNAME            "HREXX.RESPSTEMNAME"
-
-#if defined ( _MSVC_ )
-
-#define HDLOPEN( _LIBHND_, _LIBNAM_ , _LIBPAR_ ) do {\
-    _LIBHND_  = LoadLibrary( ( _LIBNAM_ ) );\
-    if (! ( _LIBHND_ )  ) { \
-        WRMSG( HHC17531, "E", RexxPackage, ( _LIBNAM_ ) ) ; \
-        return -1; \
-    } \
-} while (0)
-
-#define HDLCLOSE( _LIBHND_) do {\
-    if ( FreeLibrary( ( _LIBHND_ ) ) == 0 ) { \
-        WRMSG( HHC17532, "E", RexxPackage, ( _LIBHND_ ) ) ; \
-        return -1; \
-    } \
-    ( _LIBHND_ ) = NULL; \
-} while (0)
-
-#define HDLSYM(_SYMHND_, _LIBHND_, _SYMNAM_ ) do {\
-    ( _SYMHND_ ) = (void *) GetProcAddress( ( _LIBHND_ ), ( _SYMNAM_ ) ) ; \
-    if (! ( _SYMHND_ )  ) { \
-        WRMSG( HHC17533, "E", RexxPackage, ( _SYMNAM_ ), "") ; \
-        return -1; \
-    } \
-} while (0)
-
-#else
-
-#if !defined ( OPTION_DYNAMIC_LOAD )
-#include <dlfcn.h>
-#endif
-
-#define HDLOPEN( _LIBHND_, _LIBNAM_, _LIBPAR_ ) do {\
-    ( _LIBHND_ )  = dlopen( ( _LIBNAM_ ), ( _LIBPAR_ ) );\
-    if (! ( _LIBHND_ )  ) { \
-        WRMSG( HHC17530, "E", RexxPackage, dlerror() ) ; \
-        return -1; \
-    } \
-} while (0)
-
-#define HDLCLOSE( _LIBHND_) do {\
-    if ( dlclose( ( _LIBHND_ ) ) != 0 ) { \
-        WRMSG( HHC17530, "E", RexxPackage, dlerror() ) ; \
-        return -1; \
-    } \
-    ( _LIBHND_ ) = NULL; \
-} while (0)
-
-#define HDLSYM(_SYMHND_, _LIBNAM_, _SYMNAM_ ) do {\
-    ( _SYMHND_ )  = dlsym( ( _LIBNAM_ ), ( _SYMNAM_ ) );\
-    if (! ( _SYMHND_ ) ) { \
-        WRMSG( HHC17530, "E", RexxPackage, dlerror() ) ; \
-        return -1; \
-    } \
-} while (0)
-
-#endif
-
-#endif /* #ifndef _HREXX_H_  */
+#endif // HAVE_REXX
+#endif // _HREXX_H_

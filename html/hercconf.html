@@ -96,8 +96,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#TODDRAG">TODDRAG</a>    1.0
     <a href="#DEVTMAX">DEVTMAX</a>    8
 
-    <a href="#DIAG8CMD">DIAG8CMD</a>   disable
-    <a href="#SHCMDOPT">SHCMDOPT</a>   disable
+    <a href="#SHCMDOPT">SHCMDOPT</a>   disable  nodiag8
+    <a href="#DIAG8CMD">DIAG8CMD</a>   disable  noecho
 
     <a href="#DEFSYM">DEFSYM</a>     TAPEDIR   "<a href="#subs">$(HOME)</a>/tapes"
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  $(TAPEDIR)
@@ -128,8 +128,8 @@ a real System/390.  The configuration file is an ASCII text file.
     000A      <a href="#1442">1442</a>    adrdmprs.rdr
     000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
     000D      <a href="#3525">3525</a>    pch00d.txt  ascii
-    000E      <a href="#1403">1403</a>    prt00e.txt  noclear
-    001E      <a href="#1403">1403</a>    192.168.200.1:1403 sockdev
+    000E      <a href="#1403">1403</a>    prt00e.txt  append       cctape=legacy
+    001E      <a href="#1403">3211</a>    192.168.200.1:1403 sockdev  fcb=legacy
 
     001F      <a href="#3270">3270</a>    * 192.168.0.1
     0200.4    <a href="#3270">3270</a>    * 192.168.0.0  255.255.255.0
@@ -277,7 +277,7 @@ a real System/390.  The configuration file is an ASCII text file.
     directories with a '-' minus sign. The default prefix if neither is
     specified is the '+' plus sign (i.e. an allowable directory).
     <p>
-    <i><b>Caution:</b> &nbsp;Enabling this feature may have security
+    <i><b><u>Caution</u>:</b> &nbsp;Enabling this feature may have security
     consequences depending on which allowable host system directories you
     specify as well as how your guest operating system enforces
     authorized use of the Set Diagnose (X'4B') channel command code.
@@ -707,32 +707,40 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DIAG8CMD"></a>
-<dt><code>DIAG8CMD &nbsp; <u>DISABLE</u> &#124; ENABLE [ECHO &#124; <u>NOECHO</u>]</code>
+<dt><code>DIAG8CMD &nbsp; <u>DISABLE</u> &#124; ENABLE &nbsp; [ECHO &#124; <u>NOECHO</u>]</code>
 <dd><p>
-    When <code>ENABLE</code> is specified, commands issued through the Diagnose 8 interface
-    will be executed by Hercules as Hercules commands.  When set to <code>DISABLE</code>,
-    commands issued through the Diagnose 8 interface will generate a Specification
-    Exception program interrupt on the issuing CPU.
-    <p>An optional second argument can be given to request whether the commands
-    issued using the Diagnose 8 interface will be traced at the console. This may be
-    useful for programs that routinely issue panel commands using the Diagnose 8 interface.
-    When <code>ECHO</code> is specified, a message is issued as the panel is about to issue
-    the command, the command is redisplayed as if it was entered through the panel input
-    line, and a final message is issued to indicate the command completed. When <code>NOECHO</code>
-    is specified, no such messages are displayed and the command completes silently.
-    <p>The value of <code>ECHO</code> or <code>NOECHO</code> has no effect on
-    command output being placed into a response buffer if the Diagnose 8 interface
-    requested one.
-    <p>The default is <code>DISABLE NOECHO</code>
+    When <code>ENABLE</code> is specified the Hercules Diagnose 8 instruction command
+    interface is enabled, allowing the guest to directly issue Hercules commands via
+    the Diagnose 8 instruction. When set to <code>DISABLE</code> all Diagnose 8 instructions
+    cause a Specification Exception program interrupt to occur instead.
     <p>
 
-    <i><b>Caution:</b> &nbsp;Enabling this feature may have security consequences.</i>
+    An optional second argument can be given to request whether an audit trail of such
+    commands should be created or not. When <code>ECHO</code> is specified, a message
+    is issued when the command is about to be issued, when the command is redisplayed (as
+    is normally done when entered from the command line), as well as a final message
+    indicating the command has finished executing. When <code>NOECHO</code> is specified
+    no such audit trail messages are displayed and the command instead completes silently
+    (except for whatever messages the command itself may issue).
     <p>
 
-    When this feature is enabled it is possible for guest operating systems
-    running under Hercules to issue commands directly to the host operating system
-    by means of the Hercules <code>sh</code> (shell) command. This ability may be
-    disabled via the <a href="#SHCMDOPT">SHCMDOPT</a> statement.
+    <i><b><u>Security Alert</u>:</b> &nbsp;Enabling this feature has security consequences.
+    When this feature is enabled it is possible for guest operating systems running under
+    Hercules to issue commands directly to the host operating system by means of the
+    <code>sh</code> (host shell command) and <code>exec</code> (execute Rexx script) commands.
+    This ability may be disabled via the <a href="#SHCMDOPT">SHCMDOPT</a> statement's
+    <code>NODIAG8</code> option.</i>
+    <p>
+
+    The value of <code>ECHO</code> or <code>NOECHO</code> has no effect on whether or not
+    command output will be placed into the Diagnose 8 instruction's response buffer if the
+    instruction requested one, nor does it cause the resulting audit trail messages from
+    being placed into the response buffer either. The <code>ECHO</code> option only impacts
+    what is displayed on the hardware console (and what appears in the hardcopy logfile)
+    but does not otherwise impact what is placed into the instruction's response buffer.
+    <p>
+
+    The default is <code>DISABLE NOECHO</code>
     <p>
 
 <a name="ECPSVM"></a>
@@ -1251,21 +1259,26 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="SHCMDOPT"></a>
-<dt><code>SHCMDOPT &nbsp; DISABLE &#124; NODIAG8</code>
+<dt><code>SHCMDOPT &nbsp; <u>DISABLE</u> &#124; ENABLE &nbsp; [DIAG8 &#124; <u>NODIAG8</u>]</code>
 <dd><p>
-    When set to <code>DISABLE</code>, <code>sh</code> (shell) commands are globally disabled, and will result
-    in an error if entered either directly via the Hercules hardware console or
-    programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
+    When set to <code>DISABLE</code>, the <code>sh</code> (host shell command)
+    and <code>exec</code> (Rexx execute script) commands are globally disabled
+    and will result in an error if entered either directly via the hardware
+    console or programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
     <p>
-    When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
-    the Diagnose 8 interface is disabled, but <code>sh</code> (shell) commands entered directly
-    via the Hercules hardware console will still work.
+
+    If the optional <code>NODIAG8</code> option is specified, then only the
+    programmatic execution of commands via the the Diagnose 8 interface are disabled,
+    but shell and <a href="rexx.html">Rexx commands</a> entered directly via the
+    Hercules command line still work. This includes commands entered via the
+    <a href="#HTTPROOT">HTTP server facility</a> as well as commands issued by
+    <a href="hercinst.html#RCFILE">.rc "run command"</a> scripts too (automatically
+    at startup or directly or indirectly via the <code>script</code> command).
     <p>
-    <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
-    also pertains to both commands entered via the
-    <a href="#HTTPROOT">HTTP server facility</a>
-    as well as commands entered via
-    <a href="hercinst.html#RCFILE">.rc "run command"</a> scripts.
+
+    <i><b><u>Security Alert</u>:</b> &nbsp;Enabling this feature has security consequences.
+    When <code>ENABLE DIAG8</code> is specified it is possible for guest operating systems
+    running under Hercules to issue commands directly to the host operating system.</i>
     <p>
 
 <a name="SHRDPORT"></a>
@@ -2011,7 +2024,7 @@ a real System/390.  The configuration file is an ASCII text file.
                 <td>Disk file (ASCII or EBCDIC)</td>
             </tr>
 
-            <tr><td>1403, 3211</td>
+            <tr><td>1403, 3203, 3211</td>
                 <td><a href="#printer">Line printers</a></td>
                 <td>Disk file (ASCII)</td>
             </tr>
@@ -2460,15 +2473,24 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <dl>
+    <dt><code>append</code>
+    <dd><p>
+        Specifies that the output file, if it already exists, will
+        not be cleared to zero bytes when it is opened. Instead,
+        output will be appended to the end of the existing data.
+        If the <code>noclear</code> argument is not specified, then
+        any previous contents of the file is destroyed when the file
+        is opened (i.e. the file is set to empty (truncated to zero
+        bytes) as soon as it is opened).
+        <p>
+
     <dt><code>ascii</code>
     <dd><p>
         Specifies that the file will be written as variable length
         lines of ASCII characters delimited by line feeds or
         carriage return line feed sequences at the end of each line.
         Trailing blanks are removed from each line.
-        If the <code>ascii</code> argument is not specified, the
-        file is written as fixed length 80-byte EBCDIC records with
-        no line-end delimiters.
+        This is the opposite of the <code>ebcdic</code> option.
         <p>
 
     <dt><code>crlf</code>
@@ -2479,14 +2501,18 @@ a real System/390.  The configuration file is an ASCII text file.
         line-feeds only are written at the end of each line.
         <p>
 
-    <dt><code>noclear</code>
+    <dt><code>ebcdic</code>
     <dd><p>
-        Specifies that the output file will not be cleared to zero
-        bytes when it is opened.
-        If the <code>noclear</code> argument is not specified, then
-        any previous content of the file is destroyed when the file
-        is opened (i.e. the file is set to empty as soon as it is
-        opened).
+        Specifies the file is written as fixed length 80-byte EBCDIC
+        records with no line-end delimiters (the opposite of the
+        <code>ascii</code> option). This is the default.
+        <p>
+
+    <dt><code>noclear</code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+    <dd><p>
+        This option is deprecated and will be removed in a future
+        release.  Please use the more aptly named <code>append</code>
+        option instead.
         <p>
 
     </dl>
@@ -2512,6 +2538,162 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <dl>
+    <dt><code>append</code>
+    <dd><p>
+        Specifies that the output file, if it already exists, will
+        not be cleared to zero bytes when it is opened. Instead,
+        output will be appended to the end of the existing data.
+        If the <code>append</code> argument is not specified, then
+        any previous contents of the file is destroyed when the file
+        is opened (i.e. the file is set to empty (truncated to zero
+        bytes) as soon as it is opened).
+        <p>
+
+    <dt><code>cctape= &nbsp;<i>(lll=cc[,lll=cc]...)</i> | <i>name</i></code>
+    <dd><p>
+        This option defines the carriage control tape to use for this printer.
+        It is only valid for 1403 printer devices.
+        <p>
+        The option can be specified as either a series of <code>lll=cc</code>
+        values surrounded by parentheses where <code>lll</code> identifies
+        the carriage control tape's line number (<code>1-255</code>) and
+        <code>cc</code> indicates the channel punch for that line
+        (<code>1-12</code>), or as a predefined carriage control
+        tape <code>name</code>.
+        <p>
+        More than one channel punch may be specified for a line by either
+        specifying the desired list of channel punches for that line
+        within parentheses or by simply specifying the same line number again
+        in your list but with a different channel number each time.
+        <p>
+        The <code>name</code> format specifies the name of a predefined
+        carriage control tape. Valid predefined cctape names are:
+        <code>legacy</code>, <code>fcb2std2</code> or <code>fcb2id1</code>.
+        The default if not specified is <code>legacy</code>.
+
+        <blockquote>
+            <code><b><u>legacy</u></b>: &nbsp; &nbsp; cctape=(1=1,7=2,13=3,19=4,25=5,31=6,37=7,43=8,63=9,49=10,55=11,61=12)</code>
+            <br>
+            <code>fcb2std2: &nbsp; cctape=(1=1,7=2,13=3,19=4,25=5,31=6,37=7,43=8,49=9,55=10,61=11,63=12)</code>
+            <br>
+            <code>fcb2id1: &nbsp; &nbsp;cctape=(1=1,8=2,15=3,22=4,29=5,36=6,43=7,50=8,57=9,64=10,71=11,78=12)</code>
+        </blockquote>
+
+        Note that the <u>lines per page</u> value is not supported by the
+        <code>cctape</code> option. Instead, you must specify your desired
+        lines per page value separately via the <code>lpp</code> option.
+        <p>
+
+    <dt><code>crlf</code>
+    <dd><p>
+        Specifies that carriage return line feed sequences should be written
+        at the end of each line. If the <code>crlf</code> argument is not specified
+        then the default behavior is to only write line-feeds at the end of each line.
+        <p>
+
+    <dt><code>fcb= &nbsp;<i>ppnnnnnnnnnnnnnnnnnnnnnnnn</i> | <i>cc:lll[,cc:lll]...</i> | <i>name</i></code>
+    <dd><p>
+        This option is only valid for 3203 or 3211 printer devices.
+        It specifies an initial FCB image to use for this printer.
+        <p>
+        This option supports three different formats: old, new and name.
+        <p>
+        The old format argument must be exactly 26 digits long, and consist
+        of digits from 0 to 9. The first pair of digits (<code>pp</code>) specifies
+        the number of lines on a printed page (01-99). It is followed by 12 pairs
+        of digits (<code>nn</code>) which specify the line number on the page
+        (<code>00-99</code>) corresponding to each of the 12 possible FCB channels.
+        Specify the line number as <code>00</code> for those channels you wish to
+        leave undefined.
+        <p>
+        The new format is specified as a series of semicolon-delimited channel and
+        line number pairs (<code>cc:lll</code>), each successive pair separated
+        from the previous pair with a single comma, where <code>cc</code> indicates
+        the channel number and <code>lll</code> indicates the line number for that
+        channel (<code>0-255</code>). To leave a particular FCB channel undefined
+        either specify <code>0</code> for the line number or simply don't specify
+        that channel anywhere in your list.
+        <p>
+        The <code>name</code> format specifies the name of a predefined fcb image.
+        Valid predefined fcb image names are: <code>legacy</code>, <code>fcb2std2</code>,
+        <code>fcb2id1</code> or <code>hardware</code>. The default if not
+        specified is <code>legacy</code>.
+
+        <blockquote>
+            <code><b><u>legacy</u></b>: &nbsp; &nbsp; fcb=01:01,02:07,03:13,04:19,05:25,06:31,07:37,08:43,09:63,10:49,11:55,12:61</code>
+            <br>
+            <code>fcb2std2: &nbsp; fcb=01:01,02:07,03:13,04:19,05:25,06:31,07:37,08:43,09:49,10:55,11:61,12:63</code>
+            <br>
+            <code>fcb2id1: &nbsp; &nbsp;fcb=01:01,02:08,03:15,04:22,05:29,06:36,07:43,08:50,09:57,10:64,11:71,12:78</code>
+            <br>
+            <code>hardware: &nbsp; fcb=01:01</code>
+        </blockquote>
+
+        Note that the <u>lines per page</u> value is not supported by the
+        new or <code>name</code> formats of the <code>fcb</code> option.
+        Instead, you must specify your desired lines per page value separately
+        via the <code>lpp</code> option.
+        <p>
+
+    <dt><code>fcbcheck</code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+    <dd><p>
+        This option is only valid for 3203 or 3211 printer devices.
+        It requests that an attempt to skip to a FCB channel for which
+        no line number has been set should cause a Unit Check to occur.
+        This is the default. This option is deprecated and will be removed
+        in a future release.
+        <p>
+
+    <dt><code>index= &nbsp;<i>[-]nn</i> | <u>0</u></code>
+    <dd><p>
+        Specifies the column number of the form (-31 to +31) where each print
+        line should begin. This option is only valid for 3211 printer devices.
+        For 3203 printer devices the option is accepted but is otherwise ignored.
+        <p>
+        Positive values prepend each print line with a number of blanks equal to
+        one less than the index value, thus "indenting" the print line to reach
+        the desired form column. An index value of 1 means flush-left.
+        A negative value causes the first <code>nn</code> columns of each print
+        line to be chopped off. A value of -1 will thus cause the first character
+        of each print line to be dropped, thereby causing the first column of
+        the page to begin with the second character of each printed line.
+        <p>
+        The default is 0 meaning to print normally (i.e. indexing is disabled).
+        <p>
+
+    <dt><code>lpi= &nbsp;<u>6</u> | 8</code>
+    <dd><p>
+        Specifies the number of vertical lines per inch. The only valid values
+        are either 6 or 8. The default is 6.
+        <p>
+
+    <dt><code>lpp= &nbsp;<i>nnn</i> | <u>66</u></code>
+    <dd><p>
+        Specifies the number of vertical lines per page (1-255). The default is 66.
+        <p>
+
+    <dt><code>noclear</code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+    <dd><p>
+        This option is deprecated and will be removed in a future
+        release.  Please use the more aptly named <code>append</code>
+        option instead.
+        <p>
+
+    <dt><code>nofcbcheck</code> &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+    <dd><p>
+        This option is only valid for 3203 or 3211 printer devices.
+        It requests that an attempt to skip to a FCB channel for which no
+        line number has been set should suppress the Unit Check that would
+        normally occur and to instead simply print the next line of output
+        on the next line instead. It is the opposite of the <code>fcbcheck</code>
+        option.
+        <p>
+        This option is deprecated and will be removed in a future release.
+        The option will continue to be accepted for the time being if specified,
+        but is otherwise completely ignored. Skips to non-existent FCB channels
+        will always cause a Unit Check regardless of this option.
+        <p>
+
     <dt><code>sockdev</code>
     <dd><p>
         Indicates the line printer is a socket device wherein the
@@ -2522,114 +2704,8 @@ a real System/390.  The configuration file is an ASCII text file.
         remote connections on the given TCP/IP port,
         and writes data to the socket instead of to a device
         file. This allows automatic remote spooling of line printer
-        data. The sockdev option is mutually exclusive with all other
-        printer options (e.g. crlf, etc) and must be specified alone.
-        <p>
-
-    <dt><code>crlf</code>
-    <dd><p>
-        Specifies, for ASCII files, that carriage return line feed
-        sequences are written at the end of each line.
-        If the <code>crlf</code> argument is not specified, then
-        line-feeds only are written at the end of each line.
-        <p>
-
-    <dt><code>noclear</code>
-    <dd><p>
-        Specifies that the output file will not be truncated to zero
-        bytes when it is opened. If the <code>noclear</code> argument
-        is not specified, then any previous content of the file is
-        destroyed when the file is opened (i.e. the file is set to empty
-        as soon as it is opened).
-        <p>
-
-    <dt><code>fcbcheck</code>
-    <dd><p>
-        This option is only valid for 3211 printer devices.
-        It specifies that an attempt to skip to a FCB channel for which
-        no line number has been set will cause the command to be rejected
-        with a unit check. This is the default.
-        <p>
-
-    <dt><code>nofcbcheck</code>
-    <dd><p>
-        This option is only valid for 3211 printer devices.
-        It specifies that an attempt to skip to a FCB channel for which no
-        line number has been set will cause the next line of output to be
-        printed on the next line on the printer output. The opposite,
-        <code>fcbcheck</code>, is the default.
-        <p>
-
-    <dt><code>rawcc</code>
-    <dd><p>
-        Specifies that printer output CCWs are not to be interpreted, but
-        simply dumped in hex to the printer output file. This is a debugging
-        aid. The default is to process CCWs normally.
-        <p>
-
-    <dt><code>lpi=</code>
-    <dd><p>
-        Specifies the number of vertical lines per inch. The only valid values
-        are either 6 or 8. The default is 6.
-        <p>
-
-    <dt><code>lpp=</code>
-    <dd><p>
-        Specifies the number of vertical lines per page. The default is 66.
-        <p>
-
-    <dt><code>index=</code>
-    <dd><p>
-        This option is only valid for 3211 printer devices.
-        It specifies how many columns to indent each print line. The default is 0.
-        <p>
-
-    <dt><code>fcb=</code>
-    <dd><p>
-        This option is only valid for 3211 printer devices.
-        It specifies an initial FCB image to use for this printer.
-        <p>
-        This option has two different formats: old and new. The old format
-        argument must be exactly 26 digits long, and consist of digits from
-        0 to 9. The first pair of digits specifies the number of lines
-        on a printed page. It is followed by 12 pairs of digits which specify,
-        for FCB channels 1-12, the line number on the page that the FCB channel
-        corresponds to. Use <code>00</code> to leave the line number unset
-        for that channel (see <code>fcbcheck</code> above).
-        <p>
-        The new format is specified as a series of "chan:line" values separated
-        from each other with a comma, where 'chan' indicates the channel number and
-        'line' indicates the line number for that channel. To leave the line number
-        unset for a channel either specify '00' for the line number or simply
-        don't specify that channel in your list.
-        <p>
-        Note that the lines per page value is not supported with the new format.
-        Instead, you must specify your desired lines per page value separately
-        via the above 'lpp=' option.
-        <p>
-        The default value for each format is:
-        <p>
-        <blockquote>
-            Old format: &nbsp; &nbsp; <code>lpi=6 fcb=66010713192531374361495561</code><br>
-            New format: &nbsp; <code>lpi=6 lpp=66 fcb=01:01,02:07,03:13,04:19,05:25,06:31,07:37,08:43,09:61,10:49,11:55,12:61</code>.
-        </blockquote>
-        <p>
-
-    <dt><code>cctape=</code>
-    <dd><p>
-        This option is only valid for 1403 printer devices.
-        It defines the carriage control tape to use for this printer.
-        <p>
-        The option is specified as a series of "line=chan" arguments
-        surrounded by parentheses where 'line' identifies the carriage control
-        tape's line number and 'chan' indicates the channel punch for that
-        line. More than one channel punch may be specified for a line by
-        surounding the list of channel punches within parentheses.
-        The default value is:
-        <p>
-        <blockquote>
-            <code>cctape=(1=1,61=(9,12),7=2,13=3,19=4,25=5,31=6,37=7,43=8,49=10,55=11)</code>.
-        </blockquote>
+        data. The sockdev option is mutually exclusive with the
+        <code>crlf</code> and <code>append</code> options.
         <p>
     </dl>
 
@@ -2650,11 +2726,8 @@ a real System/390.  The configuration file is an ASCII text file.
     since any tokens following the filename are parsed as Hercules printer
     device options:
     <pre>
-    000E 1403 "|/usr/bin/lpr -Phplj" crlf          <em>(for Unix)</em>
+    000E 1403 "|/usr/bin/lpr -Phplj"               <em>(for Unix)</em>
     000E 1403 "|c:\utils\pr -s -PLPT1:" crlf       <em>(for Windows)</em></pre>
-    The above example uses the pr program downloaded
-    from <a href="http://www.atnetsend.net/computing/">
-    http://www.atnetsend.net/computing/</a>
     <p>
     If the "print-to-pipe" command line itself contains quotes, then
     the command line must be enclosed in apostrophes instead of quotes,

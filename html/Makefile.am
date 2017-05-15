@@ -54,6 +54,7 @@ dist_pkgdata_DATA =   \
     hercules.html     \
     index.html        \
     Makefile.am       \
+    rexx.html         \
     shared.html       \
     tasks.html        \
     telnet.html

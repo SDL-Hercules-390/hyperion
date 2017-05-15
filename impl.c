@@ -29,6 +29,7 @@
 #include "herc_getopt.h"
 #include "hostinfo.h"
 #include "history.h"
+#include "hRexx.h"
 
 static char shortopts[] =
 
@@ -1123,6 +1124,11 @@ int     rc;
         }
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
+
+#ifdef HAVE_REXX
+    /* Initialize Rexx */
+    InitializeRexx();
+#endif
 
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;

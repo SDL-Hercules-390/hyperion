@@ -1,5 +1,6 @@
-/* HREXX_O.C    (c)Copyright Enrico Sorichetti, 2012                 */
-/*              Rexx Interpreter Support (Object  Rexx )             */
+/* HREXX_O.C    (C) Copyright Enrico Sorichetti, 2012                */
+/*              (C) Copyright "Fish" (David B. Trout), 2017          */
+/*              OORexx Interpreter Support                           */
 /*                                                                   */
 /*  Released under "The Q Public License Version 1"                  */
 /*  (http://www.hercules-390.org/herclic.html) as modifications to   */
@@ -12,98 +13,62 @@
 #ifndef _HREXX_O_C_
 #define _HREXX_O_C_
 
-#if defined(HAVE_OBJECT_REXX)
-
-#define HREXXDROPVAR            ObjectRexxDropVar
-#define HREXXFETCHVAR           ObjectRexxFetchVar
-#define HREXXSETVAR             ObjectRexxSetVar
-#define HREXXEXECCMD            ObjectRexxExecCmd
-#define HREXXEXECINSTORECMD     ObjectRexxExecInstoreCmd
-#define HREXXEXECSUB            ObjectRexxExecSub
-
-#define HREXXREGISTERFUNCTIONS  ObjectRexxRegisterFunctions
-#define HREXXEXTERNALFUNCTION_T size_t REXXENTRY
-
-#define HREXXAWSCMD             ObjectRexxawscmd
-
-#define HREXXREGISTERHANDLERS   ObjectRexxRegisterHandlers
-#define HREXXPFN                REXXPFN
-#define HREXXSTRING             CONSTRXSTRING
-
-#define HREXXEXITHANDLER_T      RexxReturnCode REXXENTRY
-#define HREXXLONG               int
-
-#define HREXXSUBCOMHANDLER_T    RexxReturnCode REXXENTRY
-#define HREXXPSTRING            PCONSTRXSTRING
-
+/*-------------------------------------------------------------------*/
+/* Hercules Rexx Support headers                                     */
+/*-------------------------------------------------------------------*/
 #define _HENGINE_DLL_
 #include "hercules.h"
-
 #include "hRexx.h"
 
+#ifdef  OBJECT_REXX         // Support for Object Rexx
+#define REXX_PKG            OOREXX_PKG
+#define REXX_PKGNUM         OOREXX_PKGNUM
+
+/*-------------------------------------------------------------------*/
+/* Object Rexx Support headers                                       */
+/*-------------------------------------------------------------------*/
 #include "rexx.h"
 #include "oorexxapi.h"
 
-extern void *hRexxLibHandle;        /* Library handle */
-extern void *hRexxApiLibHandle;     /* Api Library handle */
+/*-------------------------------------------------------------------*/
+/* Herculess Rexx implementation equivalents for Object Rexx types   */
+/*-------------------------------------------------------------------*/
+#define HR_REXXRC_T         RexxReturnCode    // (API return code)
+#define HR_ENTRY            REXXENTRY         // (calling convention)
+#define HR_PFN_T            REXXPFN           // (func ptr type)
 
-extern char *RexxPackage;
+#define HR_EXITHAND_RC_T    RexxReturnCode    // (exit handler rc)
+#define HR_SUBCOM_RC_T      RexxReturnCode    // (subcom handler rc)
+#define HR_EXTFUNC_RC_T     size_t            // (extern func rc)
 
-extern char *RexxLibrary;
-extern char *RexxApiLibrary;
+#define HR_ARGC_T           size_t            // (array count)
+#define HR_ARGV_T           PCONSTRXSTRING    // (RXSTRING array)
+#define HR_PCSZ_T           CONSTANT_STRING   // (const RXSTRING)
+#define HR_CALLTYPE_T       int               // (RexxStart call type)
+#define HR_FCODE_T          int               // (func/subfunc code)
+#define HR_MEMSIZE_T        size_t            // (AllocateMemory size)
+#define HR_PROCESS_ID_T     process_id_t      // (RexxSetHalt argument)
+#define HR_THREAD_ID_T      thread_id_t       // (RexxSetHalt argument)
+#define HR_USERINFO_T       CONSTANT_STRING   // (RegisterExit argument)
 
-extern int   MessageLevel;
-extern char *MessagePrefix;
-extern char *ErrorPrefix;
+/*-------------------------------------------------------------------*/
+/* Object Rexx library names                                         */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
+  #define REXX_LIBNAME      "rexx.dll"
+  #define REXX_APILIBNAME   "rexxapi.dll"
+#elif defined( __APPLE__ )
+  #define REXX_LIBNAME      "librexx.dylib"
+  #define REXX_APILIBNAME   "librexxapi.dylib"
+#else
+  #define REXX_LIBNAME      "librexx.so"
+  #define REXX_APILIBNAME   "librexxapi.so"
+#endif
 
-extern int (*RexxDynamicLoader)();
-extern int (*RexxRegisterFunctions)();
-extern int (*RexxRegisterHandlers)();
-extern int (*RexxExecCmd)();
-extern int (*RexxExecInstoreCmd)();
-extern int (*RexxExecSub)();
+/*-------------------------------------------------------------------*/
+/* Include the remainder of Hercules generic Rexx support functions  */
+/*-------------------------------------------------------------------*/
+#include "hRexxapi.c"
 
-static PFNREXXSTART                 hRexxStart;
-static PFNREXXREGISTERFUNCTIONEXE   hRexxRegisterFunction;
-static PFNREXXDEREGISTERFUNCTION    hRexxDeregisterFunction;
-static PFNREXXREGISTERSUBCOMEXE     hRexxRegisterSubcom;
-static PFNREXXDEREGISTERSUBCOM      hRexxDeregisterSubcom;
-static PFNREXXREGISTEREXITEXE       hRexxRegisterExit;
-static PFNREXXDEREGISTEREXIT        hRexxDeregisterExit;
-static PFNREXXALLOCATEMEMORY        hRexxAllocateMemory;
-static PFNREXXFREEMEMORY            hRexxFreeMemory;
-static PFNREXXVARIABLEPOOL          hRexxVariablePool;
-
-int ObjectRexxDynamicLoader()
-{
-    HDLOPEN( hRexxLibHandle, OOREXX_LIBRARY, RTLD_LAZY);
-
-    HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY);
-
-    HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
-
-    HDLSYM ( hRexxRegisterFunction, hRexxApiLibHandle, REXX_REGISTER_FUNCTION);
-
-    HDLSYM ( hRexxDeregisterFunction, hRexxApiLibHandle, REXX_DEREGISTER_FUNCTION);
-
-    HDLSYM ( hRexxRegisterSubcom, hRexxApiLibHandle, REXX_REGISTER_SUBCOM);
-
-    HDLSYM ( hRexxDeregisterSubcom, hRexxApiLibHandle, REXX_DEREGISTER_SUBCOM);
-
-    HDLSYM ( hRexxRegisterExit, hRexxApiLibHandle, REXX_REGISTER_EXIT);
-
-    HDLSYM ( hRexxDeregisterExit, hRexxApiLibHandle, REXX_DEREGISTER_EXIT);
-
-    HDLSYM ( hRexxAllocateMemory, hRexxApiLibHandle, REXX_ALLOCATE_MEMORY);
-
-    HDLSYM ( hRexxFreeMemory, hRexxApiLibHandle, REXX_FREE_MEMORY);
-
-    HDLSYM ( hRexxVariablePool, hRexxLibHandle, REXX_VARIABLE_POOL);
-
-    return 0;
-}
-
-#include "hRexxapi.h"
-
-#endif /* defined(HAVE_OBJECT_REXX) */
-#endif /* #ifndef _HREXX_O_C_  */
+#endif // OBJECT_REXX
+#endif // _HREXX_O_C_

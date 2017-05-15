@@ -2312,15 +2312,14 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// The function that creates us is responsible for initializing the below values
-// (as well as de-initialzing them too!)
+// The function that creates us is responsible for initializing the below values.
 
-static DWORD   dwThreadId       = 0;        // (Win32 thread-id of below thread)
-static HANDLE  hThread          = NULL;     // (Win32 handle of below thread)
+static DWORD   dwThreadId       = 0;        // (thread-id of below thread)
+static HANDLE  hThread          = NULL;     // (handle of below thread)
 static HANDLE  hGotStdIn        = NULL;     // (signaled to get next char)
 static HANDLE  hStdInAvailable  = NULL;     // (signaled when char avail)
-static HANDLE  hStdIn           = NULL;     // (Win32 stdin handle)
-static char    chStdIn          = 0;        // (the next char read from stdin)
+static HANDLE  hDupedStdIn      = NULL;     // (copy of stdin handle)
+static char    chStdIn          = 0;        // (the char read from stdin)
 
 // Win32 worker thread that reads from stdin. It needs to be a thread because the
 // "ReadFile" on stdin 'hangs' (blocks) until there's actually some data to read
@@ -2328,19 +2327,19 @@ static char    chStdIn          = 0;        // (the next char read from stdin)
 // at a time. This may perhaps be slightly inefficient but it makes for a simpler
 // implementation and besides, we don't really expect huge gobs of data coming in.
 
-static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
+static DWORD WINAPI ReadStdInThread( LPVOID lpParameter )
 {
     DWORD   dwBytesRead  = 0;
 
     UNREFERENCED( lpParameter );
 
-    SET_THREAD_NAME ("ReadStdInW32Thread");
+    SET_THREAD_NAME ("ReadStdInThread");
 
     for (;;)
     {
         WaitForSingleObject( hGotStdIn, INFINITE );
 
-        if ( !ReadFile( hStdIn, &chStdIn, 1, &dwBytesRead, NULL ) )
+        if (!ReadFile( hDupedStdIn, &chStdIn, 1, &dwBytesRead, NULL ))
         {
             char  buf[512];
             char  szErrMsg[256];
@@ -2353,7 +2352,7 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
             MSGBUF
             (
-                 buf, "ReadFile(hStdIn) failed! dwLastError=%d (0x%08.8X): %s"
+                 buf, "ReadFile( hDupedStdIn ) failed! dwLastError=%d (0x%08.8X): %s"
                 ,dwLastError
                 ,dwLastError
                 ,szErrMsg
@@ -2372,6 +2371,101 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Create the above read from stdin thread
+
+static void CreateReadStdInThread()
+{
+    if (!dwThreadId)  // (only do this once)
+    {
+        HANDLE hOrigStdIn, hOurProcess;
+
+        hStdInAvailable = CreateEvent( NULL, TRUE, FALSE, NULL );
+        hGotStdIn       = CreateEvent( NULL, TRUE, TRUE,  NULL );
+
+        ASSERT( hStdInAvailable && INVALID_HANDLE_VALUE != hStdInAvailable );
+        ASSERT( hGotStdIn       && INVALID_HANDLE_VALUE != hGotStdIn       );
+
+        // PROGRAMMING NOTE: during testing of Rexx is was discovered
+        // that OORexx would get stuck in its PeekNamedPipe() API call
+        // whenever Hercules was run under the control of an External
+        // GUI (e.g. HercGUI) thereby preventing the Rexx script from
+        // ever finishing/exiting (i.e. returning back to Hercules).
+        //
+        // Invoking a Rexx script which permanently hangs (i.e. never
+        // completes) is clearly a disastrous situation, but is made
+        // even more disastrous should the thread invoking the Rexx
+        // script happen to be one of the CPU threads invoking said
+        // Rexx script via the Hercules DIAGNOSE X'008' interface.
+        // The DIAG8 instruction would hang causing a Machine Check.
+        //
+        // After much research is was determined the cause was due to
+        // the above read from stdin thread was stuck waiting for its
+        // ReadFile of stdin to be satisfied, thereby causing OORexx's
+        // PeekNamedPipe call to hang. (Apparently the way Microsoft
+        // designed their anonymous pipe handling you can't have two
+        // threads within the same process both trying to access the
+        // same Windows HANDLE at the same time, which makes sense).
+        // The unsatisfied (blocked) ReadFile on the stdin HANDLE was
+        // causing OORexx's PeekNamedPipe() call to hang.
+        //
+        // Many different workarounds were attempted but the simplest
+        // and most straightforward of them all was determined to be
+        // the technique used below: to simply create a duplicate of
+        // the original stdin HANDLE and use it instead to read from
+        // our end of the anonymous pipe (closing the original stdin
+        // HANDLE afterwards of course). Doing this prevents OORexx's
+        // PeekNamedPipe() call on the original handle from hanging
+        // since now only one thread was accessing the handle (Rexx)
+        // since we closed our copy and were now using a completely
+        // different HANDLE to read from that Rexx wasn't also using.
+
+        hOurProcess = GetCurrentProcess();
+        hOrigStdIn  = GetStdHandle( STD_INPUT_HANDLE );
+
+        if (DuplicateHandle
+        (
+            hOurProcess,            // Process with handle to be duplicated
+            hOrigStdIn,             // Original handle to be duplicated
+            hOurProcess,            // Process to receive duplicated handle
+            &hDupedStdIn,           // The resulting duplicated handle
+            0,                      // (ignored for DUPLICATE_SAME_ACCESS)
+            FALSE,                  // Never inherit resulting duplicate
+            DUPLICATE_SAME_ACCESS   // Give duplicate same access rights
+        ))
+        {
+            CloseHandle( hOrigStdIn );  // (see above PROGRAMMING NOTE)
+        }
+        else
+        {
+            DWORD  dwLastError;
+            char   szErrMsg[ 256 ];
+
+            // "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
+            dwLastError = GetLastError();
+            WRMSG( HHC04110, "W", dwLastError, dwLastError,
+                w32_w32errmsg( dwLastError, szErrMsg, sizeof( szErrMsg )));
+
+            hDupedStdIn = hOrigStdIn;   // (we have no other choice!)
+        }
+
+        ASSERT( hDupedStdIn && INVALID_HANDLE_VALUE != hDupedStdIn );
+
+        hThread = (HANDLE) _beginthreadex
+        (
+            NULL,                   // Pointer to security attributes
+            64*1024,                // Initial thread stack size in bytes
+            ReadStdInThread,        // Pointer to thread function
+            NULL,                   // Argument for new thread
+            0,                      // Creation flags
+            &dwThreadId             // Pointer to receive thread ID
+        );
+
+        ASSERT( hThread && INVALID_HANDLE_VALUE != hThread );
+        ASSERT( dwThreadId != 0 );
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Function to read the next character from stdin. Similar to 'getch' but allows
 // one to specify a maximum timeout value and thus doesn't block forever. Returns
 // 0 or 1: 0 == timeout (zero characters read), 1 == success (one character read),
@@ -2380,39 +2474,15 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 DLL_EXPORT
 int w32_get_stdin_char( char* pCharBuff, int wait_millisecs )
 {
-    if ( !pCharBuff )
-    {
-        errno = EINVAL;
-        return -1;
+    if (!pCharBuff) {                   // (is this a silly call?)
+        errno = EINVAL;                 // (go away silly person!)
+        return -1;                      // (silliness return code)
     }
 
-    *pCharBuff = 0;
+    *pCharBuff = 0;                     // (initialize buffer to empty)
+    CreateReadStdInThread();            // (N.B. only created if needed)
 
-    if ( !dwThreadId )
-    {
-        hStdIn          = GetStdHandle( STD_INPUT_HANDLE );
-        hStdInAvailable = CreateEvent(NULL,TRUE,FALSE,NULL);
-        hGotStdIn       = CreateEvent(NULL,TRUE,TRUE,NULL); // (initially signaled)
-
-        hThread = (HANDLE) _beginthreadex
-        (
-            NULL,               // pointer to security attributes
-            64*1024,            // initial thread stack size in bytes
-            ReadStdInW32Thread, // pointer to thread function
-            NULL,               // argument for new thread
-            0,                  // creation flags
-            &dwThreadId         // pointer to receive thread ID
-        );
-
-        ASSERT(1
-            &&  hStdIn           &&  INVALID_HANDLE_VALUE != hStdIn
-            &&  hStdInAvailable  &&  INVALID_HANDLE_VALUE != hStdInAvailable
-            &&  hGotStdIn        &&  INVALID_HANDLE_VALUE != hGotStdIn
-            &&  hThread          &&  INVALID_HANDLE_VALUE != hThread
-        );
-    }
-
-    if ( WAIT_TIMEOUT == WaitForSingleObject( hStdInAvailable, wait_millisecs ) )
+    if (WAIT_TIMEOUT == WaitForSingleObject( hStdInAvailable, wait_millisecs ))
         return 0;
 
     *pCharBuff = chStdIn;               // (save the next char right away)

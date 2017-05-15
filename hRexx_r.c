@@ -1,5 +1,6 @@
-/* HREXX_R.C    (c)Copyright Enrico Sorichetti, 2012                 */
-/*              Rexx Interpreter Support ( Regina Rexx )             */
+/* HREXX_R.C    (C) Copyright Enrico Sorichetti, 2012                */
+/*              (C) Copyright "Fish" (David B. Trout), 2017          */
+/*              Regina Rexx Interpreter Support                      */
 /*                                                                   */
 /*  Released under "The Q Public License Version 1"                  */
 /*  (http://www.hercules-390.org/herclic.html) as modifications to   */
@@ -12,116 +13,68 @@
 #ifndef _HREXX_R_C_
 #define _HREXX_R_C_
 
-#if defined(HAVE_REGINA_REXX)
-
-#define HREXXDROPVAR            ReginaRexxDropVar
-#define HREXXFETCHVAR           ReginaRexxFetchVar
-#define HREXXSETVAR             ReginaRexxSetVar
-#define HREXXEXECCMD            ReginaRexxExecCmd
-#define HREXXEXECINSTORECMD     ReginaRexxExecInstoreCmd
-#define HREXXEXECSUB            ReginaRexxExecSub
-
-#define HREXXREGISTERFUNCTIONS  ReginaRexxRegisterFunctions
-#define HREXXEXTERNALFUNCTION_T ULONG APIENTRY
-
-#define HREXXAWSCMD             ReginaRexxawscmd
-
-#define HREXXREGISTERHANDLERS   ReginaRexxRegisterHandlers
-#define HREXXPFN                PFN
-#define HREXXSTRING             RXSTRING
-
-#define HREXXEXITHANDLER_T      LONG APIENTRY
-#define HREXXLONG               LONG
-
-#define HREXXSUBCOMHANDLER_T    APIRET APIENTRY
-#define HREXXPSTRING            PRXSTRING
-
+/*-------------------------------------------------------------------*/
+/* Hercules Rexx Support headers                                     */
+/*-------------------------------------------------------------------*/
 #define _HENGINE_DLL_
 #include "hercules.h"
-
 #include "hRexx.h"
 
+#ifdef  REGINA_REXX         // Support for Regina Rexx
+#define REXX_PKG            REGINA_PKG
+#define REXX_PKGNUM         REGINA_PKGNUM
+
+/*-------------------------------------------------------------------*/
+/* Regina Rexx Support headers                                       */
+/*-------------------------------------------------------------------*/
 #define INCL_REXXSAA
 #if defined(HAVE_REGINA_REXXSAA_H)
- #include "regina/rexxsaa.h"
+  #include "regina/rexxsaa.h"
 #else
- #include "rexxsaa.h"
+  #include "rexxsaa.h"
 #endif
 
-#define RXAPI_MEMFAIL   1002
+/*-------------------------------------------------------------------*/
+/* Herculess Rexx implementation equivalents for Regina Rexx types   */
+/*-------------------------------------------------------------------*/
+#define HR_REXXRC_T         APIRET            // (API return code)
+#define HR_ENTRY            APIENTRY          // (calling convention)
+#define HR_PFN_T            PFN               // (func ptr type)
 
-extern void *hRexxLibHandle;        /* Library handle */
-extern void *hRexxApiLibHandle;     /* Api Library handle */
+#define HR_EXITHAND_RC_T    LONG              // (exit handler rc)
+#define HR_SUBCOM_RC_T      APIRET            // (subcom handler rc)
+#define HR_EXTFUNC_RC_T     APIRET            // (extern func rc)
 
-extern char *RexxPackage;
+#define HR_ARGC_T           LONG              // (array count)
+#define HR_ARGV_T           PRXSTRING         // (RXSTRING array)
+#define HR_PCSZ_T           PCSZ              // (const RXSTRING)
+#define HR_CALLTYPE_T       LONG              // (RexxStart call type)
+#define HR_FCODE_T          LONG              // (func/subfunc code)
+#define HR_MEMSIZE_T        ULONG             // (AllocateMemory size)
+#define HR_PROCESS_ID_T     LONG              // (RexxSetHalt argument)
+#define HR_THREAD_ID_T      LONG              // (RexxSetHalt argument)
+#define HR_USERINFO_T       PUCHAR            // (RegisterExit argument)
 
-extern char *RexxLibrary;
-extern char *RexxApiLibrary;
+#define RXAPI_OK            0                 // (missing from Regina)
 
-extern int   MessageLevel;
-extern char *MessagePrefix;
-extern char *ErrorPrefix;
+/*-------------------------------------------------------------------*/
+/* Regina Rexx library names                                         */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
+  #define REXX_LIBNAME      "regina.dll"
+  #define REXX_APILIBNAME   ""
+#elif defined( __APPLE__ )
+  #define REXX_LIBNAME      "libregina.dylib"
+  #define REXX_APILIBNAME   ""
+#else
+  #define REXX_LIBNAME      "libregina.so"
+  #define REXX_APILIBNAME   ""
+#endif
 
-extern int (*RexxDynamicLoader)();
-extern int (*RexxRegisterFunctions)();
-extern int (*RexxRegisterHandlers)();
-extern int (*RexxExecCmd)();
-extern int (*RexxExecInstoreCmd)();
-extern int (*RexxExecSub)();
+/*-------------------------------------------------------------------*/
+/* Include the remainder of Hercules generic Rexx support functions  */
+/*-------------------------------------------------------------------*/
+#include "hRexxapi.c"
 
-typedef APIRET APIENTRY PFNREXXSTART( LONG, PRXSTRING, PCSZ, PRXSTRING, PCSZ, LONG, PRXSYSEXIT, PSHORT, PRXSTRING );
-typedef APIRET APIENTRY PFNREXXREGISTERFUNCTIONEXE( PCSZ, PFN);
-typedef APIRET APIENTRY PFNREXXDEREGISTERFUNCTION( PCSZ );
-typedef APIRET APIENTRY PFNREXXREGISTERSUBCOMEXE( PCSZ, PFN, PUCHAR);
-typedef APIRET APIENTRY PFNREXXDEREGISTERSUBCOM( PCSZ, PCSZ);
-typedef APIRET APIENTRY PFNREXXREGISTEREXITEXE( PSZ, PFN , PUCHAR );
-typedef APIRET APIENTRY PFNREXXDEREGISTEREXIT( PCSZ, PCSZ);
-typedef PVOID  APIENTRY PFNREXXALLOCATEMEMORY(ULONG);
-typedef APIRET APIENTRY PFNREXXFREEMEMORY( PVOID);
-
-typedef APIRET APIENTRY PFNREXXVARIABLEPOOL( PSHVBLOCK );
-
-static PFNREXXSTART                 *hRexxStart;
-static PFNREXXREGISTERFUNCTIONEXE   *hRexxRegisterFunction;
-static PFNREXXDEREGISTERFUNCTION    *hRexxDeregisterFunction;
-static PFNREXXREGISTERSUBCOMEXE     *hRexxRegisterSubcom;
-static PFNREXXDEREGISTERSUBCOM      *hRexxDeregisterSubcom;
-static PFNREXXREGISTEREXITEXE       *hRexxRegisterExit;
-static PFNREXXDEREGISTEREXIT        *hRexxDeregisterExit;
-static PFNREXXALLOCATEMEMORY        *hRexxAllocateMemory;
-static PFNREXXFREEMEMORY            *hRexxFreeMemory;
-static PFNREXXVARIABLEPOOL          *hRexxVariablePool;
-
-int ReginaRexxDynamicLoader()
-{
-    HDLOPEN( hRexxLibHandle, REGINA_LIBRARY, RTLD_LAZY);
-
-    HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
-
-    HDLSYM ( hRexxRegisterFunction, hRexxLibHandle, REXX_REGISTER_FUNCTION);
-
-    HDLSYM ( hRexxDeregisterFunction, hRexxLibHandle, REXX_DEREGISTER_FUNCTION);
-
-    HDLSYM ( hRexxRegisterSubcom, hRexxLibHandle, REXX_REGISTER_SUBCOM);
-
-    HDLSYM ( hRexxDeregisterSubcom, hRexxLibHandle, REXX_DEREGISTER_SUBCOM);
-
-    HDLSYM ( hRexxRegisterExit, hRexxLibHandle, REXX_REGISTER_EXIT);
-
-    HDLSYM ( hRexxDeregisterExit, hRexxLibHandle, REXX_DEREGISTER_EXIT);
-
-    HDLSYM ( hRexxAllocateMemory, hRexxLibHandle, REXX_ALLOCATE_MEMORY);
-
-    HDLSYM ( hRexxFreeMemory, hRexxLibHandle, REXX_FREE_MEMORY);
-
-    HDLSYM ( hRexxFreeMemory, hRexxLibHandle, REXX_FREE_MEMORY);
-
-    HDLSYM ( hRexxVariablePool, hRexxLibHandle, REXX_VARIABLE_POOL);
-
-    return 0;
-}
-
-#include "hRexxapi.h"
-
-#endif /* defined(HAVE_REGINA_REXX) */
-#endif /* #ifndef _HREXX_R_C_  */
+#endif // REGINA_REXX
+#endif // _HREXX_R_C_

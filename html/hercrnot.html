@@ -149,22 +149,65 @@ Hercules: Release Notes
   </p>
   <p>
     If you have <a href="http://www.rexxla.org">Rexx</a> installed on your
-    host and Hercules is built with the rexx build option, then rexx scripts
-    can be run from directly within the Hercules environment (i.e. directly
-    from the Hercules HMC command line) via Hercules's "exec" command.
+    host and Hercules is built with the Rexx build option (the default for
+    the SDL version of Hyperion), then Rexx scripts
+    can be run directly from within the Hercules environment (i.e. directly
+    from the Hercules HMC command line via the Hercules <code>exec</code> command).
   </p>
   <p>
     Rexx scripts, when run within Hercules via the 'exec' command, can
     Address the HERCULES enviroment allowing you to issue Hercules commands
-    and retrieve the results via the builtin 'awscmd' rexx function call.
+    and retrieve the results via the builtin 'AWSCMD' Rexx function call.
   </p>
   <p>
-    For more information please refer to the
-    <a href="https://github.com/fish-git/hyperion/blob/master/README.REXX">README.REXX</a>
-    document and the
-    <a href="https://github.com/fish-git/hyperion/tree/master/scripts">sample scripts</a>
-    included in the 'scripts' subdirectory of the source code distribution.
+    For more information please refer to the new
+    <a href="rexx.html">Hercules Integrated Rexx Support</a> web page.
   </p>
+
+
+  <dt>SHCMDOPT defaults change
+  <dd>
+  <p>
+    The defaults for the <a href="hercconf.html#SHCMDOPT">SHCMDOPT</a> have changed.
+    The old defaults were <code>ENABLE DIAG8</code>.
+    The new defaults are <code>DISABLE NODIAG8</code>.
+    This was done for security reasons.
+  </p>
+
+
+  <dt>SHCMDOPT option also controls Rexx EXEC command
+  <dd>
+  <p>
+    The <code>ENABLE</code> and <code>DISABLE</code> option of the
+    <a href="hercconf.html#SHCMDOPT">SHCMDOPT</a> command now also controls
+    the Rexx <code>exec</code> command as well as the <code>sh</code> command.
+    That is to say, the Rexx <code>exec</code> command is now properly treated
+    as a host shell command. Thus, enabling or disabling the execution of host
+    shell commands via the <a href="hercconf.html#SHCMDOPT">SHCMDOPT</a> option
+    now also enables or disables execution of the <code>exec</code> command as well.
+    This was done for security reasons.
+  </p>
+
+
+  <dt>Change to DIAG8CMD ECHO option
+  <dd>
+  <p>
+    The behavior of the <a href="hercconf.html#DIAG8CMD">DIAG8CMD</a> command's
+    <code>ECHO</code> and <code>NOECHO</code> options has changed. Previosuly
+    the echo/noecho option had a a direct impact on the data that was placed into
+    the Diagnose 8 instruction's response buffer. This has been fixed so that now
+    it does not.
+  </p>
+  <p>
+    Previously, specifying the ECHO option caused audit trail messages HHC01950I
+    and HHC01603I to also appear in the instruction's response buffer, whereas now
+    only the command's actual output is placed into the response buffer. The ECHO
+    option now properly controls <i><u>only</u></i> the issuing of the HHC01950I
+    and HHC01603I audit messages to both the panel and hardcopy logfile,
+    but does not otherwise impact in any way what is placed into the instruction's
+    response buffer, as was the original intent for this option.
+  </p>
+
 
   <dt>External Packages
   <dd>

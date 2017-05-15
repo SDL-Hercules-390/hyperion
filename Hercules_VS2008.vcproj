@@ -892,6 +892,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hRexxapi.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hsccmd.c"
 							>
 						</File>
@@ -1321,10 +1325,6 @@
 						</File>
 						<File
 							RelativePath=".\hRexx.h"
-							>
-						</File>
-						<File
-							RelativePath=".\hRexxapi.h"
 							>
 						</File>
 						<File
@@ -2095,6 +2095,10 @@
 						</File>
 						<File
 							RelativePath=".\html\index.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\rexx.html"
 							>
 						</File>
 						<File

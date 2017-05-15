@@ -374,6 +374,7 @@
     <ClCompile Include="hRexx.c" />
     <ClCompile Include="hRexx_o.c" />
     <ClCompile Include="hRexx_r.c" />
+    <ClCompile Include="hRexxapi.c" />
     <ClCompile Include="hsccmd.c" />
     <ClCompile Include="hscemode.c" />
     <ClCompile Include="hscloc.c" />
@@ -573,6 +574,7 @@
     <None Include="html\include\header.htmlpart" />
     <None Include="html\index.html" />
     <None Include="html\Makefile.am" />
+    <None Include="html\rexx.html" />
     <None Include="html\shared.html" />
     <None Include="html\tasks.html" />
     <None Include="html\telnet.html" />
@@ -995,7 +997,6 @@
     <ClInclude Include="hqadefs.h" />
     <ClInclude Include="hqainc.h" />
     <ClInclude Include="hRexx.h" />
-    <ClInclude Include="hRexxapi.h" />
     <ClInclude Include="hscutl.h" />
     <ClInclude Include="hsocket.h" />
     <ClInclude Include="hstdinc.h" />

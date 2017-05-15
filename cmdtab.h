@@ -498,13 +498,28 @@
 #define exec_cmd_desc           "Execute a Rexx script"
 #define exec_cmd_help           \
                                 \
-  "Format: \"exec [mode] rexx_exec [args...]\" where 'rexx_exec' \n"             \
-  "is the name of the Rexx script, \n"                                           \
-  "and 'args' are arguments (separated by spaces) to be passed to the script.\n" \
-  "the arguments passing style is determined by the REXX Mode settings\n"        \
-  "it can be overridden for the current exec invocation specifying the mode\n"   \
-  "as ... \"exec com rexx_exec [args...]\" for command style arguments\n"        \
-  "or ... \"exec sub rexx_exec [args...]\" for subroutine style arguments\n"
+  "Format:    'exec [mode] scriptname [[args...][&&]]'\n"                           \
+  "\n"                                                                              \
+  "Where 'scriptname' is the name of the Rexx script, 'args' is an optional\n"      \
+  "list of arguments to be passed to the script and '&&' as the last argument\n"    \
+  "requests the script to be run asynchronously in the background. The 'rexx'\n"    \
+  "command can be used to list/cancel currently running asynchronous scripts.\n"    \
+  "\n"                                                                              \
+  "The argument passing style is determined by the 'rexx' command's current\n"      \
+  "'Mode' setting. You can override it for the current execution by specifying\n"   \
+  "an optional 'mode' parameter on command itself, just before the scriptname:\n"   \
+  "'exec cmd script' for command style argument passing or 'exec sub script'\n"     \
+  "for subroutine style argument passing.\n"                                        \
+  "\n"                                                                              \
+  "TAKE SPECIAL CARE when using the '&&' option to run a script asynchronously.\n"  \
+  "Be careful to NOT accidentally enter a single '&' instead which invokes the\n"   \
+  "Hercules 'exec' command asynchronously, but NOT the rexx script, leaving you\n"  \
+  "with no way to cancel it. Always use two ampersands '&&' to cause the script\n"  \
+  "itself to run in the background. Of course, if the script ends quickly then\n"   \
+  "there is no need to run it asynchronously in the background. The ability to\n"   \
+  "run scripts in the background was meant for never-ending 'monitoring' type\n"    \
+  "scripts that monitor and report such things as Hercules status."
+
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
@@ -1133,55 +1148,50 @@
 #define resume_cmd_desc         "Resume hercules"
 
 #if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
-#if defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX)
-#define rexx_cmd_desc           "Modify/Display Rexx interpreter settings"
+#define rexx_cmd_desc           "Modify/Display Hercules's Rexx settings"
 #define rexx_cmd_help           \
                                 \
-  "Format: 'rexx [option [parms]]'\n"                                            \
-  "<none>             - display rexx status\n"                                   \
-  "ena[ble]/sta[rt]   - enable/start rexx \n"                                    \
-  "                   - package name oorexx/regina\n"                            \
-  "                   - <none> will enable/start the default Rexx interpreter\n" \
-  "disa[ble]/sto[p]   - disable/stop rexx support\n"                             \
+  "Format:   'rexx [optname optvalue] ...'\n"                                    \
   "\n"                                                                           \
-  "Path[s]/Rexxp[aths]- where to find rexx scripts\n"                            \
-  "Sysp[ath]          - extend the search to the System paths\n"                 \
-  "                   - on/off\n"                                                \
-  "Ext[ensions]       - what extensions to use for rexx scripts autodetect \n"   \
-  "Suf[fixes]         - same as above\n"                                         \
-  "                   - a search for no extension will ALWAYS be done \n"        \
-  "Resolv[er]         - on, hercules will resolve the script full path\n"        \
-  "                   - off, the script name will be passed as is\n"             \
-  "Msgl[evel]         - 0/1 disable/enable HHC17503I and HHC17504I messages \n"  \
-  "Msgp[refix]        - set the prefix for normal messages\n"                    \
-  "Errp[refix]        - set the prefix for trace/error messages\n"               \
-  "Mode               - define the argument passing style\n"                     \
-  "                   - command/subroutine\n"                                    \
+  "Ena[ble]/Sta[rt]     Enable/Start a Rexx Package, where package is\n"         \
+  "                     either 'OORexx' (the default) or 'Regina'.\n"            \
+  "                     Use the HREXX_PACKAGE environment variable\n"            \
+  "                     to define your preferred default value. \"auto\"\n"      \
+  "                     will automatically start the default package.\n"         \
+  "                     Use \"none\" to prevent automatic enablement.\n"         \
+  "Disa[ble]/Sto[p]     Disable/Stop the Rexx package.\n"                        \
   "\n"                                                                           \
-  "using reset as parameter will reset the above settings to the defaults\n"
-#else /* !defined(HAVE_OBJECT_REXX) || !defined(HAVE_REGINA_REXX) */
-#define rexx_cmd_desc           "display Rexx interpreter settings"
-#define rexx_cmd_help           \
-                                \
-  "Format: 'rexx [option [parms]]'\n"                                            \
-  "<none>             - display rexx status\n"                                   \
+  "RexxP[ath]/Path      List of directories to search for scripts.\n"            \
+  "                     No default. Use the HREXX_PATH environment\n"            \
+  "                     variable to define your preferred default.\n"            \
+  "SysP[ath]            Extend the search to the System Paths too.\n"            \
+  "                     'On' (default) or 'Off'.\n"                              \
+  "Ext[ensions]         List of extensions to use when searching for\n"          \
+  "                     scripts. A search with no extension is always\n"         \
+  "                     done first. The HREXX_EXTENSIONS environment\n"          \
+  "                     can be used to set a different default list.\n"          \
+  "Suf[fixes]           Alias for 'Ext[ensions]'\n"                              \
+  "Resolv[er]           'On' (default): Hercules will resolve the script's\n"    \
+  "                     full path. 'Off': the script name is used as-is.\n"      \
+  "MsgL[evel]           'Off' (default) or 'On' to disable or enable\n"          \
+  "                     Hercules messages HHC17503I and HHC17504I\n"             \
+  "                     that display a script's return code and value\n"         \
+  "                     when it finishes executing.\n"                           \
+  "MsgP[refix]          'Off' (default) or 'On' to disable or enable\n"          \
+  "                     prefixing Rexx script 'say' messages with\n"             \
+  "                     Hercules message number HHC17540I.\n"                    \
+  "ErrP[refix]          'Off' (default) or 'On' to disable or enable\n"          \
+  "                     prefixing Rexx script 'TRACE' messages with\n"           \
+  "                     Hercules message number HHC17541D.\n"                    \
+  "Mode                 Define the preferred argument passing style.\n"          \
+  "                     'Com[mand]' (default) or 'Sub[routine]'. Use\n"          \
+  "                     the HREXX_MODE environment variable to define\n"         \
+  "                     your preferred default mode.\n"                          \
+  "List                 Lists all scripts currently running asynchronously.\n"   \
+  "Cancel               <tid> to halt an asynchronously running script.\n"       \
   "\n"                                                                           \
-  "Path[s]/Rexxp[aths]- where to find rexx scripts\n"                            \
-  "Sysp[ath]          - extend the search to the System paths\n"                 \
-  "                   - on/off\n"                                                \
-  "Ext[ensions]       - what extensions to use for rexx scripts autodetect \n"   \
-  "Suf[fixes]         - same as above\n"                                         \
-  "                   - a search for no extension will ALWAYS be done \n"        \
-  "Resolv[er]         - on, hercules will resolve the script full path\n"        \
-  "                   - off, the script name will be passed as is\n"             \
-  "Msgl[evel]         - 0/1 disable/enable HHC17503I and HHC17504I messages \n"  \
-  "Msgp[refix]        - set the prefix for normal messages\n"                    \
-  "Errp[refix]        - set the prefix for trace/error messages\n"               \
-  "Mode               - define the argument passing style\n"                     \
-  "                   - command/subroutine\n"                                    \
-  "\n"                                                                           \
-  "using reset as parameter will reset the above settings to the defaults\n"
-#endif /* defined(HAVE_OBJECT_REXX) && defined(HAVE_REGINA_REXX) */
+  "Setting any option to 'reset' will reset the option to its default value.\n"  \
+  "Entering the command without any arguments displays the current values.\n"
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #define rmmod_cmd_desc          "Delete a module"

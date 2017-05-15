@@ -2154,7 +2154,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC04107 (available)
 //efine HHC04108 (available)
 //efine HHC04109 (available)
-//efine HHC04110 (available)
+#define HHC04110 "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
 //efine HHC04111 (available)
 #define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
 
@@ -2243,34 +2243,51 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
 #define HHC17199 "%.4s %s"
 
-// Reserve 17500-17999 for REXX Messages
-#define HHC17500 "REXX(%s) %s"
-#define HHC17501 "REXX(%s) %s"
+// Reserve 17500-17549 for Hercules Rexx messages
+#define HHC17500 "REXX(%s) %s" // DisplayOptions
+#define HHC17501 "REXX(%s) Rexx version/source retrieval failed: RC(%d)"
 #define HHC17502 "REXX(%s) %s RC(%d)"
-#define HHC17503 "REXX(%s) Exec/Script %s RetRC(%d)"
-#define HHC17504 "REXX(%s) Exec/Script %s RetValue%s"
-#define HHC17505 "REXX(%s) Exec/script name not specified"
-#define HHC17506 "REXX(%s) Exec/script %s not found"
-#define HHC17507 "REXX(%s) Option %s needs a value"
-#define HHC17508 "REXX(%s) Option %s in argument (%d) is invalid"
-#define HHC17509 "REXX(%s) Value %s for option %s is invalid"
-#define HHC17510 "REXX(%s) Value %s length (%d) for option %s is invalid"
+#define HHC17503 "REXX(%s) %s %s RetRC(%hd)"
+#define HHC17504 "REXX(%s) %s %s RetValue(\"%s\")"
+#define HHC17505 "REXX(%s) Exec: script name not specified"
+#define HHC17506 "REXX(%s) Exec: script \"%s\" not found"
+#define HHC17507 "REXX(%s) Option '%s' needs a value"
+#define HHC17508 "REXX(%s) Argument %d: unknown option '%s'"
+#define HHC17509 "REXX(%s) Option %s value '%s' is invalid"
+//efine HHC17510 (available)
+#define HHC17511 "REXX(%s) Could not enable %sRexx package"
+#define HHC17512 "REXX(%s) %s: return code 0x%8.8"PRIX32" from %s"
+#define HHC17513 "REXX(%s) Malformed call to 'exec_cmd' function"
+#define HHC17514 "%s" // "Started  Package ThreadId  Mode Name..."
+#define HHC17515 "%8s %6s  "TIDPAT"  %3s  %s"
+#define HHC17516 "No asynchronous Rexx scripts are currently running"
+#define HHC17517 "Asynchronous Rexx script "TIDPAT" not found"
+#define HHC17518 "REXX(%s) %s: The target Rexx procedure was not found"
+#define HHC17519 "REXX(%s) %s: A failure in Rexx processing has occurred"
+#define HHC17520 "REXX(%s) Signal HALT "TIDPAT" %s"
+//efine HHC17521 (available)
+#define HHC17522 "REXX(%s) Rexx already started/enabled"
+#define HHC17523 "REXX(%s) Rexx already stopped/disabled"
+//efine HHC17524 (available)
+#define HHC17525 "REXX(%s) Rexx has been started/enabled"
+#define HHC17526 "REXX(%s) Rexx has been stopped/disabled"
+#define HHC17527 "REXX(%s) Unknown/unsupported Rexx package '%s'"
+#define HHC17528 "REXX(%s) VERSION: %s"
+#define HHC17529 "REXX(%s) SOURCE:  %s"
+//efine HHC17530 (available)
+#define HHC17531 "REXX(%s) dlopen '%s' failed: %s"
+//efine HHC17532 (available)
+#define HHC17533 "REXX(%s) dlsym '%s' failed: %s"
+//efine HHC17534 - HHC17539 (available)
+#define HHC17540 "%s" // ExitHandler RXSIO RXSIOSAY Perform SAY Clause
+#define HHC17541 "%s" // ExitHandler RXSIO RXSIOTRC Write Trace Output
+//efine HHC17542 - HHC17549 (available)
 
-#define HHC17520 "REXX(%s) %s"
-#define HHC17521 "REXX(%s) Support not started/enabled"
-#define HHC17522 "REXX(%s) Support already started/enabled"
-#define HHC17523 "REXX(%s) Start/Enable invalid in a single REXX environment"
-#define HHC17524 "REXX(%s) Stop/Disable invalid in a single REXX environment"
-#define HHC17525 "REXX(%s) Has been started/enabled"
-#define HHC17526 "REXX(%s) Has been stopped/disabled"
-#define HHC17527 "REXX(%s) Has been AUTO started/enabled"
-
-#define HHC17530 "REXX(%s) %s"
-#define HHC17531 "REXX(%s) Dynamic library %s open/load error"
-#define HHC17532 "REXX(%s) Dynamic library %s close/free error"
-#define HHC17533 "REXX(%s) Unable to resolve symbol %s RC(%d)"
-#define HHC17534 "REXX(%s) Error Registering %s RC(%d)"
-#define HHC17535 "REXX(%s) Error Deregistering %s RC(%d)"
+// range 17550 - 17599 available
+// range 17600 - 17699 available
+// range 17700 - 17799 available
+// range 17800 - 17899 available
+// range 17900 - 17999 available
 
 // range 18000 - 18999 available
 // range 19000 - 19999 available

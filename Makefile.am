@@ -954,7 +954,7 @@ noinst_HEADERS =          \
   hqadefs.h               \
   hqainc.h                \
   hRexx.h                 \
-  hRexxapi.h              \
+  hRexxapi.c              \
   hscutl.h                \
   hsocket.h               \
   hstdinc.h               \
@@ -1057,8 +1057,8 @@ if HERCIFC_GROUPSET
 	chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
 endif
 	chmod 0750 $(DESTDIR)$(bindir)/hercifc
-	chmod +s	$(DESTDIR)$(bindir)/hercifc
-	rm									  hercifc
+	chmod +s   $(DESTDIR)$(bindir)/hercifc
+	rm                             hercifc
 endif
 
 uninstall-local:

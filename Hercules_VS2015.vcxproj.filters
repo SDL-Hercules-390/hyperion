@@ -567,6 +567,9 @@
     <ClCompile Include="hRexx_r.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hRexxapi.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hsccmd.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -1005,6 +1008,9 @@
       <Filter>Other Files\DOC\html\herc</Filter>
     </None>
     <None Include="html\index.html">
+      <Filter>Other Files\DOC\html\herc</Filter>
+    </None>
+    <None Include="html\rexx.html">
       <Filter>Other Files\DOC\html\herc</Filter>
     </None>
     <None Include="html\shared.html">
@@ -2378,9 +2384,6 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hRexx.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hRexxapi.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hscutl.h">
