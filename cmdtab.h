@@ -1525,6 +1525,7 @@ COMMAND( "detach",                  detach_cmd,             SYSCMD,             
 COMMAND( "devinit",                 devinit_cmd,            SYSCMD,             devinit_cmd_desc,       devinit_cmd_help    )
 COMMAND( "devlist",                 devlist_cmd,            SYSCMD,             devlist_cmd_desc,       devlist_cmd_help    )
 COMMAND( "fcb",                     fcb_cmd,                SYSCMD,             fcb_cmd_desc,           fcb_cmd_help        )
+COMMAND( "cctape",                  cctape_cmd,             SYSCMD,             cctape_cmd_desc,        cctape_cmd_help     )
 COMMAND( "loadparm",                loadparm_cmd,           SYSCMD,             loadparm_cmd_desc,      loadparm_cmd_help   )
 COMMAND( "log",                     log_cmd,                SYSCMD,             log_cmd_desc,           log_cmd_help        )
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
