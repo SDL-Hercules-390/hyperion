@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML><HEAD><TITLE>
+Hercules: Integrated Rexx Support
+</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+<link rel="shortcut icon" href="images/favicon.ico" />
+<link rel="icon" href="images/favicon.ico" />
+</HEAD><BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0" VLINK="#008040" ALINK="#000000">
+
+<h1>Hercules Integrated Rexx Support</h1>
+
+<hr noshade>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="#intro">Introduction / Building</a>
+<li><a href="#settings">Hercules Rexx Settings</a>
+<li><a href="#exec">Executing a Rexx Script from Hercules</a>
+<li><a href="#shell">SHCMDOPT and DIAG8CMD</a>
+<li><a href="#AWSCMD">Issuing Hercules Commands</a>
+</ul>
+
+<p>
+
+<hr noshade>
+<h2><a name="intro">Introduction / Building</a></h2>
+<p>
+
+Hercules's Rexx support provides support for the following two Rexx packages:
+
+<blockquote>
+  <table>
+    <tr><td><a href="http://www.oorexx.org/">Open Object Rexx</a></td></tr>
+    <tr><td><a href="http://regina-rexx.sourceforge.net/">Regina Rexx</a></td></tr>
+  </table>
+</blockquote>
+
+Support for either package is not mutually exclusive of support for the other.
+Support for both packages is provided as long as the package's <code>.h</code>
+header file is found during build time.
+
+<p>
+
+If the headers <code>rexx.h</code> and <code>oorexxapi.h</code> are found,
+then support for OORexx will be provided.  If the header <code>rexxsaa.h</code>
+is found, then support for Regina Rexx will be provided.  If all three headers
+are found, then support for both OORexx and Regina will be provided and you
+can then specify at runtime which one you want Hercules to use. (See the
+'<code>rexx</code>' "start" option further below.)
+
+<p>
+
+On Linux, support for both packages are enabled by default but whether support
+is provided depends of course on whether the previously mentioned headers are
+found.  If either package is installed the headers <i>should</i> be found and
+corresponding support within Hercules should be provided.
+
+<p>
+
+Support for either package can be disabled by simply specifying
+either the "<code>--disable-object-rexx</code>" and/or
+"<code>--disable-regina-rexx</code>" options on your <code>./configure</code>
+command at build time (Linux only).  On Windows, the only way to purposely disable support
+is to rename the header file(s) to prevent Hercules from finding them.
+
+<br>
+<h2><a name="settings">Hercules Rexx Settings</a></h2>
+<p>
+
+Hercules runtime support for Rexx is completely dynamic based on the availability
+of each package's dynamic libraries which are automatically loaded at startup.
+
+<p>
+
+When both packages are found to be available then <b>OORexx</b> will be chosen as the
+default Rexx interpreter unless overridden by the optional '<code>HREXX_PACKAGE</code>'
+environment variable.  The only valid values for <code>HREXX_PACKAGE</code> are
+"none", "auto", "OORexx" or "Regina".  The default (preferred) Rexx package
+when "auto" is specified is Object Rexx (OORexx).  Use "none" to prevent Rexx
+support for either package from being automatically enabled at startup, thereby
+requiring you to manually enable (start) Rexx yourself via the Hercules
+'<code>rexx</code>' command's "start" option (see just below).
+
+<p>
+
+Other optional environment variables can be used to define your own default values for
+some of Hercules Rexx's runtime options.  The '<code>HREXX_PATH</code>'
+environment variable for example defines a default value for the
+'<code>rexx</code>' command's "rexxpath" option.  Similarly the
+'<code>HREXX_MODE</code>' and '<code>HREXX_EXTENSIONS</code>' environment
+variables define default values for the '<code>rexx</code>' comamnd's
+"mode" and "extensions" options.
+
+<h3>The 'rexx' command</h3>
+
+The format of the '<code>rexx</code>' command is:
+
+<p>
+
+<blockquote>
+    <code>rexx  [option value] ...</code>
+</blockquote>
+
+<p>
+
+Entering the '<code>rexx</code>' command without any arguments displays the
+current settings.  Otherwise an option / value pair must be specified to set
+the specified option to the specified value.  More than one option/value pair
+can be specified on the same command.
+
+<blockquote>
+  <dl>
+
+    <dt><code>Ena[ble]/Sta[rt</code><p><dd>
+
+        Enable/Start a Rexx Package, where package
+        is either 'OORexx' (the default) or 'Regina'.
+        Use the <code>HREXX_PACKAGE</code> environment variable
+        to define a preferred default value. "auto"
+        will automatically start the default package.
+        Use "none" to prevent automatic enablement.
+
+    <p>
+    <dt><code>Disa[ble]/Sto[p]</code><p><dd>
+
+        Disable/Stop the Rexx package. Any attempt to
+        execute a Rexx script via the '<code>exec</code>' command
+        will result in an error.
+
+    <p>
+    <dt><code>RexxP[ath]/Path</code><p><dd>
+
+        List of directories to search for scripts.
+        No default. Use the <code>HREXX_PATH</code> environment
+        variable to define your preferred default.
+
+    <p>
+    <dt><code>SysP[ath]</code><p><dd>
+
+        Extend the search to the System Paths too.
+        'On' (default) or 'Off'.
+
+    <p>
+    <dt><code>Ext[ensions]</code><p><dd>
+
+        List of extensions to use when searching for
+        scripts. A search with no extension is always
+        done first. The <code>HREXX_EXTENSIONS</code> environment
+        can be used to set a different default list.
+
+    <p>
+    <dt><code>Suf[fixes]</code><p><dd>
+
+        Alias for 'Ext[ensions]'.
+
+    <p>
+    <dt><code>Resolv[er]</code><p><dd>
+
+        'On' (default): Hercules will resolve the
+        script's full path. 'Off': the scriptname
+        is used as-is.
+
+    <p>
+    <dt><code>MsgL[evel]</code><p><dd>
+
+        'Off' (default) or 'On' to disable or enable
+        Hercules messages <code>HHC17503I</code> and
+        <code>HHC17504I</code>
+        that display a script's return code and return
+        value when it finishes executing.
+
+    <p>
+    <dt><code>MsgP[refix]</code><p><dd>
+
+        'Off' (default) or 'On' to disable or enable
+        prefixing Rexx script 'say' messages with
+        Hercules message number <code>HHC17540I</code>.
+
+    <p>
+    <dt><code>ErrP[refix]</code><p><dd>
+
+        'Off' (default) or 'On' to disable or enable
+        prefixing Rexx script <code>TRACE</code> messages with
+        Hercules message number <code>HHC17541D</code>.
+
+    <p>
+    <dt><code>Mode</code><p><dd>
+
+        Define the preferred argument passing style.
+        'Com[mand]' (default) or 'Sub[routine]'. Use
+        the <code>HREXX_MODE</code> environment variable to define
+        your preferred default mode. See further below
+        for the difference between the two.
+
+    <p>
+    <dt><code>List</code><p><dd>
+
+        Lists currently running asynchronous scripts.
+        <br>See next section below.
+
+    <p>
+    <dt><code>Cancel &lt;tid&gt;</code><p><dd>
+
+        to halt a running asynchronous script.
+        <br>See next section below.
+
+  </dl>
+</blockquote>
+
+<p><p>
+<h2><a NAME="exec">Executing a Rexx Script from Hercules</a></h2>
+<p>
+
+<h3>The 'exec' command</h3>
+
+The format of the '<code>exec</code>' command is:
+
+<p>
+
+<blockquote>
+    <code>exec [mode] scriptname [[args...][&amp;&amp;]]</code>
+</blockquote>
+
+<p>
+
+Where 'scriptname' is the name of the Rexx script, 'args' is an optional list
+of arguments to be passed to the script and '&amp;&amp;' as the last argument requests
+that the script be run asynchronously in the background.  The rexx command's
+'list' and 'cancel' options can be used to list/cancel any currently running
+asynchronous scripts.
+
+<p>
+
+<u>Take special care</u> when using the '&amp;&amp;' option to run a script
+asynchronously.  Be careful to <i><u>not</u></i> accidentally enter a single '&amp;' instead
+(which invokes the Hercules 'exec' command asynchronously, but <i>not</i> the rexx script,
+leaving you with no way to cancel it should you need to).
+
+<p>
+
+If you need to run a script in the background always use <i><u>two</u></i>
+ampersands '<b>&amp;&amp;</b>' to cause the script
+itself to run in the background.  Of course, if the script ends quickly then
+there is no need to run it asynchronously in the background.  The ability to
+run scripts in the background is designed for never-ending 'monitoring' type
+scripts that continuously monitor and report such things as Hercules status.
+
+<p>
+
+The 'mode' setting determines how arguments are passed to your Rexx script. In
+command mode (the default) there is only one argument passed, with that single
+argument being the string of characters which immediately follows the script's
+name.  This allows your script to parse the string into individual arguments
+however it may decide, potentially contrary to the way command line arguments
+are normally parsed.
+
+<p>
+
+In subroutine mode Hercules parses the string normally and passes each argument
+to your script individually as shown in the examples below.
+
+<p>
+
+The argument passing style is determined by the 'rexx' command's current "Mode"
+setting, but can be temporarily overridden for the current execution by simply
+specifying the 'mode' parameter on the command itself, immediately before the
+scriptname (e.g. '<code>exec <u>cmd</u> ...</code>' for command style argument passing,
+or '<code>exec <u>sub</u> ...</code>' for subroutine style argument passing):
+
+<blockquote>
+
+    <p><br>
+
+    Contents of script <b>example.rexx</b>:
+
+    <pre class="jcl">
+    parse arg str
+    say ""
+    say "parse arg str: " str
+    say "arg(1): "arg(1)
+    say "arg(2): "arg(2)
+    say "arg(3): "arg(3)
+    exit
+    </pre>
+
+    <p><br>
+
+    Running the script from a command line (outside of Hercules) results in:
+
+    <pre class="jcl">
+    C:\&gt; <b>example.rexx</b> one,   Two   "Buckle    MY shoe"
+
+    parse arg str:  one,   Two   "Buckle    MY shoe"
+    arg(1): one,   Two   "Buckle    MY shoe"
+    arg(2):
+    arg(3):
+    </pre>
+
+    <p><br>
+
+    Running the script from within Hercules via the '<code>exec</code>' command using
+    the default '<u>Command</u>' mode setting results in:
+
+    <pre class="jcl">
+    HHC01603I <b>exec</b> example.rexx  one,   Two   "Buckle    MY shoe"
+    HHC17540I
+    HHC17540I parse arg str:  one,   Two   "Buckle    MY shoe"
+    HHC17540I arg(1): one,   Two   "Buckle    MY shoe"
+    HHC17540I arg(2):
+    HHC17540I arg(3):
+    </pre>
+
+    <p><br>
+
+    Running the script using '<u>Subroutine</u>' mode results in:
+
+    <pre class="jcl">
+    HHC01603I <b>exec <u>sub</u></b> example.rexx  one,   Two   "Buckle    MY shoe"
+    HHC17540I
+    HHC17540I parse arg str:  one,
+    HHC17540I arg(1): one,
+    HHC17540I arg(2): Two
+    HHC17540I arg(3): Buckle    MY shoe
+    </pre>
+
+</blockquote>
+
+<h2><a NAME="shell">SHCMDOPT and DIAG8CMD</a></h2>
+<p>
+
+The Hercules Rexx '<code>exec</code>' command is considered to be a "shell" command
+from Hercules's point of view since both of the supported Rexx interpreters provide
+the ability to directly target the host operating system environment.  Both of
+the '<code>sh</code>' and '<code>exec</code>' commands are thus disabled by default
+for security reasons.
+
+<p>
+
+To enable the ability to '<code>exec</code>' Rexx scripts from the Hercules command line
+(or via the Hercules DIAG 8 instruction interface) use the
+'<code><a href="hercconf.html#SHCMDOPT">shcmdopt</a></code>' and/or
+'<code><a href="hercconf.html#DIAG8CMD">diag8cmd</a></code>' commands.
+ For more information on each please refer to Hercules
+documentation describing <a href="hercconf.html">configuration file statements</a>.
+
+<h2><a NAME="AWSCMD">Issuing Hercules Commands</a></h2>
+<p>
+
+Rexx scripts run from within Hercules (via the '<code>exec</code>' command)
+are able to issue Hercules commands via the Rexx "<code>Address</code>" keyword
+or via the Hercules "<code>AWSCMD</code>" special function:
+
+<p>
+
+<blockquote><br>
+    <code>Address HERCULES "command..."</code><br>
+    <code>rc = AWSCMD( "command..." &nbsp;[,stemvar[,errmode]] )</code><br>
+    <code>Call AWSCMD  &nbsp;"command..." &nbsp;[,stemvar[,errmode]]</code><br>
+</blockquote>
+
+<p><br>
+
+The Rexx variable "RC" contains the return code from the Hercules command.  The
+specified stem variable "stemvar" will contain the response from Hercules with
+the usual convention of "stemvar<i>.0</i>" being set to the number of response lines
+and "stemvar<i>.1</i>" to "stemvar<i>.n</i>" holding the Hercules response lines themselves.
+A sample script called
+"<u><a href="https://github.com/Fish-Git/hyperion/blob/master/scripts/hcommand.rexx">hcommand.rexx</a></u>"
+illustrating both techniques ("Address" and "AWSCMD") can be found in the
+"<code>scripts</code>" subdirectory of the Hercules source code distribution.
+
+<p>
+
+Note that when a response stemname is used Hercules does <i>not</i> display the results
+of the command on the hardware console panel.  Instead, the results are captured
+and returned in the specified Rexx stem variable, and it becomes your decision
+what to do with them (such as displaying them on the hardware console panel via
+the Rexx "Say" command).
+
+<p>
+
+Since the Rexx "Address" keyword syntax does not provide any means of specifying
+additional parameters (such as the stem variable name and error handling option
+that the <code>AWSCMD</code> technique provides), options for the "Address" keyword
+syntax are passed to the Hercules Rexx subcommand environment via several predefined
+(reserved) Rexx variables instead:
+
+<p>
+
+<blockquote><br>
+    <code>HREXX.RESPSTEMNAME</code><br>
+    <code>HREXX.PERSISTENTRESPSTEMNAME</code>
+</blockquote>
+
+<p><br>
+
+defines the stem variable name to be used to hold the Hercules response lines.
+"HREXX.RESPSTEMNAME" is dropped after every call so each "Address 'HERCULES'"
+invocation finds an unbiased environment.  "HREXX.PERSISTENTRESPSTEMNAME" provides
+the same functionality but is never dropped.
+
+<p>
+
+<blockquote><br>
+    <code>HREXX.ERRORHANDER</code>
+</blockquote>
+    
+<p><br>
+
+defines how errors (non-zero RC) should be handled.  Setting the variable to
+"SYSTEM" requests the Rexx interpreter itself handle any non-zero return code
+in the standard Rexx fashion.
+
+<p>
+
+Setting it to the value "RETCODE" delegates all error handling to the caller,
+allowing your script to react to the "error" in whatever way it deems is appropriate.
+
+<p>
+
+The ability to specify error handling is provided since some Hercules commands
+might return a non-zero return code (such as the "<code>devlist</code>" command when there
+are no devices defined in the configuration) and from the subcommand interface's
+point of view such non-zero return codes should not be considered a subcommand
+failure.
+
+<p>
+
+The default error handler setting is thus "RETCODE".
+
+<p>
+
+<p><center><hr width=15% noshade>
+<a href="##" onclick="history.go(-1)"><img src="images/back.gif" border=0 alt="back"></a>
+<p class="lastupd"><script language="Javascript">
+document.write( "Last updated " + document.lastModified + "" );
+</script></p>
+
+</BODY>
+</HTML>
+
+
+
