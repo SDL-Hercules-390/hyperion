@@ -906,11 +906,18 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01102 "%1d:%04X Printer: argument %d parameter '%s' is invalid"
 #define HHC01103 "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
 #define HHC01104 "%1d:%04X Printer: option %s is incompatible"
-#define HHC01105 "%1d:%04X Printer: error in function %s: %s"
+#define HHC01105 "%1d:%04X Printer: unsupported device type %04X"
 #define HHC01106 "%1d:%04X Printer: pipe receiver with pid %d starting"
 #define HHC01107 "%1d:%04X Printer: pipe receiver with pid %d terminating"
 #define HHC01108 "%1d:%04X Printer: unable to execute file %s: %s"
 #define HHC01109 "%1d:%04X Printer: %s incompatible with device type %04X"
+#define HHC01110 "%1d:%04X Printer: Indexing accepted but ignored for 3203-5"
+#define HHC01111 "%1d:%04X Printer: channel 1 is undefined"
+#define HHC01112 "%1d:%04X Printer: invalid fcb: maximum channel codes exceeded"
+#define HHC01113 "%1d:%04X Printer: incompatible '%s' and 'lpp' values detected"
+//efine HHC01114 - HHC01159 (available)
+
+// range   01150 - 01199 available
 
 // reserve 012xx for card devices
 //efine HHC01200 (available)
@@ -928,7 +935,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // reserve 01250 - 01299 for Generic device messages
 #define HHC01250 "%1d:%04X %s: error in function %s: %s"
 #define HHC01251 "%1d:%04X %s: option '%s' has been deprecated"
-//efine HHC01252 - HHC01259 (available)
+//efine HHC01252 - HHC01251 (available)
 
 // reserve 013xx for channel related messages
 /* channel.c */
@@ -1339,7 +1346,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02236 "IPL rejected: All CPU's must be stopped"
 #define HHC02237 "Not all devices shown (max %d)"
 #define HHC02238 "Device numbers can only be redefined within the same Logical Channel SubSystem"
-//efine HHC02239 (available)
+#define HHC02239 "command '%s' invalid for device type %04X"
 //efine HHC02240 (available)
 #define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"

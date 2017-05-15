@@ -795,13 +795,11 @@ EXTRA_DIST =                  \
   hercules.cnf.rexx           \
   hercules.ico                \
   hercules.m4                 \
-  Hercules.sln                \
-  Hercules.vcproj             \
-  Hercules.vcxproj            \
-  Hercules.vcxproj.filters    \
-  Hercules_VS2010.sln         \
-  Hercules_VS2012.sln         \
-  Hercules_VS2012.vcxproj     \
+  Hercules_VS2008.sln         \
+  Hercules_VS2008.vcproj      \
+  Hercules_VS2015.sln              \
+  Hercules_VS2015.vcxproj          \
+  Hercules_VS2015.vcxproj.filters  \
   hercver.rc2                 \
   INSTALL                     \
   license_dyn76.txt           \

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hercules", "Hercules_VS2008.vcproj", "{A0F495FF-9C35-4DFB-A51A-0427D8420779}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hercules_VS2008", "Hercules_VS2008.vcproj", "{A0F495FF-9C35-4DFB-A51A-0427D8420779}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

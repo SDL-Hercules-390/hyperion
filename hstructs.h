@@ -1316,8 +1316,6 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
         u_int   ispiped:1;              /* 1=Piped device            */
         u_int   stopdev:1;              /* T=stopped; F=started      */
-        u_int   rawcc:1;                /* Debugging: 1=write hex cc
-                                           else process cc normally  */
         u_int   fcbcheck:1;             /* 1=signal FCB errors, else
                                            ignore FCB errors.        */
         u_int   diaggate:1;             /* 1=Diagnostic gate command */
@@ -1329,14 +1327,23 @@ struct DEVBLK {                         /* Device configuration block*/
         int     lpi;                    /* lines per inch 6/8        */
         int     index;                  /* 3211 indexing             */
         int     lpp;                    /* lines per page            */
-#define FCBSIZE 180                     /* Forms Control Buffer size */
-        int     fcb[FCBSIZE+1];         /* FCB image                 */
-        U16     cctape[FCBSIZE];        /* Carriage Control Tape     */
-        int     fcbisdef;               /* FCB is default            */
+#define FCBSIZE_3211        180         /* FCB image size for 3211   */
+#define FCBSIZE_OTHER       256         /* FCB image size for 3203   */
+#define MAX_FCBSIZE         256
+        int     fcb    [ MAX_FCBSIZE ]; /* FCB image itself          */
+        char*   fcbname;                /* FCB image or cctape name  */
+        U16     cctape [ MAX_FCBSIZE ]; /* Carriage Control Tape     */
+        int     chan9line;              /* Line number of channel 9  */
         int     chan12line;             /* Line number of channel 12 */
-        int     prevline;               /* previous line number      */
         int     currline;               /* curr line number          */
-        int     destline;               /* destination  line number  */
+#define UCBSIZE_OTHER       304         /* UCS Buffer size 1403/3203 */
+#define UCBSIZE_3211        432         /* UCS Buffer size 3211      */
+#define MAX_UCBSIZE         432
+        BYTE    ucb    [ MAX_UCBSIZE ]; /* UCS Buffer itself         */
+#define PLBSIZE_OTHER       132         /* Print Line Buffer size    */
+#define PLBSIZE_3211        132         /* Print Line Buffer size    */
+#define MAX_PLBSIZE         150         /* Print Line Buffer size    */
+        BYTE    plb    [ MAX_PLBSIZE ]; /* Print Line Buffer itself  */
 
         /*  Device dependent fields for tapedev                      */
 

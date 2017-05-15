@@ -1469,6 +1469,116 @@ DLL_EXPORT BYTE reverse_bits( BYTE b )
 }
 
 /*-------------------------------------------------------------------*/
+/* Format printer cctape information                                 */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void FormatCCTAPE( char* buf, size_t buflen,
+                              int lpi, int lpp,
+                              U16* cctape )
+{
+    size_t len, curlen = 0, newlen;
+    int line, chnum, chans;
+    U16 mask;
+    char onechan[8], allchans[48], chanlist[64];
+
+    /* Get started */
+    snprintf( buf, buflen, "lpi=%d lpp=%d cctape=(", lpi, lpp );
+    curlen = strlen( buf );
+
+    /* Format: "cctape=(lll=cc,lll=(cc,cc),...)" */
+    for (line=1; line <= lpp; line++)
+    {
+        /* Skip lines with no channels defined */
+        if (!cctape[line])
+            continue;
+
+        /* Format channel stop(s) for this line */
+        for (chans=0, allchans[0]=0, chnum=1, mask=0x8000;
+            chnum <= 12; mask >>= 1, chnum++)
+        {
+            if (cctape[ line ] & mask)
+            {
+                MSGBUF( onechan, "%d", chnum );
+                if (chans++)
+                    strlcat( allchans, ",", _countof( allchans ));
+                strlcat( allchans, onechan, _countof( allchans ));
+            }
+        }
+
+        /* Surround this line's channels with parens if needed */
+        MSGBUF( chanlist, "%d=%s%s%s,",
+            line,
+            chans > 1 ? "(" : "",
+            allchans,
+            chans > 1 ? ")" : "" );
+
+        len = strlen( chanlist );
+
+        /* Truncate and return if out of buffer space */
+        if ((newlen = curlen + len) >= (buflen - 5))
+        {
+            strlcat( buf, ", ...", buflen );
+            return;
+        }
+
+        /* Append formatted channel stop(s) to output */
+        strlcat( buf, chanlist, buflen );
+        curlen = newlen;
+    }
+
+    /* No channel stops at all? */
+    if (buf[ curlen-1 ] == '(')
+        buf[ curlen-1 ] = '0';
+    else
+        /* Change ending comma to closing paren instead */
+        buf[ curlen-1 ] = ')';
+}
+
+/*-------------------------------------------------------------------*/
+/* Format printer FCB information                                    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void FormatFCB( char* buf, size_t buflen,
+                           int index, int lpi, int lpp,
+                           int* fcb )
+{
+    int line;
+    size_t curlen, newlen;
+    char sep, chan[16];
+
+    /* Get started */
+    snprintf( buf, buflen, "index=%d lpi=%d lpp=%d fcb",
+        index, lpi, lpp );
+    curlen = strlen( buf );
+    sep = '=';
+
+    /* Format the "fcb=" values... */
+    for (line=1; line <= lpp; line++)
+    {
+        /* Skip lines with no channel stop defined */
+        if (!fcb[line])
+            continue;
+
+        /* Format channel stop */
+        MSGBUF( chan, "%c%d:%d", sep, fcb[line], line );
+        sep = ',';
+
+        /* Truncate and return if out of buffer space */
+        if ((newlen = curlen + strlen( chan )) >= (buflen - 5))
+        {
+            strlcat( buf, ", ...", buflen );
+            return;
+        }
+
+        /* Append formatted channel stop to output */
+        strlcat( buf, chan, buflen );
+        curlen = newlen;
+    }
+
+    /* No channel stops at all? */
+    if (sep == '=')
+        strlcat( buf, "=0", buflen );
+}
+
+/*-------------------------------------------------------------------*/
 /* Count number of tokens in a string                                */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int tkcount( const char* str, const char* delims )

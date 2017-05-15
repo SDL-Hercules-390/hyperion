@@ -511,8 +511,8 @@
     <None Include="dynmake.bat" />
     <None Include="hercules.cnf" />
     <None Include="hercules.cnf.rexx" />
-    <None Include="Hercules.sln" />
-    <None Include="Hercules.vcproj" />
+    <None Include="Hercules_VS2008.sln" />
+    <None Include="Hercules_VS2008.vcproj" />
     <None Include="Hercules_VS2015.sln" />
     <None Include="Hercules_VS2015.vcxproj" />
     <None Include="Hercules_VS2015.vcxproj.filters" />
@@ -694,6 +694,12 @@
     <None Include="SoftFloat\doc\SoftFloat-source.html" />
     <None Include="SoftFloat\doc\SoftFloat.html" />
     <None Include="SoftFloat\README.html" />
+    <None Include="tests\3211.asm" />
+    <None Include="tests\3211.core" />
+    <None Include="tests\3211.list" />
+    <None Include="tests\3211.pdf" />
+    <None Include="tests\3211.rexx" />
+    <None Include="tests\3211.tst" />
     <None Include="tests\agf.assemble" />
     <None Include="tests\agf.listing" />
     <None Include="tests\agf.tst" />
@@ -1043,7 +1049,6 @@
     <Text Include="license_dyn76.txt" />
     <Text Include="SoftFloat\LICENSE.txt" />
     <Text Include="SoftFloat\README.txt" />
-    <Text Include="tests\agf.txt" />
     <Text Include="tests\alsi.txt" />
     <Text Include="tests\axtr.txt" />
     <Text Include="tests\brc.txt" />

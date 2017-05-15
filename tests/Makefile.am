@@ -1,4 +1,10 @@
 dist_pkgdata_DATA =			\
+     3211.asm               \
+     3211.core              \
+     3211.list              \
+     3211.pdf               \
+     3211.rexx              \
+     3211.tst               \
 	 a.core					\
 	 b.core					\
 	 bctr.core				\

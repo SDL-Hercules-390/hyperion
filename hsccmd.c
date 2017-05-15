@@ -81,8 +81,6 @@ extern int ecpsvm_command( int argc, char **argv );
 int HercCmdLine ( char *cmdline );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 
-static void fcb_dump( DEVBLK*, char *, unsigned int );
-
 /*-------------------------------------------------------------------*/
 /* $test command - do something or other                             */
 /*-------------------------------------------------------------------*/
@@ -905,244 +903,113 @@ int rc = 0;
 }
 
 /*-------------------------------------------------------------------*/
-/* fcb - display or load                                             */
+/* Display cctape for specified printer                              */
 /*-------------------------------------------------------------------*/
-int fcb_cmd(int argc, char *argv[], char *cmdline)
+int cctape_cmd( int argc, char* argv[], char* cmdline )
 {
-    U16      devnum;
+    int      rc;
     U16      lcss;
+    U16      devnum;
     DEVBLK*  dev;
     char*    devclass;
-    int      rc;
+    char     buffer[256];
 
-    int      iarg,jarg;
-    int      chan;
-    int      line;
+    UNREFERENCED( cmdline );
 
-    char     wbuf[150];
-    int      wlpi;
-    int      windex;
-    int      wlpp;
-    int      wfcb[FCBSIZE+1];
-    char     *ptr, *nxt;
-
-    UNREFERENCED(cmdline);
-
-    /* process specified printer device */
-
-    if ( argc < 2 )
+    /* Our only argument is the required device number */
+    if (argc < 2)
     {
+        // "Device number missing"
         WRMSG( HHC02201, "E" );
         return -1 ;
     }
 
-    rc=parse_single_devnum(argv[1],&lcss,&devnum);
-    if (rc<0)
+    if ((rc = parse_single_devnum( argv[1], &lcss, &devnum )) < 0)
+        return -1;    // (message already displayed)
+
+    if (!(dev = find_device_by_devnum( lcss, devnum )))
     {
+        devnotfound_msg( lcss, devnum );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (lcss,devnum)))
+    (dev->hnd->query)( dev, &devclass, 0, NULL );
+
+    if (strcasecmp( devclass, "PRT" ) != 0)
     {
-        devnotfound_msg(lcss,devnum);
+        // "%1d:%04X device is not a %s"
+        WRMSG( HHC02209, "E", lcss, devnum, "printer" );
         return -1;
     }
 
-    (dev->hnd->query)(dev, &devclass, 0, NULL);
-
-    if (strcasecmp(devclass,"PRT"))
+    if (0x1403 != dev->devtype)
     {
-        WRMSG(HHC02209, "E", lcss, devnum, "printer" );
+        // "command '%s' invalid for device type %04X"
+        WRMSG( HHC02239, "E", "cctape", dev->devtype );
         return -1;
     }
 
-    if (dev->devtype != 0x3211)
-    {
-        // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-        WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "command 'fcb'", dev->devtype);
-        return -1;
-    }
+    FormatCCTAPE( buffer, sizeof( buffer ),
+        dev->lpi, dev->lpp, dev->cctape );
 
-    if ( argc == 2 )
-    {
-        fcb_dump(dev, wbuf, sizeof(wbuf));
-        WRMSG(HHC02210, "I", lcss, devnum, wbuf );
-        return 0;
-    }
-
-    if ( !dev->stopdev )
-    {
-        WRMSG(HHC02211, "E", lcss, devnum );
-        return -1;
-    }
-
-    wlpi = dev->lpi;
-    windex = dev->index;
-    wlpp = dev->lpp;
-    for (line = 0; line <= FCBSIZE; line++)
-        wfcb[line] = dev->fcb[line];
-
-    for (iarg = 2; iarg < argc; iarg++)
-    {
-        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
-        {
-            ptr = argv[iarg]+4;
-            errno = 0;
-            wlpi = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( wlpi != 6 && wlpi != 8 && wlpi != 10) )
-            {
-                jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("index=", argv[iarg], 6) == 0)
-        {
-            if (0x3211 != dev->devtype )
-            {
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], 1);
-                return -1;
-            }
-            ptr = argv[iarg]+6;
-            errno = 0;
-            windex = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( windex < 0 || windex > 15) )
-            {
-                jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
-        {
-            ptr = argv[iarg]+4;
-            errno = 0;
-            wlpp = (int) strtoul(ptr,&nxt,10) ;
-            if (errno != 0 || nxt == ptr || *nxt != 0 ||wlpp > FCBSIZE)
-            {
-                jarg = ptr - argv[iarg] ;
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
-        {
-            for (line = 0 ; line <= FCBSIZE; line++)  wfcb[line] = 0;
-            /* check for simple mode */
-            if  ( strstr(argv[iarg],":") )
-            {
-                /* ':" found  ==> new mode */
-                ptr = argv[iarg]+4;
-                while (*ptr)
-                {
-                    errno = 0;
-                    line = (int) strtoul(ptr,&nxt,10) ;
-                    if (errno != 0 || *nxt != ':' || nxt == ptr || line > wlpp || wfcb[line] != 0 )
-                    {
-                        jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                        return -1;
-                    }
-
-                    ptr = nxt + 1 ;
-                    errno = 0;
-                    chan = (int) strtoul(ptr,&nxt,10) ;
-                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
-                    {
-                        jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                        return -1;
-                    }
-                    wfcb[line] = chan;
-                    if ( *nxt == 0 )
-                        break ;
-                    ptr = nxt + 1;
-                }
-
-            }
-            else
-            {
-                /* ':" NOT found  ==> old mode */
-                ptr = argv[iarg]+4;
-                chan = 0;
-                while (*ptr)
-                {
-                    errno = 0;
-                    line = (int) strtoul(ptr,&nxt,10) ;
-                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || line > wlpp || wfcb[line] != 0 )
-                    {
-                        jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                        return -1;
-                    }
-                    chan += 1;
-                    if ( chan > 12 )
-                    {
-                        jarg = ptr - argv[iarg] ;
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                        return -1;
-                    }
-                    wfcb[line] = chan;
-                    if ( *nxt == 0 )
-                        break ;
-                    ptr = nxt + 1;
-                }
-                if ( chan != 12 )
-                {
-                    jarg = 5 ;
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], jarg);
-                    return -1;
-                }
-            }
-
-            continue;
-        }
-
-        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg]);
-        return -1;
-    }
-
-    /* It's all ok, copy it to the dev block */
-    dev->lpi = wlpi;
-    dev->index = windex ;
-    dev->lpp = wlpp;
-    for (line = 0; line <= FCBSIZE; line++)
-        dev->fcb[line] = wfcb[line];
-
-    fcb_dump(dev, wbuf, sizeof(wbuf));
-    WRMSG(HHC02210, "I", lcss, devnum, wbuf );
+    // "%1d:%04X %s"
+    WRMSG( HHC02210, "I", lcss, devnum, buffer );
     return 0;
 }
 
-static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
+/*-------------------------------------------------------------------*/
+/* Display fcb for specified printer                                 */
+/*-------------------------------------------------------------------*/
+int fcb_cmd( int argc, char* argv[], char* cmdline )
 {
-    int i;
-    char wrk[16];
-    char sep[1];
-    sep[0] = '=';
-    snprintf( buf, buflen-1, "lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
-    for (i = 1; i <= dev->lpp; i++)
+    int      rc;
+    U16      lcss;
+    U16      devnum;
+    DEVBLK*  dev;
+    char*    devclass;
+    char     buffer[256];
+
+    UNREFERENCED( cmdline );
+
+    /* Our only argument is the required device number */
+    if (argc < 2)
     {
-        if (dev->fcb[i] != 0)
-        {
-            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
-            sep[0] = ',' ;
-            if (strlen(buf) + strlen(wrk) >= buflen - 4)
-            {
-                /* Too long, truncate it */
-                strlcat(buf, ",...", buflen);
-                return;
-            }
-            strlcat(buf, wrk, buflen);
-        }
+        // "Device number missing"
+        WRMSG( HHC02201, "E" );
+        return -1 ;
     }
-    return;
+
+    if ((rc = parse_single_devnum( argv[1], &lcss, &devnum )) < 0)
+        return -1;    // (message already displayed)
+
+    if (!(dev = find_device_by_devnum( lcss, devnum )))
+    {
+        devnotfound_msg( lcss, devnum );
+        return -1;
+    }
+
+    (dev->hnd->query)( dev, &devclass, 0, NULL );
+
+    if (strcasecmp( devclass, "PRT" ) != 0)
+    {
+        // "%1d:%04X device is not a %s"
+        WRMSG( HHC02209, "E", lcss, devnum, "printer" );
+        return -1;
+    }
+
+    if (0x1403 == dev->devtype)
+    {
+        // "command '%s' invalid for device type %04X"
+        WRMSG( HHC02239, "E", "fcb", dev->devtype );
+        return -1;
+    }
+
+    FormatFCB( buffer, sizeof( buffer ),
+        dev->index, dev->lpi, dev->lpp, dev->fcb );
+
+    // "%1d:%04X %s"
+    WRMSG( HHC02210, "I", lcss, devnum, buffer );
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/

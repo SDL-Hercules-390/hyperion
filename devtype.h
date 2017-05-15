@@ -66,6 +66,7 @@ extern DEVHND comadpt_device_hndinfo;
 extern DEVHND cardrdr_device_hndinfo;
 extern DEVHND cardpch_device_hndinfo;
 extern DEVHND printer_device_hndinfo;
+extern DEVHND prt3203_device_hndinfo
 extern DEVHND tapedev_device_hndinfo;
 extern DEVHND qeth_device_hndinfo;
 extern DEVHND zfcp_device_hndinfo;

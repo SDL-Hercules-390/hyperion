@@ -299,6 +299,17 @@ HUT_DLL_IMPORT int initialize_utility( int argc, char* argv[],
 HUT_DLL_IMPORT BYTE reverse_bits( BYTE b );
 
 /*-------------------------------------------------------------------*/
+/* Format printer FCB/CCTAPE information                             */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT void FormatFCB    ( char* buf, size_t buflen,
+                                   int index, int lpi, int lpp,
+                                   int* fcb );
+
+HUT_DLL_IMPORT void FormatCCTAPE ( char* buf, size_t buflen,
+                                   int lpi, int lpp,
+                                   U16* cctape);
+
+/*-------------------------------------------------------------------*/
 /* Count number of tokens in a string                                */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int tkcount( const char* str, const char* delims );

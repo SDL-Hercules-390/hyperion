@@ -1277,10 +1277,10 @@
     <None Include="retail-all.msbuild.jobs">
       <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
     </None>
-    <None Include="Hercules.sln">
+    <None Include="Hercules_VS2008.sln">
       <Filter>Other Files\Build\msvc\VS2008</Filter>
     </None>
-    <None Include="Hercules.vcproj">
+    <None Include="Hercules_VS2008.vcproj">
       <Filter>Other Files\Build\msvc\VS2008</Filter>
     </None>
     <None Include="Hercules_VS2015.sln">
@@ -1505,6 +1505,9 @@
     <None Include="tests\tests.conf">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="tests\3211.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\bfp-001-divtoint.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1648,6 +1651,12 @@
     </None>
     <None Include="tests\sske.listing">
       <Filter>Other Files\tests\scripts\assemble\listing</Filter>
+    </None>
+    <None Include="tests\3211.rexx">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\3211.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\agf.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
@@ -1820,6 +1829,9 @@
     <None Include="tests\tapebsf.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
+    <None Include="tests\3211.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\bfp-001-divtoint.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -1894,6 +1906,12 @@
     </None>
     <None Include="tests\pfpo.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\3211.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\3211.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-001-divtoint.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
@@ -2513,9 +2531,6 @@
     </Text>
     <Text Include="util\TMOUNT.txt">
       <Filter>Other Files\Utilities</Filter>
-    </Text>
-    <Text Include="tests\agf.txt">
-      <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\alsi.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>

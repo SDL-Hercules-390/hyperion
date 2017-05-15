@@ -1,6 +1,7 @@
-/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Enrico Sorichetti, 2012                */
-/*              ESA/390 Line Printer Device Handler                  */
+/* PRINTER.C    (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) Copyright Enrico Sorichetti, 2012                */
+/*              (C) Copyright "Fish" (David B. Trout), 2017          */
+/*              Line Printer Device Handler                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -8,14 +9,19 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
-/* System/370 line printer devices with fcb support and more.        */
+/* System/370 line printer devices with FCB support and more.        */
 /*-------------------------------------------------------------------*/
-/* Primary Reference:                                                */
-/*    GA24-3312-09 "IBM 2821 Control Unit Component Description"     */
-/* See also:                                                         */
+/* Reference:                                                        */
 /*    GA24-3073-8 "IBM 1403 Printer Component Description"           */
+/*    GA24-3312-9 "IBM 2821 Control Unit Component Description"      */
+/*    GA24-3073-8 "IBM 1403 Printer Component Description"           */
+/*    GA33-1529-0 "IBM 3203 Printer Model 5 Component Description"   */
 /*    GA24-3543-0 "IBM 3211 Printer and 3811 Control Unit            */
 /*                                  Component Description"           */
+/*    https://www.ibm.com/support/knowledgecenter/SSLTBW_2.1.0       */
+/*           /com.ibm.zos.v2r1.idas300/fcbim.htm                     */
+/*    https://www.ibm.com/support/knowledgecenter/SSLTBW_2.1.0       */
+/*           /com.ibm.zos.v2r1.idas300/s3270.htm                     */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -41,83 +47,113 @@
 /* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/* The following are considered IMMEDIATE commands for the 1403 and  */
+/* 3211 printers: CTL-NOOP, Space Lines Immediate, Skip to Channel   */
+/* Immediate, Block Data check, Allow Data Check, Load UCS Buffer,   */
+/* Load UCS Buffer (No Fold), Diagnostic Gate, UCS Gate Load, Raise  */
+/* Cover, Fold, Unfold.                                              */
+/*-------------------------------------------------------------------*/
 
-/* Printer Specific : 1403 */
-/* The following are considered IMMEDIATE commands : */
-/* CTL-NOOP, Skip Channel 'n' Immediate, Block Data check , Allow Data Check
- * Space 1,2,3 Lines Immediate, UCS Gate Load, Load UCS Buffer & Fold,
- * Load UCS Buffer (No Fold)
- */
-
-static BYTE printer_immed_commands[256]=
+static BYTE  printer_immed_commands[ 256 ] =
 /*0 1 2 3 4 5 6 7 8 9 A B C D E F*/
-{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*0*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*1*/
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*2*/
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*3*/
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*4*/
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*5*/
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /*6*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*7*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*8*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*9*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*A*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*B*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*C*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*D*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, /*E*/
-  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};/*F*/
+{ 0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, // 0:    03,  0B,  07
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 1:    13,  1B
+  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, // 2:    23
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 3:
+  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, // 4:    43
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 5:
+  0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0, // 6:         6B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 7:    73,  7B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 8:    83,  8B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 9:    93,  9B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // A:    A3,  AB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // B:    B3,  BB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // C:    C3,  CB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // D:    D3,  DB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // E:    E3,  EB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};// F:    F3,  FB
+
+/*-------------------------------------------------------------------*/
+/* The 3203-5 printer however, implements ALL control commands as    */
+/* non-immediate commands, meaning you must specify the SLI bit in   */
+/* your CCW or else you will get an incorrect length error.          */
+/*-------------------------------------------------------------------*/
+
+static BYTE  prt3203_immed_commands[ 256 ] =
+/*0 1 2 3 4 5 6 7 8 9 A B C D E F*/
+{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 1:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 2:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 3:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 4:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 5:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 6:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 7:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 8:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 9:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // A:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // B:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // C:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // D:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // E:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};// F:
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-//#define LINE_LENGTH     150
-#define BUFF_SIZE       1500
-#define BUFF_OVFL       150
+#define BUFF_SIZE       MAX(MAX(MAX_FCBSIZE,MAX_UCBSIZE),MAX_PLBSIZE)
+#define LINENUM(n)      (1 + (((n)-1) % dev->lpp))
+#define CCWOP2LINES(op) ((op)/8)
+#define CCWOP2CHAN(op)  (((op)-128)/8)
+#define ISSKPIMMED(op)  (((op) & 0x80) ? 1 : 0)
+#define FCBSIZE(dev)    ((0x3211 == (dev)->devtype) ? FCBSIZE_3211 : FCBSIZE_OTHER)
+#define UCBSIZE(dev)    ((0x3211 == (dev)->devtype) ? UCBSIZE_3211 : UCBSIZE_OTHER)
+#define PLBSIZE(dev)    ((0x3211 == (dev)->devtype) ? PLBSIZE_3211 : PLBSIZE_OTHER)
+#define MIN_PLB_INDEX   (-31)
+#define MAX_PLB_INDEX   (+31)
+#define MAX_CHAN_STOPS  (30)    // (or +1 if stop on last line)
 
 /*-------------------------------------------------------------------*/
-/*              DEFAULT 3211 FORMS CONTROL BUFFER                    */
-/* First entry (entry 0) is the number of lines per page. The next   */
-/* 12 entries are the line numbers assigned to channels 1 thru 12.   */
+/*             DEFAULT 3203/3211 FORMS CONTROL BUFFERS               */
 /*-------------------------------------------------------------------*/
-const int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
+/*                                                                   */
+/*  First entry (entry 0) is the number of lines per page. The next  */
+/*  12 entries are the line numbers assigned to channels 1 thru 12.  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+const int fcbmask_hardware [ MAX_FCBSIZE ] = {66, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//                           channel:             1  2  3  4  5  6  7  8  9 10 11 12
+const int fcbmask_legacy   [ MAX_FCBSIZE ] = {66, 1, 7,13,19,25,31,37,43,63,49,55,61};
+//                           channel:             1  2  3  4  5  6  7  8  9 10 11 12
+const int fcbmask_fcb2std2 [ MAX_FCBSIZE ] = {66, 1, 7,13,19,25,31,37,43,49,55,61,63};
+//                           channel:             1  2  3  4  5  6  7  8  9 10 11 12
+const int fcbmask_fcb2id1  [ MAX_FCBSIZE ] = {88, 1, 8,15,22,29,36,43,50,57,64,71,78};
 
 /*-------------------------------------------------------------------*/
-/*               DEFAULT 1403 CARRIAGE CONTROL TAPE                  */
-/* Each entry in the below table corresponds to a line on a page.    */
-/* The number of entries in the array defines the length of the tape */
-/* and thus the number of lines on the page. Each entry is a bitmask */
-/* indicating which of the 12 possible channels are punched on that  */
-/* line. It is thus possible to punch more than one channel per line */
-/* and the same channel may be punched on different lines as well.   */
-/* For example, both channels 9 and 12 can be punched on the same    */
-/* line and multiple lines may all have the same channel 11 punch,   */
-/* just like on a real 1403 printer carriage control tape.           */
+/*             DEFAULT 1403-ONLY CARRIAGE CONTROL TAPE               */
 /*-------------------------------------------------------------------*/
-const
-U16 cctape[] = {    /* carriage control tape = channel punch masks:
-
-    0x8000   1
-    0x4000   2
-    0x2000   3
-    0x1000   4
-    0x0800   5
-    0x0400   6
-    0x0200   7
-    0x0100   8
-    0x0080   9
-    0x0040  10
-    0x0020  11
-    0x0010  12
-
-    The first value is the line number and the second is the channel.
-
-    Default:  "cctape=(1=1,7=2,13=3,19=4,25=5,31=6,37=7,43=8,61=9,49=10,55=11,61=12)"
-     (or):    "cctape=(1=1,61=(9,12),7=2,13=3,19=4,25=5,31=6,37=7,43=8,49=10,55=11)"
-
-    1 2  3  4  5  6  7  8  9 10 11 12  (chan)
-    1 7 13 19 25 31 37 43 61 49 55 61  (line)  (note: 9 & 12 same line!)
+/*                                                                   */
+/*  Each entry in the below table corresponds to a line on a page.   */
+/*  Each entry is a bitmask indicating which of the 12 possible      */
+/*  channels that are punched on that line.  It is thus possible     */
+/*  to not only specify the same channel punch on different lines    */
+/*  but also to have more than one channel punch on the same line.   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  Table entry channel numbers, for reference:                      */
+/*                                                                   */
+/*    0x8000   1      0x1000   4      0x0200   7      0x0040  10                    */
+/*    0x4000   2      0x0800   5      0x0100   8      0x0020  11                    */
+/*    0x2000   3      0x0400   6      0x0080   9      0x0010  12                    */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*
+    PROGRAMMMING NOTE:  the below cctape value SHOULD match
+                        the same corresponding fcb value!
 */
+const U16 cctape_legacy[ MAX_FCBSIZE ] = {
 /* 1       2       3       4       5       6       7       8       9      10        lines  */
 0x8000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x4000, 0x0000, 0x0000, 0x0000, /*  1 - 10 */
 0x0000, 0x0000, 0x2000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x1000, 0x0000, /* 11 - 20 */
@@ -125,214 +161,435 @@ U16 cctape[] = {    /* carriage control tape = channel punch masks:
 0x0400, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0200, 0x0000, 0x0000, 0x0000, /* 31 - 40 */
 0x0000, 0x0000, 0x0100, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0040, 0x0000, /* 41 - 50 */
 0x0000, 0x0000, 0x0000, 0x0000, 0x0020, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, /* 51 - 60 */
-0x0090, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,                                 /* 61 - 66 */
- 0 }; /* (remainder of array == zeroes) */
-
-#define LINENUM(n)  (1 + (((n)-1) % dev->lpp))
-
-#define WRITE_LINE() \
-do { \
-    /* Start a new record if not data-chained from previous CCW */ \
-    if ((chained & CCW_FLAGS_CD) == 0) \
-    { \
-        dev->bufoff = 0; \
-        dev->bufres = BUFF_SIZE; \
-    } /* end if(!data-chained) */ \
-    if (dev->index > 1) \
-    { \
-        for (i=1; i < (U32)dev->index; i++) \
-        { \
-            dev->buf[dev->bufoff] = SPACE; \
-            dev->bufoff++; \
-            dev->bufres--; \
-        } /* end for(i) */ \
-    } /* end if ( dev->index > 1 )  */ \
-    /* Calculate number of bytes to write and set residual count */ \
-    num = (count < (U32)dev->bufres) ? count : (U32)dev->bufres; \
-    *residual = count - num; \
-    /* Copy data from channel buffer to print buffer */ \
-    for (i=0; i < num; i++) \
-    { \
-        c = guest_to_host(iobuf[i]); \
-        if (dev->fold) c = toupper(c); \
-        if (c == 0) c = SPACE; \
-        dev->buf[dev->bufoff] = c; \
-        dev->bufoff++; \
-        dev->bufres--; \
-    } /* end for(i) */ \
-    /* Perform end of record processing if not data-chaining */ \
-    if ((flags & CCW_FLAGS_CD) == 0) \
-    { \
-        /* Truncate trailing blanks from print line */ \
-        for (i = dev->bufoff; i > 0; i--) \
-            if (dev->buf[i-1] != SPACE) break; \
-        /* Write print line */ \
-        write_buffer (dev, (char *)dev->buf, i, unitstat); \
-        if (*unitstat != 0) return; \
-        if (dev->crlf) \
-        { \
-            write_buffer (dev, "\r", 1, unitstat); \
-            if (*unitstat != 0) return; \
-        } \
-        dev->sp0after = (code == 0x01) ? 1 : 0; \
-    } /* end if(!data-chaining) */ \
-    /* Return normal status */ \
-} while(0)
-
-#define SPACE_LINES() \
-do { \
-    /* Space the requested number of lines */ \
-    write_buffer(dev, nls, coun, unitstat); \
-    if (*unitstat == 0) \
-        *unitstat = CSW_CE | CSW_DE; \
-    /* \
-      Unit Exception (CSW_UX) is set (along with device \
-      end) when any carriage spacing operation (but not \
-      skipping) senses that channel 12 has been passed. \
-      In other words, the write and space, and space \
-      immediate commands will cause the Unit Exception \
-      bit to be set when channel 12 is passed, but the \
-      write and skip, skip immediate, and write without \
-      spacing commands will NOT cause the Unit Exception \
-      bit to be set. See page 36 of GA24-3312-09 "IBM \
-      2821 Control Unit Component Description". \
-    */ \
-    dev->currline += coun;    /* increment but don't fix */ \
-    if (dev->currline > dev->chan12line) \
-        *unitstat |= CSW_UX; \
-    dev->currline = LINENUM( dev->currline ); /* now fix */ \
-} while(0)
-
-#define SKIP_TO_CHAN() \
-do { \
-    U8  found = FALSE; /* TRUE/FALSE whether channel was found */ \
-    if (dev->devtype == 0x1403) \
-    { \
-        /* 1403: Search carriage control tape for channel punch */ \
-        int line; \
-        U16 chan_mask = 0x8000 >> (chan - 1); \
-        for (line=LINENUM(dev->currline+1); !(dev->cctape[line-1] & chan_mask) && line != dev->currline; line=LINENUM(line+1)) \
-            ; /* nop */ \
-        if (dev->cctape[line-1] & chan_mask) \
-        { \
-            found = TRUE; \
-            dev->destline = line; \
-        } \
-    } \
-    else /* Not 1403 (e.g. 3211): Search FCB */ \
-    { \
-        int line; \
-        for (line=LINENUM(dev->currline+1); dev->fcb[line] != chan && line != dev->currline; line=LINENUM(line+1)) \
-            ; /* nop */ \
-        if (dev->fcb[line] == chan)  \
-        { \
-            found = TRUE; \
-            dev->destline = line; \
-        } \
-    } \
-    if (found) \
-    { \
-        /* If this is a skip immediate to the same channel \
-           as the one we're already positioned at and nothing \
-           has been printed on this line yet, then don't skip \
-           since we're already positioned where they want to \
-           be. Otherwise if something was already printed on \
-           the current line or we're not on the channel they \
-           want, then we need to perform the skip immediate. \
-           See page 25 of GA24-3312-09 "IBM 2821 Control Unit \
-           Component Description". \
-        */ \
-        if (1 \
-            && dev->skpimmed \
-            && dev->destline == dev->currline \
-            && !dev->sp0after \
-        ) \
-        { \
-            *unitstat = CSW_CE | CSW_DE; \
-            dev->sp0after = 0; \
-            return; \
-        } \
-        /* We need to perform this skip to channel */ \
-        dev->sp0after = 0; \
-        if (dev->destline <= dev->currline || dev->ffpend) \
-        { \
-            dev->ffpend = 0; \
-            write_buffer (dev, "\f", 1, unitstat); \
-            if (*unitstat != 0) return; \
-            dev->currline = 1; \
-        } \
-        for (; dev->currline < dev->destline; dev->currline++ ) \
-        { \
-            write_buffer (dev, "\n", 1, unitstat); \
-            if (*unitstat != 0) return; \
-        } \
-        *unitstat = CSW_CE | CSW_DE; \
-        return; \
-    } \
-    dev->sp0after = 0; \
-    /* channel not found */ \
-    if (dev->fcbcheck) \
-    { \
-        dev->sense[0] = SENSE_EC; \
-        *unitstat = CSW_CE | CSW_DE | CSW_UC; \
-        return; \
-    } \
-    else \
-    { \
-        if ((code & 0x02) != 0) \
-        { \
-            write_buffer (dev, "\n", 1, unitstat); \
-            if (*unitstat != 0) return; \
-        } \
-    } \
-} while (0)
-
-static void* spthread ( void* dev );        /*  (forward reference)  */
+0x0010, 0x0000, 0x0080, 0x0000, 0x0000, 0x0000, };                              /* 61 - 66 */
+/*
+    PROGRAMMMING NOTE:  the below cctape value SHOULD match
+                        the same corresponding fcb value!
+*/
+const U16 cctape_fcb2std2[ MAX_FCBSIZE ] = {
+/* 1       2       3       4       5       6       7       8       9      10        lines  */
+0x8000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x4000, 0x0000, 0x0000, 0x0000, /*  1 - 10 */
+0x0000, 0x0000, 0x2000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x1000, 0x0000, /* 11 - 20 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x0800, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, /* 21 - 30 */
+0x0400, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0200, 0x0000, 0x0000, 0x0000, /* 31 - 40 */
+0x0000, 0x0000, 0x0100, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0080, 0x0000, /* 41 - 50 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x0040, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, /* 51 - 60 */
+0x0020, 0x0000, 0x0010, 0x0000, 0x0000, 0x0000, };                              /* 61 - 66 */
+/*
+    PROGRAMMMING NOTE:  the below cctape value SHOULD match
+                        the same corresponding fcb value!
+*/
+const U16 cctape_fcb2id1[ MAX_FCBSIZE ] = {
+/* 1       2       3       4       5       6       7       8       9      10        lines  */
+0x8000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x4000, 0x0000, 0x0000, /*  1 - 10 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x2000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, /* 11 - 20 */
+0x0000, 0x1000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0800, 0x0000, /* 21 - 30 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0400, 0x0000, 0x0000, 0x0000, 0x0000, /* 31 - 40 */
+0x0000, 0x0000, 0x0200, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0100, /* 41 - 50 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0080, 0x0000, 0x0000, 0x0000, /* 51 - 60 */
+0x0000, 0x0000, 0x0000, 0x0040, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, /* 61 - 70 */
+0x0020, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0010, 0x0000, 0x0000, /* 71 - 80 */
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, };              /* 81 - 88 */
 
 /*-------------------------------------------------------------------*/
-/* Dump the FCB info                                                 */
+/* Predefined fcb/cctape values                                      */
 /*-------------------------------------------------------------------*/
-static void fcb_dump(DEVBLK* dev, char *buf, unsigned int buflen)
+typedef const int    FCBMASK, *PFCBMASK;
+typedef const U16    CCTAPE,  *PCCTAPE;
+
+#define FCBTYPE_FCB         0
+#define FCBTYPE_CCTAPE      1
+
+typedef struct _FCBTAB
 {
-    int i;
-    char wrk[16];
-    char sep[1];
-    sep[0] = '=';
-    snprintf(buf, buflen-1, "LOADED lpi=%d index=%d lpp=%d fcb", dev->lpi, dev->index, dev->lpp );
-    for (i = 1; i <= dev->lpp; i++)
+    const BYTE  type;       // FCBTYPE_FCB or FCBTYPE_CCTAPE
+    const char* name;       // "legacy", "fcb2std2", etc.
+    const void* image;      // PFCBMASK or PCCTAPE
+}
+FCBTAB, *PFCBTAB;
+
+static FCBTAB fcbtab[] =    // table of predefined fcb/cctape names
+{
+    { FCBTYPE_FCB,    "legacy",   fcbmask_legacy   },
+    { FCBTYPE_FCB,    "fcb2std",  fcbmask_fcb2std2 },
+    { FCBTYPE_FCB,    "fcb2id1",  fcbmask_fcb2id1  },
+    { FCBTYPE_FCB,    "hardware", fcbmask_hardware },
+
+    { FCBTYPE_CCTAPE, "legacy",   cctape_legacy    },
+    { FCBTYPE_CCTAPE, "fcb2std2", cctape_fcb2std2  },
+    { FCBTYPE_CCTAPE, "fcb2id1",  cctape_fcb2id1   },
+};
+
+/*-------------------------------------------------------------------*/
+/*  Write data to printer.    Return 0 if successful, else unitstat. */
+/*-------------------------------------------------------------------*/
+static BYTE write_buffer( DEVBLK* dev, const char* buf, int len, BYTE* unitstat )
+{
+int rc;
+
+    /* Write data to the printer file */
+    if (dev->bs)
     {
-        if (dev->fcb[i] != 0)
+        /* Write data to socket, check for error */
+        if ((rc = write_socket( dev->fd, buf, len )) < len)
         {
-            MSGBUF( wrk, "%c%d:%d",sep[0], i, dev->fcb[i]);
-            sep[0] = ',';
-            if (strlen(buf) + strlen(wrk) >= buflen - 4)
+            /* Close the connection */
+            if (dev->fd != -1)
             {
-                /* Too long, truncate it */
-                strlcat(buf, ",...", buflen);
-                return;
+                int fd = dev->fd;
+                dev->fd = -1;
+                close_socket( fd );
+                // "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
+                WRMSG( HHC01100, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
             }
-            strlcat(buf, wrk, buflen);
+
+            /* Set unit check with intervention required */
+            dev->sense[0] = SENSE_IR;
+            return *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
     }
-    return;
+    else
+    {
+        /* Write data to the printer file, check for error */
+        if ((rc = write( dev->fd, buf, len )) < len)
+        {
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                   "Printer", "write()",
+                   rc < 0 ? strerror( errno )
+                          : "incomplete record written");
+
+            /* Set Equipment Check */
+            dev->sense[0] = SENSE_EC;
+            return *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+    }
+
+    return 0;   /* Successful completion */
 }
 
 /*-------------------------------------------------------------------*/
-/* Sockdev "OnConnection" callback function                          */
+/*          SpaceLines        Return 0 if successful, else unitstat. */
 /*-------------------------------------------------------------------*/
-static int onconnect_callback (DEVBLK* dev)
+static BYTE SpaceLines( DEVBLK* dev, BYTE* unitstat, int spaceamt )
 {
-    TID tid;
-    int rc;
+    const char* buf;
+    int         len;
+    int         newline, oldline = dev->currline;
 
-    rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
-    if(rc)
+    ASSERT( spaceamt >= 0 && spaceamt <= 3 );   // (sanity check)
+
+    if (!(len = spaceamt))
     {
-        // "Error in function create_thread(): %s"
-        WRMSG( HHC00102, "E", strerror( rc ) );
-        return 0;
+        buf = "\r";
+        len = 1;
     }
-    return 1;
+    else
+        buf = "\n\n\n";
+
+    /* Space the requested number of lines */
+    if (write_buffer( dev, buf, len, unitstat ) != 0)
+        return *unitstat;  /* I/O error */
+
+    /* Start with normal status */
+    *unitstat = CSW_CE | CSW_DE;
+
+    /* Bump current line number and save */
+    newline = oldline + spaceamt;
+    dev->currline = LINENUM( newline );
+
+    /* Check if channel 12 was passed */
+    if (1
+        &&            dev->chan12line
+        && oldline <  dev->chan12line
+        && newline >= dev->chan12line
+    )
+    {
+        *unitstat |= CSW_UX;    /* Unit Exception */
+    }
+
+    /* Check if channel 9 was passed */
+    if (1
+        &&            dev->chan9line
+        && oldline <  dev->chan9line
+        && newline >= dev->chan9line
+    )
+    {
+        /* Set unit check with channel-9 */
+        *unitstat |= CSW_UC;
+        dev->sense[0] = SENSE_CH9;
+    }
+
+    /* Return success or failure */
+    return (*unitstat & CSW_UC) ? *unitstat : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/*          WriteLine         Return 0 if successful, else unitstat. */
+/*-------------------------------------------------------------------*/
+static BYTE WriteLine
+(
+    DEVBLK* dev,
+    BYTE    code,
+    BYTE    flags,
+    BYTE    chained,
+    U32     count,
+    BYTE*   iobuf,
+    BYTE*   unitstat,
+    U32*    residual
+)
+{
+    U32  i, num;
+    BYTE c;
+
+    /* Start a new record if not data-chained from previous CCW */
+    if (!(chained & CCW_FLAGS_CD))
+    {
+        dev->bufoff = 0;
+        dev->bufres = BUFF_SIZE;
+        memset( dev->plb, 0, sizeof( dev->plb ));
+    }
+
+    /* Handle indexing. For compatibility with the 3211 Printer,
+       the optional indexing byte is accepted but ignored by the
+       3203-5.  Positive indexing (indent) is handled here.
+       Negative indexing (chop) is handled further below.
+    */
+    if (dev->index > 0 && dev->devtype != 0x3203)
+    {
+        for (i=1; i < (U32) dev->index; i++)
+        {
+            dev->buf[ dev->bufoff ] = SPACE;
+            dev->bufoff++;
+            dev->bufres--;
+        }
+    }
+
+    /* Calculate number of bytes to write and set residual count */
+    num = (count < (U32) dev->bufres) ? count : (U32) dev->bufres;
+    *residual = count - num;
+
+    /* Copy data from the channel buffer to the device buffer.
+       Negative indexing (chop) is handled here.
+    */
+    i = (U32) ((dev->index < 0 && dev->devtype != 0x3203) ?
+               -dev->index : 0); /* Chop if requested */
+    for (; i < num; i++)
+    {
+        /* Copy print line to PLB */
+        dev->plb[ dev->bufoff ] = iobuf[i];
+
+        /* Translate EBCDIC to ASCII */
+        c = guest_to_host( dev->plb[ dev->bufoff ] );
+
+        if (!c)
+            c = SPACE;
+        else if (dev->fold)
+            c = toupper(c);
+
+        /* Copy to device output buffer */
+        dev->buf[ dev->bufoff ] = c;
+
+        dev->bufoff++;
+        dev->bufres--;
+    }
+
+    /* Perform end of record processing if not data-chaining */
+    if (!(flags & CCW_FLAGS_CD))
+    {
+        /* (trim trailing blanks...) */
+
+        for (i = dev->bufoff; i > 0; i--)
+            if (dev->buf[ i - 1 ] != SPACE)
+                break;
+
+        /* Print the line unless this is a Diagnostic Write.
+           Diagnostic Writes update the Print Line buffer (PLB)
+           but otherwise don't actually print anything nor move
+           the carriage. They're like Write Without Spacing but
+           without the write.
+        */
+        if (code != 0x05)    /* If NOT diagnostic write... */
+        {
+            /* Write print line... */
+            if (write_buffer( dev, (char*) dev->buf, i, unitstat ) != 0)
+                return *unitstat; /* (I/O error) */
+
+            if (dev->crlf)
+                if (write_buffer( dev, "\r", 1, unitstat ) != 0)
+                    return *unitstat; /* (I/O error) */
+        }
+
+        dev->sp0after = (code == 0x01) ? 1 : 0;
+    }
+
+    return 0;   /* Successful completion */
+}
+
+/*-------------------------------------------------------------------*/
+/*          SkipToChannel     Return 0 if successful, else unitstat. */
+/*-------------------------------------------------------------------*/
+static BYTE SkipToChannel
+(
+    DEVBLK* dev,
+    BYTE    code,
+    BYTE*   unitstat,
+    int     chan
+)
+{
+    int  line, destline;
+    U8   found  = FALSE;     /* TRUE/FALSE whether channel was found */
+
+    UNREFERENCED( code );
+
+    if (dev->devtype == 0x1403)
+    {
+        /* 1403: Search carriage control tape for channel punch */
+
+        U16  chan_mask  = 0x8000 >> (chan - 1);
+
+        for (line = LINENUM( dev->currline + 1);
+            !(dev->cctape[ line-1 ] & chan_mask) && line != dev->currline;
+            line = LINENUM( line+1 )
+        )
+            ;   /* (do nothing) */
+
+        if (dev->cctape[ line-1 ] & chan_mask)
+        {
+            found = TRUE;
+            destline = line;
+        }
+    }
+    else /* 3203/3211: Search FCB image for channel number */
+    {
+        for (line = LINENUM( dev->currline + 1 );
+            dev->fcb[ line ] != chan && line != dev->currline;
+            line = LINENUM( line+1 )
+        )
+            ;   /* (do nothing) */
+
+        if (dev->fcb[ line ] == chan)
+        {
+            found = TRUE;
+            destline = line;
+        }
+    }
+
+    if (found)
+    {
+        /*  Write and skip:
+
+              If a 'write and skip' command orders the carriage to go
+              to the channel at which it is presently located, the
+              carriage moves until that channel is again detected.
+
+            Skip immediate:
+
+              If the carriage is at the channel, the command does not
+              cause  any carriage motion unless the previous command
+              was 'write without spacing'.
+        */
+        if (1
+            && dev->skpimmed
+            && destline == dev->currline
+            && !dev->sp0after
+        )
+        {
+            /* Already at desired channel; do nothing. */
+            *unitstat = CSW_CE | CSW_DE;
+            dev->sp0after = 0;
+        }
+        else /* We need to perform this skip to channel */
+        {
+            dev->sp0after = 0;
+
+            if (destline <= dev->currline || dev->ffpend)
+            {
+                dev->ffpend = 0;
+
+                if (write_buffer( dev, "\f", 1, unitstat ) != 0)
+                    return *unitstat; /* (I/O error) */
+
+                dev->currline = 1;
+            }
+
+            for (; dev->currline < destline; dev->currline++ )
+                if (write_buffer( dev, "\n", 1, unitstat ) != 0)
+                    return *unitstat; /* (I/O error) */
+        }
+    }
+    else /* Channel not found! */
+    {
+        if (dev->devtype == 0x1403)
+        {
+            /*  PROGRAMMING NOTE: skipping to a channel that did not
+            **  exist on a 1403 printer's carriage control tape would
+            **  cause the printer to begin spewing page after page of
+            **  paper as the printer kept looking for the non-existent
+            **  channel punch missing from the carriage control tape
+            **  until the operator eventually noticed and pressed the
+            **  printer STOP button causing an Intervention Required.
+            */
+            dev->stopdev = TRUE;
+            dev->sense[0] = SENSE_IR;
+        }
+        else // 3211, 3203-5
+        {
+            /* This condition automatically halts the skip
+               at the SECOND occurrence of FCB address one. */
+
+            /* TECHNIQUE: first, calculate the number of lines we
+               need to advance to reach line number 1 and then print
+               that many newlines. Then simply print a number of new-
+               lines equivalent to the number of lines per page thus
+               keeping us positioned on line number 1 of the FCB.
+            */
+            int newlines = (dev->lpp - dev->currline) + 1;
+
+            for (line=0; line < newlines; line++)
+                if (write_buffer( dev, "\n", 1, unitstat ) != 0)
+                    return *unitstat; /* (I/O error) */
+
+            newlines = dev->lpp;
+
+            for (line=0; line < newlines; line++)
+                if (write_buffer( dev, "\n", 1, unitstat ) != 0)
+                    return *unitstat; /* (I/O error) */
+
+            /* Set the appropriate SENSE bits */
+            dev->sense[0] = SENSE_EC + SENSE_DC;
+            dev->sense[1] = SENSE1_LPC;
+        }
+
+        dev->sp0after = 0;
+        dev->ffpend = 0;
+
+        /* Return unit check status */
+        return *unitstat = CSW_CE | CSW_DE | CSW_UC;
+    }
+
+    /* Set normal ending status */
+    *unitstat = CSW_CE | CSW_DE;
+
+    return 0;   /* Successful completion */
+}
+
+/*-------------------------------------------------------------------*/
+/*          DoSpaceOrSkip     Return 0 if successful, else unitstat. */
+/*-------------------------------------------------------------------*/
+static BYTE DoSpaceOrSkip( DEVBLK* dev, BYTE code, BYTE* unitstat )
+{
+    BYTE rc;
+
+    dev->skpimmed = ISSKPIMMED( code );
+
+    if (code <= 0x80)
+        rc = SpaceLines( dev, unitstat, CCWOP2LINES( code ));
+    else
+        rc = SkipToChannel( dev, code, unitstat, CCWOP2CHAN( code ));
+
+    return rc ? *unitstat : 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -433,6 +690,211 @@ static void* spthread (void* arg)
 } /* end function spthread */
 
 /*-------------------------------------------------------------------*/
+/* Sockdev "OnConnection" callback function                          */
+/*-------------------------------------------------------------------*/
+static int onconnect_callback (DEVBLK* dev)
+{
+    TID tid;
+    int rc;
+
+    rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
+    if(rc)
+    {
+        // "Error in function create_thread(): %s"
+        WRMSG( HHC00102, "E", strerror( rc ) );
+        return 0;
+    }
+    return 1;
+}
+
+/*-------------------------------------------------------------------*/
+/* A new fcb has been loaded                                         */
+/*-------------------------------------------------------------------*/
+static void on_new_fcb( DEVBLK* dev )
+{
+    int line, chan1line;
+
+    /* Display FCB just loaded if verbose messages enabled */
+    if (MLVL( VERBOSE ))
+    {
+        char fcbfmt[256];
+        char loaded[256];
+
+        FormatFCB( fcbfmt, sizeof( fcbfmt ),
+            dev->index, dev->lpi, dev->lpp, dev->fcb );
+
+        MSGBUF( loaded, "LOADED %s", fcbfmt );
+
+        // "%1d:%04X %s"
+        WRMSG( HHC02210, "I", SSID_TO_LCSS( dev->ssid ),
+            dev->devnum, loaded );
+    }
+
+    /* Scan new fcb and: 1) save new channel-9 and channel-12 line
+       numbers, and 2) issue a warning if channel-1 wasn't defined.
+    */
+    dev->currline   = 1;    // (reset due to new FCB load)
+    dev->chan9line  = 0;    // (reset due to new FCB load)
+    dev->chan12line = 0;    // (reset due to new FCB load)
+
+    for (chan1line=0, line=1; line <= dev->lpp; line++)
+    {
+        if      (dev->fcb[ line ] ==  1)      chan1line  = line;
+        else if (dev->fcb[ line ] ==  9) dev->chan9line  = line;
+        else if (dev->fcb[ line ] == 12) dev->chan12line = line;
+    }
+
+    if (!chan1line)
+    {
+        // "%1d:%04X Printer: channel 1 is undefined"
+        WRMSG( HHC01111, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* A new cctape has been loaded                                      */
+/*-------------------------------------------------------------------*/
+static void on_new_cctape( DEVBLK* dev )
+{
+    int line, chan1line;
+
+    /* Scan new cctape and: 1) save new channel-9 and channel-12 line
+       numbers, and 2) issue a warning if channel-1 wasn't defined.
+    */
+    dev->chan9line  = 0;    // (reset due to new cctape)
+    dev->chan12line = 0;    // (reset due to new cctape)
+    dev->currline   = 1;    // (reset due to new cctape)
+
+    for (line=1, chan1line=0; line < (int) _countof( dev->cctape); line++)
+    {
+        if      (dev->cctape[ line ] & 0x8000)      chan1line  = line;
+        else if (dev->cctape[ line ] & 0x0080) dev->chan9line  = line;
+        else if (dev->cctape[ line ] & 0x0010) dev->chan12line = line;
+    }
+
+    if (!chan1line)
+    {
+        // "%1d:%04X Printer: channel 1 is undefined"
+        WRMSG( HHC01111, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*          LoadUCB           Return 0 if successful, else unitstat. */
+/*-------------------------------------------------------------------*/
+static BYTE LoadUCB
+(
+    DEVBLK* dev,
+    U32     count,
+    BYTE*   iobuf,
+    BYTE*   more,
+    BYTE*   unitstat,
+    U32*    residual
+)
+{
+    U32 num, ucbsize = UCBSIZE( dev );
+
+    UNREFERENCED( more );
+
+    /* Calculate residual byte count */
+    num = (count < ucbsize) ? count : ucbsize;
+    *residual = count - num;
+
+    /* Make sure enough data was provided */
+    if (count < ucbsize)
+    {
+        /* Set unit check with SENSE = Load Check */
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        dev->sense[0] = SENSE_LDCK;
+        return *unitstat;
+    }
+
+    /* Load new UCB */
+    memcpy( dev->ucb, iobuf, ucbsize );
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Validate defined cctape value with respect to defined lpp value   */
+/*-------------------------------------------------------------------*/
+static BYTE valid_cctape( DEVBLK* dev )
+{
+    int line;
+    int fcbsize = FCBSIZE( dev );
+
+    /* PROGRAMMING NOTE: we cannot use dev->lpp for the exit condition
+       since we need to always scan the entire cctape since they might
+       have defined channel stops beyond the dev->lpp entry, which is
+       the very condition we're supposed to detect.
+    */
+    for (line=1; line < fcbsize; line++)
+    {
+        if (!dev->cctape[ line - 1 ])
+            continue;
+
+        if (line > dev->lpp)
+        {
+            // "%1d:%04X Printer: incompatible '%s' and 'lpp' values detected"
+            WRMSG( HHC01113, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, "cctape" );
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Validate defined fcb value with respect to defined lpp value     */
+/*-------------------------------------------------------------------*/
+static BYTE valid_fcb( DEVBLK* dev )
+{
+    int line;
+    int fcbsize = FCBSIZE( dev );
+    int chanstops = MAX_CHAN_STOPS;
+
+    /* PROGRAMMING NOTE: we cannot use dev->lpp for the exit condition
+       because we need to always scan the entire fcb since they might
+       have defined channel stops defined beyond the dev->lpp entry,
+       which is one of the very conditions we're supposed to detect.
+    */
+    for (line=1; line < fcbsize; line++)
+    {
+        if (!dev->fcb[ line ])
+            continue;
+
+        if (line > dev->lpp)
+        {
+            // "%1d:%04X Printer: incompatible '%s' and 'lpp' values detected"
+            WRMSG( HHC01113, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, "fcb" );
+            return FALSE;
+        }
+
+        /* PROGRAMMING NOTE: a maximum of 30 channel codes can be
+           specified if the end of sheet is not coded in the same
+           byte as a channel code; a maximum of 31 channel codes
+           can be specified if the end of sheet code is coded in
+           the same byte as a channel code. Thus we only decrement
+           our counter if this is not the last line.
+        */
+        if (line != dev->lpp && --chanstops < 0)
+        {
+            // "%1d:%04X Printer: invalid fcb: maximum channel codes exceeded"
+            WRMSG( HHC01112, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum );
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+// (forward reference)
+static int open_printer( DEVBLK* dev );
+
+/*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
 static int printer_init_handler( DEVBLK* dev, int argc, char *argv[] )
@@ -441,6 +903,7 @@ char *ptr;                              /* Work variable for parsing */
 char *nxt;                              /* Work variable for parsing */
 int   iarg, i, j;                       /* Some array subscripts     */
 U8    sockdev = FALSE;                  /* TRUE == is socket device  */
+int   fcbsize;                          /* FCB size for this devtype */
 
     /* For re-initialisation, close the existing file, if any, and raise attention */
     if (dev->fd >= 0)
@@ -469,57 +932,530 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
     /* Save the file name in the device block */
     hostpath( dev->filename, argv[0], sizeof( dev->filename ));
 
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
-        dev->devtype = 0x3211;
+    /* Save the device type */
+    sscanf( dev->typname, "%hx", &dev->devtype );
+    if (1
+        && 0x1403 != dev->devtype
+        && 0x3203 != dev->devtype
+        && 0x3211 != dev->devtype
+    )
+    {
+        // "%1d:%04X Printer: unsupported device type %04X"
+        WRMSG( HHC01105, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->devtype );
+        return -1;
+    }
+    fcbsize = FCBSIZE( dev ); // (now that we know the device type)
+
+    /* Initialize the device identifier bytes */
+    dev->devid[0] = 0xFF;
+    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
+    dev->devid[2] = 0x21;
+    dev->devid[3] = 0x01;
+    dev->devid[4] = dev->devtype >> 8;
+    dev->devid[5] = dev->devtype & 0xFF;
+    dev->devid[6] = 0x01;
+    dev->numdevid = 7;
+
+    /* Set number of sense bytes */
+    dev->numsense = 2;
 
     /* Initialize device dependent fields */
-    dev->fd = -1;
+    dev->fd       = -1;
+    dev->crlf     = 0;
+    dev->stopdev  = FALSE;
+    dev->append   = 0;
+    dev->ispiped  = (dev->filename[0] == '|');
+
+    /* Set length of print buffer */
+    dev->bufsize = BUFF_SIZE;
+    dev->bufres  = BUFF_SIZE;
+    dev->bufoff  = 0;
+
+    /* Initialize Forms Control Buffer and Carriage Control Tape */
+    dev->lpi      = 6;
+    dev->index    = 0;
     dev->diaggate = 0;
-    dev->fold = 0;
-    dev->crlf = 0;
-    dev->stopdev = FALSE;
-    dev->append = 0;
-    dev->ispiped = (dev->filename[0] == '|');
-
-
-    /* initialize the new fields for FCB+ support */
-    dev->rawcc = 0;
-    dev->fcbcheck = 1;
-    dev->ffpend = 0;
+    dev->fold     = 0;
+    dev->fcbcheck = 1;  /* (DEPRECATED!) */
+    dev->ffpend   = 0;
     dev->sp0after = 0;
-
-    dev->prevline = 1;
     dev->currline = 1;
-    dev->destline = 1;
 
-    dev->lpi = 6;
-    dev->index = 0;
-    dev->fcbisdef = 0;
-    dev->lpp = FCBMASK[0];
-    dev->chan12line = FCBMASK[12];
+    memcpy( dev->fcb,    fcbmask_legacy, sizeof( dev->fcb    ));
+    memcpy( dev->cctape, cctape_legacy,  sizeof( dev->cctape ));
 
-    /* Initialize Carriage Control Tape and FCB */
-    memset( &dev->cctape, 0, sizeof( dev->cctape ));
-    memset( &dev->fcb,    0, sizeof( dev->fcb    ));
-    for (i=0; i < (int) arraysize( cctape ); i++)
+    dev->lpp = dev->fcb[0];
+
+    if (dev->fcbname)
     {
-        const U16 chan12mask = 0x8000 >> (12 - 1);
-        dev->cctape[i] = cctape[i];
-        if (cctape[i] & chan12mask)
-            ASSERT( FCBMASK[12] == (i+1));
+        free( dev->fcbname );
+        dev->fcbname = NULL;
     }
-    for (i=1; i <= 12; i++)
-    {
-        if (FCBMASK[i] != 0)
-            dev->fcb[FCBMASK[i]] = i;
-    }
+    dev->fcbname = strdup( "legacy" );
 
-    /* Process the driver arguments */
-    for (iarg = 1; iarg < argc; iarg++)
+    /* Process the driver arguments...
+       PLEASE TRY TO KEEP THE BELOW IN ALPHABETICAL ORDER.
+    */
+    for (iarg=1; iarg < argc; iarg++)
     {
-        if (strcasecmp(argv[iarg], "crlf") == 0)
+        if (strcasecmp( argv[iarg], "append" ) == 0)
+        {
+            dev->append = 1;
+            continue;
+        }
+
+        if (strncasecmp( "cctape=", argv[iarg], 7 ) == 0)
+        {
+            int line, chan, found;
+            if (dev->devtype != 0x1403)
+            {
+                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "option 'cctape'", dev->devtype );
+                return -1;
+            }
+            /*  "cctape=(ll=cc,ll=(cc,cc)...)"
+                "cctape=name"
+            */
+            ptr = argv[iarg] + 7;  /* get past "cctape=" */
+            if (ptr[0] != '(')
+            {
+                /* Doesn't look like they're trying to define a custom
+                   cctape. See if they specified a cctape name instead.
+                */
+                FCBTAB* table = fcbtab;
+
+                for (i=0, found=0; i < (int) _countof( fcbtab ); i++)
+                {
+                    if (FCBTYPE_CCTAPE != table[i].type)
+                        continue;
+
+                    /* Is this the one they want? */
+                    if (strcasecmp( table[i].name, ptr ) == 0)
+                    {
+                        found = 1;
+                        memcpy( dev->cctape, table[i].image, sizeof( dev->cctape ));
+                        if (dev->fcbname) free( dev->fcbname );
+                        dev->fcbname = strdup( table[i].name );
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    j = 8;
+                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                    WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        iarg + 1, argv[ iarg ], j );
+                    return -1;
+                }
+            }
+            else
+            {
+                ptr++;  /* get past '(' */
+                memset( dev->cctape, 0, sizeof( dev->cctape ));
+                errno = 0;
+                /* Keep parsing until closing ')' found */
+                while (ptr[0] && ptr[0] != ')')
+                {
+                    line = (int) strtoul( ptr, &nxt, 10 );
+                    if (0
+                        || errno != 0
+                        || *nxt != '='
+                        || line < 1
+                        || line > fcbsize
+                    )
+                    {
+                        j = ptr+1 - argv[ iarg ];
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+                    /* get past '=' to first chan# or '(' start of chan# list */
+                    ptr = nxt + 1;
+                    if (ptr[0] == '(')  /* start of chan# list? */
+                    {
+                        ptr++;  /* point to '(' list begin */
+                        /* Keep parsing chan#s until ')' end of list */
+                        while (ptr[0] && ptr[0] != ')')
+                        {
+                            chan = (int) strtoul( ptr, &nxt, 10 );
+                            if (0
+                                || errno != 0
+                                || (*nxt != ',' && *nxt != ')')
+                                || chan < 1
+                                || chan > 12
+                            )
+                            {
+                                j = ptr+1 - argv[ iarg ];
+                                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                    iarg + 1, argv[ iarg ], j );
+                                return -1;
+                            }
+                            dev->cctape[ line-1 ] |= 0x8000 >> (chan - 1);
+                            if ((ptr = nxt)[0] == ',')
+                                ptr++; /* get past ',' to next chan# */
+
+                        } /* while (ptr[0] && ptr[0] != ')') */
+
+                        /* Check for proper ')' end of list */
+                        if (ptr[0] != ')')
+                        {
+                            j = ptr+1 - argv[iarg];
+                            // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                iarg + 1, argv[ iarg ], j );
+                            return -1;
+                        }
+                        nxt = ptr+1; /* get past ')' to maybe ',' */
+                    }
+                    else /* ptr --> chan# or something else */
+                    {
+                        chan = (int) strtoul( ptr, &nxt, 10 );
+                        if (0
+                            || errno != 0
+                            || (*nxt != ',' && *nxt != ')')
+                            || chan < 1
+                            || chan > 12
+                        )
+                        {
+                            j = ptr+1 - argv[ iarg ];
+                            // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                iarg + 1, argv[ iarg ], j );
+                            return -1;
+                        }
+                        dev->cctape[ line-1 ] |= 0x8000 >> (chan - 1);
+                    }
+                    if ((ptr = nxt)[0] == ',')
+                        ptr++; /* get past ',' to next line# */
+
+                } /* while (ptr[0] && ptr[0] != ')') */
+
+                /* Check for proper closing ')' found and nothing after it */
+                if (ptr[0] != ')' || (ptr += 1)[0] != 0)
+                {
+                    j = ptr+1 - argv[ iarg ];
+                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                    WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        iarg + 1, argv[ iarg ], j );
+                    return -1;
+                }
+            }
+            on_new_cctape( dev );
+            continue;
+        } /* "cctape=" */
+
+        if (strcasecmp( argv[ iarg ], "crlf" ) == 0)
         {
             dev->crlf = 1;
+            continue;
+        }
+
+        if (strncasecmp( "fcb=", argv[ iarg ], 4 ) == 0)
+        {
+            int line, chan, found;
+            if (dev->devtype == 0x1403)
+            {
+                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "option 'fcb'", dev->devtype );
+                return -1;
+            }
+            memset( dev->fcb, 0, sizeof( dev->fcb ));
+
+            /*  "fcb=fcb=cc:ll,..."
+                "fcb=fcb=ppnn..."
+                "fcb=name"
+            */
+            /* check for new format */
+            if (strstr( argv[ iarg ], ":" ))
+            {
+                /* ':" found == new format ==> "fcb=cc:ll,..." */
+                ptr = argv[ iarg ] + 4; /* get past "fcb=" */
+                dev->fcb[0] = dev->lpp;
+                while (*ptr)
+                {
+                    // Parse channel number
+                    errno = 0;
+                    chan = (int) strtoul( ptr, &nxt, 10 );
+                    if (0
+                        || errno != 0
+                        || *nxt != ':'
+                        || nxt == ptr
+                        || chan < 0
+                        || chan > 12
+                    )
+                    {
+                        j = ptr+1 - argv[ iarg ];
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+
+                    ptr = nxt + 1;  // (next token)
+
+                    // Parse line number
+                    errno = 0;
+                    line = (int) strtoul( ptr, &nxt, 10 );
+                    if (0
+                        || errno != 0
+                        || (*nxt != ',' && *nxt != 0)
+                        || nxt == ptr
+                        || line < 0
+                        || line > dev->lpp
+                        || dev->fcb[ line ] != 0
+                    )
+                    {
+                        j = ptr+1 - argv[ iarg ];
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+
+                    /* Register channel in FCB only if it's being defined */
+                    if (line)
+                        dev->fcb[ line ] = chan;
+
+                    // Are we done parsing yet?
+                    if (*nxt == 0)
+                        break;
+
+                    ptr = nxt + 1;  // (next token)
+                }
+            }
+            else
+            {
+                /* ':" NOT found. old format or fcb name */
+                char c;
+                ptr = argv[ iarg ] + 4; /* get past "fcb=" */
+                if (strlen( ptr ) != 26 || !isdigit( *ptr ))
+                {
+                    /* It doesn't appear they're defining a custom
+                       fcb. See if they gave us an fcb name instead.
+                    */
+                    FCBTAB* table = fcbtab;
+
+                    for (i=0, found=0; i < (int) _countof( fcbtab ); i++)
+                    {
+                        if (FCBTYPE_FCB != table[i].type)
+                            continue;
+
+                        /* Is this the one they want? */
+                        if (strcasecmp( table[i].name, ptr ) == 0)
+                        {
+                            found = 1;
+                            memcpy( dev->fcb, table[i].image, sizeof( dev->fcb ));
+                            if (dev->fcbname) free( dev->fcbname );
+                            dev->fcbname = strdup( table[i].name );
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        j = ptr+1 - argv[iarg];
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+                    dev->lpp = dev->fcb[0];
+                }
+                else
+                {
+                    /* old format ==> "fcb=66010713192531374361495561" */
+                    errno = 0;
+                    c = ptr[2];
+                    ptr[2] = 0;
+                    dev->lpp = (int) strtoul( ptr, &nxt, 10 );
+                    ptr[2] = c;
+                    if (0
+                        || errno != 0
+                        || nxt != (ptr+2)
+                        || dev->lpp < 1
+                        || dev->lpp > fcbsize
+                    )
+                    {
+                        j = ptr+1 - argv[iarg];
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+                    dev->fcb[0] = dev->lpp;
+                    chan = 0;
+                    for (ptr += 2; c; ptr += 2)
+                    {
+                        c = ptr[2];
+                        ptr[2] = 0;
+                        line = (int) strtoul( ptr, &nxt, 10 );
+                        ptr[2] = c;
+                        if (0
+                            || errno != 0
+                            || nxt != (ptr+2)
+                            || line < 0
+                            || line > dev->lpp
+                        )
+                        {
+                            j = ptr+1 - argv[ iarg ];
+                            // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                iarg + 1, argv[ iarg ], j );
+                            return -1;
+                        }
+                        chan += 1;
+                        if (chan > 12)
+                        {
+                            j = ptr+1 - argv[ iarg ];
+                            // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                iarg + 1, argv[ iarg ], j );
+                            return -1;
+                        }
+
+                        /* Register channel in FCB only if it's being defined */
+                        if (line)
+                            dev->fcb[line] = chan;
+                    }
+                    if (chan != 12)
+                    {
+                        j = 5;
+                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            iarg + 1, argv[ iarg ], j );
+                        return -1;
+                    }
+                }
+            }
+            on_new_fcb( dev );
+            continue;
+        } /* "fcb=" */
+
+        /* (DEPRECATED!) */
+        if (strcasecmp( argv[ iarg ], "fcbcheck" ) == 0)
+        {
+            if (dev->devtype == 0x1403)
+            {
+                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "option 'fcbcheck'", dev->devtype );
+                return -1;
+            }
+
+            // "%1d:%04X %s: option '%s' has been deprecated"
+            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Printer", "fcbcheck" );
+
+            dev->fcbcheck = 1;
+            continue;
+        }
+
+        if (strncasecmp( "index=", argv[ iarg ], 6 ) == 0)
+        {
+            if (dev->devtype == 0x1403)
+            {
+                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "option 'index'", dev->devtype );
+                return -1;
+            }
+            ptr = argv[ iarg ] + 6;
+            errno = 0;
+            dev->index = (int) strtoul( ptr, &nxt, 10 );
+            if (0
+                || errno != 0
+                || nxt == ptr
+                || *nxt != 0
+                || dev->index < MIN_PLB_INDEX
+                || dev->index > MAX_PLB_INDEX
+            )
+            {
+                j = ptr+1 - argv[iarg];
+                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    iarg + 1, argv[ iarg ], j );
+                return -1;
+            }
+            if (dev->devtype == 0x3203)
+            {
+                // "%1d:%04X Printer: Indexing accepted and ignored for 3203-5"
+                WRMSG( HHC01110, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            }
+            continue;
+        }
+
+        if (strncasecmp( "lpi=", argv[ iarg ], 4 ) == 0)
+        {
+            ptr = argv[ iarg ] + 4;
+            errno = 0;
+            dev->lpi = (int) strtoul( ptr, &nxt, 10 );
+            if (0
+                || errno != 0
+                || nxt == ptr
+                || *nxt != 0
+                || (dev->lpi != 6 && dev->lpi != 8)
+            )
+            {
+                j = ptr+1 - argv[iarg];
+                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    iarg + 1, argv[ iarg ], j );
+                return -1;
+            }
+            continue;
+        }
+
+        if (strncasecmp( "lpp=", argv[ iarg ], 4 ) == 0)
+        {
+            ptr = argv[ iarg ] + 4;
+            errno = 0;
+            dev->lpp = (int) strtoul( ptr, &nxt, 10 );
+            if (0
+                || errno != 0
+                || nxt == ptr
+                || *nxt != 0
+                || dev->lpp >= fcbsize
+            )
+            {
+                j = ptr + 1 - argv[ iarg ];
+                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
+                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    iarg + 1, argv[ iarg ], j );
+                return -1;
+            }
+            continue;
+        }
+
+        if (strcasecmp( argv[ iarg ], "noclear" ) == 0)
+        {
+            dev->append = 1;
+            // "%1d:%04X %s: option '%s' has been deprecated"
+            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Printer", "noclear" );
+            continue;
+        }
+
+        /* (DEPRECATED!) */
+        if (strcasecmp( argv[ iarg ], "nofcbcheck" ) == 0)
+        {
+            if (dev->devtype == 0x1403)
+            {
+                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
+                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    "option 'nofcbcheck'", dev->devtype );
+                return -1;
+            }
+
+            // "%1d:%04X %s: option '%s' has been deprecated"
+            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                "Printer", "nofcbcheck" );
+
+            //dev->fcbcheck = 0;      // IGNORED
+            dev->fcbcheck = 1;      // FORCED
             continue;
         }
 
@@ -528,326 +1464,49 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
            The file name is the socket_spec (host:port)
            to listen for connections on.
         */
-        if (!dev->ispiped && strcasecmp(argv[iarg], "sockdev") == 0)
+        if (!dev->ispiped && strcasecmp( argv[ iarg ], "sockdev" ) == 0)
         {
             sockdev = TRUE;
             continue;
         }
 
-        if (strcasecmp(argv[iarg], "append") == 0)
-        {
-            dev->append = 1;
-            continue;
-        }
-
-        if (strcasecmp(argv[iarg], "rawcc") == 0)
-        {
-            dev->rawcc = 1;
-            continue;
-        }
-
-        if (strcasecmp(argv[iarg], "nofcbcheck") == 0)
-        {
-            if (dev->devtype != 0x3211)
-            {
-                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "option 'nofcbcheck'", dev->devtype);
-                return -1;
-            }
-            dev->fcbcheck = 0;
-            continue;
-        }
-
-        if (strcasecmp(argv[iarg], "fcbcheck") == 0)
-        {
-            if (dev->devtype != 0x3211)
-            {
-                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "option 'fcbcheck'", dev->devtype);
-                return -1;
-            }
-            dev->fcbcheck = 1;
-            continue;
-        }
-
-        if (strncasecmp("lpi=", argv[iarg], 4) == 0)
-        {
-            ptr = argv[iarg]+4;
-            errno = 0;
-            dev->lpi = (int) strtoul(ptr,&nxt,10);
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->lpi != 6 && dev->lpi != 8 ) )
-            {
-                j = ptr+1 - argv[iarg];
-                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("lpp=", argv[iarg], 4) == 0)
-        {
-            ptr = argv[iarg]+4;
-            errno = 0;
-            dev->lpp = (int) strtoul(ptr,&nxt,10);
-            if (errno != 0 || nxt == ptr || *nxt != 0 || dev->lpp > FCBSIZE)
-            {
-                j = ptr+1 - argv[iarg];
-                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("index=", argv[iarg], 6) == 0)
-        {
-            if (dev->devtype != 0x3211 )
-            {
-                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "option 'index'", dev->devtype);
-                return -1;
-            }
-            ptr = argv[iarg]+6;
-            errno = 0;
-            dev->index = (int) strtoul(ptr,&nxt,10);
-            if (errno != 0 || nxt == ptr || *nxt != 0 || ( dev->index < 0 || dev->index > 15) )
-            {
-                j = ptr+1 - argv[iarg];
-                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                return -1;
-            }
-            continue;
-        }
-
-        if (strncasecmp("fcb=", argv[iarg], 4) == 0)
-        {
-            int line, chan;
-            if (dev->devtype != 0x3211)
-            {
-                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "option 'fcb'", dev->devtype);
-                return -1;
-            }
-            for (line = 0; line <= FCBSIZE; line++)  dev->fcb[line] = 0;
-            /* check for simple mode */
-            if ( strstr(argv[iarg],":") )
-            {
-                /* ':" found  ==> new mode ==> "fcb=ll:cc,..." */
-                ptr = argv[iarg]+4;
-                while (*ptr)
-                {
-                    // Parse line number
-                    errno = 0;
-                    line = (int) strtoul(ptr,&nxt,10);
-                    if (errno != 0 || *nxt != ':' || nxt == ptr || line > dev->lpp || dev->fcb[line] != 0 )
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-
-                    ptr = nxt + 1;  // (next token)
-
-                    // Parse channel number
-                    errno = 0;
-                    chan = (int) strtoul(ptr,&nxt,10);
-                    if (errno != 0 || (*nxt != ',' && *nxt != 0) || nxt == ptr || chan < 1 || chan > 12 )
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-
-                    // Save the line number for this channel
-                    dev->fcb[line] = chan;
-
-                    // Are we done parsing yet?
-                    if ( *nxt == 0 )
-                        break;
-
-                    ptr = nxt + 1;  // (next token)
-                }
-            }
-            else
-            {
-                /* ':" NOT found  ==> old mode ==> "fcb=66010713192531374361495561" */
-                char c;
-                ptr = argv[iarg]+4;
-                if (strlen(ptr) != 26)
-                {
-                    j = ptr+1 - argv[iarg];
-                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                    return -1;
-                }
-                errno = 0;
-                c = ptr[2];
-                ptr[2] = 0;
-                dev->lpp = (int) strtoul(ptr,&nxt,10);
-                ptr[2] = c;
-                if (errno != 0 || nxt != (ptr+2) || dev->lpp < 1 || dev->lpp > FCBSIZE)
-                {
-                    j = ptr+1 - argv[iarg];
-                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                    return -1;
-                }
-                chan = 0;
-                for (ptr+=2; c; ptr+=2)
-                {
-                    c = ptr[2];
-                    ptr[2] = 0;
-                    line = (int) strtoul(ptr,&nxt,10);
-                    ptr[2] = c;
-                    if (errno != 0 || nxt != (ptr+2) || line < 1 || line > dev->lpp)
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-                    chan += 1;
-                    if (chan > 12)
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-                    dev->fcb[line] = chan;
-                }
-                if (chan != 12)
-                {
-                    j = 5;
-                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                    return -1;
-                }
-            }
-
-            continue;
-        } /* "fcb=" */
-
-        if (strncasecmp("cctape=", argv[iarg], 7) == 0)
-        {
-            int line, chan;
-            if (dev->devtype != 0x1403)
-            {
-                // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG (HHC01109, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "option 'cctape'", dev->devtype);
-                return -1;
-            }
-            /* Format:  "cctape=(line=chan,line=(chan,chan)...)"  */
-            ptr = argv[iarg]+7;  /* get past "cctape=" */
-            if (ptr[0] != '(')
-            {
-                j = 8;
-                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                return -1;
-            }
-            ptr++;  /* get past '(' */
-            memset( &dev->cctape, 0, sizeof( dev->cctape ));
-            errno = 0;
-            /* Keep parsing until closing ')' found */
-            while (ptr[0] && ptr[0] != ')')
-            {
-                line = (int) strtoul(ptr,&nxt,10);
-                if (errno != 0 || *nxt != '=' || line < 1 || line > dev->lpp)
-                {
-                    j = ptr+1 - argv[iarg];
-                    // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                    return -1;
-                }
-                /* get past '=' to first chan# or '(' start of chan# list */
-                ptr = nxt+1;
-                if (ptr[0] == '(')  /* start of chan# list? */
-                {
-                    ptr++;  /* point to '(' list begin */
-                    /* Keep parsing chan#s until ')' end of list */
-                    while (ptr[0] && ptr[0] != ')')
-                    {
-                        chan = (int) strtoul(ptr,&nxt,10);
-                        if (errno != 0 || (*nxt != ',' && *nxt != ')') || chan < 1 || chan > 12)
-                        {
-                            j = ptr+1 - argv[iarg];
-                            // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                            WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                            return -1;
-                        }
-                        dev->cctape[line-1] |= 0x8000 >> (chan - 1);
-                        if ((ptr=nxt)[0] == ',')
-                            ptr++; /* get past ',' to next chan# */
-
-                    } /* while (ptr[0] && ptr[0] != ')') */
-
-                    /* Check for proper ')' end of list */
-                    if (ptr[0] != ')')
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-                    nxt = ptr+1; /* get past ')' to maybe ',' */
-                }
-                else /* ptr --> chan# or something else */
-                {
-                    chan = (int) strtoul(ptr,&nxt,10);
-                    if (errno != 0 || (*nxt != ',' && *nxt != ')') || chan < 1 || chan > 12)
-                    {
-                        j = ptr+1 - argv[iarg];
-                        // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                        return -1;
-                    }
-                    dev->cctape[line-1] |= 0x8000 >> (chan - 1);
-                }
-                if ((ptr=nxt)[0] == ',')
-                    ptr++; /* get past ',' to next line# */
-
-            } /* while (ptr[0] && ptr[0] != ')') */
-
-            /* Check for proper closing ')' found and nothing after it */
-            if (ptr[0] != ')' || (ptr+=1)[0] != 0)
-            {
-                j = ptr+1 - argv[iarg];
-                // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG (HHC01103, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg], j);
-                return -1;
-            }
-
-            continue;
-        } /* "cctape=" */
-
-
-        /* INSERT NEW DEVICE OPTIONS HERE... */
-
-
         // "%1d:%04X Printer: argument %d parameter '%s' is invalid"
-        WRMSG (HHC01102, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, iarg + 1, argv[iarg]);
+        WRMSG( HHC01102, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            iarg + 1, argv[ iarg ]);
         return -1;
 
     } /* for (iarg = 1; iarg < argc; iarg++) Process the driver arguments */
+
+    /* Perform final fcb/cctape validation: for fcb only, verify there
+       are not more than 30 channel stops defined. For both cctape and
+       fcb, verify no channel stop is on a line greater than the lpp.
+    */
+    if (0x1403 == dev->devtype)
+    {
+        if (!valid_cctape( dev ))
+            return -1;  // (error msg already issued)
+    }
+    else // 3203 or 3211
+    {
+        if (!valid_fcb( dev ))
+            return -1;  // (error msg already issued)
+    }
 
     /* Check for incompatible options... */
 
     if (sockdev && dev->crlf)
     {
         // "%1d:%04X Printer: option %s is incompatible"
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/crlf");
+        WRMSG( HHC01104, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "sockdev/crlf" );
         return -1;
     }
 
     if (sockdev && dev->append)
     {
         // "%1d:%04X Printer: option %s is incompatible"
-        WRMSG (HHC01104, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "sockdev/append");
+        WRMSG( HHC01104, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            "sockdev/noclear" );
         return -1;
     }
 
@@ -860,27 +1519,9 @@ U8    sockdev = FALSE;                  /* TRUE == is socket device  */
         return -1;  // (error msg already issued)
     }
 
-    /* Set length of print buffer */
-//  dev->bufsize = LINE_LENGTH + 8;
-    dev->bufsize = BUFF_SIZE + BUFF_OVFL;
-    dev->bufres = BUFF_SIZE;
-    dev->bufoff = 0;
-
-    /* Set number of sense bytes */
-    dev->numsense = 1;
-
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x28; /* Control unit type is 2821-1 */
-    dev->devid[2] = 0x21;
-    dev->devid[3] = 0x01;
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = 0x01;
-    dev->numdevid = 7;
-
-    /* Activate I/O tracing */
-//  dev->ccwtrace = 1;
+    /* Open the device file right away */
+    if (open_printer( dev ) != 0)
+        return -1;  // (error msg already issued)
 
     return 0;
 } /* end function printer_init_handler */
@@ -893,16 +1534,13 @@ static void printer_query_device (DEVBLK *dev, char **devclass,
 {
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s IO[%"PRIu64"]",
+    snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
                  dev->filename,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
                 (dev->append  ? " append"    : ""),
-                (dev->rawcc   ? " rawcc"     : ""),
-                (dev->devtype == 0x3211 ?
-                (dev->fcbcheck ? " fcbcheck" : " nofcbcheck") : ""),
                 (dev->stopdev ? " (stopped)" : ""),
-                dev->excps );
+                 dev->excps );
 
 } /* end function printer_query_device */
 
@@ -1072,56 +1710,6 @@ off_t           filesize = 0;           /* file size for ftruncate   */
 } /* end function open_printer */
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to write data to the printer                           */
-/*-------------------------------------------------------------------*/
-static void
-write_buffer (DEVBLK *dev, char *buf, int len, BYTE *unitstat)
-{
-int rc;
-
-    /* Write data to the printer file */
-    if (dev->bs)
-    {
-        /* (socket printer) */
-        rc = write_socket (dev->fd, buf, len);
-
-        /* Check for socket error */
-        if (rc < len)
-        {
-            /* Close the connection */
-            if (dev->fd != -1)
-            {
-                int fd = dev->fd;
-                dev->fd = -1;
-                close_socket( fd );
-                // "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
-                WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
-            }
-
-            /* Set unit check with intervention required */
-            dev->sense[0] = SENSE_IR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
-    }
-    else
-    {
-        /* Write data to the printer file */
-        rc = write (dev->fd, buf, len);
-
-        /* Equipment check if error writing to printer file */
-        if (rc < len)
-        {
-            // "%1d:%04X Printer: error in function %s: %s"
-            WRMSG (HHC01105, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "write()",
-                   rc < 0 ? strerror(errno) : "incomplete record written");
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
-    }
-
-} /* end function write_buffer */
-
-/*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
 static int printer_close_device ( DEVBLK *dev )
@@ -1172,26 +1760,26 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
-int             rc = 0;                 /* Return code               */
-U32             i;                      /* Loop counter              */
-U32             num;                    /* Number of bytes to move   */
-char           *eor;                    /* -> end of record string   */
-char           *nls = "\n\n\n";         /* -> new lines              */
-BYTE            c;                      /* Print character           */
-char            hex[3];                 /* for hex conversion        */
-char            wbuf[150];
+    int  rc;
+    U32  num, fcbsize, ucbsize, plbsize;
+
+    UNREFERENCED( prevcode );
+
+    fcbsize = FCBSIZE( dev );
+    ucbsize = UCBSIZE( dev );
+    plbsize = PLBSIZE( dev );
 
     /* Reset flags at start of CCW chain */
-    if (chained == 0)
+    if (!ccwseq)
         dev->diaggate = 0;
 
     /* Open the device file if necessary */
-    if (dev->fd < 0 && !IS_CCW_SENSE(code))
-        rc = open_printer (dev);
+    if (dev->fd < 0 && !IS_CCW_SENSE( code ))
+        rc = open_printer( dev );
     else
     {
         /* If printer stopped, return intervention required */
-        if (dev->stopdev && !IS_CCW_SENSE(code))
+        if (dev->stopdev && !IS_CCW_SENSE( code ))
             rc = -1;
         else
             rc = 0;
@@ -1209,13 +1797,51 @@ char            wbuf[150];
     dev->skpimmed = 0;
 
     /* Process depending on CCW opcode */
-    switch (code) {
+    switch (code)
+    {
+    /*---------------------------------------------------------------*/
+    /* DIAGNOSTIC READ PLB                                           */
+    /*---------------------------------------------------------------*/
+    case 0x02:
+
+        /* Calculate residual byte count */
+        num = (count < plbsize) ? count : plbsize;
+        *residual = count - num;
+        if (count < plbsize) *more = 1;
+
+        /* Copy PLB to channel I/O buffer */
+        memcpy( iobuf, dev->plb, num );
+
+        /* Return normal status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
 
     /*---------------------------------------------------------------*/
     /* NOP                                                           */
     /*---------------------------------------------------------------*/
-    case 0x03: /* No Operation                   */
+    case 0x03:
 
+        /* No Operation */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* SENSE                                                         */
+    /*---------------------------------------------------------------*/
+    case 0x04:
+
+        /* Calculate residual byte count */
+        num = (count < dev->numsense) ? count : dev->numsense;
+        *residual = count - num;
+        if (count < dev->numsense) *more = 1;
+
+        /* Copy device sense bytes to channel I/O buffer */
+        memcpy( iobuf, dev->sense, num );
+
+        /* Clear the device sense bytes */
+        memset( dev->sense, 0, sizeof( dev->sense ));
+
+        /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -1239,52 +1865,14 @@ char            wbuf[150];
     case 0xD9:  /*  Write and Skip to Channel 11  */
     case 0xE1:  /*  Write and Skip to Channel 12  */
 
-        if (dev->rawcc)
+        if (WriteLine( dev, code, flags, chained, count, iobuf, unitstat, residual ) == 0)
         {
-            sprintf(hex,"%02x",code);
-            write_buffer(dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            WRITE_LINE();
-            write_buffer(dev, "\n", 1, unitstat);
-            if (*unitstat == 0)
+            if (!(flags & CCW_FLAGS_CD))
+                DoSpaceOrSkip( dev, code, unitstat );
+            else
                 *unitstat = CSW_CE | CSW_DE;
-            return;
         }
-
-        WRITE_LINE();
-        if ((flags & CCW_FLAGS_CD) == 0)
-        {
-            if (code <= 0x80) /* line control? */
-            {
-                int coun = code / 8;
-                if (coun == 0)
-                {
-                    write_buffer(dev, "\r", 1, unitstat);
-                    if (*unitstat == 0)
-                        *unitstat = CSW_CE | CSW_DE;
-                    return;
-                }
-                SPACE_LINES();
-                return;
-            }
-            else /* code > 0x80: chan control */
-            {
-                int chan = (code - 128) / 8;
-                if (chan == 1)
-                {
-                    write_buffer(dev, "\r", 1, unitstat);
-                    if (*unitstat != 0)
-                        return;
-                }
-                SKIP_TO_CHAN();
-                if (*unitstat == 0)
-                    *unitstat = CSW_CE | CSW_DE;
-                return;
-            }
-
-        }
-        *unitstat = CSW_CE | CSW_DE;
-        return;
+        break;
 
     /*---------------------------------------------------------------*/
     /* CONTROL IMMEDIATE COMMANDS                                    */
@@ -1305,150 +1893,140 @@ char            wbuf[150];
     case 0xDB:  /*  Skip to Channel 11 Immediate  */
     case 0xE3:  /*  Skip to Channel 12 Immediate  */
 
-        dev->skpimmed = (code & 0x80) ? 1 : 0;
+        DoSpaceOrSkip( dev, code, unitstat );
+        break;
 
-        if (dev->rawcc)
-        {
-            sprintf(hex,"%02x",code);
-            write_buffer(dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat == 0)
-                *unitstat = CSW_CE | CSW_DE;
-            return;
-        }
-
-        if (code <= 0x80) /* line control? */
-        {
-            int coun = code / 8;
-            SPACE_LINES();
-        }
-        else /* code > 0x80: chan control */
-        {
-            int chan = (code - 128) / 8;
-            SKIP_TO_CHAN();
-            if (*unitstat == 0)
-                *unitstat = CSW_CE | CSW_DE;
-        }
-        return;
-
-    case 0x63:
     /*---------------------------------------------------------------*/
-    /* LOAD FORMS CONTROL BUFFER                                     */
+    /* 1403 DIAGNOSTIC WRITE                                         */
     /*---------------------------------------------------------------*/
-        if (dev->devtype == 0x1403)
+               case 0x0D:
+    case 0x15: case 0x1D:
+               case 0x8D:
+    case 0x95: case 0x9D:
+    case 0xA5: case 0xAD:
+    case 0xB5: case 0xBD:
+    case 0xC5: case 0xCD:
+    case 0xD5: case 0xDD:
+    case 0xE5:
+
+        if (dev->devtype != 0x1403)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
-        if (dev->rawcc)
+
+        /* PURPOSELY FALL THROUGH to case 0x05: */
+
+    /*---------------------------------------------------------------*/
+    /* DIAGNOSTIC WRITE                                              */
+    /*---------------------------------------------------------------*/
+    case 0x05:
+
+        /* Diagnostic write is not supported on the 3203 */
+        if (dev->devtype == 0x3203)
         {
-            sprintf(hex,"%02x",code);
-            write_buffer(dev, hex, 2, unitstat);
-            if (*unitstat != 0) return;
-            for (i = 0; i < count; i++)
-            {
-                sprintf(hex,"%02x",iobuf[i]);
-                dev->buf[i*2] = hex[0];
-                dev->buf[i*2+1] = hex[1];
-            } /* end for(i) */
-            write_buffer(dev, (char *)dev->buf, i*2, unitstat);
-            if (*unitstat != 0) return;
-            eor = (dev->crlf) ? "\r\n" : "\n";
-            write_buffer(dev, eor, (int)strlen(eor), unitstat);
-            if (*unitstat != 0) return;
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
         else
         {
-            U32 i = 0;
-            int j = 1;
-            int more = 1;
-            for (i = 0; i <= FCBSIZE; i++) dev->fcb[i] = 0;
-            i = 0;
+            /* Calculate number of bytes to write and set residual count */
+            num = (count < plbsize) ? count : plbsize;
+            *residual = count - num;
 
-            dev->lpi = 6;
-            dev->index = 0;
-            i = 0;
-            if (iobuf[0] & 0xc0)
-            {
-                /* First byte is a print position index */
-                if ((iobuf[0] & 0xc0) == 0x80)
-                    /* Indexing right */
-                    dev->index = iobuf[0] & 0x1f;
-                else
-                    /* Indexing left */
-                    dev->index = - (iobuf[0] & 0x1f);
-                i = 1;
-            }
+            /* Clear PLB of any previously printed data */
+            memset( dev->plb, 0, sizeof( dev->plb ));
 
-            for (; i < count && j <= FCBSIZE && more; i++, j++)
-            {
-                dev->fcb[i] = iobuf[i] & 0x0f;
-                if (dev->fcb[j] > 12)
-                {
-                    *residual = count - i;
-                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                    dev->sense[0] = SENSE_CC;
-                    return;
-                }
+            /* Copy channel I/O buffer to PLB */
+            memcpy( dev->plb, iobuf, num );
 
-                if (iobuf[i] & 0x10)
-                {
-                    /* Flag bit is on */
-                    if (j == 1)
-                        /* Flag bit in first byte means eight lines per inch */
-                        dev->lpi = 8;
-                    else
-                        more = 0;
-                }
-            }
-            if (more)
-            {
-                /* No flag in last byte or too many bytes */
-                *residual = count - i;
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                dev->sense[0] = SENSE_CC;
-                return;
-            }
-            *residual = count - i;
-            dev->lpp = j - 1;
-
-            fcb_dump(dev, wbuf, 150);
-            // "%1d:%04X %s"
-            WRMSG(HHC02210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, wbuf );
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
         }
-        /* Return normal status */
-        *residual = 0;
-        *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0x06:
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC CHECK READ                                         */
     /*---------------------------------------------------------------*/
-        /* If not 1403, reject if not preceded by DIAGNOSTIC GATE */
-        if (dev->devtype != 0x1403 && !dev->diaggate)
+    case 0x06:
+
+        /*      (Note: "PLB" = "Print Line Buffer")
+
+        This command transfers unique check information stored
+        in each addressable position of the PLB to the channel.
+        It is normally used for diagnostic purposes, such as fault
+        isolation to an individual print position.  Bit positions
+        (zero) (0) through four (4) on bus-in are not used.  Bit
+        position five (5) signifies that the print line complete
+        (PLC) bit was set, indicating that a print compare was
+        completed for the corresponding position or that the PLB
+        contained a blank or null code.  Bit position six (6)
+        signifies that the print error check (PEC) bit had been set
+        due to invalid parity or a hammer check for the corres-
+        ponding print position.  Bit seven (7) signifies that
+        invalid parity was detected for the nine data bits in that
+        PLB position.
+        */
+        if (!dev->diaggate)
         {
-            dev->sense[0] = SENSE_CR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            /* Calculate residual byte count */
+            num = (count < plbsize) ? count : plbsize;
+            *residual = count - num;
+            if (count < plbsize) *more = 1;
+
+            /* Copy requested Check Read bytes to channel I/O buffer */
+            memset( iobuf, 0x04, num );
+        }
+        else /* (dev->diaggate) */
+        {
+            /*
+            When the 'check read' command is given after a 'diagnostic
+            gate' command, the eight bits of the FCB pointer indicating
+            the position of the current line in the forms control buffer
+            are transferred to the channel.  The maximum data transfer
+            length is 1.  The value of the FCB pointer is encoded in the
+            same way as the 3811, as follows:
+
+             * Internally, the FCB position is stored in 'zero origin'
+               notation (the first line is line 0, the second line is
+               line 1, etc...
+
+             * A value of two is added to the zero origin notatIon.
+
+             * The hexadecimal notation of the resultant one-byte value
+               is reversed (bits 7, 6, 5, 4, 3, 2, 1, 0 become bits 0, 1,
+               2, 3, 4, 5, 6, 7 respectively).
+
+            For example, FCB pointer value hex '40' is encoded for the
+            first line of the form; hex 'C0' is encoded for the second
+            line, etc...
+            */
+            iobuf[0] = (BYTE)(dev->currline - 1);   // zero origin
+            iobuf[0] += 2;                          // plus 2
+            iobuf[0] = reverse_bits( iobuf[0] );    // reverse bits
+
+            /* Calculate residual byte count */
+            num = (count < 1) ? count : 1;
+            *residual = count - num;
+            if (count < 1) *more = 1;
         }
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0x07:
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC GATE                                               */
     /*---------------------------------------------------------------*/
-        /* Command reject if 1403, or if chained to another CCW
-           except a no-operation at the start of the CCW chain */
-        if (dev->devtype == 0x1403 || ccwseq > 1
-            || (chained && prevcode != 0x03))
+    case 0x07:
+
+        /* Command reject if 1403. Otherwise treated as NOP */
+        if (dev->devtype == 0x1403)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1461,191 +2039,362 @@ char            wbuf[150];
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0x0A:
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC READ UCS BUFFER                                    */
     /*---------------------------------------------------------------*/
+    case 0x0A:
+
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
         if (dev->devtype == 0x1403 || !dev->diaggate)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
         }
+        else
+        {
+            /* Calculate residual byte count */
+            num = (count < ucbsize) ? count : ucbsize;
+            *residual = count - num;
+            if (count < ucbsize) *more = 1;
 
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
+            /* Copy requested UCB bytes to channel I/O buffer */
+            memcpy( iobuf, dev->ucb, num );
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
-    case 0x12:
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC READ FCB                                           */
     /*---------------------------------------------------------------*/
+    case 0x12:
+
         /* Reject if 1403 or not preceded by DIAGNOSTIC GATE */
         if (dev->devtype == 0x1403 || !dev->diaggate)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
         }
-        /*
-            The read FCB command, normally for diagnostic purposes,
-            transfers the carriage codes to the channel, where they
-            may be analyzed or compared. The number of data bytes
-            transferred is controlled by the count field in the CCW.
+        else
+        {
+            U32 i = 0;      // iobuf index
+            U32 f;          // FCB index
+            U32 k;          // work count
+            BYTE b;         // work byte
 
-            For example, to check the carriage setting in the first
-            address position for the presence or absence of a flag
-            bit to determine the carriage space setting of six or
-            eight lines per inch, set the count field to 1.
+            /* Calculate residual byte count */
+            num = (count < fcbsize) ? count : fcbsize;
+            *residual = count - num;
+            if (count < fcbsize) *more = 1;
 
-            NOTE: To maintain vertical forms alignment, issue the
-            read FCB command, only after skipping to a channel code
-            stored in FCB address one. If read FCB is given at any
-            other position, the form becomes misaligned because the
-            FCB returns to address position one.
-        */
-        /* Return normal status */
-        *unitstat = CSW_CE | CSW_DE;
+            /* Copy requested FCB bytes to channel I/O buffer */
+            if (dev->index)
+            {
+                if (dev->index < 0)
+                    b = 0xC0 | ((BYTE)-dev->index);
+                else
+                    b = 0x80 | ((BYTE)+dev->index);
+
+                iobuf[i++] = b;
+            }
+            for (k=dev->lpp, f=1; f <= k && i < num; f++)
+            {
+                b = (BYTE) dev->fcb[f];
+                if (0
+                    || (f == 1 && dev->lpi == 8)
+                    ||  f == k
+                )
+                    b |= 0x10;
+                iobuf[i++] = b;
+            }
+            while (i < num)
+                iobuf[i++] = 0;
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
-    case 0x23:
     /*---------------------------------------------------------------*/
     /* UNFOLD                                                        */
     /*---------------------------------------------------------------*/
+    case 0x23:
+
         if (dev->devtype == 0x1403)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
         }
-        dev->fold = 0;
-        *unitstat = CSW_CE | CSW_DE;
+        else
+        {
+            /* Reset fold indicator */
+            dev->fold = 0;
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
-    case 0x43:
     /*---------------------------------------------------------------*/
     /* FOLD                                                          */
     /*---------------------------------------------------------------*/
+    case 0x43:
+
         if (dev->devtype == 0x1403)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
         }
-        dev->fold = 1;
-        *unitstat = CSW_CE | CSW_DE;
+        else
+        {
+            /* Set fold indicator */
+            dev->fold = 1;
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
         break;
 
-    case 0x73:
+    /*---------------------------------------------------------------*/
+    /* LOAD FORMS CONTROL BUFFER                                     */
+    /*---------------------------------------------------------------*/
+    case 0x63:
+
+        if (dev->devtype == 0x1403)
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        else
+        {
+            /*  The first byte of the FCB image is either the print
+            **  position indexing byte, or the lines-per-inch byte.
+            **
+            **  The print position indexing byte is optional and, when
+            **  used, precedes the lines-per-inch byte.
+            **
+            **  The 3203-5, 3262-5, 4245, 4248, and 6262-14 printers
+            **  accept and discard the index byte if it is present,
+            **  because they do not support the indexing feature.
+            **
+            **  A description of the print position indexing feature
+            **  and its use can be found in the publication GA24-3543
+            **  "IBM 3211 Printer, 3216 Interchangeable Train
+            **  Cartridge, and 3811 Printer Control Unit Component
+            **  Description and Operator's Guide".
+            **
+            **  The special index flag contains X'80' plus a binary
+            **  index value, from 1 to 32 (the default is 1).  This
+            **  index value sets the left margin: 1 indicates flush-
+            **  left; any other value indicates a line indented
+            **  the specified number of spaces. FISH NOTE: it appears
+            **  a negative value sets a negative margin shifting the
+            **  print line 'n' columns to the left thus chopping off
+            **  the print line at that column (i.e. the first n chars
+            **  of the print line are dropped and printing begins in
+            **  column 1 with the N'th character of the print line).
+            **
+            **  The form image begins with the first line of the page,
+            **  and if the X'1n' flag bit is set, indicates an 8 lines
+            **  per inch form. The default when the X'1n' flag bit is
+            **  not set indicates a normal 6 lines per inch form.
+            **
+            **  All remaining bytes (lines) must contain X'0n', except
+            **  the last byte, which must be X'1n'.  The letter n can
+            **  be a hexadecimal value from 1 to C, representing a
+            **  channel (one to 12), or it can be 0, which means no
+            **  channel is indicated for that line.
+            */
+
+            int  savedfcb[ MAX_FCBSIZE ];
+
+            U32  i = 0;     // iobuf index
+            U32  f;         // FCB index
+            int  k;         // work counter
+            BYTE b;         // work byte
+
+            /* Load Check if X'20' bit on in first byte of FCB */
+            if (iobuf[0] & 0x20)
+            {
+                /* Set Unit Check, SENSE = Load Check */
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                dev->sense[0] = SENSE_LDCK;
+                *residual = count;
+                break;
+            }
+
+            /* Save old fcb and clear to zero; new one being loaded */
+            memcpy( savedfcb, dev->fcb, sizeof( savedfcb ));
+            memset( dev->fcb,     0,    sizeof( dev->fcb ));
+
+            /* First byte of FCB is optional indexing byte */
+            dev->index = 0;
+            b = iobuf[i];
+
+            /* Was indexing option specified? */
+            if (b & 0x80)
+            {
+                dev->index = (b & 0x1F);    /* Save indexing value   */
+                i++;                        /* Consume optional byte */
+
+                if (b & 0x40)               /* Negative indexing?    */
+                    dev->index *= -1;       /* Then make it negative */
+
+                dev->fcb[0] = dev->index;   /* Save FCB index value  */
+            }
+
+            /* Process FCB bytes for line=channel... */
+            dev->lpi = 6;
+            dev->lpp = 0;
+
+            for (k=MAX_CHAN_STOPS, f=1; f < fcbsize && i < count; f++)
+            {
+                /* Consume the first or next FCB byte */
+                b = iobuf[i++];
+
+                /* Save channel number for this line */
+                dev->fcb[f] = (b & (0xFF-0x10));
+
+                /* Specifed channel greater than 12? */
+                if (dev->fcb[f] > 12)
+                    break;
+
+                /* PROGRAMMING NOTE: a maximum of 30 channel codes
+                   can be specified if the end of sheet is not
+                   coded in the same byte as a channel code; a
+                   maximum of 31 channel codes can be specified
+                   if the end of sheet code is coded in the same
+                   byte as a channel code. Thus the order of the
+                   below two tests is important: we MUST check for
+                   end of sheet FIRST (to skip decrementing our
+                   channel code counter 'k') and then AFTERWARDS
+                   decrement the counter if a channel was coded.
+                */
+                /* Flag bit set on first line of FCB means 8 LPI.
+                   Otherwise flag bit set means last line of FCB.
+                */
+                if (b & 0x10)
+                {
+                    if (f == 1)
+                        dev->lpi = 8;
+                    else
+                    {
+                        dev->lpp = f;
+                        break;
+                    }
+                }
+
+                /* Count channel codes. Abort if max exceeded. */
+                if (dev->fcb[f])
+                    if (--k < 0)
+                        break;
+            }
+
+            /* Any errors detected? */
+            if (k < 0 || !dev->lpp)
+            {
+                /* Set Unit Check, SENSE = Load Check */
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                dev->sense[0] = SENSE_LDCK;
+
+                /* Calculate residual */
+                *residual = count - i;
+
+                /* Restore original FCB */
+                memcpy( dev->fcb, savedfcb, sizeof( dev->fcb ));
+            }
+            else // success
+            {
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+
+                /* Calculate residual byte count */
+                if (dev->devtype == 0x3211)
+                {
+                    /* Note: The 3211 printer does not set incorrect length
+                       on 'load FCB'. This is *not* mentioned anywhere in
+                       the 3211 manual (GA24-3543), but *is* mentioned in
+                       Appendix C of the 3203-5 manual (GA33-1529, updated
+                       by TNL GN33-1732) where it describes the differences
+                       between the 3203-5 and other printers.
+                    */
+                    *residual = 0;    /* prevent incorrect length */
+                }
+                else
+                    *residual = count - i;
+
+                /* A new fcb has just been loaded */
+                on_new_fcb( dev );
+            }
+        }
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* RAISE COVER                                                   */
+    /*---------------------------------------------------------------*/
+    case 0x68:
+
+        if (dev->devtype != 0x3211)
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        else
+        {
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        break;
+
     /*---------------------------------------------------------------*/
     /* BLOCK DATA CHECK                                              */
     /*---------------------------------------------------------------*/
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0x7B:
-    /*---------------------------------------------------------------*/
-    /* ALLOW DATA CHECK                                              */
-    /*---------------------------------------------------------------*/
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0xEB:
-    /*---------------------------------------------------------------*/
-    /* UCS GATE LOAD                                                 */
-    /*---------------------------------------------------------------*/
-        /* Command reject if not first command in chain */
-        if (chained != 0)
-        {
-            dev->sense[0] = SENSE_CR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
+    case 0x73:
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0xF3:
     /*---------------------------------------------------------------*/
-    /* LOAD UCS BUFFER AND FOLD                                      */
+    /* ALLOW DATA CHECK                                              */
     /*---------------------------------------------------------------*/
-        /* For 1403, command reject if not chained to UCS GATE */
-        /* Also allow ALLOW DATA CHECK to get TSS/370 working  */
-        /* -- JRM 11/28/2007 */
-        if (dev->devtype == 0x1403 &&
-            ((prevcode != 0xEB) && (prevcode != 0x7B)))
+    case 0x7B:
+
+        /* Return normal status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* SKIP TO CHANNEL 0 IMMEDIATE                                   */
+    /*---------------------------------------------------------------*/
+    case 0x83:
+
+        if (dev->devtype != 0x3211)
         {
+            /* Command Reject */
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
         }
-
-        /* Set fold indicator and return normal status */
-        dev->fold = 1;
-        dev->ffpend = 1;
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0xFB:
-    /*---------------------------------------------------------------*/
-    /* LOAD UCS BUFFER (NO FOLD)                                     */
-    /*---------------------------------------------------------------*/
-        /* For 1403, command reject if not chained to UCS GATE */
-        if (dev->devtype == 0x1403 && prevcode != 0xEB)
+        else
         {
-            dev->sense[0] = SENSE_CR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
         }
-
-        /* Reset fold indicator and return normal status */
-        dev->fold = 0;
-        dev->ffpend = 1;
-
-    /*
-        *residual = 0;
-    */
-        *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0x04:
-    /*---------------------------------------------------------------*/
-    /* SENSE                                                         */
-    /*---------------------------------------------------------------*/
-        /* Calculate residual byte count */
-        num = (count < dev->numsense) ? count : dev->numsense;
-        *residual = count - num;
-        if (count < dev->numsense) *more = 1;
-
-        /* Copy device sense bytes to channel I/O buffer */
-        memcpy (iobuf, dev->sense, num);
-
-        /* Clear the device sense bytes */
-        memset (dev->sense, 0, sizeof(dev->sense));
-
-        /* Return unit status */
-        *unitstat = CSW_CE | CSW_DE;
-        break;
-
-    case 0xE4:
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
+    case 0xE4:
 
-        /* SENSE ID is only supported if LEGACYSENSEID is ON;
-         * otherwise, fall through to invalid operation.
-         */
+        /* SENSE ID is only supported if LEGACYSENSEID is ON */
         if (sysblk.legacysenseid)
         {
             /* Calculate residual byte count */
@@ -1654,12 +2403,92 @@ char            wbuf[150];
             if (count < dev->numdevid) *more = 1;
 
             /* Copy device identifier bytes to channel I/O buffer */
-            memcpy (iobuf, dev->devid, num);
+            memcpy( iobuf, dev->devid, num );
 
-            /* Return unit status */
+            /* Return normal status */
             *unitstat = CSW_CE | CSW_DE;
-            break;
         }
+        else
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* UCS GATE LOAD                                                 */
+    /*---------------------------------------------------------------*/
+    case 0xEB:
+
+        /* Command reject if not 1403 */
+        if (dev->devtype != 0x1403)
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        else
+        {
+            /* Set diagnostic gate flag */
+            dev->diaggate = 1;
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+        }
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* LOAD UCS BUFFER AND FOLD                                      */
+    /*---------------------------------------------------------------*/
+    case 0xF3:
+
+        /* Reject if not 1403 or not preceded by UCS GATE LOAD */
+        if (dev->devtype != 0x1403 || !dev->diaggate)
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        else
+        {
+            if (LoadUCB( dev, count, iobuf, more, unitstat, residual ) == 0)
+            {
+                /* Set fold indicator */
+                dev->fold = 1;
+                dev->ffpend = 1;
+
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+            }
+        }
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* LOAD UCS BUFFER  (NO FOLD implied)                            */
+    /*---------------------------------------------------------------*/
+    case 0xFB:
+
+        /* For 1403, command reject if not chained to UCS GATE LOAD */
+        if (dev->devtype == 0x1403 && !dev->diaggate)
+        {
+            /* Command Reject */
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        }
+        else
+        {
+            if (LoadUCB( dev, count, iobuf, more, unitstat, residual ) == 0)
+            {
+                /* Reset fold indicator */
+                dev->fold = 0;
+                dev->ffpend = 1;
+
+                /* Return normal status */
+                *unitstat = CSW_CE | CSW_DE;
+            }
+        }
+        break;
 
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
@@ -1705,6 +2534,33 @@ DEVHND printer_device_hndinfo = {
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
+DEVHND prt3203_device_hndinfo = {
+        &printer_init_handler,         /* Device Initialisation      */
+        &printer_execute_ccw,          /* Device CCW execute         */
+        &printer_close_device,         /* Device Close               */
+        &printer_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        prt3203_immed_commands,        /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
+        NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
+};
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
@@ -1728,6 +2584,7 @@ END_DEPENDENCY_SECTION
 HDL_DEVICE_SECTION;
 {
     HDL_DEVICE( 1403, printer_device_hndinfo );
+    HDL_DEVICE( 3203, prt3203_device_hndinfo );
     HDL_DEVICE( 3211, printer_device_hndinfo );
 }
 END_DEVICE_SECTION

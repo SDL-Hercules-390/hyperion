@@ -131,6 +131,7 @@ HDL_DEVICE_SECTION;
 
     /* Printers */
     HDL_DEVICE(1403, printer_device_hndinfo );
+    HDL_DEVICE(3203, prt3203_device_hndinfo );
     HDL_DEVICE(3211, printer_device_hndinfo );
 
     /* Tape drives */
