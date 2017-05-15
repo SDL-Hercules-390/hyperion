@@ -802,7 +802,9 @@ VADR    effective_addr2;                /* Effective address         */
     PTT_INF("DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
 
     /* Process diagnose instruction */
+    regs->diagnose = TRUE;
     ARCH_DEP(diagnose_call) (effective_addr2, b2, r1, r3, regs);
+    regs->diagnose = FALSE;
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);

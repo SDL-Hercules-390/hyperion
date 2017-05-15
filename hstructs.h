@@ -153,7 +153,8 @@ struct REGS {                           /* Processor registers       */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 host:1,                 /* REGS are hostregs         */
-                guest:1;                /* REGS are guestregs        */
+                guest:1,                /* REGS are guestregs        */
+                diagnose:1;             /* Diagnose instr executing  */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
@@ -624,13 +625,12 @@ struct SYSBLK {
                                  | SYSGROUP_SYSCONFIG \
                                 )
 #endif
-        BYTE    diag8cmd;               /* Allow diagnose 8 commands */
+        BYTE    diag8opt;               /* Diagnose 8 option         */
 #define DIAG8CMD_ENABLE   0x01          /* Enable DIAG8 interface    */
-#define DIAG8CMD_RUNNING  0x40          /* Indicate DIAG8 in process */
 #define DIAG8CMD_ECHO     0x80          /* Echo command to console   */
-        BYTE    shcmdopt;               /* 'sh'ell command option    */
-#define SHCMDOPT_ENABLE   0x01          /* Globally enable 'sh' cmd  */
-#define SHCMDOPT_DIAG8    0x80          /* Allow DIAG8 'sh' also     */
+        BYTE    shcmdopt;               /* Host shell access option  */
+#define SHCMDOPT_ENABLE   0x01          /* Allow host shell access   */
+#define SHCMDOPT_DIAG8    0x02          /* Allow for DIAG8 as well   */
         int     panrate;                /* Panel refresh rate        */
         int     timerint;               /* microsecs timer interval  */
         char   *pantitle;               /* Alt console panel title   */

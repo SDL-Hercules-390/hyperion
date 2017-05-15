@@ -1255,12 +1255,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01949 (available)
 
 /* vm.c */
-#define HHC01950 "Panel command %s issued by guest %s"
-#define HHC01951 "Panel command %s issued by guest not processed, disabled in configuration"
+#define HHC01950 "%s guest issued panel command: %s"
+//efine HHC01951 (available)
 #define HHC01952 "%1d:%04X:Diagnose X\'0A4\':%s blk=%8.8X adr=%8.8X len=%8.8X"
-#define HHC01953 "Host command processing disabled by configuration statement"
-#define HHC01954 "Host command processing not included in engine build"
-
+#define HHC01953 "DIAG8 access to shell disallowed by SHCMDOPT setting"
+#define HHC01954 "Hercules-specific DIAG instructions support not included in engine build"
+//efine HHC01955 - HHC01999 (available)
 
 // reserve 020xx for sr.c
 #define HHC02000 "SR: too many arguments"
@@ -1334,7 +1334,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02224 "Store status rejected: CPU not stopped"
 #define HHC02225 "HTTP server already active"
 #define HHC02226 "Held messages cleared"
-#define HHC02227 "Shell commands are disabled"
+#define HHC02227 "Shell/Exec commands are disabled"
 #define HHC02228 "%s key pressed"
 #define HHC02229 "Instruction %s %s %s"
 #define HHC02230 "%1d:%04X attention request raised"

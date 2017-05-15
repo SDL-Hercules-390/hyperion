@@ -455,7 +455,26 @@
   "\n"                                                                           \
   "The default for Windows is 8. The default for all other systems is 0.\n"
 
-#define diag8_cmd_desc          "Set diag8 command option"
+#define diag8_cmd_desc          "Set DIAG 8 instruction options"
+#define diag8_cmd_help          \
+                                \
+  "Format:  \"diag8cmd  [DISABLE|ENABLE]  [ECHO|NOECHO]\".\n"                   \
+  "\n"                                                                          \
+  "When ENABLE is specified the Hercules Diagnose 8 instruction interface\n"    \
+  "is enabled, allowing guests to directly issue Hercules commands via the\n"   \
+  "Hercules Diagnose 8 instruction.  When set to DISABLE such instructions\n"   \
+  "instead cause a Specification Exception program interrupt.\n"                \
+  "\n"                                                                          \
+  "When ECHO is specified a message is issued to the hardware console panel\n"  \
+  "when the command is about to be issued, when the command is redisplayed,\n"  \
+  "and when the command has finished executing.  When NOECHO is specified\n"    \
+  "no such audit trail messages are displayed.\n"                               \
+  "\n"                                                                          \
+  "NOTE: Enabling this feature has security consequences. When this feature\n"  \
+  "is enabled it is possible for guest operating systems to issue commands\n"   \
+  "directly to the host operating system via the 'sh' and 'exec' commands.\n"   \
+  "Use the SHCMDOPT command's NODIAG8 option to disable this ability.\n"
+
 #define dir_cmd_desc            "Displays a list of files and subdirs in a directory"
 #define ds_cmd_desc             "Display subchannel"
 #define ecps_cmd_desc           "Command deprecated - Use \"ECPSVM\""
@@ -491,11 +510,10 @@
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
 #define f_cmd_desc              "Mark frames unusable/usable"
-#define fcb_cmd_desc            "Display the current FCB (if only the printer is given)"
-#define fcb_cmd_help            \
-                                \
-  "Reset the fcb to the standard one\n"                                          \
-  "Load a fcb image\n"
+#define fcb_cmd_desc            "Display a printer's current FCB"
+#define fcb_cmd_help            "Format: \"fcb <devnum>\""
+#define cctape_cmd_desc         "Display a printer's current cctape"
+#define cctape_cmd_help         "Format: \"cctape <devnum>\""
 
 #define fpc_cmd_desc            "Display or alter floating point control register"
 #define fpc_cmd_help            \
@@ -1296,28 +1314,52 @@
   "Format: \"sh command [args...]\" where 'command' is any valid shell\n"        \
   "command or the special command 'startgui'. The entered command and any\n"     \
   "arguments are passed as-is to the shell for processing and the results\n"     \
-  "are displayed on the Hercules console.\n\n"                                   \
-                                                                                 \
+  "are displayed on the Hercules console.\n"                                     \
+  "\n"                                                                           \
   "The special startgui command MUST be used if the command being started\n"     \
   "either directly or indirectly starts a Windows graphical user interface\n"    \
   "(i.e. non-command-line) program such as notepad. Failure to use startgui\n"   \
   "in such cases will hang Hercules until you close/exit notepad. Note that\n"   \
   "starting a batch file which starts notepad still requires using startgui.\n"  \
-  "If 'foo.bat' does: \"start notepad\", then doing \"sh foo.bat\" will hang\n"   \
-  "Hercules until notepad exits just as doing \"sh start foo.bat\" will too.\n"  \
-  "Use startgui to invoke foo.bat instead: \"sh startgui foo.bat\".\n"
+  "If 'foo.bat' does: \"start notepad\", then doing \"sh foo.bat\" will hang\n"  \
+  "Hercules until notepad exits just like doing \"sh start notepad\" will.\n"    \
+  "Use startgui instead: \"sh startgui notepad\", \"sh startgui foo.bat\".\n"    \
+  "\n"                                                                           \
+  "For security reasons execution of shell commands are disabled by default.\n"  \
+  "Enter 'help shcmdopt' for more information.\n"
 
 #else /* !defined( _MSVC ) */
 
 #define sh_cmd_help             \
                                 \
-  "Format: \"sh command [args...]\" where 'command' is any valid shell\n"        \
-  "command. The entered command and any arguments are passed as-is to the\n"     \
-  "shell for processing and the results are displayed on the Hercules console.\n"
+  "Format: \"sh command [args...]\" where 'command' is any valid shell\n"          \
+  "command. The entered command and any arguments are passed as-is to the\n"       \
+  "shell for processing and the results are displayed on the Hercules console.\n"  \
+  "\n"                                                                             \
+  "For security reasons execution of shell commands are disabled by default.\n"    \
+  "Enter 'help shcmdopt' for more information.\n"
 
 #endif /* defined( _MSVC ) */
 
-#define shcmdopt_cmd_desc       "Set diag8 sh option"
+#define shcmdopt_cmd_desc       "Set shell command options"
+#define shcmdopt_cmd_help       \
+                                \
+  "Format:  \"shcmdopt  [DISABLE|ENABLE]  [DIAG8|NODIAG8]\".\n"                 \
+  "\n"                                                                          \
+  "When set to DISABLE, the 'sh' (host shell command) and 'exec' (execute\n"    \
+  "Rexx script) commands are globally disabled and will result in an error\n"   \
+  "if entered either directly via the hardware console or programmatically\n"   \
+  "via the DIAG 8 interface.\n"                                                 \
+  "\n"                                                                          \
+  "If the optional NODIAG8 option is specified, then only the programmatic\n"   \
+  "execution of commands via the the Diagnose 8 interface are disabled, but\n"  \
+  "shell and Rexx commands entered directly via the Hercules command line\n"    \
+  "still work.\n"                                                               \
+  "\n"                                                                          \
+  "NOTE: Enabling this feature has security consequences. When ENABLE DIAG8\n"  \
+  "is specified, it's possible for Hercules guest operating systems to issue\n" \
+  "commands directly to your host operating system.\n"
+
 #define shrd_cmd_desc           "shrd command"
 #define shrdport_cmd_desc       "Set shrdport value"
 #define sizeof_cmd_desc         "Display size of structures"
@@ -1628,7 +1670,7 @@ COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       
 COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
 CMDABBR( "defstore",  7,            defstore_cmd,           SYSCFGNDIAG8,       defstore_cmd_desc,      defstore_cmd_help   )
 COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       NULL                )
-COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         NULL                )
+COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
 COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       hercprio_cmd_desc,      NULL                )
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
@@ -1637,7 +1679,7 @@ COMMAND( "mainsize",                mainsize_cmd,           SYSCFGNDIAG8,       
 CMDABBR( "manufacturer",  8,        stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
 COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
 COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
-COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      NULL                )
+COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
 COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       srvprio_cmd_desc,       NULL                )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
 COMMAND( "todprio",                 todprio_cmd,            SYSCFGNDIAG8,       todprio_cmd_desc,       NULL                )

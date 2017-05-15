@@ -1021,7 +1021,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2 && !(sysblk.diag8cmd & DIAG8CMD_RUNNING))
+    if (argc < 2 && !is_diag_instr())
     {
         rc = start_cmd_cpu( argc, argv, cmdline );
     }
@@ -1140,7 +1140,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2 && !(sysblk.diag8cmd & DIAG8CMD_RUNNING))
+    if (argc < 2 && !is_diag_instr())
     {
         rc = stop_cmd_cpu( argc, argv, cmdline );
     }
@@ -4035,32 +4035,19 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int sh_cmd( int argc, char* argv[], char* cmdline )
 {
-    char* cmd;
-    int   rc;
-
     UNREFERENCED( argc );
     UNREFERENCED( argv );
 
-    if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
+    if (!(sysblk.shcmdopt & SHCMDOPT_ENABLE))
     {
-        cmd = cmdline + 2;
-        while (isspace(*cmd)) cmd++;
-        if (*cmd)
-        {
-            rc = herc_system(cmd);
-            return rc;
-        }
-        else
-            return -1;
+        // "Shell/Exec commands are disabled"
+        WRMSG( HHC02227, "E" );
+        return -1;
     }
-    else
-    {
-        WRMSG(HHC02227, "E");
-    }
-    return -1;
+
+    for (cmdline += 2; isspace( *cmdline ); ++cmdline) /* (nop) */;
+    return (*cmdline) ? herc_system( cmdline ) : -1;
 }
-
-
 
 #if defined(OPTION_LPP_RESTRICT)
 /*-------------------------------------------------------------------*/
@@ -4109,98 +4096,124 @@ int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* diag8cmd command                                                  */
 /*-------------------------------------------------------------------*/
-int diag8_cmd(int argc, char *argv[], char *cmdline)
+int diag8_cmd( int argc, char* argv[], char* cmdline )
 {
-int i;
+    int i;
+    char buf[40];
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 3 )
+    if (argc > 3)
     {
-        WRMSG( HHC01455, "S", argv[0] );
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
-    /* Parse diag8cmd operand */
-    if ( argc > 1 )
-        for ( i = 1; i < argc; i++ )
+    /* Did they enter any arguments to the command? */
+    if (argc > 1)
+    {
+        BYTE diag8opt = sysblk.diag8opt;
+
+        /* Parse diag8cmd argument(s) */
+        for (i=1; i < argc; i++)
         {
-            if ( CMD(argv[i],echo,4) )
-                sysblk.diag8cmd |= DIAG8CMD_ECHO;
+            if (CMD( argv[i], echo, 4 ))
+                diag8opt |= DIAG8CMD_ECHO;
             else
-            if ( CMD(argv[i],noecho,6) )
-                sysblk.diag8cmd &= ~DIAG8CMD_ECHO;
+            if (CMD( argv[i], noecho, 6 ))
+                diag8opt &= ~DIAG8CMD_ECHO;
             else
-            if ( CMD(argv[i],enable,3) )
-                sysblk.diag8cmd |= DIAG8CMD_ENABLE;
+            if (CMD( argv[i], enable, 3 ))
+                diag8opt |= DIAG8CMD_ENABLE;
             else
-            if ( CMD(argv[i],disable,4) )
-                // disable implies no echo
-                sysblk.diag8cmd &= ~(DIAG8CMD_ENABLE | DIAG8CMD_ECHO);
+            if (CMD( argv[i], disable, 4 ))
+                diag8opt &= ~DIAG8CMD_ENABLE;
             else
             {
-                WRMSG(HHC02205, "S", argv[i], "");
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[i], "" );
                 return -1;
             }
         }
-    else
-    {
-        char buf[40];
-        MSGBUF( buf, "%sable, %secho",(sysblk.diag8cmd & DIAG8CMD_ENABLE) ? "en" : "dis",
-            (sysblk.diag8cmd & DIAG8CMD_ECHO)   ? ""   : "no ");
 
+        /* Update sysblk */
+        sysblk.diag8opt = diag8opt;
+
+        if (MLVL( VERBOSE ))
+        {
+            MSGBUF( buf, "%sABLE  %sECHO",
+                (sysblk.diag8opt & DIAG8CMD_ENABLE) ? "EN" : "DIS",
+                (sysblk.diag8opt & DIAG8CMD_ECHO)   ? ""   : "NO" );
+
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
+    }
+    else /* Display current diag8cmd settings */
+    {
+        MSGBUF( buf, "%sABLE  %sECHO",
+            (sysblk.diag8opt & DIAG8CMD_ENABLE) ? "EN" : "DIS",
+            (sysblk.diag8opt & DIAG8CMD_ECHO)   ? ""   : "NO" );
+
+        // "%-14s: %s"
         WRMSG( HHC02203, "I", "DIAG8CMD", buf );
     }
+
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* shcmdopt command                                                  */
 /*-------------------------------------------------------------------*/
-int shcmdopt_cmd(int argc, char *argv[], char *cmdline)
+int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
 {
-int i;
+    int i;
+    char buf[40];
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    /* Parse SHCMDOPT operand */
     if (argc > 1)
     {
-        for (i = 1; i < argc; i++)
+        BYTE shcmdopt = sysblk.shcmdopt;
+
+        for (i=1; i < argc; i++)
         {
-            if ( CMD( argv[i], enable,  3 ) )
-                sysblk.shcmdopt |= SHCMDOPT_ENABLE;
-            else
-            if ( CMD( argv[i], diag8,   4 ) )
-                sysblk.shcmdopt |= SHCMDOPT_DIAG8;
-            else
-            if ( CMD( argv[i], disable, 4 ) )
-                sysblk.shcmdopt &= ~SHCMDOPT_ENABLE;
-            else
-            if ( CMD( argv[i], nodiag8, 6 ) )
-                sysblk.shcmdopt &= ~SHCMDOPT_DIAG8;
+                 if (CMD( argv[i], enable,  3 )) shcmdopt |= SHCMDOPT_ENABLE;
+            else if (CMD( argv[i], diag8,   4 )) shcmdopt |= SHCMDOPT_DIAG8;
+            else if (CMD( argv[i], disable, 4 )) shcmdopt &= ~SHCMDOPT_ENABLE;
+            else if (CMD( argv[i], nodiag8, 6 )) shcmdopt &= ~SHCMDOPT_DIAG8;
             else
             {
-                WRMSG(HHC02205, "E", argv[i], "");
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[i], "" );
                 return -1;
             }
         }
-        if ( MLVL(VERBOSE) )
+
+        /* Update sysblk */
+        sysblk.shcmdopt = shcmdopt;
+
+        if (MLVL( VERBOSE ))
         {
-            char buf[40];
-            MSGBUF( buf, "%sabled%s",
-                    (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
-                    (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-            WRMSG(HHC02204, "I", argv[0], buf);
+            MSGBUF( buf, "%sABLE  %sDIAG8"
+                , (sysblk.shcmdopt & SHCMDOPT_ENABLE) ? "EN" : "DIS"
+                , (sysblk.shcmdopt & SHCMDOPT_DIAG8)  ? ""   : "NO"
+            );
+
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], buf );
         }
     }
     else
     {
-        char buf[40];
-        MSGBUF( buf, "%sabled%s", (sysblk.shcmdopt&SHCMDOPT_ENABLE)?"En":"Dis",
-          (sysblk.shcmdopt&SHCMDOPT_DIAG8)?"":" NoDiag8");
-        WRMSG(HHC02203, "I", argv[0], buf);
+        MSGBUF( buf, "%sABLE  %sDIAG8"
+            , (sysblk.shcmdopt & SHCMDOPT_ENABLE) ? "EN" : "DIS"
+            , (sysblk.shcmdopt & SHCMDOPT_DIAG8)  ? ""   : "NO"
+        );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", "SHCMDOPT", buf );
     }
 
     return 0;

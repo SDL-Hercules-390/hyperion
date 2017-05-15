@@ -662,8 +662,8 @@ int     rc;
     /* set default system state to reset */
     sysblk.sys_reset = TRUE;
 
-    /* set default SHCMDOPT enabled */
-    sysblk.shcmdopt = SHCMDOPT_ENABLE + SHCMDOPT_DIAG8;
+    /* Set default SHCMDOPT to DISABLE NODIAG8 */
+    sysblk.shcmdopt = 0;
 
     /* Save process ID */
     sysblk.hercules_pid = getpid();

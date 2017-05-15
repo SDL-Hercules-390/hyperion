@@ -267,6 +267,28 @@ typedef struct _VRDCBLOK {
    } VRDCBLOK;
 #define VRDCBLOK_SIZE sizeof(VRDCBLOK)
 
+/*-------------------------------------------------------------------*/
+/* Check if command is a "shell" type command   (boolean function)   */
+/*-------------------------------------------------------------------*/
+static BYTE is_shell_command( const char* cmd )
+{
+    char* cmd_work  = strdup( cmd );
+    BYTE  is_shcmd  = FALSE;
+
+    /* Remove leading/trailing blanks */
+    TRIM( cmd_work );
+
+    /* Check for possible "shell" type command */
+    if (0
+        || strcasecmp( cmd_work, "sh"   ) == 0  // (shell command)
+        || strcasecmp( cmd_work, "exec" ) == 0  // (rexx command)
+    )
+        is_shcmd = TRUE;  /* Looks like a 'sh' shell command! */
+
+    free( cmd_work );
+    return is_shcmd;
+}
+
 #endif /*!defined(_VM_C)*/
 
 /*-------------------------------------------------------------------*/
@@ -1038,41 +1060,50 @@ BYTE       c;                           /* Character work area       */
 int ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs)
 {
 U32     i;                              /* Array subscript           */
-U32     cc = 0;                         /* Condition code            */
+U32     cc;                             /* Condition code            */
 U32     cmdaddr;                        /* Address of command string */
 U32     cmdlen;                         /* Length of command string  */
 U32     respadr;                        /* Address of response buffer*/
 U32     maxrlen;                        /* Length of response buffer */
-U32     resplen;                        /* Length of actual response */
 BYTE    cmdflags;                       /* Command flags             */
-#define CMDFLAGS_REJPASSW       0x80    /* Reject password in command*/
-#define CMDFLAGS_RESPONSE       0x40    /* Return response in buffer */
-#define CMDFLAGS_REQPASSW       0x20    /* Prompt for password       */
-#define CMDFLAGS_RESERVED       0x1F    /* Reserved bits, must be 0  */
-char    bufi[256];                      /* Command buffer (ASCIIZ)   */
-char    bufo[257];                      /* Command buffer (ASCIIZ)   */
-char    resp[256];                      /* Response buffer (ASCIIZ)  */
-char    *dresp;                         /* Default response (ASCIIZ) */
-int     freeresp;                       /* Flag to free resp bfr     */
-U32     j,k;
-char    msgbuf[512];                    /* Message work area         */
 
-    /* Obtain command address from R1 register */
-    cmdaddr = regs->GR_L(r1);
+#define CMDFLAGS_REJPASSW     0x80      /* Reject password in command*/
+#define CMDFLAGS_RESPONSE     0x40      /* Return response in buffer */
+#define CMDFLAGS_REQPASSW     0x20      /* Prompt for password       */
+#define CMDFLAGS_RESERVED     0x1F      /* Reserved bits, must be 0  */
 
-    /* Obtain command length and flags from R2 register */
-    cmdflags = regs->GR_L(r2) >> 24;
-    cmdlen = regs->GR_L(r2) & 0x00FFFFFF;
+char    msg[256];                       /* Message work area         */
+char    cmd[256+1];                     /* Input command +1 for NULL */
+char*   resp;                           /* Output response           */
+int     freeresp;                       /* Flag to free resp         */
+
+    /* Obtain address of command from R1 register
+       and command length and flags from R2 register
+    */
+    cmdaddr  = regs->GR_L( r1 );
+    cmdflags = regs->GR_L( r2 ) >> 24;
+    cmdlen   = regs->GR_L( r2 ) & 0x00FFFFFF;
 
     /* Program check if invalid flags, or if command string
        is too long, or if response buffer is specified and
-       registers are consecutive or either register
-       specifies register 15 */
-    if ((cmdflags & CMDFLAGS_RESERVED) || cmdlen > sizeof(bufi)-1
-        || ((cmdflags & CMDFLAGS_RESPONSE)
-            && (r1 == 15 || r2 == 15 || r1 == r2 + 1 || r2 == r1 + 1)))
+       registers are consecutive or either register specifies
+       register 15
+    */
+    if (0
+        || (cmdflags & CMDFLAGS_RESERVED)
+        || (cmdlen > (sizeof(cmd)-1))   // (room for NULL terminator!)
+        || (1
+            && (cmdflags & CMDFLAGS_RESPONSE)
+            && (0
+                || r1 == r2 + 1
+                || r2 == r1 + 1
+                || r1 == 15
+                || r2 == 15
+               )
+           )
+    )
     {
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
     }
 
     /* Put machine into stopped state if command length is zero */
@@ -1080,118 +1111,115 @@ char    msgbuf[512];                    /* Message work area         */
     {
         regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
-        ON_IC_INTERRUPT(regs);
+        ON_IC_INTERRUPT( regs );
         return 0;
     }
 
-    /* Obtain the command string from storage */
-    ARCH_DEP(vfetchc) (bufi, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
+    /* Obtain the EBCDIC command string from guest storage */
+    ARCH_DEP( vfetchc )( cmd, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs );
 
-    /* Prepend '-' if noecho is requested */
-    i=0;
-    if(!(sysblk.diag8cmd & DIAG8CMD_ECHO))
-    {
-        bufo[0]='-';
-        i=1;
-    }
-    /* Translate EBCDIC command to ASCII */
-    for (j=0; j < cmdlen; i++,j++)
-    {
-        bufo[i] = guest_to_host(bufi[j]);
-    }
-    bufo[i] = '\0';
-    dresp="";
-    freeresp=0;
+    /* Translate guest EBCDIC command to host ASCII format */
+    for (i=0; i < cmdlen; i++)
+        cmd[i] = guest_to_host( cmd[i] );
+    cmd[i] = 0; // (null terminate!)
 
-    if(*bufo)
+    /* Execute the Hercules emulator (hypervisor) command */
+    resp = "";
+    freeresp = 0;
+
+#if !defined( FEATURE_HERCULES_DIAGCALLS )
+        // "Hercules-specific DIAG instructions support not included in engine build"
+        MSGBUF( msg, MSG( HHC01954, "E" ));
+        resp = &msg[0];
+#else
+    /************************************************************
+     *  SECURITY CHECK: Reject attempts to issue "shell" type
+     *  commands unless specifically allowed by SHCMDOPT option.
+     ************************************************************/
+    if (1
+        && is_shell_command( cmd )
+        && (sysblk.shcmdopt & (SHCMDOPT_ENABLE + SHCMDOPT_DIAG8))
+                           != (SHCMDOPT_ENABLE + SHCMDOPT_DIAG8)
+    )
     {
-#ifdef FEATURE_HERCULES_DIAGCALLS
-        int shcmd = 0;
+        // "DIAG8 access to shell disallowed by SHCMDOPT setting"
+        MSGBUF( msg, MSG( HHC01953, "E" ));
+        resp = &msg[0];
+    }
+    else
+    {
+        /* It's either not a "shell" type command or the
+           SHCMDOPT option is allowing them to be issued
+           so we can go ahead and execute the command. */
+
+        // "%s guest issued panel command: %s"
+        if (sysblk.diag8opt & DIAG8CMD_ECHO)
+            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Starting", cmd );
+
+        /* Issue the command and capture the response */
+        if (cmdflags & CMDFLAGS_RESPONSE)
         {
-            char* p = bufo;
-            while (*p && isspace(*p)) p++;
-            if ((*(p+0) == 's' || *(p+0) == 'S') &&
-                (*(p+1) == 'h' || *(p+1) == 'H') &&
-                isspace(*(p+2))) shcmd = 1;
-        }
-        if ((sysblk.diag8cmd & DIAG8CMD_ENABLE)
-            && (!shcmd || (sysblk.shcmdopt & (SHCMDOPT_ENABLE + SHCMDOPT_DIAG8)))
-        )
-        {
-            if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                WRMSG (HHC01950, "I", bufo, "started");
-            if (cmdflags & CMDFLAGS_RESPONSE)
-            {
-                sysblk.diag8cmd |= DIAG8CMD_RUNNING;
-                panel_command_capture( bufo, &dresp );
-                if(dresp!=NULL)
-                {
-                    freeresp=1;
-                }
-                else
-                {
-                    dresp="";
-                }
-                sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
-            }
+            panel_command_capture( cmd, &resp );
+
+            if (resp)
+                freeresp = 1;
             else
-            {
-                sysblk.diag8cmd |= DIAG8CMD_RUNNING;
-                panel_command(bufo);
-                sysblk.diag8cmd &= ~DIAG8CMD_RUNNING;
-                if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-                    WRMSG (HHC01950, "I", bufo, "completed");
-            }
+                resp = "";
+        }
+        else /* Issue command normally (no response wanted) */
+        {
+            panel_command( cmd );
+        }
+
+        // "%s guest issued panel command: %s"
+        if (sysblk.diag8opt & DIAG8CMD_ECHO)
+            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Completed", cmd );
+    }
+#endif // defined( FEATURE_HERCULES_DIAGCALLS )
+
+    /* Copy response to guest storage if response requested */
+    if (cmdflags & CMDFLAGS_RESPONSE)
+    {
+        U32 resplen, chunk, rem;
+
+        /* Translate host ASCII response to guest EBCDIC format */
+        for (i=0, resplen = (U32) strlen( resp ); i < resplen; i++)
+            resp[i] = host_to_guest( resp[i] );
+
+        /* Retrieve guest's response parameters */
+        respadr = regs->GR_L( r1+1 );
+        maxrlen = regs->GR_L( r2+1 );
+
+        /* Copy the response to guest storage in 256 byte chunks */
+        for (i=0, chunk=256, rem = MIN( resplen, maxrlen ); rem; rem -= chunk, i += chunk)
+        {
+            if (rem < chunk) chunk = rem;
+            ARCH_DEP( vstorec )( &resp[i], chunk-1, respadr+i, USE_REAL_ADDR, regs );
+        }
+
+        /* Update guest response register and set condition code */
+        if (resplen <= maxrlen)
+        {
+            /* They have the complete response */
+            regs->GR_L( r2+1 ) = resplen;
+            cc = 0;
         }
         else
         {
-            if(sysblk.diag8cmd & DIAG8CMD_ECHO)
-            {
-                WRMSG (HHC01951, "W", bufo);
-            }
-            MSGBUF(msgbuf, MSG(HHC01953, "E"));
-            dresp = msgbuf;
+            /* Their response buffer is too small */
+            regs->GR_L( r2+1 ) = (resplen - maxrlen);
+            cc = 1;
         }
-#else
-            MSGBUF(msgbuf, MSG(HHC01954, "E"));
-            dresp = msgbuf;
-#endif
     }
-
-    /* Store the response and set length if response requested */
-    if (cmdflags & CMDFLAGS_RESPONSE)
-    {
-        if(!freeresp)
-        {
-                strlcpy (resp, dresp, sizeof(resp));
-                dresp=resp;
-        }
-        resplen = (U32)strlen(dresp);
-        for (i = 0; i < resplen; i++)
-            dresp[i] = host_to_guest(dresp[i]);
-
-        respadr = regs->GR_L(r1+1);
-        maxrlen = regs->GR_L(r2+1);
-
-        i=(resplen<=maxrlen) ? resplen : maxrlen;
-        j=0;
-        while(i>0)
-        {
-            k=(i<255 ? i : 255);
-            ARCH_DEP(vstorec) (&dresp[j], k-1 , respadr+j, USE_REAL_ADDR, regs);
-            i-=k;
-            j+=k;
-        }
-        regs->GR_L(r2+1) = (resplen<=maxrlen) ? resplen : resplen-maxrlen;
-        cc = (resplen<=maxrlen) ? 0 : 1;
-    }
-    if(freeresp)
-    {
-        free(dresp);
-    }
+    else
+        cc = 0;
 
     /* Set R2 register to CP completion code */
-    regs->GR_L(r2) = 0;
+    regs->GR_L( r2 ) = 0;
+
+    /* Free memory malloc'ed by panel_command_capture */
+    if (freeresp)
+        free( resp );
 
     /* Return condition code */
     return cc;

@@ -978,6 +978,46 @@ int configure_srv_priority(int prio)
 }
 
 /*-------------------------------------------------------------------*/
+/* Check if we're a CPU thread or not.       (boolean function)      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT BYTE are_cpu_thread( int* cpunum )
+{
+    TID  tid  = thread_id();
+    int  i;
+
+    for (i=0; i < sysblk.maxcpu; i++)
+    {
+        if (equal_threads( sysblk.cputid[ i ], tid ))
+        {
+            if (cpunum)
+                *cpunum = i;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if we're a CPU executing diagnose   (boolean function)      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT BYTE is_diag_instr()
+{
+    REGS* regs;
+    BYTE  arecpu;
+    int   ourcpu;
+
+    /* Find out if we are a cpu thread */
+    if (!(arecpu = are_cpu_thread( &ourcpu )))
+        return FALSE;
+
+    /* Point to our REGS structure */
+    regs = sysblk.regs[ ourcpu ];
+
+    /* Return TRUE/FALSE boolean as appropriate */
+    return regs->diagnose ? TRUE : FALSE;
+}
+
+/*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */
 /* Caller MUST own the intlock                                       */
 /*-------------------------------------------------------------------*/

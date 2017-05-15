@@ -235,6 +235,7 @@ DLL_EXPORT int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 CMDTAB* pCmdTab;
 size_t  cmdlen, matchlen;
 int     rc = HERRINVCMD;             /* Default to invalid command   */
+BYTE    isdiag;
 
     /* Let 'cscript' command run immediately in any context */
     if (argc >= 1 && strcasecmp( argv[0], "cscript" ) == 0)
@@ -296,13 +297,21 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
     /* PROGRAMMING NOTE: since our table is now sorted, the below could
        be converted to a more efficient binary search algorithm instead */
 
+    isdiag = is_diag_instr();
+
     for (pCmdTab = cmdtab; pCmdTab->statement; pCmdTab++)
     {
         if (1
             && pCmdTab->function
             && (pCmdTab->type & sysblk.sysgroup)
-            /* Commands issues through DIAG8 must NOT be part of the SYSNDIAG8 group */
-            && (!(sysblk.diag8cmd & DIAG8CMD_RUNNING) || !(pCmdTab->type & SYSNDIAG8))
+            /********************************************************
+            *  SECURITY CHECK: any command in the "SYSNDIAG8" group
+            *  are not *ever* to be allowed to be issued via DIAG8!
+            *  The following test causes us to consider only those
+            *  commands that are either NOT in the SYSNDIAG8 group,
+            *  or, for those that are, ONLY when DIAG8 isn't active.
+            ********************************************************/
+            && (!(pCmdTab->type & SYSNDIAG8) || !isdiag)
         )
         {
             cmdlen = pCmdTab->mincmdlen ? pCmdTab->mincmdlen : strlen( pCmdTab->statement );
@@ -314,7 +323,10 @@ int     rc = HERRINVCMD;             /* Default to invalid command   */
 
                 /* Make full-length copy of the true command's name */
                 strlcpy( cmd, pCmdTab->statement, sizeof(cmd) );
-                argv[0] = cmd; /* (since theirs may be abbreviated) */
+
+                /* Replace abbreviated command with full command */
+                if (pCmdTab->mincmdlen)
+                    argv[0] = cmd; /* (since theirs may be abbreviated) */
 
                 /* Run command in background? (last argument == '&') */
                 if (strcmp(argv[argc-1],"&") == 0)
@@ -647,7 +659,20 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 /*-------------------------------------------------------------------*/
 static void EchoHercCmdLine( const char* cmd )
 {
-    PWRMSG( WRMSG_NORMAL, HHC01603, "I", cmd );    // "%s"
+    BYTE panel = WRMSG_NORMAL;  // (default)
+
+    /* Don't echo the command if it's the DIAG8 interface issuing it
+       unless the echo option is enabled, and if it is enabled, only
+       echo it to the panel to prevent DIAG8 from capturing the echo.
+    */
+    if (is_diag_instr())
+    {
+        if (!(sysblk.diag8opt & DIAG8CMD_ECHO))
+            return;             // (no logging whatsoever)
+        panel = WRMSG_PANEL;    // (prevent DIAG8 capturing)
+    }
+
+    PWRMSG( panel, HHC01603, "I", cmd );    // "%s"
 }
 
 void* FindSCRCTL( TID tid );// (external helper function; see script.c)
