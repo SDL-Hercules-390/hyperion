@@ -1,0 +1,28 @@
+
+#------------------------------------------------------------
+# TESTCASE FRAGMENT -- everything except *Testcase and *Done
+#------------------------------------------------------------
+
+# Immediately load successful completion PSW
+
+stopall
+numcpu 1
+mainsize 2m
+sysclear
+archmode S/370
+sysreset
+r 000=0000000000000200
+r 068=000200000000DEAD
+r 200=82000208
+r 208=000A000000000000
+
+runtest .1
+
+# Dummy comparison
+
+*Compare
+r 204.1
+
+*Want 00
+
+#------------------------------------------------------------

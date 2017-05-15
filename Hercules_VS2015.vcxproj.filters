@@ -1757,6 +1757,9 @@
     <None Include="tests\hetbsf.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\ifelse.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\ilc.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -1824,6 +1827,9 @@
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\cmd-rv-4K-64.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
+    <None Include="tests\dummy.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\pr.subtst">

@@ -1,767 +1,1060 @@
-/* Process a test case                                               */
-/*                                John Hartmann 22 Sep 2015 16:27:56 */
+/*********************************************************************/
+/*                                                                   */
+/*     redtest.rexx   ---   Reduce Hercules Test Run Logfile         */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  This script reads and processes the logfile that was created     */
+/*  from a Hercules test run.                                        */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  This file was put into the public domain 2015-10-05 by John P.   */
+/*  Hartmann.  You can use it for anything you like, as long as      */
+/*  this notice remains.                                             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  Rewritten & bugs fixed by "Fish" (David B. Trout) Apr-May 2017   */
+/*                                                                   */
+/*********************************************************************/
+
+--Trace Intermediate        -- (uncomment to enable debug tracing)
+
+Signal On NoValue
 
 /*********************************************************************/
-/* This  file  was  put into the public domain 2015-10-05 by John P. */
-/* Hartmann.   You can use it for anything you like, as long as this */
-/* notice remains.                                                   */
-/*                                                                   */
-/* Process the log file from a Hercules test run.                    */
-/*                                                                   */
-/* One challenge is that messages are issued from different threads. */
-/* Thus the *Done message may overtake, e.g., message 809.           */
+/*                        Initialization                             */
 /*********************************************************************/
 
-Signal On novalue
+TRUE  = 1
+FALSE = 0
 
-Parse Arg In opts
+quiet = FALSE
+values. = ''
 
-values.                = ''
-values.keepalive       = 'Full'
-values.threading_model = ''
-values.locking_model   = ''
-values.libraries       = ''
-values.hatomics        = ''
-values.cmpxchg1        = 0
-values.cmpxchg4        = 0
-values.cmpxchg8        = 0
-values.cmpxchg16       = 0
-values.fetch_dw        = 0
-values.store_dw        = 0
-values.max_cpu_engines = 0
-values.can_s370_mode   = 0
-values.can_esa390_mode = 0
-values.can_zarch_mode  = 0
-values.syncio          = 0
-values.shared_devices  = 0
-values.HDL             = 0
-values.externalgui     = 0
-values.SIGABEND        = 0
-values.NLS             = 0
-values.HAO             = 0
-values.regex           = 0
-values.IPV6            = 0
-values.HTTP            = 0
-values.IEEE            = 0
-values.sqrtl           = 0
-values.CCKD_BZIP2      = 0
-values.HET_BZIP2       = 0
-values.ZLIB            = 0
-values.OORexx          = 0
-values.Regina          = 0
-values.CONFIG_INCLUDE  = 0
-values.SYSTEM_SYMBOLS  = 0
-values.CONFIG_SYMBOLS  = 0
+Call InitVars
 
-quiet = 0                             /* Log OK tests too            */
+Parse Arg  logfile options
 
-Do while opts \= ''
+/* Parse options which, except for 'quiet', are "name=value" strings */
 
-   Parse Var opts optval opts
-   Parse Var optval varname '=' +0 eq +1 varvalue
+Do while options \= ''
+
+   Parse Var options  optval options
+   Parse Var optval   varname '=' +0 equals +1 varvalue
 
    Select
-
-      When optval = 'quiet' Then
-         quiet = 1
-
-      When eq \= '=' Then
-         Say 'Not variable assignment in argument string: ' optval
-
+      When optval = 'quiet' Then quiet = TRUE
+      When equals =   '='   Then Call SetVar varname varvalue
       Otherwise
-         Call setvar varname varvalue
+      Do
+         Say 'ERROR: Invalid argument: 'optval options
+         Exit -1
+      End
    End
-
 End
-
-testcase  = '<unknown>'
-ifstack   = ''
-
-comparing = 0
-hadelse   = 0
-fails.    = 0                         /* .0 is OK .1 is failures     */
-catast    = 0                         /* Catastrophic failures       */
-done      = 0                         /* Test cases started          */
-stardone  = 0                         /* *Done orders met            */
-lineno    = 0                         /* Line number in input file   */
-ifnest    = 0                         /* If/then/else nesting        */
-active    = 1                         /* We do produce output        */
 
 /*********************************************************************/
-/* Process the test output.                                          */
+/*                           M A I N                                 */
 /*********************************************************************/
 
-Do While lines(in) > 0
-   l = readline()
-   If l \= ''
-      Then Call procline l
-End
+stmt = ReadLog()                -- (this...)
+Do While stmt \= ''             -- (...is...)
+   Call ProcessStmt stmt        -- (...our...)
+   stmt = ReadLog()             -- (...main...)
+End                             -- (...processing loop)
 
-Select
-   When fails.1 = 0 & catast = 0
-      Then msg = 'All OK.'
-   Otherwise
-      msg = fails.1 'failed;' fails.0 'OK.'
-End
+/* DONE! Report total number of Testcases processed
+   and the total number of successes and failures.
+*/
+If fails.1 = 0 & catast = 0 Then msg = 'All OK.'
+Else msg = fails.1 'failed;' fails.0 'OK.'
+Say 'Did' numtests 'tests. ' msg
 
-Say 'Done' done 'tests. ' msg
+/* Report catastrophic/serious errors if any */
 
 If catast > 0
-   Then Say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
+   Then Say '>>>>>' catast 'test(s) failed catastrophically.  Bug in Hercules or Testcase is likely. <<<<<'
 
-If done \= stardone Then Say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
+/* Report malformed test cases if any*/
 
-Exit  fails.1
+If numtests \= numdones Then
+Do
+  Say ''
+  Say 'Tests malformed:' numtests "'*Testcase' orders met, but" numdones "'*Done' orders met."
+  Say 'This is either a bug in Hercules or in one or more test cases.'
+  Say 'Please report this error to your Hercules vendor.'
+End
+
+/* Exit with number of failed *Testcases (which ideally should be 0) */
+
+Exit fails.1
 
 /*********************************************************************/
-/* Read a line of input and strip timestamp, if any.                 */
+/*                            InitVars                               */
 /*********************************************************************/
 
-readline:
+InitVars:
 
-Do forever
+numtests  = 0           -- No '*Testcase' orders encountered yet
+numdones  = 0           -- No '*Done' orders encountered yet
+comparing = FALSE       -- No '*Compare' order encountered yet
+fails.    = 0           -- ".0" (false) is total #of successes,
+                        -- ".1" (true) is total #of failures
+catast    = FALSE       -- No catastrophic failures yet
+lineno    = 0           -- Line number of input file
 
-   l = ''
+testcase = '<unknown>'
+package = ''
+prev_package = ''
+lookingahead = FALSE
 
-   If 0 = lines(in)
-      Then Return ''                  /* EOF                         */
+/* The 'active' flag is used to suppress the processing of testcase
+   orders when an 'if' statement (or its 'else' branch) is evaluated
+   to 'false'.  When the program first starts, there is no 'if/else'
+   block that is active, so the 'active' flag initially defaults to
+  'true' so that we can immediately begin processing statements.
+*/
+active = TRUE           -- Statement processing is active by default
+ifnum = 0               -- If > 0, then we're inside an if/else block
+ifcond.ifnum = active   -- Current 'active' state for if/else block;
+                        -- Flip-flopped when 'else' is encountered
+ifprev.ifnum = active   -- Active state of previous 'if' block
+ifelse.ifnum = FALSE    -- Set to TRUE whenever 'else' encountered
 
-   lineno = lineno + 1
-   l      = linein(in)
+rest = ''               -- (because 'BegTest' requires it)
+Call BegTest            -- (Initialize '*Testcase' variables)
+numtests = 0            -- (because 'BegTest' bumped it)
 
-   /*  Another way to handle a prefix to the response
-       might be to look for HHC.
+/* The following "values." variables are defined by the ProcessStmt
+   subroutine as a result of processing certain messages that are
+   issued by Hercules upon startup.  They provide a means for '*If'
+   directives to test for the availability of certain build options
+   and packages that might not be available on all Hercules systems
+   depending how the user chose to build Hercules, thereby allowing
+   the Testcase author to design test cases that skip certain tests
+   depending on whether a given build option or package happens to
+   be available and/or installed or not.
+*/
+
+save_quiet = quiet
+quiet = TRUE
+
+Call SetVar 'can_s370_mode'     FALSE
+Call SetVar 'can_esa390_mode'   FALSE
+Call SetVar 'can_zarch_mode'    FALSE
+Call SetVar 'CCKD_BZIP2'        FALSE
+Call SetVar 'cmpxchg1'          FALSE
+Call SetVar 'cmpxchg16'         FALSE
+Call SetVar 'cmpxchg4'          FALSE
+Call SetVar 'cmpxchg8'          FALSE
+Call SetVar 'CONFIG_INCLUDE'    FALSE
+Call SetVar 'CONFIG_SYMBOLS'    FALSE
+Call SetVar 'externalgui'       FALSE
+Call SetVar 'fetch_dw'          FALSE
+Call SetVar 'HAO'               FALSE
+Call SetVar 'hatomics'          ''
+Call SetVar 'HDL'               FALSE
+Call SetVar 'HET_BZIP2'         FALSE
+Call SetVar 'HTTP'              FALSE
+Call SetVar 'IEEE'              FALSE
+Call SetVar 'IPV6'              FALSE
+Call SetVar 'keepalive'         'Full'
+Call SetVar 'libraries'         ''
+Call SetVar 'locking_model'     ''
+Call SetVar 'max_cpu_engines'   0
+Call SetVar 'platform'          ''
+Call SetVar 'ptrsize'           '-1'
+Call SetVar 'quiet'             save_quiet
+Call SetVar 'NLS'               FALSE
+Call SetVar 'regex'             FALSE
+Call SetVar 'rexx_ErrPrefix'    FALSE
+Call SetVar 'rexx_Extensions'   ''
+Call SetVar 'rexx_Mode'         ''
+Call SetVar 'rexx_MsgLevel'     FALSE
+Call SetVar 'rexx_MsgPrefix'    FALSE
+Call SetVar 'rexx_package'      ''
+Call SetVar 'rexx_Resolver'     FALSE
+Call SetVar 'rexx_RexxPath'     ''
+Call SetVar 'rexx_SOURCE'       ''
+Call SetVar 'rexx_supported'    FALSE
+Call SetVar 'rexx_SysPath'      FALSE
+Call SetVar 'rexx_VERSION'      ''
+Call SetVar 'shared_devices'    FALSE
+Call SetVar 'SIGABEND'          FALSE
+Call SetVar 'sqrtl'             FALSE
+Call SetVar 'store_dw'          FALSE
+Call SetVar 'syncio'            FALSE
+Call SetVar 'SYSTEM_SYMBOLS'    FALSE
+Call SetVar 'threading_model'   ''
+Call SetVar 'ZLIB'              FALSE
+
+quiet = save_quiet
+Return
+
+/*********************************************************************/
+/*                          ReadLog                                  */
+/*********************************************************************/
+/* This is the primary "read a statement from the logfile" routine.  */
+/* It reads a line from the logfile and removes and debugging prefix */
+/* and/or timestamp if present.  It always returns a 'HHC' Hercules  */
+/* message except at EOF whereupon is returns an '' empty string.    */
+/*********************************************************************/
+
+ReadLog:
+
+Do Forever
+
+   If LINES( logfile ) <= 0             -- (if no lines remain)
+      Then Return ''                    -- (return empty string)
+
+   stmt = STRIP( LINEIN( logfile ))     -- (read logfile statement)
+   lineno = lineno + 1                  -- (what line number it is)
+
+   /* Remove any debugging prefix */
+
+   Parse Value WORD( stmt, 1 ) With foo '(' bar ')' +0 foobar
+   If foobar = ')' Then Do              -- Debugging Prefix?
+      Parse Var stmt  . stmt            -- Reparse to discard it
+      stmt = STRIP( stmt )              -- Trim whitespace again
+   End
+
+   /* Examine just the Hercules message number */
+
+   Parse Var stmt  msg .                -- Parse message number
+   pos = VERIFY( msg, '0123456789:' )   -- Skip past timestamp
+   If pos = 0                           -- Nothing past timestamp?
+      Then Iterate                      -- Ignore this statement
+   stmt = STRIP( SUBSTR( stmt, pos ))   -- Remove the timestamp
+
+   /* The following ensures we will never return an empty string
+      except at EOF.
    */
-
-   Parse Value word(l, 1) With fn '(' line ')' +0 rpar
-
-   If rpar = ')' Then
-      Do
-         Parse Var l . l              /* Drop debug ID               */
-         l = strip(l)
-      End
-
-   Parse Var l ?msg ?verb ?rest
-   p = verify(?msg, "0123456789:")    /* Leading timestamp?          */
-
-   If p = 0                           /* Just a timestamp or nothing */
-      Then Iterate
-   If p > 1                           /* Timestamp prefix            */
-      Then l = substr(l, p)           /* Toss it                     */
-   If left(l, 3) \='HHC'
-      Then Iterate                    /* Not a message               */
-   If ?msg = 'HHC00007I'              /* Where issued                */
-      Then Iterate
-   If ?msg \= 'HHC01603I'
-      Then Leave                      /* Not a comment               */
-   If length(?verb) > 1 & left(?verb, 1) = '*'
-      Then Leave                      /* Potential order.            */
+   If LEFT( stmt, 3 ) = 'HHC'           -- Hercules message?
+      Then Return stmt                  -- Then process stmt
 End
-Return l
 
 /*********************************************************************/
-/* Process the line                                                  */
+/*                          ProcessStmt                              */
+/*********************************************************************/
+/* Process a Hercules message.  Some messages (such as those issued  */
+/* at startup) simply set a "values." stem variable value that sub-  */
+/* sequent '*If' directives can then test.  Others (such as display  */
+/* registers or storage or program check or disabled wait messages)  */
+/* are parsed to extract various information contained within them   */
+/* which '*Compare' and '*Want' etc. test directives need in order   */
+/* to determine whether the given test has succeeded or failed. If   */
+/* the message is a command-echo message HHC01603I that is echoing   */
+/* a '*' loud comment, it is further processed as a potential test   */
+/* order by the "DoOrder" subroutine responsible for handling all    */
+/* testing directives *Testcase, *If, *Else, *Want, *Compare, etc.   */
 /*********************************************************************/
 
-procline:
-
-Parse Arg l
-Parse Var l msg verb rest
+ProcessStmt: /*  msg     will be the Hercules message number
+                 verb    will be the first word of the message
+                 rest    is everything else following the first word */
+Parse Arg stmt
+Parse Var stmt   msg verb rest
 
 Select
-   When left(msg, 3) \= 'HHC' Then
-      nop                             /* Toss all non-messages.      */
-   When msg = 'HHC01417I' Then
-      Select
-         When verb = 'Machine' Then
-            Do
-               Parse Var rest 'dependent assists:' rest
-               Do while rest \= ''
-                  Parse Var rest fac rest
-                  If left(fac, 9) = 'hatomics=' Then
-                     Do
-                        fac = substr(fac, 10)
-                        If fac \= 'UNKNOWN' Then
-                           Call setvar 'hatomics' fac
-                     End
-                  Else
-                     Call setvar fac 1
-               End
-            End
-         When verb = 'Modes:' Then
-            Do while rest \= ''
-               Parse Var rest arch rest
-               Select
-                  When arch = 'S/370'   Then Call setvar 'can_s370_mode'   1
-                  When arch = 'ESA/390' Then Call setvar 'can_esa390_mode' 1
-                  When arch = 'z/Arch'  Then Call setvar 'can_zarch_mode'  1
-                  Otherwise nop
-               End
-            End
-         When verb = 'Max' Then
-            Do
-               Parse Var rest 'CPU Engines: ' engines
-               Call setvar 'max_cpu_engines' engines
-            End
-         When verb = 'Using' Then
-            Select
-               When rest = 'Fish threads Threading Model'       Then Call setvar 'threading_model' 'Fish'
-               When rest = 'POSIX threads Threading Model'      Then Call setvar 'threading_model' 'POSIX'
 
-               When rest = 'Error-Checking Mutex Locking Model' Then Call setvar 'locking_model'   'Error'
-               When rest = 'Normal Mutex Locking Model'         Then Call setvar 'locking_model'   'Normal'
-               When rest = 'Recursive Mutex Locking Model'      Then Call setvar 'locking_model'   'Recursive'
+   When msg = 'HHC00007I' Then Nop -- "Previous message from function '%s' at %s(%d)"
+   When msg = 'HHC00809I' Then Call HHC00809I
+   When msg = 'HHC01417I' Then Call HHC01417I   -- (startup)
+   When msg = 'HHC01603I' Then Call HHC01603I   -- (command echo)
+   When msg = 'HHC02269I' Then Call HHC02269I
+   When msg = 'HHC02290I' Then Call HHC02290I   -- (real, absolute)
+   When msg = 'HHC02291I' Then Call HHC02291I   -- (virtual)
 
-               When rest = 'shared libraries'                   Then Call setvar 'libraries'       'shared'
-               When rest = 'static libraries'                   Then Call setvar 'libraries'       'static'
-               Otherwise nop
-            End
-         When  verb = 'With' | verb = 'Without' Then
-            Do
-               If verb = 'With' Then
-                  with = 1
-               Else    
-                  with = 0
-               Select
-                  When rest = 'Partial TCP keepalive support' Then Call setvar 'keepalive'  'Partial'
-                  When rest = 'Basic TCP keepalive support'   Then Call setvar 'keepalive'  'Basic'
-                  When rest = 'TCP keepalive support'         Then Call setvar 'keepalive'  ''
+   When LEFT( msg,  8 ) = 'HHC02332'  Then Call HHC02332x
+   When LEFT( verb, 5 ) = 'REXX('     Then Call hRexx
 
-                  When rest = 'Syncio support'                Then Call setvar 'syncio'         with
-                  When rest = 'Shared Devices support'        Then Call setvar 'shared_devices' with
-                  When rest = 'Dynamic loading support'       Then Call setvar 'HDL'            with
-                  When rest = 'External GUI support'          Then Call setvar 'externalgui'    with
-                  When rest = 'SIGABEND handler'              Then Call setvar 'SIGABEND'       with
-                  When rest = 'National Language Support'     Then Call setvar 'NLS'            with
-                  When rest = 'Automatic Operator support'    Then Call setvar 'HAO'            with
-                  When rest = 'Regular Expressions support'   Then Call setvar 'regex'          with
-                  When rest = 'IPV6 support'                  Then Call setvar 'IPV6'           with
-                  When rest = 'HTTP Server support'           Then Call setvar 'HTTP'           with
-                  When rest = 'IEEE support'                  Then Call setvar 'IEEE'           with
-                  When rest = 'sqrtl support'                 Then Call setvar 'sqrtl'          with
-                  When rest = 'CCKD BZIP2 support'            Then Call setvar 'CCKD_BZIP2'     with
-                  When rest = 'HET BZIP2 support'             Then Call setvar 'HET_BZIP2'      with
-                  When rest = 'ZLIB support'                  Then Call setvar 'ZLIB'           with
-                  When rest = 'Object REXX support'           Then Call setvar 'OORexx'         with
-                  When rest = 'Regina REXX support'           Then Call setvar 'Regina'         with
-                  When rest = 'CONFIG_INCLUDE support'        Then Call setvar 'CONFIG_INCLUDE' with
-                  When rest = 'SYSTEM_SYMBOLS support'        Then Call setvar 'SYSTEM_SYMBOLS' with
-                  When rest = 'CONFIG_SYMBOLS support'        Then Call setvar 'CONFIG_SYMBOLS' with
-                  Otherwise nop
-               End
-            End
-         Otherwise
-            nop
-      End
-   When msg = 'HHC00801I' Then
-      Parse Var rest ' code ' havepgm . ' ilc'
-   When msg = 'HHC00803I' Then     /* Program interrupt loop      */
-      havewait = 1
-   When msg = 'HHC00809I' Then
-      Call waitstate
-   When msg = 'HHC01405E' Then
-      Call test 0, l
-   When msg = 'HHC01603I' Then
-      If left(verb, 1) = '*'
-         Then Call order
-   When msg = 'HHC02269I' Then
-      Call gprs
+   /*          HHC02277I Prefix register: %s */
    When msg = 'HHC02277I' Then
-      Parse Var rest . prefix .
-   When (msg = 'HHC02290I' | msg = 'HHC02291I') Then
-      If comparing Then
-         Do
-            Parse Var rest 'K:' key .
-            If key = ''
-               Then
-                  Do
-                     Parse Var rest display +36 /* Save for compare order */
-                     lastaddr = verb
-                  end
-               Else
-                  Do
-                     keyaddr = substr(verb, 3)
-                     lastkey = key
-                  End
-         End
-   When left(msg, 8) = 'HHC02332' Then
+      Parse Var rest  . prefix .
+
+   /*          HHC00801I Processor %s%02X: %s%s%s code %4.4X  ilc %d%s */
+   When msg = 'HHC00801I' Then
+      Parse Var rest  ' code ' pgmchk . ' ilc'
+
+   /*          HHC00803I Processor %s%02X: program interrupt loop PSW %s */
+   When msg = 'HHC00803I' Then
+      waitseen = TRUE
+
+   /*          HHC01405E Script file %s not found */
+   When msg = 'HHC01405E' Then
+      Call OkayOrNot FALSE, stmt
+
+   /* Save all other messages for '*Hmsg' once a '*Compare' is seen */
+   When comparing Then
       Do
-         If \timeoutOk
-            Then catast = catast + 1
-         Call test timeoutOk, 'Test case timed out in wait.',,
-            'This is likely an error in Hercules.  Please report'
+         msgnum = lastmsg.0 + 1
+         lastmsg.msgnum = stmt
+         lastmsg.0 = msgnum
       End
-   When \comparing /* Toss other messages, particularly during start */
-      Then nop
-   Otherwise                     /* Something else.  Store for *Hmsg */
-      ? = lastmsg.0 + 1
-      lastmsg.? = l
-      lastmsg.0 = ?
+
+   Otherwise          -- (not anything we're interested in)
+      Nop             -- (ignore this statement altogether)
 End
 Return
 
 /*********************************************************************/
-/* Set variable value                                                */
+/*                          HHC01417I                                */
 /*********************************************************************/
 
-setvar:
-Parse Arg varname varvalue
-values.varname = varvalue
-If \quiet Then
-   Say 'Variable' varname 'set to "'values.varname'".'
-Return
-
-/*********************************************************************/
-/* Decode orders.                                                    */
-/*********************************************************************/
-
-order:
-
-info = ''
-rest = strip(rest)
-
-If left(rest, 1) = '"'
-   Then Parse Var rest '"' info '"' rest
+HHC01417I:      -- Hercules startup message
 
 Select
 
-   When verb = '*'                    /* Comment                     */
-      Then nop
-   When verb = '*Testcase'
-      Then call begtest
-   When verb = '*If'
-      Then call doif
-   When verb = '*Else'
-      Then call doElse
-   When verb = '*Fi'
-      Then call endif
-   when \active
-      Then nop
-   When verb = '*Compare' Then
+   When verb = 'Machine' Then
+   Do
+      Parse Var rest  'dependent assists:' rest
+      Do while rest \= ''
+         Parse Var rest  assist_type rest
+         If LEFT( assist_type, 9 ) = 'hatomics=' Then
+         Do
+            atomic_type = SUBSTR( assist_type, 10 )
+            If atomic_type \= 'UNKNOWN' Then
+               Call SetVar 'hatomics' atomic_type
+         End
+         Else
+            Call SetVar assist_type TRUE
+      End
+   End
+
+
+   When verb = 'Modes:' Then
+   Do while rest \= ''
+      Parse Var rest  archmode rest
+      Select
+         When archmode = 'S/370'   Then Call SetVar 'can_s370_mode'   TRUE
+         When archmode = 'ESA/390' Then Call SetVar 'can_esa390_mode' TRUE
+         When archmode = 'z/Arch'  Then Call SetVar 'can_zarch_mode'  TRUE
+         Otherwise Nop
+      End
+   End
+
+
+   When verb = 'Max' Then
+   Do
+      Parse Var rest  'CPU Engines: ' engines
+      Call SetVar 'max_cpu_engines' engines
+   End
+
+
+   When verb = 'Using' Then
+   Select
+      When rest = 'Fish threads Threading Model'       Then Call SetVar 'threading_model' 'Fish'
+      When rest = 'POSIX threads Threading Model'      Then Call SetVar 'threading_model' 'POSIX'
+      When rest = 'Error-Checking Mutex Locking Model' Then Call SetVar 'locking_model'   'Error'
+      When rest = 'Normal Mutex Locking Model'         Then Call SetVar 'locking_model'   'Normal'
+      When rest = 'Recursive Mutex Locking Model'      Then Call SetVar 'locking_model'   'Recursive'
+      When rest = 'shared libraries'                   Then Call SetVar 'libraries'       'Shared'
+      When rest = 'static libraries'                   Then Call SetVar 'libraries'       'Static'
+      Otherwise Nop
+   End
+
+
+   When verb = 'With' | verb = 'Without' Then
+   Do
+      If verb = 'With' Then YesOrNo = TRUE; Else YesOrNo = FALSE
+      Select
+         When rest = 'Partial TCP keepalive support' Then Call SetVar 'keepalive'     'Partial'
+         When rest = 'Basic TCP keepalive support'   Then Call SetVar 'keepalive'     'Basic'
+         When rest = 'TCP keepalive support'         Then Call SetVar 'keepalive'     'Full'
+         When rest = 'Syncio support'                Then Call SetVar 'syncio'         YesOrNo
+         When rest = 'Shared Devices support'        Then Call SetVar 'shared_devices' YesOrNo
+         When rest = 'Dynamic loading support'       Then Call SetVar 'HDL'            YesOrNo
+         When rest = 'External GUI support'          Then Call SetVar 'externalgui'    YesOrNo
+         When rest = 'SIGABEND handler'              Then Call SetVar 'SIGABEND'       YesOrNo
+         When rest = 'National Language Support'     Then Call SetVar 'NLS'            YesOrNo
+         When rest = 'Automatic Operator support'    Then Call SetVar 'HAO'            YesOrNo
+         When rest = 'Regular Expressions support'   Then Call SetVar 'regex'          YesOrNo
+         When rest = 'IPV6 support'                  Then Call SetVar 'IPV6'           YesOrNo
+         When rest = 'HTTP Server support'           Then Call SetVar 'HTTP'           YesOrNo
+         When rest = 'IEEE support'                  Then Call SetVar 'IEEE'           YesOrNo
+         When rest = 'sqrtl support'                 Then Call SetVar 'sqrtl'          YesOrNo
+         When rest = 'CCKD BZIP2 support'            Then Call SetVar 'CCKD_BZIP2'     YesOrNo
+         When rest = 'HET BZIP2 support'             Then Call SetVar 'HET_BZIP2'      YesOrNo
+         When rest = 'ZLIB support'                  Then Call SetVar 'ZLIB'           YesOrNo
+         When (rest = 'Object REXX support' | rest = 'Regina REXX support') Then
+         Do
+            If \GetVar('rexx_supported')      Then Call SetVar 'rexx_supported' YesOrNo
+         End
+         When rest = 'CONFIG_INCLUDE support' Then Call SetVar 'CONFIG_INCLUDE' YesOrNo
+         When rest = 'SYSTEM_SYMBOLS support' Then Call SetVar 'SYSTEM_SYMBOLS' YesOrNo
+         When rest = 'CONFIG_SYMBOLS support' Then Call SetVar 'CONFIG_SYMBOLS' YesOrNo
+         Otherwise Nop
+      End
+   End
+
+   Otherwise Nop
+End
+Return
+
+/*********************************************************************/
+/*                          hRexx                                    */
+/*********************************************************************/
+
+hRexx:           -- Hercules Rexx message
+/*
+HHC17525I REXX(OORexx) Rexx has been started/enabled
+HHC17528I REXX(OORexx) VERSION: REXX-ooRexx_4.2.0(MT)_64-bit 6.04 22 Feb 2014
+HHC17529I REXX(OORexx) SOURCE:  WindowsNT
+HHC17500I REXX(OORexx) Mode            : Subroutine
+HHC17500I REXX(OORexx) MsgLevel        : Off
+HHC17500I REXX(OORexx) MsgPrefix       : Off
+HHC17500I REXX(OORexx) ErrPrefix       : Off
+HHC17500I REXX(OORexx) Resolver        : On
+HHC17500I REXX(OORexx) SysPath    (44) : On
+HHC17500I REXX(OORexx) RexxPath   ( 0) :
+HHC17500I REXX(OORexx) Extensions ( 8) : .REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx
+*/
+If Left( rest, 8 ) = 'VERSION:' Then
+Do
+   Parse Var verb  'REXX(' package ')'
+   If package \= prev_package Then
+   Do
+      Call SetVar 'rexx_package' package
+      prev_package = package
+   End
+   If package \= '' Then Call SetVar 'rexx_VERSION' SUBSTR( rest, 10 )
+End
+Else
+Do
+   If package \= '' Then
+   Do
+      If SUBSTR( rest, 19 ) = 'On' Then OnOff = TRUE; Else OnOff = FALSE
+      Select
+         When Left( rest,  7 ) = 'SOURCE:'    Then Call SetVar 'rexx_SOURCE'     SUBSTR( rest, 10 )
+         When Left( rest,  4 ) = 'Mode'       Then Call SetVar 'rexx_Mode'       SUBSTR( rest, 19 )
+         When Left( rest,  8 ) = 'MsgLevel'   Then Call SetVar 'rexx_MsgLevel'   OnOff
+         When Left( rest,  9 ) = 'MsgPrefix'  Then Call SetVar 'rexx_MsgPrefix'  OnOff
+         When Left( rest,  9 ) = 'ErrPrefix'  Then Call SetVar 'rexx_ErrPrefix'  OnOff
+         When Left( rest,  8 ) = 'Resolver'   Then Call SetVar 'rexx_Resolver'   OnOff
+         When Left( rest,  7 ) = 'SysPath'    Then Call SetVar 'rexx_SysPath'    OnOff
+         When Left( rest,  8 ) = 'RexxPath'   Then Call SetVar 'rexx_RexxPath'   SUBSTR( rest, 19 )
+         When Left( rest, 10 ) = 'Extensions' Then Call SetVar 'rexx_Extensions' SUBSTR( rest, 19 )
+         Otherwise Nop
+      End
+   End
+End
+Return
+
+/*********************************************************************/
+/*                           SetVar                                  */
+/*********************************************************************/
+/* Set an internal "values." stem variable value                     */
+/*********************************************************************/
+
+SetVar:
+Parse Arg varname varvalue          -- (no upper so 'varvalue' exact)
+UPPER_varname = UPPER( varname )    -- (UPPER for case insensitivity)
+values.UPPER_varname = varvalue
+If quiet Then Return
+Say LEFT( 'Variable $'varname, 28 )' set to "'values.UPPER_varname'"'
+Return
+
+/*********************************************************************/
+/*                           GetVar                                  */
+/*********************************************************************/
+/* Return an internal "values." stem variable value                  */
+/*********************************************************************/
+
+GetVar:
+Parse UPPER Arg UPPER_varname       -- (UPPER for case insensitivity)
+varvalue = values.UPPER_varname
+return varvalue
+
+/*********************************************************************/
+/*                    HHC02290I / HHC02291I                          */
+/*********************************************************************/
+/* HHC02290I A:0000000000001000  K:06                                */
+/* HHC02290I R:00001000  00000000 00000000 00000000 00000000  .....  */
+/*********************************************************************/
+
+HHC02290I:      -- (display real or absolute storage)
+HHC02291I:      -- (display virtual storage)
+
+If \comparing Then Return
+
+Parse Var rest  'K:' key .
+
+If key \= '' Then
+   Do
+      storkey = key
+      keyaddr = SUBSTR( verb, 3 )
+   End
+Else
+   Do
+      storaddr = verb
+      Parse Var rest  storbytes +36
+   End
+Return
+
+/*********************************************************************/
+/*                          HHC02332x                                */
+/*********************************************************************/
+/* HHC02332x Script %d: test: timeout                                */
+/*********************************************************************/
+
+HHC02332x:
+If timeoutok Then Return
+catast = catast + 1     -- runtest timeout value too short
+Call OkayOrNot FALSE, 'Testcase timed out in wait.',,
+   'This is either a bug in Hercules or in the Testcase.',,
+   'Please report this error to your Hercules vendor.'
+Return
+
+/*********************************************************************/
+/*                          HHC01603I                                */
+/*********************************************************************/
+/* Hercules echoing of command message                               */
+/*********************************************************************/
+
+HHC01603I:
+If LENGTH( verb ) > 1 & LEFT( verb, 1 ) = '*' Then Call DoOrder
+Return
+
+/*********************************************************************/
+/*                           DoOrder                                 */
+/*********************************************************************/
+/* This subroutine handles all supported testing directives.         */
+/*********************************************************************/
+
+DoOrder:
+
+Select
+
+   /* PROGRAMMING NOTE: we must process if/else/endif first,
+      before all other orders, since it determines the value
+      of our 'active' flag which tells us whether or not we
+      should process or ignore any of the other directives.
+   */
+   When verb = '*If'   Then call DoIf
+   When verb = '*Else' Then call DoElse
+   When verb = '*Fi'   Then call EndIf
+
+   Otherwise Select
+
+      when \active             Then Nop
+
+      When verb = '*Testcase'  Then call BegTest
+      When verb = '*Done'      Then call EndTest
+      When verb = '*Want'      Then call DoWant
+      When verb = '*Gpr'       Then call WantGPR
+      When verb = '*Key'       Then call WantKey
+      When verb = '*Prefix'    Then call WantPrefix
+      When verb = '*Explain'   Then call DoExplain
+
+      When verb = '*Error'     Then call DoHmsg 'Error'
+      When verb = '*Info'      Then call DoHmsg 'Informational'
+      When verb = '*Hmsg'      Then call DoHmsg 'Panel message'
+
+      When verb = '*Program'   Then wantpgm = rest
+      When verb = '*Timeout'   Then timeoutok = TRUE
+      When verb = '*Message'   Then Say rest
+
+      When verb = '*Compare'   Then
       Do
-         comparing = 1
+         comparing = TRUE
          lastmsg.0 = 0
       End
-   When verb = '*Want'
-      Then call want
-   When verb = '*Error'
-      Then call msg 'Error'
-   When verb = '*Info'
-      Then call msg 'Informational'
-   When verb = '*Hmsg'
-      Then call msg 'Panel message'
-   When verb = '*Explain'
-      Then call explain
-   When verb = '*Gpr'
-      Then call wantgpr
-   When verb = '*Key'
-      Then call wantkey
-   When verb = '*Message' Then
-      If active
-         Then Say rest
-   When verb = '*Prefix'
-      Then call wantprefix
-   When verb = '*Program'
-      Then wantpgm = rest
-   When verb = '*Done'
-      Then call endtest
-   When verb = '*Timeout'
-      then timeoutOk = 1
-   Otherwise
-      Say 'Bad directive: ' verb
-      rv = 16
+
+      Otherwise
+         Call OkayOrNot FALSE, 'Unknown directive:' verb
+   End
 End
 Return
 
 /*********************************************************************/
-/* Initialise variable store for new test case                       */
+/*                             DoIf                                  */
+/*********************************************************************/
+/* Process '*If' order: evaluate the condition to determine whether  */
+/* it's true or false, which defines our new 'active' flag state.    */
 /*********************************************************************/
 
-begtest:
+DoIf:
 
-done        = done + 1
-testcase    = rest
-comparing   = 0
-havewait    = 0
+if lookingahead Then
+Do
+   stoplookahead = TRUE
+   Return
+End
+
+ifnum = ifnum + 1           -- (starting a new 'if' block)
+testexpr = rest             -- (save unresolved expression)
+testcond = ''               -- (initialize 'if' condition)
+
+/* Build this 'if' statement's conditional expression */
+
+Do While rest \= ''     -- Tokenize expression until nothing remains
+
+   /* Check if there's a '$variable' we need to expand */
+
+   Parse Var rest  foo '$' +0 dolvar rest
+   testcond = testcond foo
+
+   /* If no '$variable' remains in the expression,
+      then what we have is a complete expression
+   */
+   If dolvar = '' Then Leave
+
+   /* Otherwise retrieve the variable's value from our "values" stem.
+      PLEASE NOTE that we use 'Parse UPPER' for case insensitivity.
+   */
+   Parse UPPER Var dolvar +1 UPPER_varname .
+   varvalue = values.UPPER_varname
+
+   /* Surround it with double-quotes if it's not a whole number */
+   If \DATATYPE( varvalue, 'Whole' )
+      Then varvalue = '"'varvalue'"'
+
+   /* Append it to our test condition that we're accumulating */
+   testcond = testcond varvalue
+
+End
+
+/* Now interpret the condition to see whether it's true or false */
+Signal On    Syntax
+Signal Off   NoValue
+Interpret    'iftrue = 'testcond
+Signal On    NoValue
+
+/* Save the 'active' state for the now current 'if' block */
+ifprev.ifnum = active
+ifcond.ifnum = (iftrue & ifprev.ifnum)
+ifelse.ifnum = 0
+
+/* Update current state based on new and previous states */
+active = (ifcond.ifnum & ifprev.ifnum)
+Return
+
+Syntax:
+Say "'*If' statement syntax error:" testexpr
+Return
+
+/*********************************************************************/
+/*                             DoElse                                */
+/*********************************************************************/
+/* Process '*Else' order: flip 'active' flag for current 'if' block  */
+/*********************************************************************/
+
+DoElse:
+
+if lookingahead Then
+Do
+   stoplookahead = TRUE
+   Return
+End
+
+Select
+
+   When ifnum <= 0
+      Then Say "No '*If' is active."
+
+   When ifelse.ifnum
+      Then Say "'*Else' already seen for '*If' block " ifnum
+
+   Otherwise
+      ifelse.ifnum = TRUE
+      ifcond.ifnum = \ifcond.ifnum
+
+      /* Update current state based on new and previous states */
+      active = (ifcond.ifnum & ifprev.ifnum)
+
+End
+Return
+
+/*********************************************************************/
+/*                             EndIf                                 */
+/*********************************************************************/
+/* Process '*Fi' (EndIf) order: restore previous 'active' state      */
+/*********************************************************************/
+
+EndIf:
+
+if lookingahead Then
+Do
+   stoplookahead = TRUE
+   Return
+End
+
+If ifnum <= 0 Then
+Do
+   Say "No '*If' block is active."
+   Return
+End
+
+ifnum = ifnum - 1
+
+/* Update current state based on new and previous states */
+active = (ifcond.ifnum & ifprev.ifnum)
+Return
+
+/*********************************************************************/
+/*                             BegTest                               */
+/*********************************************************************/
+/* Process '*Testcase' order: initialize testcase variables          */
+/*********************************************************************/
+
+BegTest:
+
+if lookingahead Then
+Do
+   stoplookahead = TRUE
+   Return
+End
+
+numtests    = numtests + 1      -- (count '*Testcases' orders)
+testcase    = rest              -- (save Testcase name)
+
 oks         = 0
-wantpgm     = ''
-havepgm     = ''
 rv          = 0
-pgmok       = 0                       /* Program check not expected  */
-gpr.        = ''
-lastkey     = ''
+
+timeoutok   = FALSE
+waitseen    = FALSE
+comparing   = FALSE
+
+storaddr    = '<unknown>'
 keyaddr     = '<unknown>'
-lastaddr    = '<unknown>'
+storkey     = ''
+pgmchk      = ''
+wantpgm     = ''
 prefix      = ''
-lastmsg.0   = 0
-lasterror.0 = 0
-lasterror   = ''
-lastinfo.0  = 0
+gpr.        = ''
+
 lastinfo    = ''
-expl.0      = 0
-timeoutOk   = 0
 lastmsg.0   = 0
+explain.0   = 0
 
 Return
 
 /*********************************************************************/
-/* Wind up a test.                                                   */
+/*                             DoWant                                */
+/*********************************************************************/
+/* Compare storage display against expected contents.                */
 /*********************************************************************/
 
-endtest:
-
-stardone    = stardone + 1
-unprocessed = ''                      /* No read ahead stored        */
-nowait = (rest = 'nowait')
-
-If \havewait & \nowait
-   Then Call lookahead             /* Perhaps *Done overtook message */
-
-Select
-   When havepgm \= ''
-      Then call figurePgm
-   Otherwise nop
+DoWant:
+rest = STRIP( rest )
+If LEFT( rest, 1 ) = '"' Then
+Do
+   Parse Var rest  '"' info '"' rest
+   info = '"'info'"'
+   rest = STRIP( rest )
 End
-
-If \havewait & \nowait Then
-   Do
-      Say '>>>>> line' lineno': No wait state encountered.'
-      rv = rv + 1
-   End
-Select
-   When rv = 0
-      Then msg ='All pass.'
-   When rv = 1
-      Then msg ='One failure.'
-   Otherwise
-      msg = rv 'failures.'
-End
-
-If \quiet | rv \= 0
-   Then Say 'Test' testcase'. ' oks 'OK compares. ' msg
-
-fail       = rv \= 0
-fails.fail = fails.fail + 1           /* Ok or fail                  */
-
-If unprocessed \= ''
-   Then Call procline unprocessed
+Else
+   info = ''
+   Call OkayOrNot rest = storbytes, 'Storage compare mismatch.',,
+      'Want:' storaddr STRIP( rest ) ' 'info, 'Got: ' storaddr STRIP( storbytes )
 Return
 
 /*********************************************************************/
-/* Test  case has ended, but we have not seen a disabled PSW message */
-/* yet.                                                              */
-/*                                                                   */
-/* If havepgm is nonblank, we have seen a program check, but not yet */
-/* the disabled wait PSW that will ensue.                            */
-/*********************************************************************/
-
-lookahead:
-
-Do While lines(in) > 0
-
-   unprocessed = readline()
-
-   If wordpos(?msg, 'HHC00809I HHC00803I') > 0
-      Then leave
-   If havepgm = ''                    /* Saw a program check?        */
-      Then Return                  /* Return to process *Done if not */
-
-   Call procline unprocessed
-
-End
-
-/* Say '*** wait leapfrogged. ***' lineno */
-Call procline unprocessed
-unprocessed = ''
-
-Return
-
-/*********************************************************************/
-/* Compare storage display against wanted contents.                  */
-/*********************************************************************/
-
-want:
-
-wantres = (rest = display)
-
-Call test wantres, 'Storage at' lastaddr 'compare mismatch. ' info
-
-If \wantres Then
-   Do
-      Say '... Want:' strip(rest)
-      Say '... Have:' strip(display)
-   End
-Return
-
+/*                           WantGPR                                 */
 /*********************************************************************/
 /* Verify contents of a general register.                            */
 /*********************************************************************/
 
-wantgpr:
-
-Parse Upper Var rest r want '#' .
-
-Call test gpr.r = want, 'Gpr' r 'compare mismatch. ' info 'Want:' want 'got' gpr.r
-
+WantGPR:
+Parse Upper Var rest r what '#' .
+Call OkayOrNot gpr.r = what, 'Gpr' r 'compare mismatch.',,
+    'Want:' what, 'Got: ' gpr.r
 Return
 
 /*********************************************************************/
-/* Verify  that  the  key  of  the  last page frame displayed is the */
-/* specified one.                                                    */
+/*                           WantKey                                 */
+/*********************************************************************/
+/* Verify a page frame's storage key has the expected value.         */
 /*********************************************************************/
 
-wantkey:
-
-Parse Upper Var rest want '#' .
-
-If lastkey = '' Then
-   Call test 0, 'No key saved from r command.'
+WantKey:
+Parse Upper Var rest what '#' .
+If storkey = '' Then
+   Call OkayOrNot FALSE, 'No key saved from r/abs/v command.'
 Else
-   Call test lastkey = want, 'Key' keyaddr 'compare mismatch. ' info 'Want:' want 'got' lastkey
-
+Call OkayOrNot storkey = what, 'Key' keyaddr 'compare mismatch.',,
+    'Want:' what, 'Got: ' storkey
 Return
 
 /*********************************************************************/
-/* Verify that the prefix register contains the specified value.     */
+/*                          WantPrefix                               */
+/*********************************************************************/
+/* Verify the prefix register contains the expected value.           */
 /*********************************************************************/
 
-wantprefix:
-
-Parse Upper Var rest want '#' .
-
+WantPrefix:
+Parse Upper Var rest what '#' .
 If prefix = '' Then
-   Call test 0, 'No prefix register saved from pr command.'
+   Call OkayOrNot FALSE, 'No prefix register saved from pr command.'
 Else
-   Call test prefix = want, 'Prefix register compare mismatch. ' info 'Want:' want 'got' prefix
-
+   Call OkayOrNot prefix = what, 'Prefix register compare mismatch.',,
+   'Want:' what, 'Got: ' prefix
 Return
 
+/*********************************************************************/
+/*                             DoHmsg                                */
 /*********************************************************************/
 /* Verify the last issued message.                                   */
 /*********************************************************************/
 
-msg:
+DoHmsg:
 
-Parse Arg msgtype
+Parse Arg  msgtype
 
-If lastmsg.0 = 0 Then
-   Do
-      Call test 0, 'No message saved for' rest
-      Return
-   End
+If lastmsg.0 <= 0 Then
+Do
+   Call OkayOrNot FALSE, 'No message saved for' rest
+   Return
+End
 
-If datatype(word(rest, 1), 'Whole') Then
-   Parse var rest mnum rest
+If DATATYPE( WORD( rest, 1 ), 'Whole' ) Then
+   Parse Var rest  index rest
 Else
-   mnum = 0
+   index = 0
 
-ix = lastmsg.0 - mnum
+msgnum = lastmsg.0 - index
 
-If ix <= 0 Then
-   Call test 0, 'No message stored for number' mnum
+If msgnum <= 0 Then
+   Call OkayOrNot FALSE, 'No message stored for number' index
 Else
-   Call test lastmsg.ix = rest, msgtype 'message mismatch. ' info ,,
-      'Want:' rest, 'Got: ' lastmsg.ix
-
+   Call OkayOrNot lastmsg.msgnum = rest, msgtype 'message mismatch.',,
+      'Want:' rest, 'Got: ' lastmsg.msgnum
 Return
 
 /*********************************************************************/
-/* Verify the last issue informational message                       */
+/*                           HHC02269I                               */
+/*********************************************************************/
+/*  HHC02269I General purpose registers                              */
+/*  HHC02269I R0=0000000000000001 R1=0000000000000618 R2=0000...     */
+/*  HHC02269I R4=0000000000000500 R5=0000000000000000 R6=0000...     */
+/*  ...etc...                                                        */
 /*********************************************************************/
 
-imsg:
-
-If lastinfo = '' Then
-   Call test 0, 'No informational message saved for' rest
-Else
-   Call test lastinfo = rest, 'Informational message mismatch. ' info ,,
-      'Want:' rest, 'Got: ' lastinfo
-
-Return
-
-/*********************************************************************/
-/* Decode disabled wait state message.                               */
-/*********************************************************************/
-
-waitstate:
-
-havewait = 1
-Parse Var rest 'wait state' psw1 psw2
-cond = (psw2 = 0) | (right(psw2, 4) = 'DEAD' & havepgm \= '' & havepgm = wantpgm)
-Call test cond, 'Received unexpected wait state: ' psw1 psw2
-
-Return
-
-/*********************************************************************/
-/* Save general registers for later test.                            */
-/*********************************************************************/
-
-gprs:
-
-If verb = 'General'
-   Then return
-
-todo = verb rest
-
-Do While todo \= ''
-   Parse Var todo 'R' r '=' val todo
-   r = x2d(r)
-   gpr.r = val
-End
-
-Return
-
-/*********************************************************************/
-/* Save explain text in explain array.                               */
-/*********************************************************************/
-
-explain:
-
-? = expl.0 + 1
-expl.? = rest
-expl.0 = ?
-
-Return
-
-/*********************************************************************/
-/* Process  a  program check, which is identified by the IA field of */
-/* the disabled wait PSW.                                            */
-/*********************************************************************/
-
-figurePgm:
-
-Select
-   When havepgm \= '' & wantpgm \= ''
-      Then Call test havepgm = wantpgm, 'Expect pgm type' wantpgm', but have type' havepgm'.'
-   When havepgm \= ''
-      Then Call test 0, 'Unexpected pgm type' havepgm' havepgm.'
-   Otherwise
-      Call test 0, 'Expect pgm type' wantpgm', but none happened.'
-End
-
-Return
-
-/*********************************************************************/
-/* Evaluate  the  condition  on a If to determine whether to perform */
-/* orders or not.                                                    */
-/*********************************************************************/
-
-doif:
-
-expr = rest
-test = ''
-
-Do While rest \= ''
-   Parse Var rest rl '$' +0 dolvar rest
-   test = test rl
-
-   If dolvar = ''
-      Then leave
-
-   Parse Var dolvar +1 varname .
-   varvalue = values.varname
-
-   If \datatype(varvalue, "Whole")
-      Then varvalue = '"'varvalue'"'
-
-   test = test varvalue
-End
-
-Signal On syntax
-Signal Off novalue
-
-interpret 'res = ' test
-
-Signal On  novalue
-
-ifstack = active hadelse ifstack
-ifnest = ifnest + 1
-
-If active                             /* In nested suppress?         */
-   Then active = (res = 1)
-
-Return
-
-syntax:
-Say 'Syntax error in *If test:' expr
-Return
-
-/*********************************************************************/
-/* Process Else.  Flip active if no else has been seen.              */
-/*********************************************************************/
-
-doElse:
-
-Select
-   When ifnest <= 0
-      Then Say 'No *If is active.'
-   When hadelse
-      Then Say '*Else already seen on level' ifnnest '.  Stack:' ifstack
-   Otherwise
-      Parse Var ifstack prevact .   /* Nested if in suppressed code? */
-      hadelse = 1
-      active = prevact & (1 && active)
-End
-
-Return
-
-/*********************************************************************/
-/* End of if.  Unstack.                                              */
-/*********************************************************************/
-
-endif:
-
-If ifnest <= 0 Then
-   Do
-      Say 'No *If is active.'
-      Return
-   End
-
-ifnest = ifnest - 1
-Parse Var ifstack active hadelse ifstack
-
-Return
-
-/*********************************************************************/
-/* Display message about a failed test.                              */
-/*********************************************************************/
-
-test:
-
-If \active                            /* suppress any noise          */
+HHC02269I:
+If verb = 'General'         -- (ignore header line)  
    Then Return
+regsline = verb rest        -- ("R0=... R1..." etc, as one long string)
+Do While regsline \= ''
+   Parse Var regsline  'R' regnum '=' regval regsline
+   regnum = X2D( regnum )
+   gpr.regnum = regval
+End
+Return
 
-! = '>>>>> line' right(lineno, 5)':'
-!! = left(' ', length(!))
+/*********************************************************************/
+/*                           DoExplain                               */
+/*********************************************************************/
+/* Save explain text in explain. stem array.                         */
+/*********************************************************************/
 
-If arg(1) Then
-   oks = oks + 1
+DoExplain:
+numexplains = explain.0 + 1
+explain.numexplains = rest
+explain.0 = numexplains
+Return
+
+/*********************************************************************/
+/*                           HHC00809I                               */
+/*********************************************************************/
+/* HHC00809I Processor %s%02X: disabled wait state %s                */
+/*********************************************************************/
+
+HHC00809I:
+waitseen = TRUE
+Parse Var rest  'wait state' psw1 psw2
+waitok = (psw2 = 0) | (RIGHT( psw2, 4 ) = 'DEAD' & pgmchk \= '' & pgmchk = wantpgm)
+Call OkayOrNot waitok, 'Received unexpected wait state: ' psw1 psw2
+Return
+
+/*********************************************************************/
+/*                           OkayOrNot                               */
+/*********************************************************************/
+/* Display error message(s) when a Testcase condition isn't true.    */
+/* Counts number of 'ok' tests if the test condition is true. Else   */
+/* counts and displays information about the failed condition. The   */
+/* first passed argument is true/false condition indicating whether  */
+/* the test condition holds or not.  The other passed arguments is   */
+/* message text that should be displayed if the condition is false.  */
+/*********************************************************************/
+
+OkayOrNot:
+
+If \active Then Return      -- (ignore if no '*Compare' seen yet)
+
+/* The first argument passed to us is a boolean indicating whether or
+   not the test condition was found to be true or false (ok or not).
+*/
+If ARG(1) Then
+   oks = oks + 1            -- (count okay tests for this Testcase)
 Else
-   Do
-      Say ! arg(2)
+Do
+   /* Display the test failure message(s) provided by the caller */
 
-      Do ? = 3 to arg()
-         Say !! arg(?)
-      End
+   errmsg  =  '>>>>> line' RIGHT( lineno, 5 )':'
+   indent  =  LEFT( ' ', LENGTH( errmsg ))
 
-      rv = rv + 1
-
-      Do ? = 1 to expl.0              /* Further explanation         */
-         Say !! expl.?
-      End
+   Say errmsg ARG(2)      -- primary failure message
+   Do n = 3 To ARG()
+   Say indent ARG( n )    -- 'Want:', 'Got: ', etc...
    End
 
-expl.0 = 0                            /* Be quiet next time          */
+   rv = rv + 1            -- (count failed tests for this Testcase)
+
+   /* Display any '*Explain' messages if there are any */
+
+   Do n = 1 to explain.0
+      Say indent explain.n
+   End
+End
+
+explain.0 = 0     -- (be quiet until next '*Explain' group)
+Return
+
+/*********************************************************************/
+/*                           EndTest                                 */
+/*********************************************************************/
+/* Process '*Done' order: perform end-of-Testcase processing         */
+/*********************************************************************/
+
+EndTest:
+
+numdones = numdones + 1         -- (count '*Done' orders)
+nowait = (rest = 'nowait')      -- (was 'nowait' option specified?)
+
+/* Report any unexpected program checks */
+
+If pgmchk \= '' | wantpgm \= '' Then
+Do
+   If pgmchk \= '' & wantpgm = '' Then
+      Call OkayOrNot FALSE, 'Unexpected pgm type' pgmchk'.'
+
+   If pgmchk = '' & wantpgm \= '' Then
+      Call OkayOrNot FALSE, 'Expected pgm type' wantpgm', but none happened.'
+
+   If pgmchk \= '' & wantpgm \= '' Then
+      Call OkayOrNot pgmchk = wantpgm, 'Expected pgm type' wantpgm', but got type' pgmchk'.'
+End
+
+/* Report any missing wait state */
+
+If \nowait & \waitseen Then
+Do
+   /* PROGRAMMING NOTE: due to Hercules's currently flawed message
+      handling, sometimes messages appear in the log in the wrong
+      order, with the message for a particular event that logically
+      occurred BEFORE some other event being written to the logfile
+      AFTER the message for an event which logically followed it.
+
+      The below call to the LookAhead subroutine attempts to locate
+      the missing disabled wait message by reading the next several
+      lines from the logfile. During this process the current file
+      position is saved and then restored again afterwards to ensure
+      no logile statements are inadvertently skipped.
+   */
+   Call LookAhead       -- (maybe it follows our '*Done' order?)
+
+   If \waitseen Then
+   Do
+      Say '>>>>> line' lineno': No wait state encountered.'
+      rv = rv + 1
+   End
+End
+
+/* Issue the overall report for this Testcase */
+
+Select
+   When rv = 0 Then msg = 'All pass.'
+   When rv = 1 Then msg = 'One failure.'
+   Otherwise        msg = rv 'failures.'
+End
+
+If rv \= 0 | \quiet
+   Then Say 'Test "'testcase'": ' oks 'OK compares. ' msg
+
+/* Increment overall count of Testcase successes or failures. */
+
+failed = (rv \= 0)                -- (whether or not Testcase failed)
+fails.failed = fails.failed + 1   -- (bump overall successes/failures)
 
 Return
 
-novalue:
+/*********************************************************************/
+/*                         LookAhead                                 */
+/*********************************************************************/
+/*  The '*Done' order is being processed, but we haven't seen any    */
+/*  disabled wait PSW message yet. Keep reading ahead until either   */
+/*  it's found or we reach an if/else/endif or testcase directive.   */
+/*********************************************************************/
 
-Parse Source . . fn ft fm .
+LookAhead:
 
-Say 'Novalue in' fn ft fm '-- variable' condition('D')
-Say right(sigl, 6) '>>>' sourceline(sigl)
-Say '  This is often caused by missing or misspelled *Testcase'
-Say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
+/* Save stream position */
+saved_lineno = lineno
+oldpos = STREAM( logfile, 'Command', 'QUERY POSITION READ' )
 
-Signal Value lets_get_a_traceback
+/* Read and process statements until either:
+
+    1. waitseen is true
+    2. An '*If', '*Else' or '*Fi' order is reached
+    3. The next '*Testcase' order is reached
+    4. EOF is reached.
+*/
+
+lookingahead  = TRUE
+stoplookahead = FALSE
+
+Do
+   stmt = ReadLog()
+   Do While stmt \= ''
+      Call ProcessStmt stmt
+      If waitseen | stoplookahead Then Leave
+      stmt = ReadLog()
+   End
+End
+
+lookingahead  = FALSE
+stoplookahead = TRUE
+
+/*
+If waitseen Then
+Do
+   Say '>>>>> DEBUG: LookAhead success'
+   Say '      line' saved_lineno": '*Done' order processed"
+   Say '      line' lineno': HHC00809I (or HHC00803I) seen'
+End
+Else
+Do
+   Say '>>>>> DEBUG: LookAhead failed'
+   Say '      line' saved_lineno": '*Done' order processed"
+   Say '      line' lineno': LookAhead aborted'
+End
+*/
+
+/* Restore stream position */
+newpos = STREAM( logfile, 'Command', 'SEEK 'oldpos' READ')
+lineno = saved_lineno
+
+Return
+
+/*********************************************************************/
+/*      Handle LOGIC ERROR.    We should NEVER reach here.           */
+/*********************************************************************/
+
+NoValue:
+
+Parse Source . . ourname
+
+ourname = FILESPEC( 'Name', ourname )   -- (just name w/o path)
+
+Say ''
+Say "** LOGIC ERROR in '"ourname"': variable '"CONDITION( 'Description' )"' is undefined."
+Say '   Line' SIGL': "'SOURCELINE( SIGL )'"'
+Say ''
+
+Exit -1
+
+/*********************************************************************/
+/*                            ( EOF )                                */
+/*********************************************************************/

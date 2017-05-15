@@ -3,6 +3,16 @@
   REM  If this batch file works, then it was written by Fish.
   REM  If it doesn't then I don't know who the heck wrote it.
 
+  setlocal
+  pushd .
+
+  set "TRACE=if defined DEBUG echo"
+  set "return=goto :EOF"
+  set "exit=goto :exit"
+  set "skip=goto :skip"
+  set "maxrc=0"
+  set "rc=0"
+
   goto :init
 
 ::-----------------------------------------------------------------------------
@@ -19,7 +29,7 @@
   echo.
   echo         %~n0     [ -d tdir ]  [-n tname]  [-f ftype]  [-t factor]
   echo                     [-64 ^| -32 ]  [-b build]  [-r [rpts[:fails]]]
-  echo                     [{-v QUIET ^| name:value} ... ]  [--noexit]
+  echo                     [{-v QUIET ^| name=value} ... ]  [--noexit]
   echo                     [-w wfn ]
   echo.
   echo     EXAMPLE
@@ -61,7 +71,7 @@
   echo                     ignored when the -r repeat option is specified.
   echo.
   echo         -v var...   Optional variable^(s^) to pass to the redtest.rexx
-  echo                     script such as QUIET or name:value.  You may repeat
+  echo                     script such as QUIET or name=value.  You may repeat
   echo                     this option as many times as neeed.
   echo.
   echo         --noexit    Specify --noexit to suppress the exit command that
@@ -118,7 +128,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.1         (January 17, 2016)
+  echo         3.2         (May 9, 2017)
   echo.
 
   set "hlp=1"
@@ -131,15 +141,6 @@
 ::-----------------------------------------------------------------------------
 :init
 
-  setlocal
-  pushd .
-
-  set "TRACE=if defined DEBUG echo"
-  set "return=goto :EOF"
-  set "exit=goto :exit"
-  set "skip=goto :skip"
-  set "maxrc=0"
-  set "rc=0"
   set "hlp="
 
   set "tool1=rexx.exe"
@@ -215,20 +216,34 @@
 ::-----------------------------------------------------------------------------
 :calc_mttof
 
+  :: Use Rexx to prevent antivirus issues with .vbs files
+
+  call :findtool "%tool1%"
+  if not defined # (
+    :: Rexx is not available
+    set /a "rc=1"
+    set "mttof=???"
+    %return%
+  )
+
   @REM  'mttof' is the maximum test timeout factor (runtest script statement)
   @REM  'msto'  is the maximum scripting timeout (i.e. script pause statement)
 
   setlocal
-  set "mttof="
-  set "msto=300.0"
-  call :tempfn                                    calc_mttof_vbs    .vbs
-  echo WScript.Echo Eval(WScript.Arguments(0)) > %calc_mttof_vbs%
-  for /f %%i in ('cscript //nologo               %calc_mttof_vbs% "(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"') do set mttof=%%i
-  for /f %%i in ('cscript //nologo               %calc_mttof_vbs% "Int(10.0 * %mttof%) / 10.0"')                                      do set mttof=%%i
-  del                                            %calc_mttof_vbs%
+
+  set    "mttof="
+  set    "msto=300.0"
+  set    "formula=(((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0 / %msto%)"
+
+  call   :tempfn                            calc_mttof_rexx    .rexx
+  echo   PARSE ARG '"' formula '"'     >   %calc_mttof_rexx%
+  echo   INTERPRET 'mttof = 'formula   >>  %calc_mttof_rexx%
+  echo   SAY FORMAT(mttof,,1)          >>  %calc_mttof_rexx%
+  for    /f %%i in ('rexx.exe              %calc_mttof_rexx% "%formula%"') do set mttof=%%i
+  del                                      %calc_mttof_rexx% >nul 2>&1
+
   endlocal && set "mttof=%mttof%"
   %return%
-
 
 ::-----------------------------------------------------------------------------
 ::                           load_tools
@@ -630,7 +645,7 @@
 :parse_v_opt
 
   if not defined optval goto :parse_missing_argument
-  for /f "tokens=1,2* delims=:" %%a in ("%optval%") do (
+  for /f "tokens=1,2* delims==" %%a in ("%optval%") do (
     set "a=%%a"
     set "b=%%b"
   )
@@ -826,22 +841,13 @@
 
   if not defined ttof %skip%
 
-  call :tempfn                                          check_mttof_vbs    .vbs
-  echo If %ttof% ^< 1.0 Or %ttof% ^> %mttof% Then   >  %check_mttof_vbs%
-  echo Wscript.Echo "0"                             >> %check_mttof_vbs%
-  echo Else                                         >> %check_mttof_vbs%
-  echo Wscript.Echo "1"                             >> %check_mttof_vbs%
-  echo End If                                       >> %check_mttof_vbs%
-  for /f %%i in ('cscript //nologo                     %check_mttof_vbs% 2^>^&1') do set ok=%%i
-
-  ::  Temporary HACK: for some reason the temporary file is sometimes
-  ::  not getting deleted.  I suspect it might be my antivirus but am
-  ::  unable to figure it out.  Hopefully the below hack will help to
-  ::  reduce the likelihood of occurrence.
-
-  timeout /t 1 /nobreak     &&  @REM Sleep for one second before
-                                @REM trying to delete temp file.
-  del %check_mttof_vbs%
+  :: Use Rexx to prevent antivirus issues with .vbs files
+  
+  call :tempfn                                 check_mttof_rexx    .rexx
+  echo Parse Arg ttof mttof               >   %check_mttof_rexx%
+  echo say ttof ^>= 1 ^& ttof ^<= mttof   >>  %check_mttof_rexx%
+  for /f %%i in ('rexx.exe                    %check_mttof_rexx% %ttof% %mttof%') do set ok=%%i
+  del                                         %check_mttof_rexx% >nul 2>&1
 
   %TRACE% "mttof=%mttof%, ttof=%ttof%: ok=%ok%"
 
@@ -849,6 +855,7 @@
     echo ERROR: Test timeout factor '%ttof%' not within valid range of 1.0 to %mttof%. 1>&2
     set /a "rc=1"
   )
+
 :skip
 
 
@@ -876,7 +883,9 @@
   %TRACE% maxfail  = %maxfail%
   %TRACE% noexit   = %noexit%
   %TRACE%.
-  if defined DEBUG goto :exitnow
+
+::::  goto :exitnow && @REM (debug variable parsing)
+
 
   @REM  Convert tests diretory to full path
 
@@ -929,7 +938,7 @@
     @REM  For normal runs, log date/time test was run
     @REM  in case they're redirecting output to a file
     echo.
-    echo On:     %dat% at %tod%
+    echo On:     %dat% at %begtime:~0,8% %tod:~-2%
     echo.
   )
 
@@ -976,6 +985,16 @@
     echo *                                                                 >> %wfn%.%wfe%
     type "%%a"                                                             >> %wfn%.%wfe%
   )
+
+  :: PROGRAMMING NOTE: It's CRITICALLY IMPORTANT that we echo a blank line
+  :: before echoing our 'exit command to our work file (%wfn%.%wfe%) since
+  :: the last file might not end with a line with a LF or CRLF line ending,
+  :: causing the exit command to simply be appended to the end of that line
+  :: instead of being echoed to a new line by itself, thus causing Hercules
+  :: to never exit. (If the last line is "# last line" without any line-
+  :: ending, the last line of our file would then become "# last lineexit")
+
+  echo.                                                                    >> %wfn%.%wfe%
   if not defined noexit echo exit                                          >> %wfn%.%wfe%
 
 

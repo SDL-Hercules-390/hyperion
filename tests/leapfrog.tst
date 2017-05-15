@@ -29,3 +29,4 @@ cpu 1 clocks
 ipending
 cr
 *Done
+numcpu 1

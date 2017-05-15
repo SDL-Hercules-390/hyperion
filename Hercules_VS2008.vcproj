@@ -4026,6 +4026,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ifelse.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ilc.tst"
 							>
 						</File>
@@ -4170,6 +4174,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\cmd-rv-4K-64.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\dummy.subtst"
 								>
 							</File>
 							<File

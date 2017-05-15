@@ -68,39 +68,6 @@ runtest .1
 *Done
 *
 * -----------------------------------------------------------------
-*Testcase SSK S/370  Specification Exception (high reg bits)
-*
-sysclear
-archmode S/370
-pr $(prpage)
-*
-r 000=0008000000000200        # EC mode restart PSW
-r 068=000A00000000DEAD        # EC mode pgm new PSW
-*
-r 200=58100308                # L    R1,bad           INVALID
-r 204=410000F0                # LA   R0,keyvalue      KEY F0
-r 208=0801                    # SSK  R0,R1
-r 20a=82000300                # LPSW DONEPSW
-*
-r 300=000A000000000000        # EC mode end-of-test PSW
-r 308=01000800                # bad page address
-*
-r $(apage0)=$(page0)          # table of page addresses...
-r $(apage1)=$(page1)
-r $(apage2)=$(page2)
-r $(apage3)=$(page3)
-r $(apage4)=$(page4)
-r $(apage5)=$(page5)
-r $(apage6)=$(page6)
-r $(anextlast)=$(nextlast)
-r $(alastpage)=$(lastpage)
-r $(apastlast)=$(pastlast)
-*
-*Program 0006
-runtest .1
-*Done
-*
-* -----------------------------------------------------------------
 *Testcase SSK S/370  Addressing Exception
 *
 sysclear

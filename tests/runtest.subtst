@@ -179,18 +179,25 @@ r $(aend3).c            # Show CPU 3 ending compare TOD
 *
 * ----------------------------------------------------------------------------
 *
+*Explain
 *Explain The failure of this test indicates one or more of the CPUs failed
 *Explain to properly update the indicated word to indicate it has completed
-*Explain its job. The word starts out as F0F1F2F3 and as each CPU finishes
-*Explain its loop it changes its corresponding value to FF. Thus the ending
-*Explain value reported by the failure indicates which of the CPUs failed
-*Explain to properly update its flag. For example: if the ending value is
-*Explain FFFFFFF3 it means CP03 failed to update its flag. If the ending
-*Explain value is FFFFF2F3 it means both CP02 and CP03 failed to update
-*Explain their flags, etc. The failure of this test therefore indicates
-*Explain either the runtest statement timed out, the implementation of the
-*Explain runtest statement itself is flawed (it should never wakeup early),
-*Explain or else some other part of Hercules is broken.
+*Explain its job.
+*Explain
+*Explain The word starts out as F0F1F2F3 and as each CPU finishes its loop 
+*Explain it changes its corresponding value to FF.  Thus the ending value
+*Explain reported by the failure indicates which of the CPUs failed to
+*Explain properly update its flag.
+*Explain
+*Explain For example: if the ending value is FFFFFFF3, it means CP03 failed
+*Explain to update its flag.  If the ending value is FFFFF2F3 it means both
+*Explain CP02 and CP03 failed to update their flags, etc.
+*Explain
+*Explain The failure of this test therefore indicates either the runtest
+*Explain statement timed out, the implementation of the runtest statement
+*Explain itself is flawed (it should never wakeup early), or else some other
+*Explain part of Hercules is broken.
+*Explain
 *
 *Compare
 r $(flag0)-$(flag3)

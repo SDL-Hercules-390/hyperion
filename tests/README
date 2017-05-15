@@ -243,9 +243,9 @@ Passed to hercules (timeout factor)
 Set variable for redtest.rexx (in fact, arguments to redtest.rexx).  Use
 -v ptrsize=4 when running a 32 bit executable on an 8 bit system if no
 valid config.h can be found. You can also set private variables this way
-(but such variables will be unset when running "make check").  It is
-unspecified whether case is respected in variable names. -v quiet will
-make redtest more terse.
+(but such variables will be unset when running "make check").  Variable
+names are case insensitive but their values are not. -v quiet will make
+redtest more terse.
 
 -w <word>
 Specify the work file name.  The default is allTests.
@@ -300,23 +300,29 @@ case ran correctly.
 .tst file directives
 --------------------
 
-.tst files are executed as Hercules rc files, so they contain Hercules
-console commands.  A number of loud comments (beginning with an
-asterisk) are interpretted by redtest.rexx as directives.  All
-directives are case sensitive.  Using "*testcase" for example
-accomplishes nothing.
+.tst files are executed as Hercules .rc files, so they contain Hercules
+console commands.
 
-*           Comment; ignored.  There must be a blank after the
-            asterisk.
+A number of "loud" comments (without a blank immediately following it)
+are interpretted by redtest.rexx as directives.  All testing directives
+are case sensitive.  Using "*testcase" for example accomplishes nothing.
+
+*           Hercules "loud" comment.  There must be a blank after the
+            asterisk for it to be ignored.  If it is not followed by a
+            blank it will interpretted as a test directive.
 
 *Testcase   Identify beginning of a test case.
 
-*Compare    An r command follows and the output should be stored for
-            later comparison.
+*Compare    An 'r', 'v' or 'abs' command follows and the output should
+            be stored for later comparison.  The '*Compare' directive
+            triggers the storing of messages in the message queue for
+            later comparison by the '*Hmsg' and other directives.  If
+            not given then any subsequent '*Hmsg' directives will fail
+            due to the stored message queue being empty.
 
 *Want       The expected r command output.  A string identifying the
             comparison may be enclosed in double quotes before the
-            compare data.
+            compare data (e.g. '*Want "CRC-32" DF00E74C')
 
 *Gpr        A previous gpr console command should have been issued to
             display the general registers.  The specified register is
@@ -333,14 +339,26 @@ accomplishes nothing.
             register displayed by a previous pr command.
 
 *Program    A program check is expected, for example to verify that a
-            privileged operation causes an 0c2.
+            privileged operation causes an 0c2.  Since program checks
+            typically cause a disabled wait state psw to be loaded,
+            to prevent an unwanted "unexpected wait state" error from
+            being detected instead this directive MUST be specified
+            BEFORE the 'runtest' script command that starts the test.
 
-*Hmsg       Specify the complete informational message string to
-            compare against the last issued message, except for
-            messages that are processed by redtest.rexx, plus messages
-            7 and 1603.  A number is optional before the message
-            identifier to specify the last but one, last but two, etc,
-            see example below.
+*Hmsg       Specifies a complete informational message string to be
+            compared against the last stored message (except for any
+            messages that are processed by redtest.rexx plus messages
+            HHC00007I and HHC01603I).  A number is optional before the
+            message identifier to specify the last but one message, the
+            last but two message, etc.  For example, if a test expects
+            three messages then you would use:
+
+                *Hmsg 2  First expected message...
+                *Hmsg 1  Second expected message...
+                *Hmsg    Third expected message...
+
+            The stored messages queue does not begin storing messages
+            until the '*Compare' directive is first given.
 
 *Info       Synonym for *Hmsg.  Use if an informational message is
             expected.
@@ -355,10 +373,10 @@ accomplishes nothing.
 *Message    Print a message on the output.
 
 *If         Specify a condition to test (see later).  The expression is
-            evaluated by the REXX interpreter.   If the condition holds, the
-            following directives are processed up to the matching *Else
-            or *Fi.   If the condition does not hold, directives are
-            ignored except that nested *If directives are parsed.
+            evaluated by the Rexx interpreter.   If the condition holds,
+            the following directives are processed up to the matching
+            *Else or *Fi.   If the condition does not hold, directives
+            are ignored except that nested *If directives are parsed.
 
 *Else       Flip the setting of the matching *If condition, unless
             nested in a suppressed *If.
@@ -380,22 +398,32 @@ pr.tst for *Prefix.  See mainsize.tst for conditional processing.
 Predefined variables
 --------------------
 
-Predefined variables are specified as arguments to redtest.rexx and extracted
-from the HHC01417I features messages.  The runtest script (not to be confused
-with the runtest command above) sets the value of the "$ptrsize" variable to
-either 4 or 8 by passing the value to redtest.rexx on the command line.  Any
-number of user defined variables can be defined the same way by simply passing
-their name and value on the command line to redtest.rexx.  Refer to runtest's
-help display for how to do this.
+Predefined variables are specified as arguments to redtest.rexx as well
+as being extracted from the HHC01417I features messages.  The runtest
+script (not to be confused with the runtest command above) sets the value
+of the "$ptrsize" variable to either 4 or 8 by directly passing the value
+to redtest.rexx on the command line.  Any number of user defined variables
+can also be defined the same way by simply passing their name and value
+on the command line to redtest.rexx.  Refer to runtest's help display
+for how to do this.
 
-Other variables are defined directly by redtest.rexx itself based on Hercules
-HHC01417I startup messages. For example, the variable $cmpxchg1 is set to 1
-if "cmpxchg1" appears in the message "HHC01417I Machine dependent assists:".
-The variable $locking_model is set to 'error' if message "HHC01417I Using
-Error-Checking Mutex Locking Model" is seen, etc.
+Other variables are defined by redtest.rexx itself based on the Hercules
+HHC01417I startup and other messages.  For example, the variable $cmpxchg1
+is set to 1 if "cmpxchg1" appears in message "HHC01417I Machine dependent
+assists:".  The variable $locking_model is set to 'error' if the message
+"HHC01417I Using Error-Checking Mutex Locking Model" is seen, and so on.
 
-All variables are either boolean, numeric or string type and are read only.
-The list of currently supported pre-defined variables are:
+Variables are either of boolean, numeric or string type and are read only.
+A variable's name is case insensitive but its value is not.  $foo, $FOO,
+$Foo, etc, all refer to the same variable.  Predefined variables are meant
+to be use in '*If' directives to adjust test cases according the defined
+value of a given variable or variables, since one user's build of Hercules
+(or the environment in which it runs) might not be the same as another's.
+Designing you test cases to take this into consideration is encouraged.
+
+
+The current list of pre-defined runtime variables are as follows:
+
 
   Boolean:
 
@@ -418,9 +446,13 @@ The list of currently supported pre-defined variables are:
     $IEEE
     $IPV6
     $NLS
-    $OORexx
     $regex
-    $Regina
+    $rexx_ErrPrefix
+    $rexx_MsgLevel
+    $rexx_MsgPrefix
+    $rexx_Resolver
+    $rexx_supported
+    $rexx_SysPath
     $shared_devices
     $SIGABEND
     $sqrtl
@@ -432,24 +464,53 @@ The list of currently supported pre-defined variables are:
   Numeric:
 
     $max_cpu_engines
+    $ptrsize
 
   String:
 
-    $hatomics         C11, msvcIntrinsics, atomicIntrinsics, syncBuiltins
-    $keepalive        Full, Partial, Basic
-    $libraries        shared, static
-    $locking_model    Error, Normal, Recursive
-    $threading_model  Fish, POSIX
+    $hatomics           atomicIntrinsics, C11, msvcIntrinsics, syncBuiltins
+    $keepalive          Basic, Full, Partial
+    $libraries          Shared, Static
+    $locking_model      Error, Normal, Recursive
+    $platform           Linux, Windows, etc.
+    $rexx_Extensions    .REXX;.rexx;.REX;.rex;.CMD;.cmd;.RX;.rx
+    $rexx_Mode          Command, Subroutine
+    $rexx_package       OORexx, Regina
+    $rexx_RexxPath      /foo:/bar:/foobar (or C:\Foo;C:\Bar;C:\FooBar)
+    $rexx_SOURCE        WindowsNT, LINUX, etc.
+    $rexx_VERSION       REXX-ooRexx_4.2.0(MT)_64-bit 6.04 22 Feb 2014
+    $threading_model    Fish, POSIX
 
 
-Example conditional directives variable usage:
+Examples of if/else variable usage:
 
   mainsize 2147483648b
   *If $ptrsize = 4
-  *Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
-  *Error   HHC02388E Configure storage error -1
+      *Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+      *Error   HHC02388E Configure storage error -1
   *Else # 64 bit
-  *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+      *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+  *Fi
+
+
+  *If $HET_BZIP2
+      ...(do test here)...
+  *Else
+      *Message SKIPPING: Testcase MyTest
+      *Message REASON:   No BZIP2 support
+  *Fi
+
+
+  *If \$rexx_supported
+      *Message SKIPPING: Testcase Example
+      *Message REASON:   No Hercules Rexx support.
+  *Else
+      *If $rexx_package = ''
+          *Message SKIPPING: Testcase Example
+          *Message REASON:   Rexx is not installed.
+      *Else
+          ...(do test here)...
+      *Fi
   *Fi
 
 
@@ -541,7 +602,7 @@ The test cases are TEXT decks on CMS.  When the .tst script is built from
 assembler source, the object deck is a by product; it should be uploaded
 to CMS without change.  The test case is loaded at a page boundary by CMS.
 
-The REXX script cvttst.rexx builds an object deck from a .tst script
+The Rexx script cvttst.rexx builds an object deck from a .tst script
 that is built by hand (notably the ieee floating point test cases).
 This process makes several changes to the program:
 

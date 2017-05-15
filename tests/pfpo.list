@@ -19,7 +19,7 @@ ASMA Ver. 0.2.0                                                                 
                                                                             15
 0000000000000000  00090000 00000200                                         16  dc a(x'00090000',go) ESA restart new PSW at 0
 0000000000000008                                                            17 ropsw390 ds 0xl8  ESA/390 Restart old psw
-0000000000000008  00000000 00000000                                         18  ds x'ffffffffffffffff'  If no longer ones, then ESA/390 mode
+0000000000000008  FFFFFFFF FFFFFFFF                                         18  dc x'ffffffffffffffff'  If no longer ones, then ESA/390 mode
                                                                             19
 0000000000000010                      0000000000000010  0000000000000060    20  org pfpo+x'60' ESA SVC new PSW
 0000000000000060  000A0000 00000000                                         21  dc x'000a0000',a(x'0')    normal end of job

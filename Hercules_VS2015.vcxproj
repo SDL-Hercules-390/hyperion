@@ -817,9 +817,11 @@
     <None Include="tests\digest.assemble" />
     <None Include="tests\digest.listing" />
     <None Include="tests\digest.tst" />
+    <None Include="tests\dummy.subtst" />
     <None Include="tests\hetbsf-bzip2.het" />
     <None Include="tests\hetbsf.het" />
     <None Include="tests\hetbsf.tst" />
+    <None Include="tests\ifelse.tst" />
     <None Include="tests\ilc.assemble" />
     <None Include="tests\ilc.listing" />
     <None Include="tests\ilc.tst" />

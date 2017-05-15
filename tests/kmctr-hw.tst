@@ -29,7 +29,7 @@ sysclear
 archmode z
 r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-r 200=41000000     # LA R0,63          R0->function code 0
+r 200=4100003f     # LA R0,63          R0->function code 63
 r 204=4110f500      #  LA R1,PB          R1->parameter block address
 r 208=41200000     # LA R2,FO          R2->first operand
 r 20C=41400000     # LA R4,SO          R4->second operand
@@ -38,6 +38,8 @@ r 214=41600000     # LA R6,TO          R6->third operand
 r 218=B92D6024     # KMCTR R2,R6,R4    Cipher message with counter
 r 21C=12ee077eB2B20300      #  LPSWE WAITPSW     Load enabled wait PSW
 r 300=00020001800000000000000000000000 #  WAITPSW Enabled wait state PSW
+*
+r 500=000102030405060708090A0B0C0D0E0F # Parameter block
 *Program 6
 runtest .1
 *Done

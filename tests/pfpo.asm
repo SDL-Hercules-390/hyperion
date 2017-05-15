@@ -15,7 +15,7 @@ pfpo start 0
  
  dc a(x'00090000',go) ESA restart new PSW at 0
 ropsw390 ds 0xl8  ESA/390 Restart old psw
- ds x'ffffffffffffffff'  If no longer ones, then ESA/390 mode
+ dc x'ffffffffffffffff'  If no longer ones, then ESA/390 mode
  
  org pfpo+x'60' ESA SVC new PSW
  dc x'000a0000',a(x'0')    normal end of job

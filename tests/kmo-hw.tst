@@ -29,7 +29,7 @@ sysclear
 archmode z
 r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-r 200=41000000     # LA R0,x'7f'       R0->function code 0
+r 200=4100007f     # LA R0,x'7f'       R0->function code 127
 r 204=4110f500      #  LA R1,PB          R1->parameter block address
 r 208=41200000     # LA R2,FO          R2->first operand
 r 20C=41400000     # LA R4,SO          R4->second operand
@@ -40,11 +40,8 @@ r 300=00020001800000000000000000000000 #  WAITPSW Enabled wait state PSW
 *
 r 500=000102030405060708090A0B0C0D0E0F # Parameter block
 *
-r 580=F0703838000000000000000000000000 # Expected result
-*
-runtest .1
 *Program 6
-*Compare
+runtest .1
 *Done
 
 *Testcase KMO fc1
