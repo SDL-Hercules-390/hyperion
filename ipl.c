@@ -467,8 +467,8 @@ int rc;
         for (i=0; i < (int)dev->numsense; i++)
         {
             MSGBUF(buf2, "%2.2X", dev->sense[i]);
-            strlcat(buf, buf2, sizeof(buf) );
-            if ((i & 3) == 3) strlcat(buf, " ", sizeof(buf));
+            STRLCAT( buf, buf2 );
+            if ((i & 3) == 3) STRLCAT( buf, " " );
         }
         {
             char buffer[256];

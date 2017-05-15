@@ -338,7 +338,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 struct tt32ctl tt32ctl;
 
                 memset( &tt32ctl, 0, sizeof(tt32ctl) );
-                strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetIfName, sizeof(tt32ctl.tt32ctl_name) );
+                STRLCPY( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetIfName );
 
                 tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
 
@@ -2599,7 +2599,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                        "TAP device name", optarg );
                 return -1;
             }
-            strlcpy( pLCSBLK->Port[0].szNetIfName, optarg, sizeof(pLCSBLK->Port[0].szNetIfName) );
+            STRLCPY( pLCSBLK->Port[0].szNetIfName, optarg );
             saw_if = 1;
             break;
 #endif /*!defined(OPTION_W32_CTCI)*/
@@ -2728,7 +2728,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             }
             /* The -x option was not specified, so the argument should be the  */
             /* the name of the pre-configured TAP interface that LCS will use. */
-            strlcpy( pLCSBLK->Port[0].szNetIfName, argv[0], sizeof(pLCSBLK->Port[0].szNetIfName) );
+            STRLCPY( pLCSBLK->Port[0].szNetIfName, argv[0] );
             pLCSBLK->Port[0].fPreconfigured = TRUE;
 #endif /*defined(OPTION_W32_CTCI)*/
         }
@@ -2826,7 +2826,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             cl = resolve_symbol_string( pszStatement );
             if (cl)
             {
-                strlcpy( szBuff, cl, sizeof( szBuff ));
+                STRLCPY( szBuff, cl );
                 free( cl );
                 free( pszStatement );
                 pszStatement = strdup( szBuff );

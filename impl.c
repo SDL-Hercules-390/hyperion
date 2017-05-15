@@ -619,9 +619,9 @@ int     rc;
             if ( hostinfo.num_procs > 1 )
                 MSGBUF( num_procs, "MP=%d", hostinfo.num_procs );
             else if ( hostinfo.num_procs == 1 )
-                strlcpy( num_procs, "UP", sizeof(num_procs) );
+                STRLCPY( num_procs, "UP" );
             else
-                strlcpy( num_procs,   "",  sizeof(num_procs) );
+                STRLCPY( num_procs, "" );
         }
 
         set_symbol( "HOSTNAME", hostinfo.nodename );

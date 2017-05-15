@@ -175,15 +175,15 @@ BOOL tt32_loaddll()
     if ( strchr( pszDLLName, '/' ) || strchr( pszDLLName, '\\' ) )
     {
         // It's already a path...
-        strlcpy( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
+        STRLCPY( tt32_dllname_in_buff, pszDLLName );
     }
     else
     {
         // It's not a path, so make it one, using loadable module path
 
-        strlcpy( tt32_dllname_in_buff, hdl_setpath(NULL,TRUE), sizeof(tt32_dllname_in_buff) );
-        strlcat( tt32_dllname_in_buff, PATHSEPS,   sizeof(tt32_dllname_in_buff) );
-        strlcat( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
+        STRLCPY( tt32_dllname_in_buff, hdl_setpath( NULL, TRUE ));
+        STRLCAT( tt32_dllname_in_buff, PATHSEPS );
+        STRLCAT( tt32_dllname_in_buff, pszDLLName );
     }
 
     // Now convert it to a full path...
@@ -195,7 +195,7 @@ BOOL tt32_loaddll()
 
 #ifdef _MSVC_
     if ( !_fullpath( tt32_dllname_out_buff, tt32_dllname_in_buff, sizeof(tt32_dllname_out_buff) ) )
-        strlcpy(     tt32_dllname_out_buff, tt32_dllname_in_buff, sizeof(tt32_dllname_out_buff) );
+        STRLCPY(     tt32_dllname_out_buff, tt32_dllname_in_buff );
 #else // (presumed cygwin)
     cygwin_conv_to_full_win32_path( tt32_dllname_in_buff, tt32_dllname_out_buff );
 #endif // _MSVC_
@@ -204,7 +204,7 @@ BOOL tt32_loaddll()
 
     // Finally, copy it to our global home for it...
 
-    strlcpy( g_tt32_dllname, tt32_dllname_out_buff, sizeof(g_tt32_dllname) );
+    STRLCPY( g_tt32_dllname, tt32_dllname_out_buff );
 
     ASSERT(g_tt32_dllname[0]);
 
@@ -214,7 +214,7 @@ BOOL tt32_loaddll()
     {
         // Try again WITHOUT the path this time...
 
-        strlcpy( g_tt32_dllname, pszDLLName, sizeof(g_tt32_dllname) );
+        STRLCPY( g_tt32_dllname, pszDLLName );
 
         g_tt32_hmoddll = LoadLibraryEx( g_tt32_dllname, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
 

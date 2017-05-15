@@ -291,7 +291,7 @@ static void logger_logfile_timestamp()
         char            hhmmss[10];
 
         gettimeofday( &now, NULL ); tt = now.tv_sec;
-        strlcpy( hhmmss, ctime(&tt)+11, sizeof(hhmmss) );
+        STRLCPY( hhmmss, ctime(&tt)+11 );
         logger_logfile_write( hhmmss, strlen(hhmmss) );
     }
 }
@@ -489,8 +489,7 @@ DLL_EXPORT void logger_init(void)
            as the log file. */
         if(sysblk.daemon_mode)
         {
-            strlcpy(logger_filename, "STDOUT redirected from command line",
-                    sizeof(logger_filename));
+            STRLCPY( logger_filename, "STDOUT redirected from command line" );
             /* Ignore standard output to the extent that it is
                treated as standard error */
             logger_hrdcpyfd = dup(STDOUT_FILENO);
@@ -505,8 +504,7 @@ DLL_EXPORT void logger_init(void)
         {
             if(!isatty(STDOUT_FILENO))
             {
-                strlcpy(logger_filename, "STDOUT redirected from command line",
-                        sizeof(logger_filename));
+                STRLCPY( logger_filename, "STDOUT redirected from command line" );
                 logger_hrdcpyfd = dup(STDOUT_FILENO);
                 if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
                 {
@@ -517,8 +515,7 @@ DLL_EXPORT void logger_init(void)
             }
             else if(!isatty(STDERR_FILENO))
             {
-                strlcpy(logger_filename, "STDERR redirected from command line",
-                        sizeof(logger_filename));
+                STRLCPY( logger_filename, "STDERR redirected from command line" );
                 logger_hrdcpyfd = dup(STDERR_FILENO);
                 if(dup2(STDOUT_FILENO,STDERR_FILENO) == -1)
                 {
@@ -675,7 +672,7 @@ DLL_EXPORT void log_sethrdcpy( const char* filename )
                     logger_hrdcpy   = new_hrdcpy;
                     logger_hrdcpyfd = new_hrdcpyfd;
 
-                    strlcpy( logger_filename, filename, sizeof( logger_filename ));
+                    STRLCPY( logger_filename, filename );
                 }
                 release_lock( &logger_lock );
 

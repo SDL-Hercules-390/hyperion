@@ -61,17 +61,17 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 #else
    #if defined( HAVE_SYS_UTSNAME_H )
     uname(        &uname_info );
-    strlcpy( pHostInfo->sysname,  uname_info.sysname,  sizeof(pHostInfo->sysname)  );
-    strlcpy( pHostInfo->nodename, uname_info.nodename, sizeof(pHostInfo->nodename) );
-    strlcpy( pHostInfo->release,  uname_info.release,  sizeof(pHostInfo->release)  );
-    strlcpy( pHostInfo->version,  uname_info.version,  sizeof(pHostInfo->version)  );
-    strlcpy( pHostInfo->machine,  uname_info.machine,  sizeof(pHostInfo->machine)  );
+    STRLCPY( pHostInfo->sysname,  uname_info.sysname  );
+    STRLCPY( pHostInfo->nodename, uname_info.nodename );
+    STRLCPY( pHostInfo->release,  uname_info.release  );
+    STRLCPY( pHostInfo->version,  uname_info.version  );
+    STRLCPY( pHostInfo->machine,  uname_info.machine  );
    #else
-    strlcpy( pHostInfo->sysname,  "(unknown)", sizeof(pHostInfo->sysname)  );
-    strlcpy( pHostInfo->nodename, "(unknown)", sizeof(pHostInfo->nodename) );
-    strlcpy( pHostInfo->release,  "(unknown)", sizeof(pHostInfo->release)  );
-    strlcpy( pHostInfo->version,  "(unknown)", sizeof(pHostInfo->version)  );
-    strlcpy( pHostInfo->machine,  "(unknown)", sizeof(pHostInfo->machine)  );
+    STRLCPY( pHostInfo->sysname,  "(unknown)" );
+    STRLCPY( pHostInfo->nodename, "(unknown)" );
+    STRLCPY( pHostInfo->release,  "(unknown)" );
+    STRLCPY( pHostInfo->version,  "(unknown)" );
+    STRLCPY( pHostInfo->machine,  "(unknown)" );
    #endif
    #if defined(HAVE_SYSCONF)
       #if defined(HAVE_DECL__SC_NPROCESSORS_CONF) && \
@@ -105,7 +105,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
         if ( sysctl( mib, 2, &machine, &length, NULL, 0 ) != -1 )
         {
             machine[length] = 0;
-            strlcpy( pHostInfo->machine, machine, sizeof( pHostInfo->machine ) );
+            STRLCPY( pHostInfo->machine, machine );
         }
 
         length = sizeof(iRV);
@@ -147,7 +147,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             char mach[64];
 
             MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
-            strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+            STRLCPY( pHostInfo->machine, mach );
             pHostInfo->cpu_64bits = 1;
         }
 
@@ -157,7 +157,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
             char mach[64];
 
             MSGBUF( mach, "%s %s", iRV != 0 ? "64-bit" : "32-bit", pHostInfo->machine );
-            strlcpy( pHostInfo->machine, mach, sizeof( pHostInfo->machine ) );
+            STRLCPY( pHostInfo->machine, mach );
             pHostInfo->cpu_aes_extns = 1;
         }
 
@@ -275,9 +275,9 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
             if ( pHostInfo->num_procs > 1 )
                 MSGBUF( num_procs, " MP=%d", pHostInfo->num_procs );
             else if ( pHostInfo->num_procs == 1 )
-                strlcpy( num_procs, " UP", sizeof(num_procs) );
+                STRLCPY( num_procs, " UP" );
             else
-                strlcpy( num_procs,   "",  sizeof(num_procs) );
+                STRLCPY( num_procs, "" );
         }
 
 #if defined( OPTION_LONG_HOSTINFO )

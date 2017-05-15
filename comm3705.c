@@ -288,7 +288,7 @@ packet_trace( BYTE* pAddr, int iLen )
             if( offset < iLen )
             {
                 sprintf( tmp, "%2.2X", c );
-                strlcat( print_line, tmp, sizeof( print_line ));
+                STRLCAT( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -300,13 +300,13 @@ packet_trace( BYTE* pAddr, int iLen )
             }
             else
             {
-                strlcat( print_line, "  ", sizeof( print_line ));
+                STRLCAT( print_line, "  " );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strlcat( print_line, " ", sizeof( print_line ));
+                STRLCAT( print_line, " " );
             }
         }
 
@@ -756,7 +756,7 @@ char                    group[16];      /* Console group             */
     if ( cons_hostinfo.num_procs > 1 )
         snprintf( num_procs, sizeof(num_procs)-1, "MP=%d", cons_hostinfo.num_procs );
     else
-        strlcpy( num_procs, "UP", sizeof(num_procs) );
+        STRLCPY( num_procs, "UP" );
 
     snprintf
     (
@@ -850,10 +850,10 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         }
         if(i%4==0 && i)
         {
-            strlcat(buf, " ", sizeof(buf));
+            STRLCAT( buf, " " );
         }
         MSGBUF(byte, "%02X", bfr[i]);
-        strlcat(buf, byte, sizeof(buf));
+        STRLCAT( buf, byte );
     }
     WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
     buf[0] = 0;
@@ -868,7 +868,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             }
         }
         MSGBUF(byte, "%c",(bfr[i] & 0x7f) < 0x20 ? '.' : (bfr[i] & 0x7f));
-        strlcat(buf, byte, sizeof(buf));
+        STRLCAT( buf, byte );
     }
     WRMSG(HHC01051,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,buf);
 }
@@ -1539,10 +1539,10 @@ static void format_sna (BYTE * requestp, char * tag, U16 ssid, U16 devnum) {
     sprintf(fmtbuf3, "%02X", requestp[13]);
     sprintf(fmtbuf4, "%02X", requestp[14]);
     if (len > 1)
-        strlcat(fmtbuf3, fmtbuf4, sizeof(fmtbuf3));
+        STRLCAT( fmtbuf3, fmtbuf4 );
     sprintf(fmtbuf4, "%02X", requestp[15]);
     if (len > 2)
-        strlcat(fmtbuf3, fmtbuf4, sizeof(fmtbuf3));
+        STRLCAT( fmtbuf3, fmtbuf4 );
     if (requestp[13] == 0x11)
         ru_type = "ACTPU";
     if (requestp[13] == 0x0D)

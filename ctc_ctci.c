@@ -24,13 +24,13 @@
 /*    Interfaces  are  displayed  and  controlled  by  the  ifconfig */
 /*    command (to be replaced by the ip command).                    */
 #if 0
-        tun0      Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00
-                  inet addr:192.168.2.65  P-t-P:10.0.0.33  Mask:255.255.255.255
-                  UP POINTOPOINT RUNNING NOARP MULTICAST  MTU:1500  Metric:1
-                  RX packets:70834 errors:0 dropped:0 overruns:0 frame:0
-                  TX packets:47 errors:0 dropped:0 overruns:0 carrier:0
-                  collisions:0 txqueuelen:100
-                  RX bytes:4262823 (4.0 MiB)  TX bytes:2602 (2.5 KiB)
+   tun0   Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00
+          inet addr:192.168.2.65  P-t-P:10.0.0.33  Mask:255.255.255.255
+          UP POINTOPOINT RUNNING NOARP MULTICAST  MTU:1500  Metric:1
+          RX packets:70834 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:47 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:100
+          RX bytes:4262823 (4.0 MiB)  TX bytes:2602 (2.5 KiB)
 #endif
 /*                                                                   */
 /* Opening the character special file obtains a file handle that can */
@@ -266,7 +266,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             struct tt32ctl tt32ctl;
 
             memset( &tt32ctl, 0, sizeof(tt32ctl) );
-            strlcpy( tt32ctl.tt32ctl_name, pDevCTCBLK->szTUNIfName, sizeof(tt32ctl.tt32ctl_name) );
+            STRLCPY( tt32ctl.tt32ctl_name, pDevCTCBLK->szTUNIfName );
 
             tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
@@ -1171,13 +1171,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     memset( &mac, 0, sizeof( MAC ) );
 
     // Set some initial defaults
-    strlcpy( pCTCBLK->szMTU,     "1500",            sizeof(pCTCBLK->szMTU) );
-    strlcpy( pCTCBLK->szNetMask, "255.255.255.255", sizeof(pCTCBLK->szNetMask) );
+    STRLCPY( pCTCBLK->szMTU,     "1500" );
+    STRLCPY( pCTCBLK->szNetMask, "255.255.255.255" );
 #if defined( OPTION_W32_CTCI )
     strlcpy( pCTCBLK->szTUNCharDevName,  tt32_get_default_iface(),
              sizeof(pCTCBLK->szTUNCharDevName) );
 #else
-    strlcpy( pCTCBLK->szTUNCharDevName,  HERCTUN_DEV, sizeof(pCTCBLK->szTUNCharDevName) );
+    STRLCPY( pCTCBLK->szTUNCharDevName, HERCTUN_DEV );
 #endif
 
 #if defined( OPTION_W32_CTCI )
@@ -1293,7 +1293,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "device name", optarg );
                 return -1;
             }
-            strlcpy( pCTCBLK->szTUNCharDevName, optarg, sizeof(pCTCBLK->szTUNCharDevName) );
+            STRLCPY( pCTCBLK->szTUNCharDevName, optarg );
             break;
 
 #if !defined( OPTION_W32_CTCI )
@@ -1305,7 +1305,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "TUN device name", optarg );
                 return -1;
             }
-            strlcpy( pCTCBLK->szTUNIfName, optarg, sizeof(pCTCBLK->szTUNIfName) );
+            STRLCPY( pCTCBLK->szTUNIfName, optarg );
             saw_if = 1;
             break;
 #endif
@@ -1354,7 +1354,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strlcpy( pCTCBLK->szMACAddress, optarg, sizeof(pCTCBLK->szMACAddress) );
+            STRLCPY( pCTCBLK->szMACAddress, optarg );
             saw_conf = 1;
 
             break;
@@ -1371,7 +1371,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strlcpy( pCTCBLK->szMTU, optarg, sizeof(pCTCBLK->szMTU) );
+            STRLCPY( pCTCBLK->szMTU, optarg );
             saw_conf = 1;
             break;
 
@@ -1384,7 +1384,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strlcpy( pCTCBLK->szNetMask, optarg, sizeof(pCTCBLK->szNetMask) );
+            STRLCPY( pCTCBLK->szNetMask, optarg );
             saw_conf = 1;
             break;
 
@@ -1433,7 +1433,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "IP address", *argv );
                 return -1;
             }
-            strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
+            STRLCPY( pCTCBLK->szGuestIPAddr, *argv );
             argc--; argv++;
 
             // Driver IP Address
@@ -1444,7 +1444,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "IP address", *argv );
                 return -1;
             }
-            strlcpy( pCTCBLK->szDriveIPAddr, *argv, sizeof(pCTCBLK->szDriveIPAddr) );
+            STRLCPY( pCTCBLK->szDriveIPAddr, *argv );
             argc--; argv++;
 
             pCTCBLK->fPreconfigured = FALSE;
@@ -1459,7 +1459,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                       "TUN device name", optarg );
                 return -1;
             }
-            strlcpy( pCTCBLK->szTUNIfName, *argv, sizeof(pCTCBLK->szTUNIfName) );
+            STRLCPY( pCTCBLK->szTUNIfName, *argv );
             argc--; argv++;
 
             pCTCBLK->fPreconfigured = TRUE;
@@ -1485,7 +1485,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             char * s = pCTCBLK->szTUNIfName + strlen(pCTCBLK->szTUNIfName);
 
             while(isdigit(s[- 1])) s--;
-            strlcat( pCTCBLK->szTUNCharDevName,  s, sizeof(pCTCBLK->szTUNCharDevName) );
+            STRLCAT( pCTCBLK->szTUNCharDevName, s );
         }
 #endif
     }
@@ -1511,7 +1511,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strlcpy( pCTCBLK->szTUNCharDevName, *argv, sizeof(pCTCBLK->szTUNCharDevName) );
+        STRLCPY( pCTCBLK->szTUNCharDevName, *argv );
 
         argc--; argv++;
 
@@ -1526,7 +1526,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strlcpy( pCTCBLK->szMTU, *argv, sizeof(pCTCBLK->szMTU) );
+        STRLCPY( pCTCBLK->szMTU, *argv );
         argc--; argv++;
 
         // Guest IP Address
@@ -1538,7 +1538,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
+        STRLCPY( pCTCBLK->szGuestIPAddr, *argv );
 
         argc--; argv++;
 
@@ -1551,7 +1551,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strlcpy( pCTCBLK->szDriveIPAddr, *argv, sizeof(pCTCBLK->szDriveIPAddr) );
+        STRLCPY( pCTCBLK->szDriveIPAddr, *argv );
 
         argc--; argv++;
 
@@ -1564,7 +1564,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strlcpy( pCTCBLK->szNetMask, *argv, sizeof(pCTCBLK->szNetMask) );
+        STRLCPY( pCTCBLK->szNetMask, *argv );
 
         argc--; argv++;
 
@@ -1594,7 +1594,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     return -1;
                 }
 
-                strlcpy( pCTCBLK->szGuestIPAddr, *argv, sizeof(pCTCBLK->szGuestIPAddr) );
+                STRLCPY( pCTCBLK->szGuestIPAddr, *argv );
 
                 argc--; argv++;
 
@@ -1611,7 +1611,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     }
                 }
 
-                strlcpy( pCTCBLK->szTUNCharDevName, *argv, sizeof(pCTCBLK->szTUNCharDevName) );
+                STRLCPY( pCTCBLK->szTUNCharDevName, *argv );
 
                 // Kludge: This may look strange at first, but with
                 // TunTap32, only the last 3 bytes of the "driver IP

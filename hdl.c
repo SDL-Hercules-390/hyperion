@@ -169,7 +169,7 @@ DLL_EXPORT char *hdl_setpath( const char *path, int flag )
         abspath[0] = 0;
     }
     if (!abspath[0])
-        strlcpy( abspath, pathname, sizeof( abspath ));
+        STRLCPY( abspath, pathname );
 
     // Check flag: TRUE == conditional, FALSE == unconditional
     if (flag)

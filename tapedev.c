@@ -1348,7 +1348,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) >= sizeof(dev->filename))
-        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
+        STRLCPY( dev->filename, TAPE_UNLOADED );
     else
     {
         /* Save the file name in the device block */
@@ -1746,7 +1746,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 /* A new tape SHOULD be mounted */
                 dev->tapedisptype   = TAPEDISPTYP_MOUNT;
                 dev->tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
-                strlcpy( dev->tapemsg1, dev->tapemsg2, sizeof(dev->tapemsg1) );
+                STRLCPY( dev->tapemsg1, dev->tapemsg2 );
             }
             else if(TAPEDISPTYP_UNMOUNT == dev->tapedisptype)
             {
@@ -1787,12 +1787,12 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
-    if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
-                                   strlcat( devparms, dev->filename, sizeof(devparms));
-    if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
+    if (strchr(dev->filename,' ')) STRLCAT( devparms, "\""          );
+                                   STRLCAT( devparms, dev->filename );
+    if (strchr(dev->filename,' ')) STRLCAT( devparms, "\""          );
 
     if (dev->noautomount)
-        strlcat( devparms, " noautomount", sizeof(devparms));
+        STRLCAT( devparms, " noautomount" );
 
 #if defined(OPTION_SCSI_TAPE)
     if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
@@ -1836,13 +1836,13 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
         {
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
+                if (!dev->stape_blkid_32 ) STRLCAT( devparms, " --blkid-22" );
             }
             else // emulating 3480, 3490
             {
-                if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+                if ( dev->stape_blkid_32 ) STRLCAT( devparms, " --blkid-32" );
             }
-            if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
+            if ( dev->stape_no_erg ) STRLCAT( devparms, " --no-erg" );
         }
 #endif
         snprintf(buffer, buflen, "%s%s%s IO[%"PRIu64"]%s%s deonirq=%c",
@@ -1869,7 +1869,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
             if (STS_BOT( dev ))
             {
                 dev->eotwarning = 0;
-                strlcat(tapepos,"*BOT* ",sizeof(tapepos));
+                STRLCAT( tapepos, "*BOT* " );
             }
 
             // If tape has a display, then GetDisplayMsg already
@@ -1877,17 +1877,17 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
 
             if ( !dev->tdparms.displayfeat )
                 if (STS_WR_PROT( dev ))
-                    strlcat(tapepos,"*FP* ",sizeof(tapepos));
+                    STRLCAT( tapepos, "*FP* " );
 
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
+                if (!dev->stape_blkid_32 ) STRLCAT( devparms, " --blkid-22" );
             }
             else // emulating 3480, 3490
             {
-                if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+                if ( dev->stape_blkid_32 ) STRLCAT( devparms, " --blkid-32" );
             }
-            if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
+            if ( dev->stape_no_erg ) STRLCAT( devparms, " --no-erg" );
         }
 #endif
 
@@ -2222,16 +2222,16 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
             char  msg1[9];
             char  msg2[9];
 
-            strlcpy ( msg1,   dev->tapemsg1, sizeof(msg1) );
-            strlcat ( msg1,   "        ",    sizeof(msg1) );
-            strlcpy ( msg2,   dev->tapemsg2, sizeof(msg2) );
-            strlcat ( msg2,   "        ",    sizeof(msg2) );
+            STRLCPY( msg1,   dev->tapemsg1 );
+            STRLCAT( msg1,   "        "    );
+            STRLCPY( msg2,   dev->tapemsg2 );
+            STRLCAT( msg2,   "        "    );
 
-            strlcat ( msgbfr, msg1,             lenbfr );
-            strlcat ( msgbfr, "\" / \"",        lenbfr );
-            strlcat ( msgbfr, msg2,             lenbfr );
-            strlcat ( msgbfr, "\"",             lenbfr );
-            strlcat ( msgbfr, " (alternating)", lenbfr );
+            strlcat( msgbfr, msg1,             lenbfr );
+            strlcat( msgbfr, "\" / \"",        lenbfr );
+            strlcat( msgbfr, msg2,             lenbfr );
+            strlcat( msgbfr, "\"",             lenbfr );
+            strlcat( msgbfr, " (alternating)", lenbfr );
         }
         else
         {
@@ -2259,7 +2259,7 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
     // First, build the system message, then move it into
     // the caller's buffer...
 
-    strlcpy( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+    STRLCPY( dev->tapesysmsg, "\"" );
 
     switch ( dev->tapedisptype )
     {
@@ -2269,7 +2269,7 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
         // Blank display if no tape loaded...
         if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
         {
-            strlcat( dev->tapesysmsg, "        ", sizeof(dev->tapesysmsg) );
+            STRLCAT( dev->tapesysmsg, "        " );
             break;
         }
 
@@ -2288,7 +2288,7 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 #endif
         )
         {
-            strlcat( dev->tapesysmsg, " NT RDY ", sizeof(dev->tapesysmsg) );
+            STRLCAT( dev->tapesysmsg, " NT RDY " );
             break;
         }
 
@@ -2296,8 +2296,8 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 
         ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
 
-        strlcat ( dev->tapesysmsg, " READY  ", sizeof(dev->tapesysmsg) );
-        strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+        STRLCAT( dev->tapesysmsg, " READY  " );
+        STRLCAT( dev->tapesysmsg, "\"" );
 
         if (0
             || dev->readonly
@@ -2309,30 +2309,30 @@ void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 #endif
         )
             // (append "file protect" indicator)
-            strlcat ( dev->tapesysmsg, " *FP*", sizeof(dev->tapesysmsg) );
+            STRLCAT( dev->tapesysmsg, " *FP*" );
 
         // Copy system message to caller's buffer
         strlcpy( msgbfr, dev->tapesysmsg, lenbfr );
         return;
 
     case TAPEDISPTYP_ERASING:
-        strlcat ( dev->tapesysmsg, " ERASING", sizeof(dev->tapesysmsg) );
+        STRLCAT( dev->tapesysmsg, " ERASING" );
         break;
 
     case TAPEDISPTYP_REWINDING:
-        strlcat ( dev->tapesysmsg, "REWINDNG", sizeof(dev->tapesysmsg) );
+        STRLCAT( dev->tapesysmsg, "REWINDNG" );
         break;
 
     case TAPEDISPTYP_UNLOADING:
-        strlcat ( dev->tapesysmsg, "UNLOADNG", sizeof(dev->tapesysmsg) );
+        STRLCAT( dev->tapesysmsg, "UNLOADNG" );
         break;
 
     case TAPEDISPTYP_CLEAN:
-        strlcat ( dev->tapesysmsg, "*CLEAN  ", sizeof(dev->tapesysmsg) );
+        STRLCAT( dev->tapesysmsg, "*CLEAN  " );
         break;
     }
 
-    strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+    STRLCAT( dev->tapesysmsg, "\"" );
 
     // Copy system message to caller's buffer
     strlcpy( msgbfr, dev->tapesysmsg, lenbfr );

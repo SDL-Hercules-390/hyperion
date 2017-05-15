@@ -733,13 +733,13 @@ BYTE dumpbuf[32*1024] = {0};
         if (disp && !(disp & 15))
         {
             DUMPLINE;
-            strlcat(dumpbuf, linebuf, sizeof(dumpbuf));
+            STRLCAT( dumpbuf, linebuf );
             hexbuf[0] = 0;
         }
         if (!(disp & 3))
-            strlcat(hexbuf, " ", sizeof(hexbuf));
+            STRLCAT( hexbuf, " " );
         MSGBUF( hex, "%2.2X", *p );
-        strlcat(hexbuf, hex, sizeof(hexbuf));
+        STRLCAT( hexbuf, hex );
         c = guest_to_host(*p);
         if (!isprint(c) || iscntrl(c)) c = '.';
         charbuf[disp & 15] = c;
@@ -751,15 +751,15 @@ BYTE dumpbuf[32*1024] = {0};
         for (; disp & 15; disp++)
         {
             if (!(disp & 3))
-                strlcat(hexbuf, " ", sizeof(hexbuf));
-            strlcat(hexbuf, "  ", sizeof(hexbuf));
+                STRLCAT( hexbuf, " " );
+            STRLCAT( hexbuf, "  " );
             charbuf[disp & 15] = ' ';
         }
     }
 
     /* Last line */
     DUMPLINE;
-    strlcat(dumpbuf, linebuf, sizeof(dumpbuf));
+    STRLCAT( dumpbuf, linebuf );
 
     logmsg("CHSC 0x%04X: req_len=0x%04X, rsp_len=0x%04X\n%s",
         req, req_len, rsp_len, dumpbuf);

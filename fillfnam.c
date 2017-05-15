@@ -156,22 +156,22 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
          sprintf(fullfilename, "%s", namelist[i]->d_name);
 #ifdef _MSVC_
       if (within_quoted_string)
-        strlcat(fullfilename,"\"",sizeof(fullfilename));
+        STRLCAT( fullfilename, "\"" );
 #endif
       /* if it is a directory, add '/' to the end so it can be seen on screen*/
       hostpath(pathname, fullfilename, sizeof(pathname));
       if (stat(pathname,&buf) == 0)
          if (buf.st_mode & S_IFDIR) {
-//          strlcat(namelist[i]->d_name,"/",sizeof(namelist[i]->d_name));
+//          STRLCAT( namelist[i]->d_name, "/" );
 // Don't write past end of d_name
 // Problem debugged by bb5ch39t
             namelist[i] = realloc(namelist[i], sizeof(struct dirent)
                                 + strlen(namelist[i]->d_name) + 2);
             if (namelist[i])
 #ifdef _MSVC_
-               strlcat(namelist[i]->d_name,"\\",sizeof(namelist[i]->d_name));
+               STRLCAT( namelist[i]->d_name, "\\" );
 #else
-               strlcat(namelist[i]->d_name,"/",sizeof(namelist[i]->d_name));
+               STRLCAT( namelist[i]->d_name, "/" );
 #endif
          }
     }

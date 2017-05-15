@@ -234,7 +234,7 @@ void showhelp(char *pgm)
             , sizeof( part4 ));
     }
     else
-        strlcpy( part4, "" , sizeof( part4 ));
+        STRLCPY( part4, "" );
 
     // HHC02660 "Usage: %s %s%s%s%s"
     WRMSG( HHC02660, "I", pgm, part1, part2, part3, part4 );
@@ -480,10 +480,10 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
     y = (f1dscb->ds1credt[1] << 8) | f1dscb->ds1credt[2];
 
     MSGBUF( txtcredt, "%4.4d", x );
-    strlcat (txtcredt, ".", sizeof( txtcredt));
+    STRLCAT( txtcredt, "." );
 
     MSGBUF( txtscr, "%3.3d", y );
-    strlcat( txtcredt, txtscr, sizeof( txtcredt ));
+    STRLCAT( txtcredt, txtscr );
 
     if (f1dscb->ds1expdt[0] || f1dscb->ds1expdt[1] || f1dscb->ds1expdt[2])
     {
@@ -491,10 +491,10 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
         y = (f1dscb->ds1expdt[1] << 8) | f1dscb->ds1expdt[2];
 
         MSGBUF( txtexpdt, "%4.4d", x );
-        strlcat( txtexpdt, ".", sizeof( txtexpdt ));
+        STRLCAT( txtexpdt, "." );
 
         MSGBUF( txtscr, ".%3.3d", y );
-        strlcat( txtexpdt, txtscr, sizeof( txtexpdt ));
+        STRLCAT( txtexpdt, txtscr );
     }
 
     num_extents = f1dscb->ds1noepv;
@@ -504,25 +504,25 @@ void showf1(    FORMAT1_DSCB    *f1dscb,
 
     dsorg = (f1dscb->ds1dsorg[0] << 8) | (f1dscb->ds1dsorg[1]);
 
-    if (dsorg & (DSORG_IS * 256))               strlcpy( txtdsorg, "IS", sizeof( txtdsorg ));
-    if (dsorg & (DSORG_PS * 256))               strlcpy( txtdsorg, "PS", sizeof( txtdsorg ));
-    if (dsorg & (DSORG_DA * 256))               strlcpy( txtdsorg, "DA", sizeof( txtdsorg ));
-    if (dsorg & (DSORG_PO * 256))               strlcpy( txtdsorg, "PO", sizeof( txtdsorg ));
-    if (dsorg &  DSORG_AM)                      strlcpy( txtdsorg, "VS", sizeof( txtdsorg ));
-    if (txtdsorg[0] == '\0')                    strlcpy( txtdsorg, "??", sizeof( txtdsorg ));
+    if (dsorg & (DSORG_IS * 256))               STRLCPY( txtdsorg, "IS" );
+    if (dsorg & (DSORG_PS * 256))               STRLCPY( txtdsorg, "PS" );
+    if (dsorg & (DSORG_DA * 256))               STRLCPY( txtdsorg, "DA" );
+    if (dsorg & (DSORG_PO * 256))               STRLCPY( txtdsorg, "PO" );
+    if (dsorg &  DSORG_AM)                      STRLCPY( txtdsorg, "VS" );
+    if (txtdsorg[0] == '\0')                    STRLCPY( txtdsorg, "??" );
 
-    if (dsorg & (DSORG_U * 256))                strlcat( txtdsorg, "U",  sizeof( txtdsorg ));
+    if (dsorg & (DSORG_U * 256))                STRLCAT( txtdsorg, "U" );
 
-    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strlcpy( txtrecfm, "F", sizeof( txtrecfm ));
-    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strlcpy( txtrecfm, "V", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      STRLCPY( txtrecfm, "F" );
+    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      STRLCPY( txtrecfm, "V" );
     if ((f1dscb->ds1recfm & RECFM_FORMAT_U) == RECFM_FORMAT_U)
-                                                strlcpy( txtrecfm, "U", sizeof( txtrecfm ));
+                                                STRLCPY( txtrecfm, "U" );
 
-    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strlcat( txtrecfm, "B", sizeof( txtrecfm ));
-    if (f1dscb->ds1recfm & RECFM_SPANNED)       strlcat( txtrecfm, "S", sizeof( txtrecfm ));
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strlcat( txtrecfm, "A", sizeof( txtrecfm ));
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strlcat( txtrecfm, "M", sizeof( txtrecfm ));
-    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strlcat( txtrecfm, "T", sizeof( txtrecfm ));
+    if (f1dscb->ds1recfm & RECFM_BLOCKED)       STRLCAT( txtrecfm, "B" );
+    if (f1dscb->ds1recfm & RECFM_SPANNED)       STRLCAT( txtrecfm, "S" );
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     STRLCAT( txtrecfm, "A" );
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     STRLCAT( txtrecfm, "M" );
+    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      STRLCAT( txtrecfm, "T" );
 
     //  Field ignored: ds1optcd (option codes, same as in DCB)
 
@@ -637,7 +637,7 @@ int fbcopy(     FILE            *fout,
 
     if (absvalid)
     {
-        strlcpy( zdsn, argdsn, sizeof( zdsn ));
+        STRLCPY( zdsn, argdsn );
         // "%s"
         if (debug) WRMSG( HHC02677, "D", "absvalid" );
     }
@@ -1125,7 +1125,7 @@ int getF1dscb(
     //  Locate dataset's F1 DSCB
 
     memset(zdsn, 0, sizeof(zdsn));
-    strlcpy( zdsn, *pdsn, sizeof( zdsn ));
+    STRLCPY( zdsn, *pdsn );
     string_to_upper( zdsn );
     convert_to_ebcdic( edsn, sizeof( edsn ), zdsn );
     if (verbose)

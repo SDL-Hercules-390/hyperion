@@ -182,7 +182,7 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
     dev->prompt1052 = 1;
 
     /* Initialize command prefix string to undefined */
-    strlcpy( dev->filename, "", sizeof( dev->filename ));
+    STRLCPY( dev->filename, "" );
 
     /* Determine device type. Default to 1052 */
     if (!sscanf( dev->typname, "%hx", &dev->devtype))
@@ -204,7 +204,7 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
         if (strcasecmp( argv[ac], "noprompt" ) == 0)
             dev->prompt1052 = 0;
         else
-            strlcpy( dev->filename, argv[ac], sizeof( dev->filename ));
+            STRLCPY( dev->filename, argv[ac] );
     }
 
     /* Set default command prefix if one wasn't specified */

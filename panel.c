@@ -368,7 +368,7 @@ static void do_panel_command( void* cmd )
     if (!is_currline_visible())
         scroll_to_bottom_screen();
     if (cmd != (void*)cmdline)
-        strlcpy( cmdline, cmd, sizeof(cmdline) );
+        STRLCPY( cmdline, cmd );
     if ( sysblk.cmdsep != NULL &&
          strlen(sysblk.cmdsep) == 1 &&
          strstr(cmdline, sysblk.cmdsep) != NULL )
@@ -400,7 +400,7 @@ static void do_prev_history()
 {
     if (history_prev() != -1)
     {
-        strlcpy(cmdline, historyCmdLine, sizeof(cmdline) );
+        STRLCPY( cmdline, historyCmdLine );
         cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
@@ -411,7 +411,7 @@ static void do_next_history()
 {
     if (history_next() != -1)
     {
-        strlcpy(cmdline, historyCmdLine, sizeof(cmdline) );
+        STRLCPY( cmdline, historyCmdLine );
         cmdlen = (int)strlen(cmdline);
         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
         ADJ_CMDCOL();
@@ -601,34 +601,34 @@ void set_console_title ( char *status )
 
         memset( msgbuf, 0, sizeof(msgbuf) );
 
-        strlcat(systype,str_systype(),sizeof(systype));
-        strlcat(sysname,str_sysname(),sizeof(sysname));
-        strlcat(sysplex,str_sysplex(),sizeof(sysplex));
-        strlcat(lparnam,str_lparname(),sizeof(lparnam));
+        STRLCAT( systype, str_systype()  );
+        STRLCAT( sysname, str_sysname()  );
+        STRLCAT( sysplex, str_sysplex()  );
+        STRLCAT( lparnam, str_lparname() );
 
         if ( strlen(lparnam)+strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
         {
             if ( strlen(lparnam) > 0 )
             {
-                strlcat(msgbuf, lparnam, sizeof(msgbuf));
+                STRLCAT( msgbuf, lparnam );
                 if ( strlen(systype)+strlen(sysname)+strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " - ", sizeof(msgbuf));
+                    STRLCAT( msgbuf, " - " );
             }
             if ( strlen(systype) > 0 )
             {
-                strlcat(msgbuf, systype, sizeof(msgbuf));
+                STRLCAT( msgbuf, systype );
                 if ( strlen(sysname)+strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+                    STRLCAT( msgbuf, " * " );
             }
             if ( strlen(sysname) > 0 )
             {
-                strlcat(msgbuf, sysname, sizeof(msgbuf));
+                STRLCAT( msgbuf, sysname );
                 if ( strlen(sysplex) > 0 )
-                    strlcat(msgbuf, " * ", sizeof(msgbuf));
+                    STRLCAT( msgbuf, " * " );
             }
             if ( strlen(sysplex) > 0 )
             {
-                strlcat(msgbuf, sysplex, sizeof(msgbuf));
+                STRLCAT( msgbuf, sysplex );
             }
 
             MSGBUF( title, "%s - System Status: %s", msgbuf, status );
@@ -670,8 +670,8 @@ void set_console_title ( char *status )
 static void NP_init()
 {
     NPdataentry = 0;
-    strlcpy(NPprompt1, "", sizeof(NPprompt1));
-    strlcpy(NPprompt2, "", sizeof(NPprompt2));
+    STRLCPY( NPprompt1, "" );
+    STRLCPY( NPprompt2, "" );
 }
 
 /*=NP================================================================*/
@@ -926,7 +926,7 @@ static char *format_int(uint64_t ic)
     int             maxg=0;
     int             i;
 
-    strlcpy(grps[0],"0",sizeof(grps[0]) );
+    STRLCPY( grps[0], "0" );
     while(ic>0)
     {
         int grp;
@@ -948,10 +948,10 @@ static char *format_int(uint64_t ic)
     obfr[0]=0;
     for(i=maxg;i>=0;i--)
     {
-        strlcat(obfr,grps[i],sizeof(obfr));
+        STRLCAT( obfr, grps[i] );
         if(i)
         {
-            strlcat(obfr,",",sizeof(obfr));
+            STRLCAT( obfr, "," );
         }
     }
     return obfr;
@@ -1115,7 +1115,7 @@ static void NP_update(REGS *regs)
             set_pos( mode || zhost ? (PSW_LINE+1) : PSW_LINE, 28 );
             draw_text( buf );
             NPpswstate_valid = 1;
-            strlcpy( NPpswstate, buf, sizeof(NPpswstate) );
+            STRLCPY( NPpswstate, buf );
         }
 
         /* Redraw the register template if the regmode switched */
@@ -1496,7 +1496,7 @@ static void NP_update(REGS *regs)
         for ( ; i < NP_MAX_DEVICES; i++)
         {
             NPonline[i] = NPdevnum[i] = NPbusy[i] = NPdevtype[i] = NPopen[i] = 0;
-            strlcpy( NPdevnam[i], "", sizeof(NPdevnam[i]) );
+            STRLCPY( NPdevnam[i], "" );
         }
         NPdevices_valid = 1;
     }
@@ -1504,7 +1504,7 @@ static void NP_update(REGS *regs)
     /* Prompt 1 */
     if (strcmp(NPprompt1, NPoldprompt1))
     {
-        strlcpy(NPoldprompt1, NPprompt1, sizeof(NPoldprompt1) );
+        STRLCPY( NPoldprompt1, NPprompt1 );
         if (strlen(NPprompt1) > 0)
         {
             set_color (COLOR_WHITE, COLOR_BLUE);
@@ -1522,7 +1522,7 @@ static void NP_update(REGS *regs)
     /* Prompt 2 */
     if (strcmp(NPprompt2, NPoldprompt2))
     {
-        strlcpy(NPoldprompt2, NPprompt2, sizeof(NPoldprompt2) );
+        STRLCPY( NPoldprompt2, NPprompt2 );
         if (strlen(NPprompt2) > 0)
         {
             set_color(COLOR_WHITE, COLOR_BLUE);
@@ -2007,8 +2007,8 @@ size_t  loopcount;                    /* Number of iterations done   */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_WHITE;
                             NPcolorBack = COLOR_BLUE;
-                            strlcpy(NPentered, "", sizeof(NPentered) );
-                            strlcpy(NPprompt1, "Enter Address", sizeof(NPprompt1) );
+                            STRLCPY( NPentered, "" );
+                            STRLCPY( NPprompt1, "Enter Address" );
                             redraw_status = 1;
                             break;
                         case 'd':                   /* Enter data */
@@ -2024,8 +2024,8 @@ size_t  loopcount;                    /* Number of iterations done   */
                             NPcolorSwitch = 1;
                             NPcolorFore = COLOR_WHITE;
                             NPcolorBack = COLOR_BLUE;
-                            strlcpy(NPentered, "", sizeof(NPentered) );
-                            strlcpy(NPprompt1, "Enter Data Value", sizeof(NPprompt1) );
+                            STRLCPY( NPentered, "" );
+                            STRLCPY( NPprompt1, "Enter Data Value" );
                             redraw_status = 1;
                             break;
                         case 'l':                   /* IPL */
@@ -2034,7 +2034,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                               break;
                             NPdevsel = 1;
                             NPsel2 = 1;
-                            strlcpy(NPprompt2, "Select Device for IPL", sizeof(NPprompt2) );
+                            STRLCPY( NPprompt2, "Select Device for IPL" );
                             redraw_status = 1;
                             break;
                         case 1:                     /* IPL - 2nd part */
@@ -2055,7 +2055,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                         case 'U':
                             NPdevsel = 1;
                             NPsel2 = 2;
-                            strlcpy(NPprompt2, "Select Device for Interrupt", sizeof(NPprompt2));
+                            STRLCPY( NPprompt2, "Select Device for Interrupt" );
                             redraw_status = 1;
                             break;
                         case 2:                     /* Device int: part 2 */
@@ -2076,7 +2076,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                         case 'N':
                             NPdevsel = 1;
                             NPsel2 = 3;
-                            strlcpy(NPprompt2, "Select Device to Reassign", sizeof(NPprompt2));
+                            STRLCPY( NPprompt2, "Select Device to Reassign" );
                             redraw_status = 1;
                             break;
                         case 3:                     /* Device asgn: part 2 */
@@ -2097,14 +2097,14 @@ size_t  loopcount;                    /* Number of iterations done   */
                             NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
                             memset(NPentered,0,sizeof(NPentered));
-                            strlcpy(NPprompt2, "New Name, or [enter] to Reload", sizeof(NPprompt2) );
+                            STRLCPY( NPprompt2, "New Name, or [enter] to Reload" );
                             redraw_status = 1;
                             break;
                         case 'W':                   /* POWER */
                         case 'w':
                             NPdevsel = 1;
                             NPsel2 = 4;
-                            strlcpy(NPprompt1, "Confirm Powerdown Y or N", sizeof(NPprompt1) );
+                            STRLCPY( NPprompt1, "Confirm Powerdown Y or N" );
                             redraw_status = 1;
                             break;
                         case 4:                     /* POWER - 2nd part */
@@ -2119,7 +2119,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                               break;
                             NPdevsel = 1;
                             NPsel2 = 5;
-                            strlcpy(NPprompt1, "Confirm Restart Y or N", sizeof(NPprompt1) );
+                            STRLCPY( NPprompt1, "Confirm Restart Y or N" );
                             redraw_status = 1;
                             break;
                         case 5:                    /* Restart - part 2 */
@@ -2136,7 +2136,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                               break;
                             NPdevsel = 1;
                             NPsel2 = 6;
-                            strlcpy(NPprompt1, "Confirm External Interrupt Y or N", sizeof(NPprompt1));
+                            STRLCPY( NPprompt1, "Confirm External Interrupt Y or N" );
                             redraw_status = 1;
                             break;
                         case 6:                    /* External - part 2 */

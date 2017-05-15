@@ -955,7 +955,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             {
                 dev->tapedisptype   = TAPEDISPTYP_MOUNT;
                 dev->tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
-                strlcpy( dev->tapemsg1, dev->tapemsg2, sizeof(dev->tapemsg1) );
+                STRLCPY( dev->tapemsg1, dev->tapemsg2 );
             }
             else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype )
             {
@@ -1588,7 +1588,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
         /* Change "OFFLINE" to "*" (tape unloaded) */
         if (strcasecmp (newfile, "OFFLINE") == 0)
-            strlcpy (newfile, TAPE_UNLOADED, sizeof(newfile));
+            STRLCPY( newfile, TAPE_UNLOADED );
 
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
@@ -1625,10 +1625,10 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
                 )
                     resolve_in[0] = 0;          /* (then use just given spec) */
                 else                            /* (else prepend with default) */
-                    strlcpy( resolve_in, sysblk.defdir, sizeof(resolve_in) );
+                    STRLCPY( resolve_in, sysblk.defdir );
 
                 /* (finish building path to be resolved) */
-                strlcat( resolve_in, newfile, sizeof(resolve_in) );
+                STRLCAT( resolve_in, newfile );
 
                 /* (fully resolvable path?) */
                 if (realpath( resolve_in, resolve_out ) == NULL)
@@ -3354,8 +3354,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
         dev->tapedispflags = 0;
 
-        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
-        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
+        STRLCPY( dev->tapemsg1, msg1 );
+        STRLCPY( dev->tapemsg2, msg2 );
 
         dev->tapedisptype  = TAPEDISPTYP_WAITACT;
 
@@ -3380,7 +3380,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_UNMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+            STRLCPY( dev->tapemsg1, msg1 );
 
             if ( dev->ccwtrace || dev->ccwstep )
                 WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
@@ -3405,7 +3405,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+            STRLCPY( dev->tapemsg1, msg1 );
 
             if ( dev->ccwtrace || dev->ccwstep )
                 WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
@@ -3451,8 +3451,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
         dev->tapedispflags = 0;
 
-        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
-        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
+        STRLCPY( dev->tapemsg1, msg1 );
+        STRLCPY( dev->tapemsg2, msg2 );
 
         if ( tapeloaded )
         {

@@ -1296,7 +1296,7 @@ static char * check_define_default_automount_dir()
         }
         VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
         if (cwd[strlen(cwd)-1] != *PATH_SEP)
-            strlcat (cwd, PATH_SEP, sizeof(cwd));
+            STRLCAT( cwd, PATH_SEP );
         pNewTAMDIR->dir = strdup (cwd);
         pNewTAMDIR->len = (int)strlen (cwd);
         pNewTAMDIR->rej = 0;
@@ -1552,7 +1552,7 @@ int rc;
                     VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
                     rc = (int)strlen( cwd );
                     if (cwd[rc-1] != *PATH_SEP)
-                        strlcat (cwd, PATH_SEP, sizeof(cwd));
+                        STRLCAT( cwd, PATH_SEP );
 
                     if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
                     {
@@ -1615,7 +1615,7 @@ int rc;
 
         // Convert argument to absolute path ending with a slash
 
-        strlcpy( tamdir2, argv2, sizeof(tamdir2) );
+        STRLCPY( tamdir2, argv2 );
         if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
         else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
 
@@ -1636,10 +1636,10 @@ int rc;
         )
             tamdir1[0] = 0;         // (then use just given spec)
         else                        // (else prepend with default)
-            strlcpy( tamdir1, sysblk.defdir, sizeof(tamdir1) );
+            STRLCPY( tamdir1, sysblk.defdir );
 
         // (finish building path to be resolved)
-        strlcat( tamdir1, tamdir2, sizeof(tamdir1) );
+        STRLCAT( tamdir1, tamdir2 );
 
         // (try resolving it to an absolute path and
         //  append trailing path separator if needed)
@@ -1719,7 +1719,7 @@ int rc;
                                 VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
                                 rc = (int)strlen( cwd );
                                 if (cwd[rc-1] != *PATH_SEP)
-                                    strlcat (cwd, PATH_SEP, sizeof(cwd));
+                                    STRLCAT( cwd, PATH_SEP );
 
                                 if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
                                 {
@@ -5179,7 +5179,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
            )
         {
             int i;
-            strlcpy( devtype, argv[1], sizeof(devtype) );
+            STRLCPY( devtype, argv[1] );
             for ( i = 0; i < (int)strlen( devtype ); i++ )
                 if ( isalpha( devtype[i] ) )
                     devtype[i] = toupper( devtype[i] );
@@ -7732,12 +7732,12 @@ int msglevel_cmd( int argc, char* argv[], char* cmdline )
         }
     }
 
-    if (MLVL( VERBOSE )) strlcat( msgbuf, " verbose",   sizeof( msgbuf ));
-    else                 strlcat( msgbuf, " terse",     sizeof( msgbuf ));
-    if (MLVL( DEBUG   )) strlcat( msgbuf, " debug",     sizeof( msgbuf ));
-    else                 strlcat( msgbuf, " nodebug",   sizeof( msgbuf ));
-    if (MLVL( EMSGLOC )) strlcat( msgbuf, " emsgloc",   sizeof( msgbuf ));
-    else                 strlcat( msgbuf, " noemsgloc", sizeof( msgbuf ));
+    if (MLVL( VERBOSE )) STRLCAT( msgbuf, " verbose"   );
+    else                 STRLCAT( msgbuf, " terse"     );
+    if (MLVL( DEBUG   )) STRLCAT( msgbuf, " debug"     );
+    else                 STRLCAT( msgbuf, " nodebug"   );
+    if (MLVL( EMSGLOC )) STRLCAT( msgbuf, " emsgloc"   );
+    else                 STRLCAT( msgbuf, " noemsgloc" );
 
     WRMSG( HHC17012, "I", &msgbuf[1] );
 

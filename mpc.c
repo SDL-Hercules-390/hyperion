@@ -178,7 +178,7 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
             {
                 snprintf((char *) tmp, 32, "%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
-                strlcat((char *) print_line, (char *) tmp, sizeof(print_line) );
+                STRLCAT( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -190,13 +190,13 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
             }
             else
             {
-                strlcat((char *) print_line, "  ", sizeof(print_line) );
+                STRLCAT( print_line, "  " );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strlcat((char *) print_line, " ", sizeof(print_line) );
+                STRLCAT( print_line, " " );
             }
         }
 

@@ -250,7 +250,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         memset( &hifr, 0, sizeof( hifr ) );
         hifr.hifr_flags = iFlags & ~(iFlags & IFF_OSOCK) & 0xffff;
         if(*pszNetDevName)
-            strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+            STRLCPY( hifr.hifr_name, pszNetDevName );
 
         if( TUNTAP_SetMode (fd, &hifr, iFlags) < 0 )
         {
@@ -318,7 +318,7 @@ int             TUNTAP_ClrIPAddr( char* pszNetDevName )
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
 
     return TUNTAP_IOCtl( 0, SIOCDIFADDR, (char*)&hifr );
 }   // End of function  TUNTAP_ClrIPAddr()
@@ -342,7 +342,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     sin = (struct sockaddr_in*)&hifr.hifr_addr;
     sin->sin_family = AF_INET;
     set_sockaddr_in_sin_len( sin );
@@ -376,7 +376,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     sin = (struct sockaddr_in*)&hifr.hifr_addr;
     sin->sin_family = AF_INET;
     set_sockaddr_in_sin_len( sin );
@@ -409,7 +409,7 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     sin = (struct sockaddr_in*)&hifr.hifr_netmask;
     sin->sin_family = AF_INET;
     set_sockaddr_in_sin_len( sin );
@@ -443,7 +443,7 @@ int           TUNTAP_SetBCastAddr( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     sin = (struct sockaddr_in*)&hifr.hifr_broadaddr;
     sin->sin_family = AF_INET;
     set_sockaddr_in_sin_len( sin );
@@ -497,7 +497,7 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
 
     if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
     {
@@ -541,7 +541,7 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
     *ppszMTU = NULL;
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
 
 #if defined( OPTION_W32_CTCI )
     rc = TUNTAP_IOCtl( 0, SIOCGIFMTU, (char*)&hifr );
@@ -599,7 +599,7 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     hifr.hifr_mtu = iMTU;
 
     return TUNTAP_IOCtl( 0, SIOCSIFMTU, (char*)&hifr );
@@ -634,7 +634,7 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
     *ppszMACAddr = NULL;
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     addr = (struct sockaddr*)&hifr.hifr_hwaddr;
     addr->sa_family = 1;    // ARPHRD_ETHER
 
@@ -690,7 +690,7 @@ int           TUNTAP_SetMACAddr( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name));
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     addr = (struct sockaddr*)&hifr.hifr_hwaddr;
     memcpy( addr->sa_data, mac, IFHWADDRLEN );
     addr->sa_family = 1;    // ARPHRD_ETHER
@@ -717,7 +717,7 @@ int             TUNTAP_SetFlags ( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name) );
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     hifr.hifr_flags = iFlags;
 
     return TUNTAP_IOCtl( 0, SIOCSIFFLAGS, (char*)&hifr );
@@ -742,7 +742,7 @@ int      TUNTAP_GetFlags ( char*  pszNetDevName,
     }
 
     memset( &hifr, 0, sizeof( struct hifr ) );
-    strlcpy( hifr.hifr_name, pszNetDevName, sizeof(hifr.hifr_name) );
+    STRLCPY( hifr.hifr_name, pszNetDevName );
     sin = (struct sockaddr_in*)&hifr.hifr_addr;
     sin->sin_family = AF_INET;
 
@@ -1332,7 +1332,7 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
             {
                 snprintf((char *) tmp, 32, "%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
-                strlcat((char *) print_line, (char *) tmp, sizeof(print_line) );
+                STRLCAT( print_line, tmp );
 
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
@@ -1344,13 +1344,13 @@ void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSe
             }
             else
             {
-                strlcat((char *) print_line, "  ", sizeof(print_line) );
+                STRLCAT( print_line, "  " );
             }
 
             offset++;
             if( ( offset & 3 ) == 0 )
             {
-                strlcat((char *) print_line, " ", sizeof(print_line) );
+                STRLCAT( print_line, " " );
             }
         }
 

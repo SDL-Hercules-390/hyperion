@@ -465,10 +465,10 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         case RECFM_FORMAT_V: tmpstr = "V"; break;
                         default:             tmpstr = "U"; break;
                     }
-                    strlcpy( txtrecfm, tmpstr, _countof( txtrecfm ));
+                    STRLCPY( txtrecfm, tmpstr );
 
-                    if (f1dscb->ds1recfm & RECFM_BLOCKED)  strlcat( txtrecfm, "B", _countof( txtrecfm ));
-                    if (f1dscb->ds1recfm & RECFM_SPANNED)  strlcat( txtrecfm, "S", _countof( txtrecfm ));
+                    if (f1dscb->ds1recfm & RECFM_BLOCKED)  STRLCAT( txtrecfm, "B" );
+                    if (f1dscb->ds1recfm & RECFM_SPANNED)  STRLCAT( txtrecfm, "S" );
 
                     switch (f1dscb->ds1recfm & RECFM_CTLCHAR)
                     {
@@ -477,9 +477,9 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         case RECFM_CTLCHAR_A | RECFM_CTLCHAR_M: tmpstr = "?"; break; /* both ?! */
                         default:                                tmpstr = "";  break; /* neither */
                     }
-                    strlcat( txtrecfm, tmpstr, _countof( txtrecfm ));
+                    STRLCAT( txtrecfm, tmpstr );
 
-                    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  strlcat( txtrecfm, "T", _countof( txtrecfm ));
+                    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  STRLCAT( txtrecfm, "T" );
 
                     printf(" %-5s", txtrecfm);
 

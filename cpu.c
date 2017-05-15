@@ -597,11 +597,11 @@ static char *pgmintname[] = {
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 #if defined(_FEATURE_SIE)
         if (SIE_MODE(realregs))
-          strlcpy(buf1, "SIE: ", sizeof(buf1) );
+          STRLCPY( buf1, "SIE: " );
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
-        strlcpy(buf2, QSTR(_GEN_ARCH), sizeof(buf2) );
-        strlcat(buf2, " ", sizeof(buf2) );
+        STRLCPY( buf2, QSTR(_GEN_ARCH) );
+        STRLCAT( buf2, " " );
 #endif /*defined(SIE_DEBUG)*/
         if (code == PGM_DATA_EXCEPTION)
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);

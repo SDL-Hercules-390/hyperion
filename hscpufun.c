@@ -50,7 +50,7 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
     sysblk.dummyregs.cpuad = cpu;
     sysblk.pcpu = cpu;
 
-    strlcpy(cmd,cmdline,sizeof(cmd));
+    STRLCPY( cmd, cmdline );
 
     if ( argc > 2 )
     {
@@ -408,7 +408,7 @@ int  rest_loadparm = FALSE;
         }
         else if ( CMD( argv[2], loadparm, 4 ) )
         {
-            strlcpy( save_loadparm, str_loadparm(), sizeof(save_loadparm) );
+            STRLCPY( save_loadparm, str_loadparm() );
             rest_loadparm = TRUE;
             if ( argc == 4 )
                 set_loadparm(argv[3]);

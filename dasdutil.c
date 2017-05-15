@@ -152,7 +152,7 @@ int             lastsame = 0;
                 }
                 printf ("+%4.4X %s %s\n",
                         startoff, hex_chars, print_chars);
-                strlcpy ( prev_hex, hex_chars, sizeof(prev_hex) );
+                STRLCPY ( prev_hex, hex_chars );
             }
         }
 
@@ -553,7 +553,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Read the device header so we can determine the device type */
-    strlcpy( sfxname, fname, sizeof(sfxname));
+    STRLCPY( sfxname, fname );
     hostpath(pathname, sfxname, sizeof(pathname));
     fd = HOPEN (pathname, omode);
     if (fd < 0)
@@ -582,14 +582,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 else
                 {
                     strlcpy( sfxname + i, "_1", sizeof(sfxname)-(size_t)i );
-                    strlcat( sfxname, fname + i, sizeof(sfxname) );
+                    STRLCAT( sfxname, fname + i );
                     suffix = sfxname + i + 1;
                 }
             }
             else
             {
                 if (strlen(sfxname) < 2 || sfxname[strlen(sfxname)-2] != '_')
-                    strlcat (sfxname, "_1", sizeof(sfxname) );
+                    STRLCAT (sfxname, "_1" );
                 suffix = sfxname + strlen(sfxname) - 1;
             }
             *suffix = '1';
@@ -603,7 +603,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             free (cif);
             return NULL;
         }
-        else if (fd < 0) strlcpy( sfxname, fname, sizeof(sfxname) );
+        else if (fd < 0) STRLCPY( sfxname, fname );
     }
 
     /* If not a possible remote device, check the dasd header
@@ -1810,7 +1810,7 @@ U32             trksize;                /* DASD image track length   */
             devtype, rawflag ? "" : volser, volcyls, heads, trksize));
 
     /* Copy the unsuffixed DASD image file name */
-    strlcpy( sfname, fname, sizeof(sfname) );
+    STRLCPY( sfname, fname );
     suffix = NULL;
 
     /* Create the suffixed file name if volume will exceed 2GB */
@@ -1832,15 +1832,15 @@ U32             trksize;                /* DASD image track length   */
                 suffix = sfname + i - 1;
             else
             {
-                strlcpy (sfname + i, "_1", sizeof(sfname)-(size_t)i );
-                strlcat (sfname, fname + i, sizeof(sfname) );
+                strlcpy( sfname + i, "_1", sizeof(sfname)-(size_t)i );
+                STRLCAT( sfname, fname + i );
                 suffix = sfname + i + 1;
             }
         }
         else
         {
             if (strlen(sfname) < 2 || sfname[strlen(sfname)-2] == '_')
-                strlcat( sfname, "_1", sizeof(sfname) );
+                STRLCAT( sfname, "_1" );
             suffix = sfname + strlen(sfname) - 1;
         }
     }

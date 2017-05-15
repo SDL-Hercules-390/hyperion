@@ -1612,7 +1612,7 @@ int exec_cmd( int argc, char* argv[], char* cmdline )
 
     /* Save the name of the script they want to execute */
     pscriptname = argv[1];
-    strlcpy( scriptname, pscriptname, sizeof( scriptname ));
+    STRLCPY( scriptname, pscriptname );
 
     /* If the resolver option isn't enabled, use their name as-is */
     found = TRUE;

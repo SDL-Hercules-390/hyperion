@@ -212,7 +212,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     memset (ofname, 0, sizeof(ofname));
     strncpy (ofname, memname, 8);
     string_to_lower (ofname);
-    strlcat (ofname, ".mac", sizeof(ofname));
+    STRLCAT( ofname, ".mac" );
 
     /* Open the output file */
     hostpath(pathname, ofname, sizeof(pathname));

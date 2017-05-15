@@ -176,18 +176,18 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
             /* It's a real device. Fix the type so Hercules can use it and
                locate the output filename. */
-            strlcpy( output_type, device.type, sizeof( output_type ));
+            STRLCPY( output_type, device.type );
             if (isprint(device.parms.disk.volser[0]))
                 output_filename = device.parms.disk.filename;
             else output_filename = device.parms.other.filename;
 
             if (strncmp(device.type, "3278", 4) == 0)
             {
-                strlcpy( output_type, "3270", sizeof( output_type ));
+                STRLCPY( output_type, "3270" );
                 output_filename = "";
             }
             if (strncmp(device.type, "2540", 4) == 0)
-                strlcpy( output_type, "3505", sizeof( output_type ));
+                STRLCPY( output_type, "3505" );
 
             /* Emit the Hercules config file entry. */
             len = (int) strlen( output_filename );

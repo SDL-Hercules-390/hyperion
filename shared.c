@@ -126,7 +126,7 @@ char    *strtok_str = NULL;             /* last position             */
     {
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
-        strlcpy( buf, argv[0], sizeof(buf) );
+        STRLCPY( buf, argv[0] );
 
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
@@ -399,7 +399,7 @@ char    *strtok_str = NULL;             /* last token                */
 
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
-        strlcpy( buf, argv[0], sizeof(buf) );
+        STRLCPY( buf, argv[0] );
 
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
@@ -2910,7 +2910,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
         WRMSG (HHC00738, "E");
         return 0;
     }
-    strlcpy( buf, argv[1], sizeof(buf) );
+    STRLCPY( buf, argv[1] );
     kw = strtok_r (buf, "=", &strtok_str );
     op = strtok_r (NULL, " \t", &strtok_str );
 

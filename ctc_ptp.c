@@ -505,7 +505,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             struct tt32ctl tt32ctl;
 
             memset( &tt32ctl, 0, sizeof(tt32ctl) );
-            strlcpy( tt32ctl.tt32ctl_name, pPTPBLK->szTUNIfName, sizeof(tt32ctl.tt32ctl_name) );
+            STRLCPY( tt32ctl.tt32ctl_name, pPTPBLK->szTUNIfName );
 
             // Set the specified driver/dll i/o buffer sizes..
             tt32ctl.tt32ctl_devbuffsize = pPTPBLK->iKernBuff;
@@ -2578,24 +2578,24 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #if defined(OPTION_W32_CTCI)
     pPTPBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pPTPBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
-    strlcpy( pPTPBLK->szTUNCharDevName, tt32_get_default_iface(), sizeof(pPTPBLK->szTUNCharDevName) );
+    STRLCPY( pPTPBLK->szTUNCharDevName, tt32_get_default_iface() );
 #else /* defined(OPTION_W32_CTCI) */
-    strlcpy( pPTPBLK->szTUNCharDevName, HERCTUN_DEV, sizeof(pPTPBLK->szTUNCharDevName) );
+    STRLCPY( pPTPBLK->szTUNCharDevName, HERCTUN_DEV );
 #endif /* defined(OPTION_W32_CTCI) */
 #if defined(ENABLE_IPV6)
     pPTPBLK->iAFamily = AF_UNSPEC;
 #else /* defined(ENABLE_IPV6) */
     pPTPBLK->iAFamily = AF_INET;
 #endif /* defined(ENABLE_IPV6) */
-    strlcpy( pPTPBLK->szMaxBfru, "5", sizeof(pPTPBLK->szMaxBfru) );
+    STRLCPY( pPTPBLK->szMaxBfru, "5" );
     pPTPBLK->iMaxBfru = 5;
-    strlcpy( pPTPBLK->szMTU, "1500", sizeof(pPTPBLK->szMTU) );
+    STRLCPY( pPTPBLK->szMTU, "1500" );
     pPTPBLK->iMTU = 1500;
-    strlcpy( pPTPBLK->szDrivePfxSiz4, "32", sizeof(pPTPBLK->szDrivePfxSiz4) );
-    strlcpy( pPTPBLK->szNetMask, "255.255.255.255", sizeof(pPTPBLK->szNetMask) );
+    STRLCPY( pPTPBLK->szDrivePfxSiz4, "32" );
+    STRLCPY( pPTPBLK->szNetMask, "255.255.255.255" );
 #if defined(ENABLE_IPV6)
-    strlcpy( pPTPBLK->szDrivePfxSiz6, "128", sizeof(pPTPBLK->szDrivePfxSiz6) );
-    strlcpy( pPTPBLK->szDriveLLxSiz6, "64", sizeof(pPTPBLK->szDriveLLxSiz6) );
+    STRLCPY( pPTPBLK->szDrivePfxSiz6, "128" );
+    STRLCPY( pPTPBLK->szDriveLLxSiz6, "64" );
 #endif /* defined(ENABLE_IPV6) */
 
     // Initialize getopt's counter. This is necessary in the case
@@ -2670,7 +2670,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "device name", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szTUNCharDevName, optarg, sizeof(pPTPBLK->szTUNCharDevName) );
+            STRLCPY( pPTPBLK->szTUNCharDevName, optarg );
             break;
 
 #if !defined(OPTION_W32_CTCI)
@@ -2682,7 +2682,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "TUN device name", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szTUNIfName, optarg, sizeof(pPTPBLK->szTUNIfName) );
+            STRLCPY( pPTPBLK->szTUNIfName, optarg );
             saw_if = 1;
             break;
 #endif /* !defined(OPTION_W32_CTCI) */
@@ -2721,7 +2721,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "MTU size", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szMTU, optarg, sizeof(pPTPBLK->szMTU) );
+            STRLCPY( pPTPBLK->szMTU, optarg );
             pPTPBLK->iMTU = iMTU;
             saw_conf = 1;
             break;
@@ -2750,17 +2750,17 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //
 //          if (iMaxBfru < 5)
 //          {
-//              strlcpy( pPTPBLK->szMaxBfru, "5", sizeof(pPTPBLK->szMaxBfru) );
+//              STRLCPY( pPTPBLK->szMaxBfru, "5" );
 //              pPTPBLK->iMaxBfru = 5;
 //          }
 //          else if (iMaxBfru > 16)
 //          {
-//              strlcpy( pPTPBLK->szMaxBfru, "16", sizeof(pPTPBLK->szMaxBfru) );
+//              STRLCPY( pPTPBLK->szMaxBfru, "16" );
 //              pPTPBLK->iMaxBfru = 16;
 //          }
 //          else
 //          {
-//              strlcpy( pPTPBLK->szMaxBfru, optarg, sizeof(pPTPBLK->szMaxBfru) );
+//              STRLCPY( pPTPBLK->szMaxBfru, optarg );
 //              pPTPBLK->iMaxBfru = iMaxBfru;
 //          }
 //
@@ -2811,7 +2811,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                       "MAC address", optarg );
                 return -1;
             }
-            strlcpy( pPTPBLK->szMACAddress, optarg, sizeof(pPTPBLK->szMACAddress) );
+            STRLCPY( pPTPBLK->szMACAddress, optarg );
             break;
 
         case 'k':     // Kernel Buffer Size (Windows only)
@@ -2897,7 +2897,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                   "TUN device name", argv[0] );
             return -1;
         }
-        strlcpy( pPTPBLK->szTUNIfName, argv[0], sizeof(pPTPBLK->szTUNIfName) );
+        STRLCPY( pPTPBLK->szTUNIfName, argv[0] );
         argc--; argv++;
         pPTPBLK->fPreconfigured = TRUE;
     }
@@ -2922,7 +2922,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         char * s = pPTPBLK->szTUNIfName + strlen(pPTPBLK->szTUNIfName);
 
         while(isdigit(s[- 1])) s--;
-        strlcat( pPTPBLK->szTUNCharDevName,  s, sizeof(pPTPBLK->szTUNCharDevName) );
+        STRLCAT( pPTPBLK->szTUNCharDevName, s );
     }
 #endif
 
@@ -2970,7 +2970,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         {
             // OK, a numeric IPv4 address has been specified.
             iFirstFamily[j] = AF_INET;
-            strlcpy( pPTPBLK->szGuestIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr4) );
+            STRLCPY( pPTPBLK->szGuestIPAddr4, hrb.ipaddr );
             memcpy( &pPTPBLK->iaGuestIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaGuestIPAddr4) );
         }
         else
@@ -2994,7 +2994,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             {
                 // OK, a numeric IPv6 address has been specified.
                 iFirstFamily[j] = AF_INET6;
-                strlcpy( pPTPBLK->szGuestIPAddr6, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr6) );
+                STRLCPY( pPTPBLK->szGuestIPAddr6, hrb.ipaddr );
                 memcpy( &pPTPBLK->iaGuestIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaGuestIPAddr6) );
             }
             else
@@ -3016,13 +3016,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     iFirstFamily[j] = hrb.afam;
                     if (iFirstFamily[j] == AF_INET)
                     {
-                        strlcpy( pPTPBLK->szGuestIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr4) );
+                        STRLCPY( pPTPBLK->szGuestIPAddr4, hrb.ipaddr );
                         memcpy( &pPTPBLK->iaGuestIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaGuestIPAddr4) );
                     }
 #if defined(ENABLE_IPV6)
                     else
                     {
-                        strlcpy( pPTPBLK->szGuestIPAddr6, hrb.ipaddr, sizeof(pPTPBLK->szGuestIPAddr6) );
+                        STRLCPY( pPTPBLK->szGuestIPAddr6, hrb.ipaddr );
                         memcpy( &pPTPBLK->iaGuestIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaGuestIPAddr6) );
                     }
 #endif /* defined(ENABLE_IPV6) */
@@ -3129,13 +3129,13 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         if (iFirstFamily[j] == AF_INET)
         {
-            strlcpy( pPTPBLK->szDriveIPAddr4, hrb.ipaddr, sizeof(pPTPBLK->szDriveIPAddr4) );
+            STRLCPY( pPTPBLK->szDriveIPAddr4, hrb.ipaddr );
             memcpy( &pPTPBLK->iaDriveIPAddr4, &hrb.sa.in.sin_addr, sizeof(pPTPBLK->iaDriveIPAddr4) );
         }
 #if defined(ENABLE_IPV6)
         else
         {
-            strlcpy( pPTPBLK->szDriveIPAddr6, hrb.ipaddr, sizeof(pPTPBLK->szDriveIPAddr6) );
+            STRLCPY( pPTPBLK->szDriveIPAddr6, hrb.ipaddr );
             memcpy( &pPTPBLK->iaDriveIPAddr6, &hrb.sa.in6.sin6_addr, sizeof(pPTPBLK->iaDriveIPAddr6) );
         }
 #endif /* defined(ENABLE_IPV6) */
@@ -3160,7 +3160,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     return -1;
                 }
 
-                strlcpy( pPTPBLK->szDrivePfxSiz4, cpprfx, sizeof(pPTPBLK->szDrivePfxSiz4) );
+                STRLCPY( pPTPBLK->szDrivePfxSiz4, cpprfx );
 
                 switch( iPfxSiz )
                 {
@@ -3197,7 +3197,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                           "prefix size", *argv );
                     return -1;
                 }
-                strlcpy( pPTPBLK->szDrivePfxSiz6, cpprfx, sizeof(pPTPBLK->szDrivePfxSiz6) );
+                STRLCPY( pPTPBLK->szDrivePfxSiz6, cpprfx );
             }
 #endif /* defined(ENABLE_IPV6) */
         }
@@ -3692,7 +3692,7 @@ int  check_specified_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
     {
         // HHC03918 "%1d:%04X PTP: MTU changed from size %d bytes to size %d bytes"
         WRMSG(HHC03918, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pPTPBLK->iMTU, 1280 );
-        strlcpy( pPTPBLK->szMTU, "1280", sizeof(pPTPBLK->szMTU) );
+        STRLCPY( pPTPBLK->szMTU, "1280" );
         pPTPBLK->iMTU = 1280;
     }
 

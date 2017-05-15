@@ -44,7 +44,7 @@ char tempdir[MAX_PATH];
         else
         {
             hostpath(realdir, tempdir, sizeof(realdir));
-            strlcat(realdir,PATHSEPS,sizeof(realdir));
+            STRLCAT( realdir, PATHSEPS );
             sce_basedir = strdup(realdir);
         }
 }
@@ -98,8 +98,8 @@ char tempreal[MAX_PATH];
     }
 
     /* Establish the full path of the file we are trying to access */
-    strlcpy(temppath,sce_basedir,sizeof(temppath));
-    strlcat(temppath,path,sizeof(temppath));
+    STRLCPY( temppath, sce_basedir );
+    STRLCAT( temppath, path );
 
     if(!realpath(temppath,tempreal))
     {

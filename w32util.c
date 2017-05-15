@@ -1054,12 +1054,12 @@ DLL_EXPORT int scandir
       int rtn;
       struct dirent current;
 
-      strlcpy( current.d_name, file_data.cFileName, sizeof(current.d_name) );
+      STRLCPY( current.d_name, file_data.cFileName );
 
       if (!filter || filter(&current))
         {
           struct dirent *copyentry = (struct dirent *)malloc(sizeof(struct dirent));
-          strlcpy(copyentry->d_name, current.d_name, sizeof(copyentry->d_name) );
+          STRLCPY( copyentry->d_name, current.d_name );
           names[pos] = copyentry;
           pos++;
         }
@@ -2257,15 +2257,15 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
                 if ( mem_eq(CPUString,"GenuineIntel",12) )
                 {
-                    strlcpy( pHostInfo->machine, "Intel(R) x64", sizeof(pHostInfo->machine) );
+                    STRLCPY( pHostInfo->machine, "Intel(R) x64" );
                 }
                 else if ( mem_eq(CPUString,"AuthenticAMD",12) )
                 {
-                    strlcpy( pHostInfo->machine, "AMD(R) x64", sizeof(pHostInfo->machine) );
+                    STRLCPY( pHostInfo->machine, "AMD(R) x64" );
                 }
                 else
                 {
-                    strlcpy( pHostInfo->machine, "AMD64", sizeof(pHostInfo->machine) );
+                    STRLCPY( pHostInfo->machine, "AMD64" );
                 }
                 memset(CPUBrand, 0, sizeof(CPUBrand));
 
@@ -2282,14 +2282,14 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
 
             }
             break;
-        case PROCESSOR_ARCHITECTURE_PPC:           strlcpy( pHostInfo->machine, "PowerPC"       , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_SHX:           strlcpy( pHostInfo->machine, "SH"            , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_ARM:           strlcpy( pHostInfo->machine, "ARM"           , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_IA64:          strlcpy( pHostInfo->machine, "IA64"          , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64: strlcpy( pHostInfo->machine, "IA32_ON_WIN64" , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_ALPHA:         strlcpy( pHostInfo->machine, "ALPHA"         , sizeof(pHostInfo->machine) ); break;
-        case PROCESSOR_ARCHITECTURE_MIPS:          strlcpy( pHostInfo->machine, "MIPS"          , sizeof(pHostInfo->machine) ); break;
-        default:                                   strlcpy( pHostInfo->machine, "???"           , sizeof(pHostInfo->machine) ); break;
+        case PROCESSOR_ARCHITECTURE_PPC:           STRLCPY( pHostInfo->machine, "PowerPC"       ); break;
+        case PROCESSOR_ARCHITECTURE_SHX:           STRLCPY( pHostInfo->machine, "SH"            ); break;
+        case PROCESSOR_ARCHITECTURE_ARM:           STRLCPY( pHostInfo->machine, "ARM"           ); break;
+        case PROCESSOR_ARCHITECTURE_IA64:          STRLCPY( pHostInfo->machine, "IA64"          ); break;
+        case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64: STRLCPY( pHostInfo->machine, "IA32_ON_WIN64" ); break;
+        case PROCESSOR_ARCHITECTURE_ALPHA:         STRLCPY( pHostInfo->machine, "ALPHA"         ); break;
+        case PROCESSOR_ARCHITECTURE_MIPS:          STRLCPY( pHostInfo->machine, "MIPS"          ); break;
+        default:                                   STRLCPY( pHostInfo->machine, "???"           ); break;
     }
 
     pHostInfo->num_procs = si.dwNumberOfProcessors;
@@ -4445,7 +4445,7 @@ UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
 
             oflow = TRUE;
             memcpy( holdbuff + nHoldAmount, readbuff, HOLDBUFSIZE - nHoldAmount);
-            strlcpy(                        readbuff, buffer_overflow_msg, sizeof(readbuff) );
+            STRLCPY(                        readbuff, buffer_overflow_msg );
             nAmountRead =                   (DWORD)buffer_overflow_msg_len;
             nHoldAmount =  HOLDBUFSIZE  -   nAmountRead - 1;
         }
@@ -4659,7 +4659,7 @@ DLL_EXPORT char*  w32_basename( const char* path )
     memset( _basename, 0, sizeof( _basename ));
 
     if (!path || !path[0])
-        strlcpy( _basename, ".", sizeof( _basename ));
+        STRLCPY( _basename, "." );
     else
     {
         char buffer [  MAX_PATH  ];
@@ -4667,7 +4667,7 @@ DLL_EXPORT char*  w32_basename( const char* path )
         char ext    [ _MAX_EXT   ];
 
         /* Copy path to work buffer */
-        strlcpy( buffer, path, sizeof( buffer ));
+        STRLCPY( buffer, path );
 
         /* Remove any trailing slashes before doing splitpath */
         rtrim( buffer, PATHSEPS );
@@ -4682,11 +4682,11 @@ DLL_EXPORT char*  w32_basename( const char* path )
             ext,   sizeof( ext   )  // extension buffer and buffer size
         );
 
-        strlcpy( _basename, fname, sizeof( _basename ));
-        strlcat( _basename, ext,   sizeof( _basename ));
+        STRLCPY( _basename, fname );
+        STRLCAT( _basename, ext );
 
         if (!_basename[0])
-            strlcpy( _basename, ".", sizeof( _basename ));
+            STRLCPY( _basename, "." );
     }
 
     return _basename;
@@ -4728,7 +4728,7 @@ DLL_EXPORT char*  w32_dirname( const char* path )
         || !path[0]
         || !strchr( path, PATHSEPC )
     )
-        strlcpy( _dirname, ".", sizeof( _dirname ));
+        STRLCPY( _dirname, "." );
     else
     {
         char buffer [  MAX_PATH  ];
@@ -4736,7 +4736,7 @@ DLL_EXPORT char*  w32_dirname( const char* path )
         char dir    [ _MAX_DIR   ];
 
         /* Copy path to work buffer */
-        strlcpy( buffer, path, sizeof( buffer ));
+        STRLCPY( buffer, path );
 
         /* Remove any trailing slashes before doing splitpath */
         rtrim( buffer, PATHSEPS );
@@ -4751,11 +4751,11 @@ DLL_EXPORT char*  w32_dirname( const char* path )
             NULL, 0                 // not interested in extension component
         );
 
-        strlcpy( _dirname, drive, sizeof( _dirname ));
-        strlcat( _dirname, dir,   sizeof( _dirname ));
+        STRLCPY( _dirname, drive );
+        STRLCAT( _dirname, dir );
 
         if (!_dirname[0])
-            strlcpy( _dirname, ".", sizeof( _dirname ));
+            STRLCPY( _dirname, "." );
     }
 
     return _dirname;

@@ -187,7 +187,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
         &&                  path            [4]  != 0
     )
     {
-        strlcpy( szTapeDeviceName, path, sizeof(szTapeDeviceName) );
+        STRLCPY( szTapeDeviceName, path );
     }
     else // (not a Windows device name)
     {
@@ -207,7 +207,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
         {
             // Change it to a Windows device name (e.g. \\.\Tape0)
 
-            strlcpy( szTapeDeviceName, WIN32_TAPE_DEVICE_NAME, sizeof(szTapeDeviceName) );
+            STRLCPY( szTapeDeviceName, WIN32_TAPE_DEVICE_NAME );
             szTapeDeviceName[8] = *pszTapeDevNum;
             szTapeDeviceName[9] = 0;
 

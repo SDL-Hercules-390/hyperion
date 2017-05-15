@@ -610,9 +610,9 @@ static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
     char msgbuf[256] = {0};
 
     if (errnum >= 0)
-        strlcpy( strerr, strerror( errnum ), sizeof( strerr ));
+        STRLCPY( strerr, strerror( errnum ) );
     else
-        strlcpy( strerr, "An unidentified error has occurred", sizeof( strerr ));
+        STRLCPY( strerr, "An unidentified error has occurred" );
 
     /* "function() failed, rc=99 (0x00000063): an error occurred" */
     MSGBUF( msgbuf, "%s, rc=%d (0x%08X): %s",
@@ -638,7 +638,7 @@ static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
 static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
 {
     char not[8];
-    strlcpy( not, grp->enabled ? "" : "not ", sizeof( not ));
+    STRLCPY( not, grp->enabled ? "" : "not " );
 
     // HHC03997 "%1d:%04X %s: %s: %susing %s %s"
     WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
@@ -2689,7 +2689,7 @@ int i;
 #if !defined(OPTION_W32_CTCI)
         else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
         {
-            strlcpy( grp->ttifname, argv[++i], sizeof(grp->ttifname) );
+            STRLCPY( grp->ttifname, argv[++i] );
             continue;
         }
 #endif /*!defined(OPTION_W32_CTCI)*/
@@ -3023,9 +3023,9 @@ OSA_GRP *grp;
     {
         char ttifname[IFNAMSIZ+2];
 
-        strlcpy( ttifname, grp->ttifname, sizeof(ttifname));
+        STRLCPY( ttifname, grp->ttifname );
         if (ttifname[0])
-            strlcat( ttifname, " ", sizeof(ttifname));
+            STRLCAT( ttifname, " " );
 
         snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u] "
             , ttifname
@@ -3035,13 +3035,13 @@ OSA_GRP *grp;
     }
 
     if (dev->group->acount != dev->group->members)
-        strlcpy( incomplete, "*Incomplete ", sizeof( incomplete ));
+        STRLCPY( incomplete, "*Incomplete " );
 
     if (dev->scsw.flag2 & SCSW2_Q)
-        strlcpy( status, qdiostat, sizeof( status ));
+        STRLCPY( status, qdiostat );
 
     if (dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
-        strlcpy( active, "IDX ", sizeof( active ));
+        STRLCPY( active, "IDX " );
 
     snprintf( buffer, buflen, "QDIO %s%s%s%sIO[%"PRIu64"]"
         , incomplete

@@ -4230,9 +4230,9 @@ static void ecpsvm_showstats2( ECPSVM_STAT *ar, size_t count )
 
             MSGBUF( nname, "%s%s", ar[i].name, ar[i].support ? "" : "*" );
 
-            if (!ar[i].enabled) strlcat( nname, "-", sizeof( nname ));
-            if ( ar[i].debug)   strlcat( nname, "%", sizeof( nname ));
-            if ( ar[i].total)   strlcat( nname, "+", sizeof( nname ));
+            if (!ar[i].enabled) STRLCAT( nname, "-" );
+            if ( ar[i].debug)   STRLCAT( nname, "%" );
+            if ( ar[i].total)   STRLCAT( nname, "+" );
 
             // "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
             WRMSG( HHC01701, "I", nname, ar[i].call, ar[i].hit,

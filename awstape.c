@@ -40,7 +40,7 @@ void close_awstape (DEVBLK *dev)
         WRMSG (HHC00201, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws");
         close(dev->fd);
     }
-    strlcpy(dev->filename, TAPE_UNLOADED, sizeof(dev->filename));
+    STRLCPY( dev->filename, TAPE_UNLOADED );
     dev->fd=-1;
     dev->blockid = 0;
     dev->fenced = 0;
@@ -156,7 +156,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "open()", strerror(errno));
 
-        strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
+        STRLCPY( dev->filename, TAPE_UNLOADED );
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }

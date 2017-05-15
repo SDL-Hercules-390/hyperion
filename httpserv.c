@@ -83,8 +83,8 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
     char buffer[HTTP_PATH_LENGTH];
     int ret;
 
-    strlcpy( fullname, http_serv.httproot, sizeof(fullname) );
-    strlcat( fullname, filename,           sizeof(fullname) );
+    STRLCPY( fullname, http_serv.httproot );
+    STRLCAT( fullname, filename );
 
     inclfile = fopen(fullname,"rb");
 
@@ -442,8 +442,8 @@ static void http_download(WEBBLK *webblk, char *filename)
     struct stat st;
     MIMETAB *mime_type = mime_types;
 
-    strlcpy( fullname, http_serv.httproot, sizeof(fullname) );
-    strlcat( fullname, filename,        sizeof(fullname) );
+    STRLCPY( fullname, http_serv.httproot );
+    STRLCAT( fullname, filename );
 
     http_verify_path(webblk,fullname);
 
@@ -656,7 +656,7 @@ char *http_root()
         char process_dir[HTTP_PATH_LENGTH];
         if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
         {
-            strlcat(process_dir,"\\html",HTTP_PATH_LENGTH);
+            STRLCAT( process_dir, "\\html" );
             http_serv.httproot = strdup(process_dir);
         }
         else
@@ -724,7 +724,7 @@ char *http_root()
         rc = (int)strlen(absolute_httproot_path);
 
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
-            strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
+            STRLCAT( absolute_httproot_path, HTTP_PS );
 
         /* Save the absolute path */
         free(http_serv.httproot);
@@ -1045,7 +1045,7 @@ int http_command(int argc, char *argv[])
             hostpath(pathname, argv[1], sizeof(pathname));
 
             if ( pathname[strlen(pathname)-1] != PATHSEPC )
-                strlcat( pathname, PATHSEPS, sizeof(pathname) );
+                STRLCAT( pathname, PATHSEPS );
 
             http_serv.httproot = strdup(pathname);
         }

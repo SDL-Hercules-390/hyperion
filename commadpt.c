@@ -456,10 +456,10 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         }
         if( i%4 == 0 && i)
         {
-            strlcat(buf, " ", sizeof(buf));
+            STRLCAT( buf, " " );
         }
         MSGBUF(byte, "%02X",bfr[i]);
-        strlcat(buf, byte, sizeof(buf));
+        STRLCAT( buf, byte );
     }
     WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
 }

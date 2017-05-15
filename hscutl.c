@@ -539,7 +539,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                             if (inc_equals >= 0)
                             {
                                 memset(dflt, 0, sizeof(dflt));
-                                strlcpy(dflt, &buf[inc_equals+1], sizeof(dflt));
+                                STRLCPY( dflt, &buf[inc_equals+1] );
                                 inc_envvar = dflt;
                             }
                         }
@@ -1390,7 +1390,7 @@ int initialize_utility( int argc, char* argv[],
 #if defined( _MSVC_ )
             GetModuleFileName( NULL, path, MAX_PATH );
 #else
-            strlcpy( path, argv[0], sizeof( path ) );
+            STRLCPY( path, argv[0] );
 #endif
             exename = strdup( basename( path ));
         }

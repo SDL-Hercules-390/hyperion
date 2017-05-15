@@ -211,17 +211,17 @@ char           *strtok_str = NULL;      /* last token position       */
         strncpy (tdftab[filecount].filename, dev->filename, pathlen);
         if (tdffilenm[0] != '/')
             stlrcat ( tdftab[filecount].filename, "/", sizeof(tdftab[filecount].filename) );
-        strlcat ( tdftab[filecount].filename, tdffilenm, sizeof(tdftab[filecount].filename) );
+        STRLCAT( tdftab[filecount].filename, tdffilenm );
 */
         tdftab[filecount].filename[0] = 0;
 
         if ((tdffilenm[0] != '/') && (tdffilenm[1] != ':'))
         {
-            strncpy (tdftab[filecount].filename, dev->filename, pathlen);
-            strlcat (tdftab[filecount].filename, "/", sizeof(tdftab[filecount].filename) );
+            strncpy( tdftab[filecount].filename, dev->filename, pathlen);
+            STRLCAT( tdftab[filecount].filename, "/" );
         }
 
-        strlcat (tdftab[filecount].filename, tdffilenm, sizeof(tdftab[filecount].filename) );
+        STRLCAT( tdftab[filecount].filename, tdffilenm );
 
         /* Check for valid file format code */
         if (strcasecmp(tdfformat, "HEADERS") == 0)
@@ -1167,7 +1167,7 @@ void close_omatape2(DEVBLK *dev)
 void close_omatape(DEVBLK *dev)
 {
     close_omatape2(dev);
-    strlcpy( dev->filename, TAPE_UNLOADED, sizeof(dev->filename) );
+    STRLCPY( dev->filename, TAPE_UNLOADED );
     dev->blockid = 0;
     dev->fenced = 0;
     return;

@@ -5535,7 +5535,7 @@ int   rc;
         return 0;
     }
 
-    strlcpy(buf, op, sizeof(buf));
+    STRLCPY( buf, op );
     op = buf;
 
     /* Initialize the global cckd block if necessary */
@@ -6012,7 +6012,7 @@ int             l;
     {
         gettimeofday(&tv, NULL);
         t = tv.tv_sec;
-        strlcpy(tbuf, ctime(&t), sizeof(tbuf));
+        STRLCPY( tbuf, ctime(&t) );
         tbuf[19] = '\0';
 
         va_start(vl,msg);

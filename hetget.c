@@ -811,15 +811,15 @@ main( int argc, char *argv[] )
 
                 if( ( ( i + 1 ) % 3 ) == 0 )
                 {
-                    strlcat( msgbuf2, msgbuf3, sizeof(msgbuf2) );
+                    STRLCAT( msgbuf2, msgbuf3 );
                     // "%s"
                     MSGBUF( msgbuf4, MSG( HHC02752, "I", msgbuf2 ) );
-                    strlcat( msgbuf, msgbuf4, sizeof(msgbuf) );
+                    STRLCAT( msgbuf, msgbuf4 );
                     msgbuf2[0] = 0;
                 }
                 else
                 {
-                    strlcat( msgbuf2, msgbuf3, sizeof(msgbuf2) );
+                    STRLCAT( msgbuf2, msgbuf3 );
                 }
             }
             printf( "%s", msgbuf );

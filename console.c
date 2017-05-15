@@ -513,7 +513,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
         if (ev->ttype.cmd == TELNET_TTYPE_IS)
         {
             /* Save terminal type */
-            strlcpy( tn->ttype, ev->ttype.name, sizeof( tn->ttype ));
+            STRLCPY( tn->ttype, ev->ttype.name );
 
             /* Finish negotiations based on terminal type */
             negotiate_ttype( tn );
@@ -934,7 +934,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                         rc = -1;
 
                 if (rc == 0 && isalpha( group[0] ))
-                    strlcpy( dev->filename, group, sizeof( dev->filename ));
+                    STRLCPY( dev->filename, group );
                 else
                 {
                     // "%1d:%04X COMM: %s has an invalid GROUP name length or format; must be a valid luname or poolname"
@@ -1065,7 +1065,7 @@ static int  constty_init_handler( DEVBLK* dev, int argc, char* argv[] )
             ;   // NOP (not really a group name; an '*' is
                 // simply used as an argument place holder)
         else
-            strlcpy( dev->filename, argv[ac], sizeof( dev->filename ));
+            STRLCPY( dev->filename, argv[ac] );
 
         argc--;
         ac++;
@@ -2235,7 +2235,7 @@ static void negotiate_ttype( TELNET* tn )
     s = strchr( tn->ttype, '@' );
 
     if (s && strlen( s ) < sizeof( tn->tgroup ))
-        strlcpy( tn->tgroup, &s[1], sizeof( tn->tgroup ));
+        STRLCPY( tn->tgroup, &s[1] );
 
     if (s && sscanf( s, "@%hx%c", &devnum, &c ) == 1)
     {
@@ -2821,9 +2821,9 @@ size_t                  logoheight;     /* Logo file number of lines */
         if (hostinfo.num_procs > 1)
             MSGBUF(  procsmsg, "MP=%d", hostinfo.num_procs );
         else if (hostinfo.num_procs == 1)
-            strlcpy( procsmsg, "UP",   sizeof( procsmsg ));
+            STRLCPY( procsmsg, "UP" );
         else
-            strlcpy( procsmsg,   "",   sizeof( procsmsg ));
+            STRLCPY( procsmsg, "" );
     }
 
     // "Running on %s (%s-%s.%s %s %s)"
@@ -2968,7 +2968,7 @@ size_t                  logoheight;     /* Logo file number of lines */
         tn->dev = dev;      /* tn  -->  dev */
         dev->tn = tn;       /* tn  <--  dev */
 
-        strlcpy( orig_cid, tn->clientid, sizeof( orig_cid ));
+        STRLCPY( orig_cid, tn->clientid );
         MSGBUF( tn->clientid, "%1d:%04X", SSID_TO_LCSS( dev->ssid ), dev->devnum );
         // "%s COMM: %s negotiations complete; ttype = '%s'"
         WRMSG( HHC02914, "I", tn->clientid, orig_cid, tn->ttype );

@@ -1197,16 +1197,16 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     {
 #if defined( OPTION_SHARED_DEVICES )
         if (dev->shioactive == DEV_SYS_NONE)
-            strlcpy( sysid, "(none)", sizeof(sysid) );
+            STRLCPY( sysid, "(none)" );
         else if (dev->shioactive == DEV_SYS_LOCAL)
-            strlcpy( sysid, "local", sizeof(sysid) );
+            STRLCPY( sysid, "local" );
         else
             MSGBUF( sysid, "id=%d", dev->shioactive);
 #else // !defined( OPTION_SHARED_DEVICES )
         if (dev->busy && !(dev->suspended))
-            strlcpy( sysid, "local", sizeof(sysid) );
+            STRLCPY( sysid, "local" );
         else
-            strlcpy( sysid, "(none)", sizeof(sysid) );
+            STRLCPY( sysid, "(none)" );
 #endif // defined( OPTION_SHARED_DEVICES )
         if (dev->busy && !(dev->suspended
 #if defined( OPTION_SHARED_DEVICES )

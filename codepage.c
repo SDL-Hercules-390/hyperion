@@ -1127,7 +1127,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
             p = argv[2];
             p++;
 
-            strlcpy(buf,p,sizeof(buf));
+            STRLCPY( buf, p );
             buf[strlen(buf)-1] = '\0';
 
             for( addargc = 0; ; addargc++ )

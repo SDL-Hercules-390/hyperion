@@ -1041,7 +1041,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         if( ( hp = gethostbyname( remaddr ) ) != NULL )
         {
             memcpy( &ipaddr, hp->h_addr, hp->h_length );
-            strlcpy( address, inet_ntoa( ipaddr ), sizeof(address) );
+            STRLCPY( address, inet_ntoa( ipaddr ) );
             remaddr = address;
         }
         else
@@ -1603,7 +1603,7 @@ U16 lcss;
         if (start_vmnet(dev, xdev, argc - 1, &argv[1]))
             return -1;
     }
-    strlcpy(dev->filename, "vmnet", sizeof(dev->filename) );
+    STRLCPY( dev->filename, "vmnet" );
 
     /* Set the control unit type */
     /* Linux/390 currently only supports 3088 model 2 CTCA and ESCON */
@@ -3232,13 +3232,13 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     {
         if( pCTCE_Info->attn_can )
         {
-            strlcat( ctce_trace_xtra, "->NONE", sizeof( ctce_trace_xtra ) );
+            STRLCAT( ctce_trace_xtra, "->NONE" );
         }
         else if( pCTCE_Info->working_attn_rc > -1 )
         {
             snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
                 "->RC=%d", pCTCE_Info->working_attn_rc );
-            strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+            STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
         }
     }
 
@@ -3247,7 +3247,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     {
         snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
             " DE_READY->RC=%d",pCTCE_Info->de_ready_attn_rc );
-        strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
 
     // "WEOF" means that the "Write End of File" bit is or was set.
@@ -3259,21 +3259,21 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     if(  IS_CTCE_WEOF( pCTCE_Info->state_x_prev ) ||
          IS_CTCE_WEOF( pDEVBLK->ctcexState      ) )
     {
-        strlcat( ctce_trace_xtra, " WEOF", sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, " WEOF" );
     }
     if( !IS_CTCE_WEOF( pCTCE_Info->state_x_prev ) &&
          IS_CTCE_WEOF( pDEVBLK->ctcexState      ) )
     {
-        strlcat( ctce_trace_xtra, "->SET", sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, "->SET" );
         if( IS_CTCE_MATCH( pCTCE_Info->actions ) )
         {
-            strlcat( ctce_trace_xtra, "->UX", sizeof( ctce_trace_xtra ) );
+            STRLCAT( ctce_trace_xtra, "->UX" );
         }
     }
     if(  IS_CTCE_WEOF( pCTCE_Info->state_x_prev ) &&
         !IS_CTCE_WEOF( pDEVBLK->ctcexState      ) )
     {
-        strlcat( ctce_trace_xtra, "->CLR", sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, "->CLR" );
     }
 
     // The source for reporting dependings on the Command X-fer
@@ -3332,7 +3332,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
         {
             snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
                 " SCB=%02X=%s", pCTCE_Info->scb, CTCE_CmdStr[CTCE_CMD( pCTCE_Info->scb )] );
-            strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+            STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
         }
     }
 
@@ -3341,7 +3341,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     {
         snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
             " Busy_Waits=%d", pCTCE_Info->busy_waits );
-        strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
 
     // Report on the WAIT RC if needed.
@@ -3349,7 +3349,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     {
         snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
             " WAIT->RC=%d", pCTCE_Info->wait_rc );
-        strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
 
     // The "state mismatch" was used for debugging purposes
@@ -3361,7 +3361,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
             " CTCE_STATE MISMATCH %s!=%s(:FSM) !",
             CTCE_StaStr[ctce_state_verify],
             CTCE_StaStr[pCTCE_Info->state_new] );
-        strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
 
     // The unit "Stat mismatch" was used for debugging purposes
@@ -3377,19 +3377,19 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
         snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
             " Stat MISMATCH %02X!=%02X(:FSM) !",
             *pUnitStat, pCTCE_Info->x_unit_stat );
-        strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, ctce_trace_xtra_temp );
     }
 
     // Report a contention loser situation.
     if( pCTCE_Info->con_lost )
     {
-        strlcat( ctce_trace_xtra, " CON_LOSER", sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, " CON_LOSER" );
     }
 
     // Report a contention winner situation.
     if( pCTCE_Info->con_won )
     {
-        strlcat( ctce_trace_xtra, " CON_WINNER", sizeof( ctce_trace_xtra ) );
+        STRLCAT( ctce_trace_xtra, " CON_WINNER" );
     }
 
 /*

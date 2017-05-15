@@ -424,12 +424,12 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
             attargv = malloc( attargc * sizeof(char *) );
 
             attargv[0] = "attach";
-            strlcpy( attcmdline, attargv[0], sizeof(attcmdline) );
+            STRLCPY( attcmdline, attargv[0] );
             for ( i = 1; i < attargc; i++ )
             {
                 attargv[i] = addargv[i - 1];
-                strlcat( attcmdline, " ", sizeof(attcmdline) );
-                strlcat( attcmdline, attargv[i], sizeof(attcmdline) );
+                STRLCAT( attcmdline, " " );
+                STRLCAT( attcmdline, attargv[i] );
             }
 
             rc = CallHercCmd( attargc, attargv, attcmdline );
@@ -489,11 +489,11 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
             int i;
             int rc;
 
-            strlcpy( addcmdline, addargv[0], sizeof(addcmdline) );
+            STRLCPY( addcmdline, addargv[0] );
             for( i = 1; i < addargc; i++ )
             {
-                strlcat(addcmdline, " ", sizeof(addcmdline));
-                strlcat(addcmdline, addargv[i], sizeof(addcmdline));
+                STRLCAT( addcmdline, " " );
+                STRLCAT( addcmdline, addargv[i] );
             }
 
             rc = CallHercCmd (addargc, addargv, addcmdline);

@@ -220,7 +220,7 @@ static char     name[8];                /* Name of dsorg             */
     else if (dsorg[0] & DSORG_PO)
         strcpy (name, "PO");
 
-    if (dsorg[0] & DSORG_U) strlcat (name, "U", sizeof(name));
+    if (dsorg[0] & DSORG_U) STRLCAT( name, "U" );
 
     return name;
 } /* end function dsorg_name */
@@ -244,9 +244,9 @@ static char     name[8];                /* Name of record format     */
         strcpy (name,"??");
     } /* end switch */
 
-    if (recfm[0] & RECFM_TRKOFLOW) strlcat (name, "T", sizeof(name));
-    if (recfm[0] & RECFM_BLOCKED)  strlcat (name, "B", sizeof(name));
-    if (recfm[0] & RECFM_SPANNED)  strlcat (name, "S", sizeof(name));
+    if (recfm[0] & RECFM_TRKOFLOW) STRLCAT( name, "T" );
+    if (recfm[0] & RECFM_BLOCKED)  STRLCAT( name, "B" );
+    if (recfm[0] & RECFM_SPANNED)  STRLCAT( name, "S" );
 
     switch (recfm[0] & RECFM_CTLCHAR) {
     case RECFM_CTLCHAR_A:

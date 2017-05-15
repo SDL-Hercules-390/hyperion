@@ -322,7 +322,7 @@ BYTE    isdiag;
                 char cmd[256]; /* (copy of command name) */
 
                 /* Make full-length copy of the true command's name */
-                strlcpy( cmd, pCmdTab->statement, sizeof(cmd) );
+                STRLCPY( cmd, pCmdTab->statement );
 
                 /* Replace abbreviated command with full command */
                 if (pCmdTab->mincmdlen)
@@ -772,7 +772,7 @@ void *panel_command (void *cmdline)
         cl = resolve_symbol_string( cmd );
         if (cl)
         {
-            strlcpy( cmd, cl, sizeof( cmd ));
+            STRLCPY( cmd, cl );
             free( cl );
         }
 #endif /* ENABLE_SYSTEM_SYMBOLS */
