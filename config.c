@@ -1019,163 +1019,202 @@ DLL_EXPORT BYTE is_diag_instr()
 
 /*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */
-/* Caller MUST own the intlock                                       */
+/* This routine MUST be called with OBTAIN_INTLOCK already held.     */
 /*-------------------------------------------------------------------*/
-int configure_cpu(int cpu)
+int configure_cpu( int target_cpu )
 {
-int   i;
-int   rc;
-char  thread_name[32];
-TID   tid;
-
-    if(IS_CPU_ONLINE(cpu))
-        return -1;
-
-    /* If no more CPUs are permitted, exit */
-    if (sysblk.cpus >= sysblk.maxcpu)
+    /* If CPU isn't already configured... */
+    if (!IS_CPU_ONLINE( target_cpu ))
     {
-        return (HERRCPUOFF); /* CPU offline */
+        int   rc;
+        char  thread_name[32];
+        BYTE  arecpu;
+        int   ourcpu;
+
+        /* If no more CPUs are permitted, exit */
+        if (sysblk.cpus >= sysblk.maxcpu)
+            return HERRCPUOFF; /* CPU offline; maximum reached */
+
+        MSGBUF( thread_name, "Processor %s%02X",
+            PTYPSTR( target_cpu ), target_cpu );
+
+        rc = create_thread( &sysblk.cputid[ target_cpu ], JOINABLE,
+                            cpu_thread, &target_cpu, thread_name );
+        if (rc)
+        {
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
+            return HERRCPUOFF; /* CPU offline; create_thread failed */
+        }
+
+        /* Find out if we are a cpu thread */
+        arecpu = are_cpu_thread( &ourcpu );
+
+        if (arecpu)
+            sysblk.regs[ ourcpu ]->intwait = 1;
+
+        /* Wait for CPU thread to initialize */
+        while (!IS_CPU_ONLINE( target_cpu ))
+           wait_condition( &sysblk.cpucond, &sysblk.intlock );
+
+        if (arecpu)
+            sysblk.regs[ ourcpu ]->intwait = 0;
+
+#if defined( FEATURE_CONFIGURATION_TOPOLOGY_FACILITY )
+        /* Set topology-change-report-pending condition */
+        sysblk.topchnge = 1;
+#endif
     }
-
-    MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-
-    rc = create_thread (&sysblk.cputid[cpu], JOINABLE, cpu_thread,
-                        &cpu, thread_name);
-    if (rc)
-    {
-        WRMSG(HHC00102, "E", strerror(rc));
-        return HERRCPUOFF; /* CPU offline */
-    }
-
-    /* Find out if we are a cpu thread */
-    tid = thread_id();
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (equal_threads( sysblk.cputid[i], tid ))
-            break;
-
-    if (i < sysblk.maxcpu)
-        sysblk.regs[i]->intwait = 1;
-
-    /* Wait for CPU thread to initialize */
-    while (!IS_CPU_ONLINE(cpu))
-       wait_condition (&sysblk.cpucond, &sysblk.intlock);
-
-    if (i < sysblk.maxcpu)
-        sysblk.regs[i]->intwait = 0;
-
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
-    /* Set topology-change-report-pending condition */
-    sysblk.topchnge = 1;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
 
     return 0;
 } /* end function configure_cpu */
 
-
 /*-------------------------------------------------------------------*/
 /* Function to remove a CPU from the configuration                   */
-/* This routine MUST be called with the intlock held                 */
+/* This routine MUST be called with OBTAIN_INTLOCK already held.     */
 /*-------------------------------------------------------------------*/
-int deconfigure_cpu(int cpu)
+int deconfigure_cpu( int target_cpu )
 {
-int i;
-TID tid = thread_id();
-
-    /* Find out if we are a cpu thread */
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (equal_threads( sysblk.cputid[i], tid ))
-            break;
-
-    /* If we're NOT trying to deconfigure ourselves */
-    if (cpu != i)
+    /* If CPU isn't already deconfigured... */
+    if (IS_CPU_ONLINE( target_cpu ))
     {
-        if (!IS_CPU_ONLINE(cpu))
-            return -1;
+        int   ourcpu;
+        BYTE  arecpu  = are_cpu_thread( &ourcpu );
 
-        /* Deconfigure CPU */
-        sysblk.regs[cpu]->configured = 0;
-        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
-        ON_IC_INTERRUPT(sysblk.regs[cpu]);
-
-        /* Wake up CPU as it may be waiting */
-        WAKEUP_CPU (sysblk.regs[cpu]);
-
-        /* (if we're a cpu thread) */
-        if (i < sysblk.maxcpu)
-            sysblk.regs[i]->intwait = 1;
-
-        /* Wait for CPU thread to terminate */
-        while (IS_CPU_ONLINE(cpu))
-            wait_condition (&sysblk.cpucond, &sysblk.intlock);
-
-        /* (if we're a cpu thread) */
-        if (i < sysblk.maxcpu)
-            sysblk.regs[i]->intwait = 0;
-
-        join_thread (sysblk.cputid[cpu], NULL);
-        detach_thread( sysblk.cputid[cpu] );
-
-        /*-----------------------------------------------------------*/
-        /* Note: While this is the logical place to cleanup and to   */
-        /*       release the associated regs context, there is post  */
-        /*       processing that is done by various callers.         */
-        /*-----------------------------------------------------------*/
-    }
-    else
-    {
-        /* Else we ARE trying to deconfigure ourselves */
-        sysblk.regs[cpu]->configured = 0;
-        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
-        ON_IC_INTERRUPT(sysblk.regs[cpu]);
-    }
-
-    sysblk.cputid[cpu] = 0;
-
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
-    /* Set topology-change-report-pending condition */
-    sysblk.topchnge = 1;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
-
-    return 0;
-
-} /* end function deconfigure_cpu */
-
-#ifdef OPTION_ECL_CPU_ORDER
-static int configure_cpu_order[] = { 1, 0, 3, 2 }; // ECL CPU type order
-#define config_order(_cpu) (((_cpu) < (int)(sizeof(configure_cpu_order)/sizeof(int))) ? configure_cpu_order[(_cpu)] : (_cpu))
-#else
-#define config_order(_cpu) (_cpu)
-#endif
-
-int configure_numcpu(int numcpu)
-{
-int cpu;
-
-    OBTAIN_INTLOCK(NULL);
-    if(sysblk.cpus)
-        for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
-            if(IS_CPU_ONLINE(cpu) && sysblk.regs[cpu]->cpustate == CPUSTATE_STARTED)
-            {
-                RELEASE_INTLOCK(NULL);
-                return HERRCPUONL;
-            }
-
-    /* Start the CPUs */
-    for(cpu = 0; cpu < sysblk.maxcpu; cpu++)
-        if(cpu < numcpu)
+        /* If we're NOT trying to deconfigure ourselves */
+        if (target_cpu != ourcpu)
         {
-            if(!IS_CPU_ONLINE(config_order(cpu)))
-                configure_cpu(config_order(cpu));
+            /* Deconfigure CPU */
+            sysblk.regs[ target_cpu ]->configured = 0;
+            sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT( sysblk.regs[ target_cpu ]);
+
+            /* Wake up CPU as it may be waiting */
+            WAKEUP_CPU( sysblk.regs[ target_cpu ]);
+
+            /* (if we're a cpu thread) */
+            if (arecpu)
+                sysblk.regs[ ourcpu ]->intwait = 1;
+
+            /* Wait for CPU thread to terminate */
+            while (IS_CPU_ONLINE( target_cpu ))
+                wait_condition( &sysblk.cpucond, &sysblk.intlock );
+
+            /* (if we're a cpu thread) */
+            if (arecpu)
+                sysblk.regs[ ourcpu ]->intwait = 0;
+
+            join_thread( sysblk.cputid[ target_cpu ], NULL );
+            detach_thread( sysblk.cputid[ target_cpu ]);
+
+            /*-----------------------------------------------------------*/
+            /* Note: While this is the logical place to cleanup and to   */
+            /*       release the associated regs context, there is also  */
+            /*       post-processing that is done by various callers.    */
+            /*-----------------------------------------------------------*/
         }
         else
         {
-            if(IS_CPU_ONLINE(config_order(cpu)))
-                deconfigure_cpu(config_order(cpu));
+            /* Else we ARE trying to deconfigure ourselves */
+            sysblk.regs[ target_cpu ]->configured = 0;
+            sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT( sysblk.regs[ target_cpu ]);
         }
 
-    RELEASE_INTLOCK(NULL);
+        sysblk.cputid[ target_cpu ] = 0;
+
+#if defined( FEATURE_CONFIGURATION_TOPOLOGY_FACILITY )
+        /* Set topology-change-report-pending condition */
+        sysblk.topchnge = 1;
+#endif
+    }
 
     return 0;
+} /* end function deconfigure_cpu */
+
+/*-------------------------------------------------------------------*/
+/* Configure number of online CPUs                                   */
+/*-------------------------------------------------------------------*/
+static int configure_numcpu_intlock_held( int numcpu )
+{
+    int cpu;
+
+    /* Requested number of online CPUs must be <= maximum */
+    if (numcpu > sysblk.maxcpu)
+        return HERRCPUOFF;  /* CPU offline; number > maximum */
+
+    /* All CPUs must be stopped beforehand */
+    if (sysblk.cpus && !are_all_cpus_stopped_intlock_held())
+        return HERRCPUONL; /* CPU online; not all are stopped */
+
+    /* Keep deconfiguring CPUS until within desired range */
+    for (cpu=sysblk.hicpu-1; cpu >= 0 && sysblk.cpus > numcpu; cpu--)
+    {
+        /* Deconfigure this CPU if it's currently configured */
+        if (IS_CPU_ONLINE( cpu ))
+            deconfigure_cpu( cpu );
+    }
+
+    /* Keep configuring CPUs until desired amount reached */
+    for (cpu=0; cpu < sysblk.maxcpu && sysblk.cpus < numcpu; cpu++)
+    {
+        /* Configure this CPU if it's not currently configured */
+        if (!IS_CPU_ONLINE( cpu ))
+            configure_cpu( cpu );
+    }
+
+    /* Make sure we did that right */
+    ASSERT( sysblk.cpus == numcpu && numcpu <= sysblk.maxcpu );
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Configure number of online CPUs                                   */
+/*-------------------------------------------------------------------*/
+int configure_numcpu( int numcpu )
+{
+    int rc = 0;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        rc = configure_numcpu_intlock_held( numcpu );
+    }
+    RELEASE_INTLOCK( NULL );
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* Configure maximum number of online CPUs                           */
+/*-------------------------------------------------------------------*/
+int configure_maxcpu( int maxcpu )
+{
+    int rc = 0;
+    OBTAIN_INTLOCK( NULL );
+    {
+        /* Requested maxumim must be <= absolute maximum possible */
+        if (maxcpu > MAX_CPU_ENGINES)
+        {
+            RELEASE_INTLOCK( NULL );
+            return HERRCPUOFF;  /* CPU offline; number > maximum */
+        }
+
+        /* All CPUs must be stopped beforehand */
+        if (sysblk.cpus && !are_all_cpus_stopped_intlock_held())
+        {
+            RELEASE_INTLOCK( NULL );
+            return HERRCPUONL; /* CPU online; not all are stopped */
+        }
+
+        /* Set new maximum number of online CPUs */
+        sysblk.maxcpu = maxcpu;
+
+        /* Deconfigure excess online CPUs if necessary */
+        if (sysblk.cpus > maxcpu)
+            rc = configure_numcpu_intlock_held( maxcpu );
+    }
+    RELEASE_INTLOCK( NULL );
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/

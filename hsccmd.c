@@ -3591,119 +3591,155 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 /* numcpu command                                                    */
 /*-------------------------------------------------------------------*/
-int numcpu_cmd(int argc, char *argv[], char *cmdline)
+int numcpu_cmd( int argc, char* argv[], char* cmdline )
 {
-U16 numcpu;
-int rc;
-BYTE c;
+    int   rc;
+    U16   numcpu;
+    BYTE  c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     /* Ensure only two arguments passed */
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
     /* Display current value */
-    if ( argc == 1 )
+    if (argc == 1)
     {
         char msgbuf[32];
-        MSGBUF(msgbuf, "%d", sysblk.cpus);
+        MSGBUF( msgbuf, "%d", sysblk.cpus );
+        // "%-14s: %s"
         WRMSG( HHC02203, "I", argv[0], msgbuf );
-        if ( sysblk.cpus == 0 )
-            return 1;
+
+        if (sysblk.cpus == 0)
+            return 1;   // warning?
         else
-            return 0;
+            return 0;   // success
     }
 
     /* Parse maximum number of CPUs operand */
-    if (sscanf(argv[1], "%hu%c", &numcpu, &c) != 1)
+    if (sscanf( argv[1], "%hu%c", &numcpu, &c ) != 1)
     {
+        // "Invalid value %s specified for %s"
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
-    if ( numcpu > sysblk.maxcpu )
+    if (numcpu > sysblk.maxcpu)
     {
+        // "Invalid argument %s%s"
         WRMSG( HHC02205, "E", argv[1], "; NUMCPU must be <= MAXCPU" );
         return -1;
     }
 
-    /* Configure CPUs */
-    rc = configure_numcpu(numcpu);
-    switch(rc) {
-    case 0:
-        if ( MLVL(VERBOSE) )
-            WRMSG( HHC02204, "I", argv[0], argv[1] );
+    /* Configure number of online CPUs */
+    rc = configure_numcpu( numcpu );
+
+    switch (rc)
+    {
+        case 0:
+        {
+            if (MLVL( VERBOSE ))
+            {
+                // "%-14s set to %s"
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            }
+        }
         break;
-    case HERRCPUONL:
-        WRMSG( HHC02389, "E");
+
+        case HERRCPUONL:
+        {
+            // "CPUs must be offline or stopped"
+            WRMSG( HHC02389, "E" );
+        }
         break;
-    default:
-        WRMSG( HHC02386, "E", rc);
+
+        default:
+        {
+            // "Configure CPU error %d"
+            WRMSG( HHC02386, "E", rc );
+        }
     }
 
     return rc;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* maxcpu command                                                    */
 /*-------------------------------------------------------------------*/
-int maxcpu_cmd(int argc, char *argv[], char *cmdline)
+int maxcpu_cmd( int argc, char* argv[], char* cmdline )
 {
-U16 maxcpu;
-BYTE c;
+    int   rc;
+    U16   maxcpu;
+    BYTE  c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     /* Ensure only two arguments passed */
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
     /* Display current value */
-    if ( argc == 1 )
+    if (argc == 1)
     {
         char msgbuf[32];
-
-        MSGBUF(msgbuf, "%d", sysblk.maxcpu);
+        MSGBUF( msgbuf, "%d", sysblk.maxcpu );
+        // "%-14s: %s"
         WRMSG( HHC02203, "I", argv[0], msgbuf );
-        if ( sysblk.maxcpu == 0 )
-            return 1;
+
+        if (sysblk.maxcpu == 0)
+            return 1;   // warning?
         else
-            return 0;
+            return 0;   // success
     }
 
     /* Parse maximum number of CPUs operand */
-    if (sscanf(argv[1], "%hu%c", &maxcpu, &c) != 1
+    if (sscanf( argv[1], "%hu%c", &maxcpu, &c ) != 1
         || maxcpu > MAX_CPU_ENGINES)
     {
+        // "Invalid value %s specified for %s"
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
-    if (maxcpu < sysblk.hicpu)
+    /* Configure maximum number of online CPUs */
+    rc = configure_maxcpu( maxcpu );
+
+    switch (rc)
     {
-        WRMSG( HHC02389, "E");
-        return HERRCPUONL;
+        case 0:
+        {
+            if (MLVL( VERBOSE ))
+            {
+                // "%-14s set to %s"
+                WRMSG( HHC02204, "I", argv[0], argv[1] );
+            }
+        }
+        break;
+
+        case HERRCPUONL:
+        {
+            // "CPUs must be offline or stopped"
+            WRMSG( HHC02389, "E" );
+        }
+        break;
+
+        default:
+        {
+            // "Configure CPU error %d"
+            WRMSG( HHC02386, "E", rc );
+        }
     }
 
-    sysblk.maxcpu = maxcpu;
-
-    if (MLVL(VERBOSE))
-    {
-        char msgbuf[32];
-
-        MSGBUF(msgbuf, "%d", sysblk.maxcpu);
-        WRMSG( HHC02204, "I", argv[0], msgbuf );
-    }
-
-    return 0;
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/

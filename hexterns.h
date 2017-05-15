@@ -281,6 +281,7 @@ CONF_DLL_IMPORT BYTE free_group(DEVGRP *group, int locked, const char *msg, DEVB
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int  configure_numcpu (int numcpu);
+int  configure_maxcpu (int maxcpu);
 int  configure_memlock(int);
 int  configure_memfree(int);
 int  configure_storage(U64);
