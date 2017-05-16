@@ -1499,7 +1499,7 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 //      | LCS_IP_FRAG_REASSEMBLY
 //      | LCS_IP_FILTERING
 //      | LCS_IP_V6_SUPPORT
-        | LCS_MULTICAST_SUPPORT
+//      | LCS_MULTICAST_SUPPORT
         ;
 
     pLCSPORT->sIPAssistsEnabled =
@@ -1510,7 +1510,7 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 //      | LCS_IP_FRAG_REASSEMBLY
 //      | LCS_IP_FILTERING
 //      | LCS_IP_V6_SUPPORT
-        | LCS_MULTICAST_SUPPORT
+//      | LCS_MULTICAST_SUPPORT
         ;
 
 #else // !WIN32 (Linux, Apple, etc)
