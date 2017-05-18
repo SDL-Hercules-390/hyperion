@@ -55,11 +55,7 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
                     FOOBAR;
                 ],
                 [
-                    int main(int argc, char *argv[])
-                    {
-                        FOOBAR* p = calloc( 1, sizeof(FOOBAR) + 16 );
-                        return 0;
-                    }
+                    FOOBAR* p = calloc( 1, sizeof(FOOBAR) + 16 );
                 ],
                 [hc_cv_c99_flexible_array=yes],
                 [hc_cv_c99_flexible_array=no]
