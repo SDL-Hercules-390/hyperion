@@ -1520,7 +1520,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     }
 
     /* Open the device file right away */
-    if (open_printer( dev ) != 0)
+    if (!sockdev && open_printer( dev ) != 0)
         return -1;  // (error msg already issued)
 
     return 0;
