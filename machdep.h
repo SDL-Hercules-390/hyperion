@@ -178,7 +178,7 @@
 
       #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
       // (must follow cmpxchg8 since it uses it)
-      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile void *ptr )
+      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile const void *ptr )
       {
         U64 value = *(U64*)ptr;
         cmpxchg8( &value, value, (U64*)ptr );
@@ -341,7 +341,7 @@ __asm__ __volatile__ (
 }
 
 #define fetch_dw_noswap(x) fetch_dw_i686_noswap(x)
-static __inline__ U64 fetch_dw_i686_noswap(void *ptr)
+static __inline__ U64 fetch_dw_i686_noswap(const void *ptr)
 {
  U64 value = *(U64 *)ptr;
 __asm__ __volatile__ (
@@ -590,11 +590,11 @@ U32  *ptr4, val4, old4, new4;
     #define fetch_hw_noswap(_p) CSWAP16(fetch_hw((_p)))
   #else
     #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U16 fetch_hw_noswap(void *ptr) {
+      static __inline__ U16 fetch_hw_noswap(const void *ptr) {
         return *(U16 *)ptr;
       }
     #else
-      static __inline__ U16 fetch_hw_noswap(void *ptr) {
+      static __inline__ U16 fetch_hw_noswap(const void *ptr) {
         U16 value;
         memcpy(&value, (BYTE *)ptr, 2);
         return value;
@@ -718,11 +718,11 @@ U32  *ptr4, val4, old4, new4;
     #define fetch_dw_noswap(_p) CSWAP64(fetch_dw((_p)))
   #else
     #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U64 fetch_dw_noswap(void *ptr) {
+      static __inline__ U64 fetch_dw_noswap(const void *ptr) {
         return *(U64 *)ptr;
       }
     #else
-      static __inline__ U64 fetch_dw_noswap(void *ptr) {
+      static __inline__ U64 fetch_dw_noswap(const void *ptr) {
         U64 value;
         memcpy(&value, (BYTE *)ptr, 8);
         return value;
