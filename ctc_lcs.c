@@ -1601,6 +1601,8 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
     ifreq             ifr = {0};
     int               rc, badrc = 0, errnum = 0;
     U16               i, numpairs;
+    char*             pszMAC;
+    const char*       what;
 
     // Initialize reply frame
 
@@ -1617,9 +1619,71 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
     // If tuntap multicast assist is available, use it.
     // Otherwise keep track of guest's request manually.
 
-    if (!pLCSPORT->fDoMCastAssist)  // (tuntap multicast support?)
+    if (pLCSPORT->fDoMCastAssist)  // (manual multicast assist?)
+    {
+        what = SIOCADDMULTI == ioctlcode ? "MACTabAdd"
+             : SIOCDELMULTI == ioctlcode ? "MACTabRem" : "???";
+
+        for (i=0, badrc=0; i < numpairs; i++)
+        {
+            pMAC = &pIPMFrame->IP_MAC_Pair[i].MAC_Address;
+
+            // Remember (or forget) this MAC for later
+
+            if (SIOCADDMULTI == ioctlcode)
+            {
+                if ((rc = MACTabAdd( pLCSPORT->MCastTab, (BYTE*) pMAC, 0 )) == 0)
+                {
+                    pLCSPORT->nMCastCount++;
+
+                    if (pLCSDEV->pLCSBLK->fDebug)
+                    {
+                        VERIFY( FormatMAC( &pszMAC, (BYTE*) pMAC ) == 0);
+                        // "CTC: lcs device '%s' port %2.2X: %s %s: ok"
+                        WRMSG( HHC00964, "D", pLCSPORT->szNetIfName, pLCSPORT->bPort,
+                            what, pszMAC );
+                        free( pszMAC );
+                    }
+                }
+                else
+                    badrc = -rc;    // (convert to errno)
+            }
+            else // (SIOCDELMULTI == ioctlcode)
+            {
+                if ((rc = MACTabRem( pLCSPORT->MCastTab, (BYTE*) pMAC )) == 0)
+                {
+                    pLCSPORT->nMCastCount--;
+
+                    if (pLCSDEV->pLCSBLK->fDebug)
+                    {
+                        VERIFY( FormatMAC( &pszMAC, (BYTE*) pMAC ) == 0);
+                        // "CTC: lcs device '%s' port %2.2X: %s %s: ok"
+                        WRMSG( HHC00964, "D", pLCSPORT->szNetIfName, pLCSPORT->bPort,
+                            what, pszMAC );
+                        free( pszMAC );
+                    }
+                }
+                else
+                    badrc = -rc;    // (convert to errno)
+            }
+        }
+
+        // Set return code and issue message if any requests failed.
+
+        if (badrc)
+        {
+            errnum = badrc;  // (get errno)
+            // "CTC: error in function %s: %s"
+            WRMSG( HHC00940, "E", what, strerror( errnum ));
+            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
+        }
+    }
+    else // (!pLCSPORT->fDoMCastAssist): let tuntap do it for us
     {
         // Issue ioctl for each MAC address in their request
+
+        what = SIOCADDMULTI == ioctlcode ? "SIOCADDMULTI"
+             : SIOCDELMULTI == ioctlcode ? "SIOCDELMULTI" : "???";
 
         STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
 
@@ -1628,7 +1692,18 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
             pMAC = &pIPMFrame->IP_MAC_Pair[i].MAC_Address;
             memcpy( ifr.ifr_hwaddr.sa_data, pMAC, sizeof( MAC ));
 
-            if ((rc = TUNTAP_IOCtl( 0, ioctlcode, (char*) &ifr )) != 0)
+            if ((rc = TUNTAP_IOCtl( 0, ioctlcode, (char*) &ifr )) == 0)
+            {
+                if (pLCSDEV->pLCSBLK->fDebug)
+                {
+                    VERIFY( FormatMAC( &pszMAC, (BYTE*) pMAC ) == 0);
+                    // "CTC: lcs device '%s' port %2.2X: %s %s: ok"
+                    WRMSG( HHC00964, "D", pLCSPORT->szNetIfName, pLCSPORT->bPort,
+                        what, pszMAC );
+                    free( pszMAC );
+                }
+            }
+            else
             {
                 badrc = rc;
                 errnum = HSO_errno;
@@ -1639,46 +1714,8 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
         if (badrc)
         {
-            const char* pioctl = SIOCADDMULTI == ioctlcode ? "SIOCADDMULTI"
-                : SIOCDELMULTI == ioctlcode ? "SIOCDELMULTI" : "???";
             // "CTC: ioctl %s failed for device %s: %s"
-            WRMSG( HHC00941, "E", pioctl, pLCSPORT->szNetIfName, strerror( errnum ));
-            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
-        }
-    }
-    else // (pLCSPORT->fDoMCastAssist == do multicast assist ourselves)
-    {
-        for (i=0, badrc=0; i < numpairs; i++)
-        {
-            pMAC = &pIPMFrame->IP_MAC_Pair[i].MAC_Address;
-
-            // Remember (or forget) this MAC for later
-
-            if (SIOCADDMULTI == ioctlcode)
-            {
-                if ((rc = MACTabAdd( pLCSPORT->MCastTab, (BYTE*) pMAC, 0 )) != 0)
-                    badrc = -rc; // (convert to errno)
-                else
-                    pLCSPORT->nMCastCount++;
-            }
-            else // (SIOCDELMULTI == ioctlcode)
-            {
-                if ((rc = MACTabRem( pLCSPORT->MCastTab, (BYTE*) pMAC )) != 0)
-                    badrc = -rc; // (convert to errno)
-                else
-                    pLCSPORT->nMCastCount--;
-            }
-        }
-
-        // Set return code and issue message if any requests failed.
-
-        if (badrc)
-        {
-            const char* func = SIOCADDMULTI == ioctlcode ? "MACTabAdd"
-                : SIOCDELMULTI == ioctlcode ? "MACTabRem" : "???";
-            errnum = badrc;  // (get errno)
-            // "CTC: error in function %s: %s"
-            WRMSG( HHC00940, "E", func, strerror( errnum ));
+            WRMSG( HHC00941, "E", what, pLCSPORT->szNetIfName, strerror( errnum ));
             STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
         }
     }

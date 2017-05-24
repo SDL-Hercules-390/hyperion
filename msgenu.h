@@ -773,7 +773,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00961 "CTC: error in file %s: %s: invalid mode"
 #define HHC00962 "CTC: error in file %s: reading line %d: %s"
 #define HHC00963 "CTC: error in file %s: line %d is too long"
-//efine HHC00964 (available)
+#define HHC00964 "CTC: lcs device '%s' port %2.2X: %s %s: ok"
 #define HHC00965 "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
 #define HHC00966 "%1d:%04X CTC: lcs triggering port %2.2X event"
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
