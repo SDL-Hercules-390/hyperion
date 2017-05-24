@@ -74,5 +74,5 @@ VER_DLL_IMPORT void display_extpkg_vers   ( FILE* f, int httpfd );
 VER_DLL_IMPORT int  get_buildinfo_strings ( const char*** pppszBldInfoStr );
 
 #define HERCULES_COPYRIGHT \
-       "(C) Copyright 1999-2016 by Roger Bowler, Jan Jaeger, and others"
+       "(C) Copyright 1999-2017 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_
