@@ -105,8 +105,8 @@ struct ifmap {
 
 #define IFF_TUN             0x0001
 #define IFF_TAP             0x0002
-#define IFF_NO_PI           0x1000
-#define IFF_ONE_QUEUE       0x2000
+#define IFF_NO_PI           0x1000  // (allowed but ignored; no pi is default)
+#define IFF_ONE_QUEUE       0x2000  // (allowed but ignored; no queue support)
 
 //---------------------------------------------------------------------------------------
 // Fish: 2006-06-16: Must #undef first since PSDK header
@@ -130,7 +130,7 @@ struct ifmap {
 //---------------------------------------------------------------------------------------
 
 #define IFF_UP              0x0001      //  @  Interface is up.
-#define IFF_BROADCAST       0x0002      //     Broadcast address valid.
+#define IFF_BROADCAST       0x0002      //  #  Broadcast address valid.
 #define IFF_DEBUG           0x0004      //  @  Turn on debugging.
 #define IFF_LOOPBACK        0x0008      //     Is a loopback net.
 #define IFF_POINTOPOINT     0x0010      //     Interface is point-to-point link.
@@ -146,8 +146,11 @@ struct ifmap {
 #define IFF_AUTOMEDIA       0x4000      //     Auto media select active.
 #define IFF_DYNAMIC         0x8000      //     Dialup device with changing addresses.
 
-                                        // (+) Supported but unmodifiable.
-                                        // (@) User is allowed to modify.
+                                        // (@)  Supported.
+                                        // (#)  Allowed but ignored.
+                                        // (+)  Read-only (unmodifiable).
+
+                                        // All others are unsupported by CTCI-WIN.
 
 //---------------------------------------------------------------------------------------
 
