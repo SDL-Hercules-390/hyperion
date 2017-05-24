@@ -1639,12 +1639,11 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
         if (badrc)
         {
-            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
-
             const char* pioctl = SIOCADDMULTI == ioctlcode ? "SIOCADDMULTI"
                 : SIOCDELMULTI == ioctlcode ? "SIOCDELMULTI" : "???";
             // "CTC: ioctl %s failed for device %s: %s"
             WRMSG( HHC00941, "E", pioctl, pLCSPORT->szNetIfName, strerror( errnum ));
+            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
         }
     }
     else // (pLCSPORT->fDoMCastAssist == do multicast assist ourselves)
@@ -1675,13 +1674,12 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
         if (badrc)
         {
-            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
-
             const char* func = SIOCADDMULTI == ioctlcode ? "MACTabAdd"
                 : SIOCDELMULTI == ioctlcode ? "MACTabRem" : "???";
             errnum = badrc;  // (get errno)
             // "CTC: error in function %s: %s"
             WRMSG( HHC00940, "E", func, strerror( errnum ));
+            STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
         }
     }
 
