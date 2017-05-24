@@ -45,7 +45,8 @@ tuntap_OBJ = \
 ctc_OBJ = \
     $(O)ctc_lcs.obj  \
     $(O)ctc_ctci.obj \
-    $(O)ctcadpt.obj
+    $(O)ctcadpt.obj  \
+    $(O)netsupp.obj
 
 hutil_OBJ = \
     $(O)codepage.obj \

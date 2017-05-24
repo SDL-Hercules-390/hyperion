@@ -122,6 +122,7 @@ dyndev_SRC =  \
   hetlib.c    \
   hettape.c   \
   mpc.c       \
+  netsupp.c   \
   omatape.c   \
   printer.c   \
   qeth.c      \
@@ -318,7 +319,7 @@ hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
-hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
+hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
@@ -970,6 +971,7 @@ noinst_HEADERS =          \
   memrchr.h               \
   mpc.h                   \
   msgenu.h                \
+  netsupp.h               \
   opcode.h                \
   parser.h                \
   printfmt.h              \

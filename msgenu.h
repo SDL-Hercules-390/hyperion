@@ -720,7 +720,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00900 "%1d:%04X %s: Error in function %s: %s"
 #define HHC00901 "%1d:%04X %s: Interface %s, type %s opened"
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
+//efine HHC00903 (available)
 #define HHC00904 "%1d:%04X %s: Halt or clear recognized"
+//efine HHC00905 (available)
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
 #define HHC00907 "%1d:%04X CTC: interface command: %s %8.8X"
 #define HHC00908 "%1d:%04X CTC: incomplete write buffer segment header at offset %4.4X"
@@ -732,26 +734,27 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00914 "%1d:%04X CTC: packet frame too big, dropped"
 #define HHC00915 "%1d:%04X %s: Incorrect number of parameters"
 #define HHC00916 "%1d:%04X %s: Option %s value %s invalid"
-// #define HHC00917 "%1d:%04X CTC: default value %s is used for option %s"
+//efine HHC00917 (available)
 #define HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
-// #define HHC00919 "%1d:%04X CTC: option %s must be specified"
+//efine HHC00919 (available)
 
 /* ctc_lcs.c */
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
-#define HHC00921 "%1d:%04X CTC: lcs read"
+#define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
 #define HHC00933 "%1d:%04X CTC: executing command %s"
 #define HHC00934 "%1d:%04X CTC: sending packet to file %s"
+#define HHC00935 "CTC: lcs device port %2.2X: %s Checksum Offload enabled"
 #define HHC00936 "%1d:%04X CTC: error writing to file %s: %s"
 #define HHC00937 "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
-#define HHC00938 "%1d:%04X CTC: lcs triggering device event"
+#define HHC00938 "CTC: lcs device port %2.2X: %s Large Send Offload enabled"
 #define HHC00939 "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X %s compiled size 0x%4.4X: ignored"
 #define HHC00940 "CTC: error in function %s: %s"
 #define HHC00941 "CTC: ioctl %s failed for device %s: %s"
 #define HHC00942 "CTC: lcs device %s using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHC00943 "CTC: lcs device %s not using mac %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
 #define HHC00944 "CTC: lcs device read error from port %2.2X: %s"
-#define HHC00945 "CTC: lcs device port %2.2X: read buffer"
+#define HHC00945 "CTC: lcs device port %2.2X: MCAST not in table, discarding frame"
 #define HHC00946 "CTC: lcs device port %2.2X: IPv4 frame received for %s"
 #define HHC00947 "CTC: lcs device port %2.2X: ARP frame received for %s"
 #define HHC00948 "CTC: lcs device port %2.2X: RARP frame received for %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X"
@@ -770,7 +773,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00961 "CTC: error in file %s: %s: invalid mode"
 #define HHC00962 "CTC: error in file %s: reading line %d: %s"
 #define HHC00963 "CTC: error in file %s: line %d is too long"
-#define HHC00964 "CTC: packet trace: %s %s %s"
+//efine HHC00964 (available)
 #define HHC00965 "CTC: lcs device port %2.2X: STILL trying to enqueue frame to device %4.4X %s"
 #define HHC00966 "%1d:%04X CTC: lcs triggering port %2.2X event"
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
@@ -786,7 +789,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00974 "%1d:%04X CTC: incorrect client or config error: config file %s connecting client %s"
 #define HHC00975 "%1d:%04X CTC: invalid %s length: %d < %d"
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
-#define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == 0x01)"
+#define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == LGW)"
 #define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
 #define HHC00979 "%s: %s: %s %s %s"
 
@@ -796,6 +799,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
 #define HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
 #define HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
+//efine HHC00985 - HHC00999 (available)
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c, commadpt.c, console.c, con1052c.c */

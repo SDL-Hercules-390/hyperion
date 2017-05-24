@@ -399,6 +399,7 @@
     <ClCompile Include="machchk.c" />
     <ClCompile Include="memrchr.c" />
     <ClCompile Include="mpc.c" />
+    <ClCompile Include="netsupp.c" />
     <ClCompile Include="omatape.c" />
     <ClCompile Include="opcode.c" />
     <ClCompile Include="panel.c" />
@@ -1014,6 +1015,7 @@
     <ClInclude Include="memrchr.h" />
     <ClInclude Include="mpc.h" />
     <ClInclude Include="msgenu.h" />
+    <ClInclude Include="netsupp.h" />
     <ClInclude Include="opcode.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="printfmt.h" />

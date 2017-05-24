@@ -12,6 +12,8 @@
 #ifndef __CTCADPT_H_
 #define __CTCADPT_H_
 
+#include "netsupp.h"            // (Networking Support Functions)
+
 // --------------------------------------------------------------------
 // Pack all structures to byte boundary...
 // --------------------------------------------------------------------
@@ -47,6 +49,41 @@
 typedef uint8_t  MAC[ IFHWADDRLEN ];    // Data Type for MAC Addresses
 
 // --------------------------------------------------------------------
+// LCS structure typedefs   (actual structures defined further below)
+// --------------------------------------------------------------------
+
+#define LCS_MAX_PORTS   4   // Maximum support ports per LCS device
+
+struct  _LCSBLK;            // Common Storage for LCS Emulation
+struct  _LCSDEV;            // LCS Device
+struct  _LCSPORT;           // LCS Port (or Relative Adapter)
+struct  _LCSRTE;            // LCS Routing Entries
+struct  _LCSHDR;            // LCS Frame Header
+struct  _LCSCMDHDR;         // LCS Command Frame Header
+struct  _LCSSTDFRM;         // LCS Standard Command Frame
+struct  _LCSSTRTFRM;        // LCS Startup Command Frame
+struct  _LCSQIPFRM;         // LCS Query IP Assists Command Frame
+struct  _LCSLSTFRM;         // LCS LAN Statistics Command Frame
+struct  _LCSIPMPAIR;        // LCS IP Multicast Pair structure
+struct  _LCSIPMFRM;         // LCS Set IP Multicast Command Frame
+struct  _LCSETHFRM;         // LCS Ethernet Passthru Frame
+
+typedef struct  _LCSBLK     LCSBLK,     *PLCSBLK;
+typedef struct  _LCSDEV     LCSDEV,     *PLCSDEV;
+typedef struct  _LCSPORT    LCSPORT,    *PLCSPORT;
+typedef struct  _LCSRTE     LCSRTE,     *PLCSRTE;
+typedef struct  _LCSHDR     LCSHDR,     *PLCSHDR;
+typedef struct  _LCSCMDHDR  LCSCMDHDR,  *PLCSCMDHDR;
+typedef struct  _LCSSTDFRM  LCSSTDFRM,  *PLCSSTDFRM;
+typedef struct  _LCSSTRTFRM LCSSTRTFRM, *PLCSSTRTFRM;
+typedef struct  _LCSQIPFRM  LCSQIPFRM,  *PLCSQIPFRM;
+typedef struct  _LCSLSTFRM  LCSLSTFRM,  *PLCSLSTFRM;
+typedef struct  _LCSIPMPAIR LCSIPMPAIR, *PLCSIPMPAIR;
+typedef struct  _LCSIPMFRM  LCSIPMFRM,  *PLCSIPMFRM;
+typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
+
+
+// --------------------------------------------------------------------
 // External Declarations
 // --------------------------------------------------------------------
 
@@ -80,6 +117,7 @@ extern void     CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
                             U32*    pResidual );
 
 extern int      LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] );
+extern void     LCS_Assist( PLCSPORT pLCSPORT );
 extern int      LCS_Close( DEVBLK* pDEVBLK );
 extern void     LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
                            int     iBufLen, char*  pBuffer );
@@ -96,10 +134,6 @@ extern void     LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 extern void     LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                            BYTE*   pIOBuf,    BYTE* UnitStat,
                            U32*    pResidual );
-extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
-                         U32     sCount,    BYTE*  pIOBuf,
-                         BYTE*   UnitStat,  U32*   pResidual,
-                         BYTE*   pMore );
 
 extern void     packet_trace( BYTE *addr, int len, BYTE dir );
 
@@ -343,39 +377,6 @@ struct _CTCISEG                         // CTCI Segment Header
  **********************************************************************
 \**********************************************************************/
 
-
-#define LCS_MAX_PORTS   4
-
-
-struct  _LCSBLK;
-struct  _LCSDEV;
-struct  _LCSPORT;
-struct  _LCSRTE;
-struct  _LCSHDR;
-struct  _LCSCMDHDR;
-struct  _LCSSTDFRM;
-struct  _LCSSTRTFRM;
-struct  _LCSQIPFRM;
-struct  _LCSLSTFRM;
-struct  _LCSIPMPAIR;
-struct  _LCSIPMFRM;
-struct  _LCSETHFRM;
-
-
-typedef struct  _LCSBLK     LCSBLK,     *PLCSBLK;
-typedef struct  _LCSDEV     LCSDEV,     *PLCSDEV;
-typedef struct  _LCSPORT    LCSPORT,    *PLCSPORT;
-typedef struct  _LCSRTE     LCSRTE,     *PLCSRTE;
-typedef struct  _LCSHDR     LCSHDR,     *PLCSHDR;
-typedef struct  _LCSCMDHDR  LCSCMDHDR,  *PLCSCMDHDR;
-typedef struct  _LCSSTDFRM  LCSSTDFRM,  *PLCSSTDFRM;
-typedef struct  _LCSSTRTFRM LCSSTRTFRM, *PLCSSTRTFRM;
-typedef struct  _LCSQIPFRM  LCSQIPFRM,  *PLCSQIPFRM;
-typedef struct  _LCSLSTFRM  LCSLSTFRM,  *PLCSLSTFRM;
-typedef struct  _LCSIPMPAIR LCSIPMPAIR, *PLCSIPMPAIR;
-typedef struct  _LCSIPMFRM  LCSIPMFRM,  *PLCSIPMFRM;
-typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
-
 // --------------------------------------------------------------------
 // LCS Device                              (host byte order)
 // --------------------------------------------------------------------
@@ -433,12 +434,14 @@ struct  _LCSDEV
 struct  _LCSPORT
 {
     BYTE        bPort;                    // Relative Adapter No
+    BYTE        nMCastCount;              // Active MACTAB entries
     MAC         MAC_Address;              // MAC Address of Adapter
     PLCSRTE     pRoutes;                  // -> Routes chain
     PLCSBLK     pLCSBLK;                  // -> LCSBLK
+    MACTAB      MCastTab[ MACTABMAX ];    // Multicast table
 
-    U16         sIPAssistsSupported;      // IP Assist Info
-    U16         sIPAssistsEnabled;
+    U16         sIPAssistsSupported;      // (See #defines below)
+    U16         sIPAssistsEnabled;        // (See #defines below)
 
     LOCK        PortDataLock;             // Data LOCK
     LOCK        PortEventLock;            // Condition LOCK
@@ -451,6 +454,8 @@ struct  _LCSPORT
     u_int       fRouteAdded:1;            // Routing Added
     u_int       fCloseInProgress:1;       // Close in progress
     u_int       fPreconfigured:1;         // TAP device pre-configured
+    u_int       fDoCkSumOffload:1;        // Do manual CSUM Offload
+    u_int       fDoMCastAssist:1;         // Do manual MCAST Assist
 
     int         fd;                       // TUN/TAP fd
     TID         tid;                      // Read Thread ID
@@ -460,6 +465,18 @@ struct  _LCSPORT
     char        szMACAddress[32];         // MAC Address
     char        szGWAddress[32];          // Gateway for W32
 };
+
+// --------------------------------------------------------------------
+// LCS Assists flags
+// --------------------------------------------------------------------
+
+#define LCS_ARP_PROCESSING            0x0001
+#define LCS_INBOUND_CHECKSUM_SUPPORT  0x0002
+#define LCS_OUTBOUND_CHECKSUM_SUPPORT 0x0004
+#define LCS_IP_FRAG_REASSEMBLY        0x0008
+#define LCS_IP_FILTERING              0x0010
+#define LCS_IP_V6_SUPPORT             0x0020
+#define LCS_MULTICAST_SUPPORT         0x0040
 
 
 // --------------------------------------------------------------------
@@ -480,12 +497,9 @@ struct  _LCSRTE
 
 struct  _LCSBLK
 {
-    // Config line parameters
     char*       pszTUNDevice;             // TUN/TAP char device
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
-//  char*       pszMACAddress;            // MAC Address (string)
-//  MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
 #if defined( OPTION_W32_CTCI )
@@ -497,11 +511,7 @@ struct  _LCSBLK
 
     PLCSDEV     pDevices;                 // -> Device chain
     LCSPORT     Port[LCS_MAX_PORTS];      // Port Blocks
-
-    // Self Describing Component Information
-    char        szSerialNumber[13];
 };
-
 
 
 /**********************************************************************\
@@ -541,7 +551,7 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
     LCSHDR      bLCSHdr;                // LCS Frame header
 
     BYTE        bCmdCode;               // (see below #defines)
-    BYTE        bInitiator;             // FIXME! What is this field?!
+    BYTE        bInitiator;             // (see below #defines)
     HWORD       hwSequenceNo;
     HWORD       hwReturnCode;
 
@@ -563,6 +573,8 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
 #define  LCS_CMD_SETIPM         0xB4        // Set IP Multicast
 #define  LCS_CMD_DELIPM         0xB5        // Delete IP Multicast
 
+#define  LCS_INITIATOR_TCPIP    0x00        // TCP/IP
+#define  LCS_INITIATOR_LGW      0x01        // LAN Gateway
 
 // --------------------------------------------------------------------
 // LCS Standard Command Frame                   (network byte order)
@@ -601,19 +613,10 @@ struct  _LCSQIPFRM
     LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
 
     HWORD       hwNumIPPairs;
-    HWORD       hwIPAssistsSupported;
-    HWORD       hwIPAssistsEnabled;
+    HWORD       hwIPAssistsSupported;   // (See "LCS Assists" above)
+    HWORD       hwIPAssistsEnabled;     // (See "LCS Assists" above)
     HWORD       hwIPVersion;
 } ATTRIBUTE_PACKED;
-
-
-#define LCS_ARP_PROCESSING            0x0001
-#define LCS_INBOUND_CHECKSUM_SUPPORT  0x0002
-#define LCS_OUTBOUND_CHECKSUM_SUPPORT 0x0004
-#define LCS_IP_FRAG_REASSEMBLY        0x0008
-#define LCS_IP_FILTERING              0x0010
-#define LCS_IP_V6_SUPPORT             0x0020
-#define LCS_MULTICAST_SUPPORT         0x0040
 
 
 // --------------------------------------------------------------------

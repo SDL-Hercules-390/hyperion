@@ -1,11 +1,11 @@
-/* TT32IF.H (C) Copyright Software Development Laboratories, 2013    */
+/* TT32IF.H (C) Copyright SoftDevLabs, 2013-2017                     */
 /*              TunTap32 networking interface structure and defines  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (C) 2013-2015, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2013-2017, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //      tt32if.h    --  declarations for inquiring about network interfaces
@@ -129,22 +129,25 @@ struct ifmap {
 
 //---------------------------------------------------------------------------------------
 
-#define IFF_UP              0x0001
-#define IFF_BROADCAST       0x0002
-#define IFF_DEBUG           0x0004
-#define IFF_LOOPBACK        0x0008
-#define IFF_POINTOPOINT     0x0010
-#define IFF_NOTRAILERS      0x0020
-#define IFF_RUNNING         0x0040
-#define IFF_NOARP           0x0080
-#define IFF_PROMISC         0x0100
-#define IFF_ALLMULTI        0x0200
-#define IFF_MASTER          0x0400
-#define IFF_SLAVE           0x0800
-#define IFF_MULTICAST       0x1000
-#define IFF_PORTSEL         0x2000
-#define IFF_AUTOMEDIA       0x4000
-#define IFF_DYNAMIC         0x8000
+#define IFF_UP              0x0001      //  @  Interface is up.
+#define IFF_BROADCAST       0x0002      //     Broadcast address valid.
+#define IFF_DEBUG           0x0004      //  @  Turn on debugging.
+#define IFF_LOOPBACK        0x0008      //     Is a loopback net.
+#define IFF_POINTOPOINT     0x0010      //     Interface is point-to-point link.
+#define IFF_NOTRAILERS      0x0020      //     Avoid use of trailers (obsolete).
+#define IFF_RUNNING         0x0040      //  +  Interface is operational.
+#define IFF_NOARP           0x0080      //     No address resolution protocol.
+#define IFF_PROMISC         0x0100      //  @  Receive all packets.
+#define IFF_ALLMULTI        0x0200      //  @  Receive all multicast packets.
+#define IFF_MASTER          0x0400      //     Master of a load balancer.
+#define IFF_SLAVE           0x0800      //     Slave of a load balancer.
+#define IFF_MULTICAST       0x1000      //  +  Supports multicast.
+#define IFF_PORTSEL         0x2000      //     Can set media type.
+#define IFF_AUTOMEDIA       0x4000      //     Auto media select active.
+#define IFF_DYNAMIC         0x8000      //     Dialup device with changing addresses.
+
+                                        // (+) Supported but unmodifiable.
+                                        // (@) User is allowed to modify.
 
 //---------------------------------------------------------------------------------------
 
@@ -174,6 +177,7 @@ struct ifreq {
         void *ifru_data;
     } ifr_ifru;
 };
+typedef struct ifreq ifreq;
 
 #define ifr_name        ifr_ifrn.ifrn_name
 #define ifr_hwaddr      ifr_ifru.ifru_hwaddr

@@ -33,6 +33,7 @@
     }
     ifr_ifru;
   };
+  typedef struct ifreq ifreq;
 
   #define  ifr_name      ifr_ifrn.ifrn_name
   #define  ifr_hwaddr    ifr_ifru.ifru_hwaddr
@@ -138,5 +139,7 @@ typedef struct hifr hifr;
 
 #define DEF_MTU         1500
 #define DEF_MTU_STR    "1500"
+
+typedef struct ifreq ifreq;
 
 #endif // __HIFR_H_

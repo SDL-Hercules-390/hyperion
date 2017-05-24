@@ -99,14 +99,6 @@ extern int      TUNTAP_SetIPAddr        ( char*   pszNetDevName,
                                           char*   pszIPAddr );
 extern int      TUNTAP_SetDestAddr      ( char*   pszNetDevName,
                                           char*   pszDestAddr );
-#if 0
-    /* FIXME: Do we need a IPv6 equivalent for SIOCSIFDSTADDR?
-              Does such a thing exist? Does it make sense? Do
-              Should we even concern ourselves with it at all?
-    */
-    #define HAVE_SETDESTADDR6           /* Is such a thing neeed? */
-#endif
-
 #ifdef OPTION_TUNTAP_SETNETMASK
 extern int      TUNTAP_SetNetMask       ( char*   pszNetDevName,
                                           char*   pszNetMask );
