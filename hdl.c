@@ -271,11 +271,13 @@ size_t  fulllen = 0;
     }
 #endif
 
-    if( hdl_modpath && *hdl_modpath)
+    if (hdl_modpath && *hdl_modpath)
     {
-        strlcpy(fullname,hdl_modpath,fulllen);
-        strlcat(fullname,PATHSEPS,fulllen);
-        strlcat(fullname,basename(filename),fulllen);
+        char* filenamecopy = strdup( filename );
+        strlcpy( fullname, hdl_modpath,              fulllen );
+        strlcat( fullname, PATHSEPS,                 fulllen );
+        strlcat( fullname, basename( filenamecopy ), fulllen );
+        free( filenamecopy );
     }
     else
         strlcpy(fullname,filename,fulllen);
