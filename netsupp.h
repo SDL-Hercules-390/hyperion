@@ -18,11 +18,9 @@ struct MACTAB
 #ifndef    IFHWADDRLEN
   #define  IFHWADDRLEN      6       /* Mac OSX is missing this       */
 #endif
-
     BYTE   inuse;                   /* In use flag: 0=free, 1=in use */
     BYTE   flags;                   /* Optional user-provided flags  */
     BYTE   mac[ IFHWADDRLEN ];      /* HW MAC address                */
-
 };
 
 typedef struct MACTAB  MACTAB, *PMACTAB;
