@@ -180,7 +180,7 @@
 #endif
 #ifdef OPTION_DYNAMIC_LOAD
   #ifdef HDL_USE_LIBTOOL
-    #include <ltdl.h>
+    #include "ltdl.h"
   #else
     #if defined(__MINGW__) || defined(_MSVC_)
       #include "w32dl.h"
