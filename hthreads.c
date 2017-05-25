@@ -1069,7 +1069,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
     else if (strcasecmp( argv[1], "ALL"  ) == 0)
         tid = 0;
     else if (strcasecmp( argv[1], "HELD" ) == 0)
-        tid = -1;
+        tid = (TID) -1;
     else if (sscanf( argv[1], SCN_TIDPAT "%c", &tid, &c ) != 1)
         rc = -1;
 
@@ -1122,7 +1122,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
                 {
                     if (0
                         || !tid
-                        || (equal_threads( tid, -1 ) && !equal_threads( ilk[i].tid, 0 ))
+                        || (equal_threads( tid, (TID) -1 ) && !equal_threads( ilk[i].tid, 0 ))
                         || equal_threads( tid, ilk[i].tid )
                     )
                     {
