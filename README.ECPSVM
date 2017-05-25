@@ -9,7 +9,9 @@
 -------------------------------------------------------------------------------
 
                             CHANGE LOG
-
+04/12/17 : Updated supported functions to include LRA instruction 
+           assist; fixed DISP0 assist issue where VMPSWAIT was not
+           being set.
 02/18/17 : Updated supported functions to include CCW translation
            assists DFCCW,DNCCW,CCWGN, and CCW untranslation assists
            UXCCW, FCCWS.
@@ -210,6 +212,7 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
     LCTL Simulation
     STNSM Simulation
     STOSM Simulation
+    LRA Simulation
 
 -------------------------------------------------------------------------------
 
@@ -226,7 +229,7 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
     DIAG
     IUCV
     ISK/SSK/ISKE/SSKE/IVSK    Extended Key Operations assist
-    V=R Shadow Table Bypass assists, including LRA instruction.
+    V=R Shadow Table Bypass assists
 
             Note: The V=R Shadow Table Bypass assist
             is a feature which requires the guest program
@@ -285,9 +288,9 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
     ("ECPSVM YES" and "ECPSVM YES TRAP" are functionally equivalent.)
 
     You can determine if ECPS:VM is operating with the trap after IPL by
-    issuing the 'ecpsvm status' command at the Hercules console.  If the
+    issuing the 'ecpsvm stats' command at the Hercules console.  If the
     trap is in effect and ECPS:VM has recognized it, the following message
-    will also be displayed at the beginning of the normal status report:
+    will also be displayed at the beginning of the normal stats report:
 
           "ECPS:VM Operating with CP FREE/FRET trap in effect"
 
@@ -297,59 +300,61 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
                     Example 'ecpsvm stats' report
 
 
-19:12:28 ecpsvm stats
-19:12:28 HHCEV011I ECPS:VM Command processor invoked
-19:12:28 HHCEV024I ECPS:VM Operating with CP FREE/FRET trap in effect
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV002I | VM ASSIST | Calls    | Hits     | Ratio |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV001I | STNSM     |  1666907 |  1663455 |   99% |
-19:12:28 HHCEV001I | STOSM     |  1133231 |  1045143 |   92% |
-19:12:28 HHCEV001I | LPSW      |   767737 |   765925 |   99% |
-19:12:28 HHCEV001I | SVC       |   314237 |   314236 |   99% |
-19:12:28 HHCEV001I | SIO       |   154594 |   154220 |   99% |
-19:12:28 HHCEV001I | LCTL      |    95101 |    88944 |   93% |
-19:12:28 HHCEV001I | DIAG*     |     1547 |        0 |    0% |
-19:12:28 HHCEV001I | SSM       |      238 |      236 |   99% |
-19:12:28 HHCEV001I | STCTL*    |      219 |        0 |    0% |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV001I | Total     |  4133811 |  4032159 |   97% |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV004I * : Unsupported, - : Disabled, % - Debug
-19:12:28 HHCEV005I 2 Entries not shown (never invoked)
-19:12:28 HHCEV006I 1766 calls where made to unsupported functions
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV002I | CP ASSIST | Calls    | Hits     | Ratio |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV001I | LINK      |  2781505 |  2769165 |   99% |
-19:12:28 HHCEV001I | RETRN     |  2781504 |  2769165 |   99% |
-19:12:28 HHCEV001I | DFCCW     |   825475 |   674525 |   81% |
-19:12:28 HHCEV001I | DISP0     |   733744 |   733744 |  100% |
-19:12:28 HHCEV001I | DISP1     |   684650 |   684646 |   99% |
-19:12:28 HHCEV001I | DNCCW     |   548207 |   548123 |   99% |
-19:12:28 HHCEV001I | TRBRG     |   512871 |   512871 |  100% |
-19:12:28 HHCEV001I | CCWGN     |   477629 |   389104 |   81% |
-19:12:28 HHCEV001I | FREEX     |   463450 |   462915 |   99% |
-19:12:28 HHCEV001I | SCNVU     |   377753 |   290833 |   76% |
-19:12:28 HHCEV001I | TRLOK     |   359299 |   359198 |   99% |
-19:12:28 HHCEV001I | DISP2     |   230185 |   230178 |   99% |
-19:12:28 HHCEV001I | SCNRU     |   183727 |   160585 |   87% |
-19:12:28 HHCEV001I | FRETX     |   183563 |   183417 |   99% |
-19:12:28 HHCEV001I | UXCCW     |   154282 |   154282 |  100% |
-19:12:28 HHCEV001I | FCCWS     |   153891 |   153780 |   99% |
-19:12:28 HHCEV001I | ULKPG     |    14109 |    14109 |  100% |
-19:12:28 HHCEV001I | LCKPG     |    14075 |    14075 |  100% |
-19:12:28 HHCEV001I | VIST      |     7779 |     7779 |  100% |
-19:12:28 HHCEV001I | VIPT      |      230 |      230 |  100% |
-19:12:28 HHCEV001I | LCSPG*    |        2 |        0 |    0% |
-19:12:28 HHCEV001I | STEVL     |        1 |        1 |  100% |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV001I | Total     | 11487931 | 11112725 |   96% |
-19:12:28 HHCEV003I +-----------+----------+----------+-------+
-19:12:28 HHCEV004I * : Unsupported, - : Disabled, % - Debug
-19:12:28 HHCEV005I 3 Entries not shown (never invoked)
-19:12:28 HHCEV006I 2 calls where made to unsupported functions
-19:12:28 HHCEV011I ECPS:VM Command processor complete
+16:04:07 HHC01603I ecpsvm sta
+16:04:07 HHC01719I ECPS:VM Command processor invoked
+16:04:07 HHC01725I ECPS:VM Code version 1.81
+16:04:07 HHC01724I ECPS:VM Operating with CP FREE/FRET trap in effect
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01706I | VM ASSIST |    Calls   |     Hits   | Ratio |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01701I | LRA       |    5971197 |    5971197 |  100% |
+16:04:07 HHC01701I | STNSM     |    3793385 |    3780107 |   99% |
+16:04:07 HHC01701I | STOSM     |    2555856 |    2457050 |   96% |
+16:04:07 HHC01701I | LPSW      |    1714621 |    1689625 |   98% |
+16:04:07 HHC01701I | LCTL      |    1642906 |     539138 |   32% |
+16:04:07 HHC01701I | SVC       |     604066 |     604061 |   99% |
+16:04:07 HHC01701I | STCTL*    |     354527 |          0 |    0% |
+16:04:07 HHC01701I | SIO       |     252790 |     252384 |   99% |
+16:04:07 HHC01701I | DIAG*     |       1547 |          0 |    0% |
+16:04:07 HHC01701I | SSM       |        238 |        236 |   99% |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01701I | Total     |   16891133 |   15293798 |   90% |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01703I * : Unsupported, - : Disabled, % - Debug
+16:04:07 HHC01704I 2 entries not shown and never invoked
+16:04:07 HHC01705I 356074 call(s) were made to unsupported functions
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01706I | CP ASSIST |    Calls   |     Hits   | Ratio |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01701I | DISP0     |    3497746 |    3497746 |  100% |
+16:04:07 HHC01701I | DISP1     |    3478979 |    3478979 |  100% |
+16:04:07 HHC01701I | DFCCW     |    1857819 |    1617010 |   87% |
+16:04:07 HHC01701I | TRBRG     |    1436418 |    1436418 |  100% |
+16:04:07 HHC01701I | DNCCW     |    1298279 |    1298064 |   99% |
+16:04:07 HHC01701I | CCWGN     |    1215345 |     981291 |   80% |
+16:04:07 HHC01701I | TRLOK     |    1112524 |    1112524 |  100% |
+16:04:07 HHC01701I | FREEX     |     844095 |     773177 |   91% |
+16:04:07 HHC01701I | RETRN     |     785714 |     773377 |   98% |
+16:04:07 HHC01701I | LINK      |     785714 |     773377 |   98% |
+16:04:07 HHC01701I | SCNVU     |     574565 |     390106 |   67% |
+16:04:07 HHC01701I | FRETX     |     423849 |     353332 |   83% |
+16:04:07 HHC01701I | DISP2     |     331465 |     331465 |  100% |
+16:04:07 HHC01701I | SCNRU     |     281634 |     258780 |   91% |
+16:04:07 HHC01701I | UXCCW     |     252403 |     252403 |  100% |
+16:04:07 HHC01701I | FCCWS     |     251862 |     181397 |   72% |
+16:04:07 HHC01701I | VIST      |      51759 |      51759 |  100% |
+16:04:07 HHC01701I | ULKPG     |      14201 |      14201 |  100% |
+16:04:07 HHC01701I | LCKPG     |      14186 |      14186 |  100% |
+16:04:07 HHC01701I | VIPT      |        294 |        294 |  100% |
+16:04:07 HHC01701I | LCSPG*    |          2 |          0 |    0% |
+16:04:07 HHC01701I | STEVL     |          1 |          1 |  100% |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01701I | Total     |   18508854 |   17589887 |   95% |
+16:04:07 HHC01702I +-----------+------------+------------+-------+
+16:04:07 HHC01703I * : Unsupported, - : Disabled, % - Debug
+16:04:07 HHC01704I 3 entries not shown and never invoked
+16:04:07 HHC01705I 2 call(s) were made to unsupported functions
+16:04:07 HHC01722I ECPS:VM Command processor complete
 
 
 -------------------------------------------------------------------------------

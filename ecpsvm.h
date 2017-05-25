@@ -62,6 +62,7 @@ typedef struct _ECPSVM_MICBLOK
 #define MICIPTP2 0x20   /* VRSTBYPASS IPTE/TPRT Simulation */
 #define MICVPFR2 0x10   /* Virtual Page Fault reflection Assists */
 #define MICLRA2  0x08   /* VRSTBYPASS LRA Simulation */
+#define MICSPT   0x04   /* SPT control */
 #define MICSTSM2 0x02   /* VRSTBYPASS SSM/STxSM Sim */
 #define MICLCTL2 0x01   /* VRSTBYPASS LCTL Sim */
     /* Bits define in MICEVMA3 */

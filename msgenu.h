@@ -1188,7 +1188,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01722 "ECPS:VM Command processor complete"
 #define HHC01723 "Invalid ECPS:VM level value : %s. Default of 20 used"
 #define HHC01724 "ECPS:VM Operating with CP FREE/FRET trap in effect"
-//efine HHC01725 - HHC01749 (available)
+#define HHC01725 "ECPS:VM Code version %.02f"
+//efine HHC01726 - HHC01749 (available)
 
 //efine HHC01750 - HHC01799 (available)
 

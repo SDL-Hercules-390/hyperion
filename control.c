@@ -2066,6 +2066,13 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dolra(regs,r1,b2,effective_addr2)==0)
+    {
+        return;
+    }
+#endif
+
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
 } /* end DEF_INST(load_real_address) */

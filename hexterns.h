@@ -609,6 +609,7 @@ int  ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2);
 int  ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2);
 int  ecpsvm_doiucv(REGS *regs,int b2,VADR effective_addr2);
 int  ecpsvm_virttmr_ext(REGS *regs);
+int  ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2);
 #endif
 
 /* Functions in module w32ctca.c */
