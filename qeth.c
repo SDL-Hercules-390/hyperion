@@ -677,7 +677,7 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 
     flags = ( 0
             | IFF_UP
-            | IFF_MULTICAST
+            | IFF_ALLMULTI
             | IFF_BROADCAST
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
             | IFF_RUNNING
@@ -711,7 +711,6 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 /* IP addresses to be lost.                                          */
 static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
 {
-
     if (!grp->enabled)
         return 0;
 
@@ -721,7 +720,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         int flags;
 
         flags = ( 0
-                | IFF_MULTICAST
+                | IFF_ALLMULTI
                 | IFF_BROADCAST
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
                 | IFF_RUNNING
@@ -1145,43 +1144,66 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETVMAC:  /* 0x25 */
-                DBGTRC(dev, "  IPA_CMD_SETVMAC\n");
                 {
-                MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
-                char tthwaddr[32] = {0}; // 11:22:33:44:55:66
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
-                int rc = 0;
-#endif /*defined(OPTION_W32_CTCI)*/
-                    MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
-                        ,ipa_mac->macaddr[0]
-                        ,ipa_mac->macaddr[1]
-                        ,ipa_mac->macaddr[2]
-                        ,ipa_mac->macaddr[3]
-                        ,ipa_mac->macaddr[4]
-                        ,ipa_mac->macaddr[5]
-                    );
+                    MPC_IPA_MAC*  ipa_mac  = (MPC_IPA_MAC*) (ipa+1);
+                    char*         pszMAC;
+#if defined( OPTION_W32_CTCI )
+                    int           flags, rc = 0;
+#endif
+                    VERIFY( FormatMAC( &pszMAC, ipa_mac->macaddr ) == 0);
+                    DBGTRC(dev, "  IPA_CMD_SETVMAC: ifname=%s hwaddr=%s\n",
+                        grp->ttifname, pszMAC );
 
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
-                    if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
+                    // PROGRAMMING NOTE: normally one should not change
+                    // tuntap's MAC but due to the way Windows CTCI-WIN
+                    // is implemented (designed) we MUST change the MAC
+                    // for Windows. This is ONLY for Windows. For Linux
+                    // we should leave the tuntap MAC alone (as-is).
+
+#if !defined( OPTION_W32_CTCI )      // Linux tuntap
+                    free( pszMAC );  // (no longer needed)
                     {
-                        qeth_errnum_msg( dev, grp, rc,
-                            "E", "IPA_CMD_SETVMAC failed" );
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+#else // Windows CTCI-WIN
+                    /*                    CTCI-WIN
+                    **  If the interface is already enabled/up we need to
+                    **  temporarily bring it down (disable it) so we can
+                    **  change the MAC address and then afterwards bring
+                    **  it back up again (enable it).
+                    */
+                    VERIFY( TUNTAP_GetFlags( grp->ttifname, &flags ) == 0);
+
+                    if (flags & IFF_UP)
+                        VERIFY( qeth_disable_interface( dev, grp ) == 0);
+
+                    rc = TUNTAP_SetMACAddr( grp->ttifname, pszMAC );
+
+                    if (flags & IFF_UP)
+                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
+
+                    if (rc != 0)
+                    {
+                        char msgbuf[256];
+                        MSGBUF( msgbuf,
+                            "IPA_CMD_SETVMAC: TUNTAP_SetMACAddr(%s,%s) failed",
+                            grp->ttifname, pszMAC );
+                        free( pszMAC );
+                        qeth_errnum_msg( dev, grp, rc, "E", msgbuf );
+                        STORE_HW( ipa->rc, IPA_RC_FFFF );
                     }
                     else
                     {
                         if (grp->tthwaddr)
                             free( grp->tthwaddr );
-
-                        grp->tthwaddr = strdup( tthwaddr );
+                        grp->tthwaddr = pszMAC;
+                        deregister_mac( grp->iMAC, MAC_TYPE_UNICST, grp );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-#else /*defined(OPTION_W32_CTCI)*/
-                    {
-#endif /*defined(OPTION_W32_CTCI)*/
-                        if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                            STORE_HW(ipa->rc,IPA_RC_OK);
+
+#endif // Linux tuntap or Windows CTCI-WIN
+
+                        if (register_mac( ipa_mac->macaddr, MAC_TYPE_UNICST, grp ))
+                            STORE_HW( ipa->rc, IPA_RC_OK );
                         else
-                            STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                            STORE_HW( ipa->rc, IPA_RC_L2_DUP_MAC );
                     }
                 }
                 break;
@@ -5032,21 +5054,18 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         || memcmp( iMAC, zeromac, IFHWADDRLEN ) == 0
     )
     {
-        char szMAC[3*IFHWADDRLEN] = {0};
-        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
-        DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
+        char* pszMAC;
+        UNREFERENCED( dev ); // (unreferenced in non-debug build)
+        DBGTRC( dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n" );
+        build_herc_iface_mac( iMAC, NULL );
+        VERIFY( FormatMAC( &pszMAC, iMAC ) == 0);
         if (tthwaddr)
             free( tthwaddr );
-        build_herc_iface_mac( iMAC, NULL );
-        MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
-            iMAC[0], iMAC[1], iMAC[2],
-            iMAC[3], iMAC[4], iMAC[5] );
-        tthwaddr = strdup( szMAC );
+        tthwaddr = pszMAC;
     }
 
     grp->tthwaddr = strdup( tthwaddr );
     memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
-
     free( tthwaddr );
 }
 
