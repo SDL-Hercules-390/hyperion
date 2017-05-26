@@ -418,7 +418,7 @@ static FACTAB* get_factab( const char* name )
 }
 
 /*-------------------------------------------------------------------*/
-/*                          set_archlvl                              */
+/*                          set_archlvl                     (public) */
 /*-------------------------------------------------------------------*/
 BYTE set_archlvl( const char* name )
 {
@@ -434,87 +434,70 @@ BYTE set_archlvl( const char* name )
 }
 
 /*-------------------------------------------------------------------*/
-/*                          force_facbit                             */
+/*                        do_force_facbit                            */
 /*-------------------------------------------------------------------*/
-static void force_facbit( int bitno, BYTE enable, BYTE mode )
+static void do_force_facbit( int bitno, BYTE enable, BYTE mode,
+                             BYTE archmode, int archnum, const char* archname )
 {
-    int fbyte, fbit;
+    const char*  endis  = enable ? "en" : "dis";
 
-    fbyte = bitno / 8;
-    fbit  = 0x80 >> (bitno % 8);
+    int  fbyte  =         (bitno / 8);
+    int  fbit   = 0x80 >> (bitno % 8);
+
+    // If Hercules was not built with support for this architecture,
+    // or the facility doesn't apply for this archmode, just return.
+
+    if (archnum < 0 || !(archmode & mode))
+        return;
+
+    // Try to do what they want
 
     if (enable)
     {
-#if defined( _370 )
-        if (S370 & mode)
-            if (!(sysblk.facility_list[ ARCH_370 ][fbyte] & fbit))
-            {
-                sysblk.facility_list[ ARCH_370 ][fbyte] |= fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_370_NAME );
-            }
-#endif
-#if defined( _390 )
-        if (ESA390 & mode)
-            if (!(sysblk.facility_list[ ARCH_390 ][fbyte] & fbit))
-            {
-                sysblk.facility_list[ ARCH_390 ][fbyte] |= fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_390_NAME );
-            }
-#endif
-#if defined( _900 )
-        if (ZARCH & mode)
-            if (!(sysblk.facility_list[ ARCH_900 ][fbyte] & fbit))
-            {
-                sysblk.facility_list[ ARCH_900 ][fbyte] |= fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_900_NAME );
-            }
-#endif
+        // If already enabled, nothing to do; return.
+        if ((sysblk.facility_list[ archnum ][fbyte] & fbit))
+            return;
+
+        sysblk.facility_list[ archnum ][fbyte] |= fbit;
     }
     else // disable
     {
-#if defined( _370 )
-        if (S370 & mode)
-            if (sysblk.facility_list[ ARCH_370 ][fbyte] & fbit)
-            {
-                sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_370_NAME );
-            }
-#endif
-#if defined( _390 )
-        if (ESA390 & mode)
-            if (sysblk.facility_list[ ARCH_390 ][fbyte] & fbit)
-            {
-                sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_390_NAME );
-            }
-#endif
-#if defined( _900 )
-        if (ZARCH & mode)
-            if (sysblk.facility_list[ ARCH_900 ][fbyte] & fbit)
-            {
-                sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_900_NAME );
-            }
-#endif
+        // If already disabled, nothing to do; return.
+        if (!(sysblk.facility_list[ archnum ][fbyte] & fbit))
+            return;
+
+        sysblk.facility_list[ archnum ][fbyte] &= ~fbit;
+    }
+
+    // Report what we did
+
+    if (MLVL( VERBOSE ))
+    {
+        // "Facility(%s) %sabled for archmode %s"
+        WRMSG( HHC00898, "I", get_facname( bitno ), endis, archname );
     }
 }
 
 /*-------------------------------------------------------------------*/
-/*                          set_facility                             */
+/*                          force_facbit                             */
 /*-------------------------------------------------------------------*/
-static void set_facility( FACTAB* facility, BYTE enable, BYTE mode )
+static void force_facbit( int bitno, BYTE enable, BYTE mode )
+{
+#if defined( _370 )
+    do_force_facbit( bitno, enable, mode, S370,   ARCH_370, _ARCH_370_NAME );
+#endif
+#if defined( _390 )  
+    do_force_facbit( bitno, enable, mode, ESA390, ARCH_390, _ARCH_390_NAME );
+#endif
+#if defined( _900 )  
+    do_force_facbit( bitno, enable, mode, ZARCH,  ARCH_900, _ARCH_900_NAME );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*                        set_facility                     (boolean) */
+/*-------------------------------------------------------------------*/
+static BYTE set_facility( FACTAB* facility, BYTE enable, BYTE mode )
 {
     int fbyte, fbit;
 
@@ -525,7 +508,7 @@ static void set_facility( FACTAB* facility, BYTE enable, BYTE mode )
     {
         // "Facility(%s) not supported for specfied archmode"
         WRMSG( HHC00896, "E", facility->name );
-        return;
+        return FALSE;
     }
 
 #if defined( _370 )
@@ -607,13 +590,13 @@ static void set_facility( FACTAB* facility, BYTE enable, BYTE mode )
     }
 #endif
 
-    return;
+    return TRUE;
 }
 
 /*-------------------------------------------------------------------*/
-/*                        update_archlvl                             */
+/*                        update_archlvl                   (boolean) */
 /*-------------------------------------------------------------------*/
-static int update_archlvl( int argc, char* argv[] )
+static BYTE update_archlvl( int argc, char* argv[] )
 {
     FACTAB*     ft;
     ARCHTAB*    at;
@@ -669,7 +652,7 @@ static int update_archlvl( int argc, char* argv[] )
     {
         // "Facility name not specified"
         WRMSG( HHC00892, "E" );
-        return 0;
+        return FALSE;
     }
 
     if (argc == 4)
@@ -678,7 +661,7 @@ static int update_archlvl( int argc, char* argv[] )
         {
             // "Archmode %s is invalid"
             WRMSG( HHC00895, "E", argv[3] );
-            return 0;
+            return FALSE;
         }
         als = arch2als[ at->archmode ];
     }
@@ -703,18 +686,23 @@ static int update_archlvl( int argc, char* argv[] )
         WRMSG( HHC00893, "E", argv[2] );
     }
 
-    return 0;
+    return TRUE;
 }
 
 /*-------------------------------------------------------------------*/
-/*          archlvl_cmd  --  set architecture level set              */
+/*       archlvl_cmd  -  set architecture level set         (public) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* Usage:                                                            */
 /*                                                                   */
-/*   archlvl  s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3   */
-/*            enable|disable <facility> [s/370|esa/390|z/arch]       */
-/*            query <facility>|all                                   */
+/*   archlvl  S/370   | ALS0                                         */
+/*            ESA/390 | ALS1                                         */
+/*            ESAME   | ALS2                                         */
+/*            Z/ARCH  | ALS3                                         */
+/*                                                                   */
+/*            ENABLE  | DISABLE  <facility>  [S/370|ESA/390|Z/ARCH]  */
+/*                                                                   */
+/*            QUERY              <facility> | ALL                    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int archlvl_cmd( int argc, char* argv[], char* cmdline )
@@ -723,6 +711,8 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
+    // Display current value
+
     if (argc < 2)
     {
         // "%-14s: %s"
@@ -730,12 +720,16 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
+    // Too many arguments?
+
     if (argc > 4)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
+
+    // Query specific facility...
 
     if (CMD( argv[1], query, 1 ))
     {
@@ -798,9 +792,10 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
                 return -1;
             }
         }
-
-        return 0;
+        return 0;   // (success)
     }
+
+    // Enable/Disable a specific facility...
 
     /* Make sure all CPUs are deconfigured or stopped */
     if (are_any_cpus_started())
@@ -812,7 +807,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     if (!set_archlvl( argv[1] ))
     {
-        if (update_archlvl( argc, argv ) != 0)
+        if (!update_archlvl( argc, argv ))
         {
             // "Invalid argument %s%s"
             WRMSG( HHC02205, "E", argv[1], "" );
@@ -838,20 +833,17 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         RELEASE_INTLOCK( NULL );
     }
 
-    if (argc == 2)
+    if (argc == 2 && MLVL( VERBOSE ))
     {
-        if (MLVL( VERBOSE ))
-        {
-            // "%-14s set to %s"
-            WRMSG( HHC02204, "I", "archmode", get_arch_mode_string( NULL ));
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", "archmode", get_arch_mode_string( NULL ));
 
-            if (storage_reset)
-            {
-                // "%-8s storage is %s (%ssize); storage is %slocked"
-                WRMSG( HHC17003, "I", "MAIN",
-                    fmt_memsize_KB( (U64) sysblk.mainsize >> SHIFT_KIBIBYTE ),
-                    "main", sysblk.mainstor_locked ? "":"not " );
-            }
+        if (storage_reset)
+        {
+            // "%-8s storage is %s (%ssize); storage is %slocked"
+            WRMSG( HHC17003, "I", "MAIN",
+                fmt_memsize_KB( (U64) sysblk.mainsize >> SHIFT_KIBIBYTE ),
+                "main", sysblk.mainstor_locked ? "":"not " );
         }
     }
 
