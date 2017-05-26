@@ -11,11 +11,13 @@
 #ifndef _ESA390_H
 #define _ESA390_H
 
-/* Platform-independent storage operand definitions */
-
 #include "htypes.h"         // (need Hercules fixed-size data types)
 
-#if defined(WORDS_BIGENDIAN)
+/*-------------------------------------------------------------------*/
+/*        Platform-independent storage operand definitions           */
+/*-------------------------------------------------------------------*/
+
+#if defined( WORDS_BIGENDIAN )
 
  typedef union {
                  U16 H;
@@ -35,7 +37,8 @@
                  struct { FW HH; FW HL; FW LH; FW LL; } F;
                } QW;
 
-#else // !defined(WORDS_BIGENDIAN)
+/*-------------------------------------------------------------------*/
+#else // (little endian)
 
  typedef union {
                  U16 H;
@@ -55,7 +58,9 @@
                  struct { FW LL; FW LH; FW HL; FW HH; } F;
                } QW;
 
-#endif // defined(WORDS_BIGENDIAN)
+#endif
+
+/*-------------------------------------------------------------------*/
 
 typedef union {
                  HWORD H;
@@ -70,35 +75,45 @@ typedef union {
                  struct { FWORD_U H; FWORD_U L; } F;
                } DWORD_U;
 
-/* Internal-format PSW structure definition */
-typedef struct  _PSW {
-        BYTE     sysmask;               /* System mask      (0 -  7) */
-        BYTE     pkey;                  /* PSW Key          (8 - 11) */
-        BYTE     states;                /* EC,M,W,P bits   (12 - 15) */
-        BYTE     asc;                   /* Address space control     */
-                                        /*                 (16 - 17) */
-        BYTE     cc;                    /* Condition code  (18 - 19) */
-        BYTE     progmask;              /* Program mask    (20 - 23) */
-        BYTE     zerobyte;              /* Zeroes          (24 - 31) */
-                                        /* or (esame)      (24 - 30) */
-        u_int                           /* Addressing mode (31 - 32) */
-                 amode64:1,             /* 64-bit addressing    (31) */
-                 amode:1,               /* 31-bit addressing    (32) */
-                 zeroilc:1;             /* 1=Zero ILC                */
-        U32      zeroword;              /* esame only      (33 - 63) */
-        DW       ia;                    /* Instruction addrress      */
-                                        /*                 (33 - 63) */
-                                        /* or (esame)      (64 -127) */
-        DW       amask;                 /* Address wraparound mask   */
-        U16      intcode;               /* Interruption code         */
-        BYTE     ilc;                   /* Instruction length count  */
-        BYTE     unused;
-    } PSW;
+/*-------------------------------------------------------------------*/
+/*           Internal-format PSW structure definition                */
+/*-------------------------------------------------------------------*/
+struct  PSW
+{
+    BYTE     sysmask;           /* System mask              (0 -  7) */
+    BYTE     pkey;              /* PSW Key                  (8 - 11) */
+    BYTE     states;            /* EC,M,W,P bits           (12 - 15) */
+    BYTE     asc;               /* Address space control   (16 - 17) */
+    BYTE     cc;                /* Condition code          (18 - 19) */
+    BYTE     progmask;          /* Program mask            (20 - 23) */
+
+    BYTE     zerobyte;          /* Zeroes                  (24 - 31) */
+                                /* or (esame)              (24 - 30) */
+
+    u_int                       /* Addressing mode         (31 - 32) */
+             amode64:1,         /* 64-bit addressing       (31)      */
+             amode:1,           /* 31-bit addressing       (32)      */
+             zeroilc:1;         /* 1=Zero ILC                        */
+
+    U32      zeroword;          /* esame only              (33 - 63) */
+    DW       ia;                /* Instruction addrress    (33 - 63) */
+                                /* or (esame)              (64 -127) */
+
+    DW       amask;             /* Address wraparound mask           */
+    U16      intcode;           /* Interruption code                 */
+    BYTE     ilc;               /* Instruction length count          */
+    BYTE     unused;
+};
+typedef struct PSW  PSW;
+
+/*-------------------------------------------------------------------*/
 
 #define IA_G     ia.D
 #define IA_H     ia.F.H.F
 #define IA_L     ia.F.L.F
 #define IA_LA24  ia.F.L.A.A
+
+/*-------------------------------------------------------------------*/
 
 #define AMASK_G  amask.D
 #define AMASK_L  amask.F.L.F
@@ -107,13 +122,17 @@ typedef struct  _PSW {
 #define AMASK31  0x7FFFFFFF
 #define AMASK64  0xFFFFFFFFFFFFFFFFULL
 
+/*-------------------------------------------------------------------*/
 /* System mask                 (0 -  7) */
+
 #define PSW_PERMODE     0x40            /* Program event recording   */
 #define PSW_DATMODE     0x04            /* Dynamic addr translation  */
 #define PSW_IOMASK      0x02            /* I/O interrupt mask        */
 #define PSW_EXTMASK     0x01            /* External interrupt mask   */
 
+/*-------------------------------------------------------------------*/
 /* PSW key mask                (8 - 11) */
+
 #define PSW_KEYMASK     0xF0            /* PSW key mask              */
 
 /*                            (12 - 15) */
@@ -123,7 +142,9 @@ typedef struct  _PSW {
 #define PSW_PROB_BIT       0    /* 0x01    Problem state             */
 #define PSW_NOTESAME_BIT   PSW_EC_BIT
 
+/*-------------------------------------------------------------------*/
 /* Address space control      (16 - 17) */
+
 #define PSW_ASCMASK     0xC0            /* Address space control mask*/
 #define PSW_SPACE_BIT      7    /* 0x80    Space mode bit            */
 #define PSW_AR_BIT         6    /* 0x40    Access register mode bit  */
@@ -132,79 +153,109 @@ typedef struct  _PSW {
 #define PSW_ACCESS_REGISTER_MODE   0x40 /* Access-register mode      */
 #define PSW_HOME_SPACE_MODE        0xC0 /* Home-space mode           */
 
+/*-------------------------------------------------------------------*/
 /* Condition code             (18 - 19) */
+
 #define PSW_CCMASK      0x30            /* Condition code mask       */
 
+/*-------------------------------------------------------------------*/
 /* Program mask               (20 - 23) */
+
 #define PSW_PROGMASK    0x0F            /* Program-mask bits         */
 #define PSW_FOBIT          3    /* 0x08    Fixed-point overflow bit  */
 #define PSW_DOBIT          2    /* 0x04    Decimal overflow bit      */
 #define PSW_EUBIT          1    /* 0x02    Exponent underflow bit    */
 #define PSW_SGBIT          0    /* 0x01    Significance bit          */
 
+/*-------------------------------------------------------------------*/
 /* Address mode               (31 - 32) */
+
 #define PSW_AMODE64_BIT    0            /* Extended addressing  (31) */
 #define PSW_AMODE31_BIT    7            /* Basic addressing     (32) */
 
+/*-------------------------------------------------------------------*/
 /* Macros for testing states (EC, M, W, P bits) */
+
 #define ECMODE(p)    (((p)->states & BIT(PSW_EC_BIT))       != 0)
 #define NOTESAME(p)  (((p)->states & BIT(PSW_NOTESAME_BIT)) != 0)
 #define MACHMASK(p)  (((p)->states & BIT(PSW_MACH_BIT))     != 0)
 #define WAITSTATE(p) (((p)->states & BIT(PSW_WAIT_BIT))     != 0)
 #define PROBSTATE(p) (((p)->states & BIT(PSW_PROB_BIT))     != 0)
 
+/*-------------------------------------------------------------------*/
 /* Macros for testing program mask */
+
 #define FOMASK(p)             ( (p)->progmask & BIT(PSW_FOBIT) )
 #define DOMASK(p)             ( (p)->progmask & BIT(PSW_DOBIT) )
 #define EUMASK(p)             ( (p)->progmask & BIT(PSW_EUBIT) )
 #define SGMASK(p)             ( (p)->progmask & BIT(PSW_SGBIT) )
 
-/* Structure definition for translation-lookaside buffer entry */
+/*-------------------------------------------------------------------*/
+/*   Structure definition for TLB (Translation-Lookaside Buffer)     */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  Fields set by translate_addr() are:                              */
+/*                                                                   */
+/*      asd, vaddr, pte, id, common and protect.                     */
+/*                                                                   */
+/*  Fields set by logical_to_main() are:                             */
+/*                                                                   */
+/*      main, storkey, skey, read and write,                         */
+/*      and are used for accelerated address lookup (formerly AEA).  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
 #define TLBN            1024            /* Number TLB entries        */
 #define TLB_MASK        0x3FF           /* Mask for 1024 entries     */
 #define TLB_REAL_ASD_L  0xFFFFFFFF      /* ASD values for real mode  */
 #define TLB_REAL_ASD_G  0xFFFFFFFFFFFFFFFFULL
 #define TLB_HOST_ASD    0x800           /* Host entry for XC guest   */
-typedef struct _TLB  {
-        DW              asd[TLBN];      /* Address space designator  */
+
+struct  TLB {
+    DW                  asd[TLBN];      /* Address space designator  */
+
 #define TLB_ASD_G(_n)   asd[(_n)].D
 #define TLB_ASD_L(_n)   asd[(_n)].F.L.F
-        DW              vaddr[TLBN];    /* Virtual page address      */
+
+    DW                  vaddr[TLBN];    /* Virtual page address      */
+
 #define TLB_VADDR_G(_n) vaddr[(_n)].D
 #define TLB_VADDR_L(_n) vaddr[(_n)].F.L.F
-        DW              pte[TLBN];      /* Copy of page table entry  */
+
+    DW                  pte[TLBN];      /* Copy of page table entry  */
+
 #define TLB_PTE_G(_n)   pte[(_n)].D
 #define TLB_PTE_L(_n)   pte[(_n)].F.L.F
-        BYTE           *main[TLBN];     /* Mainstor address          */
-        BYTE           *storkey[TLBN];  /* -> Storage key            */
-        BYTE            skey[TLBN];     /* Storage key key-value     */
-        BYTE            common[TLBN];   /* 1=Page in common segment  */
-        BYTE            protect[TLBN];  /* 1=Page in protected segmnt*/
-        BYTE            acc[TLBN];      /* Access type flags         */
-    } TLB;
 
-/* TLB Notes -
- * Fields set by translate_addr() are asd, vaddr, pte, id, common and
- * protect.
- * Fields set by logical_to_main() are main, storkey, skey, read and
- * write and are used for accelerated address lookup (formerly AEA).
- */
+    BYTE*               main[TLBN];     /* Mainstor address          */
+    BYTE*               storkey[TLBN];  /* -> Storage key            */
+    BYTE                skey[TLBN];     /* Storage key key-value     */
+    BYTE                common[TLBN];   /* 1=Page in common segment  */
+    BYTE                protect[TLBN];  /* 1=Page in protected segmnt*/
+    BYTE                acc[TLBN];      /* Access type flags         */
+};
+typedef struct TLB  TLB;
 
-/* Structure for Dynamic Address Translation */
-typedef struct _DAT {
-        RADR    raddr;                  /* Real address              */
-        RADR    aaddr;                  /* Absolute address          */
-        RADR    rpfra;                  /* Real page frame address   */
-        RADR    asd;                    /* Address space designator: */
-                                        /*   STD or ASCE             */
-        int     stid;                   /* Address space indicator   */
-        BYTE   *storkey;                /* ->Storage key             */
-        U16     xcode;                  /* Translation exception code*/
-        u_int   pvtaddr:1,              /* 1=Private address space   */
-                protect:2;              /* 1=Page prot, 2=ALE prot   */
-      } DAT;
+/*-------------------------------------------------------------------*/
+/*   Structure definition for DAT (Dynamic Address Translation)      */
+/*-------------------------------------------------------------------*/
+struct DAT
+{
+    RADR    raddr;          /* Real address                          */
+    RADR    aaddr;          /* Absolute address                      */
+    RADR    rpfra;          /* Real page frame address               */
+    RADR    asd;            /* Address space designator: STD or ASCE */
+    int     stid;           /* Address space indicator               */
+    BYTE   *storkey;        /* ->Storage key                         */
+    U16     xcode;          /* Translation exception code            */
+    u_int   pvtaddr:1,      /* 1=Private address space               */
+            protect:2;      /* 1=Page prot, 2=ALE prot               */
+};
+typedef struct DAT  DAT;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 0 */
+
 #define CR0_MCX_AUTH    0x0001000000000000ULL   /* Measurement Counter
                                                    Extraction Authority       */
 #define CR0_TRACE_TOD           0x80000000      /* TRACE TOD-clock control    */
@@ -249,24 +300,34 @@ typedef struct _DAT {
 #define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 1 */
+
 /* CR1 is the primary segment table descriptor or primary ASCE */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 2 */
+
 #define CR2_DUCTO       0x7FFFFFC0      /* DUCT origin               */
 /* For S/370, CR2 contains channel masks for channels 0-31 */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 3 */
+
 #define CR3_SASTEIN     0xFFFFFFFF00000000ULL /* SASN STE instance#  */
 #define CR3_KEYMASK     0xFFFF0000      /* PSW key mask              */
 #define CR3_SASN        0x0000FFFF      /* Secondary ASN             */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 4 */
+
 #define CR4_PASTEIN     0xFFFFFFFF00000000ULL /* PASN STE instance#  */
 #define CR4_AX          0xFFFF0000      /* Authorization index       */
 #define CR4_PASN        0x0000FFFF      /* Primary ASN               */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 5 */
+
                                         /* When CR0_ASF=0 (ESA/390): */
 #define CR5_SSLINK      0x80000000      /* Subsystem-Linkage control */
 #define CR5_LTO         0x7FFFFF80      /* Linkage-Table origin      */
@@ -274,18 +335,26 @@ typedef struct _DAT {
                                         /* When CR0_ASF=1 or ESAME:  */
 #define CR5_PASTEO      0x7FFFFFC0      /* Primary-ASTE origin       */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 6 */
+
 /* CR6 is the I/O interruption subclass mask */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 7 */
+
 /* CR7 is the secondary segment table descriptor or secondary ASCE */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 8 */
+
 #define CR8_ENHMCMASK   0x0000FFFF00000000ULL /* Enh Monitor masks   */
 #define CR8_EAX         0xFFFF0000      /* Extended auth index       */
 #define CR8_MCMASK      0x0000FFFF      /* Monitor masks             */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for PER */
+
 #define CR9_SB          0x80000000      /* Successful Branching      */
 #define CR9_IF          0x40000000      /* Instruction Fetch         */
 #define CR9_SA          0x20000000      /* Storage Alteration        */
@@ -296,7 +365,9 @@ typedef struct _DAT {
 #define CR9_BAC         0x00800000      /* Br addr control PER2 only */
 #define CR9_SAC         0x00200000      /* Stor. alter. c. PER2 only */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 12 */
+
 #define S_CR12_BRTRACE  0x80000000      /* Branch trace control      */
 #define Z_CR12_BRTRACE  0x8000000000000000ULL /* Branch trace control*/
 #define CR12_MTRACE     0x4000000000000000ULL /* Mode trace control  */
@@ -305,10 +376,14 @@ typedef struct _DAT {
 #define CR12_ASNTRACE   0x00000002      /* ASN trace control         */
 #define CR12_EXTRACE    0x00000001      /* Explicit trace control    */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 13 */
+
 /* CR13 is the home segment table descriptor or home ASCE */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 14 */
+
 #define CR14_CHKSTOP    0x80000000      /* Check-stop control   S/370*/
 #define CR14_SYNCMCEL   0x40000000      /* Synchronous MCEL     S/370*/
 #define CR14_IOEXTLOG   0x20000000      /* I/O extended logout  S/370*/
@@ -323,28 +398,38 @@ typedef struct _DAT {
 #define CR14_ASN_TRAN   0x00080000      /* ASN translation control   */
 #define CR14_AFTO       0x0007FFFF      /* ASN first table origin    */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for control register 15 */
+
 #define CR15_LSEA_390   0x7FFFFFF8      /* Linkage stack address  390*/
 #define CR15_LSEA_900   0xFFFFFFFFFFFFFFF8ULL /* Linkage stack  ESAME*/
 #define CR15_MCEL       0x00FFFFF8      /* MCEL address         S/370*/
 
+/*-------------------------------------------------------------------*/
 /* Linkage table designation bit definitions */
+
 #define LTD_SSLINK      0x80000000      /* Subsystem-Linkage control */
 #define LTD_LTO         0x7FFFFF80      /* Linkage-Table origin      */
 #define LTD_LTL         0x0000007F      /* Linkage-Table length      */
 
+/*-------------------------------------------------------------------*/
 /* Linkage first table designation bit definitions (ASN-and-LX-reuse)*/
+
 #define LFTD_SSLINK     0x80000000      /* Subsystem-Linkage control */
 #define LFTD_LFTO       0x7FFFFF00      /* Linkage-First-Table origin*/
 #define LFTD_LFTL       0x000000FF      /* Linkage-First-Table length*/
 
+/*-------------------------------------------------------------------*/
 /* Values for designation type and table type (ESAME mode) */
+
 #define TT_R1TABL       0xC             /* Region first table        */
 #define TT_R2TABL       0x8             /* Region second table       */
 #define TT_R3TABL       0x4             /* Region third table        */
 #define TT_SEGTAB       0x0             /* Segment table             */
 
+/*-------------------------------------------------------------------*/
 /* Address space control element bit definitions (ESAME mode) */
+
 #define ASCE_TO         0xFFFFFFFFFFFFF000ULL /* Table origin        */
 #define ASCE_G          0x200           /* Subspace group indicator  */
 #define ASCE_P          0x100           /* Private space indicator   */
@@ -355,7 +440,9 @@ typedef struct _DAT {
 #define ASCE_TL         0x003           /* Table length              */
 #define ASCE_RESV       0xC10           /* Reserved bits - ignored   */
 
+/*-------------------------------------------------------------------*/
 /* Region table entry bit definitions (ESAME mode) */
+
 #define REGTAB_TO       0xFFFFFFFFFFFFF000ULL /* Table origin        */
 #define REGTAB_P        0x200           /* DAT Protection bit    EDAT*/
 #define REGTAB_TF       0x0C0           /* Table offset              */
@@ -364,7 +451,9 @@ typedef struct _DAT {
 #define REGTAB_TL       0x003           /* Table length              */
 #define REGTAB_RESV     0xD10           /* Reserved bits - ignored   */
 
+/*-------------------------------------------------------------------*/
 /* Segment table entry bit definitions (ESAME mode) */
+
 #define ZSEGTAB_PTO     0xFFFFFFFFFFFFF800ULL /* Page table origin   */
 #define ZSEGTAB_SFAA    0xFFFFFFFFFFF00000ULL /* Seg Fr Abs Addr EDAT*/
 #define ZSEGTAB_AV      0x10000         /* ACCF Validity Control EDAT*/
@@ -378,7 +467,9 @@ typedef struct _DAT {
 #define ZSEGTAB_TT      0x00C           /* Table type                */
 #define ZSEGTAB_RESV    0x0C3           /* Reserved bits - ignored   */
 
+/*-------------------------------------------------------------------*/
 /* Page table entry bit definitions (ESAME mode) */
+
 #define ZPGETAB_PFRA    0xFFFFFFFFFFFFF000ULL /* Page frame real addr*/
 #define ZPGETAB_I       0x400           /* Invalid page              */
 #define ZPGETAB_P       0x200           /* Protected page            */
@@ -389,7 +480,9 @@ typedef struct _DAT {
 #define ZPGETAB_ESLCK   0x020           /* ES Locked                 */
 #define ZPGETAB_RESV    0x800           /* Reserved bits - must be 0 */
 
+/*-------------------------------------------------------------------*/
 /* Segment table designation bit definitions (ESA/390 mode) */
+
 #define STD_SSEVENT     0x80000000      /* Space switch event        */
 #define STD_STO         0x7FFFF000      /* Segment table origin      */
 #define STD_RESV        0x00000C00      /* Reserved bits - must be 0 */
@@ -398,14 +491,18 @@ typedef struct _DAT {
 #define STD_SAEVENT     0x00000080      /* Storage alteration event  */
 #define STD_STL         0x0000007F      /* Segment table length      */
 
+/*-------------------------------------------------------------------*/
 /* Segment table entry bit definitions (ESA/390 mode) */
+
 #define SEGTAB_PTO      0x7FFFFFC0      /* Page table origin         */
 #define SEGTAB_INVALID  0x00000020      /* Invalid segment           */
 #define SEGTAB_COMMON   0x00000010      /* Common segment            */
 #define SEGTAB_PTL      0x0000000F      /* Page table length         */
 #define SEGTAB_RESV     0x80000000      /* Reserved bits - must be 0 */
 
+/*-------------------------------------------------------------------*/
 /* Page table entry bit definitions (ESA/390 mode) */
+
 #define PAGETAB_PFRA    0x7FFFF000      /* Page frame real address   */
 #define PAGETAB_ESNK    0x00000800      /* ES NK bit                 */
 #define PAGETAB_INVALID 0x00000400      /* Invalid page              */
@@ -416,12 +513,16 @@ typedef struct _DAT {
 #define PAGETAB_PGLOCK  0x00000001      /* Page lock (LKPG)          */
 #define PAGETAB_RESV    0x80000900      /* Reserved bits - must be 0 */
 
+/*-------------------------------------------------------------------*/
 /* Segment table designation bit definitions (S/370 mode) */
+
 #define STD_370_STL     0xFF000000      /* 370 segment table length  */
 #define STD_370_STO     0x00FFFFC0      /* 370 segment table origin  */
 #define STD_370_SSEVENT 0x00000001      /* 370 space switch event    */
 
+/*-------------------------------------------------------------------*/
 /* Segment table entry bit definitions (S/370 mode) */
+
 #define SEGTAB_370_PTL  0xF0000000      /* Page table length         */
 #define SEGTAB_370_PTO  0x00FFFFF8      /* Page table origin         */
 #define SEGTAB_370_PROT 0x00000004      /* Protected segment         */
@@ -429,7 +530,9 @@ typedef struct _DAT {
 #define SEGTAB_370_INVL 0x00000001      /* Invalid segment           */
 #define SEGTAB_370_RSV  0x0F000000      /* Reserved bits - must be 0 */
 
+/*-------------------------------------------------------------------*/
 /* Page table entry bit definitions (S/370 mode) */
+
 #define PAGETAB_PFRA_4K 0xFFF0          /* Page frame real address   */
 #define PAGETAB_INV_4K  0x0008          /* Invalid page              */
 #define PAGETAB_EA_4K   0x0006          /* Extended physical address */
@@ -437,18 +540,24 @@ typedef struct _DAT {
 #define PAGETAB_INV_2K  0x0004          /* Invalid page              */
 #define PAGETAB_RSV_2K  0x0002          /* Reserved bit - must be 0  */
 
+/*-------------------------------------------------------------------*/
 /* Access-list entry token special value definitions */
+
 #define ALET_PRIMARY    0               /* Primary address-space     */
 #define ALET_SECONDARY  1               /* Secondary address-space   */
 #define ALET_HOME       2               /* Home address-space        */
 
+/*-------------------------------------------------------------------*/
 /* Access-list entry token bit definitions */
+
 #define ALET_RESV       0xFE000000      /* Reserved bits - must be 0 */
 #define ALET_PRI_LIST   0x01000000      /* Primary space access-list */
 #define ALET_ALESN      0x00FF0000      /* ALE sequence number       */
 #define ALET_ALEN       0x0000FFFF      /* Access-list entry number  */
 
+/*-------------------------------------------------------------------*/
 /* Access-list designation bit definitions */
+
 #if FEATURE_ALD_FORMAT == 0 || defined(_900)
 #define ALD_ALO         0x7FFFFF80      /* Access-list origin (fmt0) */
 #define ALD_ALL         0x0000007F      /* Access-list length (fmt0) */
@@ -459,7 +568,9 @@ typedef struct _DAT {
 #define ALD_ALL_SHIFT   4               /* Length units are 2**4     */
 #endif
 
+/*-------------------------------------------------------------------*/
 /* Access-list entry bit definitions */
+
 #define ALE0_INVALID    0x80000000      /* ALEN invalid              */
 #define ALE0_FETCHONLY  0x02000000      /* Fetch only address space  */
 #define ALE0_PRIVATE    0x01000000      /* Private address space     */
@@ -468,18 +579,24 @@ typedef struct _DAT {
 #define ALE2_ASTE       0x7FFFFFC0      /* ASTE address              */
 #define ALE3_ASTESN     0xFFFFFFFF      /* ASTE sequence number      */
 
+/*-------------------------------------------------------------------*/
 /* Address-space number (ASN) bit definitions */
+
 #define ASN_AFX         0xFFC0          /* ASN first table index     */
 #define ASN_ASX         0x003F          /* ASN second table index    */
 
+/*-------------------------------------------------------------------*/
 /* ASN first table entry bit definitions */
+
 #define AFTE_INVALID    0x80000000      /* ASN invalid               */
 #define AFTE_ASTO_0     0x7FFFFFF0      /* ASTE origin (CR0_ASF=0)   */
 #define AFTE_RESV_0     0x0000000F      /* Reserved bits (CR0_ASF=0) */
 #define AFTE_ASTO_1     0x7FFFFFC0      /* ASTE origin (CR0_ASF=1)   */
 #define AFTE_RESV_1     0x0000003F      /* Reserved bits (CR0_ASF=1) */
 
+/*-------------------------------------------------------------------*/
 /* ASN second table entry bit definitions */
+
 #define ASTE0_INVALID   0x80000000      /* ASX invalid               */
 #define ASTE0_ATO       0x7FFFFFFC      /* Authority-table origin    */
 #define ASTE0_RESV      0x00000002      /* Must be 0 for ESA/390     */
@@ -501,11 +618,15 @@ typedef struct _DAT {
 #define ASTE11_ASTEIN   0xFFFFFFFF      /* ASTE instance number      */
 /* ASTE words 12-15 are unused */
 
+/*-------------------------------------------------------------------*/
 /* Authority table entry bit definitions */
+
 #define ATE_PRIMARY     0x80            /* Primary authority bit     */
 #define ATE_SECONDARY   0x40            /* Secondary authority bit   */
 
+/*-------------------------------------------------------------------*/
 /* Dispatchable unit control table bit definitions */
+
 #define DUCT0_BASTEO    0x7FFFFFC0      /* Base ASTE origin          */
 #define DUCT1_SA        0x80000000      /* Subspace active           */
 #define DUCT1_SSASTEO   0x7FFFFFC0      /* Subspace ASTE origin      */
@@ -542,16 +663,22 @@ typedef struct _DAT {
 #define TRAP0_EXECUTE   0x80000000      /* TRAP is target of execute */
 #define TRAP0_TRAP4     0x40000000      /* TRAP is TRAP4             */
 
-/* Linkage stack entry descriptor structure definition */
-typedef struct _LSED {
-        BYTE    uet;                    /* U-bit and entry type      */
-        BYTE    si;                     /* Section identification    */
-        HWORD   rfs;                    /* Remaining free space      */
-        HWORD   nes;                    /* Next entry size           */
-        HWORD   resv;                   /* Reserved bits - must be 0 */
-    } LSED;
+/*-------------------------------------------------------------------*/
+/*     LSED (Linkage stack entry descriptor) structure definition    */
+/*-------------------------------------------------------------------*/
+struct LSED
+{
+    BYTE    uet;                        /* U-bit and entry type      */
+    BYTE    si;                         /* Section identification    */
+    HWORD   rfs;                        /* Remaining free space      */
+    HWORD   nes;                        /* Next entry size           */
+    HWORD   resv;                       /* Reserved bits - must be 0 */
+};
+typedef struct LSED LSED;
 
+/*-------------------------------------------------------------------*/
 /* Stack type definitions */
+
 #define LSED_UET_U      0x80            /* Unstack suppression bit   */
 #define LSED_UET_ET     0x7F            /* Entry type...             */
 
@@ -565,7 +692,9 @@ typedef struct _LSED {
 #define Z_LSED_UET_BAKR 0x0C            /* ...branch state entry     */
 #define Z_LSED_UET_PC   0x0D            /* ...call state entry       */
 
+/*-------------------------------------------------------------------*/
 /* Program call number bit definitions */
+
 #define PC_LFX1         0xFFF00000      /* Linkage first index (high)*/
 #define PC_BIT44        0x00080000      /* 1=LFX1 is significant     */
 #define PC_LFX2         0x0007E000      /* Linkage first index (low) */
@@ -573,28 +702,37 @@ typedef struct _LSED {
 #define PC_LX           0x000FFF00      /* Linkage index             */
 #define PC_EX           0x000000FF      /* Entry index               */
 
+/*-------------------------------------------------------------------*/
 /* Linkage table entry bit definitions */
+
 #define LTE_INVALID     0x80000000      /* LX invalid                */
 #define LTE_ETO         0x7FFFFFC0      /* Entry table origin        */
 #define LTE_ETL         0x0000003F      /* Entry table length        */
 
+/*-------------------------------------------------------------------*/
 /* Linkage first table entry bit definitions (ASN-and-LX-reuse) */
+
 #define LFTE_INVALID    0x80000000      /* LFX invalid               */
 #define LFTE_LSTO       0x7FFFFF00      /* Linkage second table orig */
 
+/*-------------------------------------------------------------------*/
 /* Linkage second table entry bit definitions (ASN-and-LX-reuse) */
+
 #define LSTE0_INVALID   0x80000000      /* LSX invalid               */
 #define LSTE0_ETO       0x7FFFFFC0      /* Entry table origin        */
 #define LSTE0_ETL       0x0000003F      /* Entry table length        */
 #define LSTE1_LSTESN    0xFFFFFFFF      /* LSTE sequence number      */
 
+/*-------------------------------------------------------------------*/
 /* Entry table bit entry definitions */
+
 /* ETE word 0 is the left half of the EIA for ESAME if ETE4_G is set */
 #define ETE0_AKM        0xFFFF0000      /* Authorization key mask 390*/
 #define ETE0_ASN        0x0000FFFF      /* Address space number   390*/
 #define ETE1_AMODE      0x80000000      /* Addressing mode           */
 #define ETE1_EIA        0x7FFFFFFE      /* Instruction address       */
 #define ETE1_PROB       0x00000001      /* Problem state bit         */
+
 /* ETE word 2 is the entry parameter for ESA/390 */
 #define ETE2_AKM        0xFFFF0000      /* Auth.key mask        ESAME*/
 #define ETE2_ASN        0x0000FFFF      /* Address space number ESAME*/
@@ -609,17 +747,21 @@ typedef struct _LSED {
 #define ETE4_EK         0x00F00000      /* Entry key                 */
 #define ETE4_EEAX       0x0000FFFF      /* Entry extended AX         */
 #define ETE5_ASTE       0x7FFFFFC0      /* ASTE address              */
+
 /* ETE words 6 and 7 are unused for ESA/390 */
 /* ETE words 6 and 7 are the entry parameter for ESAME */
 
+/*-------------------------------------------------------------------*/
 /* Clock states */
+
 #define CC_CLOCK_SET    0               /* Clock in set state        */
 #define CC_CLOCK_NOTSET 1               /* Clock in not-set state    */
 #define CC_CLOCK_ERROR  2               /* Clock in error state      */
 #define CC_CLOCK_STOP   3               /* Clock in stopped state or
                                            not-operational state     */
-
+/*-------------------------------------------------------------------*/
 /* SIGP order codes */
+
 #define SIGP_SENSE               0x01   /* Sense                     */
 #define SIGP_EXTCALL             0x02   /* External call             */
 #define SIGP_EMERGENCY           0x03   /* Emergency signal          */
@@ -642,7 +784,9 @@ typedef struct _LSED {
 #define MAX_SIGPORDER            0x15   /* Maximum SIGP order value  */
 #define LOG_SIGPORDER            0x03   /* Log any SIGP > this value */
 
+/*-------------------------------------------------------------------*/
 /* SIGP status codes */
+
 #define SIGP_STATUS_EQUIPMENT_CHECK             0x80000000
 #define SIGP_STATUS_NOT_RUNNING                 0x00000400
 #define SIGP_STATUS_INCORRECT_STATE             0x00000200
@@ -655,15 +799,20 @@ typedef struct _LSED {
 #define SIGP_STATUS_INVALID_ORDER               0x00000002
 #define SIGP_STATUS_RECEIVER_CHECK              0x00000001
 
+/*-------------------------------------------------------------------*/
 /* Storage key bit definitions */
+
 #define STORKEY_KEY     0xF0            /* Storage key               */
 #define STORKEY_FETCH   0x08            /* Fetch protect bit         */
 #define STORKEY_REF     0x04            /* Reference bit             */
 #define STORKEY_CHANGE  0x02            /* Change bit                */
 #define STORKEY_BADFRM  0x01            /* Unusable frame            */
 
-/* Prefixed storage area structure definition */
-typedef struct _PSA_3XX {               /* Prefixed storage area     */
+/*-------------------------------------------------------------------*/
+/*      32-bit 370/390 Prefixed storage area (PSA) structure         */
+/*-------------------------------------------------------------------*/
+struct PSA_3XX                          /* Prefixed storage area     */
+{
 /*000*/ DBLWRD iplpsw;                  /* IPL PSW, Restart new PSW  */
 /*008*/ DBLWRD iplccw1;                 /* IPL CCW1, Restart old PSW */
 /*010*/ DBLWRD iplccw2;                 /* IPL CCW2                  */
@@ -724,10 +873,14 @@ typedef struct _PSA_3XX {               /* Prefixed storage area     */
 /*160*/ FWORD  storefpr[8];             /* FP register save area     */
 /*180*/ FWORD  storegpr[16];            /* General register save area*/
 /*1C0*/ FWORD  storecr[16];             /* Control register save area*/
-} PSA_3XX;
+};
+typedef struct PSA_3XX  PSA_3XX;
 
-/* ESAME Prefixed storage area structure definition */
-typedef struct _PSA_900 {               /* Prefixed storage area     */
+/*-------------------------------------------------------------------*/
+/*       64-bit ESAME Prefixed storage area (PSA) structure          */
+/*-------------------------------------------------------------------*/
+struct PSA_900
+{
 /*0000*/ DBLWRD iplpsw;                 /* IPL PSW                   */
 /*0008*/ DBLWRD iplccw1;                /* IPL CCW1                  */
 /*0010*/ DBLWRD iplccw2;                /* IPL CCW2                  */
@@ -799,9 +952,12 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 /*1338*/ DBLWRD resv1338;               /* Reserved                  */
 /*1340*/ FWORD  storear[16];            /* Access register save area */
 /*1380*/ DBLWRD storecr[16];            /* Control register save area*/
-} PSA_900;
+};
+typedef struct PSA_900  PSA_900;
 
+/*-------------------------------------------------------------------*/
 /* Bit settings for Translation Exception Address */
+
 #define TEA_SECADDR     0x80000000      /* Secondary addr (370,390)  */
 #define TEA_FETCH       0x800           /* Fetch exception        810*/
 #define TEA_STORE       0x400           /* Store exception        810*/
@@ -817,7 +973,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define TEA_ASN         0x0000FFFF      /* Address space number      */
 #define TEA_PCN         0x000FFFFF      /* Program call number       */
 
+/*-------------------------------------------------------------------*/
 /* Bit settings for Machine Check Interruption Code */
+
 #define MCIC_SD  0x8000000000000000ULL  /* System damage             */
 #define MCIC_P   0x4000000000000000ULL  /* Instruction proc damage   */
 #define MCIC_SR  0x2000000000000000ULL  /* System recovery           */
@@ -859,7 +1017,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define MCIC_CT  0x0000000000020000ULL  /* CPU timer validity        */
 #define MCIC_CC  0x0000000000010000ULL  /* Clock comparator validity */
 
+/*-------------------------------------------------------------------*/
 /* Channel Report Word definitions */
+
 #define CRW_FLAGS_MASK  0xF0C00000      /* Flags mask                */
 //      (unassigned)    0x80000000      /* (unassigned)              */
 #define CRW_SOL         0x40000000      /* Solicited CRW             */
@@ -886,7 +1046,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define CRW_ERC_RSTRD   0x000A0000      /* PIM, PAM or CHPID restored*/
 #define CRW_RSID_MASK   0x0000FFFF      /* Reporting-Source ID mask  */
 
+/*-------------------------------------------------------------------*/
 /* Bit settings for channel id */
+
 #define CHANNEL_TYPE    0xF0000000      /* Bits 0-3=Channel type...  */
 #define CHANNEL_SEL     0x00000000      /* ...selector channel       */
 #define CHANNEL_MPX     0x10000000      /* ...byte multiplexor       */
@@ -894,7 +1056,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define CHANNEL_MODEL   0x0FFF0000      /* Bits 4-15=Channel model   */
 #define CHANNEL_MAXIOEL 0x0000FFFF      /* Bits 16-31=Max.IOEL length*/
 
+/*-------------------------------------------------------------------*/
 /* Program interruption codes */
+
 #define PGM_OPERATION_EXCEPTION                         0x0001
 #define PGM_PRIVILEGED_OPERATION_EXCEPTION              0x0002
 #define PGM_EXECUTE_EXCEPTION                           0x0003
@@ -951,7 +1115,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define PGM_PER_EVENT                                   0x0080
 #define PGM_CRYPTO_OPERATION_EXCEPTION                  0x0119
 
+/*-------------------------------------------------------------------*/
 /* External interrupt codes */
+
 #define EXT_INTERRUPT_KEY_INTERRUPT                     0x0040
 #define EXT_INTERVAL_TIMER_INTERRUPT                    0x0080
 #define EXT_TOD_CLOCK_SYNC_CHECK_INTERRUPT              0x1003
@@ -971,7 +1137,9 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define EXT_BLOCKIO_INTERRUPT                           0x2603
 #endif
 
+/*-------------------------------------------------------------------*/
 /* Macros for classifying CCW operation codes */
+
 #define IS_CCW_WRITE(c)         (((c)&0x03)==0x01)
 #define IS_CCW_READ(c)          (((c)&0x03)==0x02)
 #define IS_CCW_CONTROL(c)       (((c)&0x03)==0x03)
@@ -980,32 +1148,40 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define IS_CCW_TIC(c)           (((c)&0x0F)==0x08)
 #define IS_CCW_RDBACK(c)        (((c)&0x0F)==0x0C)
 
-/* Operation-Request Block (ORB) structure definition */
-typedef struct _ORB {
-        FWORD   intparm;                /* Interruption parameter    */
-        BYTE    flag4;                  /* Flag byte 4               */
-        BYTE    flag5;                  /* Flag byte 5               */
-        BYTE    lpm;                    /* Logical path mask         */
-        BYTE    flag7;                  /* Flag byte 7               */
-        FWORD   ccwaddr;                /* CCW address               */
-        BYTE    csspriority;            /* CSS Priority              */
-        BYTE    reserved_byte_13;       /* Reserved for future use   */
-        BYTE    cupriority;             /* CU Priority               */
-        BYTE    reserved_byte_15;       /* Reserved for future use   */
-        FWORD   reserved_word_4;        /* Reserved for future use   */
-        FWORD   reserved_word_5;        /* Reserved for future use   */
-        FWORD   reserved_word_6;        /* Reserved for future use   */
-        FWORD   reserved_word_7;        /* Reserved for future use   */
-    } ORB;
+/*-------------------------------------------------------------------*/
+/*       Operation-Request Block (ORB) structure definition          */
+/*-------------------------------------------------------------------*/
+struct ORB
+{
+    FWORD   intparm;                    /* Interruption parameter    */
+    BYTE    flag4;                      /* Flag byte 4               */
+    BYTE    flag5;                      /* Flag byte 5               */
+    BYTE    lpm;                        /* Logical path mask         */
+    BYTE    flag7;                      /* Flag byte 7               */
+    FWORD   ccwaddr;                    /* CCW address               */
+    BYTE    csspriority;                /* CSS Priority              */
+    BYTE    reserved_byte_13;           /* Reserved for future use   */
+    BYTE    cupriority;                 /* CU Priority               */
+    BYTE    reserved_byte_15;           /* Reserved for future use   */
+    FWORD   reserved_word_4;            /* Reserved for future use   */
+    FWORD   reserved_word_5;            /* Reserved for future use   */
+    FWORD   reserved_word_6;            /* Reserved for future use   */
+    FWORD   reserved_word_7;            /* Reserved for future use   */
+};
+typedef struct ORB  ORB;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for ORB flag byte 4 */
+
 #define ORB4_KEY        0xF0            /* Subchannel protection key */
 #define ORB4_S          0x08            /* Suspend control           */
 #define ORB4_C          0x04            /* Streaming mode (FICON)    */
 #define ORB4_M          0x02            /* Modification (FICON)      */
 #define ORB4_Y          0x01            /* Synchronization (FICON)   */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for ORB flag byte 5 */
+
 #define ORB5_F          0x80            /* CCW format                */
 #define ORB5_P          0x40            /* Prefetch                  */
 #define ORB5_I          0x20            /* Initial status interrupt  */
@@ -1015,14 +1191,19 @@ typedef struct _ORB {
 #define ORB5_H          0x02            /* Format-2 IDAW control     */
 #define ORB5_T          0x01            /* 2K format-2 IDAW control  */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for ORB flag byte 7 */
+
 #define ORB7_L          0x80            /* Suppress incorrect length */
 #define ORB7_D          0x40            /* MIDAW control          @MW*/
 #define ORB7_RESV       0x3E            /* Reserved - must be 0   @MW*/
 #define ORB7_X          0x01            /* ORB extension control     */
 
-/* Path management control word structure definition */
-typedef struct _PMCW {
+/*-------------------------------------------------------------------*/
+/*     Path management control word (PMCW) structure definition      */
+/*-------------------------------------------------------------------*/
+struct PMCW
+{
 /*000*/ FWORD   intparm;                /* Interruption parameter    */
 /*004*/ BYTE    flag4;                  /* Flag byte 4               */
 /*005*/ BYTE    flag5;                  /* Flag byte 5               */
@@ -1039,15 +1220,20 @@ typedef struct _PMCW {
 /*019*/ BYTE    flag25;                 /* Flag byte 25              */
 /*01A*/ BYTE    flag26;                 /* Reserved byte - must be 0 */
 /*01B*/ BYTE    flag27;                 /* Flag byte 27              */
-    } PMCW;
+};
+typedef struct PMCW PMCW;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for PMCW flag byte 4 */
+
 #define PMCW4_Q         0x80            /* QDIO available            */
 #define PMCW4_ISC       0x38            /* Interruption subclass     */
 #define PMCW4_A         0x01            /* Alternate Block Control   */
 #define PMCW4_RESV      0x46            /* Reserved bits - must be 0 */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for PMCW flag byte 5 */
+
 #define PMCW5_E         0x80            /* Subchannel enabled        */
 #define PMCW5_LM        0x60            /* Limit mode...             */
 #define PMCW5_LM_NONE   0x00            /* ...no limit checking      */
@@ -1061,7 +1247,9 @@ typedef struct _PMCW {
 #define PMCW5_T         0x02            /* Timing facility available */
 #define PMCW5_V         0x01            /* Subchannel valid          */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for PMCW flag byte 25 */
+
 #define PMCW25_VISC     0x07            /* Guest ISC                 */
 #define PMCW25_TYPE     0xE0            /* Subchannel Type           */
 #define PMCW25_TYPE_0   0x00            /* I/O Subchannel            */
@@ -1070,28 +1258,35 @@ typedef struct _PMCW {
 #define PMCW25_TYPE_3   0x60            /* ADM subchannel            */
 #define PMCW25_RESV     0x18            /* Reserved bits             */
 
-
+/*-------------------------------------------------------------------*/
 /* Bit definitions for PMCW flag byte 27 */
+
 #define PMCW27_I        0x80            /* Interrupt Interlock Cntl  */
 #define PMCW27_S        0x01            /* Concurrent sense mode     */
 #define PMCW27_RESV     0x7E            /* Reserved bits - must be 0 */
 
-/* Extended-Status Word (ESW) structure definition */
-typedef struct _ESW {
-        BYTE    scl0;                   /* Subchannel logout byte 0  */
-        BYTE    lpum;                   /* Last path used mask       */
-        BYTE    scl2;                   /* Subchannel logout byte 2  */
-        BYTE    scl3;                   /* Subchannel logout byte 3  */
-        BYTE    erw0;                   /* Extended report word byte0*/
-        BYTE    erw1;                   /* Extended report word byte1*/
-        BYTE    erw2;                   /* Extended report word byte2*/
-        BYTE    erw3;                   /* Extended report word byte3*/
-        FWORD   failaddr;               /* Failing storage address   */
-        FWORD   resv2;                  /* Reserved word - must be 0 */
-        FWORD   resv3;                  /* Reserved word - must be 0 */
-    } ESW;
+/*-------------------------------------------------------------------*/
+/*        Extended-Status Word (ESW) structure definition            */
+/*-------------------------------------------------------------------*/
+struct ESW
+{
+    BYTE    scl0;                       /* Subchannel logout byte 0  */
+    BYTE    lpum;                       /* Last path used mask       */
+    BYTE    scl2;                       /* Subchannel logout byte 2  */
+    BYTE    scl3;                       /* Subchannel logout byte 3  */
+    BYTE    erw0;                       /* Extended report word byte0*/
+    BYTE    erw1;                       /* Extended report word byte1*/
+    BYTE    erw2;                       /* Extended report word byte2*/
+    BYTE    erw3;                       /* Extended report word byte3*/
+    FWORD   failaddr;                   /* Failing storage address   */
+    FWORD   resv2;                      /* Reserved word - must be 0 */
+    FWORD   resv3;                      /* Reserved word - must be 0 */
+};
+typedef struct ESW  ESW;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for subchannel logout byte 0 */
+
 #define SCL0_ESF        0x7F            /* Extended status flags...  */
 #define SCL0_ESF_KEY    0x40            /* ...key check              */
 #define SCL0_ESF_MBPGK  0x20            /* ...meas.block prog.check  */
@@ -1100,7 +1295,9 @@ typedef struct _ESW {
 #define SCL0_ESF_CCWCK  0x04            /* ...CCW check              */
 #define SCL0_ESF_IDACK  0x02            /* ...IDAW check             */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for subchannel logout byte 2 */
+
 #define SCL2_R          0x80            /* Ancillary report bit      */
 #define SCL2_FVF        0x7C            /* Field validity flags...   */
 #define SCL2_FVF_LPUM   0x40            /* ...LPUM valid             */
@@ -1114,7 +1311,9 @@ typedef struct _ESW {
 #define SCL2_SA_WRT     0x02            /* ...write                  */
 #define SCL2_SA_RDBK    0x03            /* ...read backward          */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for subchannel logout byte 3 */
+
 #define SCL3_TC         0xC0            /* Termination code...       */
 #define SCL3_TC_HALT    0x00            /* ...halt signal issued     */
 #define SCL3_TC_NORM    0x40            /* ...stop, stack, or normal */
@@ -1125,7 +1324,9 @@ typedef struct _ESW {
 #define SCL3_A          0x08            /* I/O error alert           */
 #define SCL3_SC         0x07            /* Sequence code             */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for extended report word byte 0 */
+
 #define ERW0_RSV        0x80            /* (reserved)                */
 #define ERW0_L          0x40            /* Request Logging Only      */
 #define ERW0_E          0x20            /* Extended Logout Pending   */
@@ -1135,13 +1336,18 @@ typedef struct _ESW {
 #define ERW0_F          0x02            /* Failing storage addr valid*/
 #define ERW0_S          0x01            /* Concurrent sense          */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for extended report word byte 1 */
+
 #define ERW1_C          0x80            /* 2ndary CCW Addr. Validity */
 #define ERW1_R          0x40            /* Fail. Stor. Addr. Format  */
 #define ERW1_SCNT       0x3F            /* Concurrent sense count    */
 
-/* Subchannel status word structure definition */
-typedef struct _SCSW {
+/*-------------------------------------------------------------------*/
+/*        Subchannel status word (SCSW) structure definition         */
+/*-------------------------------------------------------------------*/
+struct SCSW
+{
         BYTE    flag0;                  /* Flag byte 0               */
         BYTE    flag1;                  /* Flag byte 1               */
         BYTE    flag2;                  /* Flag byte 2               */
@@ -1150,9 +1356,12 @@ typedef struct _SCSW {
         BYTE    unitstat;               /* Device status             */
         BYTE    chanstat;               /* Subchannel status         */
         HWORD   count;                  /* Residual byte count       */
-    } SCSW;
+};
+typedef struct SCSW SCSW;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for SCSW flag byte 0 */
+
 #define SCSW0_KEY       0xF0            /* Subchannel protection key */
 #define SCSW0_S         0x08            /* Suspend control           */
 #define SCSW0_L         0x04            /* ESW format (logout stored)*/
@@ -1161,7 +1370,9 @@ typedef struct _SCSW {
 #define SCSW0_CC_1      0x01            /* ...condition code 1       */
 #define SCSW0_CC_3      0x03            /* ...condition code 3       */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for SCSW flag byte 1 */
+
 #define SCSW1_F         0x80            /* CCW format                */
 #define SCSW1_P         0x40            /* Prefetch                  */
 #define SCSW1_I         0x20            /* Initial status interrupt  */
@@ -1171,7 +1382,9 @@ typedef struct _SCSW {
 #define SCSW1_E         0x02            /* Extended control          */
 #define SCSW1_N         0x01            /* Path not operational      */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for SCSW flag byte 2 */
+
 #define SCSW2_Q         0x80            /* QDIO active               */
 #define SCSW2_FC        0x70            /* Function control bits...  */
 #define SCSW2_FC_START  0x40            /* ...start function         */
@@ -1183,7 +1396,9 @@ typedef struct _SCSW {
 #define SCSW2_AC_HALT   0x02            /* ...halt pending           */
 #define SCSW2_AC_CLEAR  0x01            /* ...clear pending          */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for SCSW flag byte 3 */
+
 #define SCSW3_AC        0xE0            /* Activity control bits...  */
 #define SCSW3_AC_SCHAC  0x80            /* ...subchannel active      */
 #define SCSW3_AC_DEVAC  0x40            /* ...device active          */
@@ -1195,7 +1410,9 @@ typedef struct _SCSW {
 #define SCSW3_SC_SEC    0x02            /* ...secondary status       */
 #define SCSW3_SC_PEND   0x01            /* ...status pending         */
 
+/*-------------------------------------------------------------------*/
 /* CSW unit status flags */
+
 #define CSW_ATTN        0x80            /* Attention                 */
 #define CSW_SM          0x40            /* Status modifier           */
 #define CSW_CUE         0x20            /* Control unit end          */
@@ -1205,7 +1422,9 @@ typedef struct _SCSW {
 #define CSW_UC          0x02            /* Unit check                */
 #define CSW_UX          0x01            /* Unit exception            */
 
+/*-------------------------------------------------------------------*/
 /* CSW channel status flags */
+
 #define CSW_PCI         0x80            /* Program control interrupt */
 #define CSW_IL          0x40            /* Incorrect length          */
 #define CSW_PROGC       0x20            /* Program check             */
@@ -1215,7 +1434,9 @@ typedef struct _SCSW {
 #define CSW_ICC         0x02            /* Interface control check   */
 #define CSW_CHC         0x01            /* Chaining check            */
 
+/*-------------------------------------------------------------------*/
 /* CCW flags */
+
 #define CCW_FLAGS_CD    0x80            /* Chain data flag           */
 #define CCW_FLAGS_CC    0x40            /* Chain command flag        */
 #define CCW_FLAGS_SLI   0x20            /* Suppress incorrect length
@@ -1227,13 +1448,17 @@ typedef struct _SCSW {
 #define CCW_FLAGS_SUSP  0x02            /* Suspend flag              */
 #define CCW_FLAGS_MIDAW 0x01            /* Modified IDAW flag     @MW*/
 
+/*-------------------------------------------------------------------*/
 /* MIDAW flags (bits 40-47)                                       @MW*/
+
 #define MIDAW_LAST      0x80            /* Last MIDAW flag        @MW*/
 #define MIDAW_SKIP      0x40            /* Skip flag              @MW*/
 #define MIDAW_DTI       0x20            /* Data transfer interrupt@MW*/
 #define MIDAW_RESV      0x1F            /* Reserved bits          @MW*/
 
+/*-------------------------------------------------------------------*/
 /* Device independent bit settings for sense byte 0 */
+
 #define SENSE_CR        0x80            /* Command reject            */
 #define SENSE_IR        0x40            /* Intervention required     */
 #define SENSE_BOC       0x20            /* Bus-out check             */
@@ -1246,7 +1471,9 @@ typedef struct _SCSW {
 #define SENSE_OC        0x01            /* Operation check           */
 #define SENSE_CH9       0x01            /* Channel 9                 */
 
+/*-------------------------------------------------------------------*/
 /* Device dependent bit settings for sense byte 1 */
+
 #define SENSE1_PER      0x80            /* Permanent Error           */
 #define SENSE1_ITF      0x40            /* Invalid Track Format      */
 #define SENSE1_EOC      0x20            /* End of Cylinder           */
@@ -1257,32 +1484,46 @@ typedef struct _SCSW {
 #define SENSE1_WRI      0x02            /* Write Inhibited           */
 #define SENSE1_IE       0x01            /* Imprecise Ending          */
 
-/* Subchannel information block structure definition */
-typedef struct _SCHIB {
-        PMCW    pmcw;                   /* Path management ctl word  */
-        SCSW    scsw;                   /* Subchannel status word    */
-        BYTE    moddep[12];             /* Model dependent area      */
-    } SCHIB;
+/*-------------------------------------------------------------------*/
+/*    Subchannel information block (SCHIB) structure definition      */
+/*-------------------------------------------------------------------*/
+struct SCHIB
+{
+    PMCW    pmcw;                       /* Path management ctl word  */
+    SCSW    scsw;                       /* Subchannel status word    */
+    BYTE    moddep[12];                 /* Model dependent area      */
+};
+typedef struct SCHIB  SCHIB;
 
-/* Interruption response block structure definition */
-typedef struct _IRB {
-        SCSW    scsw;                   /* Subchannel status word    */
-        ESW esw;                        /* Extended status word      */
-        BYTE    ecw[32];                /* Extended control word     */
-    } IRB;
+/*-------------------------------------------------------------------*/
+/*      Interruption response block (IRB) structure definition       */
+/*-------------------------------------------------------------------*/
+struct IRB
+{
+    SCSW    scsw;                       /* Subchannel status word    */
+    ESW     esw;                        /* Extended status word      */
+    BYTE    ecw[32];                    /* Extended control word     */
+};
+typedef struct IRB  IRB;
 
-/* Measurement Block */
-typedef struct _MBK {
-        HWORD   srcount;                /* SSCH + RSCH count         */
-        HWORD   samplecnt;              /* Sample count              */
-        FWORD   dct;                    /* Device connect time       */
-        FWORD   fpt;                    /* Function pending time     */
-        FWORD   ddt;                    /* Device disconnect time    */
-        FWORD   cuqt;                   /* Control unit queueing time*/
-        FWORD   resv[3];                /* Reserved                  */
-    } MBK;
+/*-------------------------------------------------------------------*/
+/*          Measurement Block (MBK) structure definition             */
+/*-------------------------------------------------------------------*/
+struct MBK
+{
+    HWORD   srcount;                    /* SSCH + RSCH count         */
+    HWORD   samplecnt;                  /* Sample count              */
+    FWORD   dct;                        /* Device connect time       */
+    FWORD   fpt;                        /* Function pending time     */
+    FWORD   ddt;                        /* Device disconnect time    */
+    FWORD   cuqt;                       /* Control unit queueing time*/
+    FWORD   resv[3];                    /* Reserved                  */
+};
+typedef struct MBK  MBK;
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for SCHM instruction */
+
 #define CHM_GPR1_MBK    0xF0000000      /* Measurement Block Key     */
 #define CHM_GPR1_M      0x00000002      /* Measurement mode control  */
 #define CHM_GPR1_D      0x00000001      /* Block update Mode         */
@@ -1290,11 +1531,15 @@ typedef struct _MBK {
 #define CHM_GPR1_ZONE   0x00FF0000      /* Zone                      */
 #define CHM_GPR1_RESV   0x0E00FFFC      /* Reserved, must be zero    */
 
+/*-------------------------------------------------------------------*/
 /* Measurement Block Origin  */
+
 #define S_CHM_GPR2_RESV 0x8000001F      /* Reserved, must be zero    */
 #define Z_CHM_GPR2_RESV 0x0000001F      /* Reserved, must be zero    */
 
+/*-------------------------------------------------------------------*/
 /* Definitions for PLO instruction */
+
 #define PLO_GPR0_FC     0x000000FF      /* Function code mask        */
 #define PLO_GPR0_T      0x00000100      /* Function test mask        */
 #define PLO_GPR0_RESV   0xFFFFFE00      /* Reserved bits             */
@@ -1323,7 +1568,9 @@ typedef struct _MBK {
 #define PLO_CSTSTGR             22      /* C/S/TS              ESAME */
 #define PLO_CSTSTX              23      /* C/S/TS              ESAME */
 
+/*-------------------------------------------------------------------*/
 /* Perform Frame Management Function definitions */
+
 #define PFMF_FMFI            0x000f0000
 #define PFMF_FMFI_RESV       0x000c0000 /* Reserved must be zero     */
 #define PFMF_FMFI_SK         0x00020000 /* Set-Key Control           */
@@ -1339,7 +1586,10 @@ typedef struct _MBK {
 #define PFMF_FMFI_KEY        0x000000F7 /* Storage Key               */
 #define PFMF_RESERVED        0xFFF00101 /* Reserved                  */
 
-/* Facility List definitions */
+/*-------------------------------------------------------------------*/
+/*                  Facility List definitions                        */
+/*-------------------------------------------------------------------*/
+
 #define STFL_N3                    0    /* Instructions marked N3 in
                                            the reference summary are
                                            available in ESA/390 mode */
@@ -1447,34 +1697,36 @@ typedef struct _MBK {
 #define STFL_BYTESIZE (((STFL_MAX+8))/8)
 #define STFL_DWRDSIZE ((STFL_BYTESIZE+7)/8)
 
-/* The below facility definitions are not part of the architecture
-   but are hercules specific.  They are placed here for the convenience
-   of being able to use the Virtual Architecture Level facility */
+/*-------------------------------------------------------------------*/
+/* The below facility definitions are HERCULES SPECIFIC and not part */
+/* of the architecture.  They are placed here for the convenience of */
+/* being able to use the Virtual Architecture Level facility.        */
+/*-------------------------------------------------------------------*/
+#define STFL_HBASE                  (STFL_DWRDSIZE*64)
 
-#define STFL_HBASE              (STFL_DWRDSIZE*64)
+#define STFL_MOVE_INVERSE           (STFL_HBASE+0)
+#define STFL_MSA_EXTENSION_1        (STFL_HBASE+1)
+#define STFL_MSA_EXTENSION_2        (STFL_HBASE+2)
+#define STFL_PROBSTATE_DIAGF08      (STFL_HBASE+3)
+#define STFL_SIGP_SETARCH_S370      (STFL_HBASE+4)
+#define STFL_HOST_RESOURCE_ACCESS   (STFL_HBASE+5)
+#define STFL_QEBSM                  (STFL_HBASE+6)
+#define STFL_QDIO_TDD               (STFL_HBASE+7)
+#define STFL_QDIO_THININT           (STFL_HBASE+8)
+#define STFL_SVS                    (STFL_HBASE+9)
+#define STFL_LOGICAL_PARTITION      (STFL_HBASE+10)
+#define STFL_VIRTUAL_MACHINE        (STFL_HBASE+11)
+#define STFL_QDIO_ASSIST            (STFL_HBASE+12)
+#define STFL_INTERVAL_TIMER         (STFL_HBASE+13)
+#define STFL_DETECT_PGMINTLOOP      (STFL_HBASE+14)
+#define STFL_HMAX                   (STFL_HBASE+14)
 
-#define STFL_MOVE_INVERSE       (STFL_HBASE+0)
-#define STFL_MSA_EXTENSION_1    (STFL_HBASE+1)
-#define STFL_MSA_EXTENSION_2    (STFL_HBASE+2)
-#define STFL_PROBSTATE_DIAGF08  (STFL_HBASE+3)
-#define STFL_SIGP_SETARCH_S370  (STFL_HBASE+4)
-#define STFL_HOST_RESOURCE_ACCESS (STFL_HBASE+5)
-#define STFL_QEBSM              (STFL_HBASE+6)
-#define STFL_QDIO_TDD           (STFL_HBASE+7)
-#define STFL_QDIO_THININT       (STFL_HBASE+8)
-#define STFL_SVS                (STFL_HBASE+9)
-#define STFL_LOGICAL_PARTITION  (STFL_HBASE+10)
-#define STFL_VIRTUAL_MACHINE    (STFL_HBASE+11)
-#define STFL_QDIO_ASSIST        (STFL_HBASE+12)
-#define STFL_INTERVAL_TIMER     (STFL_HBASE+13)
-#define STFL_DETECT_PGMINTLOOP  (STFL_HBASE+14)
+#define STFL_HBYTESIZE              (((STFL_HMAX+8))/8)
+#define STFL_HDWRDSIZE              ((STFL_HBYTESIZE+7)/8)
 
-#define STFL_HMAX               (STFL_HBASE+14)
-#define STFL_HBYTESIZE (((STFL_HMAX+8))/8)
-#define STFL_HDWRDSIZE ((STFL_HBYTESIZE+7)/8)
-
-
+/*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */
+
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
 #define VSR_VCT  0x0000FFFF00000000ULL  /* Vector count              */
 #define VSR_VIX  0x00000000FFFF0000ULL  /* Vector interruption index */
@@ -1483,29 +1735,38 @@ typedef struct _MBK {
 #define VSR_VCH  0x00000000000000FFULL  /* Vector change bits        */
 #define VSR_VCH0 0x0000000000000080ULL  /* Vector change bit vr0     */
 #define VSR_RESV 0xFFFE000000000000ULL  /* Reserved bits             */
-
 #define VAC_MASK 0x00FFFFFFFFFFFFFFULL  /* Vector Activity Count mask*/
 
-/* SIE Format 1 State Descriptor Block */
-typedef struct _SIE1BK {                /* SIE State Descriptor      */
+/*-------------------------------------------------------------------*/
+/*     SIE Format 1 State Descriptor Block (SIE1BK) structure        */
+/*-------------------------------------------------------------------*/
+struct SIE1BK
+{
 /*000*/ BYTE  v;                        /* Intervention requests     */
+
 #define SIE_V           v
 #define SIE_V_WAIT      0x10            /* Wait/Run bit              */
 #define SIE_V_EXTCALL   0x08            /* External call pending     */
 #define SIE_V_STOP      0x04            /* SIE Stop control          */
 #define SIE_V_IO        0x02            /* I/O Interrupt pending     */
 #define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
+
 /*001*/ BYTE  s;                        /* State controls            */
+
 #define SIE_S           s
 #define SIE_S_T         0x80            /* Interval timer irpt pend  */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
+
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+
 #define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
+
 /*003*/ BYTE  m;                        /* Mode controls             */
+
 #define SIE_M           m
 #define SIE_M_VCC       0x40            /* Vector change control     */
 #define SIE_M_XA        0x20            /* XA mode guest             */
@@ -1513,6 +1774,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
 #define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
 #define SIE_M_GPE       0x01            /* Guest per enhancement     */
+
 /*004*/ FWORD  prefix;                  /* Guest prefix register     */
 /*008*/ HWORD  mso;                     /* Main Storage Origin       */
 /*00A*/ HWORD  mse;                     /* Main Storage Extent       */
@@ -1526,12 +1788,15 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*030*/ DBLWRD clockcomp;               /* Clock comparator          */
 /*038*/ DBLWRD epoch;                   /* Guest/Host epoch diff.    */
 /*040*/ FWORD  svc_ctl;                 /* SVC Controls              */
+
 #define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
 #define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
 #define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
+
 /*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+
 #define SIE_LCTL0       lctl_ctl[0]
 #define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
 #define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
@@ -1550,8 +1815,10 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_LCTL1_CR13  0x04            /* Intercept LCTL 13         */
 #define SIE_LCTL1_CR14  0x02            /* Intercept LCTL 14         */
 #define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
+
 /*046*/ HWORD cpuad;                    /* Virtual CPU address       */
 /*048*/ FWORD ic;                       /* Interception Controls     */
+
 #define SIE_IC0         ic[0]
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
@@ -1586,7 +1853,9 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC3_PR      0x08            /* Intercept PR              */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
+
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+
 #define SIE_EC0         ec[0]
 #define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
 #define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
@@ -1602,7 +1871,9 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
 #define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
+
 /*050*/ BYTE  c;                        /* Interception Code         */
+
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
 #define SIE_C_PGMINST     12            /* Program/instruction int   */
@@ -1617,22 +1888,27 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
+
 /*051*/ BYTE  f;                        /* Interception Status       */
+
 #define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
+
 /*052*/ HWORD lhcpu;                    /* Last Host CPU addr        */
 /*054*/ HWORD todpf;                    /* TOD programmable field    */
 /*056*/ HWORD ipa;                      /* Instruction parameter A   */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
+
 #define SIE_RCPO0       rcpo[0]
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
 #define SIE_RCPO2       rcpo[2]
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+
 /*064*/ FWORD scao;                     /* SCA area origin           */
 /*068*/ FWORD subchtabo;                /* Subchannel table origin   */
 /*06C*/ FWORD resv6Cf;
@@ -1647,38 +1923,51 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*07C*/ FWORD resv7Cf;
 /*080*/ FWORD cr[16];                   /* Guest Control registers   */
 /*0C0*/ BYTE  ip[34];                   /* Interruption parameters   */
+
 #define SIE_IP_PSA_OFFSET   0x40        /* Offset of the IP field
                                            relative to the ipfields
                                            in the PSA                */
 #define SIE_II_PSA_OFFSET   0x30        /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
+
 /*0E2*/ BYTE  xso[3];                   /* Expanded storage origin   */
 /*0E5*/ BYTE  xsl[3];                   /* Expanded storage limit    */
 /*0E8*/ BYTE  resvE8b[24];
-} SIE1BK;
+};
+typedef struct SIE1BK   SIE1BK;
 
-/* SIE Format 2 State Descriptor Block */
-typedef struct _SIE2BK {                /* SIE State Descriptor      */
+/*-------------------------------------------------------------------*/
+/*     SIE Format 2 State Descriptor Block (SIE2BK) structure        */
+/*-------------------------------------------------------------------*/
+struct SIE2BK
+{
 /*000*/ BYTE  v;                        /* Intervention requests     */
+
 #define SIE_V           v
 #define SIE_V_WAIT      0x10            /* Wait/Run bit              */
 #define SIE_V_EXTCALL   0x08            /* External call pending     */
 #define SIE_V_STOP      0x04            /* SIE Stop control          */
 #define SIE_V_IO        0x02            /* I/O Interrupt pending     */
 #define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
+
 /*001*/ BYTE  s;                        /* State controls            */
+
 #define SIE_S           s
 #define SIE_S_T         0x80            /* Interval timer irpt pend  */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
+
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+
 #define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
+
 /*003*/ BYTE  m;                        /* Mode controls             */
+
 #define SIE_M           m
 #define SIE_M_VCC       0x40            /* Vector change control     */
 #define SIE_M_XA        0x20            /* XA mode guest             */
@@ -1686,6 +1975,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
 #define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
 #define SIE_M_GPE       0x01            /* Guest per enhancement     */
+
 /*004*/ FWORD  prefix;                  /* Guest prefix register     */
 /*008*/ FWORD  resv008f;
 /*00C*/ FWORD  resv00cf;
@@ -1696,12 +1986,15 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*030*/ DBLWRD clockcomp;               /* Clock comparator          */
 /*038*/ DBLWRD epoch;                   /* Guest/Host epoch diff.    */
 /*040*/ FWORD  svc_ctl;                 /* SVC Controls              */
+
 #define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
 #define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
 #define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
+
 /*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+
 #define SIE_LCTL0       lctl_ctl[0]
 #define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
 #define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
@@ -1720,8 +2013,10 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_LCTL1_CR13  0x04            /* Intercept LCTL 13         */
 #define SIE_LCTL1_CR14  0x02            /* Intercept LCTL 14         */
 #define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
+
 /*046*/ HWORD cpuad;                    /* Virtual CPU address       */
 /*048*/ FWORD ic;                       /* Interception Controls     */
+
 #define SIE_IC0         ic[0]
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
@@ -1755,7 +2050,9 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC3_PR      0x08            /* Intercept PR              */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
+
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+
 #define SIE_EC0         ec[0]
 #define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
 #define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
@@ -1771,7 +2068,9 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
 #define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
+
 /*050*/ BYTE  c;                        /* Interception Code         */
+
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
 #define SIE_C_PGMINST     12            /* Program/instruction int   */
@@ -1786,26 +2085,33 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
+
 /*051*/ BYTE  f;                        /* Interception Status       */
+
 #define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
+
 /*052*/ HWORD lhcpu;                    /* Last Host CPU addr        */
 /*054*/ HWORD resv054h;
 /*056*/ HWORD ipa;                      /* Instruction parameter A   */
+
 #define vi_who  ipa[0]
 #define vi_when ipa[1]
 #define vi_why  ipb
 #define vi_zero ipb+2
+
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD scaoh;                    /* SCAO high word            */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
+
 #define SIE_RCPO0       rcpo[0]
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
 #define SIE_RCPO2       rcpo[2]
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+
 /*064*/ FWORD  scao;                    /* SCA area origin           */
 /*068*/ FWORD  resv068f;
 /*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
@@ -1823,6 +2129,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
                                            The actual guest machine
                                            size is (mse+1)-mso       */
 #define SIE2_MS_MASK    0xFFFFFFFFFFF00000ULL
+
 /*090*/ QWORD  psw;                     /* Guest PSW                 */
 /*0A0*/ DBLWRD gr14;                    /* Guest gr 14               */
 /*0A8*/ DBLWRD gr15;                    /* Guest gr 15               */
@@ -1831,12 +2138,14 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*0BA*/ BYTE   xso[3];                  /* Expanded storage origin   */
 /*0BD*/ BYTE   xsl[3];                  /* Expanded storage limit    */
 /*0C0*/ BYTE   ip[52];                  /* Interruption parameters   */
+
 #define SIE_IP_PSA_OFFSET       0x40    /* Offset of the IP field
                                            relative to the ipfields
                                            in the PSA for ESAME guest*/
 #define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
+
 /*0CE   HWORD  iprcc;                                                */
 /*0F4*/ BYTE   resv0f4b[6];
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
@@ -1846,8 +2155,10 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*188*/ BYTE   resv188b[24];
 /*1A0*/ FWORD  fld;                     /* Facility List Designation */
 /*1A4*/ BYTE   resv1a4b[92];
-} SIE2BK;
+};
+typedef struct SIE2BK   SIE2BK;
 
+/*-------------------------------------------------------------------*/
 
 #define SIE_VI_WHO_LVLM   0xF0     /* Mask for "source level" field:
                                       If non-zero, this is the inter-
@@ -1955,46 +2266,68 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_VI_WHY_OBMSB 0xF003    /* MSO/MSE not multiple of 1Meg...
                                       ..not supported in ESAME gen   */
 
-/* Zone Parameter Block */
-typedef struct _ZPB1 {
-        FWORD   mso;                    /* Main Storage Origin
+/*-------------------------------------------------------------------*/
+/*               Zone Parameter Block (ZPB1) structure               */
+/*-------------------------------------------------------------------*/
+struct ZPB1
+{
+    FWORD   mso;                        /* Main Storage Origin
                                            bits 0-15 must be 0       */
-        FWORD   msl;                    /* Main Storage Limit
+    FWORD   msl;                        /* Main Storage Limit
                                            bits 0-15 must be 0       */
-        FWORD   eso;                    /* Expanded Storage Origin
+    FWORD   eso;                        /* Expanded Storage Origin
                                            bits 0-7 must be 0        */
-        FWORD   esl;                    /* Expanded Storage Limit
+    FWORD   esl;                        /* Expanded Storage Limit
                                            bits 0-7 must be 0        */
-        FWORD   res[4];                 /* Reserved bits - must be 0 */
-} ZPB1;
+    FWORD   res[4];                     /* Reserved bits - must be 0 */
+};
+typedef struct ZPB1 ZPB1;
 
-typedef struct _ZPB2 {
-        DBLWRD  mso;                    /* Main Storage Origin
+/*-------------------------------------------------------------------*/
+/*                           ZPB2                                    */
+/*-------------------------------------------------------------------*/
+struct ZPB2
+{
+    DBLWRD  mso;                        /* Main Storage Origin
                                            bits 0-19 must be 0       */
-        DBLWRD  msl;                    /* Main Storage Limit
+    DBLWRD  msl;                        /* Main Storage Limit
                                            bits 0-19 must be 0       */
 #define ZPB2_MS_VALID 0x00000FFFFFFFFFFFULL
-        DBLWRD  eso;                    /* Expanded Storage Origin
+
+    DBLWRD  eso;                        /* Expanded Storage Origin
                                            bits 0-7 must be 0        */
-        DBLWRD  esl;                    /* Expanded Storage Limit
+    DBLWRD  esl;                        /* Expanded Storage Limit
                                            bits 0-7 must be 0        */
 #define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
-} ZPB2;
+};
+typedef struct ZPB2 ZPB2;
 
-typedef struct _SCAENT {
-        FWORD   scn;
-        FWORD   resv1;
-        DBLWRD  sda;                    /* Address of SIEBK          */
-        DBLWRD  resv2[2];
-} SCAENT;
+/*-------------------------------------------------------------------*/
+/*                           SCAENT                                  */
+/*-------------------------------------------------------------------*/
+struct SCAENT
+{
+    FWORD   scn;
+    FWORD   resv1;
+    DBLWRD  sda;                        /* Address of SIEBK          */
+    DBLWRD  resv2[2];
+};
+typedef struct SCAENT   SCAENT;
 
-typedef struct _SCABLK {
-        DBLWRD  ipte_control;
-        DBLWRD  resv1[5];
-        DBLWRD  mcn;                    /* Bitmap of VCPUs config    */
-        DBLWRD  resv2;
-        SCAENT  vcpu[64];
-} SCABLK;
+/*-------------------------------------------------------------------*/
+/*                           SCABLK                                  */
+/*-------------------------------------------------------------------*/
+struct SCABLK
+{
+    DBLWRD  ipte_control;
+    DBLWRD  resv1[5];
+    DBLWRD  mcn;                        /* Bitmap of VCPUs config    */
+    DBLWRD  resv2;
+    SCAENT  vcpu[64];
+};
+typedef struct SCABLK   SCABLK;
+
+/*-------------------------------------------------------------------*/
 
 #define LKPG_GPR0_LOCKBIT       0x00000200
 #define LKPG_GPR0_RESV          0x0000FD00
@@ -2011,146 +2344,211 @@ typedef struct _SCABLK {
 #define STSI_GPR1_SEL2_MASK     0x0000FFFF
 #define STSI_GPR1_RESERVED      0xFFFF0000
 
-typedef struct _SYSIB111 {              /* Basic Machine Config      */
-        BYTE    flag1;                  /* 1.1.1 SYSIB Flag          */
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB111)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB111                         /* Basic Machine Config      */
+{
+    BYTE    flag1;                      /* 1.1.1 SYSIB Flag          */
+
 #define SYSIB111_PFLAG  0x80            /* Type percentage present   */
 #define SYSIB111_TFLAG  0x01            /* CCR & CAI are transient   */
-        BYTE    reservedforblue;        /* Manufacturer reserved byte*/
+
+    BYTE    reservedforblue;            /* Manufacturer reserved byte*/
+
 #define SYSIB111_RFB_BIT_2  0x20        /* Reserved for manufacturer */
-        BYTE    ccr;                    /* Capacity change reason    */
-        BYTE    cai;                    /* Capacity adjustment ind.  */
-        FWORD   resv1[7];               /* Reserved                  */
-        BYTE    manufact[16];           /* Manufacturer              */
-        BYTE    type[4];                /* Type                      */
-        FWORD   resv2[3];               /* Reserved                  */
-        BYTE    modcapaid[16];          /* Model capacity identifier */
-        BYTE    seqc[16];               /* Sequence Code             */
-        BYTE    plant[4];               /* Plant of manufacture      */
-        BYTE    model[16];              /* System Model              */
-        BYTE    mpci[16];               /* Model Perm Capacity ID    */
-        BYTE    mtci[16];               /* Model Temp Capacity ID    */
-        FWORD   mcaprating;             /* Model Capacity Rating     */
-        FWORD   mpcaprating;            /* Model Perm Capacity Rating*/
-        FWORD   mtcaprating;            /* Model temp Capacity Rating*/
-        BYTE    typepct[5];             /* Secondary CPU types pct   */
-        BYTE    resv3[3];               /* Reserved                  */
-        FWORD   ncaprating;             /* Nominal Capacity Rating   */
-        FWORD   npcaprating;            /* Nominal Perm Capacity Rat.*/
-        FWORD   ntcaprating;            /* Nominal Temp Capacity Rat.*/
-    }   SYSIB111;
 
-typedef struct _SYSIB121 {              /* Basic Machine CPU         */
-        FWORD   resv1[20];              /* Reserved                  */
-        BYTE    seqc[16];               /* Sequence Code             */
-        BYTE    plant[4];               /* Plant of manufacture      */
-        HWORD   resv2;                  /* Reserved                  */
-        HWORD   cpuad;                  /* CPU address               */
-    }   SYSIB121;
+    BYTE    ccr;                        /* Capacity change reason    */
+    BYTE    cai;                        /* Capacity adjustment ind.  */
+    FWORD   resv1[7];                   /* Reserved                  */
+    BYTE    manufact[16];               /* Manufacturer              */
+    BYTE    type[4];                    /* Type                      */
+    FWORD   resv2[3];                   /* Reserved                  */
+    BYTE    modcapaid[16];              /* Model capacity identifier */
+    BYTE    seqc[16];                   /* Sequence Code             */
+    BYTE    plant[4];                   /* Plant of manufacture      */
+    BYTE    model[16];                  /* System Model              */
+    BYTE    mpci[16];                   /* Model Perm Capacity ID    */
+    BYTE    mtci[16];                   /* Model Temp Capacity ID    */
+    FWORD   mcaprating;                 /* Model Capacity Rating     */
+    FWORD   mpcaprating;                /* Model Perm Capacity Rating*/
+    FWORD   mtcaprating;                /* Model temp Capacity Rating*/
+    BYTE    typepct[5];                 /* Secondary CPU types pct   */
+    BYTE    resv3[3];                   /* Reserved                  */
+    FWORD   ncaprating;                 /* Nominal Capacity Rating   */
+    FWORD   npcaprating;                /* Nominal Perm Capacity Rat.*/
+    FWORD   ntcaprating;                /* Nominal Temp Capacity Rat.*/
+};
+typedef struct SYSIB111 SYSIB111;
 
-typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
-        BYTE    format;                 /* Format 0 or 1             */
-        BYTE    resv1;                  /* Reserved                  */
-        HWORD   accoff;                 /* Offset to accap field     */
-        FWORD   resv2[5];               /* Reserved                  */
-        FWORD   nccap;                  /* Nominal CPU Capability    */
-        FWORD   sccap;                  /* Secondary CPU Capability  */
-        FWORD   cap;                    /* CPU capability            */
-        HWORD   totcpu;                 /* Total CPU count           */
-        HWORD   confcpu;                /* Configured CPU count      */
-        HWORD   sbcpu;                  /* Standby CPU count         */
-        HWORD   resvcpu;                /* Reserved CPU count        */
-        HWORD   mpfact[MAX_CPU_ENGINES-1];  /* MP factors            */
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB121)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB121                         /* Basic Machine CPU         */
+{
+    FWORD   resv1[20];                  /* Reserved                  */
+    BYTE    seqc[16];                   /* Sequence Code             */
+    BYTE    plant[4];                   /* Plant of manufacture      */
+    HWORD   resv2;                      /* Reserved                  */
+    HWORD   cpuad;                      /* CPU address               */
+};
+typedef struct SYSIB121 SYSIB121;
+
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB122)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB122                         /* Basic Machine CPUs        */
+{
+    BYTE    format;                     /* Format 0 or 1             */
+    BYTE    resv1;                      /* Reserved                  */
+    HWORD   accoff;                     /* Offset to accap field     */
+    FWORD   resv2[5];                   /* Reserved                  */
+    FWORD   nccap;                      /* Nominal CPU Capability    */
+    FWORD   sccap;                      /* Secondary CPU Capability  */
+    FWORD   cap;                        /* CPU capability            */
+    HWORD   totcpu;                     /* Total CPU count           */
+    HWORD   confcpu;                    /* Configured CPU count      */
+    HWORD   sbcpu;                      /* Standby CPU count         */
+    HWORD   resvcpu;                    /* Reserved CPU count        */
+    HWORD   mpfact[MAX_CPU_ENGINES-1];  /* MP factors                */
+
+
 #if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
-        HWORD   resv3;                  /* then need some alignment  */
+    HWORD   resv3;                      /* then need some alignment  */
 #endif
-        FWORD   accap;                  /* Alternate CPU Capability  */
-        HWORD   ampfact[MAX_CPU_ENGINES-1]; /* Alternate MP factors  */
+
+    FWORD   accap;                      /* Alternate CPU Capability  */
+    HWORD   ampfact[MAX_CPU_ENGINES-1]; /* Alternate MP factors      */
+
+
 #if ((MAX_CPU_ENGINES-1) % 2)           /* if prev is odd #of HWORDs */
-        HWORD   resv4;                  /* then need some alignment  */
+    HWORD   resv4;                      /* then need some alignment  */
 #endif
-    }   SYSIB122;
+};
+typedef struct SYSIB122 SYSIB122;
 
-typedef struct _SYSIB221 {              /* Logical partition CPU     */
-        FWORD   resv1[20];              /* Reserved                  */
-        BYTE    seqc[16];               /* Logical CPU Sequence Code */
-        BYTE    plant[4];               /* Plant of manufacture      */
-        HWORD   lcpuid;                 /* Logical CPU ID            */
-        HWORD   cpuad;                  /* CPU address               */
-    }   SYSIB221;
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB221)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB221                         /* Logical partition CPU     */
+{
+    FWORD   resv1[20];                  /* Reserved                  */
+    BYTE    seqc[16];                   /* Logical CPU Sequence Code */
+    BYTE    plant[4];                   /* Plant of manufacture      */
+    HWORD   lcpuid;                     /* Logical CPU ID            */
+    HWORD   cpuad;                      /* CPU address               */
+};
+typedef struct SYSIB221 SYSIB221;
 
-typedef struct _SYSIB222 {              /* Logical partition CPUs    */
-        FWORD   resv1[8];               /* Reserved                  */
-        HWORD   lparnum;                /* LPAR number               */
-        BYTE    resv2;                  /* Reserved                  */
-        BYTE    lcpuc;                  /* Logical CPU characteristic*/
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB222)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB222                         /* Logical partition CPUs    */
+{
+    FWORD   resv1[8];                   /* Reserved                  */
+    HWORD   lparnum;                    /* LPAR number               */
+    BYTE    resv2;                      /* Reserved                  */
+    BYTE    lcpuc;                      /* Logical CPU characteristic*/
+
 #define SYSIB222_LCPUC_DEDICATED    0x80
 #define SYSIB222_LCPUC_SHARED       0x40
 #define SYSIB222_LCPUC_CAPPED       0x20
-        HWORD   totcpu;                 /* Total CPU count           */
-        HWORD   confcpu;                /* Configured CPU count      */
-        HWORD   sbcpu;                  /* Standby CPU count         */
-        HWORD   resvcpu;                /* Reserved CPU count        */
-        BYTE    lparname[8];            /* LPAR name                 */
-        FWORD   lparcaf;                /* LPAR capability adjustment*/
-        FWORD   mdep[2];                /* Model Dependent           */
-        FWORD   resv3[2];               /* Reserved                  */
-        HWORD   dedcpu;                 /* Dedicated CPU count       */
-        HWORD   shrcpu;                 /* Shared CPU count          */
-    }   SYSIB222;
 
-typedef struct _SYSIB322 {              /* Virtual Machines CPUs     */
-        BYTE    resv1[4*7];             /* Reserved                  */
-        BYTE    resv2[3*1];             /* Reserved                  */
-        BYTE    dbct;                   /* Four bit desc block count */
-        BYTE    vmdb[4*16];             /* Virtual Machine desc block*/
-        BYTE    vmdbs[4*112];           /* Additional VMDB's         */
-        BYTE    resv3[4*888];           /* Reserved                  */
-    }   SYSIB322;
+    HWORD   totcpu;                     /* Total CPU count           */
+    HWORD   confcpu;                    /* Configured CPU count      */
+    HWORD   sbcpu;                      /* Standby CPU count         */
+    HWORD   resvcpu;                    /* Reserved CPU count        */
+    BYTE    lparname[8];                /* LPAR name                 */
+    FWORD   lparcaf;                    /* LPAR capability adjustment*/
+    FWORD   mdep[2];                    /* Model Dependent           */
+    FWORD   resv3[2];                   /* Reserved                  */
+    HWORD   dedcpu;                     /* Dedicated CPU count       */
+    HWORD   shrcpu;                     /* Shared CPU count          */
+};
+typedef struct SYSIB222 SYSIB222;
 
-typedef struct _SYSIB1512 {             /* Configuration Topology    */
-        HWORD   resv1;                  /* Reserved                  */
-        HWORD   len;                    /* Length                    */
-        BYTE    mag[6];                 /* Magnitudes 6, 5, ... 1    */
-        BYTE    resv2;                  /* Reserved                  */
-        BYTE    mnest;                  /* Nesting Level             */
-        FWORD   resv3;                  /* Reserved                  */
-        BYTE    tles[FLEXIBLE_ARRAY];   /* Topology List Entries     */
-    }   SYSIB1512;
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB322)                     */
+/*-------------------------------------------------------------------*/
+struct SYSIB322                         /* Virtual Machines CPUs     */
+{
+    BYTE    resv1[4*7];                 /* Reserved                  */
+    BYTE    resv2[3*1];                 /* Reserved                  */
+    BYTE    dbct;                       /* Four bit desc block count */
+    BYTE    vmdb[4*16];                 /* Virtual Machine desc block*/
+    BYTE    vmdbs[4*112];               /* Additional VMDB's         */
+    BYTE    resv3[4*888];               /* Reserved                  */
+};
+typedef struct SYSIB322 SYSIB322;
 
-typedef struct _TLECNTNR {              /* Container TLE             */
-        BYTE    nl;                     /* Nesting Level             */
-        BYTE    resv1[3];               /* Reserved                  */
-        BYTE    resv2;                  /* Reserved                  */
-        BYTE    resv3[2];               /* Reserved                  */
-        BYTE    cntnrid;                /* Container Id              */
-    }   TLECNTNR;
+/*-------------------------------------------------------------------*/
+/*           System Information Block (SYSIB1512)                    */
+/*-------------------------------------------------------------------*/
+struct SYSIB1512                        /* Configuration Topology    */
+{
+    HWORD   resv1;                      /* Reserved                  */
+    HWORD   len;                        /* Length                    */
+    BYTE    mag[6];                     /* Magnitudes 6, 5, ... 1    */
+    BYTE    resv2;                      /* Reserved                  */
+    BYTE    mnest;                      /* Nesting Level             */
+    FWORD   resv3;                      /* Reserved                  */
+    BYTE    tles[FLEXIBLE_ARRAY];       /* Topology List Entries     */
+};
+typedef struct SYSIB1512 SYSIB1512;
 
-typedef struct _TLECPU {                /* CPU TLE                   */
-        BYTE    nl;                     /* Nesting Level             */
-        BYTE    resv1[3];               /* Reserved                  */
-        BYTE    flags;                  /* Flags                     */
-        BYTE    cputype;                /* CPU Type                  */
-        U16     cpuadorg;               /* CPU Address Origin        */
-        DW      cpumask;                /* CPU Mask                  */
-    }   TLECPU;
+/*-------------------------------------------------------------------*/
+/*                          TLECNTNR                                 */
+/*-------------------------------------------------------------------*/
+struct TLECNTNR                         /* Container TLE             */
+{
+    BYTE    nl;                         /* Nesting Level             */
+    BYTE    resv1[3];                   /* Reserved                  */
+    BYTE    resv2;                      /* Reserved                  */
+    BYTE    resv3[2];                   /* Reserved                  */
+    BYTE    cntnrid;                    /* Container Id              */
+};
+typedef struct TLECNTNR TLECNTNR;
 
+/*-------------------------------------------------------------------*/
+/*                          TLECPU                                   */
+/*-------------------------------------------------------------------*/
+struct TLECPU                           /* CPU TLE                   */
+{
+    BYTE    nl;                         /* Nesting Level             */
+    BYTE    resv1[3];                   /* Reserved                  */
+    BYTE    flags;                      /* Flags                     */
+    BYTE    cputype;                    /* CPU Type                  */
+    U16     cpuadorg;                   /* CPU Address Origin        */
+    DW      cpumask;                    /* CPU Mask                  */
+};
+typedef struct TLECPU TLECPU;
+
+/*-------------------------------------------------------------------*/
 /* Bit definitions for TLECPU flag byte */
+
 #define CPUTLE_FLAG_DEDICATED   0x04    /* Dedicated CPU             */
 #define CPUTLE_FLAG_HORIZ       0x00    /* Horizontally polarized    */
 #define CPUTLE_FLAG_VERTLOW     0x01    /* Vertical low entitlement  */
 #define CPUTLE_FLAG_VERTMED     0x02    /* Vertical med entitlement  */
 #define CPUTLE_FLAG_VERTHIGH    0x03    /* Vertical high entitlement */
 
-typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
-        BYTE    resv1[4*1];             /* Reserved                  */
-        HWORD   totcpu;                 /* Total CPU count           */
-        HWORD   confcpu;                /* Configured CPU count      */
-        HWORD   sbcpu;                  /* Standby CPU count         */
-        HWORD   resvcpu;                /* Reserved CPU count        */
-        BYTE    vmname[8];              /* VM userid                 */
-        FWORD   vmcaf;                  /* VM capability adjustment  */
-        BYTE    cpid[4*4];              /* Control Program ID        */
-    }   SYSIBVMDB;
+/*-------------------------------------------------------------------*/
+/*                          SYSIBVMDB                                */
+/*-------------------------------------------------------------------*/
+struct SYSIBVMDB                        /* Virtual Machine Desc Block*/
+{
+    BYTE    resv1[4*1];                 /* Reserved                  */
+    HWORD   totcpu;                     /* Total CPU count           */
+    HWORD   confcpu;                    /* Configured CPU count      */
+    HWORD   sbcpu;                      /* Standby CPU count         */
+    HWORD   resvcpu;                    /* Reserved CPU count        */
+    BYTE    vmname[8];                  /* VM userid                 */
+    FWORD   vmcaf;                      /* VM capability adjustment  */
+    BYTE    cpid[4*4];                  /* Control Program ID        */
+};
+typedef struct SYSIBVMDB SYSIBVMDB;
+
+/*-------------------------------------------------------------------*/
 
 #define PTFF_GPR0_RESV          0x00000080
 #define PTFF_GPR0_FC_MASK       0x0000007F
@@ -2163,29 +2561,45 @@ typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
 #define PTFF_GPR0_FC_SFS        0x42
 #define PTFF_GPR0_FC_SGS        0x43
 
-typedef struct _PTFFQAF {               /* Query Available Functions */
-        FWORD   sb[4];                  /* Status Bits words         */
-    }   PTFFQAF;
+/*-------------------------------------------------------------------*/
+/*                          PTFFQAF                                  */
+/*-------------------------------------------------------------------*/
+struct PTFFQAF                          /* Query Available Functions */
+{
+    FWORD   sb[4];                      /* Status Bits words         */
+};
+typedef struct PTFFQAF PTFFQAF;
 
-typedef struct _PTFFQTO {               /* Query TOD Offset          */
-        DBLWRD  physclk;                /* Physical Clock            */
-        DBLWRD  todoff;                 /* TOD Offset                */
-        DBLWRD  ltodoff;                /* Logical TOD Offset        */
-        DBLWRD  todepoch;               /* TOD Epoch Difference      */
-    }   PTFFQTO;
+/*-------------------------------------------------------------------*/
+/*                          PTFFQTO                                  */
+/*-------------------------------------------------------------------*/
+struct PTFFQTO                          /* Query TOD Offset          */
+{
+    DBLWRD  physclk;                    /* Physical Clock            */
+    DBLWRD  todoff;                     /* TOD Offset                */
+    DBLWRD  ltodoff;                    /* Logical TOD Offset        */
+    DBLWRD  todepoch;                   /* TOD Epoch Difference      */
+};
+typedef struct PTFFQTO PTFFQTO;
 
-typedef struct _PTFFQSI {               /* Query Steering Information*/
-        DBLWRD  physclk;                /* Physical Clock            */
-        DBLWRD  oldestart;              /* Old Episode Start Time    */
-        DBLWRD  oldebase;               /* Old Episode Base Offset   */
-        FWORD   oldfsr;                 /* Old Episode Fine St. Rate */
-        FWORD   oldgsr;                 /* Old Episode Gross St. Rate*/
-        DBLWRD  newestart;              /* New Episode Start Time    */
-        DBLWRD  newebase;               /* New Episode Base Offset   */
-        FWORD   newfsr;                 /* New Episode Fine St. Rate */
-        FWORD   newgsr;                 /* New Episode Gross St. Rate*/
-    }   PTFFQSI;
+/*-------------------------------------------------------------------*/
+/*                          PTFFQSI                                  */
+/*-------------------------------------------------------------------*/
+struct PTFFQSI                          /* Query Steering Information*/
+{
+    DBLWRD  physclk;                    /* Physical Clock            */
+    DBLWRD  oldestart;                  /* Old Episode Start Time    */
+    DBLWRD  oldebase;                   /* Old Episode Base Offset   */
+    FWORD   oldfsr;                     /* Old Episode Fine St. Rate */
+    FWORD   oldgsr;                     /* Old Episode Gross St. Rate*/
+    DBLWRD  newestart;                  /* New Episode Start Time    */
+    DBLWRD  newebase;                   /* New Episode Base Offset   */
+    FWORD   newfsr;                     /* New Episode Fine St. Rate */
+    FWORD   newgsr;                     /* New Episode Gross St. Rate*/
+};
+typedef struct PTFFQSI PTFFQSI;
 
+/*-------------------------------------------------------------------*/
 
 #define SIGA_FC_W       0               /* Initiate Output           */
 #define SIGA_FC_R       1               /* Initiate Input            */
@@ -2197,7 +2611,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define SIGA_TOKEN      0x80            /* R1 Contains Subchannel
                                                Token instead of SSID */
 
+/*-------------------------------------------------------------------*/
 /* Bit definitions for floating-point-control register */
+
 #define FPC_MASK        0xF8000000
 #define FPC_MASK_IMI    0x80000000
 #define FPC_MASK_IMZ    0x40000000
@@ -2224,14 +2640,18 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define FPC_RESV_FPX    0x03030088                              /*810*/
 #define FPC_RESERVED    0x0707008C
 
+/*-------------------------------------------------------------------*/
 /* Shift counts to allow alignment of each field in the FPC register */
+
 #define FPC_MASK_SHIFT  27
 #define FPC_FLAG_SHIFT  19
 #define FPC_DXC_SHIFT   8
 #define FPC_DRM_SHIFT   4
 #define FPC_BRM_SHIFT   0
 
+/*-------------------------------------------------------------------*/
 /* Data exception codes */
+
 #define DXC_DECIMAL             0x00    /* Decimal operand exception */
 #define DXC_AFP_REGISTER        0x01    /* AFP register exception    */
 #define DXC_BFP_INSTRUCTION     0x02    /* BFP instruction exception */
@@ -2256,7 +2676,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define DXC_COMPARE_AND_TRAP    0xFF    /* Compare-and-trap exception*/
 /* Note: IISE = IEEE-interruption-simulation event */
 
+/*-------------------------------------------------------------------*/
 /* Decimal rounding modes */
+
 #define DRM_RNE                 0       /* Round to nearest tie even */
 #define DRM_RTZ                 1       /* Round toward zero         */
 #define DRM_RTPI                2       /* Round toward +infinity    */
@@ -2266,7 +2688,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define DRM_RAFZ                6       /* Round away from zero      */
 #define DRM_RFSP                7       /* Prepare shorter precision */
 
+/*-------------------------------------------------------------------*/
 /* Binary rounding modes */
+
 #define BRM_RNE                 0       /* Round to nearest tie even */
 #define BRM_RTZ                 1       /* Round toward zero         */
 #define BRM_RTPI                2       /* Round toward +infinity    */
@@ -2276,13 +2700,17 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define BRM_RESV6               6       /* Reserved (invalid)     810*/
 #define BRM_RFSP                7       /* Prep shorter precision 810*/
 
+/*-------------------------------------------------------------------*/
 /* Mask bits for conditional SSKE facility */
+
 #define SSKE_MASK_NQ            0x08    /* NonQuiesce                */
 #define SSKE_MASK_MR            0x04    /* Reference bit update mask */
 #define SSKE_MASK_MC            0x02    /* Change bit update mask    */
 #define SSKE_MASK_MB            0x01    /* Multiple Block            */
 
+/*-------------------------------------------------------------------*/
 /* Measurement alert external interruption parameter */
+
 #define MAEIP_IEA         0x80000000   /* Invalid Entry Address      */
 #define MAEIP_ISDBTE      0x80000000   /* Incorrect sample-data-block-
                                           table entry                */
@@ -2293,5 +2721,7 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define MAEIP_CACA        0x00000080   /* Counter Authorisation
                                           change alert               */
 #define MAEIP_LCDA        0x00000040   /* Loss of counter data alert */
+
+/*-------------------------------------------------------------------*/
 
 #endif // _ESA390_H

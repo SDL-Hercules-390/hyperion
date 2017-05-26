@@ -125,14 +125,14 @@ struct FACTAB
 };
 typedef struct FACTAB   FACTAB;
 
-#define FACILITY( _name, _mode, _fixed, _supp, _level ) \
-    {                                                   \
-        QSTR( _name ),                                  \
-        (STFL_ ## _name),                               \
-        (_mode),                                        \
-        (_fixed),                                       \
-        (_supp),                                        \
-        (_level)                                        \
+#define FACILITY( _name, _mode, _fixed, _supp, _level )         \
+    {                                                           \
+        QSTR( _name ),                                          \
+        (STFL_ ## _name), /* (see 'STFL_XXXX' in "esa390.h") */ \
+        (_mode),                                                \
+        (_fixed),                                               \
+        (_supp),                                                \
+        (_level)                                                \
     },
 
 /*-------------------------------------------------------------------*/
@@ -140,183 +140,242 @@ typedef struct FACTAB   FACTAB;
 /*-------------------------------------------------------------------*/
 static FACTAB factab[] =
 {
-/*       Facility          Default       Mandatory  Supported      Group        */
+/*        Facility          Default       Mandatory  Supported      Group        */
 #if defined(_FEATURE_ESAME_N3_ESA390)
-FACILITY(N3,               ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS1|ALS2|ALS3)
+FACILITY( N3,               ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS1|ALS2|ALS3 )
 #endif
+
 #if defined(_FEATURE_ESAME)
-FACILITY(ESAME_INSTALLED,  ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-FACILITY(ESAME_ACTIVE,     ZARCH,        ZARCH,     ZARCH,         ALS2|ALS3)
+FACILITY( ESAME_INSTALLED,  ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+FACILITY( ESAME_ACTIVE,     ZARCH,        ZARCH,     ZARCH,              ALS2|ALS3 )
 #endif
+
 #if defined(_FEATURE_DAT_ENHANCEMENT)
-FACILITY(IDTE_INSTALLED,   Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/   ALS2|ALS3)
-FACILITY(IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/   ALS2|ALS3)
+FACILITY( IDTE_INSTALLED,   Z390,         NONE,      Z390,               ALS2|ALS3 )
+FACILITY( IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/        ALS2|ALS3 )
+FACILITY( IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/        ALS2|ALS3 )
 #endif
+
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-FACILITY(ASN_LX_REUSE,     0, /*Z390*/   NONE,      Z390,          ALS2|ALS3)
+FACILITY( ASN_LX_REUSE,     0, /*Z390*/   NONE,      Z390,               ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_STORE_FACILITY_LIST_EXTENDED)
-FACILITY(STFL_EXTENDED,    ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-#endif
-#if defined(_FEATURE_ENHANCED_DAT_FACILITY)
-FACILITY(ENHANCED_DAT,     Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_SENSE_RUNNING_STATUS)
-FACILITY(SENSE_RUN_STATUS, Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_CONDITIONAL_SSKE)
-FACILITY(CONDITIONAL_SSKE, Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
-FACILITY(CONFIG_TOPOLOGY,  Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_IPTE_RANGE_FACILITY)
-FACILITY(IPTE_RANGE,       Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_NONQUIESCING_KEY_SETTING_FACILITY)
-FACILITY(NONQ_KEY_SET,     Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-FACILITY(TRAN_FAC2,        ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-#endif
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
-FACILITY(MSG_SECURITY,     ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-#endif
-#if defined(_FEATURE_LONG_DISPLACEMENT)
-FACILITY(LONG_DISPL_INST,  Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(LONG_DISPL_HPERF, ZARCH,        NONE,      ZARCH,         ALS2|ALS3)
-#endif
-#if defined(_FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
-FACILITY(HFP_MULT_ADD_SUB, ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-#endif
-#if defined(_FEATURE_EXTENDED_IMMEDIATE)
-FACILITY(EXTENDED_IMMED,   Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
-FACILITY(TRAN_FAC3,        Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_HFP_UNNORMALIZED_EXTENSION)
-FACILITY(HFP_UNNORM_EXT,   Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_ETF2_ENHANCEMENT)
-FACILITY(ETF2_ENHANCEMENT, ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS2|ALS3)
-#endif
-#if defined(_FEATURE_STORE_CLOCK_FAST)
-FACILITY(STORE_CLOCK_FAST, Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-FACILITY(PARSING_ENHANCE,  Z390,         NONE,      Z390,          ALS2|ALS3)
-#if defined(_FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
-FACILITY(MVCOS,            Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_TOD_CLOCK_STEERING)
-FACILITY(TOD_CLOCK_STEER,  Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_ETF3_ENHANCEMENT)
-FACILITY(ETF3_ENHANCEMENT, Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_EXTRACT_CPU_TIME)
-FACILITY(EXTRACT_CPU_TIME, Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE)
-FACILITY(CSSF,             Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
-FACILITY(CSSF2,            Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
-FACILITY(GEN_INST_EXTN,    Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-FACILITY(EXECUTE_EXTN,     Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_ENHANCED_MONITOR_FACILITY)
-FACILITY(ENH_MONITOR,      Z390,         NONE,      Z390,          ALS3)
-#endif
-//FACILITY(FP_EXTENSION,     ZARCH,        NONE,      ZARCH,         ALS3)
-#if defined(_FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
-FACILITY(LOAD_PROG_PARAM,  Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_FPS_ENHANCEMENT)
-FACILITY(FPS_ENHANCEMENT,  Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_DECIMAL_FLOATING_POINT)
-FACILITY(DECIMAL_FLOAT,    Z390,         NONE,      Z390,          ALS2|ALS3)
-FACILITY(DFP_HPERF,        Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_PFPO)
-FACILITY(PFPO,             Z390,         NONE,      Z390,          ALS2|ALS3)
-#endif
-#if defined(_FEATURE_FAST_BCR_SERIALIZATION_FACILITY)
-FACILITY(FAST_BCR_SERIAL,  Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
-FACILITY(CMPSC_ENH,        ZARCH,        NONE,      ZARCH,         ALS3)
-#endif
-#if defined(_FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
-FACILITY(RES_REF_BITS_MUL, Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
-FACILITY(CPU_MEAS_COUNTER, Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
-FACILITY(CPU_MEAS_SAMPLNG, Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)
-FACILITY(ACC_EX_FS_INDIC,  Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
-FACILITY(MSA_EXTENSION_3,  Z390,         NONE,      Z390,          ALS3)
-#endif
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
-FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
-#endif
-#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
-/* Note that this facility is available in ESA mode too (SIE) */
-FACILITY(INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1 | ALS2 | ALS3)
+FACILITY( STFL_EXTENDED,    ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
-/* The Following entries are not part of STFL(E) but do indicate the availability of facilities */
-FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
+#if defined(_FEATURE_ENHANCED_DAT_FACILITY)
+FACILITY( ENHANCED_DAT,     Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_SENSE_RUNNING_STATUS)
+FACILITY( SENSE_RUN_STATUS, Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_CONDITIONAL_SSKE)
+FACILITY( CONDITIONAL_SSKE, Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+FACILITY( CONFIG_TOPOLOGY,  Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_IPTE_RANGE_FACILITY)
+FACILITY( IPTE_RANGE,       Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_NONQUIESCING_KEY_SETTING_FACILITY)
+FACILITY( NONQ_KEY_SET,     Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+FACILITY( TRAN_FAC2,        ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
+FACILITY( MSG_SECURITY,     ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_LONG_DISPLACEMENT)
+FACILITY( LONG_DISPL_INST,  Z390,         NONE,      Z390,               ALS2|ALS3 )
+FACILITY( LONG_DISPL_HPERF, ZARCH,        NONE,      ZARCH,              ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+FACILITY( HFP_MULT_ADD_SUB, ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_EXTENDED_IMMEDIATE)
+FACILITY( EXTENDED_IMMED,   Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+FACILITY( TRAN_FAC3,        Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_HFP_UNNORMALIZED_EXTENSION)
+FACILITY( HFP_UNNORM_EXT,   Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_ETF2_ENHANCEMENT)
+FACILITY( ETF2_ENHANCEMENT, ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_STORE_CLOCK_FAST)
+FACILITY( STORE_CLOCK_FAST, Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+FACILITY( PARSING_ENHANCE,  Z390,         NONE,      Z390,               ALS2|ALS3 )
+#if defined(_FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+FACILITY( MVCOS,            Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_TOD_CLOCK_STEERING)
+FACILITY( TOD_CLOCK_STEER,  Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_ETF3_ENHANCEMENT)
+FACILITY( ETF3_ENHANCEMENT, Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_EXTRACT_CPU_TIME)
+FACILITY( EXTRACT_CPU_TIME, Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE)
+FACILITY( CSSF,             Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
+FACILITY( CSSF2,            Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
+FACILITY( GEN_INST_EXTN,    Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+FACILITY( EXECUTE_EXTN,     Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_ENHANCED_MONITOR_FACILITY)
+FACILITY( ENH_MONITOR,      Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+//FACILITY( FP_EXTENSION,     ZARCH,        NONE,      ZARCH,                 ALS3 )
+
+#if defined(_FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
+FACILITY( LOAD_PROG_PARAM,  Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_FPS_ENHANCEMENT)
+FACILITY( FPS_ENHANCEMENT,  Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_DECIMAL_FLOATING_POINT)
+FACILITY( DECIMAL_FLOAT,    Z390,         NONE,      Z390,               ALS2|ALS3 )
+FACILITY( DFP_HPERF,        Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_PFPO)
+FACILITY( PFPO,             Z390,         NONE,      Z390,               ALS2|ALS3 )
+#endif
+
+#if defined(_FEATURE_FAST_BCR_SERIALIZATION_FACILITY)
+FACILITY( FAST_BCR_SERIAL,  Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+FACILITY( CMPSC_ENH,        ZARCH,        NONE,      ZARCH,                   ALS3 )
+#endif
+
+#if defined(_FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
+FACILITY( RES_REF_BITS_MUL, Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
+FACILITY( CPU_MEAS_COUNTER, Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+FACILITY( CPU_MEAS_SAMPLNG, Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)
+FACILITY( ACC_EX_FS_INDIC,  Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
+FACILITY( MSA_EXTENSION_3,  Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
+FACILITY( MSA_EXTENSION_4,  Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
+//------------------------------------------------------------------------------------
+// Note that this facility is available in ESA mode too (SIE)
+
+#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
+FACILITY( INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1|ALS2|ALS3 )
+#endif
+
+//------------------------------------------------------------------------------------
+// The Following entries are not part of STFL(E) but do indicate the availability of facilities
+
+FACILITY( MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1)
-FACILITY(MSA_EXTENSION_1,  Z390,         NONE,      Z390,          ALS3)
+FACILITY( MSA_EXTENSION_1,  Z390,         NONE,      Z390,                    ALS3 )
 #endif
+
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2)
-FACILITY(MSA_EXTENSION_2,  Z390,         NONE,      Z390,          ALS3)
+FACILITY( MSA_EXTENSION_2,  Z390,         NONE,      Z390,                    ALS3 )
 #endif
+
+//------------------------------------------------------------------------------------
 #if defined(_FEATURE_HERCULES_DIAGCALLS)
-FACILITY(PROBSTATE_DIAGF08,NONE,         NONE,      S370|ESA390|ZARCH, NONE)
-FACILITY(SIGP_SETARCH_S370,NONE,         NONE,      S370|ESA390|ZARCH, NONE)
+FACILITY( PROBSTATE_DIAGF08,NONE,         NONE,      S370|ESA390|ZARCH,       NONE )
+FACILITY( SIGP_SETARCH_S370,NONE,         NONE,      S370|ESA390|ZARCH,       NONE )
+
 #if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
-FACILITY(HOST_RESOURCE_ACCESS,NONE,      NONE,      S370|ESA390|ZARCH, NONE)
+FACILITY( HOST_RESOURCE_ACCESS,NONE,      NONE,      S370|ESA390|ZARCH,       NONE )
 #endif
 #endif /*defined(_FEATURE_HERCULES_DIAGCALLS)*/
+//------------------------------------------------------------------------------------
+
 #if defined(_FEATURE_QEBSM)
-FACILITY(QEBSM,            Z390,         NONE,      Z390,          ALS3)
-#endif /*defined(_FEATURE_QEBSM)*/
+FACILITY( QEBSM,            Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
 #if defined(_FEATURE_QDIO_THININT)
-FACILITY(QDIO_THININT,     Z390,         NONE,      Z390,          ALS3)
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+FACILITY( QDIO_THININT,     Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
 #if defined(_FEATURE_QDIO_TDD)
-FACILITY(QDIO_TDD,         NONE,         NONE,      Z390,          ALS3)
-#endif /*defined(_FEATURE_QDIO_TDD)*/
+FACILITY( QDIO_TDD,         NONE,         NONE,      Z390,                    ALS3 )
+#endif
+
 #if defined(_FEATURE_SVS)
-FACILITY(SVS,              Z390,         NONE,      Z390,          ALS3)
-#endif /*defined(_FEATURE_SVS)*/
+FACILITY( SVS,              Z390,         NONE,      Z390,                    ALS3 )
+#endif
+
 #if defined(_FEATURE_HYPERVISOR)
-FACILITY(LOGICAL_PARTITION,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
-#endif /*defined(_FEATURE_HYPERVISOR)*/
+FACILITY( LOGICAL_PARTITION,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
+#endif
+
 #if defined(_FEATURE_EMULATE_VM)
-FACILITY(VIRTUAL_MACHINE,  NONE,         NONE,      S370|ESA390|ZARCH, NONE)
+FACILITY( VIRTUAL_MACHINE,  NONE,         NONE,      S370|ESA390|ZARCH,       NONE )
 #endif
+
 // #if defined(_FEATURE_QDIO_ASSIST)
-FACILITY(QDIO_ASSIST,      NONE,         NONE,      Z390,          ALS3)
+FACILITY( QDIO_ASSIST,      NONE,         NONE,      Z390,                    ALS3 )
 // #endif
+
 #if defined(_FEATURE_INTERVAL_TIMER)
-FACILITY(INTERVAL_TIMER,   S370|ESA390|ZARCH, ESA390|ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
+FACILITY( INTERVAL_TIMER,   S370|ESA390|ZARCH, ESA390|ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
 #endif
-FACILITY(DETECT_PGMINTLOOP,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
+
+FACILITY( DETECT_PGMINTLOOP,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
 
 { NULL, 0, 0, 0, 0, 0 }
 };
@@ -486,10 +545,10 @@ static void force_facbit( int bitno, BYTE enable, BYTE mode )
 #if defined( _370 )
     do_force_facbit( bitno, enable, mode, S370,   ARCH_370, _ARCH_370_NAME );
 #endif
-#if defined( _390 )  
+#if defined( _390 )
     do_force_facbit( bitno, enable, mode, ESA390, ARCH_390, _ARCH_390_NAME );
 #endif
-#if defined( _900 )  
+#if defined( _900 )
     do_force_facbit( bitno, enable, mode, ZARCH,  ARCH_900, _ARCH_900_NAME );
 #endif
 }
