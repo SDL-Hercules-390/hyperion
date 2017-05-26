@@ -319,7 +319,7 @@ CONF_DLL_IMPORT BYTE is_diag_instr();
 CONF_DLL_IMPORT BYTE are_cpu_thread( int* cpunum );
 
 /* Functions in module archlvl.c */
-int set_archlvl(char *archname);
+BYTE set_archlvl( const char* archname ); // (boolean)
 void init_als(REGS *regs);
 BYTE als_update_pending(void);
 

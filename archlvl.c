@@ -30,84 +30,114 @@
  #undef   _GEN_ARCH
 #endif
 
-/* Layout of the facility table */
-#define FACILITY(_name, _mode, _fixed, _supp, _level) \
-    { QSTR(_name), (STFL_ ## _name), (_mode), (_fixed), (_supp), (_level) },
-typedef struct _FACTAB
+/*-------------------------------------------------------------------*/
+/*           ARCHTAB struct  (Architecture Level Table)              */
+/*-------------------------------------------------------------------*/
+struct ARCHTAB
 {
-    const char  *name;             /* Facility Name       */
-    const BYTE   bitno;            /* Bit number          */
-    const BYTE   mode;             /* Mode indicator      */
-#define S370       0x01            /* S/370 feature       */
-#define ESA390     0x02            /* ESA/390 feature     */
-#define ZARCH      0x04            /* ESAME feature       */
-#define Z390      (ZARCH|ESA390)   /* Exists in ESAME only
-                                      but is also indicated
-                                      in ESA390           */
-    const BYTE   fixed;            /* Mandatory for       */
-#define NONE       0x00
-    const BYTE   supported;        /* Supported in        */
-    const BYTE   alslevel;         /* alslevel grouping   */
-#define ALS0       0x01            /* S/370               */
-#define ALS1       0x02            /* ESA/390             */
-#define ALS2       0x04            /* Z/ARCH              */
-#define ALS3       0x08            /* ARCHLVL 3           */
-} FACTAB;
+    const char*  name;             /* Archlvl Name                   */
+    const int    archmode;         /* Architecture Mode              */
+    const int    alslevel;         /* Architecture Level             */
 
+#define ALS0     0x01              /* S/370                          */
+#define ALS1     0x02              /* ESA/390                        */
+#define ALS2     0x04              /* Z/ARCH                         */
+#define ALS3     0x08              /* ARCHLVL 3                      */
+};
+typedef struct ARCHTAB  ARCHTAB;
 
-/* Architecture level table */
-#define ARCHLVL(_name, _mode, _level) \
-{ (_name), (_mode), (_level) },
-typedef struct _ARCHTAB
-{
-    const char  *name;             /* Archlvl Name        */
-    const int    archmode;         /* Architecture Mode   */
-    const int    alslevel;         /* Architecture Level  */
-} ARCHTAB;
+#define ARCHLVL( _name, _mode, _level )     \
+    {                                       \
+        (_name),                            \
+        (_mode),                            \
+        (_level)                            \
+    },
 
-
+/*-------------------------------------------------------------------*/
+/*                 Architecture Level Table (archtab)                */
+/*-------------------------------------------------------------------*/
 static ARCHTAB archtab[] =
 {
-#if defined(_370)
-/* S/370 - ALS0 */
-ARCHLVL(_ARCH_370_NAME,  ARCH_370, ALS0)
-ARCHLVL("370",           ARCH_370, ALS0)
-ARCHLVL("S370",          ARCH_370, ALS0)
-ARCHLVL("S/370",         ARCH_370, ALS0)
-ARCHLVL("ALS0",          ARCH_370, ALS0)
+#if defined( _370 )
+
+    /* S/370 - ALS0 */
+    ARCHLVL( _ARCH_370_NAME,  ARCH_370, ALS0 )
+    ARCHLVL( "370",           ARCH_370, ALS0 )
+    ARCHLVL( "S370",          ARCH_370, ALS0 )
+    ARCHLVL( "S/370",         ARCH_370, ALS0 )
+    ARCHLVL( "ALS0",          ARCH_370, ALS0 )
 #endif
 
-/* Note  that  XA  and  XB  are not offered; neither is G3 (debut of */
-/* relative/immediate).                                              */
+/*
+    Note that XA and XB are not offered, and
+    neither is G3 (debut of relative/immediate).
+*/
+#if defined( _390 )
 
-#if defined(_390)
-/* ESA/390 - ALS1 */
-ARCHLVL(_ARCH_390_NAME,  ARCH_390, ALS1)
-ARCHLVL("ESA",           ARCH_390, ALS1)
-ARCHLVL("ESA390",        ARCH_390, ALS1)
-ARCHLVL("S/390",         ARCH_390, ALS1)
-ARCHLVL("S390",          ARCH_390, ALS1)
-ARCHLVL("390",           ARCH_390, ALS1)
-ARCHLVL("ALS1",          ARCH_390, ALS1)
+    /* ESA/390 - ALS1 */
+    ARCHLVL( _ARCH_390_NAME,  ARCH_390, ALS1 )
+    ARCHLVL( "ESA",           ARCH_390, ALS1 )
+    ARCHLVL( "ESA390",        ARCH_390, ALS1 )
+    ARCHLVL( "S/390",         ARCH_390, ALS1 )
+    ARCHLVL( "S390",          ARCH_390, ALS1 )
+    ARCHLVL( "390",           ARCH_390, ALS1 )
+    ARCHLVL( "ALS1",          ARCH_390, ALS1 )
 #endif
 
-#if defined(_900)
-/* z/Arch - ALS2 */
-ARCHLVL("ESA/ME",        ARCH_900, ALS2)
-ARCHLVL("ESAME",         ARCH_900, ALS2)
-ARCHLVL("ALS2",          ARCH_900, ALS2)
+#if defined( _900 )
 
-/* z/Arch - ALS3 */
-ARCHLVL(_ARCH_900_NAME,  ARCH_900, ALS3)
-ARCHLVL("zArch",         ARCH_900, ALS3)
-ARCHLVL("z",             ARCH_900, ALS3)
-ARCHLVL("ALS3",          ARCH_900, ALS3)
+    /* z/Arch - ALS2 */
+    ARCHLVL( "ESA/ME",        ARCH_900, ALS2 )
+    ARCHLVL( "ESAME",         ARCH_900, ALS2 )
+    ARCHLVL( "ALS2",          ARCH_900, ALS2 )
+
+    /* z/Arch - ALS3 */
+    ARCHLVL( _ARCH_900_NAME,  ARCH_900, ALS3 )
+    ARCHLVL( "zArch",         ARCH_900, ALS3 )
+    ARCHLVL( "z",             ARCH_900, ALS3 )
+    ARCHLVL( "ALS3",          ARCH_900, ALS3 )
 #endif
 
-{ NULL, 0, 0 }
+    { NULL, 0, 0 }          // (end of table)
 };
 
+/*-------------------------------------------------------------------*/
+/*                FACTAB struct  (Facility Table)                    */
+/*-------------------------------------------------------------------*/
+struct FACTAB
+{
+    const char*  name;             /* Facility Name                  */
+    const BYTE   bitno;            /* Bit number                     */
+    const BYTE   mode;             /* Mode indicator                 */
 
+#define S370     0x01              /* S/370 feature                  */
+#define ESA390   0x02              /* ESA/390 feature                */
+#define ZARCH    0x04              /* ESAME feature                  */
+#define Z390     (ZARCH|ESA390)    /* Exists in ESAME only, but
+                                      is also indicated in ESA390    */
+
+    const BYTE   fixed;            /* Mandatory for                  */
+
+#define NONE     0x00
+
+    const BYTE   supported;        /* Supported in                   */
+    const BYTE   alslevel;         /* alslevel grouping              */
+};
+typedef struct FACTAB   FACTAB;
+
+#define FACILITY( _name, _mode, _fixed, _supp, _level ) \
+    {                                                   \
+        QSTR( _name ),                                  \
+        (STFL_ ## _name),                               \
+        (_mode),                                        \
+        (_fixed),                                       \
+        (_supp),                                        \
+        (_level)                                        \
+    },
+
+/*-------------------------------------------------------------------*/
+/*                      Facility Table (factab)                      */
+/*-------------------------------------------------------------------*/
 static FACTAB factab[] =
 {
 /*       Facility          Default       Mandatory  Supported      Group        */
@@ -291,254 +321,286 @@ FACILITY(DETECT_PGMINTLOOP,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS1
 { NULL, 0, 0, 0, 0, 0 }
 };
 
-
-void init_als(REGS *regs)
+/*-------------------------------------------------------------------*/
+/*                          init_als                                 */
+/*-------------------------------------------------------------------*/
+void init_als( REGS* regs )
 {
-int i;
-
-    for(i = 0; i < STFL_HBYTESIZE; i++)
-        regs->facility_list[i] = sysblk.facility_list[regs->arch_mode][i];
+    int  i;
+    for (i=0; i < STFL_HBYTESIZE; i++)
+        regs->facility_list[i] =
+            sysblk.facility_list[ regs->arch_mode ][i];
 }
 
-
-static void set_alslevel(int alslevel)
+/*-------------------------------------------------------------------*/
+/*                         set_alslevel                              */
+/*-------------------------------------------------------------------*/
+static void set_alslevel( int alslevel )
 {
-FACTAB *tb;
-int i,j;
+    FACTAB*  ft;
+    int      i, j;
 
     for(i = 0; i < STFL_HBYTESIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 
-    for(tb = factab; tb->name; tb++)
+    for(ft = factab; ft->name; ft++)
     {
     int fbyte, fbit;
 
-        fbyte = tb->bitno / 8;
-        fbit = 0x80 >> (tb->bitno % 8);
+        fbyte = ft->bitno / 8;
+        fbit = 0x80 >> (ft->bitno % 8);
 
-        if(tb->alslevel & alslevel)
+        if(ft->alslevel & alslevel)
         {
 #if defined(_370)
-            if(tb->mode & S370)
+            if(ft->mode & S370)
                 sysblk.facility_list[ARCH_370][fbyte] |= fbit;
 #endif
 #if defined(_390)
-            if(tb->mode & ESA390)
+            if(ft->mode & ESA390)
                 sysblk.facility_list[ARCH_390][fbyte] |= fbit;
 #endif
 #if defined(_900)
-            if(tb->mode & ZARCH)
+            if(ft->mode & ZARCH)
                 sysblk.facility_list[ARCH_900][fbyte] |= fbit;
 #endif
         }
     }
 }
 
-
-static ARCHTAB *get_archtab(char *name)
+/*-------------------------------------------------------------------*/
+/*                         get_archtab                               */
+/*-------------------------------------------------------------------*/
+static ARCHTAB* get_archtab( const char* name )
 {
-ARCHTAB *tb;
+    ARCHTAB* at;
 
-    for(tb = archtab; tb->name; tb++)
-        if(!strcasecmp(name,tb->name))
-            return tb;
-
+    for (at = archtab; at->name; at++)
+    {
+        if (strcasecmp( name, at->name ) == 0)
+            return at;
+    }
     return NULL;
 }
 
-
-static char *get_facname(int bitno)
+/*-------------------------------------------------------------------*/
+/*                          get_facname                              */
+/*-------------------------------------------------------------------*/
+static const char* get_facname( int bitno )
 {
-FACTAB *tb;
-static char name[8];
+    FACTAB*      ft;
+    static char  name[8];
 
-    for(tb = factab; tb->name; tb++)
-        if(bitno == tb->bitno)
-            return (char *)tb->name;
+    for (ft = factab; ft->name; ft++)
+    {
+        if (ft->bitno == bitno)
+            return ft->name;
+    }
 
-    snprintf(name,sizeof(name),"bit%d",bitno);
-
+    snprintf( name, sizeof( name ), "bit%d", bitno );
     return name;
 }
 
-
-static FACTAB *get_factab(char *name)
+/*-------------------------------------------------------------------*/
+/*                          get_factab                               */
+/*-------------------------------------------------------------------*/
+static FACTAB* get_factab( const char* name )
 {
-FACTAB *tb;
+    FACTAB* ft;
 
-    for(tb = factab; tb->name; tb++)
-        if(!strcasecmp(name,tb->name))
-            return tb;
-
+    for (ft = factab; ft->name; ft++)
+    {
+        if (strcasecmp( ft->name, name ) == 0)
+            return ft;
+    }
     return NULL;
 }
 
-
-int set_archlvl(char *name)
+/*-------------------------------------------------------------------*/
+/*                          set_archlvl                              */
+/*-------------------------------------------------------------------*/
+BYTE set_archlvl( const char* name )
 {
-ARCHTAB *tb;
+    ARCHTAB* at;
 
-    if((tb = get_archtab(name)))
+    if ((at = get_archtab( name )))
     {
-        sysblk.arch_mode = tb->archmode;
-        set_alslevel(tb->alslevel);
+        sysblk.arch_mode = at->archmode;
+        set_alslevel( at->alslevel );
         return TRUE;
     }
-
     return FALSE;
 }
 
-
-static void force_facbit(int bitno, int enable, BYTE mode)
+/*-------------------------------------------------------------------*/
+/*                          force_facbit                             */
+/*-------------------------------------------------------------------*/
+static void force_facbit( int bitno, BYTE enable, BYTE mode )
 {
-int fbyte, fbit;
+    int fbyte, fbit;
 
     fbyte = bitno / 8;
-    fbit = 0x80 >> (bitno % 8);
+    fbit  = 0x80 >> (bitno % 8);
 
-    if(enable)
+    if (enable)
     {
-#if defined(_370)
-        if( S370 & mode )
-            if ( !(sysblk.facility_list[ARCH_370][fbyte] & fbit) )
+#if defined( _370 )
+        if (S370 & mode)
+            if (!(sysblk.facility_list[ ARCH_370 ][fbyte] & fbit))
             {
-                sysblk.facility_list[ARCH_370][fbyte] |= fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_370_NAME );
+                sysblk.facility_list[ ARCH_370 ][fbyte] |= fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_370_NAME );
             }
 #endif
-#if defined(_390)
-        if( ESA390 & mode )
-            if ( !(sysblk.facility_list[ARCH_390][fbyte] & fbit) )
+#if defined( _390 )
+        if (ESA390 & mode)
+            if (!(sysblk.facility_list[ ARCH_390 ][fbyte] & fbit))
             {
-                sysblk.facility_list[ARCH_390][fbyte] |= fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_390_NAME );
+                sysblk.facility_list[ ARCH_390 ][fbyte] |= fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_390_NAME );
             }
 #endif
-#if defined(_900)
-        if( ZARCH & mode )
-            if ( !(sysblk.facility_list[ARCH_900][fbyte] & fbit) )
+#if defined( _900 )
+        if (ZARCH & mode)
+            if (!(sysblk.facility_list[ ARCH_900 ][fbyte] & fbit))
             {
-                sysblk.facility_list[ARCH_900][fbyte] |= fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "en", _ARCH_900_NAME );
+                sysblk.facility_list[ ARCH_900 ][fbyte] |= fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "en", _ARCH_900_NAME );
             }
 #endif
     }
-    else
+    else // disable
     {
-#if defined(_370)
-        if( S370 & mode )
-            if ( sysblk.facility_list[ARCH_370][fbyte] & fbit )
+#if defined( _370 )
+        if (S370 & mode)
+            if (sysblk.facility_list[ ARCH_370 ][fbyte] & fbit)
             {
-                sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_370_NAME );
+                sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_370_NAME );
             }
 #endif
-#if defined(_390)
-        if( ESA390 & mode )
-            if ( sysblk.facility_list[ARCH_390][fbyte] & fbit )
+#if defined( _390 )
+        if (ESA390 & mode)
+            if (sysblk.facility_list[ ARCH_390 ][fbyte] & fbit)
             {
-                sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_390_NAME );
+                sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_390_NAME );
             }
 #endif
-#if defined(_900)
-        if( ZARCH & mode )
-            if ( sysblk.facility_list[ARCH_900][fbyte] & fbit )
+#if defined( _900 )
+        if (ZARCH & mode)
+            if (sysblk.facility_list[ ARCH_900 ][fbyte] & fbit)
             {
-                sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
-                if(MLVL(VERBOSE))
-                    WRMSG( HHC00898, "I", get_facname(bitno), "dis", _ARCH_900_NAME );
+                sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
+                    WRMSG( HHC00898, "I", get_facname( bitno ), "dis", _ARCH_900_NAME );
             }
 #endif
     }
 }
 
-static void set_facility(FACTAB *facility, int enable, BYTE mode)
+/*-------------------------------------------------------------------*/
+/*                          set_facility                             */
+/*-------------------------------------------------------------------*/
+static void set_facility( FACTAB* facility, BYTE enable, BYTE mode )
 {
-int fbyte, fbit;
+    int fbyte, fbit;
 
     fbyte = facility->bitno / 8;
-    fbit = 0x80 >> (facility->bitno % 8);
+    fbit  = 0x80 >> (facility->bitno % 8);
 
-    if( !(facility->supported & mode) )
+    if (!(facility->supported & mode))
     {
+        // "Facility(%s) not supported for specfied archmode"
         WRMSG( HHC00896, "E", facility->name );
         return;
     }
 
-#if defined(_370)
-    if( facility->supported & S370 & mode )
+#if defined( _370 )
+    if (facility->supported & S370 & mode)
     {
-        if(enable)
+        if (enable)
         {
-            if ( !(sysblk.facility_list[ARCH_370][fbyte] & fbit) )
-                sysblk.facility_list[ARCH_370][fbyte] |= fbit;
+            if (!(sysblk.facility_list[ ARCH_370 ][fbyte] & fbit))
+                sysblk.facility_list[ ARCH_370][fbyte ]  |= fbit;
 
-            if(MLVL(VERBOSE))
+            if (MLVL( VERBOSE ))
+                // "Facility(%s) %sabled for archmode %s"
                 WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
         }
         else
         {
-            if ( !(facility->fixed & S370) )
+            if (!(facility->fixed & S370))
             {
-                if ( sysblk.facility_list[ARCH_370][fbyte] & fbit )
-                    sysblk.facility_list[ARCH_370][fbyte] &= ~fbit;
+                if (sysblk.facility_list[ ARCH_370 ][fbyte] &   fbit)
+                    sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
 
-                if(MLVL(VERBOSE))
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
                     WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME );
             }
         }
     }
 #endif
-#if defined(_390)
-    if( facility->supported & ESA390 & mode )
+#if defined( _390 )
+    if (facility->supported & ESA390 & mode)
     {
-        if(enable)
+        if (enable)
         {
-            if ( !(sysblk.facility_list[ARCH_390][fbyte] & fbit) )
-                sysblk.facility_list[ARCH_390][fbyte] |= fbit;
+            if (!(sysblk.facility_list[ ARCH_390 ][fbyte] & fbit))
+                sysblk.facility_list[ ARCH_390 ][fbyte]  |= fbit;
 
-            if(MLVL(VERBOSE))
+            if (MLVL( VERBOSE ))
+                // "Facility(%s) %sabled for archmode %s"
                 WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
         }
         else
         {
-            if ( !(facility->fixed & ESA390) )
+            if (!(facility->fixed & ESA390))
             {
-                if ( sysblk.facility_list[ARCH_390][fbyte] & fbit )
-                    sysblk.facility_list[ARCH_390][fbyte] &= ~fbit;
+                if (sysblk.facility_list[ ARCH_390 ][fbyte] &   fbit)
+                    sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
             }
 
-            if(MLVL(VERBOSE))
+            if (MLVL( VERBOSE ))
+                // "Facility(%s) %sabled for archmode %s"
                 WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
         }
     }
 #endif
-#if defined(_900)
-    if( facility->supported & ZARCH & mode )
+#if defined( _900 )
+    if (facility->supported & ZARCH & mode)
     {
-        if(enable)
+        if (enable)
         {
-            if ( !(sysblk.facility_list[ARCH_900][fbyte] & fbit) )
-                sysblk.facility_list[ARCH_900][fbyte] |= fbit;
+            if (!(sysblk.facility_list[ ARCH_900 ][fbyte] & fbit))
+                sysblk.facility_list[ ARCH_900 ][fbyte]  |= fbit;
 
-            if(MLVL(VERBOSE))
+            if (MLVL( VERBOSE ))
+                // "Facility(%s) %sabled for archmode %s"
                 WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME );
         }
         else
         {
-            if ( !(facility->fixed & ZARCH) )
+            if (!(facility->fixed & ZARCH))
             {
-                if ( sysblk.facility_list[ARCH_900][fbyte] & fbit )
-                    sysblk.facility_list[ARCH_900][fbyte] &= ~fbit;
+                if (sysblk.facility_list[ ARCH_900 ][fbyte] &   fbit)
+                    sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
 
-                if(MLVL(VERBOSE))
+                if (MLVL( VERBOSE ))
+                    // "Facility(%s) %sabled for archmode %s"
                     WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
             }
         }
@@ -548,174 +610,191 @@ int fbyte, fbit;
     return;
 }
 
-
-static int update_archlvl(int argc, char *argv[])
+/*-------------------------------------------------------------------*/
+/*                        update_archlvl                             */
+/*-------------------------------------------------------------------*/
+static int update_archlvl( int argc, char* argv[] )
 {
-FACTAB *tb;
-ARCHTAB *ab;
-int enable;
-int bitno;
-char c;
-const BYTE arch2als[] = {
-#if defined(_370)
- S370
-  #if defined(_390) || defined(_900)
- ,
-  #endif // defined(_390) || defined(_900)
-#endif
+    FACTAB*     ft;
+    ARCHTAB*    at;
+    BYTE        enable;
+    int         bitno;
+    char        c;
 
-#if defined(_390)
- ESA390
-  #if defined(_900)
- ,
-  #endif // defined(_900)
-#endif
 
-#if defined(_900)
- ZARCH
-#endif
-};
-BYTE als =
-#if defined(_370)
- S370
-  #if defined(_390) || defined(_900)
- |
-  #endif
-#endif
-
-#if defined(_390)
- ESA390
-  #if defined(_900)
- |
-  #endif
-#endif
-
-#if defined(_900)
- ZARCH
-#endif
- ;
-
-    if( CMD(argv[1],enable,3) )
-        enable = TRUE;
-    else
-    if( CMD(argv[1],disable,4) )
-        enable = FALSE;
-    else
-        return -1;
-
-    if(argc < 3)
+    const BYTE  arch2als[] =
     {
+      #if defined( _370 )
+            S370
+        #if defined( _390 ) || defined( _900 )
+            ,
+        #endif
+      #endif
+      #if defined( _390 )
+            ESA390
+        #if defined( _900 )
+            ,
+        #endif
+      #endif
+      #if defined( _900 )
+            ZARCH
+      #endif
+    };
+
+
+    BYTE als =
+      #if defined( _370 )
+        S370
+        #if defined( _390 ) || defined( _900 )
+          |
+        #endif
+      #endif
+      #if defined( _390 )
+        ESA390
+        #if defined(_900)
+          |
+        #endif
+      #endif
+      #if defined( _900 )
+        ZARCH
+      #endif
+    ;
+
+
+    if      (CMD( argv[1], enable,  3 )) enable = TRUE;
+    else if (CMD( argv[1], disable, 4 )) enable = FALSE;
+    else                                 return -1;
+
+    if (argc < 3)
+    {
+        // "Facility name not specified"
         WRMSG( HHC00892, "E" );
         return 0;
     }
 
-    if(argc == 4)
+    if (argc == 4)
     {
-        if(!(ab = get_archtab(argv[3])))
+        if (!(at = get_archtab( argv[3] )))
         {
+            // "Archmode %s is invalid"
             WRMSG( HHC00895, "E", argv[3] );
             return 0;
         }
-        als = arch2als[ab->archmode];
+        als = arch2als[ at->archmode ];
     }
 
-    if((tb = get_factab(argv[2])))
-        set_facility(tb, enable, als );
+    if ((ft = get_factab( argv[2] )))
+    {
+        set_facility( ft, enable, als );
+    }
+    else if (1
+        && strncasecmp( "bit", argv[2], 3 ) == 0
+        && isdigit( *( argv[2] + 3))
+        && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
+        && bitno >= 0
+        && bitno <= STFL_HMAX
+    )
+    {
+        force_facbit( bitno, enable, als );
+    }
     else
-    if(!strncasecmp("bit",argv[2],3)
-      && isdigit(*(argv[2]+3))
-      && sscanf(argv[2]+3, "%d%c", &bitno, &c ) == 1
-      && bitno >= 0 && bitno <= STFL_HMAX)
-        force_facbit(bitno,enable,als);
-    else
+    {
+        // "Facility(%s) does not exist"
         WRMSG( HHC00893, "E", argv[2] );
+    }
 
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
-/* archlvl command - set architecture level set                      */
+/*          archlvl_cmd  --  set architecture level set              */
 /*-------------------------------------------------------------------*/
-/*
-
-  usage:
-
-        archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3
-
-                enable|disable <facility> [s/370|esa/390|z/arch]
-
-                query <facility>|all
-
-*/
-
-
-int archlvl_cmd(int argc, char *argv[], char *cmdline)
+/*                                                                   */
+/* Usage:                                                            */
+/*                                                                   */
+/*   archlvl  s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3   */
+/*            enable|disable <facility> [s/370|esa/390|z/arch]       */
+/*            query <facility>|all                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int archlvl_cmd( int argc, char* argv[], char* cmdline )
 {
-    int     storage_reset = 0;
+    BYTE  storage_reset  = FALSE;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     if (argc < 2)
     {
-        WRMSG( HHC02203, "I", "archmode", get_arch_mode_string(NULL) );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", "archmode", get_arch_mode_string( NULL ));
         return 0;
     }
 
-    if ( argc > 4 )
+    if (argc > 4)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if( CMD(argv[1],query,1) )
+    if (CMD( argv[1], query, 1 ))
     {
-    FACTAB *tb;
-    int     fcnt = 0;
+        FACTAB*  tb;
+        int      fcnt  = 0;
+        int      fbyte, fbit;
 
-        if ( argc > 3 )
+        if (argc > 3)
         {
+            // "Invalid command usage. Type 'help %s' for assistance."
             WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
 
-        for(tb = factab; tb->name; tb++)
+        for (tb = factab; tb->name; tb++)
         {
-        int fbyte, fbit;
-
             fbyte = tb->bitno / 8;
             fbit = 0x80 >> (tb->bitno % 8);
 
-            if( argc < 3 || CMD(argv[2],all,3) || !strcasecmp( argv[2], tb->name ) )
+            if (0
+                || argc < 3
+                || CMD( argv[2], all, 3 )
+                || strcasecmp( argv[2], tb->name ) == 0
+            )
             {
                 fcnt++;
+
+                // "Facility( %-20s ) %sabled"
                 WRMSG( HHC00890, "I", tb->name,
-                       sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
-                        ? "En" : "Dis" );
+                    sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
+                    "En" : "Dis" );
             }
         }
 
         if (!fcnt)
         {
-        int     bitno;
-        char    c;
+            int   bitno;
+            char  c;
 
-            if(!strncasecmp("bit",argv[2],3)
-              && isdigit(*(argv[2]+3))
-              && sscanf(argv[2]+3,"%d%c",&bitno, &c) == 1
-              && bitno >= 0 && bitno <= STFL_HMAX)
+            if (1
+                && strncasecmp( "bit", argv[2], 3 ) == 0
+                && isdigit( *( argv[2] + 3 ))
+                && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
+                && bitno >= 0
+                && bitno <= STFL_HMAX
+            )
             {
-            int fbyte, fbit;
-
                 fbyte = bitno / 8;
-                fbit = 0x80 >> (bitno % 8);
-                WRMSG( HHC00890, "I", get_facname(bitno),
-                       sysblk.facility_list[sysblk.arch_mode][fbyte] & fbit
-                        ? "En" : "Dis" );
+                fbit  = 0x80 >> (bitno % 8);
+
+                // "Facility( %-20s ) %sabled"
+                WRMSG( HHC00890, "I", get_facname( bitno ),
+                    sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
+                    "En" : "Dis" );
             }
             else
             {
-                logmsg("HHC00891 Facility %s not found\n",argv[2]);
+                // "Facility(%s) does not exist"
+                WRMSG( HHC00893, "E", argv[2] );
                 return -1;
             }
         }
@@ -731,38 +810,48 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
         return HERRCPUONL;
     }
 
-    if(!set_archlvl(argv[1]))
-        if(update_archlvl(argc, argv))
+    if (!set_archlvl( argv[1] ))
+    {
+        if (update_archlvl( argc, argv ) != 0)
         {
+            // "Invalid argument %s%s"
             WRMSG( HHC02205, "E", argv[1], "" );
             return -1;
         }
+    }
 
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
-    if (sysblk.arch_mode > ARCH_370 &&
-        sysblk.mainsize  > 0        &&
-        sysblk.mainsize  < (1 << SHIFT_MEBIBYTE))
+    if (1
+        && sysblk.arch_mode > ARCH_370
+        && sysblk.mainsize  > 0
+        && sysblk.mainsize  < (1 << SHIFT_MEBIBYTE)
+    )
     {
-        /* Default main storage to 1M and perform initial system
-           reset */
-        storage_reset = (configure_storage(1 << (SHIFT_MEBIBYTE - 12)) == 0);
+        /* Default main storage to 1M and do initial system reset */
+        storage_reset = (configure_storage( 1 << (SHIFT_MEBIBYTE - 12) ) == 0);
     }
     else
     {
-        OBTAIN_INTLOCK(NULL);
-        system_reset (sysblk.pcpu, 0, sysblk.arch_mode);
-        RELEASE_INTLOCK(NULL);
+        OBTAIN_INTLOCK( NULL );
+        system_reset( sysblk.pcpu, 0, sysblk.arch_mode );
+        RELEASE_INTLOCK( NULL );
     }
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
-        if ( MLVL(VERBOSE) )
+        if (MLVL( VERBOSE ))
         {
-            WRMSG( HHC02204, "I", "archmode", get_arch_mode_string(NULL) );
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", "archmode", get_arch_mode_string( NULL ));
+
             if (storage_reset)
-                WRMSG( HHC17003, "I", "MAIN", fmt_memsize_KB((U64)sysblk.mainsize >> SHIFT_KIBIBYTE),
-                                 "main", sysblk.mainstor_locked ? "":"not " );
+            {
+                // "%-8s storage is %s (%ssize); storage is %slocked"
+                WRMSG( HHC17003, "I", "MAIN",
+                    fmt_memsize_KB( (U64) sysblk.mainsize >> SHIFT_KIBIBYTE ),
+                    "main", sysblk.mainstor_locked ? "":"not " );
+            }
         }
     }
 

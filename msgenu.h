@@ -666,6 +666,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00844 "%1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
 #define HHC00845 "External interrupt: block I/O %s"
 #define HHC00846 "External interrupt: service signal %8.8X"
+//efine HHC00847 - HHC00849 (available)
 
 #define HHC00850 "Processor %s%02X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)"
 #define HHC00851 "Processor %s%02X: interrupt %spending"
@@ -696,6 +697,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00876 "ioq lock %sheld"
 #define HHC00877 "Central processors are capped at %u MIPS"
 #define HHC00878 "No central processors found, capping disabled"
+//efine HHC00879 (available)
 
 #define HHC00880 "device %1d:%04X: status %s"
 #define HHC00881 "I/O interrupt queue:%s"
@@ -704,16 +706,18 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00884 "Channel Report queue: (empty)"
 #define HHC00885 "Channel Report queue:"
 #define HHC00886 "CRW 0x%8.8X: %s"
+//efine HHC00887 - HHC00889 (available)
 
 #define HHC00890 "Facility( %-20s ) %sabled"
-#define HHC00891 "Facility name not found"
+//efine HHC00891 (available)
 #define HHC00892 "Facility name not specified"
 #define HHC00893 "Facility(%s) does not exist"
+//efine HHC00894 (available)
 #define HHC00895 "Archmode %s is invalid"
 #define HHC00896 "Facility(%s) not supported for specfied archmode"
-#define HHC00897 "Facility(%s) is mandatory for archmode%s %s"
+//efine HHC00897 (available)
 #define HHC00898 "Facility(%s) %sabled for archmode %s"
-#define HHC00899 "Facility(%s) not supported for archmode %s"
+//efine HHC00899 (available)
 
 // reserve 009xx for ctc related messages
 /* ctcadpt.c, ctc_ctci.c, ctc_lcs.c, ctc_ptp.c, qeth.c */
