@@ -145,7 +145,7 @@ int cpu;
     if (mainsize)
     {
 #if 0
-        if (mainsize <= (16 << (SHIFT_MEGABYTE - 12)))
+        if (mainsize <= (16 << (SHIFT_MEGABYTE - SHIFT_4K)))
             storsize = MAX((sysblk.arch_mode <= ARCH_390) ? 1 : 2,
                            mainsize);
             /* The side effect of this for values less than 256 is to establish
@@ -182,7 +182,7 @@ int cpu;
             break;
     }
     skeysize += 4095;
-    skeysize >>= 12;
+    skeysize >>= SHIFT_4K;
 
     /* Add Storage key array size */
     storsize += skeysize;
@@ -247,12 +247,12 @@ int cpu;
 
     /* Mainstor is located beyond the storage key array on a page boundary */
     /* Isn't the storage key array already at a page boundary?  jph  */
-    mainstor = (BYTE*)((U64)(storkeys + (skeysize << 12)));
+    mainstor = (BYTE*)((U64)(storkeys + (skeysize << SHIFT_4K)));
 
     /* Set in sysblk */
     sysblk.storkeys = storkeys;
     sysblk.mainstor = mainstor;
-    sysblk.mainsize = mainsize << 12;
+    sysblk.mainsize = mainsize << SHIFT_4K;
 
     /*
      *  Free prior storage in use
