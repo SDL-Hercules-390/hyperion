@@ -495,99 +495,74 @@ static void force_facbit( int bitno, BYTE enable, BYTE mode )
 }
 
 /*-------------------------------------------------------------------*/
+/*                       do_set_facility                             */
+/*-------------------------------------------------------------------*/
+static void do_set_facility( FACTAB* ft, BYTE enable, BYTE mode,
+                             BYTE archmode, int archnum, const char* archname )
+{
+    const char*  endis  = enable ? "en" : "dis";
+
+    int  fbyte  =         (ft->bitno / 8);
+    int  fbit   = 0x80 >> (ft->bitno % 8);
+
+    // If Hercules was not built with support for this architecture,
+    // or the facility doesn't apply for this archmode, just return.
+
+    if (archnum < 0 || !(ft->supported & archmode & mode))
+        return;
+
+    // Try to do what they want
+
+    if (enable)
+    {
+        // If already enabled, nothing to do; return.
+        if ((sysblk.facility_list[ archnum ][fbyte] & fbit))
+            return;
+
+        sysblk.facility_list[ archnum][fbyte ] |= fbit;
+    }
+    else // disable
+    {
+        // Ignore attempts to disable a mandatory facility
+        if (ft->fixed & archmode)
+            return;
+
+        // If already disabled, nothing to do; return.
+        if (!(sysblk.facility_list[ archnum ][fbyte] & fbit))
+            return;
+
+        sysblk.facility_list[ archnum ][fbyte] &= ~fbit;
+    }
+
+    // Report what we did
+
+    if (MLVL( VERBOSE ))
+    {
+        // "Facility(%s) %sabled for archmode %s"
+        WRMSG( HHC00898, "I", ft->name, endis, archname );
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                        set_facility                     (boolean) */
 /*-------------------------------------------------------------------*/
-static BYTE set_facility( FACTAB* facility, BYTE enable, BYTE mode )
+static BYTE set_facility( FACTAB* ft, BYTE enable, BYTE mode )
 {
-    int fbyte, fbit;
-
-    fbyte = facility->bitno / 8;
-    fbit  = 0x80 >> (facility->bitno % 8);
-
-    if (!(facility->supported & mode))
+    if (!(ft->supported & mode))
     {
         // "Facility(%s) not supported for specfied archmode"
-        WRMSG( HHC00896, "E", facility->name );
+        WRMSG( HHC00896, "E", ft->name );
         return FALSE;
     }
 
 #if defined( _370 )
-    if (facility->supported & S370 & mode)
-    {
-        if (enable)
-        {
-            if (!(sysblk.facility_list[ ARCH_370 ][fbyte] & fbit))
-                sysblk.facility_list[ ARCH_370][fbyte ]  |= fbit;
-
-            if (MLVL( VERBOSE ))
-                // "Facility(%s) %sabled for archmode %s"
-                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_370_NAME );
-        }
-        else
-        {
-            if (!(facility->fixed & S370))
-            {
-                if (sysblk.facility_list[ ARCH_370 ][fbyte] &   fbit)
-                    sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
-
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_370_NAME );
-            }
-        }
-    }
+    do_set_facility( ft, enable, mode, S370,   ARCH_370, _ARCH_370_NAME );
 #endif
 #if defined( _390 )
-    if (facility->supported & ESA390 & mode)
-    {
-        if (enable)
-        {
-            if (!(sysblk.facility_list[ ARCH_390 ][fbyte] & fbit))
-                sysblk.facility_list[ ARCH_390 ][fbyte]  |= fbit;
-
-            if (MLVL( VERBOSE ))
-                // "Facility(%s) %sabled for archmode %s"
-                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_390_NAME );
-        }
-        else
-        {
-            if (!(facility->fixed & ESA390))
-            {
-                if (sysblk.facility_list[ ARCH_390 ][fbyte] &   fbit)
-                    sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
-            }
-
-            if (MLVL( VERBOSE ))
-                // "Facility(%s) %sabled for archmode %s"
-                WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_390_NAME );
-        }
-    }
+    do_set_facility( ft, enable, mode, ESA390, ARCH_390, _ARCH_390_NAME );
 #endif
 #if defined( _900 )
-    if (facility->supported & ZARCH & mode)
-    {
-        if (enable)
-        {
-            if (!(sysblk.facility_list[ ARCH_900 ][fbyte] & fbit))
-                sysblk.facility_list[ ARCH_900 ][fbyte]  |= fbit;
-
-            if (MLVL( VERBOSE ))
-                // "Facility(%s) %sabled for archmode %s"
-                WRMSG( HHC00898, "I", facility->name, "en", _ARCH_900_NAME );
-        }
-        else
-        {
-            if (!(facility->fixed & ZARCH))
-            {
-                if (sysblk.facility_list[ ARCH_900 ][fbyte] &   fbit)
-                    sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
-
-                if (MLVL( VERBOSE ))
-                    // "Facility(%s) %sabled for archmode %s"
-                    WRMSG( HHC00898, "I", facility->name, "dis", _ARCH_900_NAME );
-            }
-        }
-    }
+    do_set_facility( ft, enable, mode, ZARCH,  ARCH_900, _ARCH_900_NAME );
 #endif
 
     return TRUE;
