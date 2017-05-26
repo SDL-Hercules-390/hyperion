@@ -6,7 +6,9 @@
 /* at compilation time for S/370 mode                                */
 /*-------------------------------------------------------------------*/
 
-#if defined(OPTION_370_MODE)
+#if !defined( OPTION_370_MODE )
+#define _ARCH_370_NAME ""
+#else
 #define _ARCH_370_NAME "S/370"
 
 /* This file MUST NOT contain #undef statements */

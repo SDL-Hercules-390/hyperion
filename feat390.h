@@ -7,7 +7,9 @@
 /*-------------------------------------------------------------------*/
 
 /* This file MUST NOT contain #undef statements */
-#if defined(OPTION_390_MODE)
+#if !defined( OPTION_390_MODE )
+#define _ARCH_390_NAME ""
+#else
 #define _ARCH_390_NAME "ESA/390"
 
 #define FEATURE_4K_STORAGE_KEYS

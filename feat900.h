@@ -6,7 +6,9 @@
 /* at compilation time for ESAME (z/Architecture) mode               */
 /*-------------------------------------------------------------------*/
 
-#if defined(OPTION_900_MODE)
+#if !defined( OPTION_900_MODE )
+#define _ARCH_900_NAME ""
+#else
 #define _ARCH_900_NAME "z/Arch" /* also: "ESAME" */
 
 /* This file MUST NOT contain #undef statements */
