@@ -240,6 +240,9 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 int traceopt_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -1609,6 +1612,8 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     char buf[128];
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc > 1 && CMD(argv[1],clear,5) )
     {

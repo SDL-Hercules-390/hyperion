@@ -1011,6 +1011,8 @@ int http_command(int argc, char *argv[])
 {
     int rc = 0;
 
+    strupper( argv[0], argv[0] );
+
     if ( !http_struct_init )
     {
         memset(&http_serv,0,sizeof(HTTP_SERV));

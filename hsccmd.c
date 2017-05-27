@@ -332,6 +332,8 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
     char buf[128];
 
+    strupper( argv[0], argv[0] );
+
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -655,6 +657,8 @@ int quitmout_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 2)
     {
         int     tm = 0;
@@ -779,6 +783,8 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
 {
     int rc = 0;
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc < 2 )
     {
@@ -1196,6 +1202,9 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
+    strupper( argv[0], argv[0] );
+
 #ifdef EXTERNALGUI
     if (extgui)
     {
@@ -1215,6 +1224,9 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 int iodelay_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
         WRMSG( HHC01455, "E", argv[0] );
     else if ( argc == 2 )
@@ -1248,6 +1260,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 int autoinit_cmd( int argc, char *argv[], char *cmdline )
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc == 2 )
     {
@@ -1430,6 +1444,8 @@ char pathname[MAX_PATH];
 int rc;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if (argc < 2)
     {
@@ -1810,9 +1826,11 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
     BYTE     mountreq, unmountreq;
     char*    label_type;
     char     buf[512];
-    // Unused..
-    // int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
-    UNREFERENCED(cmdline);
+
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -2008,6 +2026,8 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     // Format:  "ctc  debug  { on | off }  [ <devnum> | ALL ]"
 
     if (0
@@ -2147,6 +2167,8 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
     DEVBLK*  pDEVBLK;
 
     UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
     // Format:  "ptp  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
     // Format:  "ptp  debug  off [ [ <devnum>|ALL ] ]"
@@ -2328,6 +2350,8 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     // Format:  "qeth  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
     // Format:  "qeth  debug  off [ [ <devnum>|ALL ] ]"
 
@@ -2500,6 +2524,8 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if (argc < 2)
     {
         WRMSG(HHC02202, "E", argv[0] );
@@ -2601,6 +2627,8 @@ int sclproot_cmd(int argc, char *argv[], char *cmdline)
 char *basedir;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if (argc > 1)
         if ( CMD(argv[1],none,4) )
@@ -2817,6 +2845,8 @@ BYTE    c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     /* Parse year offset operand */
     if ( argc == 2 )
     {
@@ -2857,6 +2887,8 @@ S32 tzoffset;
 BYTE c;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Parse timezone offset operand */
     if ( argc == 2 )
@@ -3338,6 +3370,8 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 1 )
     {
         char msgbuf[8];
@@ -3386,6 +3420,8 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 1 )
     {
         char msgbuf[8];
@@ -3429,6 +3465,8 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 1 )
     {
         char msgbuf[8];
@@ -3470,6 +3508,8 @@ S32 todprio;
 BYTE c;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc == 1 )
     {
@@ -3514,6 +3554,8 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     /* Parse priority value */
     if ( argc == 2 )
     {
@@ -3554,6 +3596,8 @@ U16 numvec;
 BYTE c;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Parse maximum number of Vector processors operand */
     if ( argc == 2 )
@@ -3598,6 +3642,8 @@ int numcpu_cmd( int argc, char* argv[], char* cmdline )
     BYTE  c;
 
     UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
     /* Ensure only two arguments passed */
     if (argc > 2)
@@ -3678,6 +3724,8 @@ int maxcpu_cmd( int argc, char* argv[], char* cmdline )
     BYTE  c;
 
     UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
     /* Ensure only two arguments passed */
     if (argc > 2)
@@ -3935,6 +3983,9 @@ int http_cmd(int argc, char *argv[], char *cmdline)
 int toddrag_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -3978,6 +4029,9 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
     char msgbuf[16];
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -4037,8 +4091,9 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int pantitle_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc > 2 )
     {
@@ -4139,6 +4194,8 @@ int diag8_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     if (argc > 3)
     {
         // "Invalid number of arguments for %s"
@@ -4209,6 +4266,8 @@ int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     if (argc > 1)
     {
         BYTE shcmdopt = sysblk.shcmdopt;
@@ -4260,8 +4319,9 @@ int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Parse Legacy SenseID option */
     if ( argc > 2 )
@@ -4426,6 +4486,8 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     /* Update model name if operand is specified */
 
     if (argc > 1)
@@ -4515,8 +4577,9 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Update plant name if operand is specified */
     if ( argc > 2 )
@@ -4564,8 +4627,9 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Update manufacturer name if operand is specified */
     if ( argc > 2 )
@@ -4659,8 +4723,9 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int lparname_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc > 2 )
     {
@@ -4695,6 +4760,8 @@ U16     lparnum;
 BYTE    c;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc > 2 )
     {
@@ -4827,6 +4894,8 @@ BYTE    c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     /* Update CPU version if operand is specified */
     if (argc == 2)
     {
@@ -4878,6 +4947,8 @@ U32     cpumodel;
 BYTE    c;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Update CPU model if operand is specified */
     if (argc == 2)
@@ -4932,6 +5003,8 @@ BYTE    c;
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     /* Update CPU serial if operand is specified */
     if (argc == 2)
     {
@@ -4985,6 +5058,8 @@ int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
 u_int     cpuidfmt;
 
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Update CPU ID format if operand is specified */
     if (argc > 1 && argv[1] != NULL)
@@ -5112,8 +5187,9 @@ u_int     cpuidfmt;
 /*-------------------------------------------------------------------*/
 int loadparm_cmd(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     /* Update IPL parameter if operand is specified */
     if ( argc > 2 )
@@ -5747,6 +5823,8 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -6128,6 +6206,9 @@ int     rc;
 int mounted_tape_reinit_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
+
     if ( argc > 2 )
     {
         WRMSG( HHC02299, "E", argv[0] );
@@ -7072,6 +7153,8 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 1 )
     {
         if ( sysblk.cmdsep == NULL )
@@ -7170,6 +7253,8 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
+    strupper( argv[0], argv[0] );
+
     if ( argc == 2 )
     {
         if ( CMD(argv[1],on,2)  )
@@ -7202,6 +7287,8 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 int scpimply_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
+
+    strupper( argv[0], argv[0] );
 
     if ( argc == 2 )
     {
@@ -7350,6 +7437,8 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
     char msgbuf[64];
 
     UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
     // EVM      ...     (deprecated)
     // ECPS:VM  ...     (deprecated)
@@ -7565,6 +7654,8 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
     int rc, sfd, idle, intv, cnt;
 
     UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
   #if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_PARTIAL_KEEPALIVE )
 

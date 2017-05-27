@@ -636,6 +636,8 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
     int rc = 0;
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     if (argc == 2)  /* Define a new value? */
     {
         if (CMD( argv[1], default, 7 ) || CMD( argv[1], reset, 5 ))
@@ -1067,6 +1069,8 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
     const char* ptr;
     char* nxt;
     char buf[8];
+
+    strupper( argv[0], argv[0] );
 
     UNREFERENCED( cmdline );
 

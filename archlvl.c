@@ -745,6 +745,8 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     // Display current value
 
     if (argc < 2)
