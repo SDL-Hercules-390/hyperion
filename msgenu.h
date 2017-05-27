@@ -2248,6 +2248,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "Specified value is invalid or outside of range %d to %d"
 #define HHC17015 "%s support not included in this engine build"
+//efine HHC17016 - HHC17099 (available)
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
 #define HHC17199 "%.4s %s"

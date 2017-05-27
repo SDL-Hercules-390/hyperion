@@ -1054,7 +1054,7 @@ int http_command(int argc, char *argv[])
         http_root();
 
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "httproot": "root",
+            WRMSG(HHC02204, "I", http_serv.httpstmtold ? "HTTPROOT": "ROOT",
                         http_serv.httproot ? http_serv.httproot : "<not specified>");
 
         if ( http_serv.httpstmtold )
@@ -1131,7 +1131,7 @@ int http_command(int argc, char *argv[])
                 else
                     MSGBUF( msgbuf, "port=%hu noauth", http_serv.httpport );
 
-                WRMSG( HHC02204, "I", http_serv.httpstmtold ? "httpport":"port", msgbuf );
+                WRMSG( HHC02204, "I", http_serv.httpstmtold ? "HTTPPORT" : "PORT", msgbuf );
 
                 if ( http_serv.httpstmtold )
                     http_startup(TRUE);

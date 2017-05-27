@@ -2065,7 +2065,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        WRMSG(HHC02204, "I", "CTC debug", onoff ? "on ALL" : "off ALL");
+        WRMSG(HHC02204, "I", "CTC DEBUG", onoff ? "on ALL" : "off ALL");
     }
     else
     {
@@ -2122,7 +2122,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                   onoff ? "on" : "off",
                   CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
                   lcss, devnum );
-          WRMSG(HHC02204, "I", "CTC debug", buf);
+          WRMSG(HHC02204, "I", "CTC DEBUG", buf);
         }
     }
 
@@ -2262,7 +2262,7 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
             }
 
             // HHC02204 "%-14s set to %s"
-            WRMSG(HHC02204, "I", "PTP debug", onoff ? "on ALL" : "off ALL");
+            WRMSG(HHC02204, "I", "PTP DEBUG", onoff ? "on ALL" : "off ALL");
         }
         else
         {
@@ -2297,7 +2297,7 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
                     "PTP",
                     lcss, devnum );
             // HHC02204 "%-14s set to %s"
-            WRMSG(HHC02204, "I", "PTP debug", buf);
+            WRMSG(HHC02204, "I", "PTP DEBUG", buf);
             }
         }
 
@@ -2440,7 +2440,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
 
             // HHC02204 "%-14s set to %s"
-            WRMSG(HHC02204, "I", "QETH debug", onoff ? "on ALL" : "off ALL");
+            WRMSG(HHC02204, "I", "QETH DEBUG", onoff ? "on ALL" : "off ALL");
         }
         else
         {
@@ -2473,7 +2473,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                     "QETH",
                     lcss, devnum );
             // HHC02204 "%-14s set to %s"
-            WRMSG(HHC02204, "I", "QETH debug", buf);
+            WRMSG(HHC02204, "I", "QETH DEBUG", buf);
             }
         }
 
@@ -2558,7 +2558,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(1); // 1=ON
             rc = 0;
-            WRMSG(HHC02204, "I", "TT32 debug", "enabled");
+            WRMSG(HHC02204, "I", "TT32 DEBUG", "enabled");
         }
         else
         {
@@ -2572,7 +2572,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(0); // 0=OFF
             rc = 0;
-            WRMSG(HHC02204, "I", "TT32 debug", "disabled");
+            WRMSG(HHC02204, "I", "TT32 DEBUG", "disabled");
         }
         else
         {
@@ -4496,7 +4496,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
             char msgbuf[128];
             MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
                             str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );
-            WRMSG( HHC02204, "I", "model", msgbuf );
+            WRMSG( HHC02204, "I", "MODEL", msgbuf );
         }
     }
     else
