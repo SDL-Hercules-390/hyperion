@@ -53,7 +53,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CPUMODEL">CPUMODEL</a>   3090
     <a href="#CPUVERID">CPUVERID</a>   FD
     <a href="#LPARNAME">LPARNAME</a>   HERCULES
-    <a href="#LPARNUM">LPARNUM</a>    21
+    <a href="#LPARNUM">LPARNUM</a>    01
     <a href="#CPUIDFMT">CPUIDFMT</a>   1
     <a href="#MODEL">MODEL</a>      EMULATOR
     <a href="#PLANT">PLANT</a>      ZZ
@@ -189,9 +189,10 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="system_parameters"></a>
 <h3>System parameters</h3>
 <p>
-    Except for the ARCHLVL statements, system parameter statements may appear
-    in any order but must precede any device statements. Each system parameter
-    must be on a separate line. The following system parameters may be specified:
+    Except for the ARCHLVL and LPARNUM statements, system parameter statements
+    may appear in any order but must precede any device statements. Each system
+    parameter must be on a separate line. The following system parameters may be
+    specified:
 
 <dl>
 
@@ -215,13 +216,20 @@ a real System/390.  The configuration file is an ASCII text file.
     The <code>z/Arch</code> mode is equivalent to z/Architecture mode at Architecture Level 3.
     The synonyms ALS0, ALS1, ALS2 and ALS3 may be used to specify S/370, ESA/390, ESAME or Z/Arch respectively.
     <p>
-    Note: This statement used to be called <code>ARCHMODE</code> in previous versions of Hercules
+    When <code>ARCHLVL S/370</code> is set, the current
+    <code><a href="#LPARNUM">LPARNUM</a></code> and
+    <code><a href="#CPUIDFMT">CPUIDFMT</a></code> settings will be
+    <i>automatically changed</i> to <code>BASIC</code>. When <code>ARCHLVL z/Arch</code>
+    is set, <code>LPARNUM</code> and <code>CPUIDFMT</code> will be reset
+    back to <code>1</code> and <code>0</code> respectively (if needed). Refer to
+    the <i>"Limited automatic LPARNUM updating when setting certain architecture modes"</i>
+    section of the <a href="hercrnot.html">Release Notes</a> document for more information.
+    <p>
+    <b>Note:</b> This statement used to be called <code>ARCHMODE</code> in previous versions of Hercules
     but the use of <code>ARCHMODE</code> has been deprecated in favor of the new <code>ARCHLVL</code>
     statement. Existing <code>ARCHMODE</code> statements should be changed to <code>ARCHLVL</code>
-    instead.
-    <p>
-    For the time being however, <code>ARCHMODE</code> is still accepted and is treated as
-    simply a synonym for the <code>ARCHLVL</code> statement.
+    instead. For the time being however, <code>ARCHMODE</code> is still accepted
+    and is treated as simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
 
 <a name="ARCHLVL_FACILITY"></a>
@@ -585,7 +593,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUIDFMT"></a>
-<dt><code>CPUIDFMT &nbsp; 0 &#124; 1</code>
+<dt><code>CPUIDFMT &nbsp; 0 &#124; 1 &#124; BASIC</code>
 <dd><p>
     Specifies the format of the CPU ID the STIDP instruction should store.
     Refer to the <a href="#LPARNUM">LPARNUM</a> statement for more information.
@@ -963,6 +971,17 @@ a real System/390.  The configuration file is an ASCII text file.
     is specified, then STIDP stores a format-1 CPU ID. For LPARNUM
     10 the current <a href="#CPUIDFMT">CPUIDFMT</a> is not changed.
     If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
+    <p>
+    The LPARNUM setting will be <i>automatically changed</i>
+    if needed to <code>BASIC</code> when
+    <code><a href="#ARCHLVL">ARCHLVL S/370</a></code> is set (which
+    also changes the <code><a href="#CPUIDFMT">CPUIDFMT</a></code>
+    setting to <code>BASIC</code> too), and is automatically set
+    to <code>LPARNUM 1</code> (and <code>CPUIDFMT 0</code>) if needed
+    when <code><a href="#ARCHLVL">ARCHLVL z/Arch</a></code> is set.
+    Refer to the <i>"Limited automatic LPARNUM updating when setting
+    certain architecture modes"</i> section of the
+    <a href="hercrnot.html">Release Notes</a> document for more information.
     <p>
     The default is LPARNUM 1 with a format-0 CPU ID.
     <p>

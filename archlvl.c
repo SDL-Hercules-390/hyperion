@@ -750,7 +750,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     if (argc < 2)
     {
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", "archmode", get_arch_mode_string( NULL ));
+        WRMSG( HHC02203, "I", "ARCHLVL", get_arch_mode_string( NULL ));
         return 0;
     }
 
@@ -870,7 +870,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     if (argc == 2 && MLVL( VERBOSE ))
     {
         // "%-14s set to %s"
-        WRMSG( HHC02204, "I", "archmode", get_arch_mode_string( NULL ));
+        WRMSG( HHC02204, "I", "ARCHLVL", get_arch_mode_string( NULL ));
 
         if (storage_reset)
         {
@@ -879,6 +879,27 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
                 fmt_memsize_KB( (U64) sysblk.mainsize >> SHIFT_KIBIBYTE ),
                 "main", sysblk.mainstor_locked ? "":"not " );
         }
+    }
+
+    /* If S/370 archmode was just set, force LPARNUM to BASIC.
+       Else if LPARNUM is BASIC, change it back to LPARNUM 1
+       if archmode is z/Arch. Else (ARCH_390) leave it alone.
+       The user can override this automatic LPARNUM switching
+       via their own subsequent LPARNUM stmt/cmd if such auto-
+       matic behavior is not desired.
+    */
+    if (1
+        && ARCH_370 == sysblk.arch_mode
+        && om_basic != sysblk.operation_mode
+    )
+        panel_command( "-LPARNUM BASIC" );
+    else if (1
+        && ARCH_900 == sysblk.arch_mode
+        && om_basic == sysblk.operation_mode
+    )
+    {
+        panel_command( "-LPARNUM 1" );
+        panel_command( "-CPUIDFMT 0" );
     }
 
     return 0;

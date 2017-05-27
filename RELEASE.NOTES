@@ -64,11 +64,46 @@
   ARCHLVL ENABLE ASN_LX_REUSE statement in your configuration file.
   Otherwise the ASN and LX Reuse Facility would not be enabled.
 
+  With the introduction of limited automatic LPAR-mode/BASIC-mode switching
+  (see next item below), LPARNUM statements should follow ARCHLVL statements
+  if LPAR mode is truly desired for ARCHLVL S/370 (which is usually not the
+  case).
+
   The ARCHLVL statement is currently the only system parameter where the
   sequence may matter. The order of all other system parameters does not
   currently matter. This may change in the future however, so be sure to
   always carefully read through the RELEASE NOTES (this document) with
   each new release of Hercules.
+
+
+* Limited automatic LPARNUM updating when setting certain architecture modes
+
+  When 'ARCHLVL S/370' is set, LPARNUM is now automatically changed to 'BASIC'
+  (which also changes CPUIDFMT to BASIC as well), and when 'ARCHLVL z/Arch'
+  is set, it is then changed back to the default LPARNUM 1 again (which also
+  automatically changes the CPUIDFMT back to 0 as well), but only when needed.
+
+  That is to say, the automatic switching to and from LPARNUM BASIC (and
+  CPUIDFMT BASIC) and LPARNUM 1 (and CPUIDFMT 0) only occurs when needed
+  (and only when switching between S/370 and z/Arch).  If LPARNUM (and CPUIDFMT)
+  are already set to the expected values they will not be changed.  LPARNUM
+  and CPUIDFMT are also never changed from their current values however when
+  'ARCHLVL ESA/390' is set.
+
+  This new behavior was introduced to eliminate the "surprise" factor that
+  would otherwise occur when, if the LPARNUM remained set to 1 (or some other
+  number), not doing so causes the STIDP (Store CPU ID) instruction to be
+  stored in an otherwise unexpected format.  In most all situations when a
+  Hercules user sets 'ARCHLVL S/370', they are truly expecting the LPARNUM
+  and CPUIDFMT values to be set to BASIC, such that the STIDP instruction
+  then stores the CPU ID in the expected format.
+
+  For the unusual case where you actually do want to run a System/370 Operating
+  System within an LPAR, you will need to manually re-set your 'LPARNUM' and
+  'CPUIDFMT' values back to their numeric values after setting 'ARCHLVL S/370'.
+  That is to say, one should always follow your 'ARCHLVL S/370' statement with
+  a "LPARNUM n|nn" statement (and CPUIDFMT statement too if needed) if LPAR mode
+  for S/370 is truly desired.
 
 
 * More architecturally compliant Channel Subsystem implementation

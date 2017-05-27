@@ -81,14 +81,62 @@ Hercules: Release Notes
     not be enabled.
   </p>
   <p>
-    The <code>ARCHLVL</code> statement is currently the only system parameter
-    whose sequence may matter. The order of all other system parameters does
-    not currently matter. This may change in the future however, so be sure
-    to always carefully read through the RELEASE NOTES (this document) with
-    each new release of Hercules.
+    With the introduction of limited automatic LPAR-mode/BASIC-mode switching
+    (see next item below), <code><a href="hercconf.html#LPARNUM">LPARNUM</a></code>
+    statements should follow <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
+    statements if LPAR mode is truly desired for <code>ARCHLVL S/370</code>
+    (which is usually not the case).
+  </p>
+  <p>
+    The <code>ARCHLVL</code> and <code>LPARNUM</code> statements are currently
+    the only system parameters whose sequence may matter. The order of all other
+    system parameters should not currently matter. This may change in the future
+    however, so be sure to always carefully read through the RELEASE NOTES (this
+    document) with each new update to Hercules.
   </p>
 
 
+  <dt>Limited automatic LPARNUM updating when setting certain architecture modes
+  <dd>
+  <p>
+    When <code><a href="hercconf.html#ARCHLVL">ARCHLVL S/370</a></code> is set,
+    <code><a href="hercconf.html#LPARNUM">LPARNUM</a></code> is now automatically
+    changed to <code>BASIC</code> (which also changes
+    <a href="hercconf.html#CPUIDFMT">CPUIDFMT</a> to <code>BASIC</code> as well),
+    and when <code>ARCHLVL z/Arch</code> is set, it is then changed back to the
+    default <code>LPARNUM 1</code> again (which also automatically changes the
+    <code>CPUIDFMT</code> back to <code>0</code> as well), but only when needed.
+  </p>
+  <p>
+    That is to say, the automatic switching to and from <code>LPARNUM BASIC</code>
+    (and <code>CPUIDFMT BASIC</code>) and <code>LPARNUM 1</code>
+    (and <code>CPUIDFMT 0</code>) only occurs when needed (and only when switching
+    between S/370 and z/Arch). If <code>LPARNUM</code> (and
+    <code>CPUIDFMT</code>) are already set to the expected values they will not
+    be changed. When <code>ARCHLVL ESA/390</code> is set however, <code>LPARNUM</code>
+    and <code>CPUIDFMT</code> are never changed from their current values.
+  </p>
+  <p>
+    This new behavior was introduced to eliminate the "surprise" factor that would
+    otherwise occur when, if the <code>LPARNUM</code> remained set to <code>1</code>
+    (or some other number), not doing so causes the STIDP (Store CPU ID) instruction
+    to be stored in an otherwise unexpected format. In most all situations when
+    a Hercules user sets <code>ARCHLVL S/370</code>, they are truly expecting the
+    <code>LPARNUM</code> and <code>CPUIDFMT</code> to be set to <code>BASIC</code>
+    such that the STIDP instruction then stores the CPU ID in the expected format.
+  </p>
+  <p>
+    For the unusual case where users actually <i>do</i> want to run a System/370
+    Operating System within an LPAR, you will need to manually re-set your
+    <code>LPARNUM</code> and <code>CPUIDFMT</code> values back to their numeric
+    values <i><u>after</u></i> setting <code>ARCHLVL S/370</code>. That is to say,
+    one should always follow their <code>ARCHLVL S/370</code> statement with a
+    <code>LPARNUM n&#124;nn</code> statement (and <code>CPUIDFMT</code> statement
+    too if needed) if LPAR mode for S/370 is truly desired.
+  </p>
+
+
+  </p>
   <dt>More architecturally compliant Channel Subsystem implementation
   <dd>
   <p>
@@ -105,6 +153,7 @@ Hercules: Release Notes
   </p>
   <p>
     Pay <i><u>particular</u></i> attention to your
+    <a href="hercconf.html#ARCHLVL">ARCHLVL</a>,
     <a href="hercconf.html#LPARNUM">LPARNUM</a>,
     <a href="hercconf.html#CPUIDFMT">CPUIDFMT</a>,
     <a href="hercconf.html#CPUMODEL">CPUMODEL</a>,
