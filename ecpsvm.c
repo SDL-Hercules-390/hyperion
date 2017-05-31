@@ -79,6 +79,10 @@
 /*
 // $Log$    Update revision number in define variable ECPSCODEVER, below.
 //
+// Revision 1.83  2017/05/25 19:12:00  bobpolmanter/petercoghlan
+// Fix DISP2 incorrect check of VMV370R and mis-loaded control registers;
+// Remove DISP2 debug message causing page faults in CP.
+//
 // Revision 1.82  2017/04/30 13:54:00  bobpolmanter
 // Fix two minor coding errors in the SIO instruction assist.
 //
@@ -166,7 +170,7 @@
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.82    //  <--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.83    //  <--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -408,7 +412,7 @@ struct _ECPSVM_SASTATS
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITPSEUDOREGS(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-    strlcat(buf, " PSW=", sizeof(buf)-(int)strlen(buf)-1); \
+    STRLCAT( buf, " PSW=" ); \
     DEBUG_SASSISTX(_instname,display_psw(&vpregs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf))); \
     DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
 
@@ -1559,13 +1563,13 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             } /* if(Not tracing) */
             EVM_STC(B_MICVIP,F_MICBLOK+8);      /* Save new MICVIP */
         } /* if(F_MICBLOCK!=0) */
-        /* If an Extended VM, Load CRs 3-13 */
+        /* If an Extended VM, Load CRs 4-13 */
         /* CR6 Will be overwritten in a second */
-        if(B_VMESTAT & VMV370R)
+        if(B_VMPSTAT & VMV370R)
         {
             for(i=4;i<14;i++)
             {
-                regs->CR_L(i)=EVM_L(F_ECBLOK+(3*4)+(i*4));
+                regs->CR_L(i)=EVM_L(F_ECBLOK+(i*4));
             }
         }
         /* Update VMMICRO */
@@ -1668,9 +1672,9 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_AEA_COMMON(regs);
         SET_PSW_IA(regs);
         /* Dispatch..... */
-        DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
+        DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 - Dispatch...\n"));
         DEBUG_CPASSISTX(DISP2,display_gregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D "));
-        DEBUG_CPASSISTX(DISP2,strlcat(buf, "\n", sizeof(buf)));
+        DEBUG_CPASSISTX(DISP2,STRLCAT( buf, "\n" ));
         DEBUG_CPASSISTX(DISP2,display_cregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D "));
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(2);      /* OK - Perform INTCHECK */
@@ -4230,7 +4234,7 @@ int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     process through two sets of DAT tables: the real DAT tables and the virtual DAT tables.
 
     The real DAT tables belong to CP and are pointed to by MICRSEG and VMSEG.  These map
-    the 2nd level virtual storage of the virtual machine user.  This storage appears to 
+    the 2nd level virtual storage of the virtual machine user.  This storage appears to
     be "real" storage to the virtual machine.
 
     The virtual DAT tables belong to the guest running in the virtual machine.  The tables
@@ -4244,8 +4248,8 @@ int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     virtual DAT tables are in 2nd level storage we need to refer to the real DAT tables (via
     MICRSEG) to locate the real page frames in 1st level CP storage that contain the virtual
     DAT tables so we can reference them here.
-   
-    Further, CP may have paged out a guest machine page containing the virtual DAT tables 
+
+    Further, CP may have paged out a guest machine page containing the virtual DAT tables
     referenced.  This means the page invalid bit would be on in the real DAT table entry (for
     example).  When something like this is encountered, exit to CP and let him do the LRA
     simulation.
@@ -4303,7 +4307,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     SASSIST_PROLOG(LRA);
 
     UNREFERENCED(b2);
-    
+
     if(!ECMODE(&vpregs.psw))
     {
 
@@ -4313,7 +4317,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
 
     /* Check to see if can perform the Shadow Table Bypass Assist version of LOAD
        REAL ADDRESS first.  The virtual machine user must have CP STBYPASS VR set active
-       and the virtual PSW must be DAT enabled, or this assist will not be performed and 
+       and the virtual PSW must be DAT enabled, or this assist will not be performed and
        instead will proceed on to the VMA version of the LOAD REAL ADDRESS assist.
     */
     if((micevma2 & (MICSTBVR | MICLRA2)) && (vpregs.psw.sysmask & 0x04))
@@ -4387,14 +4391,14 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     v_sto = cr1 & 0x00ffffc0;
     r_segtbllen = (micblok.MICRSEG & 0xff000000) >> 24;
     r_sto = micblok.MICRSEG & 0x00ffffc0;
-    
+
     if(v_sto + ((v_segtbllen + 1) * 64) > vmsize)
     {
         DEBUG_SASSISTX(LRA,WRMSG(HHC90000, "D", "SASSIST LRA Reject : Invalid STO in virtual CR1\n"));
         return(1);
     }
 
-                      // cr0 bits 8, 9, 10, 11, 12   (bits 10,12 must always be zero) 
+                      // cr0 bits 8, 9, 10, 11, 12   (bits 10,12 must always be zero)
 #define P2KS64K  8    //          0  1   0   0   0  = page2k, segment64k
 #define P4KS64K 16    //          1  0   0   0   0  = page4k, segment64k
 #define P2KS1M  10    //          0  1   0   1   0  = page2k, segment1M
@@ -4417,11 +4421,11 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             frameshift = 7;         /* left shift amt to left justify the page frame addr in a PTE     */
             framemask = 0xfff8;     /* mask to extract the page frame addr in a PTE                    */
             bytemask = 0x000007ff;  /* mask to extract the byte index from a virtual address           */
-            segshift = 14;          /* right shift amt to get segment index from a virt address        */ 
+            segshift = 14;          /* right shift amt to get segment index from a virt address        */
             segmask = 0x00ff0000;   /* mask to extract the segment index from a virtual address        */
             seglenchk = TRUE;       /* indicates that a segment table length check is required         */
             break;
- 
+
         case P4KS64K:
             pagshift = 11;
             pagmask = 0x0000f000;
@@ -4468,11 +4472,11 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             break;
     }
 
-    /* For 64K segments only, we need to validate that the segment table length in virtual CR1 
+    /* For 64K segments only, we need to validate that the segment table length in virtual CR1
        is not less than the segment index of bits 8-11 of the LRA second operand address (i.e.,
        does the virtual address exceed the tables?).  If it is less, then we need to return cc=3
-       and also return in register operand 1 the address of the virtual STE that would have been 
-       referred to had the length violation not occurred.   
+       and also return in register operand 1 the address of the virtual STE that would have been
+       referred to had the length violation not occurred.
        Per LOAD REAL ADDRESS assist step #6, documented in GA22-7074-0.
     */
     if(seglenchk)
@@ -4485,7 +4489,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             regs->psw.cc = 3;
             DEBUG_SASSISTX(LRA,MSGBUF(buf, "SASSIST LRA Complete: CC=3; Operands r1=%8.8X, d2(b2)=%8.8X\n",regs->GR_L(r1),effective_addr2));
             DEBUG_SASSISTX(LRA,WRMSG(HHC90000, "D", buf));
-            SASSIST_HIT(LRA);                                         
+            SASSIST_HIT(LRA);
             return(0);
         }
     }
@@ -4494,7 +4498,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     offset_ste = (effective_addr2 & segmask) >> segshift;
     v_ste_ptr = v_sto + offset_ste;
 
-    /* For 64K segments only, we need to validate that the segment table length in MICRSEG 
+    /* For 64K segments only, we need to validate that the segment table length in MICRSEG
        is not less than the segment index of bits 8-11 of the virtual STE address.  If
        it is less, then we need let CP handle this LRA (virtual STE address is beyond the tables).
        Per LOAD REAL ADDRESS assist step #7, documented in GA22-7074-0.
@@ -4526,7 +4530,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
 
     /* Get the length of the real page table from the real STE.  Ensure that the leftmost 4 bits
        of the real page index of the virtual STE address is not greater than the real page table
-       length; if so, it's CP's problem.  Use hardcoded shift of 12 to compute real pagindex 
+       length; if so, it's CP's problem.  Use hardcoded shift of 12 to compute real pagindex
        because CP's page frames are always 4K.
     */
     lenindex = (r_ste & 0xF0000000) >> 28;
@@ -4558,8 +4562,8 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     byte_addr  = v_ste_ptr & bytemask;
     v_ste = EVM_L(frame_addr + byte_addr);
 
-    /* Validate the virtual STE entry.  If the segment invalid bit is set, place the 
-       virtual address of this virtual STE in register operand 1 and return with the 
+    /* Validate the virtual STE entry.  If the segment invalid bit is set, place the
+       virtual address of this virtual STE in register operand 1 and return with the
        LRA completed and psw cc=1.  If the STE format is incorrect, return to CP to handle.
     */
     if (v_ste & 0x00000001)
@@ -4579,9 +4583,9 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     }
 
     /* Get the length of the virtual page table from the virtual STE.  Ensure that the leftmost 4 bits
-       of the virtual page index of the LRA second operand address is not greater than the virtual 
-       page table length; if it is less, then we need to return cc=3 and also return in register 
-       operand 1, the address of the virtual PTE that would have been referred to had the length 
+       of the virtual page index of the LRA second operand address is not greater than the virtual
+       page table length; if it is less, then we need to return cc=3 and also return in register
+       operand 1, the address of the virtual PTE that would have been referred to had the length
        violation not occurred.  Per LOAD REAL ADDRESS assist step #15, documented in GA22-7074-0.
     */
     lenindex = (v_ste & 0xF0000000) >> 28;
@@ -4594,14 +4598,14 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             regs->psw.cc = 3;
             DEBUG_SASSISTX(LRA,MSGBUF(buf, "SASSIST LRA Complete: CC=3; Operands r1=%8.8X, d2(b2)=%8.8X\n",regs->GR_L(r1),effective_addr2));
             DEBUG_SASSISTX(LRA,WRMSG(HHC90000, "D", buf));
-            SASSIST_HIT(LRA);                                         
+            SASSIST_HIT(LRA);
             return(0);
     }
 
     /* Compute the virtual address of the virtual PTE derived from the virtual STE + virtual page index */
     v_pte_ptr = v_pto + offset_pte;
 
-    /* For 64K segments only, we need to validate that the segment table length in MICRSEG 
+    /* For 64K segments only, we need to validate that the segment table length in MICRSEG
        is not less than the segment index of bits 8-11 of the virtual PTE address.  If
        it is less, then we need let CP handle this LRA (virtual PTE address is beyond the tables).
        Per LOAD REAL ADDRESS assist step #16, documented in GA22-7074-0.
@@ -4633,7 +4637,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
 
     /* Get the length of the real page table from the real STE.  Ensure that the leftmost 4 bits
        of the real page index of the virtual STE address is not greater than the real page table
-       length; if so, it's CP's problem.  Use hardcoded shift of 12 to compute real pagindex 
+       length; if so, it's CP's problem.  Use hardcoded shift of 12 to compute real pagindex
        because CP's page frames are always 4K.
     */
     lenindex = (r_ste & 0xF0000000) >> 28;
@@ -4666,8 +4670,8 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
     byte_addr  = v_pte_ptr & bytemask;
     v_pte = EVM_LH(frame_addr + byte_addr);
 
-    /* Validate the virtual PTE entry.  If the page invalid bit is set, place the 
-       virtual address of this virtual PTE in register operand 1 and return with the 
+    /* Validate the virtual PTE entry.  If the page invalid bit is set, place the
+       virtual address of this virtual PTE in register operand 1 and return with the
        LRA completed and psw cc=2.  If the PTE format is incorrect, return to CP to handle.
     */
     if (v_pte & paginvmask)
