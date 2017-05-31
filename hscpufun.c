@@ -121,7 +121,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* stopall command - stop all CPU's                                  */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
 {
     int i;
     int rc = 0;
@@ -556,7 +556,7 @@ int     rc = HNOERROR;
 /*-------------------------------------------------------------------*/
 /* restart command - generate restart interrupt                      */
 /*-------------------------------------------------------------------*/
-int restart_cmd(int argc, char *argv[], char *cmdline)
+int restart_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -946,7 +946,7 @@ REGS *regs;
 /*-------------------------------------------------------------------*/
 /* start command - start current CPU                                 */
 /*-------------------------------------------------------------------*/
-int start_cmd_cpu(int argc, char *argv[], char *cmdline)
+int start_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
 
@@ -987,7 +987,7 @@ int start_cmd_cpu(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* stop command - stop current CPU                                   */
 /*-------------------------------------------------------------------*/
-int stop_cmd_cpu(int argc, char *argv[], char *cmdline)
+int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
 

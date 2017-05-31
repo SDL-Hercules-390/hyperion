@@ -292,7 +292,7 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym, int alloc)
         {
             continue;
         }
-#if defined(CASELESS_SYMBOLS)
+#if defined( CASELESS_SYMBOLS )
         if(strcasecmp(symbols[i]->var,sym)==0)
 #else
         if(strcmp(symbols[i]->var,sym)==0)
@@ -361,7 +361,7 @@ DLL_EXPORT void del_symbol(const char *sym)
         {
             continue;
         }
-#if defined(CASELESS_SYMBOLS)
+#if defined( CASELESS_SYMBOLS )
         if(strcasecmp(symbols[i]->var,sym)==0)
 #else
         if(strcmp(symbols[i]->var,sym)==0)

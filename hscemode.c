@@ -291,7 +291,7 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* aia - display aia values                                          */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
 {
     REGS   *regs;
     char buf[128];
