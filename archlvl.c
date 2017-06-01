@@ -628,7 +628,7 @@ static BYTE set_facility( FACTAB* ft, BYTE enable, BYTE mode )
 }
 
 /*-------------------------------------------------------------------*/
-/*                        update_archlvl                   (boolean) */
+/*                        update_facility                  (boolean) */
 /*-------------------------------------------------------------------*/
 static BYTE update_archlvl( int argc, char* argv[] )
 {
@@ -831,7 +831,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return 0;   // (success)
     }
 
-    // Enable/Disable a specific facility...
+    // Set architecture mode or enable/disable facility...
 
     /* Make sure all CPUs are deconfigured or stopped */
     if (are_any_cpus_started())
@@ -841,8 +841,10 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return HERRCPUONL;
     }
 
+    /* Try setting the architecture mode first */
     if (!set_archlvl( argv[1] ))
     {
+        /* Then it must be enable/disable facility */
         if (!update_archlvl( argc, argv ))
         {
             // "Invalid argument %s%s"
@@ -851,6 +853,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         }
     }
 
+    /* Update dummy regs with possibly new archmode */
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     if (1

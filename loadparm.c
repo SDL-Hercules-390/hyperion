@@ -100,8 +100,8 @@ static GSYSINFO gsysinfo;
     if (_source) \
         { \
         for (; i < n; i++) \
-             if (isprint(_source[i])) \
-                 _target[i] = host_to_guest((int)toupper(_source[i])); \
+             if (isprint((_source)[i])) \
+                 _target[i] = host_to_guest((int)toupper((_source)[i])); \
              else \
                  _target[i] = 0x40; \
         } \

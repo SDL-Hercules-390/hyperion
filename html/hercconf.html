@@ -593,14 +593,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUIDFMT"></a>
-<dt><code>CPUIDFMT &nbsp; 0 &#124; 1 &#124; BASIC</code>
+<dt><code>CPUIDFMT &nbsp; <u>0</u> &#124; 1 &#124; BASIC</code>
 <dd><p>
     Specifies the format of the CPU ID the STIDP instruction should store.
     Refer to the <a href="#LPARNUM">LPARNUM</a> statement for more information.
     <p>
 
 <a name="CPUMODEL"></a>
-<dt><code>CPUMODEL &nbsp; <em>xxxx</em></code>
+<dt><code>CPUMODEL &nbsp; <u>0586</u> &#124; <em>xxxx</em></code>
 <dd><p>
     Specifies the 4 hexadecimal digit CPU machine type number (known prior
     to ESA/390 as the model number) stored by the STIDP instruction.
@@ -612,7 +612,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUPRIO"></a>
-<dt><code>CPUPRIO &nbsp; <em>nn</em></code>
+<dt><code>CPUPRIO &nbsp; <u>15</u> &#124; <em>nn</em></code>
 <dd><p>
     Specifies the priority of the CPU thread.  Default is a nice value
     of 15, which means a low priority such that I/O can be scheduled and
@@ -629,25 +629,25 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUSERIAL"></a>
-<dt><code>CPUSERIAL &nbsp; <em>xxxxxx</em></code>
+<dt><code>CPUSERIAL &nbsp; <u>000001</u> &#124; <em>xxxxxx</em></code>
 <dd><p>
     Specifies the 6 hexadecimal digit CPU serial number stored by the
     STIDP instruction. In BASIC mode, the high-order digit may be
     replaced with the processor number when MAXCPU > 1; in LPAR mode,
     the two high-order digits are replaced with either the LPAR number
     or the CPU number and LPAR number with the full serial number
-    available via the STSI instruction.
-    The default serial number is 000001.
+    available via the STSI instruction. The default serial number is
+    <code>000001</code>.
     <p>
 
 <a name="CPUVERID"></a>
-<dt><code>CPUVERID &nbsp; <em>xx</em></code>
+<dt><code>CPUVERID &nbsp; <u>FD</u> &#124; <em>xx</em></code>
 <dd><p>
-    Specifies the 2 hexadecimal digit CPU version code
-    stored by the STIDP instruction.
-    The default version code is FD when ARCHLVL S/370 or ARCHLVL ESA/390
-    is specified.  For the z/Architecture mode, the version code is always
-    stored as 00 and the value specified here is ignored.
+    Specifies the 2 hexadecimal digit CPU version code stored by the STIDP
+    instruction when the architecture mode is S/370 or ESA390. When the
+    architecture mode is z/Arch the version code is always stored as
+    <code>00</code> and the value specified here is ignored. The default
+    version code is <code>FD</code> unless changed.
     <p>
 
 <a name="DEFSYM"></a>
@@ -670,7 +670,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DEVPRIO"></a>
-<dt><code>DEVPRIO &nbsp; <em>nn</em></code>
+<dt><code>DEVPRIO &nbsp; <u>8</u> &#124; <em>nn</em></code>
 <dd><p>
     Specifies the priority of the device threads.  The default value is 8.
     See <a href="#thread_priorities">"Thread Priorities"</a>
@@ -814,7 +814,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="HERCPRIO"></a>
-<dt><code>HERCPRIO &nbsp; <em>nn</em></code>
+<dt><code>HERCPRIO &nbsp; <u>0</u> &#124; <em>nn</em></code>
 <dd><p>
     Specifies the process priority for Hercules.  The default is 0.
     See <a href="#process_priorities">"Process Priorities"</a>
@@ -959,18 +959,22 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="LPARNUM"></a>
-<dt><code>LPARNUM &nbsp; <em>xx</em> &#124; BASIC</code>
+<dt><code>LPARNUM &nbsp; BASIC &#124; <u>1</u> &#124; <em>xx</em></code>
 <dd><p>
     Specifies the one- or two-digit hexadecimal LPAR identification
     number stored by the STIDP instruction, or BASIC.
     <p>
-    If a one-digit number from 1 to F (hexadecimal) is specified,
-    then STIDP stores a format-0 CPU ID unless a subsequent
-    <a href="#CPUIDFMT">CPUIDFMT 1</a> statement is specified.
-    If zero or a two-digit hexadecimal number (except 10 hexadecimal)
-    is specified, then STIDP stores a format-1 CPU ID. For LPARNUM
-    10 the current <a href="#CPUIDFMT">CPUIDFMT</a> is not changed.
-    If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
+    If a one-digit number from <code>1</code> to <code>F</code> (hexadecimal)
+    is specified, then STIDP stores a format-0 CPU ID unless a subsequent
+    <a href="#CPUIDFMT"><code>CPUIDFMT 1</code></a> statement is specified.
+    <p>
+    If <code>0</code> or a two-digit hexadecimal number (except 10 hexadecimal)
+    is specified, then STIDP stores a format-1 CPU ID. For LPARNUM <code>10</code>
+    the current <a href="#CPUIDFMT"><code>CPUIDFMT</code></a> is not changed.
+    <p>
+    When LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID (6-hexadecimal
+    digit serial number when MAXCPU = 1, or a one-hexadeciaml digit CPU number
+    and 5-hexadecimal digit serial number when MAXCPU > 1).
     <p>
     The LPARNUM setting will be <i>automatically changed</i>
     if needed to <code>BASIC</code> when
@@ -1315,7 +1319,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="SRVPRIO"></a>
-<dt><code>SRVPRIO &nbsp; <em>nn</em></code>
+<dt><code>SRVPRIO &nbsp; <u>4</u> &#124; <em>nn</em></code>
 <dd><p>
     Specifies the priority of the server threads.  The default value is 4.
     See <a href="#thread_priorities">"Thread Priorities"</a>
@@ -1380,7 +1384,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="TODPRIO"></a>
-<dt><code>TODPRIO &nbsp; <em>nn</em></code>
+<dt><code>TODPRIO &nbsp; <u>-20</u> &#124; <em>nn</em></code>
 <dd><p>
     Specifies the priority of the TOD Clock and timer thread.  The
     default value is -20.  See
@@ -1629,7 +1633,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="process_and_thread_priorities"></a>
 <h3>Process and Thread Priorities</h3>
 
-<p><br>
+<p>
 
 <a name="process_priorities"></a>
 <h4>Process Priorities</h4>
@@ -1747,9 +1751,8 @@ a real System/390.  The configuration file is an ASCII text file.
     </TR>
 </TABLE>
 
-<p><br>
+<p>
 <blockquote>
-    <p>
     <i>
     <b>Caution:</b> &nbsp;On Windows, the value you choose for your
     <a href="#HERCPRIO">Process Priority</a>
@@ -1760,7 +1763,7 @@ a real System/390.  The configuration file is an ASCII text file.
     </i>
 </blockquote>
 
-<p><br>
+<p>
 
 <a name="thread_priorities"></a>
 <h4>Thread Priorities</h4>
@@ -1883,9 +1886,8 @@ a real System/390.  The configuration file is an ASCII text file.
     </TR>
 </TABLE>
 
-<p><br>
+<p>
 <blockquote>
-    <p>
     <i>
     <b>Caution:</b> &nbsp;On Windows, your Thread Priority is interpreted
     differently based on your chosen <a href="#HERCPRIO">Process Priority</a> setting!

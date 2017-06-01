@@ -677,7 +677,7 @@ int     rc;
 
     /* Set to LPAR mode with LPAR 1, LPAR ID of 01, and CPUIDFMT 0   */
     sysblk.lparmode = 1;                /* LPARNUM 1    # LPAR ID 01 */
-    sysblk.lparnum = 1;                 /* ...                       */
+    sysblk.lparnum  = 1;                /* ...                       */
     sysblk.cpuidfmt = 0;                /* CPUIDFMT 0                */
     sysblk.operation_mode = om_mif;     /* Default to MIF operaitons */
 
@@ -685,8 +685,8 @@ int     rc;
     sysblk.cpumodel = 0x0586;
     sysblk.cpuversion = 0xFD;
     sysblk.cpuserial = 0x000001;
-    sysblk.cpuid = createCpuId(sysblk.cpumodel, sysblk.cpuversion,
-                               sysblk.cpuserial, 0);
+    sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion,
+                                sysblk.cpuserial, 0 );
 
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_NONE;

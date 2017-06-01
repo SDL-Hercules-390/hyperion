@@ -1355,17 +1355,10 @@ int i;
         sysblk.cpucreateTOD[cpu] = host_tod(); /* tod_epoch is zero at this point */
 
     regs->arch_mode = sysblk.arch_mode;
-    regs->mainstor = sysblk.mainstor;
-    regs->sysblk = &sysblk;
-    /*
-     * ISW20060125 : LINE REMOVED : This is the job of
-     *               the INITIAL CPU RESET
-     */
-#if 0
-    regs->psa = (PSA*)regs->mainstor;
-#endif
-    regs->storkeys = sysblk.storkeys;
-    regs->mainlim = sysblk.mainsize - 1;
+    regs->mainstor  = sysblk.mainstor;
+    regs->sysblk    = &sysblk;
+    regs->storkeys  = sysblk.storkeys;
+    regs->mainlim   = sysblk.mainsize - 1;
     regs->tod_epoch = get_tod_epoch();
 
     initialize_condition (&regs->intcond);
@@ -1742,6 +1735,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
                 regs->guestregs->hostregs = regs;
             sysblk.regs[cpu] = regs;
             release_lock(&sysblk.cpulock[cpu]);
+            // "Processor %s%02X: architecture mode %s"
             WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
         }
     }
@@ -1752,6 +1746,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         if (cpu_init (cpu, regs, NULL))
             return NULL;
 
+        // "Processor %s%02X: architecture mode %s"
         WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
@@ -1790,6 +1785,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
         {
             char buf[40];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(REGS));
+            // "Processor %s%02X: error in function %s: %s"
             WRMSG (HHC00813, "E", PTYPSTR(cpu), cpu, buf, strerror(errno));
             cpu_uninit (cpu, regs);
         }

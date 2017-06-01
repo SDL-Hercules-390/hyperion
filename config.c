@@ -1,5 +1,5 @@
 /* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2012                  */
-/*              Device configuration functions                       */
+/*              Device and Storage configuration functions           */
 
 /*-------------------------------------------------------------------*/
 /* The original configuration builder is now called bldcfg.c         */
@@ -21,27 +21,30 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 #include "opcode.h"
 #include "chsc.h"
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCHMODE3)
+#if defined( _ARCHMODE3 )
  #define  _GEN_ARCH _ARCHMODE3
  #include "config.c"
  #undef   _GEN_ARCH
 #endif
 
-#if defined(_ARCHMODE2)
+#if defined( _ARCHMODE2 )
  #define  _GEN_ARCH _ARCHMODE2
  #include "config.c"
  #undef   _GEN_ARCH
 #endif
 
-#if defined(HAVE_MLOCKALL)
-int configure_memlock(int flags)
+#if defined( HAVE_MLOCKALL )
+/*-------------------------------------------------------------------*/
+/*        configure_memlock - lock or unlock storage                 */
+/*-------------------------------------------------------------------*/
+int configure_memlock( int flags )
 {
 int rc;
 
     if(flags)
-        rc = mlockall(MCL_CURRENT | MCL_FUTURE);
+        rc = mlockall( MCL_CURRENT | MCL_FUTURE );
     else
         rc = munlockall();
 
@@ -49,18 +52,23 @@ int rc;
 }
 #endif /*defined(HAVE_MLOCKALL)*/
 
+/*-------------------------------------------------------------------*/
+/*                    configure_region_reloc                         */
+/*-------------------------------------------------------------------*/
 static void configure_region_reloc()
 {
-DEVBLK *dev;
-int i;
+    DEVBLK*  dev;
+    int      i;
+
 #if defined(_FEATURE_REGION_RELOCATE)
 
     /* Initialize base zone storage view (SIE compat) */
-    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
+    for (i=0; i < FEATURE_SIE_MAXZONES; i++)
     {
         sysblk.zpb[i].mso = 0;
         sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
-        if(sysblk.xpndsize)
+
+        if (sysblk.xpndsize)
         {
             sysblk.zpb[i].eso = 0;
             sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
@@ -78,27 +86,30 @@ int i;
     {
         dev->mainstor = sysblk.mainstor;
         dev->storkeys = sysblk.storkeys;
-        dev->mainlim = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
+        dev->mainlim  = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
     }
 
     /* Relocate storage for all online cpus */
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i))
+    for (i=0; i < sysblk.maxcpu; i++)
+        if (IS_CPU_ONLINE( i ))
         {
             sysblk.regs[i]->storkeys = sysblk.storkeys;
             sysblk.regs[i]->mainstor = sysblk.mainstor;
             sysblk.regs[i]->mainlim  = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
         }
-
 }
 
-static U64 config_mfree = 200 << SHIFT_MEGABYTE;
-int configure_memfree(int mfree)
+/*-------------------------------------------------------------------*/
+/* configure_memfree - adjust minimum emulator free storage amount   */
+/*-------------------------------------------------------------------*/
+static U64  config_mfree  = (200 << SHIFT_MEGABYTE);
+
+int configure_memfree( int mfree )
 {
     if (mfree < 0)
         return config_mfree >> SHIFT_MEGABYTE;
 
-    config_mfree = (RADR)mfree << SHIFT_MEGABYTE;
+    config_mfree = ((U64)mfree) << SHIFT_MEGABYTE;
     return 0;
 }
 
@@ -106,10 +117,14 @@ PUSH_GCC_WARNINGS()
 DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )
 DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
 
-/* storage configuration */
-static U64   config_allocmsize = 0;
-static BYTE *config_allocmaddr  = NULL;
-int configure_storage(U64 mainsize)
+/*-------------------------------------------------------------------*/
+/* configure_storage - configure MAIN storage                        */
+/*-------------------------------------------------------------------*/
+
+static U64    config_allocmsize  = 0;
+static BYTE*  config_allocmaddr  = NULL;
+
+int configure_storage( U64 mainsize )
 {
 BYTE *mainstor;
 BYTE *storkeys;
@@ -219,7 +234,7 @@ int cpu;
         if (mfree)
             free(mfree);
 
-        if (storkeys == NULL)
+        if (!storkeys)
         {
             char buf[64];
             sysblk.main_clear = 0;
@@ -309,9 +324,14 @@ int cpu;
     return 0;
 }
 
-static U64   config_allocxsize = 0;
-static BYTE *config_allocxaddr = NULL;
-int configure_xstorage(U64 xpndsize)
+/*-------------------------------------------------------------------*/
+/* configure_xstorage - configure EXPANDED storage                   */
+/*-------------------------------------------------------------------*/
+
+static U64    config_allocxsize  = 0;
+static BYTE*  config_allocxaddr  = NULL;
+
+int configure_xstorage( U64 xpndsize )
 {
 #ifdef _FEATURE_EXPANDED_STORAGE
 BYTE *xpndstor;
@@ -363,7 +383,7 @@ int  cpu;
         if (mfree)
             free(mfree);
 
-        if (xpndstor == NULL)
+        if (!xpndstor)
         {
             char buf[64];
             sysblk.xpnd_clear = 0;
@@ -433,7 +453,9 @@ int  cpu;
 
 POP_GCC_WARNINGS()
 
-/* 4 next functions used for fast device lookup cache management */
+/*-------------------------------------------------------------------*/
+/* Next 4 functions used for fast device lookup cache management     */
+/*-------------------------------------------------------------------*/
 
 static void AddDevnumFastLookup( DEVBLK *dev, U16 lcss, U16 devnum )
 {
@@ -513,8 +535,10 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 }
 
 #ifdef NEED_FND_CHPBLK
-static
-CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
+/*-------------------------------------------------------------------*/
+/*                        fnd_chpblk                                 */
+/*-------------------------------------------------------------------*/
+static CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
 {
 CHPBLK *chp;
 
@@ -526,8 +550,10 @@ CHPBLK *chp;
 #endif
 
 #ifdef NEED_GET_CHPBLK
-static
-CHPBLK *get_chpblk(U16 css, BYTE chpid, BYTE chptype)
+/*-------------------------------------------------------------------*/
+/*                        get_chpblk                                 */
+/*-------------------------------------------------------------------*/
+static CHPBLK *get_chpblk(U16 css, BYTE chpid, BYTE chptype)
 {
 CHPBLK *chp;
 CHPBLK**chpp;
@@ -557,7 +583,12 @@ CHPBLK**chpp;
 }
 #endif
 
+/*-------------------------------------------------------------------*/
+/*                        get_devblk                                 */
+/*-------------------------------------------------------------------*/
+
 /* NOTE: also does obtain_lock(&dev->lock); */
+
 static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
 DEVBLK *dev;
@@ -674,7 +705,12 @@ DEVBLK**dvpp;
     return dev;
 }
 
+/*-------------------------------------------------------------------*/
+/*                        ret_devblk                                 */
+/*-------------------------------------------------------------------*/
+
 /* NOTE: also does release_lock(&dev->lock);*/
+
 static void ret_devblk(DEVBLK *dev)
 {
     /* PROGRAMMING NOTE: the device buffer will be freed by the
@@ -836,6 +872,9 @@ int     cpu;
 
 } /* end function release_config */
 
+/*-------------------------------------------------------------------*/
+/*                       configure_capping                           */
+/*-------------------------------------------------------------------*/
 int configure_capping(U32 value)
 {
     if(sysblk.capvalue)
@@ -876,6 +915,9 @@ int configure_capping(U32 value)
 }
 
 #ifdef OPTION_SHARED_DEVICES
+/*-------------------------------------------------------------------*/
+/*                    shrdport_connecting_thread                     */
+/*-------------------------------------------------------------------*/
 static void* shrdport_connecting_thread(void* arg)
 {
     DEVBLK* dev = (DEVBLK*) arg;
@@ -883,6 +925,9 @@ static void* shrdport_connecting_thread(void* arg)
     return NULL;
 }
 
+/*-------------------------------------------------------------------*/
+/*                       configure_shrdport                          */
+/*-------------------------------------------------------------------*/
 int configure_shrdport(U16 shrdport)
 {
 int rc;
@@ -934,6 +979,10 @@ int rc;
     return 0;
 }
 #endif
+
+/*-------------------------------------------------------------------*/
+/*                   configure priority functions                    */
+/*-------------------------------------------------------------------*/
 
 int configure_herc_priority(int prio)
 {
@@ -1181,6 +1230,7 @@ int configure_numcpu( int numcpu )
         rc = configure_numcpu_intlock_held( numcpu );
     }
     RELEASE_INTLOCK( NULL );
+
     return rc;
 }
 
@@ -1590,68 +1640,70 @@ DLL_EXPORT BYTE free_group( DEVGRP *group, int locked,
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT DEVBLK *find_device_by_devnum (U16 lcss,U16 devnum)
+DLL_EXPORT DEVBLK* find_device_by_devnum( U16 lcss, U16 devnum )
 {
-DEVBLK *dev;
-DEVBLK **devtab;
-int Chan;
+    DEVBLK*   dev;
+    DEVBLK**  devtab;
+    int       chan;
 
-    Chan=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
-    if(sysblk.devnum_fl!=NULL)
+    chan = (devnum & 0xff00) >> 8 | ((lcss & (FEATURE_LCSS_MAX-1)) << 8);
+
+    if (sysblk.devnum_fl)
     {
-        devtab=sysblk.devnum_fl[Chan];
-        if(devtab!=NULL)
+        devtab = sysblk.devnum_fl[ chan ];
+
+        if (devtab)
         {
-            dev=devtab[devnum & 0xff];
+            dev = devtab[ devnum & 0xff ];
+
             if (dev && IS_DEV( dev ) && dev->devnum == devnum)
-            {
                 return dev;
-            }
             else
-            {
-                DelDevnumFastLookup(lcss,devnum);
-            }
+                DelDevnumFastLookup( lcss, devnum );
         }
     }
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (IS_DEV( dev ) && dev->devnum == devnum && lcss==SSID_TO_LCSS(dev->ssid)) break;
-    if(dev)
-    {
-        AddDevnumFastLookup(dev,lcss,devnum);
-    }
+        if (1
+            && IS_DEV( dev )
+            && dev->devnum == devnum
+            && lcss == SSID_TO_LCSS( dev->ssid )
+        )
+            break;
+
+    if (dev)
+        AddDevnumFastLookup( dev, lcss, devnum );
+
     return dev;
-} /* end function find_device_by_devnum */
+}
 
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
-DEVBLK *find_device_by_subchan (U32 ioid)
+DEVBLK* find_device_by_subchan( U32 ioid )
 {
-    U16 subchan = ioid & 0xFFFF;
-    DEVBLK *dev;
-    unsigned int schw = ((subchan & 0xff00)>>8)|(IOID_TO_LCSS(ioid)<<8);
-#if 0
-    logmsg(_("DEBUG : FDBS FL Looking for %d\n"),subchan);
-#endif
-    if(sysblk.subchan_fl && sysblk.subchan_fl[schw] && sysblk.subchan_fl[schw][subchan & 0xff])
-        return sysblk.subchan_fl[schw][subchan & 0xff];
-#if 0
-    logmsg(_("DEBUG : FDBS SL Looking for %8.8x\n"),ioid);
-#endif
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->ssid == IOID_TO_SSID(ioid) && dev->subchan == subchan) break;
+    DEVBLK*  dev;
+    U16      subchan   = ioid & 0xFFFF;
+    unsigned int schw  = ((subchan & 0xff00)>>8) | (IOID_TO_LCSS( ioid ) << 8);
 
-    if(dev)
-    {
-        AddSubchanFastLookup(dev, IOID_TO_SSID(ioid), subchan);
-    }
+    if (1
+        && sysblk.subchan_fl
+        && sysblk.subchan_fl[ schw ]
+        && sysblk.subchan_fl[ schw ][ subchan & 0xff ]
+    )
+        return sysblk.subchan_fl[ schw ][ subchan & 0xff ];
+
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        if (dev->ssid == IOID_TO_SSID( ioid ) && dev->subchan == subchan)
+            break;
+
+    if (dev)
+        AddSubchanFastLookup( dev, IOID_TO_SSID( ioid ), subchan );
     else
-    {
-        DelSubchanFastLookup(IOID_TO_SSID(ioid), subchan);
-    }
+        DelSubchanFastLookup( IOID_TO_SSID( ioid ), subchan );
+
     return dev;
-} /* end function find_device_by_subchan */
+}
 
 /*-------------------------------------------------------------------*/
 /* Function to Parse a LCSS specification in a device number spec    */
@@ -1666,131 +1718,162 @@ DEVBLK *find_device_by_subchan (U32 ioid)
 /* If the function returns a positive value, then *rest should       */
 /* be freed by the caller.                                           */
 /*-------------------------------------------------------------------*/
-
-static int
-parse_lcss(const char *spec,
-           char **rest,int verbose)
+static int parse_lcss( const char* spec, char** rest, int verbose )
 {
     int     lcssid;
-    char    *wrk;
-    char    *lcss;
-    char    *r;
-    char    *strptr;
-    char    *garbage;
-    char    *strtok_str = NULL;
+    char*   wrk;
+    char*   lcss;
+    char*   r;
+    char*   strptr;
+    char*   garbage;
+    char*   strtok_str = NULL;
     size_t  len;
 
-    len = strlen(spec)+1;
-    wrk=malloc(len);
-    strlcpy(wrk,spec,len);
-    lcss=strtok_r(wrk,":",&strtok_str);
-    if(lcss==NULL)
+    len = strlen( spec ) + 1;
+    wrk = malloc( len );
+    strlcpy( wrk, spec, len );
+
+    if (!(lcss = strtok_r( wrk, ":", &strtok_str )))
     {
-        if(verbose)
+        if (verbose)
         {
             // "Unspecified error occured while parsing Logical Channel Subsystem Identification"
-            WRMSG(HHC01466, "E");
+            WRMSG( HHC01466, "E" );
         }
-        free(wrk);
-        return(-1);
+        free( wrk );
+        return -1;
     }
-    r=strtok_r(NULL,":",&strtok_str );
-    if(r==NULL)
+
+
+    if (!(r=strtok_r( NULL, ":", &strtok_str )))
     {
-        *rest=wrk;
+        *rest = wrk;
         return 0;
     }
-    garbage=strtok_r(NULL,":",&strtok_str );
-    if(garbage!=NULL)
+
+    garbage = strtok_r( NULL, ":", &strtok_str );
+
+    if (garbage)
     {
-        if(verbose)
+        if (verbose)
         {
             // "No more than 1 Logical Channel Subsystem Identification may be specified"
-            WRMSG(HHC01467, "E");
+            WRMSG( HHC01467, "E" );
         }
-        free(wrk);
-        return(-1);
+        free( wrk );
+        return -1;
     }
-    lcssid=strtoul(lcss,&strptr,10);
-    if(*strptr!=0)
+
+    lcssid = strtoul( lcss, &strptr, 10 );
+
+    if (*strptr != 0)
     {
-        if(verbose)
+        if (verbose)
         {
             // "Non-numeric Logical Channel Subsystem Identification %s"
-            WRMSG(HHC01468, "E",lcss);
+            WRMSG( HHC01468, "E", lcss );
         }
-        free(wrk);
+        free( wrk );
         return -1;
     }
-    if(lcssid>=FEATURE_LCSS_MAX)
+
+    if (lcssid >= FEATURE_LCSS_MAX)
     {
-        if(verbose)
+        if (verbose)
         {
             // "Logical Channel Subsystem Identification %d exceeds maximum of %d"
-            WRMSG(HHC01469, "E",lcssid,FEATURE_LCSS_MAX-1);
+            WRMSG( HHC01469, "E", lcssid, FEATURE_LCSS_MAX-1 );
         }
-        free(wrk);
+        free( wrk );
         return -1;
     }
-    len = strlen(r)+1;
-    *rest=malloc(len);
-    strlcpy(*rest,r,len);
-    free(wrk);
+
+    len = strlen( r ) + 1;
+    *rest = malloc( len );
+    strlcpy( *rest, r, len );
+    free( wrk );
+
     return lcssid;
 }
 
-static int
-parse_single_devnum__INTERNAL(const char *spec,
-                    U16 *p_lcss,
-                    U16 *p_devnum,
-                    int verbose)
+/*-------------------------------------------------------------------*/
+/*               parse_single_devnum__INTERNAL                       */
+/*-------------------------------------------------------------------*/
+static int parse_single_devnum__INTERNAL
+(
+    const char*  spec,
+    U16*         p_lcss,
+    U16*         p_devnum,
+    int          verbose
+)
 {
-    int rc;
+    int     rc;
     U16     lcss;
     char    *r;
     char    *strptr;
-    rc=parse_lcss(spec,&r,verbose);
-    if(rc<0)
-    {
+
+    if ((rc = parse_lcss( spec, &r, verbose )) < 0)
         return -1;
-    }
-    lcss=rc;
-    rc=strtoul(r,&strptr,16);
-    if(rc<0 || rc>0xffff || *strptr!=0)
+
+    lcss = rc;
+    rc = strtoul( r, &strptr, 16 );
+
+    if (0
+        || rc < 0
+        || rc > 0xffff
+        || *strptr != 0
+    )
     {
         int err = 1;
 
         /* Maybe it's just a statement comment? */
-        if (rc >= 0 && rc <= 0xffff && *strptr != 0)
+        if (1
+            && rc >= 0
+            && rc <= 0xffff
+            && *strptr != 0
+        )
         {
-            while (*strptr == ' ') strptr++;
+            while (*strptr == ' ')
+                strptr++;
+
             /* End of statement or start of comment? */
-            if (*strptr == 0 || *strptr == '#')
+            if (0
+                || *strptr ==  0
+                || *strptr == '#'
+            )
                 err = 0;  /* Then not an error! */
         }
 
         if (err)
         {
-            if(verbose)
+            if (verbose)
             {
                 // "Incorrect %s near character '%c'"
-                WRMSG(HHC01470,"E","device address specification",*strptr);
+                WRMSG( HHC01470, "E", "device address specification", *strptr );
             }
-            free(r);
+            free( r );
             return -1;
         }
     }
-    *p_devnum=rc;
-    *p_lcss=lcss;
+
+    *p_devnum = rc;
+    *p_lcss   = lcss;
+
     return 0;
 }
 
-DLL_EXPORT
-int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
+/*-------------------------------------------------------------------*/
+/*                    parse_single_devnum                            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int parse_single_devnum( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = TRUE;
     return parse_single_devnum__INTERNAL( spec, lcss, devnum, verbose );
 }
+
+/*-------------------------------------------------------------------*/
+/*                  parse_single_devnum_silent                       */
+/*-------------------------------------------------------------------*/
 int parse_single_devnum_silent( const char* spec, U16* lcss, U16* devnum )
 {
     int verbose = FALSE;
@@ -1825,148 +1908,180 @@ int parse_single_devnum_silent( const char* spec, U16* lcss, U16* devnum )
 /* NOTE : caller should free the array returned in da if the return  */
 /*        value is not 0                                             */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT size_t parse_devnums(const char *spec,DEVNUMSDESC *dd)
+DLL_EXPORT size_t parse_devnums( const char* spec, DEVNUMSDESC* dd )
 {
-    size_t gcount;      /* Group count                     */
-    size_t i;           /* Index runner                    */
-    char *grps;         /* Pointer to current devnum group */
-    char *sc;           /* Specification string copy       */
-    DEVARRAY *dgrs;     /* Device groups                   */
-    U16  cuu1,cuu2;     /* CUUs                            */
-    char *strptr;       /* strtoul ptr-ptr                 */
-    int  basechan=0;    /* Channel for all CUUs            */
-    int  duplicate;     /* duplicated CUU indicator        */
-    int badcuu;         /* offending CUU                   */
-    int rc;             /* Return code work var            */
-    char *strtok_str = NULL; /* Last token                 */
+    size_t     gcount;          /* Group count                       */
+    size_t     i;               /* Index runner                      */
+    char*      grps;            /* Pointer to current devnum group   */
+    char*      sc;              /* Specification string copy         */
+    DEVARRAY*  dgrs;            /* Device groups                     */
+    U16        cuu1, cuu2;      /* CUUs                              */
+    char*      strptr;          /* strtoul ptr-ptr                   */
+    int        basechan = 0;    /* Channel for all CUUs              */
+    int        duplicate;       /* duplicated CUU indicator          */
+    int        badcuu;          /* offending CUU                     */
+    int        rc;              /* Return code work var              */
+    char*      strtok_str;      /* Last token                        */
 
-    rc=parse_lcss(spec,&sc,1);
-    if(rc<0)
+    strtok_str = NULL;
+
+    if ((rc = parse_lcss( spec, &sc, 1 )) < 0)
     {
         return 0;
     }
-    dd->lcss=rc;
+
+    dd->lcss = rc;
 
     /* Split by ',' groups */
-    gcount=0;
-    grps=strtok_r(sc,",",&strtok_str );
-    dgrs=NULL;
-    while(grps!=NULL)
+
+    gcount = 0;
+    grps   = strtok_r( sc, ",", &strtok_str );
+    dgrs   = NULL;
+
+    while (grps)
     {
-        if(dgrs==NULL)
-        {
-            dgrs=malloc(sizeof(DEVARRAY));
-        }
+        if (!dgrs)
+            dgrs = malloc( sizeof( DEVARRAY ));
         else
-        {
-            dgrs=realloc(dgrs,(sizeof(DEVARRAY))*(gcount+1));
-        }
-        cuu1=strtoul(grps,&strptr,16);
-        switch(*strptr)
+            dgrs = realloc( dgrs, sizeof( DEVARRAY ) * (gcount + 1));
+
+        cuu1 = strtoul( grps, &strptr, 16 );
+
+        switch (*strptr)
         {
         case 0:     /* Single CUU */
-            cuu2=cuu1;
+
+            cuu2 = cuu1;
             break;
+
         case '-':   /* CUU Range */
-            cuu2=strtoul(&strptr[1],&strptr,16);
-            if(*strptr!=0)
+
+            cuu2 = strtoul( &strptr[1], &strptr, 16 );
+
+            if (*strptr)
             {
-                WRMSG(HHC01470, "E","second device number in device range",*strptr);
-                free(dgrs);
-                free(sc);
-                return(0);
+                // "Incorrect %s near character '%c'"
+                WRMSG( HHC01470, "E", "second device number in device range", *strptr );
+                goto error_ret;
             }
             break;
+
         case '.':   /* CUU Count */
-            cuu2=cuu1+strtoul(&strptr[1],&strptr,10);
+
+            cuu2 = cuu1 + strtoul( &strptr[1], &strptr, 10 );
             cuu2--;
-            if(*strptr!=0)
+
+            if (*strptr)
             {
-                WRMSG(HHC01470,"E","device count",*strptr);
-                free(dgrs);
-                free(sc);
-                return(0);
+                // "Incorrect %s near character '%c'"
+                WRMSG( HHC01470, "E", "device count", *strptr );
+                goto error_ret;
             }
             break;
+
         default:
-            WRMSG(HHC01470,"E","incorrect device specification",*strptr);
-            free(dgrs);
-            free(sc);
-            return(0);
+
+            // "Incorrect %s near character '%c'"
+            WRMSG( HHC01470, "E", "incorrect device specification", *strptr );
+            goto error_ret;
         }
+
         /* Check cuu1 <= cuu2 */
-        if(cuu1>cuu2)
+
+        if (cuu1 > cuu2)
         {
-            WRMSG(HHC01471,"E",cuu2,cuu1);
-            free(dgrs);
-            free(sc);
-            return(0);
+            // "Incorrect device address range %04X < %04X"
+            WRMSG( HHC01471, "E", cuu2, cuu1 );
+            goto error_ret;
         }
-        if(gcount==0)
+
+        if (!gcount)
         {
-            basechan=(cuu1 >> 8) & 0xff;
+            basechan = (cuu1 >> 8) & 0xff;
         }
-        badcuu=-1;
-        if(((cuu1 >> 8) & 0xff) != basechan)
+
+        badcuu = -1;
+
+        if (((cuu1 >> 8) & 0xff) != basechan)
         {
-            badcuu=cuu1;
+            badcuu = cuu1;
         }
         else
         {
-            if(((cuu2 >> 8) & 0xff) != basechan)
+            if (((cuu2 >> 8) & 0xff) != basechan)
             {
-                badcuu=cuu2;
+                badcuu = cuu2;
             }
         }
-        if(badcuu>=0)
+
+        if (badcuu >= 0)
         {
-            WRMSG(HHC01472,"E", dd->lcss, badcuu, basechan);
-            free(dgrs);
-            free(sc);
-            return(0);
+            // "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
+            WRMSG( HHC01472, "E", dd->lcss, badcuu, basechan );
+            goto error_ret;
         }
+
         /* Check for duplicates */
-        duplicate=0;
-        for(i=0;i<gcount;i++)
+
+        duplicate = 0;
+
+        for (i=0; i < gcount; i++)
         {
             /* check 1st cuu not within existing range */
-            if(cuu1>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
+            if (cuu1 >= dgrs[i].cuu1 && cuu1 <= dgrs[i].cuu2)
             {
-                duplicate=1;
+                duplicate = 1;
                 break;
             }
+
             /* check 2nd cuu not within existing range */
-            if(cuu2>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
+            if (cuu2 >= dgrs[i].cuu1 && cuu1 <= dgrs[i].cuu2)
             {
-                duplicate=1;
+                duplicate = 1;
                 break;
             }
+
             /* check current range doesn't completelly overlap existing range */
-            if(cuu1<dgrs[i].cuu1 && cuu2>dgrs[i].cuu2)
+            if (cuu1 < dgrs[i].cuu1 && cuu2 > dgrs[i].cuu2)
             {
-                duplicate=1;
+                duplicate = 1;
                 break;
             }
         }
-        if(duplicate)
+
+        if (duplicate)
         {
-            WRMSG(HHC01473,"E",cuu1,cuu2);
-            free(dgrs);
-            free(sc);
-            return(0);
+            // "Some or all devices in %04X-%04X duplicate already defined devices"
+            WRMSG( HHC01473, "E", cuu1, cuu2 );
+            goto error_ret;
         }
-        dgrs[gcount].cuu1=cuu1;
-        dgrs[gcount].cuu2=cuu2;
+
+        dgrs[ gcount ].cuu1 = cuu1;
+        dgrs[ gcount ].cuu2 = cuu2;
+
         gcount++;
-        grps=strtok_r(NULL,",",&strtok_str );
+
+        grps = strtok_r( NULL, ",", &strtok_str );
     }
-    free(sc);
-    dd->da=dgrs;
-    return(gcount);
+
+    dd->da = dgrs;
+
+    free( sc );
+
+    return gcount;
+
+error_ret:
+
+    free( dgrs );
+    free( sc );
+
+    return 0;
 }
 
-int
-parse_and_attach_devices(const char *sdevnum,
+/*-------------------------------------------------------------------*/
+/*                  parse_and_attach_devices                         */
+/*-------------------------------------------------------------------*/
+int parse_and_attach_devices(const char *sdevnum,
                         const char *sdevtype,
                         int  addargc,
                         char **addargv)
@@ -2059,6 +2174,9 @@ parse_and_attach_devices(const char *sdevnum,
 }
 
 #define MAX_LOGO_LINES 256
+/*-------------------------------------------------------------------*/
+/*                          clearlogo                                */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void clearlogo()
 {
     size_t i;
@@ -2072,6 +2190,10 @@ DLL_EXPORT void clearlogo()
         sysblk.herclogo=NULL;
     }
 }
+
+/*-------------------------------------------------------------------*/
+/*                          readlogo                                 */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int readlogo(char *fn)
 {
     char    **data;
@@ -2106,6 +2228,9 @@ DLL_EXPORT int readlogo(char *fn)
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/*                        parse_conkpalv                             */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt )
 {
     size_t n; char *p1, *p2, *p3, c;

@@ -2251,7 +2251,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC17016 - HHC17099 (available)
 
 #define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
+//efine HHC17101 - HHC17198 (available)
 #define HHC17199 "%.4s %s"
+//efine HHC17200 - HHC17499 (available)
 
 // Reserve 17500-17549 for Hercules Rexx messages
 #define HHC17500 "REXX(%s) %s" // DisplayOptions

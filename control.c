@@ -6596,7 +6596,6 @@ long double MIPSreal (const int stsicap_type)
 /*-------------------------------------------------------------------*/
 /*  stsi_capability - Generate capability matrix                     */
 /*-------------------------------------------------------------------*/
-
 enum
 {
     stsicap_refresh,

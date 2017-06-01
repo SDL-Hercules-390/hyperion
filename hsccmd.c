@@ -330,7 +330,7 @@ enable_lparmode(const int enable)
 
 #ifdef OPTION_MIPS_COUNTING
 /*-------------------------------------------------------------------*/
-/* maxrates command                                                  */
+/* maxrates command  -  report maximum seen mips/sios rates          */
 /*-------------------------------------------------------------------*/
 int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
@@ -3094,8 +3094,8 @@ BYTE    f = ' ', c = '\0';
 
     /* Handle size suffix and suffix overflow */
     {
-        register U64 shiftsize = mainsize;              /* mainsize pages     */
-        register U64 overflow = 0xFFFFFFFFFFFFFFFFULL;  /* Overflow mask      */
+        U64 shiftsize = mainsize;              /* mainsize pages     */
+        U64 overflow = 0xFFFFFFFFFFFFFFFFULL;  /* Overflow mask      */
 
         if ( rc == 2 )
         {
@@ -3256,7 +3256,7 @@ u_int   locktype = 0;
 
     /* Handle size suffix and suffix overflow */
     {
-        register U64 shiftsize = xpndsize;
+        U64 shiftsize = xpndsize;
         size_t sizeof_RADR = (ARCH_900 == sysblk.arch_mode) ? sizeof(U64)
                                                             : sizeof(U32);
         if ( rc == 2 )
@@ -4771,12 +4771,12 @@ int lparname_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* lparnum command - set or display LPAR identification number       */
 /*-------------------------------------------------------------------*/
-int lparnum_cmd(int argc, char *argv[], char *cmdline)
+int lparnum_cmd( int argc, char* argv[], char* cmdline )
 {
-U16     lparnum;
-BYTE    c;
+    U16     lparnum;
+    BYTE    c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 

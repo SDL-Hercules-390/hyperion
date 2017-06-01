@@ -24,15 +24,13 @@ static inline void missing_devnum()
 /*-------------------------------------------------------------------*/
 /* cpu command - define target cpu for panel display and commands    */
 /*-------------------------------------------------------------------*/
-int cpu_cmd(int argc, char *argv[], char *cmdline)
+int cpu_cmd( int argc, char* argv[], char* cmdline )
 {
-    BYTE    c;
-    int     rc      =  0;
-    int     cpu     = -1;
-    int     currcpu = sysblk.pcpu;
-    char    cmd[32768];
-
-    memset(cmd,0,sizeof(cmd));
+    BYTE  c;
+    int   rc       =  0;
+    int   cpu      = -1;
+    int   currcpu  = sysblk.pcpu;
+    char  cmd[256] = {0};
 
     if (argc < 2)
     {
@@ -40,10 +38,14 @@ int cpu_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if (sscanf(argv[1], "%x%c", &cpu, &c) != 1
-     || cpu < 0 || cpu >= sysblk.maxcpu)
+    if (0
+        || sscanf(argv[1], "%x%c", &cpu, &c) != 1
+        || cpu < 0
+        || cpu >= sysblk.maxcpu
+    )
     {
-        WRMSG(HHC02205, "E", argv[1], ": target processor is invalid" );
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], ": target processor is invalid" );
         return -1;
     }
 

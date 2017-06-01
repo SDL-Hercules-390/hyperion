@@ -10,16 +10,20 @@
 
 /* Define inline assembly style for GNU C compatible compilers */
 #if defined(__GNUC__)
-    #define asm __asm__
+    #define asm  __asm__
 #endif
 
+/*-------------------------------------------------------------------*/
+
 #if !defined(round_to_hostpagesize)
-static INLINE U64 round_to_hostpagesize(U64 n)
+static inline U64 round_to_hostpagesize(U64 n)
 {
-    register U64 factor = hostinfo.hostpagesz - 1;
+    U64 factor = hostinfo.hostpagesz - 1;
     return ((n + factor) & ~factor);
 }
 #endif
+
+/*-------------------------------------------------------------------*/
 
 #if !defined(clear_io_buffer)
 
@@ -36,6 +40,8 @@ static INLINE U64 round_to_hostpagesize(U64 n)
 #define clear_page_2K(_addr)                                           \
       __clear_page((void *)(_addr), (size_t)( TWO_KILOBYTE  / 64 ) )
 
+/*-------------------------------------------------------------------*/
+
 #if defined(__GNUC__) && defined(__SSE2__) && (__SSE2__ == 1)
   #define _GCC_SSE2_
 #elif defined (_MSVC_)
@@ -51,11 +57,14 @@ static INLINE U64 round_to_hostpagesize(U64 n)
   #endif
 #endif
 
+/*-------------------------------------------------------------------*/
+
 #if defined(_GCC_SSE2_)
-static INLINE void __clear_page( void *addr, size_t pgszmod64 )
+
+static inline void __clear_page( void *addr, size_t pgszmod64 )
 {
     unsigned char xmm_save[16];
-    register unsigned int i;
+    unsigned int i;
 
     asm volatile("": : :"memory");      /* barrier */
 
@@ -79,8 +88,12 @@ static INLINE void __clear_page( void *addr, size_t pgszmod64 )
 
     return;
 }
+
+/*-------------------------------------------------------------------*/
+
 #elif defined (_MSVC_)
-static INLINE void __clear_page( void* addr, size_t pgszmod64 )
+
+static inline void __clear_page( void* addr, size_t pgszmod64 )
 {
     // Variables of type __m128 map to one of the XMM[0-7] registers
     // and are used with SSE and SSE2 instructions intrinsics defined
@@ -88,7 +101,7 @@ static INLINE void __clear_page( void* addr, size_t pgszmod64 )
     // on 16-byte boundaries. You should not access the __m128 fields
     // directly. You can, however, see these types in the debugger.
 
-    register unsigned int i;        /* (work var for loop) */
+    unsigned int i;                 /* (work var for loop) */
     __m128 xmm0;                    /* (work XMM register) */
 
     /* Init work reg to 0 */
@@ -114,10 +127,12 @@ static INLINE void __clear_page( void* addr, size_t pgszmod64 )
   #define  __clear_page(_addr, _pgszmod64 )    memset((void*)(_addr), 0, ((size_t)(_pgszmod64)) << 6)
 #endif
 
+/*-------------------------------------------------------------------*/
+
 #if defined(_GCC_SSE2_)
-static INLINE void __optimize_clear(void *addr, size_t n)
+static inline void __optimize_clear(void *addr, size_t n)
 {
-    register char *mem = addr;
+    char *mem = addr;
 
     /* Let the compiler perform special case optimization */
     while (n-- > 0)
@@ -129,16 +144,18 @@ static INLINE void __optimize_clear(void *addr, size_t n)
   #define __optimize_clear(p,n)     memset((void*)(p),0,(size_t)(n))
 #endif
 
+/*-------------------------------------------------------------------*/
+
 #if defined(_GCC_SSE2_) || defined (_MSVC_)
-static INLINE void __clear_io_buffer(void *addr, size_t n)
+static inline void __clear_io_buffer(void *addr, size_t n)
 {
-    register unsigned int x;
-    register void *limit;
+    unsigned int x;
+    void *limit;
 
     /* Let the C compiler perform special case optimization */
     if ((x = (U64)(uintptr_t)addr & 0x00000FFF))
     {
-        register unsigned int a = 4096 - x;
+        unsigned int a = 4096 - x;
 
         __optimize_clear( addr, a );
         if (!(n -= a))
@@ -172,6 +189,9 @@ static INLINE void __clear_io_buffer(void *addr, size_t n)
     return;
 
 }
+
+/*-------------------------------------------------------------------*/
+
 #else /* (all others) */
   #define  __clear_io_buffer(_addr, _n)  memset((void*)(_addr), 0, (size_t)(_n))
 #endif
@@ -392,31 +412,23 @@ setCpuId(const unsigned int cpu,
 }
 
 
-/*********************************************************************/
-/*                                                                   */
+/*-------------------------------------------------------------------*/
 /* Convert an SCSW to a CSW for S/360 and S/370 channel support      */
-/*                                                                   */
-/*********************************************************************/
-
-static INLINE void
-scsw2csw(const SCSW* scsw, BYTE* csw)
+/*-------------------------------------------------------------------*/
+static inline void scsw2csw( const SCSW* scsw, BYTE* csw )
 {
-    memcpy(csw, scsw->ccwaddr, 8);
+    memcpy( csw, scsw->ccwaddr, 8 );
     csw[0] = scsw->flag0;
 }
 
 
-/*********************************************************************/
-/*                                                                   */
+/*-------------------------------------------------------------------*/
 /* Store an SCSW as a CSW for S/360 and S/370 channel support        */
-/*                                                                   */
-/*********************************************************************/
-
-static INLINE void
-store_scsw_as_csw(const REGS* regs, const SCSW* scsw)
+/*-------------------------------------------------------------------*/
+static inline void store_scsw_as_csw( const REGS* regs, const SCSW* scsw )
 {
-    register PSA_3XX*   psa;            /* -> Prefixed storage area  */
-    register RADR       pfx;            /* Current prefix            */
+    PSA_3XX*   psa;            /* -> Prefixed storage area  */
+    RADR       pfx;            /* Current prefix            */
 
     /* Establish prefixing */
     pfx =
@@ -429,7 +441,7 @@ store_scsw_as_csw(const REGS* regs, const SCSW* scsw)
     psa = (PSA_3XX*)(regs->mainstor + pfx);
 
     /* Store the channel status word at PSA+X'40' (64)*/
-    scsw2csw(scsw, psa->csw);
+    scsw2csw( scsw, psa->csw );
 
     /* Update storage key for reference and change done by caller */
 }
@@ -437,14 +449,15 @@ store_scsw_as_csw(const REGS* regs, const SCSW* scsw)
 
 /*-------------------------------------------------------------------*/
 /* Synchronize CPUS                                                  */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
 /* Locks                                                             */
 /*      INTLOCK(regs)                                                */
 /*-------------------------------------------------------------------*/
-static INLINE void
-synchronize_cpus(REGS* regs)
+static inline void synchronize_cpus( REGS* regs )
 {
     int i, n = 0;
+    REGS*  i_regs;
 
     CPU_BITMAP mask = sysblk.started_mask;
 
@@ -453,13 +466,13 @@ synchronize_cpus(REGS* regs)
 
     /* Deselect processors at a syncpoint and count active processors
      */
-    for (i = 0; mask && i < sysblk.hicpu; ++i)
+    for (i=0; mask && i < sysblk.hicpu; ++i)
     {
-        REGS*   i_regs = sysblk.regs[i];
+        i_regs = sysblk.regs[i];
 
-        if (mask & CPU_BIT(i))
+        if (mask & CPU_BIT( i ))
         {
-            if (AT_SYNCPOINT(i_regs))
+            if (AT_SYNCPOINT( i_regs ))
             {
                 /* Remove CPU already at syncpoint */
                 mask ^= CPU_BIT(i);
@@ -470,9 +483,10 @@ synchronize_cpus(REGS* regs)
                 ++n;
 
                 /* Test and set interrupt pending conditions */
-                ON_IC_INTERRUPT(i_regs);
-                if (SIE_MODE(i_regs))
-                    ON_IC_INTERRUPT(i_regs->guestregs);
+                ON_IC_INTERRUPT( i_regs );
+
+                if (SIE_MODE( i_regs ))
+                    ON_IC_INTERRUPT( i_regs->guestregs );
             }
         }
     }
@@ -484,12 +498,15 @@ synchronize_cpus(REGS* regs)
     if (n && mask)
     {
         sysblk.sync_mask = mask;
-        sysblk.syncing = 1;
-        sysblk.intowner = LOCK_OWNER_NONE;
-        wait_condition(&sysblk.sync_cond, &sysblk.intlock);
-        sysblk.intowner = (regs)->hostregs->cpuad;
-        sysblk.syncing = 0;
-        broadcast_condition(&sysblk.sync_bc_cond);
+        sysblk.syncing   = 1;
+        sysblk.intowner  = LOCK_OWNER_NONE;
+
+        wait_condition( &sysblk.sync_cond, &sysblk.intlock );
+
+        sysblk.intowner  = (regs)->hostregs->cpuad;
+        sysblk.syncing   = 0;
+
+        broadcast_condition( &sysblk.sync_bc_cond );
     }
     /* All active processors other than self, are now waiting at their
      * respective sync point. We may now safely proceed doing whatever
@@ -497,22 +514,26 @@ synchronize_cpus(REGS* regs)
      */
 }
 
+/*-------------------------------------------------------------------*/
+
 #define WAKEUP_CPU          wakeup_cpu
 #define WAKEUP_CPU_MASK     wakeup_cpu_mask
 #define WAKEUP_CPUS_MASK    wakeup_cpus_mask
 
-static INLINE void wakeup_cpu( REGS* regs )
+static inline void wakeup_cpu( REGS* regs )
 {
     signal_condition( &regs->intcond );
 }
 
-static INLINE void wakeup_cpu_mask( CPU_BITMAP mask )
+/*-------------------------------------------------------------------*/
+
+static inline void wakeup_cpu_mask( CPU_BITMAP mask )
 {
-    REGS   *current_regs;
-    REGS   *lru_regs = NULL;
-    TOD     current_waittod;
-    TOD     lru_waittod;
-    int     i;
+    REGS*  current_regs;
+    REGS*  lru_regs = NULL;
+    TOD    current_waittod;
+    TOD    lru_waittod;
+    int    i;
 
     if (mask)
     {
@@ -554,7 +575,9 @@ static INLINE void wakeup_cpu_mask( CPU_BITMAP mask )
     }
 }
 
-static INLINE void wakeup_cpus_mask( CPU_BITMAP mask )
+/*-------------------------------------------------------------------*/
+
+static inline void wakeup_cpus_mask( CPU_BITMAP mask )
 {
     int i;
 
@@ -574,7 +597,7 @@ static INLINE void wakeup_cpus_mask( CPU_BITMAP mask )
 #define OBTAIN_INTLOCK      Obtain_Interrupt_Lock
 #define RELEASE_INTLOCK     Release_Interrupt_Lock
 
-static INLINE void Obtain_Interrupt_Lock( REGS* regs )
+static inline void Obtain_Interrupt_Lock( REGS* regs )
 {
     if (regs)
         regs->hostregs->intwait = 1;
@@ -600,7 +623,9 @@ static INLINE void Obtain_Interrupt_Lock( REGS* regs )
         sysblk.intowner = LOCK_OWNER_OTHER;
 }
 
-static INLINE void Release_Interrupt_Lock( REGS* regs )
+/*-------------------------------------------------------------------*/
+
+static inline void Release_Interrupt_Lock( REGS* regs )
 {
     UNREFERENCED( regs );
     sysblk.intowner = LOCK_OWNER_NONE;
@@ -609,5 +634,7 @@ static INLINE void Release_Interrupt_Lock( REGS* regs )
 
 
 #undef asm
+
+/*-------------------------------------------------------------------*/
 
 #endif // _HINLINES_H
