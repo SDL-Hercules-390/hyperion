@@ -118,10 +118,10 @@ static GSYSINFO gsysinfo;
     int     n; \
     BYTE    temp[sizeof(_target)]; \
     memset(temp, 0x40, sizeof(temp) ); \
-    for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp); i++) \
-        if (isalnum(name[i])) \
+    for (i = 0, n = 0; (_source) && i < strlen(_source) && i < sizeof(temp); i++) \
+        if (isalnum((_source)[i])) \
         { \
-            temp[i] = host_to_guest((int)toupper(name[i])); \
+            temp[i] = host_to_guest((int)toupper((_source)[i])); \
             n++; \
         } \
         else \
