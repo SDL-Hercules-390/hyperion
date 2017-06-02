@@ -6924,7 +6924,7 @@ REGS *regs;
             begtime = curtime;
             // "%s bytes %s so far..."
             WRMSG( HHC02317, "I",
-                fmt_memsize_rounded( saved, fmt_mem, sizeof( fmt_mem )),
+                fmt_memsize( saved, fmt_mem, sizeof( fmt_mem )),
                     "saved" );
         }
     }
@@ -8250,6 +8250,8 @@ int qstor_cmd( int argc, char* argv[], char* cmdline )
     BYTE  display_main  = FALSE;
     BYTE  display_xpnd  = FALSE;
 
+    char  memsize[128];
+
     UNREFERENCED( cmdline );
 
     if (argc < 2)
@@ -8261,11 +8263,11 @@ int qstor_cmd( int argc, char* argv[], char* cmdline )
 
         for (i=1; i < argc; i++)
         {
-            strupper( check, argv[0] ); // Uppercase for multiple checks
+            strupper( check, argv[1] ); // Uppercase for multiple checks
 
                  if (strabbrev( "MAINSIZE", check, 1 )) display_main = TRUE;
             else if (strabbrev( "XPNDSIZE", check, 1 )
-                 || strabbrev(" EXPANDED",  check, 1 )) display_xpnd = TRUE;
+                 ||  strabbrev( "EXPANDED", check, 1 )) display_xpnd = TRUE;
             else
             {
                 // "Invalid argument %s%s"
@@ -8277,18 +8279,22 @@ int qstor_cmd( int argc, char* argv[], char* cmdline )
 
     if (display_main)
     {
+        fmt_memsize_KB( sysblk.mainsize >> SHIFT_KIBIBYTE,
+            memsize, sizeof( memsize ));
+
         // "%-8s storage is %s (%ssize); storage is %slocked"
-        WRMSG( HHC17003, "I", "MAIN",
-            fmt_memsize_KB( sysblk.mainsize >> SHIFT_KIBIBYTE ),
-            "main", sysblk.mainstor_locked ? "" : "not " );
+        WRMSG( HHC17003, "I", "MAIN", memsize, "main",
+            sysblk.mainstor_locked ? "" : "not " );
     }
 
     if (display_xpnd)
     {
+        fmt_memsize_MB( sysblk.xpndsize >> (SHIFT_MEBIBYTE - XSTORE_PAGESHIFT),
+            memsize, sizeof( memsize ));
+
         // "%-8s storage is %s (%ssize); storage is %slocked"
-        WRMSG( HHC17003, "I", "EXPANDED",
-            fmt_memsize_MB( sysblk.xpndsize >> (SHIFT_MEBIBYTE - XSTORE_PAGESHIFT) ),
-            "xpnd", sysblk.xpndstor_locked ? "" : "not " );
+        WRMSG( HHC17003, "I", "EXPANDED", memsize, "xpnd",
+            sysblk.xpndstor_locked ? "" : "not " );
     }
 
     return 0;

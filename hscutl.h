@@ -281,9 +281,11 @@ HUT_DLL_IMPORT const char* trimloc( const char* loc );
 HUT_DLL_IMPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz );
 
 /*-------------------------------------------------------------------*/
-/* fmt_memsize_rounded:   128K,  64M,  8G,  etc...                   */
+/* format memory size functions:   128K,  64M,  8G,  etc...          */
 /*-------------------------------------------------------------------*/
-HUT_DLL_IMPORT char *fmt_memsize_rounded( const U64 memsize, char* buf, const size_t bufsz );
+HUT_DLL_IMPORT char* fmt_memsize    ( const U64 memsize,   char* buf, const size_t bufsz );
+HUT_DLL_IMPORT char* fmt_memsize_KB ( const U64 memsizeKB, char* buf, const size_t bufsz );
+HUT_DLL_IMPORT char* fmt_memsize_MB ( const U64 memsizeMB, char* buf, const size_t bufsz );
 
 /*-------------------------------------------------------------------*/
 /* Standard Utility Initialization                                   */

@@ -237,10 +237,11 @@ int cpu;
         if (!storkeys)
         {
             char buf[64];
+            char memsize[64];
             sysblk.main_clear = 0;
-            MSGBUF( buf, "configure_storage(%s)",
-                    fmt_memsize_KB((U64)mainsize << 2) );
-            WRMSG( HHC01430, "S", buf, strerror(errno) );
+            fmt_memsize_KB( mainsize << 2, memsize, sizeof( memsize ));
+            MSGBUF( buf, "configure_storage(%s)", memsize );
+            WRMSG( HHC01430, "S", buf, strerror( errno ));
             return -1;
         }
 
@@ -386,10 +387,11 @@ int  cpu;
         if (!xpndstor)
         {
             char buf[64];
+            char memsize[64];
             sysblk.xpnd_clear = 0;
-            MSGBUF( buf, "configure_xstorage(%s)",
-                    fmt_memsize_MB((U64)xpndsize));
-            WRMSG( HHC01430, "S", buf, strerror(errno) );
+            fmt_memsize_MB( xpndsize, memsize, sizeof( memsize ));
+            MSGBUF( buf, "configure_xstorage(%s)", memsize );
+            WRMSG( HHC01430, "S", buf, strerror( errno ));
             return -1;
         }
 

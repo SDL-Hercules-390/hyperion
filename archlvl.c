@@ -879,10 +879,12 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
         if (storage_reset)
         {
+            char memsize[128];
+            fmt_memsize_KB( sysblk.mainsize >> SHIFT_KIBIBYTE, memsize, sizeof( memsize ));
+
             // "%-8s storage is %s (%ssize); storage is %slocked"
-            WRMSG( HHC17003, "I", "MAIN",
-                fmt_memsize_KB( (U64) sysblk.mainsize >> SHIFT_KIBIBYTE ),
-                "main", sysblk.mainstor_locked ? "":"not " );
+            WRMSG( HHC17003, "I", "MAIN", memsize, "main",
+                sysblk.mainstor_locked ? "" : "not " );
         }
     }
 

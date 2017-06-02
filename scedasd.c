@@ -228,7 +228,7 @@ char fmt_mem[8];
                 begtime = curtime;
                 // "%s bytes %s so far..."
                 WRMSG( HHC02317, "I",
-                    fmt_memsize_rounded( loaded, fmt_mem, sizeof( fmt_mem )),
+                    fmt_memsize( loaded, fmt_mem, sizeof( fmt_mem )),
                         "loaded" );
             }
         }

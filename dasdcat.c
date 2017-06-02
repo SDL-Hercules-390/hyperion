@@ -217,11 +217,16 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
     }
 
     if (optflags & OPT_MEMINFO_ONLY)
+    {
+        char memsize[128];
+        fmt_memsize( tot_len, memsize, sizeof( memsize ));
+
         // "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
         FWRMSG( stdout, HHC02407, "I",
-            volser, dsname, memname, fmt_memsize( tot_len ),
+            volser, dsname, memname, memsize,
             (U32) beg_cyl, (U32) beg_head, (U32) beg_rec,
             (U32)     cyl, (U32)     head, (U32)     rec );
+    }
 
     return 0;
 }

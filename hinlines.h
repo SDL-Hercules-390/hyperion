@@ -199,68 +199,6 @@ static inline void __clear_io_buffer(void *addr, size_t n)
 #endif /* !defined(clear_io_buffer) */
 
 
-/*-------------------------------------------------------------------*/
-/* fmt_memsize routine                                               */
-/*-------------------------------------------------------------------*/
-#if !defined(_fmt_memsize_)
-#define _fmt_memsize_
-static INLINE char *
-_fmt_memsize( const U64 memsize, const u_int n )
-{
-    /* Mainframe memory and DASD amounts are reported in 2**(10*n)
-     * values, (x_iB international format, and shown as x_ or x_B, when
-     * x >= 1024; x when x < 1024). Open Systems and Windows report
-     * memory in the same format, but report DASD storage in 10**(3*n)
-     * values. (Thank you, various marketing groups and international
-     * standards committees...)
-     *
-     * For Hercules, mainframe oriented reporting characteristics will
-     * be formatted and shown as x_, when x >= 1024, and as x when x <
-     * 1024. Reporting of Open Systems and Windows specifics should
-     * follow the international format, shown as x_iB, when x >= 1024,
-     * and x or xB when x < 1024. Reporting is done at the highest
-     * integral boundary.
-     *
-     * Format storage in 2**(10*n) values at the highest integral
-     * integer boundary.
-     */
-
-    const  char     suffix[9] = {0x00, 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'};
-    static char     fmt_mem[128];       /* Max of 21 bytes used for U64 */
-    register U64    mem = memsize;
-    register u_int  i = 0;
-
-    if (mem)
-        for (i = n;
-             i < sizeof(suffix) && !(mem & 0x03FF);
-             mem >>= 10, ++i);
-
-    MSGBUF( fmt_mem, "%"PRIu64"%c", mem, suffix[i]);
-
-    return (fmt_mem);
-}
-
-static INLINE char *
-fmt_memsize( const U64 memsize )
-{
-    return _fmt_memsize(memsize, 0);
-}
-
-static INLINE char *
-fmt_memsize_KB( const U64 memsizeKB )
-{
-    return _fmt_memsize(memsizeKB, 1);
-}
-
-static INLINE char *
-fmt_memsize_MB( const U64 memsizeMB )
-{
-    return _fmt_memsize(memsizeMB, 2);
-}
-
-#endif /* !defined(_fmt_memsize_) */
-
-
 /*********************************************************************/
 /*                                                                   */
 /*      createCpuId - Create the requested CPU ID                    */
