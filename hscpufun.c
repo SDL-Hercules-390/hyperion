@@ -34,8 +34,18 @@ int cpu_cmd( int argc, char* argv[], char* cmdline )
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E", argv[0] );
-        return -1;
+        if (!IS_CPU_ONLINE( currcpu ))
+        {
+            // "Processor %s%02X%s"
+            WRMSG( HHC02240, "W", PTYPSTR( currcpu ), currcpu,
+                " (currently offline)" );
+        }
+        else
+        {
+            // "Processor %s%02X%s"
+            WRMSG( HHC02240, "I", PTYPSTR( currcpu ), currcpu, "" );
+        }
+        return 0;
     }
 
     if (0

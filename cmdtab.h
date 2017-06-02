@@ -303,16 +303,18 @@
 #define cpu_cmd_desc            "Define target cpu for panel display and commands"
 #define cpu_cmd_help            \
                                 \
-  "Format: \"cpu xx\" where 'xx' is the hexadecimal cpu address of the cpu\n"   \
-  "in your multiprocessor configuration which you wish all panel commands\n"    \
-  "to apply to. If command text follows the cpu address, the command will\n"    \
-  "execute on cpu xx and the target cpu will not be permanently changed.\n"     \
+  "Format: \"cpu [xx [cmd]]\" where 'xx' is the hexadecimal cpu address \n"     \
+  "of the cpu in your multiprocessor configuration you wish all panel\n"        \
+  "commands to apply to.  If command text follows the cpu address, the\n"       \
+  "command executes on cpu xx and the target cpu is not changed.\n"             \
   "\n"                                                                          \
   "For example, entering 'cpu 1F' followed by \"gpr\" will change the\n"        \
   "target cpu for the panel display and commands and then display the\n"        \
-  "general purpose registers for cpu 31 of your configuration. Entering\n"      \
-  "'cpu 14 gpr' will execute the 'gpr' command on cpu 20, but will not\n"       \
-  "change the target cpu for subsequent panel displays and commands.\n"
+  "general purpose registers for cpu 31 of your configuration, whereas\n"       \
+  "\"cpu 14 gpr\" executes the 'gpr' command on cpu 20, but does not\n"         \
+  "change the target cpu for subsequent panel displays and commands.\n"         \
+  "\n"                                                                          \
+  "Entering the command with no arguments displays the current value.\n"
 
 #define cpuidfmt_cmd_desc       "Set format BASIC/0/1 STIDP generation"
 #define cpumodel_cmd_desc       "Set CPU model number"
@@ -1034,10 +1036,14 @@
   "     nnnnnn           table size                 (number of entries)\n"
 
 #define pwd_cmd_desc            "Print working directory"
-#define qcpuid_cmd_desc         "Display cpuid"
+#define qcpuid_cmd_desc         "Display cpuid(s)"
 #define qcpuid_cmd_help         \
                                 \
-  "Display cpuid and STSI results presented to the SCP\n"
+  "Format:   \"qcpuid   [xx|ALL]\"\n\n"                                         \
+  "Displays the cpuid and STSI results presented to the SCP for either\n"       \
+  "the current panel command target cpu (as defined by the \"cpu\" panel\n"     \
+  "command) if no arguments are given, or the specified hexadecimal cpu\n"      \
+  "address or all cpus if an argument was given.\n"
 
 #define qd_cmd_desc             "Query device information"
 #define qd_cmd_help             \

@@ -464,6 +464,7 @@ LOADPARM_DLL_IMPORT char *str_vmid();
 void get_cpid(BYTE *name);
 void set_cpmid(BYTE *name);
 LOADPARM_DLL_IMPORT char *str_cpid();
+void bld_sysib_sequence( BYTE* seqc );
 void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */

@@ -683,6 +683,43 @@ char *str_cpid()
 
 
 /*-------------------------------------------------------------------*/
+/* Build a STSI System Information Block (SYSIB) Sequence value      */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* PROGRAMMING NOTE: according to manual SA22-7832-10 zArchitecture  */
+/* Principles of Operation, page 10-141 and 10-145:                  */
+/*                                                                   */
+/*    "Multiple CPUs in the same configuration have the              */
+/*     same sequence code, and it is necessary to use other          */
+/*     information, such as the CPU address, to establish            */
+/*     a unique CPU identity.  The sequence code returned            */
+/*     for a basic-machine CPU and a logical-partition CPU           */
+/*     are identical and have the same value as the sequence         */
+/*     code returned for the basic-machine configuration."           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void bld_sysib_sequence( BYTE* seqc )
+{
+    static BYTE hexebcdic[16] = {
+        0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,  // "01234567"
+        0xF8, 0xF9, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6   // "89ABCDEF"
+    };
+    size_t  seqc_idx;
+    BYTE    serial_shift, hexebcdic_idx, i;
+
+    memset( seqc, 0xF0, 16 );
+
+    for (i=0; i < 6; i++)
+    {
+        seqc_idx         = 16 - 6 + i;
+        serial_shift     = (32 - (3 * 4)) - (i * 4);
+        hexebcdic_idx    = (sysblk.cpuserial >> serial_shift) & 0x0F;
+        seqc[ seqc_idx ] = hexebcdic[ hexebcdic_idx ];
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Retrieve Multiprocessing CPU-Capability Adjustment Factors        */
 /*                                                                   */
 /* This function retrieves the Multiprocessing CPU-Capability        */

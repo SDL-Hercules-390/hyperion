@@ -7899,35 +7899,101 @@ int msglevel_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /*-------------------------------------------------------------------*/
+/* qcpuid helpers                                                    */
+/*-------------------------------------------------------------------*/
+static void qcpuid_cpuid( U64 cpuid, const char* source )
+{
+    // "%-6s: CPUID  = %16.16"PRIX64
+    WRMSG( HHC17004, "I",  source, cpuid );
+}
+
+static void qcpuid_cpcsi( U64 cpuid, const char* source )
+{
+    U16   machinetype = (cpuid >> 16) & 0xFFFF;
+    BYTE  seqc[16+1];
+
+    bld_sysib_sequence( seqc );
+    buf_guest_to_host( seqc, seqc, 16 );
+    seqc[16] = 0;
+
+    // "%-6s: CPC SI = %4.4X.%s.%s.%s.%s"
+    WRMSG( HHC17005, "I",  source, machinetype,
+        str_modelcapa(), str_manufacturer(), str_plant(), seqc );
+}
+
+/*-------------------------------------------------------------------*/
 /* qcpuid command                                                    */
 /*-------------------------------------------------------------------*/
-int qcpuid_cmd(int argc, char *argv[], char *cmdline)
+int qcpuid_cmd( int argc, char* argv[], char* cmdline )
 {
-    /* Note: The machine-type must be set before the message is      */
-    /*       issued due to gcc incorrectly handling substitution     */
-    /*       of the third and fourth variables on some platforms.    */
+    REGS* regs;
+    int   cpu, cpunum = sysblk.pcpu;
+    char  buf[16];
+    BYTE  c;
 
-    char *model = str_modelcapa();
-    char *manuf = str_manufacturer();
-    char *plant = str_plant();
-    U16   machinetype = ( sysblk.cpuid >> 16 ) & 0xFFFF;
-    U32   sequence    = ( sysblk.cpuid >> 32 ) & 0x00FFFFFF;
+    UNREFERENCED( cmdline );
+    UNREFERENCED( argv );
 
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argv);
-
-    if (argc != 1)
+    if (argc < 1 || argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    WRMSG( HHC17004, "I",  sysblk.cpuid );
-    WRMSG( HHC17005, "I",  machinetype,
-                           model,
-                           manuf,
-                           plant,
-                           sequence );
+    if (argc == 2)
+    {
+        if (strcasecmp( argv[1], "ALL" ) == 0)
+            cpunum = -1;
+        else if (0
+            || sscanf( argv[1], "%x%c", &cpunum, &c) != 1
+            || cpunum < 0
+            || cpunum >= sysblk.hicpu
+            || !IS_CPU_ONLINE( cpunum )
+        )
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], ": target processor is invalid" );
+            return -1;
+        }
+    }
+
+    /* Show 'CPUID' from SYSBLK */
+    qcpuid_cpuid( sysblk.cpuid, "SYSBLK" );
+
+    /* Show 'CPUID' from REGS */
+    for (cpu=0; cpu < sysblk.hicpu; cpu++)
+    {
+        if (1
+            && IS_CPU_ONLINE( cpu )
+            && (cpunum < 0 || cpu == cpunum)
+        )
+        {
+            regs = sysblk.regs[ cpu ];
+            MSGBUF( buf, "%s%02X",
+                PTYPSTR( regs->cpuad ), regs->cpuad );
+            qcpuid_cpuid( regs->cpuid, buf );
+        }
+    }
+
+    /* Show 'CPC SI' information from SYSBLK */
+    qcpuid_cpcsi( sysblk.cpuid, "SYSBLK" );
+
+    /* Show 'CPC SI' information from REGS */
+    for (cpu=0; cpu < sysblk.hicpu; cpu++)
+    {
+        if (1
+            && IS_CPU_ONLINE( cpu )
+            && (cpunum < 0 || cpu == cpunum)
+        )
+        {
+            regs = sysblk.regs[ cpu ];
+            MSGBUF( buf, "%s%02X",
+                PTYPSTR( regs->cpuad ), regs->cpuad );
+            qcpuid_cpcsi( regs->cpuid, buf );
+        }
+    }
+
     return 0;
 }
 

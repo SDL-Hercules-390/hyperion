@@ -1356,7 +1356,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02237 "Not all devices shown (max %d)"
 #define HHC02238 "Device numbers can only be redefined within the same Logical Channel SubSystem"
 #define HHC02239 "command '%s' invalid for device type %04X"
-//efine HHC02240 (available)
+#define HHC02240 "Processor %s%02X%s"
 #define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"
 #define HHC02243 "%1d:%04X reinit rejected; drive not empty"
