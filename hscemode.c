@@ -2361,4 +2361,263 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 
+/*-------------------------------------------------------------------*/
+/* createCpuId  -  Create the requested CPU ID                       */
+/*-------------------------------------------------------------------*/
+U64 createCpuId
+(
+    const U64  model,
+    const U64  version,
+    const U64  serial,
+    const U64  MCEL
+)
+{
+    U64 result;
+
+    result    =  version;
+
+    result  <<=  24;
+    result   |=  serial;
+
+    result  <<=  16;
+    result   |=  model;
+
+    result  <<=  16;
+    result   |=  MCEL;
+
+    return result;
+}
+
+/*-------------------------------------------------------------------*/
+/* setCpuIdregs  -  Set the CPU ID for the requested CPU context     */
+/*-------------------------------------------------------------------*/
+void setCpuIdregs
+(
+    REGS*  regs,
+    S32    arg_model,
+    S16    arg_version,
+    S32    arg_serial,
+    S32    arg_MCEL
+)
+{
+    U16  model;
+    U8   version;
+    U32  serial;
+    U16  MCEL;
+
+    /* Return if CPU out-of-range */
+    if (regs->cpuad >= MAX_CPU_ENGINES)
+        return;
+
+    /* Gather needed values */
+    model   = arg_model   >= 0 ?       arg_model   & 0x000FFFF : sysblk.cpumodel;
+    version = arg_version >= 0 ?       arg_version & 0xFF      : sysblk.cpuversion;
+    serial  = arg_serial  >= 0 ? (U32) arg_serial              : sysblk.cpuserial;
+    MCEL    = arg_MCEL    >= 0 ? (U32) arg_MCEL                : sysblk.cpuid;
+    MCEL   &= 0x7FFF;
+
+    /* Version is always zero in z/Architecture mode */
+    if (regs->arch_mode == ARCH_900)
+        version = 0;
+
+    /* Register new CPU ID settings */
+    regs->cpumodel   = model;
+    regs->cpuversion = version;
+    regs->cpuserial  = serial;
+
+    /* Handle LPAR formatting */
+    if (sysblk.lparmode)
+    {
+        /* Overlay CPUID serial nibbles 0 and 1 with LPAR or LPAR/CPU.
+         * The full serial number is maintained in STSI information.
+         */
+        serial &= 0x0000FFFF;
+
+        if (sysblk.cpuidfmt)  /* Format 1 CPU ID? */
+        {
+            /* Set Format 1 bit (bit 48 or MCEL bit 0) */
+            MCEL = 0x8000;
+
+            /* Use LPAR number to a maximum of 255 */
+            serial |= min( sysblk.lparnum, 255 ) << 16;
+        }
+        else /* Format 0 CPU ID */
+        {
+            /* Clear MCEL and leave Format 1 bit as zero */
+            MCEL = 0;
+
+            /* Use low-order nibble of LPAR id;
+             * LPARNUM 10 is indicated as a value of 0.
+             */
+            serial |= (sysblk.lparnum & 0x0F) << 16;
+
+            /* and a single digit CPU ID to a maximum of 15 */
+            serial |= min( regs->cpuad, 15 ) << 20;
+        }
+    }
+    else /* BASIC mode CPU ID */
+    {
+        /* If more than one CPU permitted, use a single digit CPU ID
+         * to a maximum of 15.
+         */
+        if (sysblk.maxcpu <= 1)
+            serial &= 0x00FFFFFF;
+        else
+        {
+            serial &= 0x000FFFFF;
+            serial |= min( regs->cpuad, 15 ) << 20;
+        }
+    }
+
+    /* Construct new CPU ID */
+    regs->cpuid = createCpuId( model, version, serial, MCEL );
+}
+
+/*-------------------------------------------------------------------*/
+/* setCpuId  -  Set the CPU ID for the requested CPU                 */
+/*-------------------------------------------------------------------*/
+void setCpuId
+(
+    const unsigned int  cpu,
+    S32                 arg_model,
+    S16                 arg_version,
+    S32                 arg_serial,
+    S32                 arg_MCEL
+)
+{
+    REGS*  regs;
+
+    /* Return if CPU out-of-range */
+    if (cpu >= MAX_CPU_ENGINES)
+        return;
+
+    /* Return if CPU undefined */
+    if (!IS_CPU_ONLINE( cpu ))
+        return;
+
+    regs = sysblk.regs[ cpu ];
+
+    /* Set new CPU ID */
+    setCpuIdregs( regs, arg_model, arg_version, arg_serial, arg_MCEL );
+
+    /* Set CPU timer source (a "strange" place, but here as the CPU ID
+     * must be updated when the LPAR mode or number is update).
+     */
+    set_cpu_timer_mode( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/* setOperationMode  -  Set the operation mode for the system        */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Operations Mode:                                                  */
+/*                                                                   */
+/*   BASIC: lparmode = 0                                             */
+/*   MIF:   lparmode = 1; cpuidfmt = 0; lparnum = 1...16 (decimal)   */
+/*   EMIF:  lparmode = 1; cpuidfmt = 1                               */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void setOperationMode()
+{
+    sysblk.operation_mode =
+      sysblk.lparmode ?
+      ((sysblk.cpuidfmt || sysblk.lparnum < 1 || sysblk.lparnum > 16) ?
+       om_emif : om_mif) : om_basic;
+}
+
+/*-------------------------------------------------------------------*/
+/* Set/update all CPU IDs                                            */
+/*-------------------------------------------------------------------*/
+BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+{
+    U64  mcel;
+    int  cpu;
+
+    /* Determine and update system CPU model */
+    if (model >= 0)
+        sysblk.cpumodel = model & 0x0000FFFF;
+
+    /* Determine and update CPU version */
+    if (version >= 0)
+        sysblk.cpuversion = version & 0xFF;
+
+    /* Determine and update CPU serial number */
+    if (serial >= 0)
+        sysblk.cpuserial = serial & 0x00FFFFFF;
+
+    /* Determine and update MCEL */
+         if (sysblk.lparmode)                   mcel = sysblk.cpuidfmt ? 0x8000 : 0;
+    else if (MCEL >= 0)                         mcel = MCEL & 0xFFFF;
+    else if ((sysblk.cpuid & 0xFFFF) == 0x8000) mcel = 0;
+    else                                        mcel = sysblk.cpuid & 0xFFFF;
+
+    /* Set the system global CPU ID */
+    sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion, sysblk.cpuserial, mcel );
+
+    /* Set a tailored CPU ID for each and every defined CPU */
+    for (cpu=0; cpu < MAX_CPU_ENGINES; ++cpu )
+        setCpuId( cpu, model, version, serial, MCEL );
+
+   return TRUE;
+}
+
+/*-------------------------------------------------------------------*/
+/* setAllCpuIds_lock  -  Obtain INTLOCK and then set all CPU IDs     */
+/*-------------------------------------------------------------------*/
+BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+{
+    BYTE success;
+    OBTAIN_INTLOCK( NULL );
+    {
+        /* Call unlocked version of setAllCpuIds */
+        success = setAllCpuIds( model, version, serial, MCEL );
+    }
+    RELEASE_INTLOCK( NULL );
+    return success;
+}
+
+/*-------------------------------------------------------------------*/
+/* resetAllCpuIds - Reset all CPU IDs based on sysblk CPU ID updates */
+/*-------------------------------------------------------------------*/
+BYTE resetAllCpuIds()
+{
+    return setAllCpuIds( -1, -1, -1, -1 );
+}
+
+/*-------------------------------------------------------------------*/
+/* enable_lparmode  -  Enable/Disable LPAR mode                      */
+/*-------------------------------------------------------------------*/
+void enable_lparmode( const int enable )
+{
+    static const int  fbyte  =          (STFL_LOGICAL_PARTITION / 8);
+    static const int  fbit   =  0x80 >> (STFL_LOGICAL_PARTITION % 8);
+
+    if (enable)
+    {
+#if defined( _370 )
+        sysblk.facility_list[ ARCH_370 ][fbyte] |= fbit;
+#endif
+#if defined( _390 )
+        sysblk.facility_list[ ARCH_390 ][fbyte] |= fbit;
+#endif
+#if defined( _900 )
+        sysblk.facility_list[ ARCH_900 ][fbyte] |= fbit;
+#endif
+    } else { // disable
+#if defined( _370 )
+        sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
+#endif
+#if defined( _390 )
+        sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
+#endif
+#if defined( _900 )
+        sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
+#endif
+    }
+
+    /* Set system lparmode and operation mode indicators accordingly */
+    sysblk.lparmode = enable;
+    setOperationMode();
+}
+
 #endif // !defined(_GEN_ARCH)
