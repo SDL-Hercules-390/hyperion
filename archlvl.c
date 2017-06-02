@@ -630,7 +630,7 @@ static BYTE set_facility( FACTAB* ft, BYTE enable, BYTE mode )
 /*-------------------------------------------------------------------*/
 /*                        update_facility                  (boolean) */
 /*-------------------------------------------------------------------*/
-static BYTE update_archlvl( int argc, char* argv[] )
+static BYTE update_facility( int argc, char* argv[] )
 {
     FACTAB*     ft;
     ARCHTAB*    at;
@@ -680,7 +680,7 @@ static BYTE update_archlvl( int argc, char* argv[] )
 
     if      (CMD( argv[1], enable,  3 )) enable = TRUE;
     else if (CMD( argv[1], disable, 4 )) enable = FALSE;
-    else                                 return -1;
+    else                                 return FALSE;
 
     if (argc < 3)
     {
@@ -845,7 +845,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     if (!set_archlvl( argv[1] ))
     {
         /* Then it must be enable/disable facility */
-        if (!update_archlvl( argc, argv ))
+        if (!update_facility( argc, argv ))
         {
             // "Invalid argument %s%s"
             WRMSG( HHC02205, "E", argv[1], "" );
