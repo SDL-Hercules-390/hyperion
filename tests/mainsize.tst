@@ -149,7 +149,12 @@ mainsize 4k
 
 archmode z/Arch
 
-*Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
+# PROGRAMMING NOTE: below test must be "*Info 2 ..." because
+# switching from archmode S/370 to z/Arch or vice versa now
+# causes the LPARNUM and CPUIDFMT commands to also be issued
+# resulting in 2 extra messages. See "Release Notes".
+
+*Info 2 HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 
 *Done nowait
 
