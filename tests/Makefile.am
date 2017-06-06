@@ -298,6 +298,9 @@ EXTRA_DIST =                    \
      runtest                    \
      runtest.cmd                \
      runtest.subtst             \
+     stidp-esa390.subtst        \
+     stidp-s370.subtst          \
+     stidp-zarch.subtst         \
      runtest0.tst               \
      runtest4.tst               \
      sigp.assemble              \
@@ -314,6 +317,7 @@ EXTRA_DIST =                    \
      stfl.core                  \
      stfl.listing               \
      stfl.tst                   \
+     stidp.tst                  \
      stfle.txt                  \
      stidp.txt                  \
      stsi.txt                   \

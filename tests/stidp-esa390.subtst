@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------
+#                             ESA390
+#----------------------------------------------------------------------
+
+*Testcase   $(test_name)
+
+sysclear
+
+archlvl     $(test_archlvl)
+maxcpu      $(test_numcpu)
+numcpu      $(test_numcpu)
+lparnum     $(test_lparnum)
+cpuidfmt    $(test_cpuidfmt)
+
+r 000=0008000000000200                  # EC mode restart PSW
+r 068=000a00000000dead                  # EC mode pgm new PSW
+
+r 200=b2020208                          # Store CPU ID
+r 204=82000300                          # LPSW  DONEPSW
+
+r 208=ffffffffffffffff                  # CPU ID
+r 300=000a000000000000                  # EC mode DONEPSW
+
+cpu $(panel_cpu)
+qcpuid
+$(cf_1st)
+$(cf_2nd)
+
+runtest   0.1
+
+*Compare
+
+r 208.8
+
+*Want $(want_cpuid)
+
+*Done
+
+cpu 0
+cpu 0 cf on
+cpu 1 cf off
+maxcpu 8
+numcpu 1

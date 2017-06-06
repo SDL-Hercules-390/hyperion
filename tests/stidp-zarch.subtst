@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------
+#                             z/Arch
+#----------------------------------------------------------------------
+
+*Testcase   $(test_name)
+
+sysclear
+
+archlvl     $(test_archlvl)
+maxcpu      $(test_numcpu)
+numcpu      $(test_numcpu)
+lparnum     $(test_lparnum)
+cpuidfmt    $(test_cpuidfmt)
+
+r 1a0=00000001800000000000000000000200  # z/Arch  restart PSW
+r 1d0=0002000180000000000000000000dead  # z/Arch  pgm new PSW
+
+r 200=b2020208                          # Store CPU ID
+r 204=b2b20300                          # LPSWE DONEPSW
+
+r 208=ffffffffffffffff                  # CPU ID
+r 300=00020001800000000000000000000000  # z/Arch  DONEPSW
+
+cpu $(panel_cpu)
+qcpuid
+$(cf_1st)
+$(cf_2nd)
+
+runtest   0.1
+
+*Compare
+
+r 208.8
+
+*Want $(want_cpuid)
+
+*Done
+
+cpu 0
+cpu 0 cf on
+cpu 1 cf off
+maxcpu 8
+numcpu 1

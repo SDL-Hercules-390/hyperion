@@ -872,6 +872,9 @@
     <None Include="tests\runtest" />
     <None Include="tests\runtest.cmd" />
     <None Include="tests\runtest.subtst" />
+    <None Include="tests\stidp-esa390.subtst" />
+    <None Include="tests\stidp-s370.subtst" />
+    <None Include="tests\stidp-zarch.subtst" />
     <None Include="tests\runtest0.tst" />
     <None Include="tests\runtest4.tst" />
     <None Include="tests\semipriv.asm" />
@@ -891,6 +894,7 @@
     <None Include="tests\stfl.core" />
     <None Include="tests\stfl.list" />
     <None Include="tests\stfl.tst" />
+    <None Include="tests\stidp.tst" />
     <None Include="tests\tapebsf.subtst" />
     <None Include="tests\tests.conf" />
     <None Include="tests\timeout.tst" />

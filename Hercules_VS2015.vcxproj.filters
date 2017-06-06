@@ -1814,6 +1814,9 @@
     <None Include="tests\stfl.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\stidp.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\timeout.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -1839,6 +1842,15 @@
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\runtest.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
+    <None Include="tests\stidp-esa390.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
+    <None Include="tests\stidp-s370.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
+    <None Include="tests\stidp-zarch.subtst">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\tapebsf.subtst">

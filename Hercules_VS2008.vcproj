@@ -4150,6 +4150,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\stidp.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\timeout.tst"
 							>
 						</File>
@@ -4194,6 +4198,18 @@
 							</File>
 							<File
 								RelativePath=".\tests\runtest.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stidp-esa390.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stidp-s370.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stidp-zarch.subtst"
 								>
 							</File>
 							<File
