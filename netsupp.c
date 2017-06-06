@@ -81,6 +81,16 @@ int  IsMACTab ( const MACTAB* tab, const BYTE* mac )
 }
 
 /*-------------------------------------------------------------------*/
+/*         Fold a 32-bit checksum into a 16-bit checksum             */
+/*-------------------------------------------------------------------*/
+
+static inline void  FoldSum32( U32* pSum )
+{
+    *pSum  = (*pSum >> 16) + (*pSum & 0xFFFF);  // (add hi 16 to lo 16)
+    *pSum  = (*pSum >> 16) + (*pSum & 0xFFFF);  // (add carry (if any))
+}
+
+/*-------------------------------------------------------------------*/
 /*        Calculate UN-complemented Pseudo Header checksum           */
 /*-------------------------------------------------------------------*/
 

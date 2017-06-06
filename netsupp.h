@@ -143,16 +143,6 @@ typedef struct pseudo_hdr   pseudo_hdr;
 #define                     pseudo_hdr_size     sizeof( pseudo_hdr )
 
 /*-------------------------------------------------------------------*/
-/*         Fold a 32-bit checksum into a 16-bit checksum             */
-/*-------------------------------------------------------------------*/
-
-inline void  FoldSum32( U32* pSum )
-{
-    *pSum  = (*pSum >> 16) + (*pSum & 0xFFFF);  // (add hi 16 to lo 16)
-    *pSum  = (*pSum >> 16) + (*pSum & 0xFFFF);  // (add carry (if any))
-}
-
-/*-------------------------------------------------------------------*/
 /*                 Checksum Offloading functions                     */
 /*-------------------------------------------------------------------*/
 
