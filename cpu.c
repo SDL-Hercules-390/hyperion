@@ -1344,9 +1344,6 @@ int i;
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
 
-    /* Set initial CPU ID by REGS context */
-    setCpuIdregs(regs, -1, -1, -1, -1);
-
     /* Save CPU creation time without epoch set, as epoch may change. When using
      * the field, subtract the current epoch from any time being used in
      * relation to the creation time to yield the correct result.
@@ -1360,6 +1357,11 @@ int i;
     regs->storkeys  = sysblk.storkeys;
     regs->mainlim   = sysblk.mainsize - 1;
     regs->tod_epoch = get_tod_epoch();
+
+    /* Set initial CPU ID by REGS context.  Note that this
+       must only be done AFTER regs->arch_mode has been set.
+    */
+    setCpuIdregs( regs, -1, -1, -1, -1 );
 
     initialize_condition (&regs->intcond);
     regs->cpulock = &sysblk.cpulock[cpu];
@@ -1775,6 +1777,10 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     {
         PTT_INF("*SETARCH",regs->arch_mode,sysblk.arch_mode,cpu);
         regs->arch_mode = sysblk.arch_mode;
+
+        /* Ensure CPU ID is accurate in case archmode changed */
+        setCpuIdregs( regs, -1, -1, -1, -1 );
+
         oldregs = malloc_aligned(sizeof(REGS), 4096);
         if (oldregs)
         {

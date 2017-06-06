@@ -6884,10 +6884,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                     memcpy(sysib111->modcapaid, sysib111->model, sizeof(sysib111->model));
                 get_modelperm(sysib111->mpci);
                 get_modeltemp(sysib111->mtci);
-                memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
-                for(i = 0; i < 6; i++)
-                    sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
-                    hexebcdic[(sysblk.cpuserial >> (20 - (i*4))) & 0x0F];
+                bld_sysib_sequence( sysib111->seqc );
                 get_plant(sysib111->plant);
                 STORE_FW(sysib111->mcaprating,  sysblk.cpmcr);
                 STORE_FW(sysib111->mpcaprating, sysblk.cpmpcr);
@@ -6921,10 +6918,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 /* Basic-machine Current CPU */
                 sysib121 = (SYSIB121*)(m);
                 memset(sysib121, 0, MAX(sizeof(SYSIB121),64*4));
-                memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
-                for(i = 0; i < 6; i++)
-                    sysib121->seqc[(sizeof(sysib121->seqc) - 6) + i] =
-                        hexebcdic[sysblk.cpuserial >> (20 - (i*4)) & 0x0F];
+                bld_sysib_sequence( sysib121->seqc );
                 get_plant(sysib121->plant);
                 STORE_HW(sysib121->cpuad,regs->cpuad);
                 regs->psw.cc = 0;
@@ -6994,10 +6988,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 /* Logical-partition Current CPU */
                 sysib221 = (SYSIB221 *)(m);
                 memset(sysib221, 0, MAX(sizeof(SYSIB221),64*4));
-                memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
-                for(i = 0; i < 6; i++)
-                    sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
-                    hexebcdic[(regs->cpuserial >> (20 - (i*4))) & 0x0F];
+                bld_sysib_sequence( sysib221->seqc );
                 get_plant(sysib221->plant);
                 STORE_HW(sysib221->lcpuid,regs->cpuad);
                 STORE_HW(sysib221->cpuad,regs->cpuad);

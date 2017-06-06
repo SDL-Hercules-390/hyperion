@@ -611,6 +611,9 @@ int i, rc = 0;                          /* Array subscript           */
     /* Initialize Architecture Level Set */
     init_als(regs);
 
+    /* Ensure CPU ID is accurate in case archmode changed */
+    setCpuIdregs( regs, -1, -1, -1, -1 );
+
    return rc;
 } /* end function cpu_reset */
 

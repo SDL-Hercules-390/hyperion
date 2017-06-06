@@ -1230,6 +1230,10 @@ int configure_numcpu( int numcpu )
     OBTAIN_INTLOCK( NULL );
     {
         rc = configure_numcpu_intlock_held( numcpu );
+
+        /* Update all CPU IDs to reflect new NUMCPU */
+        if (rc == 0)
+            resetAllCpuIds();
     }
     RELEASE_INTLOCK( NULL );
 
@@ -1264,6 +1268,9 @@ int configure_maxcpu( int maxcpu )
         /* Deconfigure excess online CPUs if necessary */
         if (sysblk.cpus > maxcpu)
             rc = configure_numcpu_intlock_held( maxcpu );
+
+        /* Update all CPU IDs to reflect new MAXCPU */
+        resetAllCpuIds();
     }
     RELEASE_INTLOCK( NULL );
     return rc;

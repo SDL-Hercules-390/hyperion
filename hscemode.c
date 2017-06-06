@@ -2414,7 +2414,6 @@ void setCpuIdregs
     version = arg_version >= 0 ?       arg_version & 0xFF      : sysblk.cpuversion;
     serial  = arg_serial  >= 0 ? (U32) arg_serial              : sysblk.cpuserial;
     MCEL    = arg_MCEL    >= 0 ? (U32) arg_MCEL                : sysblk.cpuid;
-    MCEL   &= 0x7FFF;
 
     /* Version is always zero in z/Architecture mode */
     if (regs->arch_mode == ARCH_900)
@@ -2425,45 +2424,44 @@ void setCpuIdregs
     regs->cpuversion = version;
     regs->cpuserial  = serial;
 
-    /* Handle LPAR formatting */
-    if (sysblk.lparmode)
+    if (ARCH_370 != sysblk.arch_mode)
     {
-        /* Overlay CPUID serial nibbles 0 and 1 with LPAR or LPAR/CPU.
-         * The full serial number is maintained in STSI information.
-         */
-        serial &= 0x0000FFFF;
-
-        if (sysblk.cpuidfmt)  /* Format 1 CPU ID? */
+        /* Handle LPAR formatting */
+        if (sysblk.lparmode)
         {
-            /* Set Format 1 bit (bit 48 or MCEL bit 0) */
-            MCEL = 0x8000;
-
-            /* Use LPAR number to a maximum of 255 */
-            serial |= min( sysblk.lparnum, 255 ) << 16;
-        }
-        else /* Format 0 CPU ID */
-        {
-            /* Clear MCEL and leave Format 1 bit as zero */
-            MCEL = 0;
-
-            /* Use low-order nibble of LPAR id;
-             * LPARNUM 10 is indicated as a value of 0.
+            /* Overlay CPUID serial nibbles 0 and 1 with LPAR or LPAR/CPU.
+             * The full serial number is maintained in STSI information.
              */
-            serial |= (sysblk.lparnum & 0x0F) << 16;
+            serial &= 0x0000FFFF;
 
-            /* and a single digit CPU ID to a maximum of 15 */
-            serial |= min( regs->cpuad, 15 ) << 20;
+            if (sysblk.cpuidfmt)  /* Format 1 CPU ID? */
+            {
+                /* Set Format 1 bit (bit 48 or MCEL bit 0) */
+                MCEL = 0x8000;
+
+                /* Use LPAR number to a maximum of 255 */
+                serial |= min( sysblk.lparnum, 255 ) << 16;
+            }
+            else /* Format 0 CPU ID */
+            {
+                /* Clear MCEL and leave Format 1 bit as zero */
+                MCEL = 0;
+
+                /* Use low-order nibble of LPAR id;
+                 * LPARNUM 10 is indicated as a value of 0.
+                 */
+                serial |= (sysblk.lparnum & 0x0F) << 16;
+
+                /* and a single digit CPU ID to a maximum of 15 */
+                serial |= min( regs->cpuad, 15 ) << 20;
+            }
         }
-    }
-    else /* BASIC mode CPU ID */
-    {
-        /* If more than one CPU permitted, use a single digit CPU ID
-         * to a maximum of 15.
-         */
-        if (sysblk.maxcpu <= 1)
-            serial &= 0x00FFFFFF;
-        else
+        else /* BASIC mode CPU ID */
         {
+            /* Format is always stored as zero in BASIC mode */
+            MCEL &= 0x7FFF;
+
+            /* Use a single digit CPU ID to a maximum of 15 */
             serial &= 0x000FFFFF;
             serial |= min( regs->cpuad, 15 ) << 20;
         }

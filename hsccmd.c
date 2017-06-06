@@ -4648,130 +4648,122 @@ int lparname_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int lparnum_cmd( int argc, char* argv[], char* cmdline )
 {
+    size_t  arglen;
     U16     lparnum;
+    char    chlparnum[20];
+    char    chcpuidfmt[20];
     BYTE    c;
+    BYTE    resetSuccessful;
 
     UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    if ( argc > 2 )
+    if (argc < 1 || argc > 2)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    /* Update LPAR identification number if operand is specified */
-    if ( argc == 2 )
+    /* Display LPAR identification number */
+    if (argc == 1)
     {
-        int n = strlen(argv[1]);
-
-        if ( (n == 2 || n == 1)
-             && sscanf(argv[1], "%hx%c", &lparnum, &c) == 1)
-        {
-            if (ARCH_370 == sysblk.arch_mode &&
-                (!lparnum || lparnum > 16))
-            {
-                // "Invalid argument %s%s"
-                WRMSG( HHC02205, "E", argv[1], ": must be 1 to 10 (hex) for ARCHMODE S370" );
-                return -1;
-            }
-
-            /* Obtain INTLOCK */
-            OBTAIN_INTLOCK(NULL);
-
-            /* Set new LPAR number, CPU ID format and operation mode */
-            enable_lparmode(1);
-            sysblk.lparnum = lparnum;
-            if (lparnum == 0)
-                sysblk.cpuidfmt = 1;
-            else if (sysblk.cpuidfmt)
-            {
-                if (n == 1)
-                    sysblk.cpuidfmt = 0;
-            }
-            else if (n == 2 && lparnum != 16)
-                sysblk.cpuidfmt = 1;
-            setOperationMode();
-
-            /* Update CPU IDs indicating LPAR mode active */
-            if (!resetAllCpuIds())
-                return -1;
-
-            /* Release INTLOCK */
-            RELEASE_INTLOCK(NULL);
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-            {
-                char buf[20];
-                MSGBUF(buf, "%02X", sysblk.lparnum);
-                set_symbol("LPARNUM", buf);
-                set_symbol("CPUIDFMT", sysblk.cpuidfmt ? "1" : "0");
-                if (MLVL( VERBOSE ))
-                    WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
-            }
-#else
-            if (MLVL( VERBOSE ))
-            {
-                char buf[20];
-                MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
-                        sysblk.lparnum);
-                WRMSG(HHC02204, "I", argv[0], buf); // "%-14s set to %s"
-            }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
-        }
-        else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
-        {
-            /* Obtain INTLOCK */
-            OBTAIN_INTLOCK(NULL);
-
-            /* Update all CPU identifiers to CPUID format 0 with LPAR
-             * mode inactive and LPAR number 0.
-             */
-            enable_lparmode(0);
-            sysblk.lparnum  = 0;
-            sysblk.cpuidfmt = 0;
-            sysblk.operation_mode = om_basic;
-
-            if (!resetAllCpuIds())
-                return -1;
-
-            /* Release INTLOCK */
-            RELEASE_INTLOCK(NULL);
-
-            if ( MLVL(VERBOSE) )
-            {
-                // "%-14s set to %s"
-                WRMSG(HHC02204, "I", argv[0], "BASIC");
-            }
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-            set_symbol("LPARNUM", "BASIC");
-            set_symbol("CPUIDFMT", "BASIC");
-#endif
-
-        }
+        if (sysblk.lparmode)
+            MSGBUF( chcpuidfmt, sysblk.cpuidfmt ? "%02X" : "%01X",
+                    sysblk.lparnum );
         else
+            STRLCPY( chcpuidfmt, "BASIC" );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], chcpuidfmt );
+        return 0;
+    }
+
+    arglen = strlen( argv[1] );
+
+    /* Update LPAR identification number */
+    if (1
+        && (arglen == 1 || arglen == 2)
+        && sscanf( argv[1], "%hx%c", &lparnum, &c ) == 1
+    )
+    {
+        if (1
+            && ARCH_370 == sysblk.arch_mode
+            && (lparnum == 0 || lparnum > 16)
+        )
         {
             // "Invalid argument %s%s"
-            WRMSG(HHC02205, "E", argv[1], ": must be BASIC, 1 to F (hex) or 00 to FF (hex)");
+            WRMSG( HHC02205, "E", argv[1], ": must be 1 to 10 (hex) for ARCHMODE S370" );
             return -1;
         }
+
+        /* Set new LPAR number, CPU ID format and operation mode */
+        OBTAIN_INTLOCK( NULL );
+        enable_lparmode( 1 );
+        sysblk.lparnum = lparnum;
+
+        if (lparnum == 0)
+            sysblk.cpuidfmt = 1;
+        else if (sysblk.cpuidfmt)
+        {
+            if (arglen == 1)
+                sysblk.cpuidfmt = 0;
+        }
+        else if (arglen == 2 && lparnum != 16)
+            sysblk.cpuidfmt = 1;
+
+        setOperationMode();
+    }
+    else if (1
+        && arglen == 5
+        && strcasecmp( argv[1], "BASIC" ) == 0
+    )
+    {
+        /* Set new LPAR number, CPU ID format and operation mode */
+        OBTAIN_INTLOCK( NULL );
+        enable_lparmode( 0 );
+        sysblk.lparnum  = 0;
+        sysblk.cpuidfmt = 0;
+        sysblk.operation_mode = om_basic;
     }
     else
     {
-        char buf[20];
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1],
+            ": must be BASIC, 1 to F (hex) or 00 to FF (hex)" );
+        return -1;
+    }
 
-        if (sysblk.lparmode)
-            MSGBUF( buf, sysblk.cpuidfmt ? "%02X" : "%01X",
-                    sysblk.lparnum);
-        else
-            strncpy(buf, "BASIC", sizeof(buf));
+    /* Update all CPU IDs to reflect new LPARNUM */
+    resetSuccessful = resetAllCpuIds();
+    RELEASE_INTLOCK( NULL );
 
-        // "%-14s: %s"
-        WRMSG(HHC02203, "I", argv[0], buf);
+    /* Abort if unable to successfully reset all CPU Ids */
+    if (!resetSuccessful)
+        return -1;
+
+    /* Report successful results */
+    if (om_basic == sysblk.operation_mode)
+    {
+        STRLCPY( chcpuidfmt, "BASIC" );
+        STRLCPY( chlparnum,  "BASIC" );
+    }
+    else // LPAR mode
+    {
+        STRLCPY( chcpuidfmt, sysblk.cpuidfmt ? "1"    : "0" );
+        MSGBUF(  chlparnum,  sysblk.cpuidfmt ? "%02X" : "%01X", sysblk.lparnum );
+    }
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "CPUIDFMT", chcpuidfmt );
+    set_symbol( "LPARNUM",  chlparnum  );
+#endif
+
+    if (MLVL( VERBOSE ))
+    {
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], chlparnum );
     }
 
     return 0;
@@ -4780,52 +4772,57 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* cpuverid command - set or display cpu version                     */
 /*-------------------------------------------------------------------*/
-int cpuverid_cmd(int argc, char *argv[], char *cmdline)
+int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 {
-U32     cpuverid;
-BYTE    c;
+    U32   version;
+    char  chversion[8];
+    BYTE  c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    /* Update CPU version if operand is specified */
-    if (argc == 2)
+    if (argc < 1 || argc > 2)
     {
-        if ( (strlen(argv[1]) > 1) && (strlen(argv[1]) < 3)
-          && (sscanf(argv[1], "%x%c", &cpuverid, &c) == 1) )
-        {
-            char buf[8];
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
 
-            /* Update all CPU identifiers */
-            if (!setAllCpuIds_lock(-1, cpuverid, -1, -1))
-                return -1;
+    /* Display CPU version */
+    if (argc == 1)
+    {
+        MSGBUF( chversion, "%02X", sysblk.cpuversion );
 
-            MSGBUF(buf,"%02X",cpuverid);
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], chversion );
+        return 0;
+    }
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-            set_symbol("CPUVERID", buf);
+    /* Update CPU version */
+    if (1
+        && (strlen( argv[1] ) == 2)
+        && (sscanf( argv[1], "%x%c", &version, &c ) == 1)
+    )
+    {
+        /* Update all CPU identifiers */
+        if (!setAllCpuIds_lock( -1, version, -1, -1 ))
+            return -1;
+
+        MSGBUF( chversion,"%02X", sysblk.cpuversion );
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+        set_symbol( "CPUVERID", chversion );
 #endif
 
-            if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], buf );
-        }
-        else
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-
-    }
-    else if ( argc == 1 )
-    {
-        char msgbuf[8];
-        MSGBUF( msgbuf, "%02X", sysblk.cpuversion );
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], chversion );
     }
     else
     {
-        WRMSG( HHC01455, "E", argv[0] );
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
@@ -4838,7 +4835,7 @@ BYTE    c;
 int cpumodel_cmd( int argc, char* argv[], char* cmdline )
 {
     U32   cpumodel;
-    char  msgbuf[8];
+    char  chmodel[8];
     BYTE  c;
 
     UNREFERENCED( cmdline );
@@ -4855,10 +4852,10 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
     /* Display CPU model */
     if (argc == 1)
     {
-        MSGBUF( msgbuf, "%04X", sysblk.cpumodel );
+        MSGBUF( chmodel, "%04X", sysblk.cpumodel );
 
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
+        WRMSG( HHC02203, "I", argv[0], chmodel );
         return 0;
     }
 
@@ -4873,15 +4870,15 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
         if (!setAllCpuIds_lock( cpumodel, -1, -1, -1 ))
             return -1;
 
-        MSGBUF( msgbuf, "%04X", sysblk.cpumodel );
+        MSGBUF( chmodel, "%04X", sysblk.cpumodel );
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
-        set_symbol( "CPUMODEL", msgbuf );
+        set_symbol( "CPUMODEL", chmodel );
 #endif
 
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], msgbuf );
+            WRMSG( HHC02204, "I", argv[0], chmodel );
     }
     else
     {
@@ -4899,7 +4896,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
 int cpuserial_cmd( int argc, char* argv[], char* cmdline )
 {
     U32   cpuserial;
-    char  msgbuf[8];
+    char  chserial[8];
     BYTE  c;
 
     UNREFERENCED( cmdline );
@@ -4917,10 +4914,11 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
     if (argc == 1)
     {
         cpuserial = (U32) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32);
-        MSGBUF( msgbuf, "%06X", cpuserial );
+        MSGBUF( chserial, "%06X", cpuserial );
 
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
+        WRMSG( HHC02203, "I", argv[0], chserial );
+        return 0;
     }
 
     /* Update CPU serial */
@@ -4934,15 +4932,16 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
         if (!setAllCpuIds_lock( -1, -1, cpuserial, -1 ))
             return -1;
 
+        /* Show them the now newly-updated SYSBLK value */
         cpuserial = (U32) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32);
-        MSGBUF( msgbuf, "%06X", cpuserial );
+        MSGBUF( chserial, "%06X", cpuserial );
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
-        set_symbol( "CPUSERIAL", msgbuf );
+        set_symbol( "CPUSERIAL", chserial );
 #endif
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], msgbuf );
+            WRMSG( HHC02204, "I", argv[0], chserial );
     }
     else
     {
@@ -4957,131 +4956,149 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* cpuidfmt command - set or display STIDP format {0|1|BASIC}        */
 /*-------------------------------------------------------------------*/
-int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
+int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
 {
-u_int     cpuidfmt;
+    size_t  arglen;
+    u_int   fmt;
+    char    chfmt[40];
+    BYTE    resetSuccessful;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline);
 
     strupper( argv[0], argv[0] );
 
-    /* Update CPU ID format if operand is specified */
-    if (argc > 1 && argv[1] != NULL)
+    if (argc < 1 || argc > 2)
     {
-        int n = strlen(argv[1]);
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
 
-        if (strlen(argv[1]) == 1
-            && sscanf(argv[1], "%u", &cpuidfmt) == 1)
-        {
-            if (cpuidfmt > 1)
-            {
-                WRMSG(HHC02205, "E", argv[1], ": must be either 0 or 1");
-                return -1;
-            }
-
-            if (!sysblk.lparmode)
-            {
-                WRMSG(HHC02205, "E", argv[1],": not in LPAR mode");
-                return -1;
-            }
-
-            if (!cpuidfmt)  /* Trying to set format-0 cpuid format */
-            {
-                if (!sysblk.lparnum || sysblk.lparnum > 16)
-                {
-                    WRMSG(HHC02205, "E", argv[1],": LPAR number not in range of 1 to 10 (hex)");
-                    return -1;
-                }
-            }
-            else    /* Trying to set format-1 cpuid format */
-            {
-                if (ARCH_370 == sysblk.arch_mode)
-                {
-                    // "Invalid argument %s%s"
-                    WRMSG( HHC02205, "E", argv[1], ": must be 0 for System/370" );
-                    return -1;
-                }
-            }
-
-            if (sysblk.cpuidfmt != cpuidfmt)
-            {
-                /* Obtain INTLOCK */
-                OBTAIN_INTLOCK(NULL);
-
-                /* Set the CPU ID format and subsequent operation mode
-                 */
-                sysblk.cpuidfmt = cpuidfmt;
-                setOperationMode();
-
-                /* Update all CPU IDs */
-                if (!resetAllCpuIds())
-                    return -1;
-
-                /* Release INTLOCK */
-                RELEASE_INTLOCK(NULL);
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-                set_symbol("CPUIDFMT", (sysblk.cpuidfmt) ? "1" : "0");
-#endif
-
-            }
-        }
-        else if (n == 5 && str_caseless_eq_n(argv[1], "BASIC", 5))
-        {
-            if (sysblk.lparmode)
-            {
-                WRMSG(HHC02205, "E", argv[1],": In LPAR mode");
-                return -1;
-            }
-
-            if (sysblk.cpuidfmt)
-            {
-
-                /* Obtain INTLOCK */
-                OBTAIN_INTLOCK(NULL);
-
-                sysblk.lparnum = 0;
-                sysblk.cpuidfmt = 0;
-                sysblk.operation_mode = om_basic;
-
-                /* Update all CPU IDs */
-                if (!resetAllCpuIds())
-                    return -1;
-
-                /* Release INTLOCK */
-                RELEASE_INTLOCK(NULL);
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-                set_symbol("CPUIDFMT", "BASIC");
-#endif
-
-                if ( MLVL(VERBOSE) )
-                    WRMSG(HHC02204, "I", argv[0], "BASIC");
-            }
-        }
+    /* Display CPUIDFMT*/
+    if (argc == 1)
+    {
+        if (sysblk.lparmode)
+            MSGBUF( chfmt, "%d", sysblk.cpuidfmt );
         else
+            STRLCPY( chfmt, "BASIC" );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], chfmt );
+        return 0;
+    }
+
+    arglen = strlen( argv[1] );
+
+    /* Update the CPUIDFMT */
+    if (1
+        && arglen == 1
+        && sscanf( argv[1], "%u", &fmt ) == 1
+    )
+    {
+        if (fmt > 1)
         {
-            WRMSG(HHC02205, "E", argv[1], "");
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], ": must be either 0 or 1" );
             return -1;
         }
-        if ( MLVL(VERBOSE) )
+
+        if (!sysblk.lparmode)
         {
-            char buf[40];
-            if (sysblk.lparmode)
-                MSGBUF( buf, "%d", sysblk.cpuidfmt );
-            else
-                strncpy(buf, "BASIC", sizeof(buf));
-            WRMSG(HHC02204, "I", argv[0], buf);
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1],": not in LPAR mode" );
+            return -1;
+        }
+
+        /* Setting format-0 cpuid format? */
+        if (!fmt)
+        {
+            if (!sysblk.lparnum || sysblk.lparnum > 16)
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1],": LPAR number not in range of 1 to 10 (hex)" );
+                return -1;
+            }
+        }
+        else /* Setting format-1 cpuid format */
+        {
+            if (ARCH_370 == sysblk.arch_mode)
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1], ": must be 0 for System/370" );
+                return -1;
+            }
+        }
+
+        /* Update the CPUIDFMT and reset all CPU Ids */
+
+        OBTAIN_INTLOCK( NULL );
+
+        if (sysblk.cpuidfmt != fmt)
+        {
+            sysblk.cpuidfmt = fmt;
+            setOperationMode();
+        }
+    }
+    else if (1
+        && arglen == 5
+        && strcasecmp( argv[1], "BASIC" ) == 0
+    )
+    {
+        if (sysblk.lparmode)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1],": In LPAR mode" );
+            return -1;
+        }
+
+        /* Make sure all CPUs are deconfigured or stopped */
+        if (are_any_cpus_started())
+        {
+            // "All CPU's must be stopped to change architecture"
+            WRMSG( HHC02253, "E" );
+            return HERRCPUONL;
+        }
+
+        /* Update the CPUIDFMT and reset all CPU Ids */
+
+        OBTAIN_INTLOCK( NULL );
+
+        if (sysblk.cpuidfmt)
+        {
+            sysblk.cpuidfmt = 0;
+            sysblk.lparnum  = 0;
+            sysblk.operation_mode = om_basic;
         }
     }
     else
     {
-        char buf[40];
-        if (sysblk.lparmode)
-            MSGBUF( buf, "%d", sysblk.cpuidfmt );
-        else
-            strncpy(buf, "BASIC", sizeof(buf));
-        WRMSG(HHC02203, "I", argv[0], buf);
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
+        return -1;
+    }
+
+    resetSuccessful = resetAllCpuIds();
+    RELEASE_INTLOCK( NULL );
+
+    /* Abort if unable to successfully reset all CPU Ids */
+    if (!resetSuccessful)
+        return -1;
+
+    /* Report successful results */
+
+    if (sysblk.lparmode)
+        MSGBUF( chfmt, "%d", sysblk.cpuidfmt );
+    else
+        STRLCPY( chfmt, "BASIC" );
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "CPUIDFMT", chfmt );
+#endif
+
+    if (MLVL( VERBOSE ))
+    {
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], chfmt );
     }
 
     return 0;
