@@ -7868,21 +7868,24 @@ int qcpuid_cmd( int argc, char* argv[], char* cmdline )
         }
     }
 
-    /* Show 'CPC SI' information from SYSBLK */
-    qcpuid_cpcsi( sysblk.cpuid, "SYSBLK" );
-
-    /* Show 'CPC SI' information from REGS */
-    for (cpu=0; cpu < sysblk.hicpu; cpu++)
+    if (ARCH_370 != sysblk.arch_mode)
     {
-        if (1
-            && IS_CPU_ONLINE( cpu )
-            && (cpunum < 0 || cpu == cpunum)
-        )
+        /* Show 'CPC SI' information from SYSBLK */
+        qcpuid_cpcsi( sysblk.cpuid, "SYSBLK" );
+
+        /* Show 'CPC SI' information from REGS */
+        for (cpu=0; cpu < sysblk.hicpu; cpu++)
         {
-            regs = sysblk.regs[ cpu ];
-            MSGBUF( buf, "%s%02X",
-                PTYPSTR( regs->cpuad ), regs->cpuad );
-            qcpuid_cpcsi( regs->cpuid, buf );
+            if (1
+                && IS_CPU_ONLINE( cpu )
+                && (cpunum < 0 || cpu == cpunum)
+            )
+            {
+                regs = sysblk.regs[ cpu ];
+                MSGBUF( buf, "%s%02X",
+                    PTYPSTR( regs->cpuad ), regs->cpuad );
+                qcpuid_cpcsi( regs->cpuid, buf );
+            }
         }
     }
 
