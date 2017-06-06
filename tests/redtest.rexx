@@ -708,7 +708,7 @@ Do
 End
 
 numtests    = numtests + 1      -- (count '*Testcases' orders)
-testcase    = rest              -- (save Testcase name)
+testcase    = STRIP( rest )     -- (save Testcase name)
 
 oks         = 0
 rv          = 0
