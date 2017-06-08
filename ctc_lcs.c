@@ -465,7 +465,10 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_CSUM )
     if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) TUN_F_CSUM ) == 0)
+    {
+        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
         pLCSPORT->fDoCkSumOffload = 0;    // (tuntap does it for us)
+    }
     else
 #endif
         pLCSPORT->fDoCkSumOffload = 1;    // (we must do it ourself)
@@ -479,6 +482,8 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_TSO4 ) && defined( TUN_F_UFO )
     if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*)(TUN_F_TSO4 | TUN_F_UFO)) == 0)
     {
+        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
+
         pLCSPORT->sIPAssistsSupported |= LCS_IP_FRAG_REASSEMBLY;
         pLCSPORT->sIPAssistsEnabled   |= LCS_IP_FRAG_REASSEMBLY;
 
