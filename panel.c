@@ -2256,7 +2256,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                     {
                         for ( j += 5; j < (int)strlen(psz_PF); j++ )
                             if ( psz_PF[j] != ' ' ) break;
-                        strcpy( cmdline, psz_PF+j );
+                        STRLCPY( cmdline, psz_PF+j );
                         cmdlen = (int)strlen(cmdline);
                         cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                         ADJ_CMDCOL();
@@ -2699,7 +2699,7 @@ size_t  loopcount;                    /* Number of iterations done   */
                                 do_panel_command(cmdline);
                                 redraw_cmd = 1;
                                 if (history_requested == 1) {
-                                    strcpy(cmdline, historyCmdLine);
+                                    STRLCPY(cmdline, historyCmdLine);
                                     cmdlen = (int)strlen(cmdline);
                                     cmdoff = cmdlen < cmdcols ? cmdlen : 0;
                                     ADJ_CMDCOL();
@@ -2717,22 +2717,22 @@ size_t  loopcount;                    /* Number of iterations done   */
                                 case 'r':
                                     sscanf(cmdline, "%x", &NPaddress);
                                     NPaddr_valid = 0;
-                                    strcpy(NPprompt1, "");
+                                    STRLCPY(NPprompt1, "");
                                     break;
                                 case 'd':
                                     sscanf(cmdline, "%x", &NPdata);
                                     NPdata_valid = 0;
-                                    strcpy(NPprompt1, "");
+                                    STRLCPY(NPprompt1, "");
                                     break;
                                 case 'n':
                                     if (strlen(cmdline) < 1) {
-                                        strcpy(cmdline, NPdevnam[NPasgn]);
+                                        STRLCPY(cmdline, NPdevnam[NPasgn]);
                                     }
-                                    strcpy(NPdevnam[NPasgn], "");
+                                    STRLCPY(NPdevnam[NPasgn], "");
                                     sprintf (NPentered, "devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
                                     do_panel_command(NPentered);
-                                    strcpy(NPprompt2, "");
+                                    STRLCPY(NPprompt2, "");
                                     break;
                                 default:
                                     break;
