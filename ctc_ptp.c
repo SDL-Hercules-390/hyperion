@@ -7819,7 +7819,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
     // will be built. Note: the message will be 128 bytes.
     // The source address is the drive link local address, the destination
-    // address is the Link-Local Scope All Nodes multicast address.
+    // address is the Link-Local Scope All Nodes multicast address, i.e.
+    // FF02:0:0:0:0:0:0:1.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
     if (!pPTPHDRre)
         return;
@@ -7896,7 +7897,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the ICMPv6 Router Solicitation message
     // will be built. Note: the message will be 120 bytes.
     // The source address is the drive link local address, the destination
-    // address is the Link-Local Scope All Routers multicast address.
+    // address is the Link-Local Scope All Routers multicast address, i.e.
+    // FF02:0:0:0:0:0:0:2.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
     if (!pPTPHDRre)
         return;
@@ -7973,7 +7975,8 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
     // will be built. Note: the message will be 128 bytes.
     // The source address is the drive address, the destination address
-    // is the Link-Local Scope All Nodes multicast address.
+    // is the Link-Local Scope All Nodes multicast address, i.e.
+    // FF02:0:0:0:0:0:0:1.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
     if (!pPTPHDRre)
         return;
@@ -8051,7 +8054,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // will be built. Note: the message will be 136 bytes.
     // The source address is the drive link local address, the destination
     // address is the Link-Local Scope Selected-Node multicast address for
-    // the drive link local address.
+    // the drive link local address, i.e. FF02:0:0:0:0:1:FFxx:xxxx.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
     if (!pPTPHDRre)
         return;
@@ -8139,7 +8142,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     // will be built. Note: the message will be 136 bytes.
     // The source address is the drive link local address, the destination
     // address is the Link-Local Scope Selected-Node multicast address for
-    // the drive address.
+    // the drive address, i.e. FF02:0:0:0:0:1:FFyy:yyyy.
     pPTPHDRre = alloc_ptp_buffer( pDEVBLK, 256 );
     if (!pPTPHDRre)
         return;

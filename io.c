@@ -113,7 +113,6 @@ DEVBLK *dev;                            /* -> device block           */
     clear_subchan (regs, dev);
 
     regs->psw.cc = 0;
-
 }
 
 

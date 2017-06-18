@@ -711,7 +711,7 @@ typedef struct _MPC_IPA_SIP {
             struct {
 /*000*/       BYTE   addr[4];
 /*004*/       BYTE   mask[4];   /* This field should be a subnet     */
-                                /* mask, but it often contains       */
+                                /* mask, but it usually contains     */
                                 /* 0xFFFFFF00, irrespective of the   */
                                 /* guests subnet mask. Why?          */
 /*008*/       BYTE   flags[4];
@@ -719,8 +719,12 @@ typedef struct _MPC_IPA_SIP {
             struct {
 /*000*/       BYTE   addr[16];
 /*010*/       BYTE   mask[16];  /* This field should be a subnet     */
-                                /* mask, but it often contains       */
-                                /* nulls. Why?                       */
+                                /* mask, but it usually contains     */
+                                /* nulls, irrespective of the        */
+                                /* guests prefix length. Why?        */
+                                /* On zLinux the answer is because   */
+                                /* the field copied here is never    */
+                                /* initialize with a value.          */
 /*020*/       BYTE   flags[4];
             } ip6;
           } data;

@@ -46,7 +46,7 @@
 // Declarations
 // ====================================================================
 
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
 
 static int IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
 static int ifc_fd[2] = { -1, -1 };
@@ -60,7 +60,7 @@ static void tuntap_term(void)
     kill(ifc_pid, SIGINT);
 }
 
-#endif /* if !defined(OPTION_W32_CTCI) */
+#endif /* if !defined( OPTION_W32_CTCI ) */
 
 
 // ====================================================================
@@ -77,7 +77,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
     /* Try TUNTAP_ioctl first */
     rc = TUNTAP_IOCtl (fd, TUNSETIFF, (char *) hifr);
 
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
     /* If invalid value, try with the pre-2.4.5 value */
     if (0 > rc && errno == EINVAL)
         rc = TUNTAP_IOCtl (fd, ('T' << 8) | 202, (char *) hifr);
@@ -139,7 +139,8 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         }
         else if (rc == 0)
         {
-            WRMSG (HHC00135, "E", hercifc);
+            // "Timeout for module %s, possible older version"
+            WRMSG( HHC00135, "E", hercifc );
             errno = EPERM;
             rc = -1;
         }
@@ -151,7 +152,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         waitpid (pid, &status, 0);
         errno = sv_err;
     }
-#endif /* if !defined(OPTION_W32_CTCI) */
+#endif /* if !defined( OPTION_W32_CTCI ) */
 
     return rc;
 }   // End of function  TUNTAP_SetMode()
@@ -223,7 +224,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( uname( &utsbuf ) != 0 )
     {
-        WRMSG(HHC00136, "E", "uname()", strerror( errno ) );
+        // "Error in function %s: %s"
+        WRMSG( HHC00136, "E", "uname()", strerror( errno ));
 
         return -1;
     }
@@ -234,7 +236,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( fd < 0 )
     {
-        WRMSG(HHC00137, "E", pszTUNDevice, strerror( errno ) );
+        // "Error opening TUN/TAP device %s: %s"
+        WRMSG( HHC00137, "E", pszTUNDevice, strerror( errno ));
         return -1;
     }
 
@@ -257,10 +260,12 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 #if !defined( OPTION_W32_CTCI )
             logmsg("nohif %x\n", IFF_NO_HERCIFC & iFlags);
             if (EPERM == errno && (IFF_NO_HERCIFC & iFlags))
-                WRMSG(HHC00154, "E", hifr.hifr_name);
+                // "Preconfigured interface %s does not exist or is not accessible by Hercules (EPERM)"
+                WRMSG( HHC00154, "E", hifr.hifr_name );
             else
 #endif // !defined( OPTION_W32_CTCI )
-                WRMSG(HHC00138, "E", hifr.hifr_name, strerror( errno ) );
+                // "Error setting TUN/TAP mode %s: %s"
+                WRMSG( HHC00138, "E", hifr.hifr_name, strerror( errno ));
             return -1;
         }
 
@@ -284,7 +289,8 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             strncpy( pszNetDevName, ++p, IFNAMSIZ );
         else
         {
-            WRMSG(HHC00139, "E", pszTUNDevice );
+            // "Invalid TUN/TAP device name %s"
+            WRMSG( HHC00139, "E", pszTUNDevice );
             return -1;
         }
     }
@@ -313,6 +319,7 @@ int             TUNTAP_ClrIPAddr( char* pszNetDevName )
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -337,6 +344,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -351,6 +359,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
     if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid ip %s"
         WRMSG( HHC00141, "E", pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
@@ -371,6 +380,7 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -384,7 +394,8 @@ int             TUNTAP_SetDestAddr( char*  pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        WRMSG(HHC00142, "E", pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
+        // "Net device %s: Invalid destination address %s"
+        WRMSG( HHC00142, "E", pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
             return -1;
     }
 
@@ -404,6 +415,7 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -417,6 +429,7 @@ int           TUNTAP_SetNetMask( char*  pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid net mask %s"
         WRMSG( HHC00143, "E", pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
             return -1;
     }
@@ -438,6 +451,7 @@ int           TUNTAP_SetBCastAddr( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -451,6 +465,7 @@ int           TUNTAP_SetBCastAddr( char*  pszNetDevName,
     if( !pszBCastAddr  ||
         !inet_aton( pszBCastAddr, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid broadcast address %s"
         WRMSG( HHC00155, "E", pszNetDevName, !pszBCastAddr ? "NULL" : pszBCastAddr );
             return -1;
     }
@@ -473,26 +488,30 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
     if( !pszIPAddr6 )
     {
+        // "Net device %s: Invalid ip %s"
         WRMSG( HHC00141, "E", pszNetDevName, "NULL" );
         return -1;
     }
 
     if( !pszPrefixSize6 )
     {
-        WRMSG(HHC00153, "E", pszNetDevName, "NULL" );
+        // "Net device %s: Invalid prefix length %s"
+        WRMSG( HHC00153, "E", pszNetDevName, "NULL" );
         return -1;
     }
 
     iPfxSiz = atoi( pszPrefixSize6 );
     if( iPfxSiz < 0 || iPfxSiz > 128 )
     {
-        WRMSG(HHC00153, "E", pszNetDevName, pszPrefixSize6 );
+        // "Net device %s: Invalid prefix length %s"
+        WRMSG( HHC00153, "E", pszNetDevName, pszPrefixSize6 );
         return -1;
     }
 
@@ -501,6 +520,7 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
 
     if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
     {
+        // "Net device %s: Invalid ip %s"
         WRMSG( HHC00141, "E", pszNetDevName, pszIPAddr6 );
         return -1;
     }
@@ -534,7 +554,7 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
     if( !ppszMTU )
     {
         // HHC00136 "Error in function %s: %s"
-        WRMSG(HHC00136, "E", "TUNTAP_GetMTU", "Invalid parameters" );
+        WRMSG( HHC00136, "E", "TUNTAP_GetMTU", "Invalid parameters" );
         return -1;
     }
 
@@ -554,7 +574,7 @@ int             TUNTAP_GetMTU( char*   pszNetDevName,
 #endif
     if( rc < 0 )
     {
-        // HHC00136 "Error in function %s: %s"
+        // "Error in function %s: %s"
         WRMSG( HHC00136, "E", "TUNTAP_GetMTU", strerror( errno ));
         return -1;
     }
@@ -581,12 +601,14 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
     if( !pszMTU  || !*pszMTU )
     {
+        // "Net device %s: Invalid MTU %s"
         WRMSG( HHC00144, "E", pszNetDevName, pszMTU ? pszMTU : "NULL" );
         return -1;
     }
@@ -594,6 +616,7 @@ int             TUNTAP_SetMTU( char*  pszNetDevName,
     iMTU = atoi( pszMTU );
     if( iMTU < 46 || iMTU > 65536 )
     {
+        // "Net device %s: Invalid MTU %s"
         WRMSG( HHC00144, "E", pszNetDevName, pszMTU );
         return -1;
     }
@@ -626,8 +649,8 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
 
     if( !ppszMACAddr )
     {
-        // HHC00136 "Error in function %s: %s"
-        WRMSG(HHC00136, "E", "TUNTAP_GetMACAddr", "Invalid parameters" );
+        // "Error in function %s: %s"
+        WRMSG( HHC00136, "E", "TUNTAP_GetMACAddr", "Invalid parameters" );
         return -1;
     }
 
@@ -649,7 +672,7 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
 #endif
     if( rc < 0 )
     {
-        // HHC00136 "Error in function %s: %s"
+        // "Error in function %s: %s"
         WRMSG( HHC00136, "E", "TUNTAP_GetMACAddr", strerror( errno ));
         return -1;
     }
@@ -658,7 +681,8 @@ int           TUNTAP_GetMACAddr( char*   pszNetDevName,
 #else // defined(OPTION_TUNTAP_GETMACADDR)
     UNREFERENCED(pszNetDevName);
     UNREFERENCED(ppszMACAddr);
-    WRMSG(HHC00136, "E", "TUNTAP_GetMACAddr", "Unsupported" );
+    // "Error in function %s: %s"
+    WRMSG( HHC00136, "E", "TUNTAP_GetMACAddr", "Unsupported" );
     return -1; // (unsupported)
 #endif // defined(OPTION_TUNTAP_GETMACADDR)
 }   // End of function  TUNTAP_GetMACAddr()
@@ -712,6 +736,7 @@ int             TUNTAP_SetFlags ( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -737,6 +762,7 @@ int      TUNTAP_GetFlags ( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -790,7 +816,8 @@ int           TUNTAP_AddRoute( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        WRMSG (HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
+        // "Invalid net device name %s"
+        WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
 
@@ -803,6 +830,7 @@ int           TUNTAP_AddRoute( char*  pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid destination address %s"
         WRMSG( HHC00142, "E", pszNetDevName, pszDestAddr ? pszDestAddr : "NULL" );
         return -1;
     }
@@ -814,6 +842,7 @@ int           TUNTAP_AddRoute( char*  pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid net mask %s"
         WRMSG( HHC00143, "E", pszNetDevName, pszNetMask ? pszNetMask : "NULL");
         return -1;
     }
@@ -826,7 +855,8 @@ int           TUNTAP_AddRoute( char*  pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            WRMSG(HHC00146, "E", pszNetDevName, pszGWAddr );
+            // "Net device %s: Invalid gateway address %s"
+            WRMSG( HHC00146, "E", pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -855,6 +885,7 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
+        // "Invalid net device name %s"
         WRMSG( HHC00140, "E", pszNetDevName ? pszNetDevName : "NULL" );
         return -1;
     }
@@ -868,7 +899,8 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        WRMSG(HHC00142, "E", pszNetDevName, pszDestAddr ? pszDestAddr : "NULL" );
+        // "Net device %s: Invalid destination address %s"
+        WRMSG( HHC00142, "E", pszNetDevName, pszDestAddr ? pszDestAddr : "NULL" );
         return -1;
     }
 
@@ -879,6 +911,7 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
+        // "Net device %s: Invalid net mask %s"
         WRMSG( HHC00143, "E", pszNetDevName, pszNetMask ? pszNetMask : "NULL" );
         return -1;
     }
@@ -891,6 +924,7 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
     {
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
+            // "Net device %s: Invalid gateway address %s"
             WRMSG( HHC00146, "E", pszNetDevName, pszGWAddr );
             return -1;
         }
@@ -992,6 +1026,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     {
         if( socketpair( AF_UNIX, SOCK_STREAM, 0, ifc_fd ) < 0 )
         {
+            // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "socketpair()", strerror( errno ) );
             return -1;
         }
@@ -1007,6 +1042,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
         if( ifc_pid < 0 )
         {
+            // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "fork()", strerror( errno ) );
             return -1;
         }
@@ -1047,6 +1083,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             (void)execlp( pszCfgCmd, pszCfgCmd, NULL );
 
             // The exec function returns only if unsuccessful
+            // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
 
             exit( 127 );

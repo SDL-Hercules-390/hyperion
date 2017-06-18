@@ -11,13 +11,13 @@
 
 #include "hercules.h"
 
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
   #include "hifr.h"             // struct in6_ifreq, struct hifr
 #else
   #include "tt32if.h"           // struct if_req
   #include "hifr.h"             // struct in6_ifreq, struct hifr
   #include "tt32api.h"          // struct tt32ctl
-#endif // !defined(OPTION_W32_CTCI)
+#endif
 
 #if !defined( OPTION_W32_CTCI )
 
@@ -82,7 +82,7 @@ extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
 //
 // TUNTAP_CreateInterface flag: open as SOCKET (CTCI-WIN v3.3+ only)
 //
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
   #define IFF_OSOCK             _O_TT32NOTIFY
 #else
   #define IFF_OSOCK             0
