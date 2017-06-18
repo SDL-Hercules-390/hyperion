@@ -1923,6 +1923,22 @@ static void  loc3270_redrive_pselect( DEVBLK* dev )
 }
 
 /*-------------------------------------------------------------------*/
+/*              Halt device / Clear Subchannel                       */
+/*-------------------------------------------------------------------*/
+static BYTE  constty_halt_or_clear( DEVBLK* dev )
+{
+    BYTE unitstat = 0;
+    constty_redrive_pselect( dev );
+    return unitstat;
+}
+static BYTE  loc3270_halt_or_clear( DEVBLK* dev )
+{
+    BYTE unitstat = 0;
+    loc3270_redrive_pselect( dev );
+    return unitstat;
+}
+
+/*-------------------------------------------------------------------*/
 /*      Hercules Suspend/Resume text units for 3270 devices          */
 /*-------------------------------------------------------------------*/
 #define SR_DEV_3270_BUF          ( SR_DEV_3270 | 0x001 )
@@ -4423,7 +4439,7 @@ DEVHND  constty_device_hndinfo  =
         &constty_redrive_pselect,      /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &constty_redrive_pselect,      /* Device Halt channel pgm    */
+        &constty_halt_or_clear,        /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */
@@ -4456,7 +4472,7 @@ DEVHND  loc3270_device_hndinfo  =
         &loc3270_redrive_pselect,      /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &loc3270_redrive_pselect,      /* Device Halt channel pgm    */
+        &loc3270_halt_or_clear,        /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

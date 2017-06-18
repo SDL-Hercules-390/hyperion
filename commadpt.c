@@ -588,11 +588,11 @@ static inline size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 }
 
 /*-------------------------------------------------------------------*/
-/* Free all private structures and buffers                           */
+/* Free all private structures and buffers  (and release CA lock)    */
 /*-------------------------------------------------------------------*/
-static void commadpt_clean_device(DEVBLK *dev)
+static void commadpt_clean_device( DEVBLK* dev )
 {
-    if(!dev)
+    if (!dev)
     {
         /*
          * Shouldn't happen.. But during shutdown, some weird
@@ -600,34 +600,37 @@ static void commadpt_clean_device(DEVBLK *dev)
          */
         return;
     }
-    if(dev->commadpt!=NULL)
+
+    if (dev->commadpt)
     {
-        commadpt_ring_terminate(&dev->commadpt->inbfr,dev->ccwtrace);
-        commadpt_ring_terminate(&dev->commadpt->outbfr,dev->ccwtrace);
-        commadpt_ring_terminate(&dev->commadpt->rdwrk,dev->ccwtrace);
-        commadpt_ring_terminate(&dev->commadpt->pollbfr,dev->ccwtrace);
-        commadpt_ring_terminate(&dev->commadpt->ttybuf,dev->ccwtrace);
+        commadpt_ring_terminate( &dev->commadpt->inbfr,   dev->ccwtrace );
+        commadpt_ring_terminate( &dev->commadpt->outbfr,  dev->ccwtrace );
+        commadpt_ring_terminate( &dev->commadpt->rdwrk,   dev->ccwtrace );
+        commadpt_ring_terminate( &dev->commadpt->pollbfr, dev->ccwtrace );
+        commadpt_ring_terminate( &dev->commadpt->ttybuf,  dev->ccwtrace );
+
         /* release the CA lock */
-        release_lock(&dev->commadpt->lock);
-        free(dev->commadpt);
-        dev->commadpt=NULL;
-        if(dev->ccwtrace)
+        release_lock( &dev->commadpt->lock );
+
+        free( dev->commadpt );
+        dev->commadpt = NULL;
+
+        if (dev->ccwtrace)
         {
-            WRMSG(HHC01052,"D",
-                SSID_TO_LCSS(dev->ssid),
-                dev->devnum,"control block freed");
+            // "%1d:%04X COMM: clean: %s"
+            WRMSG( HHC01052, "D", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, "control block freed" );
         }
     }
     else
     {
-        if(dev->ccwtrace)
+        if (dev->ccwtrace)
         {
-            WRMSG(HHC01052,"D",
-                SSID_TO_LCSS(dev->ssid),
-                dev->devnum,"control block not freed: not allocated");
+            // "%1d:%04X COMM: clean: %s"
+            WRMSG( HHC01052, "D", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, "control block not freed: not allocated" );
         }
     }
-    return;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2007,25 +2010,32 @@ static void commadpt_wait(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Halt currently executing I/O command                              */
 /*-------------------------------------------------------------------*/
-static void commadpt_halt(DEVBLK *dev)
+static BYTE commadpt_halt_or_clear( DEVBLK* dev )
 {
-    if(!dev->busy)
+    BYTE unitstat = 0;
+
+    if (dev->busy)
     {
-        return;
+        obtain_lock( &dev->commadpt->lock );
+        {
+            commadpt_wakeup( dev->commadpt, 1 );
+
+            /* Due to the mysteries of the host OS scheduling */
+            /* the wait_condition may or may not exit after   */
+            /* the CCW executor thread relinquishes control   */
+            /* This however should not be of any concern      */
+            /*                                                */
+            /* but returning from the wait guarantees that    */
+            /* the working thread will (or has) notified      */
+            /* the CCW executor to terminate the current I/O  */
+
+            wait_condition( &dev->commadpt->ipc_halt, &dev->commadpt->lock );
+            dev->commadpt->haltprepare = 1; /* part of APL\360 2741 race cond I circumvention */
+        }
+        release_lock( &dev->commadpt->lock );
     }
-    obtain_lock(&dev->commadpt->lock);
-    commadpt_wakeup(dev->commadpt,1);
-    /* Due to the mysteries of the host OS scheduling */
-    /* the wait_condition may or may not exit after   */
-    /* the CCW executor thread relinquishes control   */
-    /* This however should not be of any concern      */
-    /*                                                */
-    /* but returning from the wait guarantees that    */
-    /* the working thread will (or has) notified      */
-    /* the CCW executor to terminate the current I/O  */
-    wait_condition(&dev->commadpt->ipc_halt,&dev->commadpt->lock);
-    dev->commadpt->haltprepare = 1; /* part of APL\360 2741 race cond I circumvention */
-    release_lock(&dev->commadpt->lock);
+
+    return unitstat;
 }
 
 /* The following 3 MSG functions ensure only 1 (one)  */
@@ -2681,43 +2691,45 @@ static void commadpt_query_device (DEVBLK *dev, char **devclass,
 /* Close the device                                                  */
 /* Invoked by HERCULES shutdown & DEVINIT processing                 */
 /*-------------------------------------------------------------------*/
-static int commadpt_close_device ( DEVBLK *dev )
+static int commadpt_close_device( DEVBLK* dev )
 {
-    if(dev->ccwtrace)
+    if (dev->ccwtrace)
     {
-        WRMSG(HHC01060,"D",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        // "%1d:%04X COMM: closing down"
+        WRMSG( HHC01060, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
     }
 
     /* Terminate current I/O thread if necessary */
-    if(dev->busy)
-    {
-        commadpt_halt(dev);
-    }
+    if (dev->busy)
+        commadpt_halt_or_clear( dev );
 
     /* Obtain the CA lock */
-    obtain_lock(&dev->commadpt->lock);
+    obtain_lock( &dev->commadpt->lock );
 
     /* Terminate worker thread if it is still up */
-    if(dev->commadpt->have_cthread)
+    if (dev->commadpt->have_cthread)
     {
-        dev->commadpt->curpending=COMMADPT_PEND_SHUTDOWN;
-        commadpt_wakeup(dev->commadpt,0);
-        commadpt_wait(dev);
-        dev->commadpt->cthread=(TID)-1;
-        dev->commadpt->have_cthread=0;
+        dev->commadpt->curpending   = COMMADPT_PEND_SHUTDOWN;
+
+        commadpt_wakeup( dev->commadpt, 0 );
+        commadpt_wait( dev );
+
+        dev->commadpt->cthread      = (TID) -1;
+        dev->commadpt->have_cthread = 0;
     }
 
 
     /* Free all work storage */
     /* The CA lock will be released by the cleanup routine */
-    commadpt_clean_device(dev);
+    commadpt_clean_device( dev );  // also does "release_lock( &dev->commadpt->lock );"
 
     /* Indicate to hercules the device is no longer opened */
-    dev->fd=-1;
+    dev->fd = -1;
 
-    if(dev->ccwtrace)
+    if (dev->ccwtrace)
     {
-        WRMSG(HHC01061,"D",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        // "%1d:%04X COMM: closed down"
+        WRMSG( HHC01061, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
     }
     return 0;
 }
@@ -3683,7 +3695,7 @@ DEVHND comadpt_device_hndinfo = {
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &commadpt_halt,                /* Device Halt channel pgm    */
+        &commadpt_halt_or_clear,       /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

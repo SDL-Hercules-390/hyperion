@@ -1277,12 +1277,16 @@ static void *commadpt_thread(void *vca)
 /*-------------------------------------------------------------------*/
 /* Halt currently executing I/O command                              */
 /*-------------------------------------------------------------------*/
-static void commadpt_halt(DEVBLK *dev)
+static BYTE commadpt_halt_or_clear( DEVBLK* dev )
 {
-    if(!dev->busy)
+    BYTE unitstat = 0;
+
+    if (dev->busy)
     {
-        return;
+        // TODO: add code to halt/clear subchannel, if needed.
     }
+
+    return unitstat;
 }
 
 /* The following 3 MSG functions ensure only 1 (one)  */
@@ -1477,36 +1481,34 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
 /* Close the device                                                  */
 /* Invoked by HERCULES shutdown & DEVINIT processing                 */
 /*-------------------------------------------------------------------*/
-static int commadpt_close_device ( DEVBLK *dev )
+static int commadpt_close_device( DEVBLK* dev )
 {
-    if(dev->ccwtrace)
+    if (dev->ccwtrace)
     {
-        WRMSG(HHC01060,"D",SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X COMM: closing down"
+        WRMSG( HHC01060, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
     }
 
-    /* Obtain the CA lock */
-    obtain_lock(&dev->commadpt->lock);
-
-    /* Terminate current I/O thread if necessary */
-    if(dev->busy)
+    obtain_lock( &dev->commadpt->lock );
     {
-        commadpt_halt(dev);
+        /* Terminate current I/O thread if necessary */
+        if (dev->busy)
+            commadpt_halt_or_clear( dev );
+
+        free_bufpool( dev->commadpt );
     }
-
-    free_bufpool(dev->commadpt);
-
-    /* release the CA lock */
-    release_lock(&dev->commadpt->lock);
+    release_lock( &dev->commadpt->lock );
 
     /* Free all work storage */
-    commadpt_clean_device(dev);
+    commadpt_clean_device( dev );
 
     /* Indicate to hercules the device is no longer opened */
-    dev->fd=-1;
+    dev->fd = -1;
 
-    if(dev->ccwtrace)
+    if (dev->ccwtrace)
     {
-        WRMSG(HHC01061,"D",SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X COMM: closed down"
+        WRMSG( HHC01061, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
     }
     return 0;
 }
@@ -2249,7 +2251,7 @@ DEVHND com3705_device_hndinfo = {
     NULL,                          /* Device End channel pgm     */
     NULL,                          /* Device Resume channel pgm  */
     NULL,                          /* Device Suspend channel pgm */
-    &commadpt_halt,                /* Device Halt channel pgm    */
+    &commadpt_halt_or_clear,       /* Device Halt channel pgm    */
     NULL,                          /* Device Read                */
     NULL,                          /* Device Write               */
     NULL,                          /* Device Query used          */

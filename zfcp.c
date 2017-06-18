@@ -503,19 +503,22 @@ int mq = dev->qdio.o_qcnt;
 /*-------------------------------------------------------------------*/
 /* Halt device handler                                               */
 /*-------------------------------------------------------------------*/
-static void zfcp_halt_device ( DEVBLK *dev)
+static BYTE zfcp_halt_or_clear( DEVBLK* dev )
 {
-ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
+    ZFCP_GRP* grp = (ZFCP_GRP*) dev->group->grp_data;
+    BYTE unitstat = 0;
 
     /* Signal QDIO end if QDIO is active */
-    if(dev->scsw.flag2 & SCSW2_Q)
+    if (dev->scsw.flag2 & SCSW2_Q)
     {
         dev->scsw.flag2 &= ~SCSW2_Q;
-        VERIFY(1 == write_pipe(grp->ppfd[1],"*",1));
+        VERIFY( 1 == write_pipe( grp->ppfd[1], "*", 1 ));
     }
     else
-        if(dev->group->acount == ZFCP_GROUP_SIZE)
-            signal_condition(&grp->qcond);
+        if (dev->group->acount == ZFCP_GROUP_SIZE)
+            signal_condition( &grp->qcond );
+
+    return unitstat;
 }
 
 
@@ -1441,7 +1444,7 @@ DEVHND zfcp_device_hndinfo =
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &zfcp_halt_device,             /* Device Halt channel pgm    */
+        &zfcp_halt_or_clear,           /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

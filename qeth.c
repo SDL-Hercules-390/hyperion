@@ -2507,67 +2507,79 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
 
 
 /*-------------------------------------------------------------------*/
-/* Halt device related functions...                                  */
+/* Halt device and Clear Subchannel related functions...             */
 /*-------------------------------------------------------------------*/
-static void qeth_halt_read_device (DEVBLK *dev, OSA_GRP *grp)
+static BYTE qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
 {
+    BYTE unitstat = 0;
+
     obtain_lock( &grp->qlock );
-
-    /* Is read device still active? */
-    if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
     {
-        DBGTRC( dev, "Halting read device\n" );
-
-        /* Ask, then wait for, the READ CCW loop to exit */
-        PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
-        dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
-        signal_condition( &grp->qrcond );
-        wait_condition( &grp->qrcond, &grp->qlock );
-        PTT_QETH_TRACE( "af halt read", 0,0,0 );
-
-        DBGTRC( dev, "Read device halted\n" );
+        /* Is read device still active? */
+        if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
+        {
+            DBGTRC( dev, "Halting read device\n" );
+            {
+                /* Ask, then wait for, the READ CCW loop to exit */
+                PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
+                dev->qdio.idxstate = MPC_IDX_STATE_HALTING;
+                signal_condition( &grp->qrcond );
+                wait_condition( &grp->qrcond, &grp->qlock );
+                PTT_QETH_TRACE( "af halt read", 0,0,0 );
+            }
+            DBGTRC( dev, "Read device halted\n" );
+        }
     }
-
     release_lock( &grp->qlock );
+
+    return unitstat;
 }
 
-static void qeth_halt_data_device (DEVBLK *dev, OSA_GRP *grp)
+static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 {
+    BYTE unitstat = 0;
+
     obtain_lock( &grp->qlock );
-
-    /* Is data device still active? */
-    if (dev->busy && dev->scsw.flag2 & SCSW2_Q)
     {
-    BYTE sig = QDSIG_HALT;
+        /* Is data device still active? */
+        if (dev->busy && dev->scsw.flag2 & SCSW2_Q)
+        {
+            BYTE  sig  = QDSIG_HALT;
 
-        DBGTRC( dev, "Halting data device\n" );
-
-        /* Ask, then wait for, the Activate Queues loop to exit */
-        PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
-        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
-        wait_condition( &grp->qdcond, &grp->qlock );
-        dev->scsw.flag2 &= ~SCSW2_Q;
-        PTT_QETH_TRACE( "af halt data", 0,0,0 );
-
-        DBGTRC( dev, "Data device halted\n" );
+            DBGTRC( dev, "Halting data device\n" );
+            {
+                /* Ask, then wait for, the Activate Queues loop to exit */
+                PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
+                VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+                wait_condition( &grp->qdcond, &grp->qlock );
+                dev->scsw.flag2 &= ~SCSW2_Q;
+                PTT_QETH_TRACE( "af halt data", 0,0,0 );
+            }
+            DBGTRC( dev, "Data device halted\n" );
+        }
     }
-
     release_lock (&grp->qlock );
+
+    return unitstat;
 }
 
-static void qeth_halt_device (DEVBLK *dev)
+static BYTE qeth_halt_or_clear( DEVBLK* dev )
 {
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
+    BYTE unitstat;
 
     if (QTYPE_READ == dev->qtype)
-        qeth_halt_read_device( dev, grp );
+        unitstat = qeth_halt_read_device( dev, grp );
     else if (QTYPE_DATA == dev->qtype)
-        qeth_halt_data_device( dev, grp );
+        unitstat = qeth_halt_data_device( dev, grp );
     else
     {
-        DBGTRC( dev, "qeth_halt_device: noop!\n" );
+        unitstat = 0;
+        DBGTRC( dev, "qeth_halt_or_clear: noop!\n" );
         PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
     }
+
+    return unitstat;
 }
 
 /*-------------------------------------------------------------------*/
@@ -5214,7 +5226,7 @@ DEVHND qeth_device_hndinfo =
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &qeth_halt_device,             /* Device Halt channel pgm    */
+        &qeth_halt_or_clear,           /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

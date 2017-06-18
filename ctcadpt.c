@@ -111,7 +111,7 @@ static void*    CTCE_RecvThread( void* argp );
 
 static void*    CTCE_ListenThread( void* argp );
 
-static void     CTCE_Halt( DEVBLK* pDEVBLK );
+static BYTE     CTCE_HaltOrClear( DEVBLK* pDEVBLK );
 
 static U32      CTCE_ChkSum( const BYTE* pBuf, const U16 BufLen );
 
@@ -626,7 +626,7 @@ DEVHND ctce_device_hndinfo =
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        &CTCE_Halt,                    /* Device Halt channel pgm    */
+        &CTCE_HaltOrClear,             /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */
@@ -2238,7 +2238,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
     dev->excps = 0;
 
     // The halt_device exit is established; in version 4 this is in DEVHND in the ctce_device_hndinfo.
-//  dev->halt_device = &CTCE_Halt;
+//  dev->halt_device = &CTCE_HaltOrClear;
 
     // Mark both socket file descriptors as not yet connected.
     dev->fd = -1;
@@ -3122,32 +3122,39 @@ static void*  CTCE_RecvThread( void* argp )
 }
 
 //
-// CTCE_Halt -- Halt device for CTCE adapter
+// CTCE_HaltOrClear -- Halt device or Clear Subchannel for CTCE adapter
 //
 
-static void   CTCE_Halt( DEVBLK* pDEVBLK )
+static BYTE  CTCE_HaltOrClear( DEVBLK* pDEVBLK )
 {
+    BYTE unitstat = 0;
 
     // obtain_lock( &pDEVBLK->lock ) already carried out by caller in channel.c
-    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
     {
-        WRMSG( HHC05078, "I",  /* CTCE: -| Halt x=%s y=%s */
+        // "%1d:%04X CTCE: -| Halt x=%s y=%s"
+        WRMSG( HHC05078, "I",
             CTCX_DEVNUM( pDEVBLK ),
-            CTCE_StaStr[pDEVBLK->ctcexState & 0x07],
-            CTCE_StaStr[pDEVBLK->ctceyState & 0x07] );
+            CTCE_StaStr[ pDEVBLK->ctcexState & 0x07 ],
+            CTCE_StaStr[ pDEVBLK->ctceyState & 0x07 ] );
     }
 
     // Halt device for a CTCE device is a selective reset,
     // requiring our (x-)side to cancel any Working(D) wait state
     // if needed, and to return to the not ready state.
-    if( IS_CTCE_YWK( pDEVBLK->ctcexState ) )
+    if (IS_CTCE_YWK( pDEVBLK->ctcexState ))
     {
         obtain_lock( &pDEVBLK->ctceEventLock );
-        signal_condition( &pDEVBLK->ctceEvent );
+        {
+            signal_condition( &pDEVBLK->ctceEvent );
+        }
         release_lock( &pDEVBLK->ctceEventLock );
-        CLR_CTCE_ALLF(pDEVBLK->ctcexState);
-        SET_CTCE_YNR(pDEVBLK->ctcexState);
+
+        CLR_CTCE_ALLF( pDEVBLK->ctcexState );
+        SET_CTCE_YNR(  pDEVBLK->ctcexState );
     }
+
+    return unitstat;
 }
 
 // ---------------------------------------------------------------------

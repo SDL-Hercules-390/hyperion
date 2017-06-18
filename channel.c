@@ -1612,8 +1612,8 @@ perform_clear_subchan (DEVBLK *dev)
     release_lock(&sysblk.iointqlk);
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01308, "I", SSID_TO_LCSS(dev->ssid),
-                              dev->devnum);
+        // "%1d:%04X CHAN: clear completed"
+        WRMSG( HHC01308, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wake up any waiters if the device isn't reserved */
@@ -1634,31 +1634,35 @@ perform_clear_subchan (DEVBLK *dev)
 /*      regs    -> CPU register context                              */
 /*      dev     -> Device control block                              */
 /*-------------------------------------------------------------------*/
-void
-clear_subchan (REGS *regs, DEVBLK *dev)
+void clear_subchan( REGS* regs, DEVBLK* dev )
 {
-    UNREFERENCED(regs);
+    UNREFERENCED( regs );
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01331, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X CHAN: clear subchannel"
+        WRMSG( HHC01331, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_MODE(regs)
-      && (regs->siebk->zone != dev->pmcw.zone
-        || !(dev->pmcw.flag27 & PMCW27_I)))
+#if defined( _FEATURE_IO_ASSIST )
+    if (1
+        && SIE_MODE( regs )
+        && (0
+            || regs->siebk->zone != dev->pmcw.zone
+            || !(dev->pmcw.flag27 & PMCW27_I)
+           )
+    )
     {
-        longjmp(regs->progjmp,SIE_INTERCEPT_INST);
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
     }
 #endif
 
-    OBTAIN_INTLOCK(NULL);
-    obtain_lock(&dev->lock);
+    OBTAIN_INTLOCK( NULL );
+    obtain_lock( &dev->lock );
 
     /* If the device is busy then signal the device to clear */
     if ((dev->busy
 #if defined( OPTION_SHARED_DEVICES )
         && dev->shioactive == DEV_SYS_LOCAL
-#endif // defined( OPTION_SHARED_DEVICES )
+#endif
     ) || dev->startpending)
     {
         /* Set clear pending condition */
@@ -1668,41 +1672,42 @@ clear_subchan (REGS *regs, DEVBLK *dev)
         if (dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
-            schedule_ioq(NULL, dev);
+            schedule_ioq( NULL, dev );
         }
 
         /* Invoke the provided halt device routine if it has been
          * provided by the handler code at init
          */
-        else if(dev->hnd->halt!=NULL)
+        else if (dev->hnd->halt != NULL)
         {
             /* Revert to just holding dev->lock */
-            release_lock(&dev->lock);
-            RELEASE_INTLOCK(NULL);
-            obtain_lock(&dev->lock);
+            release_lock( &dev->lock );
+            RELEASE_INTLOCK( NULL );
 
-            /* Call the device's halt routine */
-            dev->hnd->halt(dev);
+            obtain_lock( &dev->lock );
+            {
+                /* Call the device's halt routine */
+                dev->hnd->halt( dev );
+            }
+            release_lock( &dev->lock );
 
-            /* Release dev->lock and return */
-            release_lock(&dev->lock);
-            return;
+            /* Return to holding BOTH intlock *and* dev->lock */
+            OBTAIN_INTLOCK( NULL );
+            obtain_lock( &dev->lock );
         }
-
-#if !defined(NO_SIGABEND_HANDLER)
-        else if( dev->ctctype )
+#if !defined( NO_SIGABEND_HANDLER )
+        else if (dev->ctctype)
         {
-            signal_thread(dev->tid, SIGUSR2);
+            signal_thread( dev->tid, SIGUSR2 );
         }
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
-
+#endif
     }
-    else
-        perform_clear_subchan(dev);
 
-    release_lock (&dev->lock);
-    RELEASE_INTLOCK(NULL);
+    /* Perform clear subchannel operation and queue interrupt */
+    perform_clear_subchan( dev );
 
+    release_lock( &dev->lock );
+    RELEASE_INTLOCK( NULL );
 
 } /* end function clear_subchan */
 
