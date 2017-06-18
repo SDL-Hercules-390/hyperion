@@ -77,6 +77,7 @@ static BYTE  CTC_Immed_Commands [256] =
 
 // First three octets of Multicast MAC address
 static const BYTE mcast3[ 3 ] = { 0x01, 0x00, 0x5e };
+static const MAC  zeromac     = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // ====================================================================
 //                       Declarations
@@ -465,7 +466,10 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_CSUM )
     if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) TUN_F_CSUM ) == 0)
+    {
+        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
         pLCSPORT->fDoCkSumOffload = 0;    // (tuntap does it for us)
+    }
     else
 #endif
         pLCSPORT->fDoCkSumOffload = 1;    // (we must do it ourself)
@@ -479,6 +483,8 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_TSO4 ) && defined( TUN_F_UFO )
     if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*)(TUN_F_TSO4 | TUN_F_UFO)) == 0)
     {
+        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
+
         pLCSPORT->sIPAssistsSupported |= LCS_IP_FRAG_REASSEMBLY;
         pLCSPORT->sIPAssistsEnabled   |= LCS_IP_FRAG_REASSEMBLY;
 
@@ -1099,8 +1105,16 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             pEthFrame    = (PETHFRM) pLCSEthFrame->bData;
             iEthLen      = iLength - sizeof(LCSETHFRM);
 
-            // Perform outbound checksum offloading if necessary
+            // Fill in LCS source MAC address if not specified by guest program
+            if (memcmp( pEthFrame->bSrcMAC, zeromac, sizeof( MAC )) == 0)
+            {
+                memcpy( pEthFrame->bSrcMAC, pLCSPORT->MAC_Address, sizeof( MAC ));
+#if !defined( OPTION_TUNTAP_LCS_SAME_ADDR )
+                pEthFrame->bSrcMAC[5]++;	/* Get next MAC address */
+#endif
+            }
 
+            // Perform outbound checksum offloading if necessary
             if (pLCSPORT->fDoCkSumOffload)
             {
                 PTT_TIMING( "beg csumoff", 0, iEthLen, 0 );
