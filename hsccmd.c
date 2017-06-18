@@ -2230,13 +2230,15 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
     int      i;
     u_int    j;
     DEVGRP*  pDEVGRP;
+    char     charaddr[48];
+    int      numaddr;
 
     UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    // Format:  "qeth  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
-    // Format:  "qeth  debug  off [ [ <devnum>|ALL ] ]"
+    // Format:  "QETH  DEBUG  {ON|OFF}  [ [<devnum>|ALL] [mask ...] ]"
+    // Format:  "QETH  ADDR             [ [<devnum>|ALL]            ]"
 
     if ( argc >= 2 && CMD(argv[1],debug,5) )
     {
@@ -2290,6 +2292,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         {
             if ( onoff == TRUE)
             {
+                // mask = "packet", "data", "expand", "updown", "ccw", nnn.
                 mask = 0;
                 for ( i = 4 ; i < argc ; i++ )
                 {
@@ -2347,7 +2350,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
 
             // HHC02204 "%-14s set to %s"
-            WRMSG(HHC02204, "I", "QETH DEBUG", onoff ? "on ALL" : "off ALL");
+            WRMSG(HHC02204, "I", "QETH DEBUG", onoff ? "ON ALL" : "OFF ALL");
         }
         else
         {
@@ -2382,6 +2385,131 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             // HHC02204 "%-14s set to %s"
             WRMSG(HHC02204, "I", "QETH DEBUG", buf);
             }
+        }
+
+        return 0;
+    }
+
+    if ( CMD(argv[1],addr,4) )
+    {
+
+        if ( argc < 3 )
+        {
+            all = TRUE;
+            pDEVGRP = NULL;
+        }
+        else
+        {
+            if ( CMD(argv[2],all,3) )
+            {
+                all = TRUE;
+                pDEVGRP = NULL;
+            }
+            else if ( parse_single_devnum( argv[2], &lcss, &devnum) == 0 )
+            {
+                if ( !(dev = find_device_by_devnum( lcss, devnum )) )
+                {
+                    devnotfound_msg( lcss, devnum );
+                    return -1;
+                }
+                if ( !dev->allocated ||
+                     dev->devtype != 0x1731 )
+                {
+                    // HHC02209 "%1d:%04X device is not a '%s'"
+                    WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
+                    return -1;
+                }
+                all = FALSE;
+                pDEVGRP = dev->group;
+            }
+            else
+            {
+                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                WRMSG( HHC02299, "E", argv[0] );
+                return -1;
+            }
+        }
+
+        if (argc > 3)
+        {
+            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+
+        grp = NULL;
+        for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+        {
+          /* Check the device is a QETH device */
+          if ( dev->allocated &&
+               dev->devtype == 0x1731 )
+          {
+            /* Check whether we are displaying all QETH groups or just a specific QETH group */
+            if (all == TRUE || pDEVGRP == dev->group)
+            {
+              /* Check whether we have already displayed this QETH group */
+              if (grp != dev->group->grp_data)
+              {
+                /* Check whether this QETH group is complete */
+                grp = dev->group->grp_data;
+                if (dev->group->members == dev->group->acount)
+                {
+                  /* The first device of a complete QETH group, display the addresses */
+                  numaddr = 0;
+
+                  /* Display registered MAC addresses. */
+                  for (i = 0; i < OSA_MAXMAC; i++)
+                  {
+                    if (grp->mac[i].type)
+                    {
+                      snprintf( charaddr, sizeof(charaddr),
+                                "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                                grp->mac[i].addr[0],
+                                grp->mac[i].addr[1],
+                                grp->mac[i].addr[2],
+                                grp->mac[i].addr[3],
+                                grp->mac[i].addr[4],
+                                grp->mac[i].addr[5] );
+                      // HHC02344 "%s device %1d:%04X group has registered MAC address %s"
+                      WRMSG(HHC02344, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                                charaddr );
+                      numaddr++;
+                    }
+                  }
+
+                  /* Display registered IPv4 address. */
+                  if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE)
+                  {
+                    hinet_ntop( AF_INET, grp->ipaddr4[0].addr, charaddr, sizeof(charaddr) );
+                    // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                    WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                            charaddr );
+                    numaddr++;
+                  }
+
+                  /* Display registered IPv6 addresses. */
+                  for (i = 0; i < OSA_MAXIPV6; i++)
+                  {
+                    if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE)
+                    {
+                      hinet_ntop( AF_INET6, grp->ipaddr6[i].addr, charaddr, sizeof(charaddr) );
+                      // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                      WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                              charaddr );
+                      numaddr++;
+                    }
+                  }
+
+                  /* Display whether there were any registered addresses. */
+                  if (numaddr == 0)
+                  {
+                  // HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
+                  WRMSG(HHC02346, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                  }
+                }
+              }
+            }
+          }
         }
 
         return 0;

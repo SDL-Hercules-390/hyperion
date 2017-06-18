@@ -803,7 +803,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
 #define HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
 #define HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
-//efine HHC00985 - HHC00999 (available)
+#define HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
+#define HHC00986 "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
+//efine HHC00987 - HHC00999 (available)
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c, commadpt.c, console.c, con1052c.c */
@@ -1389,7 +1391,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02270 "%s" // Floating point registers
 #define HHC02271 "%s" // Control registers
 #define HHC02272 "%s" // Access registers
-#define HHC02273 "Index %2d: %s"
+#define HHC02273 "Index %3d: %s"
 #define HHC02274 "%s" // 'clocks' command
 #define HHC02275 "SCSI auto-mount: %s"
 #define HHC02276 "Floating point control register: %08"PRIX32
@@ -1460,6 +1462,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02341 "Script %d: test: unknown runtest keyword: %s"
 #define HHC02342 "%s file '%s' not found:  %s"
 #define HHC02343 "Terminating due to %d argument errors"
+#define HHC02344 "%s device %1d:%04X group has registered MAC address %s"
+#define HHC02345 "%s device %1d:%04X group has registered IP address %s"
+#define HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
+//efine HHC02347 - HHC02349 (available)
 
 // range 02350 - 02369 available
 
@@ -2108,7 +2114,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // range 03500 - 03599 available
 // range 03600 - 03699 available
 // range 03700 - 03799 available
-// range 03800 - 03899 available
+
+// range 03800 - 03849 for qeth related messages
+//efine HHC03800 (available)
+#define HHC03801 "%1d:%04X %s: Register guest MAC address %s"
+#define HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
+#define HHC03803 "%1d:%04X %s: Unregister guest MAC address %s"
+#define HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
+#define HHC03805 "%1d:%04X %s: Register guest IP address %s"
+#define HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
+#define HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
+#define HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
+//efine HHC03809 - HHC03849 (available)
+
+//efine HHC03850 - HHC03899 (available)
 
 // reserve 039xx for ptp related messages
 #define HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"

@@ -415,8 +415,8 @@
                                 \
   "Format: \"devlist [devn | devc]\"\n"                                          \
   "    devn       is a single device address\n"                                  \
-  "    devc       is a single device class. Device classes are CON,\n"           \
-  "               CTCA, DASD, DSP, LINE, PCH, PRT, QETH, RDR, and TAPE.\n"       \
+  "    devc       is a single device class. Device classes are CHAN, CON,\n"     \
+  "               CTCA, DASD, DSP, FCP, LINE, OSA, PCH, PRT, RDR, and TAPE.\n"   \
   "\n"                                                                           \
   "If no arguments are given then all devices will be listed.\n"
 
@@ -1052,15 +1052,21 @@
   "a single device number or a multiple device number specification\n"           \
   "in the same format as used for configuration file device statements,\n"       \
   "and 'devclass' is either CHAN, CON, CTCA, DASD, DSP, FCP, LINE, OSA,\n"       \
-  "PCH, PRT, RDR or TAPE. When no argument is given all devices are shown.\n"
+  "PCH, PRT, RDR, or TAPE. When no argument is given all devices are shown.\n"
 
 #define qeth_cmd_desc           "Enable/Disable QETH debugging"
 #define qeth_cmd_help           \
                                 \
-  "Format:  \"qeth  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]\".\n\n"  \
-  "Enables/disables debug tracing for the QETH device group\n"                   \
-  "identified by <devnum>, or for all QETH device groups if\n"                   \
-  "<devnum> is not specified or specified as 'ALL'.\n"
+  "Format:  \"QETH  DEBUG {ON|OFF}  [ [<devnum>|ALL] [mask ...] ]\"\n"          \
+  "         \"QETH  ADDR              [<devnum>|ALL]\"\n\n"                     \
+  "Enables/disables debug tracing for the QETH (OSA) device groups iden-\n"     \
+  "tified by <devnum>, or for all QETH (OSA) device groups if <devnum> is\n"    \
+  "not specified or specified as 'ALL', or displays all MAC addresses\n"        \
+  "registered with the device identified by <devnum> or for all QETH (OSA)\n"   \
+  "device groups if <devnum> is not specified or specified as 'ALL'.  The\n"    \
+  "optional 'mask' value may be specified more than once. Valid values for\n"   \
+  " mask are \"packet\", \"data\", \"expand\", \"updown\", \"ccw\" or nnn,\n"   \
+  "where 'nnn' is a value from 1 to 255.\n"
 
 #define qpfkeys_cmd_desc        "Display the current PF Key settings"
 #define qpid_cmd_desc           "Display Process ID of Hercules"
