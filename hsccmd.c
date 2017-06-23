@@ -193,6 +193,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 /* Issue generic Device not found error message */
 static inline int devnotfound_msg( U16 lcss, U16 devnum )
 {
+    // HHC02200 "%1d:%04X device not found"
     WRMSG( HHC02200, "E", lcss, devnum );
     return -1;
 }
@@ -200,6 +201,7 @@ static inline int devnotfound_msg( U16 lcss, U16 devnum )
 /* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
+    // "Device number missing"
     WRMSG( HHC02201, "E" );
 }
 
@@ -816,6 +818,7 @@ int cctape_cmd( int argc, char* argv[], char* cmdline )
 
     if (!(dev = find_device_by_devnum( lcss, devnum )))
     {
+        // HHC02200 "%1d:%04X device not found"
         devnotfound_msg( lcss, devnum );
         return -1;
     }
@@ -871,6 +874,7 @@ int fcb_cmd( int argc, char* argv[], char* cmdline )
 
     if (!(dev = find_device_by_devnum( lcss, devnum )))
     {
+        // HHC02200 "%1d:%04X device not found"
         devnotfound_msg( lcss, devnum );
         return -1;
     }
@@ -928,6 +932,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         }
         else if (!(dev = find_device_by_devnum (lcss,devnum)))
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg(lcss,devnum);
             rc = -1;
         }
@@ -1046,6 +1051,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         }
         else if (!(dev = find_device_by_devnum (lcss, devnum)))
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg(lcss,devnum);
             rc = -1;
         }
@@ -1978,6 +1984,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
         if (!(dev = find_device_by_devnum ( lcss, devnum )))
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg( lcss, devnum );
             return -1;
         }
@@ -2173,6 +2180,7 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
         {
             if ( !(dev = find_device_by_devnum( lcss, devnum )) )
             {
+                // HHC02200 "%1d:%04X device not found"
                 devnotfound_msg( lcss, devnum );
                 return -1;
             }
@@ -2232,6 +2240,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
     DEVGRP*  pDEVGRP;
     char     charaddr[48];
     int      numaddr;
+    BYTE     found = FALSE;
 
     UNREFERENCED( cmdline );
 
@@ -2339,6 +2348,8 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
         if ( all )
         {
+            found = FALSE;
+
             for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
             {
                 if ( dev->allocated &&
@@ -2346,7 +2357,15 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                 {
                     grp = dev->group->grp_data;
                     grp->debugmask = mask;
+                    found = TRUE;
                 }
+            }
+
+            if (!found)
+            {
+                // HHC02347 "No %s devices found"
+                WRMSG( HHC02347, "E", "QETH" );
+                return -1;
             }
 
             // HHC02204 "%-14s set to %s"
@@ -2356,6 +2375,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         {
             if ( !(dev = find_device_by_devnum( lcss, devnum )) )
             {
+                // HHC02200 "%1d:%04X device not found"
                 devnotfound_msg( lcss, devnum );
                 return -1;
             }
@@ -2409,6 +2429,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             {
                 if ( !(dev = find_device_by_devnum( lcss, devnum )) )
                 {
+                    // HHC02200 "%1d:%04X device not found"
                     devnotfound_msg( lcss, devnum );
                     return -1;
                 }
@@ -2438,6 +2459,8 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         }
 
         grp = NULL;
+        found = FALSE;
+
         for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
         {
           /* Check the device is a QETH device */
@@ -2455,6 +2478,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                 if (dev->group->members == dev->group->acount)
                 {
                   /* The first device of a complete QETH group, display the addresses */
+                  found = TRUE;
                   numaddr = 0;
 
                   /* Display registered MAC addresses. */
@@ -2510,6 +2534,13 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
               }
             }
           }
+        } /* end for (dev = ... */
+
+        if (!found)
+        {
+            // HHC02347 "No %s devices found"
+            WRMSG( HHC02347, "E", "QETH" );
+            return -1;
         }
 
         return 0;
@@ -2556,6 +2587,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         if (!(dev = find_device_by_devnum (lcss, devnum)) &&
             !(dev = find_device_by_devnum (lcss, devnum ^ 0x01)))
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg(lcss,devnum);
             return -1;
         }
@@ -5333,6 +5365,7 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
 
         if (!(dev = find_device_by_devnum( lcss, devnum )))
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg( lcss, devnum );
             return -1;
         }
@@ -6044,6 +6077,7 @@ char buf[4096];
 
     if (!(dev = find_device_by_devnum (lcss,devnum)))
     {
+        // HHC02200 "%1d:%04X device not found"
         devnotfound_msg(lcss,devnum);
         return -1;
     }
@@ -6168,6 +6202,7 @@ int     rc;
             return -1;
         if ((dev = find_device_by_devnum (lcss,devnum)) == NULL)
         {
+            // HHC02200 "%1d:%04X device not found"
             rc = devnotfound_msg(lcss,devnum);
             return rc;
         }
@@ -6370,6 +6405,7 @@ BYTE     unitstat, code = 0;
 
     if (!(dev = find_device_by_devnum (lcss, devnum)))
     {
+        // HHC02200 "%1d:%04X device not found"
         devnotfound_msg(lcss,devnum);
         return -1;
     }
@@ -6663,6 +6699,7 @@ char   **save_argv = NULL;
 
     if (!(dev = find_device_by_devnum (lcss, devnum)))
     {
+        // HHC02200 "%1d:%04X device not found"
         devnotfound_msg(lcss,devnum);
         return -1;
     }
@@ -7201,6 +7238,7 @@ BYTE c;                                 /* Character work area       */
         dev = find_device_by_devnum (lcss, devnum);
         if (dev == NULL)
         {
+            // HHC02200 "%1d:%04X device not found"
             devnotfound_msg(lcss,devnum);
             RELEASE_INTLOCK(NULL);
             return -1;

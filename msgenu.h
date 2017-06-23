@@ -1465,7 +1465,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02344 "%s device %1d:%04X group has registered MAC address %s"
 #define HHC02345 "%s device %1d:%04X group has registered IP address %s"
 #define HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
-//efine HHC02347 - HHC02349 (available)
+#define HHC02347 "No %s devices found"
+//efine HHC02348 - HHC02349 (available)
 
 // range 02350 - 02369 available
 
