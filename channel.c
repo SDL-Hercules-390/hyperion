@@ -3984,6 +3984,61 @@ static INLINE void* execute_ccw_chain_clear_busy_and_return
 
 
 /*-------------------------------------------------------------------*/
+/* CCW Tracing helper macros                                         */
+/*-------------------------------------------------------------------*/
+#ifndef OSTAILOR_QUIET
+#define OSTAILOR_QUIET()            (!sysblk.pgminttr)
+#endif
+
+#ifndef CCW_TRACE_OR_STEP
+#define CCW_TRACE_OR_STEP( dev )    ((dev)->ccwtrace || (dev)->ccwstep)
+#endif
+
+#ifndef CCW_TRACING_ACTIVE
+#define CCW_TRACING_ACTIVE( dev, tracethis )    (CCW_TRACE_OR_STEP( dev ) \
+                                                    || ( tracethis ))
+#endif
+
+#ifndef SKIP_CH9UC
+#define SKIP_CH9UC( dev, chanstat, unitstat )                       \
+                                                                    \
+    (1                                                              \
+     && !CCW_TRACE_OR_STEP( dev )                                   \
+     && !CPU_STEPPING_OR_TRACING_ALL                                \
+     && sysblk.noch9oflow                                           \
+     && is_ch9oflow( dev, chanstat, unitstat )                      \
+    )
+#endif
+
+
+/*-------------------------------------------------------------------*/
+/* helper function to check if printer channel-9 overflow unit check */
+/*-------------------------------------------------------------------*/
+#ifndef IS_CH9OFLOW
+#define IS_CH9OFLOW
+static BYTE is_ch9oflow( DEVBLK* dev, BYTE chanstat, BYTE unitstat )
+{
+    static const BYTE unitck = (CSW_CE | CSW_DE | CSW_UC);
+
+    if (1
+        &&    0      == chanstat
+        &&  unitck   == unitstat
+        && SENSE_CH9 == dev->sense[0]
+        &&    0      == dev->sense[1]
+        && dev->hnd->query
+    )
+    {
+        char* devclass = NULL;
+        dev->hnd->query( NULL, &devclass, 0, NULL );
+        if (strcmp( devclass, "PRT" ) == 0)
+            return TRUE;
+    }
+    return FALSE;
+}
+#endif // IS_CH9OFLOW
+
+
+/*-------------------------------------------------------------------*/
 /* EXECUTE A CHANNEL PROGRAM                                         */
 /*-------------------------------------------------------------------*/
 void*
@@ -4013,7 +4068,7 @@ BYTE    chanstat;                       /* Channel status            */
 U32     residual = 0;                   /* Residual byte count       */
 BYTE    more;                           /* 1=Count exhausted         */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
-BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */
+BYTE    tracethis = 0;                  /* 1=Trace this CCW chain    */
 BYTE    firstccw = 1;                   /* 1=First CCW               */
 BYTE    area[64];                       /* Message area              */
 u_int   bufpos = 0;                     /* Position in I/O buffer    */
@@ -4092,21 +4147,21 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
 
         set_device_busy(dev);
 
-        if (dev->ccwtrace || dev->ccwstep || tracethis)
+        if (CCW_TRACING_ACTIVE( dev, tracethis ))
         {
             if (dev->s370start)
             {
-                /* State successful conversion from synchronous to
-                 * asynchronous for 370 mode.
+                /* State successful conversion from synchronous
+                 * to asynchronous for 370 mode.
                  */
-                WRMSG (HHC01321, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+                // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
+                WRMSG( HHC01321, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
             }
             else
             {
                 /* Trace I/O resumption */
-                WRMSG (HHC01311, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+                // "%1d:%04X CHAN: resumed"
+                WRMSG (HHC01311, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
             }
         }
 
@@ -4257,8 +4312,8 @@ execute_halt:
             perform_halt(dev);
 
             if (tracethis && !dev->ccwstep)
-                WRMSG (HHC01309, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+                // "%1d:%04X CHAN: halt completed"
+                WRMSG( HHC01309, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4275,9 +4330,9 @@ execute_halt:
             /* Queue the pending interrupt and update status */
             queue_io_interrupt_and_update_status(dev,TRUE);
 
-            if (dev->ccwtrace || dev->ccwstep || tracethis)
-                WRMSG (HHC01307, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+            if (CCW_TRACING_ACTIVE( dev, tracethis ))
+                // "%1d:%04X CHAN: attention completed"
+                WRMSG( HHC01307, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4632,9 +4687,9 @@ execute_halt:
                 dev->suspended = 1;
 
                 /* Trace suspension point */
-                if (unlikely(dev->ccwtrace || dev->ccwstep || tracethis))
-                    WRMSG (HHC01310, "I", SSID_TO_LCSS(dev->ssid),
-                                          dev->devnum);
+                if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
+                    // "%1d:%04X CHAN: suspended"
+                    WRMSG( HHC01310, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
                 /* Present the interrupt and return */
                 if (dev->scsw.flag3 & SCSW3_SC_PEND)
@@ -4739,9 +4794,9 @@ execute_halt:
             obtain_lock(&dev->lock);
 
             /* State converting from SIO synchronous to asynchronous */
-            if (dev->ccwtrace || dev->ccwstep || tracethis)
-                WRMSG (HHC01320, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+            if (CCW_TRACING_ACTIVE( dev, tracethis ))
+                // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
+                WRMSG( HHC01320, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
             /* Update local copy of ORB */
             STORE_FW(dev->orb.ccwaddr, (ccwaddr-8));
@@ -4800,9 +4855,9 @@ execute_halt:
                 release_lock(&dev->lock);
                 queue_io_interrupt_and_update_status(dev,FALSE);
 
-                if (dev->ccwtrace || dev->ccwstep || tracethis)
-                    WRMSG (HHC01306, "I", SSID_TO_LCSS(dev->ssid),
-                                          dev->devnum);
+                if (CCW_TRACING_ACTIVE( dev, tracethis ))
+                    // "%1d:%04X CHAN: initial status interrupt"
+                    WRMSG( HHC01306, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
             }
         }
 
@@ -4998,7 +5053,7 @@ prefetch:
             /* Handle prefetch (write) conditions */
             else if (prefetch.seq)
             {
-                /* Set prefetch remaining byte count                 */
+                /* Set prefetch remaining byte count */
                 prefetch_remaining = count - residual;
 
                 /* Determine prefetched CCW limit and raise requested
@@ -5096,7 +5151,7 @@ prefetch:
             if (((residual && !(flags & CCW_FLAGS_SLI)) ||
                  ((more || (residual && prefetch.seq)) &&
                   !(flags & (CCW_FLAGS_CD | CCW_FLAGS_SLI))))
-                && !(dev->is_immed && (flags & CCW_FLAGS_CC))                   /* DSF Debug */
+                && !(dev->is_immed && (flags & CCW_FLAGS_CC))  /* DSF Debug */
 #if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
                 /* Set incorrect length indication if not Format-1   */
                 /* CCW and incorrect length suppression is not       */
@@ -5124,21 +5179,44 @@ breakchain:
                                   CSW_CCC   | CSW_ICC   | CSW_CHC))
                   || ((unitstat & CSW_UC) && dev->sense[0])))
         {
+
+            BYTE  tracing_active  = CCW_TRACING_ACTIVE( dev, tracethis );
+            BYTE  cpu_tracing     = CPU_STEPPING_OR_TRACING_ALL;
+            BYTE  ostailor_quiet  = OSTAILOR_QUIET();
+            BYTE  ccw_tracing     = CCW_TRACE_OR_STEP( dev );
+            BYTE  skip_ch9uc      = SKIP_CH9UC( dev, chanstat, unitstat );
+
             /* Trace the CCW if not already done */
-            if (!(dev->ccwtrace || dev->ccwstep || tracethis)
-              && (CPU_STEPPING_OR_TRACING_ALL || sysblk.pgminttr
-                || dev->ccwtrace || dev->ccwstep) )
+            if (1
+                && !tracing_active
+                && (0
+                    || cpu_tracing
+                    || !ostailor_quiet
+                    || ccw_tracing
+                   )
+                && !skip_ch9uc
+            )
+            {
                 display_ccw (dev, ccw, addr, count, flags);
+            }
 
             /* Activate tracing for this CCW chain only
                if any trace is already active */
-            if(CPU_STEPPING_OR_TRACING_ALL || sysblk.pgminttr
-              || dev->ccwtrace || dev->ccwstep)
-            tracethis = 1;
+            if (0
+                || ccw_tracing
+                || cpu_tracing
+                || (1
+                    && !ostailor_quiet
+                    && !skip_ch9uc
+                   )
+            )
+            {
+                tracethis = 1;
+            }
         }
 
         /* Trace the results of CCW execution */
-        if (unlikely(dev->ccwtrace || dev->ccwstep || tracethis))
+        if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
         {
             #if DEBUG_PREFETCH
                 if (!prefetch.seq)

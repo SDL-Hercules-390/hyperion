@@ -1483,13 +1483,14 @@
 #define tlb_cmd_desc            "Display TLB tables"
 #define toddrag_cmd_desc        "Display or set TOD clock drag factor"
 #define todprio_cmd_desc        "Set/Display todprio parameter"
-#define traceopt_cmd_desc       "Instruction trace display options"
+#define traceopt_cmd_desc       "Instruction and/or CCW trace display option"
 #define traceopt_cmd_help       \
                                 \
-  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how\n"    \
-  "the registers are displayed during instruction tracing and stepping.\n"       \
-  "Entering the command without any argument simply displays the current\n"      \
-  "mode.\n"
+  "Format: \"TRACEOPT [TRADITIONAL|REGSFIRST|NOREGS] [NOCH9OFLOW]\".\n"          \
+  "Determines how the registers are displayed during instruction tracing\n"      \
+  "and stepping and/or whether CCW tracing of printer channel-9 overflow\n"      \
+  "unit-checks should be suppressed. Entering the command with no arguments\n"   \
+  "displays the current settings. The default is TRADITIONAL.\n"
 
 #define tt32_cmd_desc           "Control/query CTCI-WIN functionality"
 #define tt32_cmd_help           \

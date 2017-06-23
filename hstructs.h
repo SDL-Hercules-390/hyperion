@@ -732,8 +732,9 @@ struct SYSBLK {
                                         /*   legacy devices          */
                 haveiplparm:1,          /* IPL PARM a la VM          */
                 logoptnotime:1,         /* 1 = don't timestamp log   */
-                nolrasoe:1;             /* 1 = No trace LRA Special  */
+                nolrasoe:1,             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
+                noch9oflow:1;           /* Suppress CH9 O'Flow trace */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */

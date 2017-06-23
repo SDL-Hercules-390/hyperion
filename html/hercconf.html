@@ -1397,25 +1397,27 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="TRACEOPT"></a>
-<dt><code>TRACEOPT &nbsp; <u>TRADITIONAL</u> &#124; REGSFIRST &#124; NOREGS</code>
+<dt><code>TRACEOPT &nbsp; [<u>TRADITIONAL</u> &#124; REGSFIRST &#124; NOREGS] &nbsp;[NOCH9OFLOW]</code>
 <dd><p>
-    Sets the Hercules instruction tracing display option.
+    Sets the Hercules instruction and device tracing option(s).
+    <p>
     <code>TRADITIONAL</code> (the default), displays the registers following
-    the instruction about to be executed such that pressing enter (to execute
-    the displayed instruction) then shows the next instruction to be executed
-    followed by the updated registers display.
+    the instruction about to be executed such that pressing the ENTER key (to
+    execute the displayed instruction) then shows the next instruction to be
+    executed followed by a display of the just updated registers.
     <p>
     <code>REGSFIRST</code> displays the current register contents followed by
-    the instruction about to be executed such that pressing enter (to execute
-    the displayed instruction) then shows the updated registers followed by
-    the next instruction to be executed.
+    the instruction <i>about</i> to be executed such that pressing the ENTER
+    key (to execute the displayed instruction) then shows the just updated
+    registers followed by the <i>next</i> instruction about to be executed.
     <p>
-    <code>NOREGS</code> suppresses the registers display altogether
-    and shows just the instruction to be executed.
+    <code>NOREGS</code> suppresses the registers display altogether and shows
+    just the instruction about to be executed.
     <p>
-    In addition to the <code>TRACEOPT</code> configuration file statement
-    there is also a corresponding <code>traceopt</code> panel command to
-    dynamically display and/or update the current setting at any time.
+    <code>NOCH9OFLOW</code> suppresses CCW tracing of printer channel-9 overflow
+    unit checks which are considered completely normal and not true device errors.
+    The unit checks still occur, they are simply not traced unless CCW tracing
+    is explicitly enabled on the device.
     <p>
 
 <a name="TZOFFSET"></a>

@@ -236,53 +236,84 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* traceopt - perform display_inst traditionally or new              */
 /*-------------------------------------------------------------------*/
-int traceopt_cmd(int argc, char *argv[], char *cmdline)
+int traceopt_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    int   i;
+    char  msgbuf[ 64 ];
+    BYTE  showregsfirst  = sysblk.showregsfirst;
+    BYTE  showregsnone   = sysblk.showregsnone;
+    BYTE  noch9oflow     = sysblk.noch9oflow;
+
+    UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    if ( argc > 2 )
+    if (argc > 3)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if (argc == 2)
+    if (argc <= 1)
     {
-        if ( CMD(argv[1],traditional,4) )
+        MSGBUF( msgbuf, "%s%s"
+            , showregsnone  ? "NOREGS" : showregsfirst ? "REGSFIRST" : "TRADITIONAL"
+            , noch9oflow ? " NOCH9OFLOW" : ""
+        );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
+    }
+    else // (argc >= 2)
+    {
+        noch9oflow = FALSE;     // (reset to default)
+
+        for (i=1; i < argc; i++)
         {
-            sysblk.showregsfirst = 0;
-            sysblk.showregsnone = 0;
+            if (CMD( argv[i], TRADITIONAL, 4 ))
+            {
+                showregsfirst = FALSE;
+                showregsnone  = FALSE;
+            }
+            else if (CMD( argv[i], REGSFIRST, 4 ))
+            {
+                showregsfirst = TRUE;
+                showregsnone  = FALSE;
+            }
+            else if (CMD( argv[i], NOREGS, 4 ))
+            {
+                showregsfirst = FALSE;
+                showregsnone  = TRUE;
+            }
+            else if (CMD( argv[i], NOCH9OFLOW, 5 ))
+            {
+                noch9oflow = TRUE;
+            }
+            else
+            {
+                // "Invalid value %s specified for %s"
+                WRMSG( HHC01451, "E", argv[i], argv[0] );
+                return -1;
+            }
         }
-        else if ( CMD(argv[1],regsfirst,4) )
+
+        sysblk.showregsfirst = showregsfirst;
+        sysblk.showregsnone  = showregsnone;
+        sysblk.noch9oflow    = noch9oflow;
+
+        if (MLVL( VERBOSE ))
         {
-            sysblk.showregsfirst = 1;
-            sysblk.showregsnone = 0;
-        }
-        else if ( CMD(argv[1],noregs,4) )
-        {
-            sysblk.showregsfirst = 0;
-            sysblk.showregsnone = 1;
-        }
-        else
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        if ( MLVL(VERBOSE) )
-        {
-            WRMSG(HHC02203, "I", "Hercules inst trace display",
-                sysblk.showregsnone ? "noregs mode" :
-                sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
+            MSGBUF( msgbuf, "%s%s"
+                , showregsnone  ? "NOREGS" : showregsfirst ? "REGSFIRST" : "TRADITIONAL"
+                , noch9oflow ? " NOCH9OFLOW" : ""
+            );
+
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], msgbuf );
         }
     }
-    else
-    {
-        WRMSG(HHC02203, "I", "Hercules inst trace display",
-            sysblk.showregsnone ? "noregs mode" :
-            sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
-    }
+
     return 0;
 }
 
