@@ -79,6 +79,9 @@
 /*
 // $Log$    Update revision number in define variable ECPSCODEVER, below.
 //
+// Revision 1.84  2017/07/02 10:50:00  bobpolmanter
+// Fix LRA bug with 2K page frames (frame shift amount incorrect)
+//
 // Revision 1.83  2017/05/25 19:12:00  bobpolmanter/petercoghlan
 // Fix DISP2 incorrect check of VMV370R and mis-loaded control registers;
 // Remove DISP2 debug message causing page faults in CP.
@@ -170,7 +173,7 @@
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.83    //  <--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.84    //  <--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -4418,7 +4421,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             pagmask = 0x0000f800;   /* mask to extract the page index from a virtual address           */
             paginvmask = 0x0004;    /* mask to test page invalid bit                                   */
             pagfmtmask = 0x0002;    /* must-be-zero bits in a PTE to ensure valid format               */
-            frameshift = 7;         /* left shift amt to left justify the page frame addr in a PTE     */
+            frameshift = 8;         /* left shift amt to left justify the page frame addr in a PTE     */
             framemask = 0xfff8;     /* mask to extract the page frame addr in a PTE                    */
             bytemask = 0x000007ff;  /* mask to extract the byte index from a virtual address           */
             segshift = 14;          /* right shift amt to get segment index from a virt address        */
@@ -4444,7 +4447,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
             pagmask = 0x0000f800;
             paginvmask = 0x0004;
             pagfmtmask = 0x0002;
-            frameshift = 7;
+            frameshift = 8;
             framemask = 0xfff8;
             bytemask = 0x000007ff;
             segshift = 18;
