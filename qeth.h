@@ -200,7 +200,9 @@ typedef struct _OSA_GRP {
     int   promisc;              /* Adapter is in promiscuous mode    */
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
+    
     u_int debugmask;            /* Debug mask                        */
+
 #define DBGQETHPACKET   0x00000001  /* Packet                        */
                                     /* (i.e. the Ethernet frames     */
                                     /* or IP packets sent to or      */
@@ -221,6 +223,12 @@ typedef struct _OSA_GRP {
                                     /* of data is displayed)         */
 #define DBGQETHUPDOWN   0x00000010  /* Connection up and down        */
 #define DBGQETHCCW      0x00000020  /* CCWs executed                 */
+#define DBGQETHDROP     0x00000040  /* Dropped packets               */
+#define DBGQETHINTRUPT  0x00000080  /* Adapter interrupts            */
+#define DBGQETHSBALE    0x00000100  /* SBALEs                        */
+#define DBGQETHSIGA     0x00000200  /* Signal Adapters               */
+#define DBGQETHQUEUES   0x00000400  /* Queues                        */
+
     int   l3;                   /* Adapter in layer 3 mode           */
     int   rdpack;               /* Adapter in read packing mode      */
     int   wrpack;               /* Adapter in write packing mode     */
@@ -240,6 +248,7 @@ typedef struct _OSA_GRP {
 
     BYTE  iMAC[IFHWADDRLEN];    /* MAC of the interface              */
     U16   uMTU;                 /* MTU of the interface              */
+#define QETH_MIN_MTU   60       /* Minimum MTU size                  */
 #define QETH_DEF_MTU   "1500"   /* Default MTU size                  */
 
     BYTE  gtissue[4];           /* Guest token issuer                */
