@@ -2266,14 +2266,14 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
             else
             {
-                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                // "Invalid command usage. Type 'help %s' for assistance."
                 WRMSG( HHC02299, "E", argv[0] );
                 return -1;
             }
         }
         else
         {
-            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            // "Invalid command usage. Type 'help %s' for assistance."
             WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
@@ -2291,7 +2291,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
             else
             {
-                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                // "Invalid command usage. Type 'help %s' for assistance."
                 WRMSG( HHC02299, "E", argv[0] );
                 return -1;
             }
@@ -2301,36 +2301,77 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         {
             if ( onoff == TRUE)
             {
-                // mask = "packet", "data", "expand", "updown", "ccw", nnn.
+                // mask:
+
+                // PLEASE KEEP THESE IN ALPHABETICAL ORDER!
+                // PLEASE NOTE THE MINIMUM ABBREVIATIONS!
+
+                // 'Ccw', 'DAta', 'DRopped', 'Expand', 'Interupts',
+                // 'Packet', 'Queues', 'SBale', 'SIga', 'Updown',
+
+                // 0xhhhhhhhh hexadecimal value
+
                 mask = 0;
                 for ( i = 4 ; i < argc ; i++ )
                 {
-                    if ( CMD(argv[i],packet,6) )
-                    {
-                        j = DBGQETHPACKET;
-                    }
-                    else if ( CMD(argv[i],data,4) )
-                    {
-                        j = DBGQETHDATA;
-                    }
-                    else if ( CMD(argv[i],expand,6) )
-                    {
-                        j = DBGQETHEXPAND;
-                    }
-                    else if ( CMD(argv[i],updown,6) )
-                    {
-                        j = DBGQETHUPDOWN;
-                    }
-                    else if ( CMD(argv[i],ccw,3) )
+
+                    if (0) ;
+                    else if ( CMD(argv[i],ccw,1) )
                     {
                         j = DBGQETHCCW;
                     }
+                    else if ( CMD(argv[i],data,2) )
+                    {
+                        j = DBGQETHDATA;
+                    }
+                    else if ( CMD(argv[i],dropped,2) )
+                    {
+                        j = DBGQETHDROP;
+                    }
+                    else if ( CMD(argv[i],expand,1) )
+                    {
+                        j = DBGQETHEXPAND;
+                    }
+                    else if ( CMD(argv[i],interupts,1) )
+                    {
+                        j = DBGQETHINTRUPT;
+                    }
+                    else if ( CMD(argv[i],packet,1) )
+                    {
+                        j = DBGQETHPACKET;
+                    }
+                    else if ( CMD(argv[i],queues,1) )
+                    {
+                        j = DBGQETHQUEUES;
+                    }
+                    else if ( CMD(argv[i],sbale,2) )
+                    {
+                        j = DBGQETHSBALE;
+                    }
+                    else if ( CMD(argv[i],siga,2) )
+                    {
+                        j = DBGQETHSIGA;
+                    }
+                    else if ( CMD(argv[i],updown,1) )
+                    {
+                        j = DBGQETHUPDOWN;
+                    }
                     else
                     {
-                        j = atoi( argv[i] );
-                        if ( j < 1 || j > 255 )
+                        char* endptr;
+                        j = strtoul( argv[i], &endptr, 16 );
+                        if (0
+                            || (1
+                                && (0 == j || UINT_MAX == j)
+                                && ERANGE == errno
+                               )
+                            || (1
+                                && *endptr != ' '
+                                && *endptr != 0
+                               )
+                        )
                         {
-                            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                            // "Invalid command usage. Type 'help %s' for assistance."
                             WRMSG( HHC02299, "E", argv[0] );
                             return -1;
                         }
@@ -2340,7 +2381,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
             else
             {
-                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                // "Invalid command usage. Type 'help %s' for assistance."
                 WRMSG( HHC02299, "E", argv[0] );
                 return -1;
             }
@@ -2363,19 +2404,19 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
             if (!found)
             {
-                // HHC02347 "No %s devices found"
+                // "No %s devices found"
                 WRMSG( HHC02347, "E", "QETH" );
                 return -1;
             }
 
-            // HHC02204 "%-14s set to %s"
+            // "%-14s set to %s"
             WRMSG(HHC02204, "I", "QETH DEBUG", onoff ? "ON ALL" : "OFF ALL");
         }
         else
         {
             if ( !(dev = find_device_by_devnum( lcss, devnum )) )
             {
-                // HHC02200 "%1d:%04X device not found"
+                // "%1d:%04X device not found"
                 devnotfound_msg( lcss, devnum );
                 return -1;
             }
@@ -2383,7 +2424,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             if ( !dev->allocated ||
                  dev->devtype != 0x1731 )
             {
-                // HHC02209 "%1d:%04X device is not a '%s'"
+                // "%1d:%04X device is not a '%s'"
                 WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
                 return -1;
             }
@@ -2402,7 +2443,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                     onoff ? "on" : "off",
                     "QETH",
                     lcss, devnum );
-            // HHC02204 "%-14s set to %s"
+            // "%-14s set to %s"
             WRMSG(HHC02204, "I", "QETH DEBUG", buf);
             }
         }
@@ -2429,14 +2470,14 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             {
                 if ( !(dev = find_device_by_devnum( lcss, devnum )) )
                 {
-                    // HHC02200 "%1d:%04X device not found"
+                    // "%1d:%04X device not found"
                     devnotfound_msg( lcss, devnum );
                     return -1;
                 }
                 if ( !dev->allocated ||
                      dev->devtype != 0x1731 )
                 {
-                    // HHC02209 "%1d:%04X device is not a '%s'"
+                    // "%1d:%04X device is not a '%s'"
                     WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
                     return -1;
                 }
@@ -2445,7 +2486,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             }
             else
             {
-                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+                // "Invalid command usage. Type 'help %s' for assistance."
                 WRMSG( HHC02299, "E", argv[0] );
                 return -1;
             }
@@ -2453,7 +2494,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
         if (argc > 3)
         {
-            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+            // "Invalid command usage. Type 'help %s' for assistance."
             WRMSG( HHC02299, "E", argv[0] );
             return -1;
         }
@@ -2494,7 +2535,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                                 grp->mac[i].addr[3],
                                 grp->mac[i].addr[4],
                                 grp->mac[i].addr[5] );
-                      // HHC02344 "%s device %1d:%04X group has registered MAC address %s"
+                      // "%s device %1d:%04X group has registered MAC address %s"
                       WRMSG(HHC02344, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
                                 charaddr );
                       numaddr++;
@@ -2505,7 +2546,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                   if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE)
                   {
                     hinet_ntop( AF_INET, grp->ipaddr4[0].addr, charaddr, sizeof(charaddr) );
-                    // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                    // "%s device %1d:%04X group has registered IP address %s"
                     WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
                             charaddr );
                     numaddr++;
@@ -2517,7 +2558,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                     if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE)
                     {
                       hinet_ntop( AF_INET6, grp->ipaddr6[i].addr, charaddr, sizeof(charaddr) );
-                      // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                      // "%s device %1d:%04X group has registered IP address %s"
                       WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
                               charaddr );
                       numaddr++;
@@ -2527,7 +2568,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                   /* Display whether there were any registered addresses. */
                   if (numaddr == 0)
                   {
-                  // HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
+                  // "%s device %1d:%04X group has no registered MAC or IP addresses"
                   WRMSG(HHC02346, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum);
                   }
                 }
@@ -2538,7 +2579,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
         if (!found)
         {
-            // HHC02347 "No %s devices found"
+            // "No %s devices found"
             WRMSG( HHC02347, "E", "QETH" );
             return -1;
         }
@@ -2546,7 +2587,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         return 0;
     }
 
-    // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
+    // "Invalid command usage. Type 'help %s' for assistance."
     WRMSG( HHC02299, "E", argv[0] );
     return -1;
 
