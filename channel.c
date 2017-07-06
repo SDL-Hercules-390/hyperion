@@ -1825,7 +1825,8 @@ perform_halt_and_release_lock (DEVBLK *dev)
 
     /* Trace HALT */
     if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 0);
+        // "%1d:%04X CHAN: halt subchannel: cc=%d"
+        WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 0 );
 
     /* Queue pending I/O interrupt and update status */
     queue_io_interrupt_and_update_status_locked(dev,TRUE);
@@ -1869,50 +1870,61 @@ perform_halt (DEVBLK *dev)
 /*      instruction:  0=Halt initiated, 1=Non-intermediate status    */
 /*      pending, 2=Busy                                              */
 /*-------------------------------------------------------------------*/
-int
-halt_subchan (REGS *regs, DEVBLK *dev)
+int halt_subchan( REGS* regs, DEVBLK* dev)
 {
-    UNREFERENCED(regs);
+    UNREFERENCED( regs );
 
     if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01332, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        // "%1d:%04X CHAN: halt subchannel"
+        WRMSG( HHC01332, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
-    OBTAIN_INTLOCK(regs);
-    obtain_lock (&dev->lock);
+    OBTAIN_INTLOCK( regs );
+    obtain_lock( &dev->lock );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_MODE(regs)
-      && (regs->siebk->zone != dev->pmcw.zone
-        || !(dev->pmcw.flag27 & PMCW27_I)))
+#if defined( _FEATURE_IO_ASSIST )
+    if (1
+        && SIE_MODE(regs)
+        && (0
+            || regs->siebk->zone != dev->pmcw.zone
+            || !(dev->pmcw.flag27 & PMCW27_I)
+           )
+    )
     {
-        release_lock (&dev->lock);
-        RELEASE_INTLOCK(regs);
-        longjmp(regs->progjmp,SIE_INTERCEPT_INST);
+        release_lock( &dev->lock );
+        RELEASE_INTLOCK( regs );
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
     }
 #endif
 
     /* Set condition code 1 if subchannel is status pending alone or
-       is status pending with alert, primary, or secondary status */
-    if ((dev->scsw.flag3 & SCSW3_SC) == SCSW3_SC_PEND
-        || ((dev->scsw.flag3 & SCSW3_SC_PEND)
-            && (dev->scsw.flag3 &
-                    (SCSW3_SC_ALERT | SCSW3_SC_PRI | SCSW3_SC_SEC))))
+       is status pending with alert, primary, or secondary status
+    */
+    if (0
+        || (dev->scsw.flag3 & SCSW3_SC) == SCSW3_SC_PEND
+        || (1
+                && (dev->scsw.flag3 & SCSW3_SC_PEND)
+                && (dev->scsw.flag3 & (SCSW3_SC_ALERT | SCSW3_SC_PRI | SCSW3_SC_SEC))
+           )
+    )
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 1);
-        release_lock (&dev->lock);
-        RELEASE_INTLOCK(regs);
+            // "%1d:%04X CHAN: halt subchannel: cc=%d"
+            WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 1 );
+        release_lock( &dev->lock );
+        RELEASE_INTLOCK( regs );
         return 1;
     }
 
     /* Set condition code 2 if the halt function or the clear
-       function is already in progress at the subchannel */
+       function is already in progress at the subchannel
+    */
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            WRMSG (HHC01300, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, 2);
-        release_lock (&dev->lock);
-        RELEASE_INTLOCK(regs);
+            // "%1d:%04X CHAN: halt subchannel: cc=%d"
+            WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 2 );
+        release_lock( &dev->lock );
+        RELEASE_INTLOCK( regs );
         return 2;
     }
 
@@ -1967,17 +1979,26 @@ halt_subchan (REGS *regs, DEVBLK *dev)
     /* If intermediate status pending with subchannel and device active,
      * reset intermediate status pending (HSCH, fifth paragraph).
      */
-    if ((dev->scsw.flag3 &
-        (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC | SCSW3_SC_INTER | SCSW3_SC_PEND)) ==
-        (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC | SCSW3_SC_INTER | SCSW3_SC_PEND))
+    if ((dev->scsw.flag3 & (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC | SCSW3_SC_INTER | SCSW3_SC_PEND))
+                ==         (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC | SCSW3_SC_INTER | SCSW3_SC_PEND)
+    )
         dev->scsw.flag3 &= ~(SCSW3_SC_INTER | SCSW3_SC_PEND);
 
-    /* If the device is busy then signal subchannel to halt */
-    if ((dev->busy
+    /* If the device is busy then signal the subchannel to halt,
+       UNLESS it's suspended (in which case signal it to resume;
+       the halt will occur when resumed). If it's startpending,
+       remove the I/O from the queue and then halt subhchannel.
+       Otherwise (not busy/startpending/suspended) do nothing.
+    */
+    if (0
 #if defined( OPTION_SHARED_DEVICES )
-        && dev->shioactive == DEV_SYS_LOCAL
-#endif // defined( OPTION_SHARED_DEVICES )
-    ) || dev->startpending || dev->suspended)
+        || (dev->busy && dev->shioactive == DEV_SYS_LOCAL)
+#else
+        || dev->busy
+#endif
+        || dev->startpending
+        || dev->suspended
+    )
     {
         /* Set halt condition and reset pending condition */
         dev->scsw.flag2 |= (SCSW2_FC_HALT | SCSW2_AC_HALT);
@@ -1987,43 +2008,51 @@ halt_subchan (REGS *regs, DEVBLK *dev)
         if (dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
-            schedule_ioq(NULL, dev);
+            schedule_ioq( NULL, dev );
+            release_lock( &dev->lock );
         }
-
-        release_lock(&dev->lock);
-    }
-    else    /* Device not started */
-    {
-        /* Remove the device from the ioq if startpending and queued;
-         * lock required before test to keep from entering queue and
-         * becoming active prior to queue manipulation.
-         */
-        obtain_lock(&sysblk.ioqlock);
-        if(dev->startpending)
+        else /* Device is busy or startpending, NOT suspended */
         {
-            if(sysblk.ioq == dev)
-                sysblk.ioq = dev->nextioq;
-            else if ( sysblk.ioq != NULL )
+            /* Remove the device from the ioq if startpending and queued;
+             * lock required before test to keep from entering queue and
+             * becoming active prior to queue manipulation.
+             */
+            obtain_lock( &sysblk.ioqlock );
             {
-             DEVBLK *tmp;
-                for(tmp = sysblk.ioq;
-                    tmp->nextioq != NULL && tmp->nextioq != dev;
-                    tmp = tmp->nextioq);
-                if(tmp->nextioq == dev)
+                if (dev->startpending)
                 {
-                    tmp->nextioq = tmp->nextioq->nextioq;
-                    sysblk.devtunavail = MAX(0, sysblk.devtunavail - 1);
+                    /* If 1st entry in ioq is this device, remove it */
+                    if (sysblk.ioq == dev)
+                        sysblk.ioq = dev->nextioq;
+                    /* Otherwise search queued I/Os if there are any */
+                    else if (sysblk.ioq)
+                    {
+                        DEVBLK* tmp;
+                        /* Look for ioq entry for this device */
+                        for (tmp = sysblk.ioq;
+                             tmp->nextioq && tmp->nextioq != dev;
+                             tmp = tmp->nextioq) { };
+                        /* Is an I/O queued for this device? */
+                        if (tmp->nextioq == dev)
+                        {
+                            /* Remove this device's ioq entry */
+                            tmp->nextioq = tmp->nextioq->nextioq;
+                            sysblk.devtunavail = MAX( 0, sysblk.devtunavail - 1 );
+                        }
+                    }
+                    dev->startpending = 0;
                 }
             }
-            dev->startpending = 0;
+            release_lock( &sysblk.ioqlock );
+
+            /* Halt the device */
+            perform_halt_and_release_lock( dev );
         }
-        release_lock(&sysblk.ioqlock);
-
-        /* Halt the device */
-        perform_halt_and_release_lock(dev);
     }
+    else /* Device NOT busy, startpending or suspended: do nothing */
+        release_lock( &dev->lock );
 
-    RELEASE_INTLOCK(regs);
+    RELEASE_INTLOCK( regs );
 
     /* Return condition code zero */
     return 0;
