@@ -91,7 +91,7 @@ extern "C"
 // ioctl codes...
 
 #define TUNSETNOCSUM    _IOW('T', 200, int)     // (UNSUPPORTED)
-#define TUNSETDEBUG     _IOW('T', 201, int)     // (UNSUPPORTED)
+#define TUNSETDEBUG     _IOW('T', 201, int)     // Set debugging flags
 #define TUNSETIFF       _IOW('T', 202, int)     // Set TUN/TAP Flags (*)
 #define TUNSETPERSIST   _IOW('T', 203, int)     // (UNSUPPORTED)
 #define TUNSETOWNER     _IOW('T', 204, int)     // (UNSUPPORTED)
@@ -118,6 +118,13 @@ struct tt32ctl                          // ioctl request structure
         int     ctlu_devbuffsize;       // Kernel buffer size   (def: 1M)
         int     ctlu_iobuffsize;        // Read buffer size     (def: 64K)
         int     ctlu_readtimeout;       // Read timeout value   (def: 5 secs)
+        int     ctlu_debugflags;        // Debugging flags
+#define TT32DBG_OLDNEW      0x80000000  // Old/New values
+#define TT32DBG_IO_DATA     0x40000000  // Hexdump packet data
+#define TT32DBG_RD_ARP      0x00008000  // ARP
+#define TT32DBG_RD_OTHER    0x00004000  // Other
+#define TT32DBG_WR_ARP      0x00000080  // ARP
+#define TT32DBG_WR_OTHER    0x00000040  // Other
     } tt32_ctlu;
 };
 
