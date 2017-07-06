@@ -1120,6 +1120,7 @@ struct DEVBLK {                         /* Device configuration block*/
         }       iobuf;
 
         DEVRCD  *rcd;                   /* Read Configuration Data   */
+        DEVSNS  *sns;                   /* Format sense bytes        */
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 

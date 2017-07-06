@@ -963,7 +963,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01311 "%1d:%04X CHAN: resumed"
 #define HHC01312 "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
 #define HHC01313 "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
-#define HHC01314 "%1d:%04X CHAN: sense %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+#define HHC01314 "%1d:%04X CHAN: sense %s"
 #define HHC01315 "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
 #define HHC01316 "%1d:%04X CHAN: csw %2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X"
 #define HHC01317 "%1d:%04X CHAN: scsw %2.2X%2.2X%2.2X%2.2X, stat %2.2X%2.2X, count %2.2X%2.2X, ccw %2.2X%2.2X%2.2X%2.2X"

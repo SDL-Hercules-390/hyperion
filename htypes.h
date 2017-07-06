@@ -236,12 +236,16 @@ typedef int   DEVSR  (DEVBLK *dev, void *file);
 /*-------------------------------------------------------------------*/
 /* Device handler description structures                             */
 /*-------------------------------------------------------------------*/
-
 typedef BYTE *DEVIM;                    /* Immediate CCW Codes Table */
 
 /*-------------------------------------------------------------------*/
 /* Read Configuration Data function                                  */
 /*-------------------------------------------------------------------*/
-typedef int   DEVRCD  (DEVBLK *dev, BYTE *buffer, int bufsz);
+typedef int DEVRCD( DEVBLK *dev, BYTE *buffer, int bufsz );
+
+/*-------------------------------------------------------------------*/
+/* Format Sense bytes function                                       */
+/*-------------------------------------------------------------------*/
+typedef void DEVSNS( const DEVBLK* dev, char* buf, size_t bufsz );
 
 #endif // _HTYPES_H_

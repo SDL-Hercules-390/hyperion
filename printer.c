@@ -891,6 +891,33 @@ static BYTE valid_fcb( DEVBLK* dev )
     return TRUE;
 }
 
+/*-------------------------------------------------------------------*/
+/* Format interpretation of first two sense bytes                    */
+/*-------------------------------------------------------------------*/
+static void format_sense( const DEVBLK* dev, char* buf, size_t bufsz )
+{
+    snprintf( buf, bufsz, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+
+        , (dev->sense[0] & SENSE_CR   ) ? "CMDREJ " : ""
+        , (dev->sense[0] & SENSE_IR   ) ? "INTREQ " : ""
+        , (dev->sense[0] & SENSE_BOC  ) ? "BUSCK "  : ""
+        , (dev->sense[0] & SENSE_EC   ) ? "EQPCK "  : ""
+        , (dev->sense[0] & SENSE_DC   ) ? "DATAC "  : ""
+        , (dev->sense[0] & SENSE_OR   ) ? "OVRUN "  : ""
+        , (dev->sense[0] & SENSE_LDCK ) ? "LOADCK " : ""
+        , (dev->sense[0] & SENSE_CH9  ) ? "CHAN9 "  : ""
+
+        , (dev->sense[1] & SENSE1_PER ) ? "--- "    : ""
+        , (dev->sense[1] & SENSE1_PRTC) ? "PRTCK "  : ""
+        , (dev->sense[1] & SENSE1_QUAL) ? "QUAL "   : ""
+        , (dev->sense[1] & SENSE1_LPC ) ? "POSCK "  : ""
+        , (dev->sense[1] & SENSE1_FORM) ? "FORMCK " : ""
+        , (dev->sense[1] & SENSE1_CS  ) ? "CMDSUP " : ""
+        , (dev->sense[1] & SENSE1_MECH) ? "MECHM "  : ""
+        , (dev->sense[1] & SENSE1_IE  ) ? "--- "    : "" 
+    );
+}
+
 // (forward reference)
 static int open_printer( DEVBLK* dev );
 
@@ -904,6 +931,8 @@ char *nxt;                              /* Work variable for parsing */
 int   iarg, i, j;                       /* Some array subscripts     */
 U8    sockdev = FALSE;                  /* TRUE == is socket device  */
 int   fcbsize;                          /* FCB size for this devtype */
+
+    dev->sns = format_sense;            /* Sense formatting fuction  */
 
     /* For re-initialisation, close the existing file, if any, and raise attention */
     if (dev->fd >= 0)

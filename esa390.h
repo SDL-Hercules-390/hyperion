@@ -1465,11 +1465,12 @@ typedef struct SCSW SCSW;
 #define SENSE_EC        0x10            /* Equipment check           */
 #define SENSE_DC        0x08            /* Data check                */
 #define SENSE_OR        0x04            /* Overrun                   */
-#define SENSE_US        0x04            /* Unit specify              */
 #define SENSE_CC        0x02            /* Control check             */
-#define SENSE_LDCK      0x02            /* Load Check                */
 #define SENSE_OC        0x01            /* Operation check           */
-#define SENSE_CH9       0x01            /* Channel 9                 */
+/*-------------------------------------------------------------------*/
+/* Printer device bit settings for sense byte 0 */
+#define SENSE_LDCK      0x02            /* FCB/UCB Load Check        */
+#define SENSE_CH9       0x01            /* Channel 9 Reached         */
 
 /*-------------------------------------------------------------------*/
 /* Device dependent bit settings for sense byte 1 */
@@ -1478,11 +1479,21 @@ typedef struct SCSW SCSW;
 #define SENSE1_ITF      0x40            /* Invalid Track Format      */
 #define SENSE1_EOC      0x20            /* End of Cylinder           */
 #define SENSE1_MTO      0x10            /* Message to Operator       */
-#define SENSE1_LPC      0x10            /* Line Position Check       */
 #define SENSE1_NRF      0x08            /* No Record Found           */
 #define SENSE1_FP       0x04            /* File Protected            */
 #define SENSE1_WRI      0x02            /* Write Inhibited           */
 #define SENSE1_IE       0x01            /* Imprecise Ending          */
+/*-------------------------------------------------------------------*/
+/* Printer device bit settings for sense byte 1 */
+//                      0x80            /* (not used)                */
+#define SENSE1_PRTC     0x40            /* Print Check               */
+#define SENSE1_QUAL     0x20            /* Print Quality      (3211) */
+#define SENSE1_LPC      0x10            /* Line Position Check       */
+#define SENSE1_FORM     0x08            /* Forms Check               */
+#define SENSE1_CS       0x04            /* Command Suppress          */
+#define SENSE1_CTRLC    0x02            /* Controller Check   (3203) */
+#define SENSE1_MECH     0x02            /* Mechanical Motion  (3211) */
+//                      0x01            /* (not used)                */
 
 /*-------------------------------------------------------------------*/
 /*    Subchannel information block (SCHIB) structure definition      */

@@ -720,7 +720,7 @@ char    msgbuf[133];                    /* Message buffer            */
 #endif
 
 /*-------------------------------------------------------------------*/
-/* DISPLAY CHANNEL COMMAND WORD AND DATA                             */
+/* Display channel command word and data                             */
 /*-------------------------------------------------------------------*/
 static void
 display_ccw ( const DEVBLK *dev, const BYTE ccw[], const U32 addr,
@@ -744,6 +744,42 @@ BYTE    area[64];                       /* Data display area         */
 
 } /* end function display_ccw */
 
+/*-------------------------------------------------------------------*/
+/* Display interpretation of first two sense bytes                   */
+/*-------------------------------------------------------------------*/
+static void display_sense( const DEVBLK* dev )
+{
+    char snsbuf[64];
+
+    /* Let the device interpret its own sense bytes if possible */
+    if (dev->sns)
+        dev->sns( dev, snsbuf, sizeof( snsbuf ));
+    else
+        /* Otherwise we use our default interpretation */
+        MSGBUF( snsbuf, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+
+            , (dev->sense[0] & SENSE_CR  ) ? "CMDREJ " : ""
+            , (dev->sense[0] & SENSE_IR  ) ? "INTREQ " : ""
+            , (dev->sense[0] & SENSE_BOC ) ? "BUSCK "  : ""
+            , (dev->sense[0] & SENSE_EC  ) ? "EQPCK "  : ""
+            , (dev->sense[0] & SENSE_DC  ) ? "DATCK "  : ""
+            , (dev->sense[0] & SENSE_OR  ) ? "OVRUN "  : ""
+            , (dev->sense[0] & SENSE_CC  ) ? "CTLCK "  : ""
+            , (dev->sense[0] & SENSE_OC  ) ? "OPRCK "  : ""
+
+            , (dev->sense[1] & SENSE1_PER) ? "PERM "   : ""
+            , (dev->sense[1] & SENSE1_ITF) ? "ITF "    : ""
+            , (dev->sense[1] & SENSE1_EOC) ? "EOC "    : ""
+            , (dev->sense[1] & SENSE1_MTO) ? "MSG "    : ""
+            , (dev->sense[1] & SENSE1_NRF) ? "NRF "    : ""
+            , (dev->sense[1] & SENSE1_FP ) ? "FP "     : ""
+            , (dev->sense[1] & SENSE1_WRI) ? "WRI "    : ""
+            , (dev->sense[1] & SENSE1_IE ) ? "IE "     : "" 
+        );
+
+    // "%1d:%04X CHAN: sense %s"
+    WRMSG( HHC01314, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, snsbuf );
+}
 
 /*-------------------------------------------------------------------*/
 /* Display IDAW and Data                                             */
@@ -1733,7 +1769,6 @@ perform_halt_and_release_lock (DEVBLK *dev)
     if (!(dev->scsw.flag3 & (SCSW3_SC_PRI | SCSW3_SC_SEC) &&
           dev->scsw.flag3 & SCSW3_SC_PEND))
     {
-
         /* Indicate HALT started */
         set_subchannel_busy(dev);
         dev->scsw.flag2 |= SCSW2_FC_HALT;
@@ -5230,6 +5265,7 @@ breakchain:
                                    count, count,
                                    residual, residual,
                                    more, bufpos);
+                    // "DBG: %s"
                     WRMSG(HHC90000, "I", msgbuf);
                 }
             #endif
@@ -5287,41 +5323,29 @@ breakchain:
                 area[0] = '\0';
 
             /* Display status and residual byte count */
-            WRMSG (HHC01312, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, unitstat, chanstat, residual, area);
+
+            // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
+            WRMSG( HHC01312, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                unitstat, chanstat, residual, area );
 
             /* Display sense bytes if unit check is indicated */
             if (unitstat & CSW_UC)
             {
-                register BYTE *sense = dev->sense;
-                WRMSG (HHC01313, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                        sense[0], sense[1], sense[2], sense[3],
-                        sense[4], sense[5], sense[6], sense[7],
-                        sense[8], sense[9], sense[10], sense[11],
+                register BYTE* sense = dev->sense;
+
+                // "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X ...
+                WRMSG( HHC01313, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        sense[ 0], sense[ 1], sense[ 2], sense[ 3],
+                        sense[ 4], sense[ 5], sense[ 6], sense[ 7],
+                        sense[ 8], sense[ 9], sense[10], sense[11],
                         sense[12], sense[13], sense[14], sense[15],
                         sense[16], sense[17], sense[18], sense[19],
                         sense[20], sense[21], sense[22], sense[23],
                         sense[24], sense[25], sense[26], sense[27],
-                        sense[28], sense[29], sense[30], sense[31]);
+                        sense[28], sense[29], sense[30], sense[31] );
+
                 if (sense[0] != 0 || sense[1] != 0)
-                {
-                    WRMSG (HHC01314, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                            (sense[0] & SENSE_CR) ? "CMDREJ " : "",
-                            (sense[0] & SENSE_IR) ? "INTREQ " : "",
-                            (sense[0] & SENSE_BOC) ? "BOC " : "",
-                            (sense[0] & SENSE_EC) ? "EQC " : "",
-                            (sense[0] & SENSE_DC) ? "DCK " : "",
-                            (sense[0] & SENSE_OR) ? "OVR " : "",
-                            (sense[0] & SENSE_CC) ? "CCK " : "",
-                            (sense[0] & SENSE_OC) ? "OCK " : "",
-                            (sense[1] & SENSE1_PER) ? "PER " : "",
-                            (sense[1] & SENSE1_ITF) ? "ITF " : "",
-                            (sense[1] & SENSE1_EOC) ? "EOC " : "",
-                            (sense[1] & SENSE1_MTO) ? "MSG " : "",
-                            (sense[1] & SENSE1_NRF) ? "NRF " : "",
-                            (sense[1] & SENSE1_FP) ? "FP " : "",
-                            (sense[1] & SENSE1_WRI) ? "WRI " : "",
-                            (sense[1] & SENSE1_IE) ? "IE " : "");
-                }
+                    display_sense( dev );
             }
         }
 
