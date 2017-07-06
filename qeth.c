@@ -6359,6 +6359,8 @@ END_REGISTER_SECTION
 HDL_DEVICE_SECTION;
 {
     HDL_DEVICE ( QETH, qeth_device_hndinfo );
+    HDL_DEVICE ( OSA,  qeth_device_hndinfo );
+    HDL_DEVICE ( OSD,  qeth_device_hndinfo );
 }
 END_DEVICE_SECTION
 

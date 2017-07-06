@@ -22,9 +22,9 @@ static DTEQ dteq[] = {
     question has been registered.  This table will not be searched
     for registered device types or if the specific loadable module exists.
 
-       device type requested
+       device type requested  (second argument of device statement)
        |
-       |         base device support
+       |         base device support  (e.g base=99XY ==> 'hdt99xy.dll')
        |         |
        V         V                                                   */
 
@@ -63,11 +63,15 @@ static DTEQ dteq[] = {
     { "DW3480",  "3590D" },
     { "DW3490",  "3590D" },
     { "DW3590",  "3590D" },
+
     { "TH3480",  "3590D" },
     { "TH3490",  "3590D" },
     { "TH3590",  "3590D" },
 
     { "8232C",  "8232"  },
+
+    { "OSA",    "QETH"  },
+    { "OSD",    "QETH"  },
 
     { "LCS",    "3088"  },
     { "CTCI",   "3088"  },
