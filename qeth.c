@@ -1,4 +1,4 @@
-/* QETH.C       (c) Copyright Jan Jaeger,   1999-2012                */
+/* QETH.C       (C) Copyright Jan Jaeger,   1999-2012                */
 /*              OSA Express                                          */
 /*                                                                   */
 
@@ -22,21 +22,20 @@
 /*                 debug                                             */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
-/* on the QETH device statement.  The tap device will in that case   */
+/* on the QETH device statement.  The tun device will in that case   */
 /* need to be  bridged to another virtual or real ethernet adapter.  */
 /* e.g.                                                              */
 /* 0A00.3 QETH                                                       */
-/* The tap device will need to be bridged e.g.                       */
-/* brctl addif <bridge> tap0                                         */
+/* The tun device will need to be bridged e.g.                       */
+/* brctl addif <bridge> tun0                                         */
 /*                                                                   */
-/* When using a routed configuration the tap device needs to have    */
+/* When using a routed configuration the tun device needs to have    */
 /* an IP address assigned in the same subnet as the guests virtual   */
 /* eth adapter.                                                      */
 /* e.g.                                                              */
 /* 0A00.3 QETH ipaddr 192.168.10.1                                   */
 /* where the guest can then use any other IP address in the          */
 /* 192.168.10 range                                                  */
-/*                                                                   */
 /*                                                                   */
 /* zLinux defines which three devices addresses are used for what    */
 /* purpose depending on on the distribution.                         */
@@ -101,7 +100,6 @@
 /* captured trace data to TCP/IP.                                    */
 /* - Any OSE CHPID requires two devices (read and write) for each    */
 /* TCP/IP. SNA requires one device.                                  */
-/*                                                                   */
 
 #include "hstdinc.h"
 
@@ -358,7 +356,7 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
   if(addr+len>dev->mainlim)
   {
     DBGTRC(dev,"Address %llx above main storage\n",addr);
-     return CSW_PROGC;  /* Outside storage */
+    return CSW_PROGC;  /* Outside storage */
   }
   if(dev->orb.flag5 & ORB5_A)     /* Address limit checking enabled ?*/
   {
@@ -913,13 +911,13 @@ static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
     // HHC03996 "%1d:%04X %s: %s: %s"
     if (str_caseless_eq("E",msgcode))
         WRMSG( HHC03996, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            "QETH", grp->ttifname, msgbuf);
+            dev->typname, grp->ttifname, msgbuf);
     else if (str_caseless_eq("W",msgcode))
         WRMSG( HHC03996, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            "QETH", grp->ttifname, msgbuf);
+            dev->typname, grp->ttifname, msgbuf);
     else /* "I" information presumed */
         WRMSG( HHC03996, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            "QETH", grp->ttifname, msgbuf);
+            dev->typname, grp->ttifname, msgbuf);
     return errnum;
 }
 
@@ -933,36 +931,36 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
     STRLCPY( not, grp->enabled ? "" : "not " );
 
     // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
         grp->ttifname, not, "MAC address", grp->tthwaddr );
 
     if (grp->l3 && grp->ttipaddr)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
              grp->ttifname, not, "IP address", grp->ttipaddr );
 
         if(grp->ttnetmask)
         {
-            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                 grp->ttifname, not, "subnet mask", grp->ttnetmask );
         }
     }
 
     if (grp->l3 && grp->ttipaddr6)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
             grp->ttifname, not, "IP address", grp->ttipaddr6 );
 
         if(grp->ttpfxlen6)
         {
-            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                 grp->ttifname, not, "prefix length", grp->ttpfxlen6 );
         }
     }
 
     if (grp->ttmtu)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
             grp->ttifname, not, "MTU", grp->ttmtu );
     }
 
@@ -970,11 +968,11 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
     if (grp->l3 && grp->enabled)
     {
         // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, "", "drive MAC address", grp->szDriveMACAddr );
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            grp->ttifname, not, "drive MAC address", grp->szDriveMACAddr );
         // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, "", "drive IP address", grp->szDriveLLAddr6 );
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            grp->ttifname, not, "drive IP address", grp->szDriveLLAddr6 );
     }
 #endif /* defined(ENABLE_IPV6) */
 
@@ -2103,11 +2101,14 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
+    OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+
     /* Don't waste time queuing interrupts during power off sequence */
     if (sysblk.shutdown)
         return;
 
-    DBGTRC(dev, "Adapter Interrupt\n");
+    if (grp->debugmask & DBGQETHINTRUPT)
+        DBGTRC(dev, "Adapter Interrupt\n");
 
     OBTAIN_INTLOCK(NULL);
     {
@@ -2203,7 +2204,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
 
 /*-------------------------------------------------------------------*/
-/* Helper macro to check for logically last SBALE    (o/p only)      */
+/* Helper macro to check for logically last SBALE    (O/P only)      */
 /*-------------------------------------------------------------------*/
 #define WR_LOGICALLY_LAST_SBALE( _flag0 )                           \
     LOGICALLY_LAST_SBALE( (_flag0), grp->wrpack )
@@ -2251,7 +2252,8 @@ static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP* grp )
     static const BYTE dest_zero[16] = {0};
     int i;
 
-    if (memcmp( dest_addr, dest_zero, 16 ) == 0)     /* Note: why check for the any address? */
+    /* Note: why check for the any address? */
+    if (memcmp( dest_addr, dest_zero, 16 ) == 0)
         return HDR3_FLAGS_NOCAST;
 
     if (dest_addr[0] == 0xFF)
@@ -2313,7 +2315,7 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
         {
             // HHC00912 "%1d:%04X %s: error reading from device %s: %d %s"
             WRMSG(HHC00912, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                "QETH", grp->ttifname, errnum, strerror( errnum ));
+                dev->typname, grp->ttifname, errnum, strerror( errnum ));
             errno = errnum;
             PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EIOERR );
             return QRC_EIOERR;
@@ -2326,6 +2328,9 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
         PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EPKEOF );
         return QRC_EPKEOF;
     }
+
+    /* Count packets received */
+    dev->qdio.rxcnt++;
 
     PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_SUCCESS );
     return QRC_SUCCESS;
@@ -2353,7 +2358,7 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
 
     // HHC00911 "%1d:%04X %s: error writing to device %s: %d %s"
     WRMSG(HHC00911, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QETH", grp->ttifname, errnum, strerror( errnum ));
+        dev->typname, grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
     PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_EIOERR );
     return QRC_EIOERR;
@@ -2553,11 +2558,8 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
     STORE_FW( sbal->sbale[sb].flags,     0   );
     SET_SBALE_FRAG( sbal->sbale[sb].flags[0], frag0 );
 
-    /* Count packets received */
-    dev->qdio.rxcnt++;
-
     /* Dump the SBALE's we consumed */
-    if (grp->debugmask)
+    if (grp->debugmask & DBGQETHSBALE)
     {
         int  i;
         for (i=ssb; i <= sb; i++)
@@ -2619,28 +2621,23 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
             break;
         }
 
-        /* */
+        /* Debugging */
         if (grp->debugmask & DBGQETHPACKET)
         {
             FETCH_HW( hwEthernetType, eth->hwEthernetType );
-            if( hwEthernetType == ETH_TYPE_IP ) {
-              strcpy( cPktType, "IPv4" );
-            } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
-              strcpy( cPktType, "IPv6" );
-            } else if( hwEthernetType == ETH_TYPE_ARP ) {
-              strcpy( cPktType, "ARP" );
-            } else if( hwEthernetType == ETH_TYPE_RARP ) {
-              strcpy( cPktType, "RARP" );
-            } else if( hwEthernetType == ETH_TYPE_SNA ) {
-              strcpy( cPktType, "SNA" );
-            } else {
-              strcpy( cPktType, "unknown" );
-            }
-            // HHC00986 "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
-            WRMSG(HHC00986, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                 dev->buflen, cPktType, grp->ttifname );
-            net_data_trace( dev, (BYTE*)&o2hdr, sizeof(o2hdr), TO_GUEST, 'D', "L2 hdr", 0 );
-            net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Frame ", 0 );
+
+                 if (ETH_TYPE_IP   == hwEthernetType) STRLCPY( cPktType, "IPv4"    );
+            else if (ETH_TYPE_IPV6 == hwEthernetType) STRLCPY( cPktType, "IPv6"    );
+            else if (ETH_TYPE_ARP  == hwEthernetType) STRLCPY( cPktType, "ARP"     );
+            else if (ETH_TYPE_RARP == hwEthernetType) STRLCPY( cPktType, "RARP"    );
+            else if (ETH_TYPE_SNA  == hwEthernetType) STRLCPY( cPktType, "SNA"     );
+            else                                      STRLCPY( cPktType, "unknown" );
+
+            // "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
+            WRMSG( HHC00986, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->typname, dev->buflen, cPktType, grp->ttifname );
+            net_data_trace( dev, (BYTE*) &o2hdr, sizeof( o2hdr ), TO_GUEST, 'D', "L2 hdr", 0 );
+            net_data_trace( dev,    dev->buf,     dev->buflen,    TO_GUEST, 'D', "Frame ", 0 );
         }
 
         /* Copy header and frame to buffer storage block(s) */
@@ -2692,7 +2689,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         if (iPktVer == 4)
         {
             ip4 = (IP4FRM*)dev->buf;
-            strcpy( cPktType, " IPv4" );
+            STRLCPY( cPktType, " IPv4" );
             memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
             memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
             o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
@@ -2703,7 +2700,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         else if (iPktVer == 6)
         {
             ip6 = (IP6FRM*)dev->buf;
-            strcpy( cPktType, " IPv6" );
+            STRLCPY( cPktType, " IPv6" );
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
             o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
             if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
@@ -2715,10 +2712,10 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         else
         {
             /* Err... not IPv4 or IPv6! */
-            strcpy( cPktType, "" );
+            STRLCPY( cPktType, "" );
         }
 
-        /* */
+        /* Debugging */
         if (grp->debugmask & DBGQETHPACKET)
         {
             // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
@@ -2783,7 +2780,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
         if (iPktVer == 4)
         {
             ip4 = (IP4FRM*)bufdata;
-            strcpy( cPktType, " IPv4" );
+            STRLCPY( cPktType, " IPv4" );
             memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
             memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
             o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
@@ -2794,7 +2791,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
         else if (iPktVer == 6)
         {
             ip6 = (IP6FRM*)bufdata;
-            strcpy( cPktType, " IPv6" );
+            STRLCPY( cPktType, " IPv6" );
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
             o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
             if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
@@ -2805,13 +2802,13 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
         else
         {
             /* Err... not IPv4 or IPv6! */
-            strcpy( cPktType, "" );
+            STRLCPY( cPktType, "" );
             length = 0;
         }
 
         if (length)
         {
-            /* */
+            /* Debugging */
             if (grp->debugmask & DBGQETHPACKET)
             {
                 // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
@@ -2893,7 +2890,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
            should probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                "QETH", "** FIXME ** OSA_HDR spans multiple storage blocks." );
+                dev->typname, "** FIXME ** OSA_HDR spans multiple storage blocks." );
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
         hdr_id = hdr[0];
@@ -2943,18 +2940,20 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         flag0 = sbal->sbale[sb].flags[0];
 
         /* Trace the pack/frame if debugging is enabled */
-        DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
-                        ssb, sb, dev->buflen, dev->buflen );
+        if (grp->debugmask & DBGQETHSBALE)
+            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
+                ssb, sb, dev->buflen, dev->buflen );
 
-        /* */
-        pkt = dev->buf;
+        /* Initialize packet pointer and packet length */
+        pkt    = dev->buf;
         pktlen = dev->buflen;
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
+
         /* I know the following looks pretty weird but it seems to be         */
         /* necessary when using IPv6 over layer 3. IPv6 uses ICMPv6 Neighbor  */
         /* Solicitation (NS) & Neighbor Advertisment (NA) to determine the    */
-        /* link layer (i.e. Ethernet MAC) address for an IPv6 address. When   */
+        /* link layer address (i.e. Ethernet MAC) for an IPv6 address. When   */
         /* the guest sends out a NS, this function sends the packet over the  */
         /* tun to the host, whereupon the host duly ignores the packet. Hence */
         /* this function, and function process_l3_icmpv6_packet, responds to  */
@@ -2964,84 +2963,77 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* packet from the guest is an Ethernet frame containing the IPv6     */
         /* packet. Perhaps that's how OSD's actually work? IPv6 packets to    */
         /* the guest don't need to be Ethernet frames.                        */
+
         if (grp->l3)
         {
-            eth = (ETHFRM*)pkt;
+            eth = (ETHFRM*) pkt;
             FETCH_HW( hwEthernetType, eth->hwEthernetType );
-            if (memcmp( &eth->bDestMAC[0], &grp->iaDriveMACAddr, IFHWADDRLEN ) == 0 &&
-                memcmp( &eth->bSrcMAC[0], &grp->iMAC, IFHWADDRLEN ) == 0 &&
-                hwEthernetType == ETH_TYPE_IPV6)
+            if (1
+                && ETH_TYPE_IPV6 == hwEthernetType
+                && memcmp( eth->bDestMAC, &grp->iaDriveMACAddr, IFHWADDRLEN ) == 0
+                && memcmp( eth->bSrcMAC,  &grp->iMAC,           IFHWADDRLEN ) == 0
+            )
             {
-                pkt += sizeof(ETHFRM);
-                pktlen -= sizeof(ETHFRM);
+                pkt    += sizeof( ETHFRM );
+                pktlen -= sizeof( ETHFRM );
             }
         }
 #endif /* defined(ENABLE_IPV6) */
 
-        /* */
+        /* Debugging */
         if (grp->debugmask & DBGQETHPACKET)
         {
-            if (!grp->l3) {
-                eth = (ETHFRM*)pkt;
+            if (!grp->l3)
+            {
+                eth = (ETHFRM*) pkt;
                 FETCH_HW( hwEthernetType, eth->hwEthernetType );
-                if( hwEthernetType == ETH_TYPE_IP ) {
-                  strcpy( cPktType, "IPv4" );
-                } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
-                  strcpy( cPktType, "IPv6" );
-                } else if( hwEthernetType == ETH_TYPE_ARP ) {
-                  strcpy( cPktType, "ARP" );
-                } else if( hwEthernetType == ETH_TYPE_RARP ) {
-                  strcpy( cPktType, "RARP" );
-                } else if( hwEthernetType == ETH_TYPE_SNA ) {
-                  strcpy( cPktType, "SNA" );
-                } else {
-                  strcpy( cPktType, "unknown" );
-                }
+
+                     if (ETH_TYPE_IP   == hwEthernetType) STRLCPY( cPktType, "IPv4"    );
+                else if (ETH_TYPE_IPV6 == hwEthernetType) STRLCPY( cPktType, "IPv6"    );
+                else if (ETH_TYPE_ARP  == hwEthernetType) STRLCPY( cPktType, "ARP"     );
+                else if (ETH_TYPE_RARP == hwEthernetType) STRLCPY( cPktType, "RARP"    );
+                else if (ETH_TYPE_SNA  == hwEthernetType) STRLCPY( cPktType, "SNA"     );
+                else                                      STRLCPY( cPktType, "unknown" );
+
                 // HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
                 WRMSG(HHC00985, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      pktlen, cPktType, grp->ttifname );
                 net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Frame ", 0 );
-            } else {
-                iPktVer = ( ( pkt[0] & 0xF0 ) >> 4 );
-                if (iPktVer == 4)
-                {
-                    strcpy( cPktType, " IPv4" );
-                }
-                else if (iPktVer == 6)
-                {
-                    strcpy( cPktType, " IPv6" );
-                }
-                else
-                {
-                    strcpy( cPktType, "" );    /* Err... not IPv4 or IPv6! */
-                }
+            }
+            else
+            {
+                iPktVer = ((pkt[0] & 0xF0) >> 4);
+
+                     if (iPktVer == 4) STRLCPY( cPktType, " IPv4" );
+                else if (iPktVer == 6) STRLCPY( cPktType, " IPv6" );
+                else                   STRLCPY( cPktType, " ????" );
+
                 // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
-                WRMSG(HHC00910, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                cPktType, pktlen, grp->ttifname );
+                WRMSG( HHC00910, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    dev->typname, cPktType, pktlen, grp->ttifname );
                 net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Packet", 0 );
             }
         }
 
-        /* */
+        /* Write the packet */
         qrc = write_packet( dev, grp, pkt, pktlen );
 
-#if defined(ENABLE_IPV6)
-        /* */
+#if defined( ENABLE_IPV6 )
+
+        /* Layer 3 mode? */
         if (grp->l3)
         {
-            iPktVer = ( ( pkt[0] & 0xF0 ) >> 4 );
-            if (iPktVer == 6)
+            if ((iPktVer = ((pkt[0] & 0xF0) >> 4)) == 6)
             {
                 IP6FRM* ip6;
                 BYTE    icmpv6 = 58;  /* = 0x3A */
-                ip6 = (IP6FRM*)pkt;
+                ip6 = (IP6FRM*) pkt;
+
                 if (ip6->bNextHeader == icmpv6)
-                {
                     process_l3_icmpv6_packet( dev, grp, ip6 );
-                }
             }
         }
-#endif /* defined(ENABLE_IPV6) */
+#endif /* defined( ENABLE_IPV6 ) */
 
     }
     while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
@@ -3120,7 +3112,8 @@ int did_read = 0;                       /* Indicates some data read  */
                         /* Mark the buffer as having been completed */
                         if (qrc >= 0)
                         {
-                            DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
+                            if (grp->debugmask & DBGQETHQUEUES)
+                                DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
 
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -3183,13 +3176,15 @@ int did_read = 0;                       /* Indicates some data read  */
         int packet_len = TUNTAP_Read( grp->ttfd, buff, sizeof( buff ));
         if (packet_len)
         {
-            DBGTRC(dev, "Input dropped (No available buffers)\n");
+            dev->qdio.dropcnt++;
             PTT_QETH_TRACE( "*prcinq drop", dev->qdio.i_qmask, 0, 0 );
+            if (grp->debugmask & DBGQETHDROP)
+            {
+                // "%1d:%04X %s: %s: Input dropped: %s"
+                WRMSG( HHC03810, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    dev->typname, grp->ttifname, "No available buffers" );
+            }
         }
-#if 0
-        else
-            ASSERT( 0 ); /* 'more_packets()' lied to us?! */
-#endif
         /* No available/empty Input Queues were to be found */
         /* Wake up the program so it can process its queues */
         grp->iqPCI = TRUE;
@@ -3208,7 +3203,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int sqn = dev->qdio.o_qpos;             /* Starting queue number     */
 int mq = dev->qdio.o_qcnt;              /* Maximum number of queues  */
 int qn = sqn;                           /* Working queue number      */
-int found_buff = 0;                     /* Found primed o/p buffer   */
+int found_buff = 0;                     /* Found primed O/P buffer   */
 
     PTT_QETH_TRACE( "proutq entr", 0,0,0 );
     do
@@ -3229,7 +3224,8 @@ int found_buff = 0;                     /* Found primed o/p buffer   */
                 BYTE sk;                /* Storage Key               */
                 QRC qrc;                /* Internal return code      */
 
-                    DBGTRC(dev, "Output Queue(%d) Buffer(%d)\n", qn, bn);
+                    if (grp->debugmask & DBGQETHQUEUES)
+                        DBGTRC(dev, "Output Queue(%d) Buffer(%d)\n", qn, bn);
 
                     found_buff = 1;
                     sk = dev->qdio.o_slk[qn];
@@ -3860,20 +3856,25 @@ OSA_GRP *grp;
 
     BEGIN_DEVICE_CLASS_QUERY( "OSA", dev, devclass, buflen, buffer );
 
-    grp = (OSA_GRP*)dev->group->grp_data;
+    grp = (OSA_GRP*) dev->group->grp_data;
 
     if (dev->group->acount == dev->group->members)
     {
         char ttifname[IFNAMSIZ+2];
+        char dropped[17] = {0}; // " dr[%u]"
 
         STRLCPY( ttifname, grp->ttifname );
         if (ttifname[0])
             STRLCAT( ttifname, " " );
 
-        snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u] "
+        if (grp->debugmask & DBGQETHDROP)
+            MSGBUF( dropped, " dr[%u]", dev->qdio.dropcnt );
+
+        snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u]%s "
             , ttifname
             , dev->qdio.txcnt
             , dev->qdio.rxcnt
+            , dropped
         );
     }
 
@@ -4121,7 +4122,6 @@ U32 num;                                /* Number of bytes to move   */
     U32      first4;
     char     contentstring[256] = {0};
 
-
         /* Prepare the contentstring. */
         dev->dev_data = &contentstring;
 
@@ -4129,7 +4129,7 @@ U32 num;                                /* Number of bytes to move   */
         FETCH_FW( first4, iobuf );
         length = datalen = count;
 
-        /* */
+        /* Process the request */
         if (first4 == MPC_TH_FIRST4)
         {
             /* Process the request MPC_TH etc. */
@@ -4676,7 +4676,8 @@ U32 num;                                /* Number of bytes to move   */
             {
                 sig = QDSIG_RESET;
                 VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
-                DBGTRC( dev, "Activate Queues: %s received\n", sig2str( sig ));
+                if (QDSIG_HALT == sig || grp->debugmask & DBGQETHQUEUES)
+                    DBGTRC( dev, "Activate Queues: %s received\n", sig2str( sig ));
 
                 /* Exit immediately when requested to do so */
                 if (QDSIG_HALT == sig)
@@ -4719,13 +4720,18 @@ U32 num;                                /* Number of bytes to move   */
                         raise_adapter_interrupt( dev );
                     }
                 }
-                else /* (no i/p queues? VERY unlikely!) */
+                else /* (no I/P queues? VERY unlikely!) */
                 {
-                    /* Drop the packet */
                     if (QRC_SUCCESS == read_packet( dev, grp ))
                     {
-                        DBGTRC(dev, "Input dropped (No available queues)\n");
+                        dev->qdio.dropcnt++;
                         PTT_QETH_TRACE( "*actq drop", dev->qdio.i_qmask, 0, 0 );
+                        if (grp->debugmask & DBGQETHDROP)
+                        {
+                            // "%1d:%04X %s: %s: Input dropped: %s"
+                            WRMSG( HHC03810, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                dev->typname, grp->ttifname, "No available queues" );
+                        }
                     }
                 }
             }
@@ -4733,7 +4739,7 @@ U32 num;                                /* Number of bytes to move   */
             /* ALWAYS process all Output Queues each time regardless of
                whether the guest has recently executed a SIGA-w or not
                since most guests expect OSA devices to behave that way.
-               (SIGA-w are NOT required to cause processing o/p queues)
+               (SIGA-w are NOT required to cause processing O/P queues)
             */
             if (likely( dev->qdio.o_qmask ))
             {
@@ -4838,7 +4844,9 @@ static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd, rc = 0;
 
-    DBGTRC( dev, "SIGA-r qmask(%8.8x)\n", qmask );
+    if (grp->debugmask & DBGQETHSIGA)
+        DBGTRC( dev, "SIGA-r qmask(%8.8x)\n", qmask );
+
     PTT_QETH_TRACE( "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
@@ -4873,7 +4881,8 @@ int noselrd, rc = 0;
         if(noselrd && dev->qdio.i_qmask)
         {
             BYTE sig = QDSIG_READ;
-            DBGTRC( dev, "SIGA-r: sending %s\n", sig2str( sig ));
+            if (grp->debugmask & DBGQETHSIGA)
+                DBGTRC( dev, "SIGA-r: sending %s\n", sig2str( sig ));
             VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
@@ -4914,7 +4923,8 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
     {
-        DBGTRC( dev, "SIGA-o: sending %s\n", sig2str( sig ));
+        if (grp->debugmask & DBGQETHSIGA)
+            DBGTRC( dev, "SIGA-o: sending %s\n", sig2str( sig ));
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
     }
 
@@ -4928,7 +4938,9 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-w qmask(%8.8x)\n", qmask );
+    OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    if (grp->debugmask & DBGQETHSIGA)
+        DBGTRC( dev, "SIGA-w qmask(%8.8x)\n", qmask );
     PTT_QETH_TRACE( "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
@@ -4945,7 +4957,9 @@ static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
 static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
 {
     int rc;
-    DBGTRC( dev, "SIGA-m qmask(%8.8x)\n", qmask );
+    OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    if (grp->debugmask & DBGQETHSIGA)
+        DBGTRC( dev, "SIGA-m qmask(%8.8x)\n", qmask );
     PTT_QETH_TRACE( "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
@@ -6075,7 +6089,6 @@ static void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
 /*-------------------------------------------------------------------*/
 static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
 {
-
     BYTE*      icmp;                // ICMPv6 header
     OSA_BHR*   bhrre;               // Response buffer header
     IP6FRM*    ip6re;               // Response IPv6 header
@@ -6086,7 +6099,6 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
     char       unspecified[16];
     char       solicitednode[16];
     BYTE       sig;
-
 
     // Initialize variables
     memset( unspecified, 0, 16 );
@@ -6100,13 +6112,14 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
     icmp = (BYTE*)ip6->bPayload;
 
     // Process Neighbor Solicitation
-    if (icmp[0] == 0x87)               /* 0x87 = 135 */
-    {                                  /* Start of Neighbor Solicitation */
+    if (icmp[0] == 0x87)    /* 0x87 = 135 */
+    {                       /* Start of Neighbor Solicitation */
 
       // Check for a Neighbor Solicitation message sent by the guest
       // to verify that no other node is using the guests IP address.
       // The source address is unspecified, and the destination address
       // is the Solicited Node address, i.e. FF02::1:FFxx:xxxx.
+
 //    if (memcmp( &ip6->bSrcAddr[0], &unspecified, 16 ) == 0 &&
 //        memcmp( &ip6->bDstAddr[0], &solicitednode, 13 ) == 0 &&
 //        memcmp( &ip6->bDstAddr[13], &icmp[8+13], 3 ) == 0)
@@ -6118,6 +6131,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
       // to resolve the specified IP address. The source address
       // is the guests IP address, and the destination address is
       // the Solicited Node address, i.e. FF02::1:FFxx:xxxx.
+
       if (memcmp( &ip6->bSrcAddr[0], &unspecified, 16 ) != 0 &&
           memcmp( &ip6->bDstAddr[0], &solicitednode, 13 ) == 0 &&
           memcmp( &ip6->bDstAddr[13], &icmp[8+13], 3 ) == 0)
@@ -6133,6 +6147,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         // The source address is the target address, the destination
         // address is the Link-Local Scope All Nodes multicast address,
         // i.e. FF02:0:0:0:0:0:0:1.
+
         bhrre = alloc_buffer( dev, (ip6re_packet_size + 10) );
         if (!bhrre) return;
         bhrre->datalen = ip6re_packet_size;
@@ -6165,7 +6180,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         return;
       }
 
-    }                                  /* End of Neighbor Solicitation */
+    } /* End of Neighbor Solicitation */
 
     // Hmm... an ICMPv6 message sent by the guest
     // that we don't handle.

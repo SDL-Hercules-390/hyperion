@@ -52,8 +52,9 @@ QDIO_DLL_IMPORT int qdio_storage_access_check_and_update
 /* OSA Device Structure                                              */
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_DEV {
-    unsigned rxcnt;             /* Receive count                     */
-    unsigned txcnt;             /* Transmit count                    */
+    unsigned rxcnt;             /* Packets read                      */
+    unsigned txcnt;             /* Packets written                   */
+    unsigned dropcnt;           /* Packets dropped                   */
 
     int     idxstate;           /* IDX state                         */
 #define MPC_IDX_STATE_INACTIVE  0x00 // ZZ THIS FIELD NEEDS TO MOVE

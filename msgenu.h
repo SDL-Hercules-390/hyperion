@@ -738,7 +738,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00914 "%1d:%04X CTC: packet frame too big, dropped"
 #define HHC00915 "%1d:%04X %s: Incorrect number of parameters"
 #define HHC00916 "%1d:%04X %s: Option %s value %s invalid"
-//efine HHC00917 (available)
+#define HHC00917 "%1d:%04X %s: Required parameter '%s' missing"
 #define HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
 //efine HHC00919 (available)
 
@@ -2126,7 +2126,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
 #define HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
 #define HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
-//efine HHC03809 - HHC03849 (available)
+#define HHC03809 "%1d:%04X %s: %s: Requested MTU %s too large; decreasing to %s bytes"
+#define HHC03810 "%1d:%04X %s: %s: Input dropped: %s"
+//efine HHC03811 - HHC03849 (available)
 
 //efine HHC03850 - HHC03899 (available)
 
