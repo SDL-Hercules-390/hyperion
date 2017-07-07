@@ -1064,7 +1064,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
 
 #if defined( OPTION_W32_CTCI )  // (Windows CTCI-WIN)
 /*-------------------------------------------------------------------*/
-/*         ctci_win_setmacaddr  -- set interface MAC address         */
+/*     ctci_win_setmacaddr  -- set guest interface MAC address       */
 /*-------------------------------------------------------------------*/
 /* If the interface is already enabled/up we need to temporarily     */
 /* bring it down (disable it) so we can change the MAC address       */
@@ -1088,13 +1088,13 @@ static int ctci_win_setmacaddr( DEVBLK* dev, OSA_GRP* grp, char* pszMAC )
 
 
 /*-------------------------------------------------------------------*/
-/*         ctci_win_setdestaddr  -- set interface IP address         */
+/*    ctci_win_setdestaddr  -- set guest interface IP address        */
 /*-------------------------------------------------------------------*/
 /* If the interface is already enabled/up we need to temporarily     */
 /* bring it down (disable it) so we can change the IP address        */
 /* and then afterwards bring it back up again (enable it).           */
 /*-------------------------------------------------------------------*/
-static int ctci_win_setdestaddr( DEVBLK* dev, OSA_GRP* grp, char* pszIPAddr )
+static int ctci_win_setdestaddr( DEVBLK* dev, OSA_GRP* grp, char* pszGuestIPAddr )
 {
     int rc;
     BYTE was_enabled = grp->enabled ? TRUE : FALSE;
@@ -1102,7 +1102,31 @@ static int ctci_win_setdestaddr( DEVBLK* dev, OSA_GRP* grp, char* pszIPAddr )
     if (was_enabled)
         VERIFY( qeth_disable_interface( dev, grp ) == 0);
 
-    rc = TUNTAP_SetDestAddr( grp->ttifname, pszIPAddr );
+    rc = TUNTAP_SetDestAddr( grp->ttifname, pszGuestIPAddr );
+
+    if (was_enabled)
+        VERIFY( qeth_enable_interface( dev, grp ) == 0);
+
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*    ctci_win_setipaddr  -- choose host adapter by IP/MAC address   */
+/*-------------------------------------------------------------------*/
+/* If the interface is already enabled/up we need to temporarily     */
+/* bring it down (disable it) so we can change the IP address        */
+/* and then afterwards bring it back up again (enable it).           */
+/*-------------------------------------------------------------------*/
+static int ctci_win_setipaddr( DEVBLK* dev, OSA_GRP* grp, char* pszHostIPAddr )
+{
+    int rc;
+    BYTE was_enabled = grp->enabled ? TRUE : FALSE;
+
+    if (was_enabled)
+        VERIFY( qeth_disable_interface( dev, grp ) == 0);
+
+    rc = TUNTAP_SetIPAddr( grp->ttifname, pszHostIPAddr );
 
     if (was_enabled)
         VERIFY( qeth_enable_interface( dev, grp ) == 0);
@@ -1215,25 +1239,39 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         InitMACAddr( dev, grp );
     }
 
-    /* If possible, assign an IPv4 address to the interface */
-    if(
+    /* If possible, assign an IPv4 address to the guest interface */
+    /* and for CTCI-WIN, choose which host adapter it should use  */
+    if (grp->ttipaddr || grp->tuntap)
+    {
+        char buf[64];
 #if defined( OPTION_W32_CTCI )
-       grp->l3 &&
-#endif /*defined( OPTION_W32_CTCI )*/
-                  grp->ttipaddr)
-#if defined( OPTION_W32_CTCI )
+        if (grp->l3 && grp->ttipaddr)
+        {
             if ((rc = ctci_win_setdestaddr( dev, grp, grp->ttipaddr )) != 0)
             {
                 MSGBUF( buf, "ctci_win_setdestaddr(\"%s\") failed", grp->ttipaddr );
                 return qeth_errnum_msg( dev, grp, errno, "E", buf );
             }
-#else /*defined( OPTION_W32_CTCI )*/
+        }
+        if (grp->tuntap)
+        {
+            if ((rc = ctci_win_setipaddr( dev, grp, grp->tuntap )) != 0)
+            {
+                MSGBUF( buf, "ctci_win_setipaddr(\"%s\") failed", grp->tuntap );
+                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            }
+        }
+#else /* Linux */
+        if (grp->ttipaddr)
+        {
             if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
             {
                 MSGBUF( buf, "TUNTAP_SetIPAddr(\"%s\") failed", grp->ttipaddr );
                 return qeth_errnum_msg( dev, grp, errno, "E", buf );
             }
-#endif /*defined( OPTION_W32_CTCI )*/
+        }
+#endif /* CTCI-WIN or Linux */
+    }
 
     /* Same thing with the IPv4 subnet mask */
 #if defined( OPTION_TUNTAP_SETNETMASK )
@@ -3666,6 +3704,26 @@ U32 mask4;
         char     c;
         char    *p;
         static const BYTE zeromac[IFHWADDRLEN] = {0};
+
+        /* The 'iface', 'ipaddr' and 'netmask' are REQUIRED parameters */
+        if (!grp->tuntap)
+        {
+            // "%1d:%04X %s: Required parameter '%s' missing"
+            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "iface" );
+            retcode = -1;
+        }
+        if (!grp->ttipaddr)
+        {
+            // "%1d:%04X %s: Required parameter '%s' missing"
+            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "ipaddr" );
+            retcode = -1;
+        }
+        if (!grp->ttnetmask)
+        {
+            // "%1d:%04X %s: Required parameter '%s' missing"
+            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "netmask" );
+            retcode = -1;
+        }
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
