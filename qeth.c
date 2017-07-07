@@ -2243,9 +2243,10 @@ U32 dest_hbo;
 U32 mask_hbo;
     FETCH_FW(dest_hbo, dest_addr);
     FETCH_FW(mask_hbo, grp->confpfxmask4);
-    if (!dest_hbo)                          /* Note: why check for the loopback address? */
+    /* Note: why check for the loopback address? */
+    if (!dest_hbo)
         return HDR3_FLAGS_NOCAST;
-    if ((dest_hbo & 0xE0000000) == 0xE0000000)
+    if ((dest_hbo & 0xF0000000) == 0xE0000000) // 224-239 (E0-EF)
         return HDR3_FLAGS_MULTICAST;
     if ((dest_hbo & mask_hbo) == mask_hbo)
         return HDR3_FLAGS_BROADCAST;
