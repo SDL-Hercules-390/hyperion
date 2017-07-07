@@ -1006,7 +1006,7 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
     rc = TUNTAP_SetFlags( grp->ttifname, flags );
     if (rc != 0)
     {
-        qeth_errnum_msg( dev, grp, rc,
+        qeth_errnum_msg( dev, grp, errno,
             "E", "qeth_enable_interface() failed" );
         return rc;
     }
@@ -1048,7 +1048,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         rc = TUNTAP_SetFlags( grp->ttifname, flags );
         if (rc != 0)
         {
-            qeth_errnum_msg( dev, grp, rc,
+            qeth_errnum_msg( dev, grp, errno,
                 "E", "qeth_disable_interface() failed" );
             return rc;
         }
@@ -1118,6 +1118,7 @@ static int ctci_win_setdestaddr( DEVBLK* dev, OSA_GRP* grp, char* pszIPAddr )
 static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 {
     int i, rc;
+    char buf[64];
 
     /* We should only ever be called ONCE */
     if (grp->ttfd >= 0)
@@ -1140,7 +1141,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         grp->ttifname
 
     )) != 0)
-        return qeth_errnum_msg( dev, grp, rc,
+        return qeth_errnum_msg( dev, grp, errno,
             "E", "TUNTAP_CreateInterface() failed" );
 
     /* Update DEVBLK file descriptors */
@@ -1163,10 +1164,13 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
 #if defined( OPTION_TUNTAP_SETMACADDR )
-        if (!grp->l3) {
-            if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
-                return qeth_errnum_msg( dev, grp, rc,
-                    "E", "TUNTAP_SetMACAddr() failed" );
+        if (!grp->l3)
+        {
+            if ((rc = TUNTAP_SetMACAddr( grp->ttifname, grp->tthwaddr )) != 0)
+            {
+                MSGBUF( buf, "TUNTAP_SetMACAddr(%s) failed", grp->tthwaddr );
+                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            }
         }
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
     } else {
@@ -1180,13 +1184,17 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
-        if ((rc = ctci_win_setdestaddr( dev, grp, grp->ttipaddr )) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "ctci_win_setdestaddr() failed" );
+            if ((rc = ctci_win_setdestaddr( dev, grp, grp->ttipaddr )) != 0)
+            {
+                MSGBUF( buf, "ctci_win_setdestaddr(\"%s\") failed", grp->ttipaddr );
+                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            }
 #else /*defined( OPTION_W32_CTCI )*/
-        if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr() failed" );
+            if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
+            {
+                MSGBUF( buf, "TUNTAP_SetIPAddr(\"%s\") failed", grp->ttipaddr );
+                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            }
 #endif /*defined( OPTION_W32_CTCI )*/
 
     /* Same thing with the IPv4 subnet mask */
@@ -1196,9 +1204,13 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
        grp->l3 &&
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttnetmask)
-        if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetNetMask() failed" );
+    {
+        if ((rc = TUNTAP_SetNetMask( grp->ttifname, grp->ttnetmask )) != 0)
+        {
+            MSGBUF( buf, "TUNTAP_SetNetMask(%s) failed", grp->ttnetmask );
+            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+        }
+    }
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
 
     /* Assign it an IPv6 address too, if possible */
@@ -1209,8 +1221,10 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttipaddr6)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetIPAddr6() failed" );
+        {
+            MSGBUF( buf, "TUNTAP_SetIPAddr6(%s) failed", grp->ttipaddr6 );
+            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+        }
 #endif /*defined(ENABLE_IPV6)*/
 
     /* Set the interface's MTU size */
@@ -1567,7 +1581,7 @@ U16 offph;
                             "IPA_CMD_SETVMAC: ctci_win_setmacaddr(%s,%s) failed",
                             grp->ttifname, pszMAC );
                         free( pszMAC );
-                        qeth_errnum_msg( dev, grp, rc, "E", msgbuf );
+                        qeth_errnum_msg( dev, grp, errno, "E", msgbuf );
                         STORE_HW( ipa->rc, IPA_RC_FFFF );
                     }
                     else // (success)
@@ -1705,22 +1719,22 @@ U16 offph;
                         grp->ttipaddr  = strdup( ipaddr );
                         grp->ttnetmask = strdup( ipmask );
 
-                        rc = ctci_win_setdestaddr( dev, grp, ipaddr );
-
-                        if (rc != 0)
+                        if ((rc = ctci_win_setdestaddr( dev, grp, ipaddr )) != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "ctci_win_setdestaddr() failed" );
+                            char buf[64];
+                            MSGBUF( buf, "ctci_win_setdestaddr(%s) failed", ipaddr );
+                            qeth_errnum_msg( dev, grp, errno, "E", buf );
                             retcode = IPA_RC_FFFF;
                         }
 #else // !defined(OPTION_W32_CTCI)  // (i.e. Liux)
 
-                        rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
+                        rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
 
                         if (rc != 0)
                         {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "TUNTAP_SetDestAddr() failed" );
+                            char buf[64];
+                            MSGBUF( buf, "TUNTAP_SetDestAddr(%s) failed", ipaddr );
+                            qeth_errnum_msg( dev, grp, errno, "E", buf );
                             retcode = IPA_RC_FFFF;
                         }
 #endif // defined(OPTION_W32_CTCI)
@@ -2167,7 +2181,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 
     // HHC03985 "%1d:%04X %s: %s"
     WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-        "QETH", errmsg );
+        dev->typname, errmsg );
 
     return qrc;
 }
