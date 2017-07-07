@@ -3410,6 +3410,7 @@ OSA_GRP *grp;
 int groupsize = OSA_GROUP_SIZE;
 int grouped = 0;
 int i;
+int retcode = 0;
 U32 mask4;
 
 //  if (dev->numconfdev > groupsize)
@@ -3615,7 +3616,7 @@ U32 mask4;
 
         DEVBLK  *cua;
         U16      destlink;
-        int      i, rc, pfxlen, chpid;
+        int      i, work_rc, pfxlen, chpid;
         MAC      mac;
         HRB      hrb;
         char     c;
@@ -3631,6 +3632,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "hwaddr", grp->tthwaddr );
+                retcode = -1;
                 free(grp->tthwaddr);
                 grp->tthwaddr = NULL;
             }
@@ -3644,8 +3646,8 @@ U32 mask4;
             hrb.wantafam = AF_INET;
             hrb.numeric = TRUE;
             memcpy( hrb.host, grp->ttipaddr, strlen(grp->ttipaddr) );
-            rc = resolve_host( &hrb);
-            if (rc == 0)
+            work_rc = resolve_host( &hrb);
+            if (work_rc == 0)
             {
                 hinet_pton( AF_INET, grp->ttipaddr, grp->confipaddr4 );
             }
@@ -3654,6 +3656,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
+                retcode = -1;
                 free(grp->ttipaddr);
                 grp->ttipaddr = NULL;
                 if(grp->ttpfxlen)
@@ -3686,6 +3689,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "netmask", grp->ttnetmask );
+                retcode = -1;
                 free(grp->ttnetmask);
                 if(grp->ttipaddr)
                     free(grp->ttipaddr);
@@ -3721,6 +3725,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
+                retcode = -1;
                 free(grp->ttpfxlen);
                 if(grp->ttipaddr)
                     free(grp->ttipaddr);
@@ -3757,8 +3762,8 @@ U32 mask4;
             hrb.wantafam = AF_INET6;
             hrb.numeric = TRUE;
             memcpy( hrb.host, grp->ttipaddr6, strlen(grp->ttipaddr6) );
-            rc = resolve_host( &hrb);
-            if (rc == 0)
+            work_rc = resolve_host( &hrb);
+            if (work_rc == 0)
             {
                 hinet_pton( AF_INET6, grp->ttipaddr6, grp->confipaddr6 );
             }
@@ -3767,6 +3772,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttipaddr6 );
+                retcode = -1;
                 free(grp->ttipaddr6);
                 grp->ttipaddr6 = NULL;
                 if(grp->ttpfxlen6)
@@ -3779,16 +3785,17 @@ U32 mask4;
         if (grp->ttpfxlen6)
         {
             // Check whether a numeric prefix in the range 1 to 128 has been specified.
-            rc = 0;
+            work_rc = 0;
             for (p = grp->ttpfxlen6; isdigit(*p); p++) { }
             if (*p != '\0' || !strlen(grp->ttpfxlen6))
-                rc = -1;
+                work_rc = -1;
             pfxlen = atoi(grp->ttpfxlen6);
-            if (rc != 0 || pfxlen > 128 )
+            if (work_rc != 0 || pfxlen > 128 )
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttpfxlen6 );
+                retcode = -1;
                 free(grp->ttpfxlen6);
                 grp->ttpfxlen6 = NULL;
                 if(grp->ttipaddr6)
@@ -3808,6 +3815,7 @@ U32 mask4;
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "chpid", grp->ttchpid );
+                retcode = -1;
                 free(grp->ttchpid);
                 grp->ttchpid = NULL;
             }
@@ -3837,7 +3845,7 @@ U32 mask4;
             makepfxmask6( grp->ttpfxlen6, grp->confpfxmask6 );
     }
 
-    return 0;
+    return retcode;
 
 } /* end function qeth_init_handler */
 
