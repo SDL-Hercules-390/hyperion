@@ -1160,6 +1160,44 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         qeth_errnum_msg( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
+    /* Set the interface's MTU size, if possible */
+    {
+        /* Save original requested value, if any */
+        char*  ttmtu  = grp->ttmtu ? strdup( grp->ttmtu ) : NULL;
+        U16    uMTU   = ttmtu ? (U16) atoi( ttmtu ) : 0;
+
+        /* Retrieve the interface's actual MTU */
+        free( grp->ttmtu );
+        grp->ttmtu = NULL;
+        grp->uMTU  = 0;
+        InitMTU( dev, grp );  /* get interface's mtu value */
+        ASSERT( grp->ttmtu );
+        ASSERT( grp->uMTU  );
+
+        /* Decrease their requested MTU if neccessary */
+        if (ttmtu)
+        {
+            if (uMTU > grp->uMTU)
+            {
+                // "%1d:%04X %s: %s: Requested MTU %s too large; decreasing to %s bytes"
+                WRMSG( HHC03809, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    dev->typname, grp->ttifname, ttmtu, grp->ttmtu );
+                free( ttmtu );
+                ttmtu = NULL;
+            }
+            else /* Use their requested value */
+            {
+                free( grp->ttmtu );
+                grp->ttmtu = ttmtu;
+                grp->uMTU  = uMTU;
+            }
+
+            MSGBUF( buf, "TUNTAP_SetMTU(%s) failed", grp->ttmtu );
+            if ((rc = TUNTAP_SetMTU( grp->ttifname, grp->ttmtu )) != 0)
+                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+        }
+    }
+
     /* Make sure the interface has a valid MAC address.      */
     /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
@@ -1220,23 +1258,14 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
        grp->l3 &&
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttipaddr6)
+    {
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
         {
             MSGBUF( buf, "TUNTAP_SetIPAddr6(%s) failed", grp->ttipaddr6 );
             return qeth_errnum_msg( dev, grp, errno, "E", buf );
         }
-#endif /*defined(ENABLE_IPV6)*/
-
-    /* Set the interface's MTU size */
-    if (grp->ttmtu) {
-        if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0) {
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetMTU() failed" );
-        }
-        grp->uMTU = (U16) atoi( grp->ttmtu );
-    } else {
-        InitMTU( dev, grp );
     }
+#endif /*defined(ENABLE_IPV6)*/
 
     return 0;
 }
@@ -3821,6 +3850,21 @@ U32 mask4;
             }
         }
 #endif /*defined(ENABLE_IPV6)*/
+
+        /* Check the MTU value */
+        if (grp->ttmtu)
+        {
+            U16 uMTU = (U16) atoi( grp->ttmtu );
+            if (uMTU < QETH_MIN_MTU)
+            {
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    dev->typname, "mtu", grp->ttmtu );
+                retcode = -1;
+                free( grp->ttmtu );
+                grp->ttmtu = NULL;
+            }
+        }
 
         /* Check the grp->ttchpid value */
         if (grp->ttchpid)
