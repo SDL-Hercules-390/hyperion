@@ -118,94 +118,94 @@ U16  CheckSum ( const BYTE* pBuffer, S32 nBytes )
 
     while ((nBytes -= 128) >= 0)
     {
-        nSum += *(puShort+0);
-        nSum += *(puShort+1);
-        nSum += *(puShort+2);
-        nSum += *(puShort+3);
-        nSum += *(puShort+4);
-        nSum += *(puShort+5);
-        nSum += *(puShort+6);
-        nSum += *(puShort+7);
-        nSum += *(puShort+8);
-        nSum += *(puShort+9);
-        nSum += *(puShort+10);
-        nSum += *(puShort+11);
-        nSum += *(puShort+12);
-        nSum += *(puShort+13);
-        nSum += *(puShort+14);
-        nSum += *(puShort+15);
-        nSum += *(puShort+16);
-        nSum += *(puShort+17);
-        nSum += *(puShort+18);
-        nSum += *(puShort+19);
-        nSum += *(puShort+20);
-        nSum += *(puShort+21);
-        nSum += *(puShort+22);
-        nSum += *(puShort+23);
-        nSum += *(puShort+24);
-        nSum += *(puShort+25);
-        nSum += *(puShort+26);
-        nSum += *(puShort+27);
-        nSum += *(puShort+28);
-        nSum += *(puShort+29);
-        nSum += *(puShort+30);
-        nSum += *(puShort+31);
-        nSum += *(puShort+32);
-        nSum += *(puShort+33);
-        nSum += *(puShort+34);
-        nSum += *(puShort+35);
-        nSum += *(puShort+36);
-        nSum += *(puShort+37);
-        nSum += *(puShort+38);
-        nSum += *(puShort+39);
-        nSum += *(puShort+40);
-        nSum += *(puShort+41);
-        nSum += *(puShort+42);
-        nSum += *(puShort+43);
-        nSum += *(puShort+44);
-        nSum += *(puShort+45);
-        nSum += *(puShort+46);
-        nSum += *(puShort+47);
-        nSum += *(puShort+48);
-        nSum += *(puShort+49);
-        nSum += *(puShort+50);
-        nSum += *(puShort+51);
-        nSum += *(puShort+52);
-        nSum += *(puShort+53);
-        nSum += *(puShort+54);
-        nSum += *(puShort+55);
-        nSum += *(puShort+56);
-        nSum += *(puShort+57);
-        nSum += *(puShort+58);
-        nSum += *(puShort+59);
-        nSum += *(puShort+60);
-        nSum += *(puShort+61);
-        nSum += *(puShort+62);
-        nSum += *(puShort+63);
-        puShort     +=    64;
+        nSum += ntohs( *(puShort+ 0) );
+        nSum += ntohs( *(puShort+ 1) );
+        nSum += ntohs( *(puShort+ 2) );
+        nSum += ntohs( *(puShort+ 3) );
+        nSum += ntohs( *(puShort+ 4) );
+        nSum += ntohs( *(puShort+ 5) );
+        nSum += ntohs( *(puShort+ 6) );
+        nSum += ntohs( *(puShort+ 7) );
+        nSum += ntohs( *(puShort+ 8) );
+        nSum += ntohs( *(puShort+ 9) );
+        nSum += ntohs( *(puShort+10) );
+        nSum += ntohs( *(puShort+11) );
+        nSum += ntohs( *(puShort+12) );
+        nSum += ntohs( *(puShort+13) );
+        nSum += ntohs( *(puShort+14) );
+        nSum += ntohs( *(puShort+15) );
+        nSum += ntohs( *(puShort+16) );
+        nSum += ntohs( *(puShort+17) );
+        nSum += ntohs( *(puShort+18) );
+        nSum += ntohs( *(puShort+19) );
+        nSum += ntohs( *(puShort+20) );
+        nSum += ntohs( *(puShort+21) );
+        nSum += ntohs( *(puShort+22) );
+        nSum += ntohs( *(puShort+23) );
+        nSum += ntohs( *(puShort+24) );
+        nSum += ntohs( *(puShort+25) );
+        nSum += ntohs( *(puShort+26) );
+        nSum += ntohs( *(puShort+27) );
+        nSum += ntohs( *(puShort+28) );
+        nSum += ntohs( *(puShort+29) );
+        nSum += ntohs( *(puShort+30) );
+        nSum += ntohs( *(puShort+31) );
+        nSum += ntohs( *(puShort+32) );
+        nSum += ntohs( *(puShort+33) );
+        nSum += ntohs( *(puShort+34) );
+        nSum += ntohs( *(puShort+35) );
+        nSum += ntohs( *(puShort+36) );
+        nSum += ntohs( *(puShort+37) );
+        nSum += ntohs( *(puShort+38) );
+        nSum += ntohs( *(puShort+39) );
+        nSum += ntohs( *(puShort+40) );
+        nSum += ntohs( *(puShort+41) );
+        nSum += ntohs( *(puShort+42) );
+        nSum += ntohs( *(puShort+43) );
+        nSum += ntohs( *(puShort+44) );
+        nSum += ntohs( *(puShort+45) );
+        nSum += ntohs( *(puShort+46) );
+        nSum += ntohs( *(puShort+47) );
+        nSum += ntohs( *(puShort+48) );
+        nSum += ntohs( *(puShort+49) );
+        nSum += ntohs( *(puShort+50) );
+        nSum += ntohs( *(puShort+51) );
+        nSum += ntohs( *(puShort+52) );
+        nSum += ntohs( *(puShort+53) );
+        nSum += ntohs( *(puShort+54) );
+        nSum += ntohs( *(puShort+55) );
+        nSum += ntohs( *(puShort+56) );
+        nSum += ntohs( *(puShort+57) );
+        nSum += ntohs( *(puShort+58) );
+        nSum += ntohs( *(puShort+59) );
+        nSum += ntohs( *(puShort+60) );
+        nSum += ntohs( *(puShort+61) );
+        nSum += ntohs( *(puShort+62) );
+        nSum += ntohs( *(puShort+63) );
+        puShort +=               64;
         FoldSum32( &nSum );
     }
     nBytes += 128;
 
     while ((nBytes -= 32) >= 0)
     {
-        nSum += *(puShort+0);
-        nSum += *(puShort+1);
-        nSum += *(puShort+2);
-        nSum += *(puShort+3);
-        nSum += *(puShort+4);
-        nSum += *(puShort+5);
-        nSum += *(puShort+6);
-        nSum += *(puShort+7);
-        nSum += *(puShort+8);
-        nSum += *(puShort+9);
-        nSum += *(puShort+10);
-        nSum += *(puShort+11);
-        nSum += *(puShort+12);
-        nSum += *(puShort+13);
-        nSum += *(puShort+14);
-        nSum += *(puShort+15);
-        puShort     +=    16;
+        nSum += ntohs( *(puShort+ 0) );
+        nSum += ntohs( *(puShort+ 1) );
+        nSum += ntohs( *(puShort+ 2) );
+        nSum += ntohs( *(puShort+ 3) );
+        nSum += ntohs( *(puShort+ 4) );
+        nSum += ntohs( *(puShort+ 5) );
+        nSum += ntohs( *(puShort+ 6) );
+        nSum += ntohs( *(puShort+ 7) );
+        nSum += ntohs( *(puShort+ 8) );
+        nSum += ntohs( *(puShort+ 9) );
+        nSum += ntohs( *(puShort+10) );
+        nSum += ntohs( *(puShort+11) );
+        nSum += ntohs( *(puShort+12) );
+        nSum += ntohs( *(puShort+13) );
+        nSum += ntohs( *(puShort+14) );
+        nSum += ntohs( *(puShort+15) );
+        puShort +=               16;
     }
     nBytes += 32;
 
@@ -213,23 +213,23 @@ U16  CheckSum ( const BYTE* pBuffer, S32 nBytes )
 
     while ((nBytes -= 8) >= 0)
     {
-        nSum += *(puShort+0);
-        nSum += *(puShort+1);
-        nSum += *(puShort+2);
-        nSum += *(puShort+3);
-        puShort     +=    4;
+        nSum += ntohs( *(puShort+0) );
+        nSum += ntohs( *(puShort+1) );
+        nSum += ntohs( *(puShort+2) );
+        nSum += ntohs( *(puShort+3) );
+        puShort +=               4;
     }
     nBytes += 8;
 
     while ((nBytes -= 2) >= 0)
     {
-        nSum += *(puShort+0);
-        puShort     +=    1;
+        nSum += ntohs( *(puShort+0) );
+        puShort +=               1;
     }
     nBytes += 2;
 
     if (nBytes)
-        nSum += *(BYTE*) puShort;
+        nSum += ntohs( *((BYTE*)puShort) );
 
     FoldSum32( &nSum );
 
@@ -249,24 +249,26 @@ U16  InetCheckSum ( const BYTE* pBuffer, S32 nBytes )
 /*       Perform Ip Checksum Offloading for Ethernet Frame           */
 /*-------------------------------------------------------------------*/
 
-void EtherIpCkSumOffload( BYTE* pFrame, size_t nBytes )
+void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
 {
     ip_hdr*   pIP;
     BYTE      nIPHdrLen;
     BYTE*     pPacket;
     U16       nPacketLen;
 
+    // We only handle IPv4 checksum offloading
+
     if (ETHERTYPE_IP != ntohs( ((eth_hdr*) pFrame)->ether_type ))
         return;
 
-    pIP      =  (ip_hdr*) (pFrame + eth_hdr_size);
+    pIP      =  (ip_hdr*) (((BYTE*)pFrame) + eth_hdr_size);
     nBytes  -=  eth_hdr_size;
 
-    while (nBytes)
+    while (nBytes > ip_hdr_size)
     {
         nPacketLen =  ntohs( pIP->ip_len );
         nIPHdrLen  =  pIP->ip_hl * sizeof( U32 );
-        pPacket    =  ((BYTE*) pIP + nIPHdrLen);
+        pPacket    =  (((BYTE*)pIP) + nIPHdrLen);
 
         switch (pIP->ip_p)
         {
@@ -306,15 +308,21 @@ void EtherIpCkSumOffload( BYTE* pFrame, size_t nBytes )
             }
             break;
 
-            default:
+            default: // (some other protocol)
             {
-                // Stop upon encountering any packet we don't support
-                nPacketLen = nBytes;
+                // But since it IS an IP packet we need to
+                // still calculate the IP header checksum!
+
+                pIP->ip_sum = 0;   // (start clean)
+                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
             }
             break;
         }
 
-        pIP = (ip_hdr*) ((BYTE*) pIP + nPacketLen );
-        nBytes -= nPacketLen;
-    }
+        // Go on to the next IP packet...
+
+        pIP = (ip_hdr*) (((BYTE*)pIP) + nPacketLen );
+        nBytes -= MIN( nBytes, (size_t) nPacketLen );
+
+    } // while (nBytes > ip_hdr_size)
 }

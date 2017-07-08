@@ -146,7 +146,7 @@ typedef struct pseudo_hdr   pseudo_hdr;
 /*                 Checksum Offloading functions                     */
 /*-------------------------------------------------------------------*/
 
-extern void EtherIpCkSumOffload( BYTE* pFrame, size_t nBytes );
+extern void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes );
 
 extern U16  CheckSum          ( const BYTE* pBuffer, S32 nBytes );
 extern U16  InetCheckSum      ( const BYTE* pBuffer, S32 nBytes );

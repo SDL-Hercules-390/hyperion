@@ -1118,7 +1118,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             if (pLCSPORT->fDoCkSumOffload)
             {
                 PTT_TIMING( "beg csumoff", 0, iEthLen, 0 );
-                EtherIpCkSumOffload( (BYTE*) pEthFrame, iEthLen );
+                EtherIpv4CkSumOffload( (BYTE*) pEthFrame, iEthLen );
                 PTT_TIMING( "end csumoff", 0, iEthLen, 0 );
             }
 
