@@ -68,9 +68,6 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    <a href="#HTTPPORT">##HTTPPORT</a>   8081 NOAUTH                              (deprecated)
-    <a href="#HTTPROOT">##HTTPROOT</a>   /usr/local/share/hercules/               (deprecated)
-
     <a href="#HTTPPORT">HTTP</a>       PORT   8081  NOAUTH
     <a href="#HTTPROOT">HTTP</a>       ROOT   /usr/local/share/hercules/
     <a href="#HTTPSTRT">HTTP</a>       START
@@ -833,9 +830,6 @@ a real System/390.  The configuration file is an ASCII text file.
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
     <p>
-    Note: <code>HTTPPORT nnnn [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code> is still supported,
-    however, it has been deprecated.
-    <p>
 
 <a name="HTTPROOT"></a>
 <dt><code>HTTP ROOT &nbsp; <em>directory</em></code>
@@ -847,8 +841,6 @@ a real System/390.  The configuration file is an ASCII text file.
     installation directory when the Hercules executable was built (which can
     vary depending on how the Hercules package was built, but is usually
     <tt>/usr/local/share/hercules/</tt>).
-    <p>
-    Note: <code>HTTPROOT <em>directory </em></code> &nbsp;is still supported, however, it has been deprecated.
     <p>
 
 <a name="HTTPSTRT"></a>

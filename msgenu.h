@@ -1038,7 +1038,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01437 "Config file[%d] %s: including file %s"
 #define HHC01438 "Config file %s: open error ignored file %s: %s"
 #define HHC01439 "Config file %s: open error file %s: %s"
-#define HHC01440 "Config file[%d] %s: statement %s deprecated, use %s instead"
+//efine HHC01440 (available)
 #define HHC01441 "Config file[%d] %s: error processing statement: %s"
 #define HHC01442 "Config file[%d] %s: incorrect number of operands"
 #define HHC01443 "Config file[%d] %s: %s is not a valid %s"
@@ -1213,7 +1213,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01810 "HTTP server is stopped"
 #define HHC01811 "HTTP server root directory %s"
 #define HHC01812 "HTTP server must be stopped for this command"
-#define HHC01813 "HTTP server waiting for bind to complete; port in user by another server"
+#define HHC01813 "HTTP server waiting for bind to complete; port in use by another server"
 #define HHC01814 "HTTP server: auth requires valid userid and password operands"
 #define HHC01815 "HTTP server port is %s"
 //efine HHC01816 - HHC01849 (available)

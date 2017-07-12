@@ -626,16 +626,6 @@
   "\n"                                                                              \
   "<none>                                - display status of HTTP server\n"
 
-#define httpport_cmd_desc       "Command deprecated - Use \"HTTP PORT ...\""
-#define httpport_cmd_help       \
-                                \
-  "This command is deprecated. Use \"http port ...\" instead.\n"
-
-#define httproot_cmd_desc       "Command deprecated - Use \"HTTP ROOT fn\""
-#define httproot_cmd_help       \
-                                \
-  "This command is deprecated. Use \"http root fn\" instead.\n"
-
 #define i_cmd_desc              "Generate I/O attention interrupt for device"
 #define icount_cmd_desc         "Display individual instruction counts"
 #define iodelay_cmd_desc        "Display or set I/O delay value"
@@ -1809,8 +1799,6 @@ COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       
 #endif
 #if defined( OPTION_HTTP_SERVER )
 COMMAND( "http",                    http_cmd,               SYSCONFIG,          http_cmd_desc,          http_cmd_help       )
-COMMAND( "httpport",                httpport_cmd,           SYSCONFIG,          httpport_cmd_desc,      httpport_cmd_help   )
-COMMAND( "httproot",                httproot_cmd,           SYSCONFIG,          httproot_cmd_desc,      httproot_cmd_help   )
 #endif
 #if defined( OPTION_INSTRUCTION_COUNTING )
 COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        icount_cmd_desc,        NULL                )

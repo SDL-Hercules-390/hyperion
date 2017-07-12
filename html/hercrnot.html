@@ -42,6 +42,16 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>HTTPROOT and HTTPPORT statements are now fully deprecated
+  <dd>
+  <p>
+    Any <code>httproot</code> or <code>httpport</code> statements are now
+    rejected as invalid statements. All users still using either statement
+    format in their configuration files must now replace all occurrences
+    with <code>http root ...</code> and <code>http port ...</code> instead.
+  </p>
+
+
   <dt>New and improved CMPSC Compression Call 2012 instruction implementation is now the default
   <dd>
   <p>

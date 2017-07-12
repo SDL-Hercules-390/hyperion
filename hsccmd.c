@@ -3989,67 +3989,6 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 
 #if defined(OPTION_HTTP_SERVER)
 /*-------------------------------------------------------------------*/
-/* httproot command - set HTTP server base directory                 */
-/*-------------------------------------------------------------------*/
-int httproot_cmd(int argc, char *argv[], char *cmdline)
-{
-    int     rc = 0;
-    int     a_argc;
-    char   *a_argv[3] = { "rootx", NULL, "httproot" };
-
-    UNREFERENCED(cmdline);
-
-    WRMSG( HHC02256, "W", argv[0], "http root pathname" );
-
-    if ( argc > 2 )
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        rc = -1;
-    }
-    else
-    {
-        a_argc = 2;
-        a_argv[1] = argv[1];    /* root filename */
-
-        rc = http_command(a_argc, a_argv);
-    }
-
-    return rc;
-}
-
-/*-------------------------------------------------------------------*/
-/* httpport command - set HTTP server port                           */
-/*-------------------------------------------------------------------*/
-int httpport_cmd(int argc, char *argv[], char *cmdline)
-{
-    int     rc = 0;
-    int     a_argc;
-    char   *a_argv[6] = { "portx", NULL, NULL, NULL, NULL, "httpport" };
-
-    UNREFERENCED(cmdline);
-
-    WRMSG( HHC02256, "W", argv[0], "http port nnnn [[noauth]|[auth user pass]]" );
-
-    if ( argc > 5 )
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        rc = -1;
-    }
-    else
-    {
-        a_argc = argc;
-        a_argv[1] = argv[1];    /* port number */
-        a_argv[2] = argv[2];    /* auth|noauth */
-        a_argv[3] = argv[3];    /* userid      */
-        a_argv[4] = argv[4];    /* password    */
-
-        rc = http_command(a_argc, a_argv);
-    }
-
-    return rc;
-}
-
-/*-------------------------------------------------------------------*/
 /* http command - manage HTTP server                                 */
 /*-------------------------------------------------------------------*/
 int http_cmd(int argc, char *argv[], char *cmdline)
