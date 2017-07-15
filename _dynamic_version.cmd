@@ -262,9 +262,30 @@
   goto :BEGIN
 
 ::-----------------------------------------------------------------------------
+::                              isdir
+::-----------------------------------------------------------------------------
+:isdir
+
+  if not exist "%~1" (
+    set "isdir="
+    %return%
+  )
+  set "isdir=%~a1"
+  if defined isdir (
+    if /i not "%isdir:~0,1%" == "d" set "isdir="
+  )
+  %return%
+
+::-----------------------------------------------------------------------------
 ::                               BEGIN
 ::-----------------------------------------------------------------------------
 :BEGIN
+
+  call :isdir ".svn"
+  if defined isdir (set "have_dot_svn_dir=yes" ) else (set "have_dot_svn_dir=")
+
+  call :isdir ".git"
+  if defined isdir (set "have_dot_git_dir=yes" ) else (set "have_dot_git_dir=")
 
   ::  The following logic determines the Hercules version number,
   ::  git or svn commit/revision information, and sets variables
@@ -326,11 +347,34 @@
   %TRACE% VERS_MIN         = %VERS_MIN%
   %TRACE%.
 
-  @REM  Now to calulate a NUMERIC value for 'VERS_BLD' based on the
-  @REM  SVN/GIT repository revision number.  Note that the revision
-  @REM  number for SVN repositories is always numeric anyway but for
-  @REM  GIT repositories we must calculate it based on total number
-  @REM  of commits since GIT "revision numbers" are actually hashes.
+  @REM ----------------------------------------------------------------
+  @REM   Now to calulate a NUMERIC value for 'VERS_BLD' based on the
+  @REM   SVN/GIT repository revision number.  Note that the revision
+  @REM   number for SVN repositories is always numeric anyway but for
+  @REM   GIT repositories we must calculate it based on total number
+  @REM   of commits since GIT "revision numbers" are actually hashes.
+  @REM ----------------------------------------------------------------
+
+  @REM Latest buggy version of SubWCRev CRASHES if .svn dir doesn't exist!
+
+  call :isdir ".svn"
+  if defined isdir (set "have_dot_svn_dir=yes" ) else (set "have_dot_svn_dir=")
+
+  call :isdir ".git"
+  if defined isdir (set "have_dot_git_dir=yes" ) else (set "have_dot_git_dir=")
+
+  if defined have_dot_svn_dir goto :set_VERSION_try_SubWCRev
+  if defined have_dot_git_dir goto :set_VERSION_try_GIT
+                              goto :set_VERSION_try_XXX
+
+::-----------------------------------------------------------------------------
+::                    set_VERSION_try_SubWCRev
+::-----------------------------------------------------------------------------
+:set_VERSION_try_SubWCRev
+
+  if not defined have_dot_svn_dir (
+    goto :set_VERSION_try_GIT
+  )
 
   :: ---------------------------------------------------------------
   ::  Try TortoiseSVN's "SubWCRev.exe" program, if it exists
@@ -361,10 +405,9 @@
 
   goto :set_VERSION_try_SVN
 
-  :: ---------------------------------------------------------------
-  ::  Try the "svn info" and "svnversion" commands, if they exist
-  :: ---------------------------------------------------------------
-
+::-----------------------------------------------------------------------------
+::                      set_VERSION_try_SVN
+::-----------------------------------------------------------------------------
 :set_VERSION_try_SVN
 
   set "svn_exe=svn.exe"
@@ -419,11 +462,14 @@
 
   goto :set_VERSION_do_set
 
-  :: ---------------------------------------------------------------
-  ::  Try the "git log" command, if it exists
-  :: ---------------------------------------------------------------
-
+::-----------------------------------------------------------------------------
+::                      set_VERSION_try_GIT
+::-----------------------------------------------------------------------------
 :set_VERSION_try_GIT
+
+  if not defined have_dot_git_dir (
+    goto :set_VERSION_try_XXX
+  )
 
   @REM Prefer "git.cmd" over git.exe (if it exists)
 
@@ -488,6 +534,9 @@
 
   goto :set_VERSION_do_set
 
+::-----------------------------------------------------------------------------
+::                      set_VERSION_try_XXX
+::-----------------------------------------------------------------------------
 :set_VERSION_try_XXX
 
   :: Repo type XXX...
@@ -524,6 +573,9 @@
 
   goto :set_VERSION_do_set
 
+::-----------------------------------------------------------------------------
+::                      set_VERSION_do_set
+::-----------------------------------------------------------------------------
 :set_VERSION_do_set
 
   %TRACE%.
