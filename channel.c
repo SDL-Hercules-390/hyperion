@@ -45,7 +45,6 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 /*-------------------------------------------------------------------*/
 /* Debug Switches                                                    */
 /*-------------------------------------------------------------------*/
-
 #ifndef CHANNEL_DEBUG_SWITCHES
 #define CHANNEL_DEBUG_SWITCHES
 #define DEBUG_SCSW              0
@@ -53,11 +52,62 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 #define DEBUG_DUMP              0
 #endif
 
+/*-------------------------------------------------------------------*/
+/* CCW Tracing helper macros                                         */
+/*-------------------------------------------------------------------*/
+#ifndef OSTAILOR_QUIET
+#define OSTAILOR_QUIET()            (!sysblk.pgminttr)
+#endif
+
+#ifndef CCW_TRACE_OR_STEP
+#define CCW_TRACE_OR_STEP( dev )    ((dev)->ccwtrace || (dev)->ccwstep)
+#endif
+
+#ifndef CCW_TRACING_ACTIVE
+#define CCW_TRACING_ACTIVE( dev, tracethis )    (CCW_TRACE_OR_STEP( dev ) \
+                                                    || ( tracethis ))
+#endif
+
+#ifndef SKIP_CH9UC
+#define SKIP_CH9UC( dev, chanstat, unitstat )                       \
+                                                                    \
+    (1                                                              \
+     && !CCW_TRACE_OR_STEP( dev )                                   \
+     && !CPU_STEPPING_OR_TRACING_ALL                                \
+     && sysblk.noch9oflow                                           \
+     && is_ch9oflow( dev, chanstat, unitstat )                      \
+    )
+#endif
+
+/*-------------------------------------------------------------------*/
+/* helper function to check if printer channel-9 overflow unit check */
+/*-------------------------------------------------------------------*/
+#ifndef IS_CH9OFLOW
+#define IS_CH9OFLOW
+static BYTE is_ch9oflow( DEVBLK* dev, BYTE chanstat, BYTE unitstat )
+{
+    static const BYTE unitck = (CSW_CE | CSW_DE | CSW_UC);
+
+    if (1
+        &&    0      == chanstat
+        &&  unitck   == unitstat
+        && SENSE_CH9 == dev->sense[0]
+        &&    0      == dev->sense[1]
+        && dev->hnd->query
+    )
+    {
+        char* devclass = NULL;
+        dev->hnd->query( NULL, &devclass, 0, NULL );
+        if (strcmp( devclass, "PRT" ) == 0)
+            return TRUE;
+    }
+    return FALSE;
+}
+#endif // IS_CH9OFLOW
 
 /*-------------------------------------------------------------------*/
 /* Internal function definitions                                     */
 /*-------------------------------------------------------------------*/
-
 void                call_execute_ccw_chain (int arch_mode, void* pDevBlk);
 DLL_EXPORT  void*   device_thread (void *arg);
 static int          schedule_ioq (const REGS* regs, DEVBLK* dev);
@@ -738,6 +788,7 @@ BYTE    area[64];                       /* Data display area         */
     else
         format_iobuf_data (addr, area, dev, count);
 
+    // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
     WRMSG (HHC01315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
@@ -1101,7 +1152,7 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
     else
         cc = 0;         /* Available */
 
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
 
     /* Complete unlock sequence */
@@ -1117,19 +1168,19 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 /*-------------------------------------------------------------------*/
 /* HALT I/O                                                          */
 /*-------------------------------------------------------------------*/
-int
-haltio (REGS *regs, DEVBLK *dev, BYTE ibyte)
+int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
 {
-int      cc;                            /* Condition code            */
-PSA_3XX *psa;                           /* -> Prefixed storage area  */
+    int       cc;                       /* Condition code            */
+    PSA_3XX*  psa;                      /* -> Prefixed storage area  */
 
-    UNREFERENCED(ibyte);
+    UNREFERENCED( ibyte );
 
-    if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01329, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    if (CCW_TRACE_OR_STEP( dev ))
+        // "%1d:%04X CHAN: halt I/O"
+        WRMSG( HHC01329, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
-    OBTAIN_INTLOCK(regs);
-    obtain_lock (&dev->lock);
+    OBTAIN_INTLOCK( regs );
+    obtain_lock( &dev->lock );
 
     /* Test device status and set condition code */
     if (dev->busy)
@@ -1137,9 +1188,9 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         /* Invoke the provided halt device routine @ISW */
         /* if it has been provided by the handler  @ISW */
         /* code at init                            @ISW */
-        if(dev->hnd->halt!=NULL)                /* @ISW */
+        if (dev->hnd->halt != NULL)             /* @ISW */
         {                                       /* @ISW */
-            dev->hnd->halt(dev);                /* @ISW */
+            dev->hnd->halt( dev );              /* @ISW */
             psa = (PSA_3XX*)( regs->mainstor + regs->PX );
             psa->csw[4] = 0;    /*  Store partial CSW   */
             psa->csw[5] = 0;
@@ -1154,36 +1205,41 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
             dev->scsw.flag2 |= SCSW2_AC_HALT;
 
             /* Clear pending interrupts */
-            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
-            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
-            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
+
+            DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint  );
+            DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->ioint     );
+            DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->attnioint );
+
             dev->pciscsw.flag3  &= ~(SCSW3_SC_ALERT |
                                      SCSW3_SC_PRI   |
                                      SCSW3_SC_SEC   |
                                      SCSW3_SC_PEND);
+
             dev->scsw.flag3     &= ~(SCSW3_SC_ALERT |
                                      SCSW3_SC_PRI   |
                                      SCSW3_SC_SEC   |
                                      SCSW3_SC_PEND);
+
             dev->attnscsw.flag3 &= ~(SCSW3_SC_ALERT |
                                      SCSW3_SC_PRI   |
                                      SCSW3_SC_SEC   |
                                      SCSW3_SC_PEND);
-            subchannel_interrupt_queue_cleanup(dev);
+
+            subchannel_interrupt_queue_cleanup( dev );
         }
     }
-    else if (!IOPENDING(dev) && dev->ctctype != CTC_LCS)
+    else if (!IOPENDING( dev ) && dev->ctctype != CTC_LCS)
     {
         /* Set condition code 1 */
         cc = 1;
 
         /* Store the channel status word at PSA+X'40' */
-        store_scsw_as_csw(regs, &dev->scsw);
+        store_scsw_as_csw( regs, &dev->scsw );
 
-        if (dev->ccwtrace || dev->ccwstep)
+        if (CCW_TRACE_OR_STEP( dev ))
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
-            display_csw (dev, psa->csw);
+            display_csw( dev, psa->csw );
         }
     }
     else if (dev->ctctype == CTC_LCS)
@@ -1192,13 +1248,14 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         cc = 1;
 
         /* Store the channel status word at PSA+X'40' */
-        store_scsw_as_csw(regs, &dev->scsw);
+        store_scsw_as_csw( regs, &dev->scsw );
 
-        if (dev->ccwtrace)
+        if (CCW_TRACE_OR_STEP( dev ))
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
-            WRMSG (HHC01330, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            display_csw (dev, psa->csw);
+            // "%1d:%04X CHAN: HIO modification executed: cc=1"
+            WRMSG( HHC01330, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            display_csw( dev, psa->csw );
         }
     }
     else
@@ -1208,12 +1265,12 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     }
 
     /* Update interrupt status */
-    subchannel_interrupt_queue_cleanup(dev);
+    subchannel_interrupt_queue_cleanup( dev );
     UPDATE_IC_IOPENDING_QLOCKED();
 
     /* Release locks */
-    release_lock (&dev->lock);
-    RELEASE_INTLOCK(regs);
+    release_lock( &dev->lock );
+    RELEASE_INTLOCK( regs );
 
     /* Return the condition code */
     return cc;
@@ -1475,10 +1532,8 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
     DEQUEUE_IO_INTERRUPT_QLOCKED(*ioint);
 
     /* Display the subchannel status word */
-    if (dev->ccwtrace || dev->ccwstep)
-    {
-        display_scsw (dev, **scsw);
-    }
+    if (CCW_TRACE_OR_STEP( dev ))
+        display_scsw( dev, **scsw );
 
     /* Copy the SCSW to the IRB */
     irb->scsw = **scsw;
@@ -1572,10 +1627,9 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     release_lock(&sysblk.iointqlk);
 
     /* Display the condition code */
-    if (dev->ccwtrace || dev->ccwstep)
-    {
-        WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
-    }
+    if (CCW_TRACE_OR_STEP( dev ))
+        // "%1d:%04X CHAN: test I/O: cc=%d"
+        WRMSG( HHC01318, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, cc );
 
     /* Release remaining locks */
     release_lock(&dev->lock);
@@ -1647,7 +1701,7 @@ perform_clear_subchan (DEVBLK *dev)
     UPDATE_IC_IOPENDING_QLOCKED();
     release_lock(&sysblk.iointqlk);
 
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: clear completed"
         WRMSG( HHC01308, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
@@ -1674,7 +1728,7 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 {
     UNREFERENCED( regs );
 
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: clear subchannel"
         WRMSG( HHC01331, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
@@ -1824,7 +1878,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     }
 
     /* Trace HALT */
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: halt subchannel: cc=%d"
         WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 0 );
 
@@ -1874,7 +1928,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
 {
     UNREFERENCED( regs );
 
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: halt subchannel"
         WRMSG( HHC01332, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
@@ -1907,7 +1961,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
            )
     )
     {
-        if (dev->ccwtrace || dev->ccwstep)
+        if (CCW_TRACE_OR_STEP( dev ))
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
             WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 1 );
         release_lock( &dev->lock );
@@ -1920,7 +1974,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     */
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
-        if (dev->ccwtrace || dev->ccwstep)
+        if (CCW_TRACE_OR_STEP( dev ))
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
             WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 2 );
         release_lock( &dev->lock );
@@ -2693,7 +2747,7 @@ int cc;                                 /* Return code               */
     }
 
     /* If tracing, write trace message */
-    if (dev->ccwtrace || dev->ccwstep)
+    if (CCW_TRACE_OR_STEP( dev ))
         WRMSG (HHC01333, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
 
     release_lock (&dev->lock);
@@ -3346,14 +3400,10 @@ do {                                                                   \
                 } /* end if(!MIDAW_FLAG_SKIP) */
 
                 /* Display the MIDAW if CCW tracing is on */
-                if (!prefetch->seq && (dev->ccwtrace || dev->ccwstep))
-                {
-                    display_idaw (dev, PF_MIDAW, midawflg, midawdat,
-                                  midawlen);
-                }
-
-                #if DEBUG_DUMP
-                if (dev->ccwtrace)
+                if (!prefetch->seq && CCW_TRACE_OR_STEP( dev ))
+                    display_idaw( dev, PF_MIDAW, midawflg, midawdat, midawlen );
+#if DEBUG_DUMP
+                if (CCW_TRACE_OR_STEP( dev ))
                 {
                     if (to_memory)
                         dump("iobuf:", iobuf, midawlen);
@@ -3361,8 +3411,7 @@ do {                                                                   \
                     if (to_iobuf)
                         dump("iobuf:", iobuf, midawlen);
                 }
-                #endif
-
+#endif
                 /* Decrement remaining count */
                 midawrem -= midawlen;
 
@@ -3375,10 +3424,12 @@ do {                                                                   \
 
         /* Channel program check if sum of MIDAW lengths
            did not exhaust the CCW count and no pending status */
-        if (midawrem > 0    &&
-            *chanstat != 0  &&
-            !(prefetch->seq && prefetch->chanstat[ps]))
-            set_chanstat(CSW_PROGC);
+        if (1
+            && midawrem > 0
+            && *chanstat != 0
+            && !(prefetch->seq && prefetch->chanstat[ps])
+        )
+            set_chanstat( CSW_PROGC );
 
     } /* end if(CCW_FLAGS_MIDAW) */                             /*@MW*/
     else                                                        /*@MW*/
@@ -3403,20 +3454,22 @@ do {                                                                   \
              idaseq++)
         {
             /* Get new prefetch entry */
-            get_new_prefetch_entry(idawfmt, idawaddr);
+            get_new_prefetch_entry( idawfmt, idawaddr );
+
             if (*chanstat != 0)
                 break;
 
             /* Fetch the IDAW and set IDA pointer and length */
-            ARCH_DEP(fetch_idaw) (dev, code, ccwkey, idawfmt,  /*@IWZ*/
-                        idapmask, idaseq, idawaddr,            /*@IWZ*/
-                        &idadata, &idalen, chanstat);
+            ARCH_DEP( fetch_idaw )( dev, code, ccwkey, idawfmt, /*@IWZ*/
+                        idapmask, idaseq, idawaddr,             /*@IWZ*/
+                        &idadata, &idalen, chanstat );
 
             /* Exit if fetch_idaw detected channel program check */
             if (prefetch->seq)
             {
                 prefetch->dataaddr[ps] = idadata;
-                prefetch->datalen[ps] = idalen;
+                prefetch->datalen[ps]  = idalen;
+
                 if (*chanstat != 0)
                 {
                     prefetch->chanstat[ps] = *chanstat;
@@ -3430,9 +3483,13 @@ do {                                                                   \
             /* Channel protection check if IDAW data location is
                fetch protected, or if location is store protected
                and command is READ, READ BACKWARD, or SENSE */
-            storkey = STORAGE_KEY(idadata, dev);
-            if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
-                && ((storkey & STORKEY_FETCH) || to_memory))
+            storkey = STORAGE_KEY( idadata, dev );
+
+            if (1
+                && ccwkey != 0
+                && (storkey & STORKEY_KEY) != ccwkey
+                && ((storkey & STORKEY_FETCH) || to_memory)
+            )
             {
                 set_chanstat(CSW_PROTC);
                 break;
@@ -3442,6 +3499,7 @@ do {                                                                   \
             if (idalen > idacount)
             {
                 idalen = idacount;
+
                 if (prefetch->seq)
                    prefetch->datalen[ps] = idacount;
             }
@@ -3452,14 +3510,15 @@ do {                                                                   \
             /*  p. 16-27, Channel-Data Check                 */
             if (readbackwards)
             {
-                iobufptr = iobuf + dev->curblkrem + idacount -
-                           idalen;
+                iobufptr = iobuf + dev->curblkrem + idacount - idalen;
+
                 if ((iobufptr + idalen) > (iobufend + 1) ||
                     (iobufptr + idalen) <= iobufstart)
                 {
                     *chanstat = CSW_CDC;
                     return;
                 }
+
                 if (iobufptr < iobufstart)
                 {
                     *chanstat = CSW_CDC;
@@ -3470,67 +3529,63 @@ do {                                                                   \
             }
             else if (iobuf < iobufstart || iobuf > iobufend)
             {
-                set_chanstat(CSW_CDC);
+                set_chanstat( CSW_CDC );
                 break;
             }
             else if ((iobuf + idalen) > (iobufend + 1))
             {
                 /* Reset length to copy to buffer */
                 idalen = iobufend - iobuf + 1;
+
                 if (prefetch->seq)
                 {
                     prefetch->datalen[ps] = idalen;
 
                     /* Get new prefetch entry for channel data
                        check */
-                    get_new_prefetch_entry(idawfmt, idawaddr);
+                    get_new_prefetch_entry( idawfmt, idawaddr );
+
                     if (*chanstat != 0)
                         break;
+
                     prefetch->dataaddr[ps] = idadata + idalen;
-                    prefetch->datalen[ps] = 1;
+                    prefetch->datalen[ps]  = 1;
                     prefetch->chanstat[ps] = *chanstat = CSW_CDC;
+
                     ps -= 1;
                 }
 
                 /* Set channel data check and permit copy to/from
                    end-of-buffer */
                 else
-                    set_chanstat(CSW_CDC);
+                    set_chanstat( CSW_CDC );
             }
 
             /* Copy to I/O buffer */
             if (idalen)
             {
                 /* Set the main storage reference and change bits */
-                STORAGE_KEY(idadata, dev) |=
-                    (to_memory ?
-                     (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
+                STORAGE_KEY( idadata, dev ) |=
+                    (to_memory ? (STORKEY_REF | STORKEY_CHANGE)
+                               : (STORKEY_REF));
 
                 /* Copy data between main storage and channel buffer */
                 if (readbackwards)
                 {
                     idadata = (idadata - idalen) + 1;
-                    memcpy_backwards (dev->mainstor + idadata,
-                                      iobuf + dev->curblkrem +
-                                        idacount - idalen,
-                                     idalen);
+                    memcpy_backwards( dev->mainstor + idadata,
+                                      iobuf + dev->curblkrem + idacount - idalen,
+                                      idalen );
 
                     /* Decrement buffer pointer for next IDAW*/
                     iobuf -= idalen;
-
                 }
                 else
                 {
                     if (to_iobuf)
-                    {
-                        memcpy (iobuf,
-                                dev->mainstor + idadata,
-                                idalen);
-                    }
+                        memcpy( iobuf, dev->mainstor + idadata, idalen );
                     else
-                        memcpy (dev->mainstor + idadata,
-                                iobuf,
-                                idalen);
+                        memcpy( dev->mainstor + idadata, iobuf, idalen );
 
                     /* Increment buffer pointer for next IDAW*/
                     iobuf += idalen;
@@ -3541,20 +3596,18 @@ do {                                                                   \
             }
 
             /* If not prefetch, display the IDAW if CCW tracing */
-            else if (dev->ccwtrace || dev->ccwstep)
-                display_idaw (dev, idawfmt, 0, idadata, idalen);
-
-            #if DEBUG_DUMP
-            if (dev->ccwtrace)
+            else if (CCW_TRACE_OR_STEP( dev ))
+                display_idaw( dev, idawfmt, 0, idadata, idalen );
+#if DEBUG_DUMP
+            if (CCW_TRACE_OR_STEP( dev ))
             {
                 if (to_memory)
-                    dump("iobuf:", iobuf-idalen, idalen);
-                dump_storage("Storage:", idadata, idalen);
+                    dump( "iobuf:", iobuf-idalen, idalen );
+                dump_storage( "Storage:", idadata, idalen );
                 if (to_iobuf)
-                    dump("iobuf:", iobuf-idalen, idalen);
+                    dump( "iobuf:", iobuf-idalen, idalen );
             }
-            #endif
-
+#endif
             /* Decrement remaining count, increment buffer pointer */
             idacount -= idalen;
 
@@ -3562,7 +3615,6 @@ do {                                                                   \
             idawaddr += idasize;
 
         } /* end for(idaseq) */
-
     }
     else                              /* Non-IDA data addressing */
     {
@@ -3573,54 +3625,67 @@ do {                                                                   \
 
         /* Channel protection check if any data is fetch protected,
            or if location is store protected and command is READ,
-           READ BACKWARD, or SENSE */
+           READ BACKWARD, or SENSE.
+        */
         startpage = addr;
         endpage = addr + (count - 1);
+
         for (page = startpage & STORAGE_KEY_PAGEMASK;
              page <= (endpage | STORAGE_KEY_BYTEMASK);
              page += STORAGE_KEY_PAGESIZE)
         {
             /* Channel program check if data is outside main storage */
-            if ( CHADDRCHK(page, dev) )
+            if (CHADDRCHK( page, dev ))
             {
                 if (prefetch->seq)
                 {
                     prefetch->chanstat[ps] = CSW_PROGC;
                     break;
                 }
+
                 *chanstat = CSW_PROGC;
+
                 if (readbackwards)
                     return;
+
                 break;
             }
 
-            storkey = STORAGE_KEY(page, dev);
-            if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
-                && ((storkey & STORKEY_FETCH) || to_memory))
+            storkey = STORAGE_KEY( page, dev );
+
+            if (1
+                && ccwkey != 0
+                && (storkey & STORKEY_KEY) != ccwkey
+                && ((storkey & STORKEY_FETCH) || to_memory)
+            )
             {
                 if (readbackwards)
                 {
-                    *residual = MAX(page, addr) - addr;
+                    *residual = MAX( page, addr ) - addr;
                     *chanstat = CSW_PROTC;
                     break;
                 }
 
                 /* Calculate residual */
-                *residual = count - (MAX(page, addr) - addr);
+                *residual = count - (MAX( page, addr ) - addr);
 
                 /* Handle prefetch */
                 if (prefetch->seq)
                 {
-                    prefetch->datalen[ps] = MAX(page, addr) - addr;
+                    prefetch->datalen[ps] = MAX( page, addr ) - addr;
+
                     if (*residual)
                     {
                         /* Split entry */
-                        get_new_prefetch_entry(PF_NO_IDAW, page);
+                        get_new_prefetch_entry( PF_NO_IDAW, page );
+
                         if (*chanstat != 0)
                             break;
+
                         prefetch->dataaddr[ps] = page;
                         prefetch->datalen[ps] = *residual;
                     }
+
                     prefetch->chanstat[ps] = CSW_PROTC;
                     break;
                 }
@@ -3632,7 +3697,7 @@ do {                                                                   \
         } /* end for(page) */
 
         /* Adjust local count for copy to main storage */
-        count = MIN(count, MAX(page, addr) - addr);
+        count = MIN( count, MAX( page, addr ) - addr );
 
         /* Count may be zero during prefetch operations */
         if (count)
@@ -3642,24 +3707,22 @@ do {                                                                   \
                  page <= (endpage | STORAGE_KEY_BYTEMASK);
                  page += STORAGE_KEY_PAGESIZE)
             {
-                STORAGE_KEY(page, dev) |=
-                    (to_memory ?
-                     (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
+                STORAGE_KEY( page, dev ) |=
+                    (to_memory ? (STORKEY_REF | STORKEY_CHANGE)
+                               : (STORKEY_REF));
             } /* end for(page) */
 
-            if (DEBUG_PREFETCH && dev->ccwtrace)
+#if DEBUG_PREFETCH
+            if (CCW_TRACE_OR_STEP( dev ))
             {
                 char msgbuf[133];
-                MSGBUF(msgbuf,
-                       "CCW %2.2X %2.2X %4.4X %8.8X "
-                       "to_memory=%d "
-                       "to_iobuf=%d "
-                       "readbackwards=%d",
-                       (U8)code, (U8)flags, (U16)count, (U32)addr,
-                       to_memory, to_iobuf, readbackwards);
-                WRMSG(HHC90000, "I", msgbuf);
-            }
 
+                MSGBUF( msgbuf,
+                    "CCW %2.2X %2.2X %4.4X %8.8X to_memory=%d to_iobuf=%d readbackwards=%d",
+                    (U8)code, (U8)flags, (U16)count, (U32)addr, to_memory, to_iobuf, readbackwards );
+                WRMSG( HHC90000, "I", msgbuf );
+            }
+#endif
             /* Copy data between main storage and channel buffer */
             if (readbackwards)
             {
@@ -3674,8 +3737,8 @@ do {                                                                   \
                     *chanstat = CSW_CDC;
                 else
                     /* read backward  - use END of buffer */
-                    memcpy_backwards(dev->mainstor + addr, iobufptr,
-                                     count);
+                    memcpy_backwards( dev->mainstor + addr,
+                        iobufptr, count );
             }
 
             /* Channel check if outside buffer                       */
@@ -3684,13 +3747,15 @@ do {                                                                   \
             else if (!count                           ||
                      (iobuf + count) > (iobufend + 1) ||
                      iobuf < iobufstart)
-                set_chanstat(CSW_CDC);
+                set_chanstat( CSW_CDC );
 
             /* Handle Write and Control transfer to I/O buffer */
             else if (to_iobuf)
             {
-                memcpy (iobuf, dev->mainstor + addr, count);
+                memcpy( iobuf, dev->mainstor + addr, count );
+
                 prefetch->pos += count;
+
                 if (prefetch->seq)
                     prefetch->datalen[ps] = count;
 
@@ -3698,29 +3763,27 @@ do {                                                                   \
 
             /* Handle Read transfer from I/O buffer */
             else
-            {
-                memcpy (dev->mainstor + addr, iobuf, count);
-            }
-            #if DEBUG_DUMP
-            if (dev->ccwtrace)
+                memcpy( dev->mainstor + addr, iobuf, count );
+
+#if DEBUG_DUMP
+            if (CCW_TRACE_OR_STEP( dev ))
             {
                 char msgbuf[133];
-                MSGBUF(msgbuf,
-                       "iobuf->%8.8X.%4.4X",
-                       addr, count);
-                WRMSG(HHC90000, "I", msgbuf);
-                MSGBUF(msgbuf,
-                       "addr=%8.8X "
-                       "count=%d residual=%d copy=%d",
-                       addr, count, *residual, count);
-                WRMSG(HHC90000, "I", msgbuf);
+
+                MSGBUF( msgbuf, "iobuf->%8.8X.%4.4X", addr, count );
+                WRMSG( HHC90000, "I", msgbuf );
+
+                MSGBUF( msgbuf, "addr=%8.8X count=%d residual=%d copy=%d",
+                    addr, count, *residual, count );
+                WRMSG( HHC90000, "I", msgbuf );
+
                 if (to_memory)
-                    dump("iobuf:", iobuf, count);
-                dump_storage("Storage:", addr, count);
+                    dump( "iobuf:", iobuf, count );
+                dump_storage( "Storage:", addr, count );
                 if (to_iobuf)
-                    dump("iobuf:", iobuf, count);
+                    dump( "iobuf:", iobuf, count );
             }
-            #endif
+#endif
         }
 
     } /* end if(!IDA) */
@@ -3791,7 +3854,7 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
             dev->scsw.unitstat |= unitstat |= CSW_ATTN;
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             schedule_ioq(NULL, dev);
-            if (dev->ccwtrace || dev->ccwstep)
+            if (CCW_TRACE_OR_STEP( dev ))
                 WRMSG (HHC01304, "I", SSID_TO_LCSS(dev->ssid),
                                       dev->devnum);
             rc = 0;
@@ -3804,8 +3867,9 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
         return (rc);
     }
 
-    if (dev->ccwtrace || dev->ccwstep)
-        WRMSG (HHC01305, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    if (CCW_TRACE_OR_STEP( dev ))
+        // "%1d:%04X CHAN: attention"
+        WRMSG( HHC01305, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
 
     /*****************************************************************/
     /* The release and obtain locks around OBTAIN_INTOCK have been   */
@@ -3929,8 +3993,9 @@ int     rc;                             /* Return code               */
         /* SSCH resulting in cc=2 thanks to this additional log msg. */
         /*                        Peter J. Jansen, 21-Jun-2016  @PJJ */
         /*************************************************************/
-        if( dev->ccwtrace || dev->ccwstep )                  /* @PJJ */
+        if (CCW_TRACE_OR_STEP( dev ))                        /* @PJJ */
         {                                                    /* @PJJ */
+            // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
             WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),   /* @PJJ */
             dev->devnum, dev->busy, dev->startpending );     /* @PJJ */
         }                                                    /* @PJJ */
@@ -4053,61 +4118,6 @@ static INLINE void* execute_ccw_chain_clear_busy_and_return
     return execute_ccw_chain_clear_busy_unlock_and_return( dev, pIOBUF, pInitial_IOBUF, pvRetVal );
 }
 #endif // EXECUTE_CCW_CHAIN_RETURN_FUNCS
-
-
-/*-------------------------------------------------------------------*/
-/* CCW Tracing helper macros                                         */
-/*-------------------------------------------------------------------*/
-#ifndef OSTAILOR_QUIET
-#define OSTAILOR_QUIET()            (!sysblk.pgminttr)
-#endif
-
-#ifndef CCW_TRACE_OR_STEP
-#define CCW_TRACE_OR_STEP( dev )    ((dev)->ccwtrace || (dev)->ccwstep)
-#endif
-
-#ifndef CCW_TRACING_ACTIVE
-#define CCW_TRACING_ACTIVE( dev, tracethis )    (CCW_TRACE_OR_STEP( dev ) \
-                                                    || ( tracethis ))
-#endif
-
-#ifndef SKIP_CH9UC
-#define SKIP_CH9UC( dev, chanstat, unitstat )                       \
-                                                                    \
-    (1                                                              \
-     && !CCW_TRACE_OR_STEP( dev )                                   \
-     && !CPU_STEPPING_OR_TRACING_ALL                                \
-     && sysblk.noch9oflow                                           \
-     && is_ch9oflow( dev, chanstat, unitstat )                      \
-    )
-#endif
-
-
-/*-------------------------------------------------------------------*/
-/* helper function to check if printer channel-9 overflow unit check */
-/*-------------------------------------------------------------------*/
-#ifndef IS_CH9OFLOW
-#define IS_CH9OFLOW
-static BYTE is_ch9oflow( DEVBLK* dev, BYTE chanstat, BYTE unitstat )
-{
-    static const BYTE unitck = (CSW_CE | CSW_DE | CSW_UC);
-
-    if (1
-        &&    0      == chanstat
-        &&  unitck   == unitstat
-        && SENSE_CH9 == dev->sense[0]
-        &&    0      == dev->sense[1]
-        && dev->hnd->query
-    )
-    {
-        char* devclass = NULL;
-        dev->hnd->query( NULL, &devclass, 0, NULL );
-        if (strcmp( devclass, "PRT" ) == 0)
-            return TRUE;
-    }
-    return FALSE;
-}
-#endif // IS_CH9OFLOW
 
 
 /*-------------------------------------------------------------------*/
@@ -5092,7 +5102,7 @@ prefetch:
                               iobuf->data,
                               &more, &unitstat, &residual);
             dev->iobuf.length = 0;
-            dev->iobuf.data = 0;
+            dev->iobuf.data   = 0;
 
             /* Check for Command Retry (suggested by Jim Pierson) */
             if ( --cmdretry && unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
@@ -5187,12 +5197,16 @@ prefetch:
             /* For READ, SENSE, and READ BACKWARD operations, copy data
                from channel buffer to main storage, unless SKIP is set
                */
-            else if (!dev->is_immed                  &&
-                     !skip_ccws                      &&
-                     !(flags & CCW_FLAGS_SKIP)       &&
-                     ((IS_CCW_READ(dev->code)     ||
-                       IS_CCW_SENSE(dev->code)    ||
-                       IS_CCW_RDBACK(dev->code))))
+            else if (1
+                && !dev->is_immed
+                && !skip_ccws
+                && !(flags & CCW_FLAGS_SKIP)
+                && (0
+                    || IS_CCW_READ(   dev->code )
+                    || IS_CCW_SENSE(  dev->code )
+                    || IS_CCW_RDBACK( dev->code )
+                   )
+            )
             {
                 /* Copy data from I/O buffer to main storage */
                 ARCH_DEP(copy_iobuf) (dev, dev->code, flags, addr,
@@ -5244,7 +5258,6 @@ prefetch:
                 chanstat |= CSW_IL;
         }
 
-
 breakchain:
 
         if (unlikely((chanstat & (CSW_PROGC | CSW_PROTC | CSW_CDC |
@@ -5290,7 +5303,7 @@ breakchain:
         /* Trace the results of CCW execution */
         if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
         {
-            #if DEBUG_PREFETCH
+#if DEBUG_PREFETCH
                 if (!prefetch.seq)
                 {
                     char msgbuf[133];
@@ -5305,7 +5318,7 @@ breakchain:
                     // "DBG: %s"
                     WRMSG(HHC90000, "I", msgbuf);
                 }
-            #endif
+#endif
 
             /* Display prefetch data */
             if (prefetch.seq)
