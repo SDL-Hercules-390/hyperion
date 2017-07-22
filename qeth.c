@@ -4226,17 +4226,16 @@ U32 num;                                /* Number of bytes to move   */
         return;
     }
 
-//  /* Display various information, maybe */
-//  if (grp->debugmask & DBGQETHCCW)
-//  {
-//      // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
-//      WRMSG(HHC03992, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-//          code, flags, count, chained, prevcode, ccwseq );
-//  }
+    /* Display various information, maybe */
+    if (grp->debugmask & DBGQETHCCW)
+    {
+        // "%1d:%04X %s: Code %02X: Flags %02X: Chained %02X: Count %08X: PrevCode %02X: CCWseq %d"
+        WRMSG( HHC03992, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->typname, code, flags, chained, count, prevcode, ccwseq );
+    }
 
     /* Process depending on CCW opcode */
     switch (code) {
-
 
     case 0x01:
     /*---------------------------------------------------------------*/
@@ -4910,13 +4909,13 @@ U32 num;                                /* Number of bytes to move   */
 
     } /* end switch(code) */
 
-//  /* Display various information, maybe */
-//  if (grp->debugmask & DBGQETHCCW)
-//  {
-//      // HHC03993 "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
-//      WRMSG(HHC03993, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-//          *unitstat, *residual, *more );
-//  }
+    /* Display various information, maybe */
+    if (grp->debugmask & DBGQETHCCW)
+    {
+        // "%1d:%04X %s: More %02X: Status %02X: Residual %08X"
+        WRMSG( HHC03993, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->typname, *more, *unitstat, *residual );
+    }
 
 } /* end function qeth_execute_ccw */
 
