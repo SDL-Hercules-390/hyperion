@@ -313,21 +313,21 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len, buflen-len-1, "%s", "\n");
+                len+=snprintf(buf+len, buflen-len, "%s", "\n");
             }
-            len+=snprintf(buf+len, buflen-len-1, "%s", msghdr);
+            len+=snprintf(buf+len, buflen-len, "%s", msghdr);
             if(numcpus>1)
             {
-                len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%4)
         {
-            len+=snprintf(buf+len,buflen-len-1,"%s", " ");
+            len+=snprintf(buf+len,buflen-len,"%s", " ");
         }
-        len+=snprintf(buf+len,buflen-len-1,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
     }
-    len+=snprintf(buf+len,buflen-len-1,"%s","\n");
+    len+=snprintf(buf+len,buflen-len,"%s","\n");
     return(len);
 }
 
@@ -352,21 +352,21 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len,buflen-len-1,"%s", "\n");
+                len+=snprintf(buf+len,buflen-len,"%s", "\n");
             }
-            len+=snprintf(buf+len,buflen-len-1, "%s", msghdr);
+            len+=snprintf(buf+len,buflen-len, "%s", msghdr);
             if(numcpus>1)
             {
-                len+=snprintf(buf+len,buflen-len-1,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
             }
         }
         if(i%rpl)
         {
-            len+=snprintf(buf+len,buflen-len-1,"%s"," ");
+            len+=snprintf(buf+len,buflen-len,"%s"," ");
         }
-        len+=snprintf(buf+len,buflen-len-1,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
+        len+=snprintf(buf+len,buflen-len,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
     }
-    len+=snprintf(buf+len,buflen-len-1,"%s","\n");
+    len+=snprintf(buf+len,buflen-len,"%s","\n");
     return(len);
 }
 
@@ -388,7 +388,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     {
         len += display_gregs (regs, buf + len, buflen - len - 1, "HHC02269I " );
         if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len - 1, "\n");
+            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display control registers if appropriate */
@@ -396,7 +396,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     {
         len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
         if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len - 1, "\n");
+            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display access registers if appropriate */
@@ -404,7 +404,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     {
         len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
         if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len - 1, "\n");
+            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     if ((regs->CR(0) & CR0_AFP) && (               /* Display floating point control register if AFP enabled */
@@ -427,9 +427,9 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
                                 || (opcode == 0xED && (inst[1] >= 0xA8 && inst[1] <= 0xAF)))   /* RXE DFP conversions  */
         )
     {
-        len += snprintf(buf + len, buflen - len - 1, MSG(HHC02276,"I", regs->fpc));
+        len += snprintf(buf + len, buflen - len, MSG(HHC02276,"I", regs->fpc));
         if (sysblk.showregsfirst)
-             len += snprintf(buf + len, buflen - len - 1, "\n");
+             len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display floating-point registers if appropriate */
@@ -448,7 +448,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     {
         len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
         if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len - 1, "\n");
+            len += snprintf(buf + len, buflen - len, "\n");
     }
     return(len);
 }
@@ -553,7 +553,7 @@ char cpustr[32] = "";
         MSGBUF(cpustr, "%s", hdr);
 
     if(regs->CR(0) & CR0_AFP)
-        return(snprintf(buf,buflen-1,
+        return(snprintf(buf,buflen,
             "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
             "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
             "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
@@ -572,7 +572,7 @@ char cpustr[32] = "";
             ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
         ));
     else
-        return(snprintf(buf,buflen-1,
+        return(snprintf(buf,buflen,
             "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
             "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
             ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
@@ -595,13 +595,13 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
 
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s%1d:%04X D/T%04X\n",
         hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
     if (ARCH_370 == sysblk.arch_mode)
     {
-        len+=snprintf(buf+len,buflen-len-1,
+        len+=snprintf(buf+len,buflen-len,
             "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
             "%s         US:%2.2X  CS:%2.2X Count:%2.2X%2.2X       (Key) Subchannel key          %1.1X\n"
             "%s                                       (S)   Suspend control         %1.1X\n"
@@ -617,7 +617,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
             hdr, (dev->scsw.flag0 & SCSW0_CC));
     }
 
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s  Subchannel Number[%04X]\n"
         "%s    Path Management Control Word (PMCW)\n"
         "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
@@ -643,7 +643,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         hdr,dev->pmcw.zone, dev->pmcw.flag25,
         dev->pmcw.flag26, dev->pmcw.flag27);
 
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s  Subchannel Status Word (SCSW)\n"
         "%s    Flags: %2.2X%2.2X  Subchan Ctl: %2.2X%2.2X     (FC)  Function Control\n"
         "%s      CCW: %2.2X%2.2X%2.2X%2.2X                          Start                   %1.1X\n"
@@ -701,7 +701,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         hdr, (dev->scsw.flag2 & SCSW2_Q)        >> 7);
 
     u.status = (U8)dev->scsw.unitstat;
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s    %s %s%s%s%s%s%s%s%s%s\n",
         hdr, status_type[(sysblk.arch_mode == ARCH_370)],
         u.status == 0 ? "is Normal" : "",
@@ -715,7 +715,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         u.b.b7 ? "UE " : "");
 
     u.status = (U8)dev->scsw.chanstat;
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s    %s %s%s%s%s%s%s%s%s%s\n",
         hdr, status_type[2],
         u.status == 0 ? "is Normal" : "",
@@ -741,7 +741,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
   #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy,
 #endif // defined( OPTION_SHARED_DEVICES )
 
-    len+=snprintf(buf+len,buflen-len-1,
+    len+=snprintf(buf+len,buflen-len,
         "%s  DEVBLK Status\n"
         BUSYSHAREABLELINE_PATTERN
         "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"
@@ -1004,9 +1004,8 @@ const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
         BYTE    erc     =  (BYTE) ( ( crw & CRW_ERC_MASK   ) >> 16 );
         BYTE    rsc     =  (BYTE) ( ( crw & CRW_RSC_MASK   ) >> 24 );
         U16     rsid    =  (U16)    ( crw & CRW_RSID_MASK  );
-        size_t  n;
 
-        n = (size_t)  snprintf( buf, bufsz - 1,
+        snprintf( buf, bufsz,
 
             "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%4.4X Flags:%s%s%s%s%s%s%s"
 
@@ -1027,9 +1026,6 @@ const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
             , ( flags & CRW_AR         ) ? "AR,"         : ""
             , ( flags & 0x00400000     ) ? "0x00400000," : ""
         );
-
-        if (n < bufsz)
-            *(buf + n) = 0;             // (null terminate)
 
         rtrim( buf, "," );              // (remove trailing comma)
     }
@@ -1101,7 +1097,6 @@ const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz )
 {
-size_t n;
 static const char* sa[] =
 {
     "00",
@@ -1124,7 +1119,7 @@ static const char* tc[] =
     if (bufsz <= 1 || !esw)
         return buf;
 
-    n = (size_t) snprintf( buf, bufsz - 1,
+    snprintf( buf, bufsz,
 
         "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%2.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
 
@@ -1158,9 +1153,6 @@ static const char* tc[] =
         , ( esw->scl3 & SCL3_SC )
     );
 
-    if (n < bufsz)
-        *(buf + n) = 0;     // (null terminate)
-
     return buf;
 }
 
@@ -1170,8 +1162,6 @@ static const char* tc[] =
 /*-------------------------------------------------------------------*/
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz )
 {
-size_t n;
-
     if (!buf)
         return NULL;
     if (bufsz)
@@ -1179,7 +1169,7 @@ size_t n;
     if (bufsz <= 1 || !esw)
         return buf;
 
-    n = (size_t) snprintf( buf, bufsz - 1,
+    snprintf( buf, bufsz,
 
         "Flags:%c%c%c%c%c%c%c%c %c%c SCNT:%d"
 
@@ -1198,9 +1188,6 @@ size_t n;
         , ( esw->erw1 & ERW1_SCNT )
     );
 
-    if (n < bufsz)
-        *(buf + n) = 0;     // (null terminate)
-
     return buf;
 }
 
@@ -1213,8 +1200,6 @@ const char* FormatESW( ESW* esw, char* buf, size_t bufsz )
 char scl[64];                               /* Subchannel Logout     */
 char erw[64];                               /* Extended-Report Word  */
 
-size_t  n;
-
     if (!buf)
         return NULL;
     if (bufsz)
@@ -1222,16 +1207,13 @@ size_t  n;
     if (bufsz <= 1 || !esw)
         return buf;
 
-    n = (size_t) snprintf( buf, bufsz - 1,
+    snprintf( buf, bufsz,
 
         "SCL = %s, ERW = %s"
 
         , FormatSCL( esw, scl, _countof( scl ))
         , FormatERW( esw, erw, _countof( erw ))
     );
-
-    if (n < bufsz)
-        *(buf + n) = 0;     // (null terminate)
 
     return buf;
 }
@@ -1252,8 +1234,6 @@ sdcchar(BYTE c)
 
 const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
 {
-    size_t n;
-
     if (!buf)
         return NULL;
     if (bufsz)
@@ -1263,7 +1243,7 @@ const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
 
     #define SDCCHAR(fld, n) sdcchar(sdc->fld[n])
 
-    n = (size_t) snprintf( buf, bufsz-1,
+    snprintf( buf, bufsz,
 
         "SDC: type/model:%c%c%c%c%c%c-%c%c%c mfg:%c%c%c plant:%c%c seq/serial:%c%c%c%c%c%c%c%c%c%c%c%c\n"
 
@@ -1274,9 +1254,6 @@ const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
         , SDCCHAR(serial,0),SDCCHAR(serial,1),SDCCHAR(serial,2),SDCCHAR(serial,3),SDCCHAR(serial,4),SDCCHAR(serial,5)
         , SDCCHAR(serial,6),SDCCHAR(serial,7),SDCCHAR(serial,8),SDCCHAR(serial,9),SDCCHAR(serial,10),SDCCHAR(serial,11)
     );
-
-    if (n < bufsz)
-        buf[n] = 0;
 
     return buf;
 }
@@ -1296,7 +1273,6 @@ static const char* NED_NEQ_type[] =
 /*-------------------------------------------------------------------*/
 const char* FormatNED( NED* ned, char* buf, size_t bufsz )
 {
-    size_t  n;
     const char* typ;
     char bad_typ[4];
     char sdc_info[256];
@@ -1329,7 +1305,7 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
         typ = ned_type[ ned->type ];
     else
     {
-        snprintf( bad_typ, sizeof(bad_typ)-1, "%u", ned->type );
+        snprintf( bad_typ, sizeof(bad_typ), "%u", ned->type );
         bad_typ[3] = 0;
         typ = bad_typ;
     }
@@ -1344,12 +1320,12 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
             cls = dev_class[ ned->cls ];
         else
         {
-            snprintf( bad_class, sizeof(bad_class)-1, "%u", ned->cls );
+            snprintf( bad_class, sizeof(bad_class), "%u", ned->cls );
             bad_class[3] = 0;
             cls = bad_class;
         }
 
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
 
@@ -1365,7 +1341,7 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
     }
     else
     {
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "NED:%s%styp:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
 
@@ -1379,9 +1355,6 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
         );
     }
 
-    if (n < bufsz)
-        buf[n] = 0;
-
     return buf;
 }
 
@@ -1391,7 +1364,6 @@ const char* FormatNED( NED* ned, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
 {
-    size_t  n;
     BYTE* byte = (BYTE*) neq;
     U16 iid;
 
@@ -1404,7 +1376,7 @@ const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
 
     iid = fetch_hw( &neq->iid );
 
-    n = (size_t) snprintf( buf, bufsz-1,
+    snprintf( buf, bufsz,
 
         "NEQ: typ:%s IID:%02X%02X DDTO:%u\n"
         "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
@@ -1420,9 +1392,6 @@ const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
         , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
         , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
     );
-
-    if (n < bufsz)
-        buf[n] = 0;
 
     return buf;
 }
@@ -1451,7 +1420,6 @@ static void FormatBytes( BYTE* data, int len, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 {
-    size_t  n;
     char temp[256];
 
     if (!buf)
@@ -1484,9 +1452,7 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 
         case FIELD_IS_UNUSED:
 
-            n = (size_t) snprintf( temp, sizeof(temp)-1, "n/a\n" );
-            if (n < sizeof(temp))
-                temp[n] = 0;
+            snprintf( temp, sizeof(temp), "n/a\n" );
             break;
         }
 
@@ -1504,7 +1470,6 @@ DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatND( ND* nd, char* buf, size_t bufsz )
 {
-    size_t  n;
     const char* val;
     const char* cls;
     const char* by3;
@@ -1563,11 +1528,11 @@ const char* FormatND( ND* nd, char* buf, size_t bufsz )
         }
         if (!cls)
         {
-            snprintf( bad_cls, sizeof(bad_cls)-1, "%u", nd->cls );
+            snprintf( bad_cls, sizeof(bad_cls), "%u", nd->cls );
             bad_cls[3] = 0;
             cls = bad_cls;
         }
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "ND:  val:%s typ:%s cls:%s %s:%02X tag:%02X%02X\n     %s"
 
@@ -1582,18 +1547,15 @@ const char* FormatND( ND* nd, char* buf, size_t bufsz )
 
     case ND_VAL_INVALID:
 
-        n = (size_t) snprintf( buf, bufsz-1, "ND:  val:INVALID\n" );
+        snprintf( buf, bufsz, "ND:  val:INVALID\n" );
         break;
 
     default:
 
-        n = (size_t) snprintf( buf, bufsz-1, "ND:  val:%u (invalid)\n",
+        snprintf( buf, bufsz, "ND:  val:%u (invalid)\n",
             (int)(nd->flags >> 5) );
         break;
     }
-
-    if (n < bufsz)
-        buf[n] = 0;
 
     return buf;
 }
@@ -1604,7 +1566,6 @@ const char* FormatND( ND* nd, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
 {
-    size_t  n;
     BYTE* byte = (BYTE*) nq;
     static const char* type[] =
     {
@@ -1618,7 +1579,7 @@ const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
     if (bufsz <= 1 || !nq)
         return buf;
 
-    n = (size_t) snprintf( buf, bufsz-1,
+    snprintf( buf, bufsz,
 
         "NQ:  %02X%02X%02X%02X %02X%02X%02X%02X  (typ:%s)\n"
         "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
@@ -1631,9 +1592,6 @@ const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
         , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
         , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
     );
-
-    if (n < bufsz)
-        buf[n] = 0;
 
     return buf;
 }
@@ -1693,7 +1651,6 @@ DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
 {
-    size_t  n;
     static const char* type[] =
     {
         "RCD", "SII", "RNI", "3  ", "4  ", "5  ", "6  ", "7  ",
@@ -1709,7 +1666,7 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
 
     if ((ciw[0] & 0xC0) == 0x40)
     {
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "CIW: %02X%02X%02X%02X  typ:%s op:%02X len:%u\n"
 
@@ -1721,7 +1678,7 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
     }
     else
     {
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "CIW: %02X%02X%02X%02X  not a CIW\n"
 
@@ -1732,9 +1689,6 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
         );
     }
 
-    if (n < bufsz)
-        buf[n] = 0;
-
     return buf;
 }
 
@@ -1744,7 +1698,6 @@ const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 {
-    size_t  n;
     char temp[128];
 
     if (!buf)
@@ -1758,7 +1711,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
         FormatBytes( ciw, len, buf, bufsz );
     else
     {
-        n = (size_t) snprintf( buf, bufsz-1,
+        snprintf( buf, bufsz,
 
             "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
 
@@ -1767,9 +1720,6 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
             , ciw[4], ciw[5], ciw[6]
             , ciw[7]
         );
-
-        if (n < bufsz)
-            buf[n] = 0;
 
         ciw += 8;
         len -= 8;
@@ -1865,10 +1815,10 @@ BYTE    c;                              /* Character work area       */
         ARCH_DEP(store_int_timer)(regs);
 #endif
 
-    n = snprintf(buf, bufl-1, "%s", hdr);
+    n = snprintf(buf, bufl, "%s", hdr);
     if (draflag)
     {
-        n += snprintf (buf+n, bufl-n-1, "R:"F_RADR":", raddr);
+        n += snprintf (buf+n, bufl-n, "R:"F_RADR":", raddr);
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
@@ -1876,23 +1826,23 @@ BYTE    c;                              /* Character work area       */
     {
         if (regs->hostregs->mainlim == 0 || aaddr > regs->hostregs->mainlim)
         {
-            n += snprintf (buf+n, bufl-n-1,
+            n += snprintf (buf+n, bufl-n,
                 "A:"F_RADR" Guest real address is not valid", aaddr);
             return n;
         }
         else
         {
-            n += snprintf (buf+n, bufl-n-1, "A:"F_RADR":", aaddr);
+            n += snprintf (buf+n, bufl-n, "A:"F_RADR":", aaddr);
         }
     }
     else
     if (regs->mainlim == 0 || aaddr > regs->mainlim)
     {
-        n += snprintf (buf+n, bufl-n-1, "%s", " Real address is not valid");
+        n += snprintf (buf+n, bufl-n, "%s", " Real address is not valid");
         return n;
     }
 
-    n += snprintf (buf+n, bufl-n-1, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
+    n += snprintf (buf+n, bufl-n, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
 
     memset (hbuf, SPACE, sizeof(hbuf));
     memset (cbuf, SPACE, sizeof(cbuf));
@@ -1908,7 +1858,7 @@ BYTE    c;                              /* Character work area       */
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
     } /* end for(i) */
 
-    n += snprintf (buf+n, bufl-n-1, "%36.36s %16.16s", hbuf, cbuf);
+    n += snprintf (buf+n, bufl-n, "%36.36s %16.16s", hbuf, cbuf);
     return n;
 
 } /* end function display_real */
@@ -1925,14 +1875,14 @@ RADR    raddr;                          /* Real address              */
 int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 
-    n = snprintf (buf, bufl-1, "%s%c:"F_VADR":", hdr,
+    n = snprintf (buf, bufl, "%s%c:"F_VADR":", hdr,
                  ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
     *xcode = ARCH_DEP(virt_to_real) (&raddr, &stid,
                                      vaddr, ar, regs, acctype);
     if (*xcode == 0)
         n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
     else
-        n += snprintf (buf+n,bufl-n-1," Translation exception %4.4hX",*xcode);
+        n += snprintf (buf+n,bufl-n," Translation exception %4.4hX",*xcode);
 
     return n;
 
@@ -2159,14 +2109,14 @@ char    buf[512];                       /* MSGBUF work buffer        */
 
         if(ilc > 2)
         {
-            len += snprintf(buf + len, sizeof(buf)-len-1, "%2.2X%2.2X", inst[2], inst[3]);
+            len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X", inst[2], inst[3]);
             if(ilc > 4)
-                len += snprintf(buf + len, sizeof(buf)-len-1, "%2.2X%2.2X ", inst[4], inst[5]);
+                len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X ", inst[4], inst[5]);
             else
-                len += snprintf(buf + len, sizeof(buf)-len-1, "     ");
+                len += snprintf(buf + len, sizeof(buf)-len, "     ");
         }
         else
-            len += snprintf(buf + len, sizeof(buf)-len-1, "         ");
+            len += snprintf(buf + len, sizeof(buf)-len, "         ");
 
         /* Disassemble the instruction and display the results */
         DISASM_INSTRUCTION(inst, buf + len);
@@ -2558,7 +2508,7 @@ char    regs_msg_buf[4*512] = {0};
 
   #if defined(_FEATURE_SIE)
     if(SIE_MODE (regs))
-        n += snprintf (buf + n, sizeof(buf)-n-1, "SIE: ");
+        n += snprintf (buf + n, sizeof(buf)-n, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
     /* Display the PSW */
@@ -2566,15 +2516,15 @@ char    regs_msg_buf[4*512] = {0};
     copy_psw (regs, qword);
 
     if ( sysblk.cpus > 1 )
-        n += snprintf (buf + n, sizeof(buf)-n-1, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+        n += snprintf (buf + n, sizeof(buf)-n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
 
-    n += snprintf (buf + n, sizeof(buf)-n-1,
+    n += snprintf (buf + n, sizeof(buf)-n,
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
 
   #if defined(FEATURE_ESAME)
-    n += snprintf (buf + n, sizeof(buf)-n-1,
+    n += snprintf (buf + n, sizeof(buf)-n,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
@@ -2602,10 +2552,10 @@ char    regs_msg_buf[4*512] = {0};
     ilc = ILC(opcode);
 
     /* Format instruction line */
-    n += snprintf (buf + n, sizeof(buf)-n-1, "INST=%2.2X%2.2X", inst[0], inst[1]);
-    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[2], inst[3]);
-    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n-1, "%2.2X%2.2X", inst[4], inst[5]);
-    n += snprintf (buf + n, sizeof(buf)-n-1, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
+    n += snprintf (buf + n, sizeof(buf)-n, "INST=%2.2X%2.2X", inst[0], inst[1]);
+    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[2], inst[3]);
+    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[4], inst[5]);
+    n += snprintf (buf + n, sizeof(buf)-n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
     n += DISASM_INSTRUCTION(inst, buf + n);
     MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
@@ -2710,11 +2660,11 @@ char    regs_msg_buf[4*512] = {0};
 
   #if defined(_FEATURE_SIE)
         if(SIE_MODE (regs))
-            n += snprintf (buf2 + n, sizeof(buf2)-n-1, "SIE: ");
+            n += snprintf (buf2 + n, sizeof(buf2)-n, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
         if (sysblk.cpus > 1)
-            n += snprintf(buf2 + n, sizeof(buf2)-n-1, "%s%02X: ",
+            n += snprintf(buf2 + n, sizeof(buf2)-n, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
 
         if(REAL_MODE(&regs->psw))
@@ -2741,11 +2691,11 @@ char    regs_msg_buf[4*512] = {0};
 
   #if defined(_FEATURE_SIE)
     if(SIE_MODE (regs))
-        n += snprintf (buf2 + n, sizeof(buf2)-n-1, "SIE: ");
+        n += snprintf (buf2 + n, sizeof(buf2)-n, "SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
         if (sysblk.cpus > 1)
-            n += snprintf(buf2 + n, sizeof(buf2)-n-1, "%s%02X: ",
+            n += snprintf(buf2 + n, sizeof(buf2)-n, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
         if (0
             || (REAL_MODE(&regs->psw)
