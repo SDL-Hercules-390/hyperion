@@ -395,7 +395,7 @@ static void cardrdr_query_device (DEVBLK *dev, char **devclass,
 {
     BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "%s%s%s%s%s%s%s%s IO[%"PRIu64"]",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s IO[%"PRIu64"]",
         ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),
         (dev->bs ?                    " sockdev"   : ""),
         (dev->multifile ?             " multifile" : ""),

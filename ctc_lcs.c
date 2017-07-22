@@ -871,7 +871,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen-1, "LCS Port %2.2X %s%s (%s)%s IO[%"PRIu64"]",
+    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s IO[%"PRIu64"]",
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],
@@ -1580,7 +1580,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
         memcpy( pPortMAC, pIFaceMAC, IFHWADDRLEN );
 
-        snprintf(pLCSPORT->szMACAddress, sizeof(pLCSPORT->szMACAddress)-1,
+        snprintf(pLCSPORT->szMACAddress, sizeof(pLCSPORT->szMACAddress),
             "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X", *(pPortMAC+0), *(pPortMAC+1),
             *(pPortMAC+2), *(pPortMAC+3), *(pPortMAC+4), *(pPortMAC+5));
     }

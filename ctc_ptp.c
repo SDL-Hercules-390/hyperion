@@ -923,7 +923,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 
     if (pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec)
     {
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%"PRIu64"]",
+        snprintf( pBuffer, iBufLen, "%s %s/%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pGuestIP4,
                   pDriveIP4,
@@ -936,7 +936,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     else if (pPTPBLK->fIPv4Spec)
     {
 #endif /* defined(ENABLE_IPV6) */
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
+        snprintf( pBuffer, iBufLen, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pGuestIP4,
                   pDriveIP4,
@@ -947,7 +947,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     }
     else
     {
-        snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
+        snprintf( pBuffer, iBufLen, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
                   pGuestIP6,
                   pDriveIP6,
@@ -3483,7 +3483,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
           }
           pfx.bit >>= 1;
         }
-        snprintf( pPTPBLK->szDrivePfxSiz4, sizeof(pPTPBLK->szDrivePfxSiz4)-1, "%d", pfx.size );
+        snprintf( pPTPBLK->szDrivePfxSiz4, sizeof(pPTPBLK->szDrivePfxSiz4), "%d", pfx.size );
         hinet_ntop( AF_INET, &mask4, pPTPBLK->szNetMask, sizeof(pPTPBLK->szNetMask) );
         if (have_guest4) {
           hinet_ntop( AF_INET, &guest4, pPTPBLK->szGuestIPAddr4, sizeof(pPTPBLK->szGuestIPAddr4) );
@@ -3530,7 +3530,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
             }
           }
         }
-        snprintf( pPTPBLK->szDrivePfxSiz6, sizeof(pPTPBLK->szDrivePfxSiz6)-1, "%d", pfx.size );
+        snprintf( pPTPBLK->szDrivePfxSiz6, sizeof(pPTPBLK->szDrivePfxSiz6), "%d", pfx.size );
         if (have_adll6 && have_mall6) {
           /* Setup drive IPv6 link local address */
           hinet_ntop( AF_INET6, &adll6, pPTPBLK->szDriveLLAddr6, sizeof(pPTPBLK->szDriveLLAddr6) );
@@ -3557,7 +3557,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
               }
             }
           }
-          snprintf( pPTPBLK->szDriveLLxSiz6, sizeof(pPTPBLK->szDriveLLxSiz6)-1, "%d", pfx.size );
+          snprintf( pPTPBLK->szDriveLLxSiz6, sizeof(pPTPBLK->szDriveLLxSiz6), "%d", pfx.size );
         } else {
           // Create a Driver Link Local address using pseudo-random numbers.
           addr6.s6_addr[0] = 0xFE;
@@ -3610,7 +3610,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
     }
 
     pPTPBLK->iMTU = hifr.hifr_mtu;
-    snprintf( pPTPBLK->szMTU, sizeof(pPTPBLK->szMTU)-1, "%d", hifr.hifr_mtu );
+    snprintf( pPTPBLK->szMTU, sizeof(pPTPBLK->szMTU), "%d", hifr.hifr_mtu );
 
 //  // HHC03953 "%1d:%04X PTP: IPv4: Drive %s/%s (%s): Guest %s"
 //  WRMSG(HHC03953, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,

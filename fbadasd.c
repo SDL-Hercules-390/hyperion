@@ -332,14 +332,14 @@ void fbadasd_query_device (DEVBLK *dev, char **devclass,
 
     if (!cckd)
     {
-        snprintf( buffer, buflen-1, "%s [%"PRId64",%d] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s [%"PRId64",%d] IO[%"PRIu64"]",
                   dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
-        snprintf( buffer, buflen-1, "%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
                   dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,

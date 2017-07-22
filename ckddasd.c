@@ -677,7 +677,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
     {
         if ( dev->ckdnumfd > 1)
         {
-            snprintf( buffer, buflen-1, "%s [%d cyls] [%d segs] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s [%d cyls] [%d segs] IO[%"PRIu64"]",
                       dev->filename,
                       dev->ckdcyls,
                       dev->ckdnumfd,
@@ -685,7 +685,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
         }
         else
         {
-            snprintf( buffer, buflen-1, "%s [%d cyls] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s [%d cyls] IO[%"PRIu64"]",
                       dev->filename,
                       dev->ckdcyls,
                       dev->excps );
@@ -693,7 +693,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
     }
     else
     {
-        snprintf( buffer, buflen-1, "%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
                   dev->filename,
                   dev->ckdcyls,
                   cckd->sfn,

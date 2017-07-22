@@ -179,7 +179,7 @@ static void cardpch_query_device (DEVBLK *dev, char **devclass,
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, devclass, buflen, buffer );
 
-    snprintf (buffer, buflen-1, "%s%s%s%s%s IO[%"PRIu64"]",
+    snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
                 dev->filename,
                 (dev->ascii                ? " ascii"     : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf"      : ""),

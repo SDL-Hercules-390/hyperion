@@ -1982,7 +1982,7 @@ int     arch_mode;                        /* architecture mode       */
     if( arch_mode != ARCH_900 )
     {
         copy_psw (regs, qword);
-        return(snprintf(buf, buflen-1,
+        return(snprintf(buf, buflen,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]));
@@ -1990,7 +1990,7 @@ int     arch_mode;                        /* architecture mode       */
     else
     {
         copy_psw (regs, qword);
-        return(snprintf(buf, buflen-1,
+        return(snprintf(buf, buflen,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 qword[0], qword[1], qword[2], qword[3],

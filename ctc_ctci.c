@@ -655,7 +655,7 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
     else
        pDriveIP = "-";
 
-    snprintf( pBuffer, iBufLen-1, "CTCI %s/%s (%s)%s IO[%"PRIu64"]",
+    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s IO[%"PRIu64"]",
               pGuestIP,
               pDriveIP,
               pCTCBLK->szTUNIfName,

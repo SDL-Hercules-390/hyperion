@@ -754,7 +754,7 @@ char                    group[16];      /* Console group             */
     /* Build connection message for client */
 
     if ( cons_hostinfo.num_procs > 1 )
-        snprintf( num_procs, sizeof(num_procs)-1, "MP=%d", cons_hostinfo.num_procs );
+        snprintf( num_procs, sizeof(num_procs), "MP=%d", cons_hostinfo.num_procs );
     else
         STRLCPY( num_procs, "UP" );
 
@@ -771,12 +771,12 @@ char                    group[16];      /* Console group             */
         ,cons_hostinfo.machine
         ,num_procs
     );
-    snprintf (conmsg, sizeof(conmsg)-1,
+    snprintf (conmsg, sizeof(conmsg),
                 "Hercules version %s built on %s %s",
                 VERSION, __DATE__, __TIME__);
 
     {
-        snprintf (devmsg, sizeof(devmsg)-1, "Connected to device %4.4X",
+        snprintf (devmsg, sizeof(devmsg), "Connected to device %4.4X",
                   0);
     }
 
@@ -785,7 +785,7 @@ char                    group[16];      /* Console group             */
     /* Send connection message to client */
     if (class != 'K')
     {
-        len = snprintf (buf, sizeof(buf)-1,
+        len = snprintf (buf, sizeof(buf),
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s"
                     "\x11\xC2\x60\x1D\x60%s",
@@ -813,7 +813,7 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        len = snprintf (buf, sizeof(buf)-1, "%s\r\n%s\r\n%s\r\n",
+        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
     }
 
@@ -1473,7 +1473,7 @@ static void commadpt_query_device (DEVBLK *dev, char **class,
 {
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
 
-    snprintf(buffer,buflen-1,"Read count=%d, Write count=%d IO[%"PRIu64"]",
+    snprintf(buffer,buflen,"Read count=%d, Write count=%d IO[%"PRIu64"]",
         dev->commadpt->read_ccw_count, dev->commadpt->write_ccw_count, dev->excps );
 }
 

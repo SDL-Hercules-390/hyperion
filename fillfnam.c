@@ -202,11 +202,11 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
          in original filename. it is because of scandir function, which
          needs path portion */
       if (tmp != NULL)
-         snprintf(fullfilename, bl-1, "%s%s", path, buff);
+         snprintf(fullfilename, bl, "%s%s", path, buff);
       else
-         snprintf(fullfilename, bl-1, "%s", buff);
+         snprintf(fullfilename, bl, "%s", buff);
       /* construct command line */
-      snprintf(result, sizeof(result)-1, "%s%s%s", part1, fullfilename, part3);
+      snprintf(result, sizeof(result), "%s%s%s", part1, fullfilename, part3);
       /* move cursor */
       *(cmdoffset) = (int)(strlen(part1) + strlen(fullfilename));
       strlcpy(cmdlinefull, result, cmdlinelen);
