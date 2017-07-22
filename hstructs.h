@@ -1172,6 +1172,7 @@ struct DEVBLK {                         /* Device configuration block*/
                 dasdcopy:1,             /* 1=Called by dasdcopy      */
                 quiet:1,                /* 1=suppress open messages  */
                 oslinux:1,              /* 1=Linux                   */
+                orbtrace:1,             /* 1=ORB trace               */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1,             /* 1=Channel will merge data

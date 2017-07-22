@@ -3985,6 +3985,14 @@ int     rc;                             /* Return code               */
         memset(&dev->orb.csspriority, 0, sizeof(ORB) - 12);
     }
 
+    if (dev->orbtrace)
+    {
+        char msgbuf[128] = {0};
+        FormatORB( orb, msgbuf, sizeof( msgbuf ));
+        // HHC01334 "%1d:%04X CHAN: ORB: %s"
+        WRMSG( HHC01334, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, msgbuf );
+    }
+
     /* Set I/O priority */
     dev->priority &= 0x00FF0000ULL;
     dev->priority |= dev->orb.csspriority << 8;

@@ -975,7 +975,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01331 "%1d:%04X CHAN: clear subchannel"
 #define HHC01332 "%1d:%04X CHAN: halt subchannel"
 #define HHC01333 "%1d:%04X CHAN: resume subchannel: cc=%d"
-//efine HHC01334 (available)
+#define HHC01334 "%1d:%04X CHAN: ORB: %s"
 //efine HHC01335 (available)
 #define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
 //efine HHC01337 - HHC01349 (available)

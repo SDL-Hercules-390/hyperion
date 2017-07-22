@@ -1159,6 +1159,7 @@ struct ORB
     BYTE    lpm;                        /* Logical path mask         */
     BYTE    flag7;                      /* Flag byte 7               */
     FWORD   ccwaddr;                    /* CCW address               */
+                                        /* if (orb->flag7 & ORB7_X): */
     BYTE    csspriority;                /* CSS Priority              */
     BYTE    reserved_byte_13;           /* Reserved for future use   */
     BYTE    cupriority;                 /* CU Priority               */
@@ -1194,10 +1195,13 @@ typedef struct ORB  ORB;
 /*-------------------------------------------------------------------*/
 /* Bit definitions for ORB flag byte 7 */
 
-#define ORB7_L          0x80            /* Suppress incorrect length */
+#define ORB7_L          0x80            /* Suppress incorrect length
+                                           for Immediate commands if
+                                           ORB5_F CCW format is one. */
 #define ORB7_D          0x40            /* MIDAW control          @MW*/
 #define ORB7_RESV       0x3E            /* Reserved - must be 0   @MW*/
-#define ORB7_X          0x01            /* ORB extension control     */
+#define ORB7_X          0x01            /* ORB extension control: ORB
+                                           is 32 bytes long, not 12. */
 
 /*-------------------------------------------------------------------*/
 /*     Path management control word (PMCW) structure definition      */

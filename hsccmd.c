@@ -7209,40 +7209,52 @@ BYTE c;                                 /* Character work area       */
 
 #endif
 
+    // o+devn and o-devn commands - turn ORB tracing on/off
     // t+devn and t-devn commands - turn CCW tracing on/off
     // s+devn and s-devn commands - turn CCW stepping on/off
 
-    if ((cmd[0] == 't' || cmd[0] == 's')
-        && parse_single_devnum_silent(&cmd[2],&lcss,&devnum)==0 )
+    if (1
+        && (cmd[0] == 'o' || cmd[0] == 't' || cmd[0] == 's')
+        && parse_single_devnum_silent( &cmd[2], &lcss, &devnum ) == 0
+    )
     {
-        dev = find_device_by_devnum (lcss, devnum);
-        if (dev == NULL)
+        char* typ;
+        char buf[40];
+
+        if (!(dev = find_device_by_devnum( lcss, devnum )))
         {
             // HHC02200 "%1d:%04X device not found"
-            devnotfound_msg(lcss,devnum);
-            RELEASE_INTLOCK(NULL);
+            devnotfound_msg( lcss, devnum );
+            RELEASE_INTLOCK( NULL );
             return -1;
         }
 
-        if (cmd[0] == 't')
+        if (cmd[0] == 'o')
         {
-            char buf[40];
-            dev->ccwtrace = oneorzero;
-            MSGBUF( buf, "CCW trace for %1d:%04X", lcss, devnum);
-            WRMSG(HHC02204, "I", buf, onoroff);
-        } else {
-            char buf[40];
-            dev->ccwtrace = oneorzero;
-            MSGBUF( buf, "CCW step for %1d:%04X", lcss, devnum);
-            dev->ccwstep = oneorzero;
-            WRMSG(HHC02204, "I", buf, onoroff);
+            typ = "ORB trace";
+            dev->orbtrace = oneorzero;
         }
-        RELEASE_INTLOCK(NULL);
+        else if (cmd[0] == 't')
+        {
+            typ = "CCW trace";
+            dev->ccwtrace = oneorzero;
+        }
+        else // (cmd[0] == 's')
+        {
+            typ = "CCW step";
+            dev->ccwtrace = oneorzero;
+            dev->ccwstep  = oneorzero;
+        }
+        MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", buf, onoroff );
+        RELEASE_INTLOCK( NULL );
         return 0;
     }
 
-    RELEASE_INTLOCK(NULL);
-    WRMSG(HHC02205, "E", cmd, "");
+    RELEASE_INTLOCK( NULL );
+    // "Invalid argument %s%s"
+    WRMSG( HHC02205, "E", cmd, "" );
     return -1;
 }
 

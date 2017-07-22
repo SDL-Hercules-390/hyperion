@@ -1045,19 +1045,20 @@ const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
 {
-size_t n;
-
     if (!buf)
         return NULL;
+
     if (bufsz)
         *buf = 0;
+
     if (bufsz <= 1 || !orb)
         return buf;
 
-    n = (size_t) snprintf( buf, bufsz - 1,
+    snprintf( buf, bufsz,
 
         "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
-        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c %c%c%c%c %c%c%c %cCW:%2.2X%2.2X%2.2X%2.2X"
+        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c%c%c%c%c %c%c.....%c "
+        "%cCW:%2.2X%2.2X%2.2X%2.2X"
 
         , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
         , (orb->flag4 & ORB4_KEY) >> 4
@@ -1087,11 +1088,9 @@ size_t n;
         , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
 
         , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
+
         , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
     );
-
-    if (n < bufsz)
-        *(buf + n) = 0;     // (null terminate)
 
     return buf;
 }

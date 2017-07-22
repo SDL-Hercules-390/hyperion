@@ -1450,6 +1450,7 @@
   "and the range if any.\n"
 
 #define tckd_cmd_desc           "Turn CKD_KEY tracing on/off"
+#define odev_cmd_desc           "Turn ORB tracing on/off"
 #define tdev_cmd_desc           "Turn CCW tracing on/off"
 #define tplus_cmd_desc          "Instruction trace on"
 #define tplus_cmd_help          \
@@ -1755,6 +1756,7 @@ COMMAND( "sf+dev",                  NULL,                   SYSCMDNOPER,        
 COMMAND( "sfc",                     NULL,                   SYSCMDNOPER,        sfc_cmd_desc,           NULL                )
 COMMAND( "sfd",                     NULL,                   SYSCMDNOPER,        sfd_cmd_desc,           NULL                )
 COMMAND( "sfk",                     NULL,                   SYSCMDNOPER,        sfk_cmd_desc,           sfk_cmd_help        )
+COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
 #if defined( OPTION_CKD_KEY_TRACING )
 COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL )
