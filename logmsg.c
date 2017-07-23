@@ -394,7 +394,7 @@ static void vfwritemsg( BYTE panel, FILE* f,
 
     if (msgbuf)
     {
-        snprintf( msgbuf, bufsiz, "%s%s\n", prefix, bfr );
+        snprintf( msgbuf, bufsiz, "%s%s", prefix, bfr );
         flog_write( panel, f, msgbuf );
         free( msgbuf );
     }
