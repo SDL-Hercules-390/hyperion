@@ -79,6 +79,12 @@
 /*
 // $Log$    Update revision number in define variable ECPSCODEVER, below.
 //
+// Revision 1.85  2017/07/11 08:00:00  bobpolmanter
+// Fix LRA bug with 2K page frames (incorrectly using 'bytemask' value
+//  against CP page table entries),
+// Remove checking for MICBLOK crossing a page boundary (not part of the
+//  specification and causing ECPS to be ignored for some virtual machines).
+//
 // Revision 1.84  2017/07/02 10:50:00  bobpolmanter
 // Fix LRA bug with 2K page frames (frame shift amount incorrect)
 //
@@ -173,7 +179,7 @@
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.84    //  <--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.85    //  <--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -377,14 +383,6 @@ struct _ECPSVM_SASTATS
     /* Increment call now (don't count early misses) */ \
     ecpsvm_sastats._instname.call++; \
     amicblok=CR6 & ECPSVM_CR6_MICBLOK; \
-    /* Ensure MICBLOK resides on a single 2K page */ \
-    /* Then set ref bit by calling LOG_TO_ABS */ \
-    if((amicblok & 0x007ff) > 0x7e0) \
-    { \
-        DEBUG_SASSISTX(_instname,MSGBUF(buf, "SASSIST "#_instname" Micblok @ %6.6X crosses page frame",amicblok)); \
-        DEBUG_SASSISTX(_instname,WRMSG(HHC90000, "D", buf)); \
-        return(1); \
-    } \
     /* Load the micblok copy */ \
     micblok.MICRSEG=EVM_L(amicblok); \
     micblok.MICCREG=EVM_L(amicblok+4); \
@@ -4562,7 +4560,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
        entry pointed to by v_ste_ptr and fetch the virtual STE entry
     */
     frame_addr = (U32) ((r_pte & framemask) << frameshift);
-    byte_addr  = v_ste_ptr & bytemask;
+    byte_addr  = v_ste_ptr & 0x0FFF;
     v_ste = EVM_L(frame_addr + byte_addr);
 
     /* Validate the virtual STE entry.  If the segment invalid bit is set, place the
@@ -4670,7 +4668,7 @@ int ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2)
        pointed to by v_pte_ptr and fetch the virtual PTE
     */
     frame_addr = (U32) ((r_pte & framemask) << frameshift);
-    byte_addr  = v_pte_ptr & bytemask;
+    byte_addr  = v_pte_ptr & 0x0FFF;
     v_pte = EVM_LH(frame_addr + byte_addr);
 
     /* Validate the virtual PTE entry.  If the page invalid bit is set, place the
