@@ -2063,7 +2063,6 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
         {
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             schedule_ioq( NULL, dev );
-            release_lock( &dev->lock );
         }
         else /* Device is busy or startpending, NOT suspended */
         {
@@ -2098,13 +2097,11 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
                 }
             }
             release_lock( &sysblk.ioqlock );
-
-            /* Halt the device */
-            perform_halt_and_release_lock( dev );
         }
     }
-    else /* Device NOT busy, startpending or suspended: do nothing */
-        release_lock( &dev->lock );
+
+    /* Halt the device */
+    perform_halt_and_release_lock( dev );
 
     RELEASE_INTLOCK( regs );
 
