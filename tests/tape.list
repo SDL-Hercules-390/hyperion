@@ -1,0 +1,1454 @@
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *                     Tape Data Chaining Test
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *   This program verifies proper Hercules tape device handler
+                                                     9 *   and/or channel subsystem handling of data-chained CCWs.
+                                                    10 *
+                                                    11 *   A bug was reported wherein multiple data-chained CCWs were used
+                                                    12 *   to read a potentially very large 256K tape block (8 data-chained
+                                                    13 *   CCWs, each specifying a 32K buffer), but the "Address of the last
+                                                    14 *   CCW processed" and "Residual" SCSW fields of the IRB were wrong,
+                                                    15 *   causing the program to calculate an incorrect block size.
+                                                    16 *
+                                                    17 ***********************************************************************
+                                                    18 *
+                                                    19 *   Example Hercules Testcase:
+                                                    20 *
+                                                    21 *
+                                                    22 *       *Testcase Tape Data Chaining
+                                                    23 *
+                                                    24 *       # Prepare test environment
+                                                    25 *       mainsize  1
+                                                    26 *       numcpu    1
+                                                    27 *       sysclear
+                                                    28 *       archlvl   z/Arch
+                                                    29 *       detach    580
+                                                    30 *       attach    580 3490 "$(testpath)/tape.aws"
+                                                    31 *       loadcore  "$(testpath)/tape.core"
+                                                    32 *
+                                                    33 *       ## t+                          # (trace instructions)
+                                                    34 *       t+580                       # (trace device CCWs)
+                                                    35 *
+                                                    36 *       # Run the test...
+                                                    37 *       runtest   0.25              # (plenty of time)
+                                                    38 *
+                                                    39 *       # Clean up afterwards
+                                                    40 *       detach    580               # (no longer needed)
+                                                    41 *
+                                                    42 *       *Compare
+                                                    43 *       r 800.8
+                                                    44 *       *Want "SCSW fields" 00001008 0C403000
+                                                    45 *
+                                                    46 *       *Done
+                                                    47 *
+                                                    48 *
+                                                    49 ***********************************************************************
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    51          PRINT OFF
+                                                  3432          PRINT ON
+
+                                                  3434 ***********************************************************************
+                                                  3435 *        SATK prolog stuff...
+                                                  3436 ***********************************************************************
+
+                                                  3438          ARCHLVL  MNOTE=NO
+                                                  3440+$AL      OPSYN AL
+                                                  3441+$ALR     OPSYN ALR
+                                                  3442+$B       OPSYN B
+                                                  3443+$BAS     OPSYN BAS
+                                                  3444+$BASR    OPSYN BASR
+                                                  3445+$BC      OPSYN BC
+                                                  3446+$BCTR    OPSYN BCTR
+                                                  3447+$BE      OPSYN BE
+                                                  3448+$BH      OPSYN BH
+                                                  3449+$BL      OPSYN BL
+                                                  3450+$BM      OPSYN BM
+                                                  3451+$BNE     OPSYN BNE
+                                                  3452+$BNH     OPSYN BNH
+                                                  3453+$BNL     OPSYN BNL
+                                                  3454+$BNM     OPSYN BNM
+                                                  3455+$BNO     OPSYN BNO
+                                                  3456+$BNP     OPSYN BNP
+                                                  3457+$BNZ     OPSYN BNZ
+                                                  3458+$BO      OPSYN BO
+                                                  3459+$BP      OPSYN BP
+                                                  3460+$BXLE    OPSYN BXLE
+                                                  3461+$BZ      OPSYN BZ
+                                                  3462+$CH      OPSYN CH
+                                                  3463+$L       OPSYN L
+                                                  3464+$LH      OPSYN LH
+                                                  3465+$LM      OPSYN LM
+                                                  3466+$LPSW    OPSYN LPSW
+                                                  3467+$LR      OPSYN LR
+                                                  3468+$LTR     OPSYN LTR
+                                                  3469+$NR      OPSYN NR
+                                                  3470+$SL      OPSYN SL
+                                                  3471+$SLR     OPSYN SLR
+                                                  3472+$SR      OPSYN SR
+                                                  3473+$ST      OPSYN ST
+                                                  3474+$STM     OPSYN STM
+                                                  3475+$X       OPSYN X
+                                                  3476+$AHI     OPSYN AHI
+                                                  3477+$B       OPSYN J
+                                                  3478+$BC      OPSYN BRC
+                                                  3479+$BE      OPSYN JE
+                                                  3480+$BH      OPSYN JH
+                                                  3481+$BL      OPSYN JL
+                                                  3482+$BM      OPSYN JM
+                                                  3483+$BNE     OPSYN JNE
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3484+$BNH     OPSYN JNH
+                                                  3485+$BNL     OPSYN JNL
+                                                  3486+$BNM     OPSYN JNM
+                                                  3487+$BNO     OPSYN JNO
+                                                  3488+$BNP     OPSYN JNP
+                                                  3489+$BNZ     OPSYN JNZ
+                                                  3490+$BO      OPSYN JO
+                                                  3491+$BP      OPSYN JP
+                                                  3492+$BXLE    OPSYN JXLE
+                                                  3493+$BZ      OPSYN JZ
+                                                  3494+$CHI     OPSYN CHI
+                                                  3495+$AHI     OPSYN AGHI
+                                                  3496+$AL      OPSYN ALG
+                                                  3497+$ALR     OPSYN ALGR
+                                                  3498+$BCTR    OPSYN BCTGR
+                                                  3499+$BXLE    OPSYN JXLEG
+                                                  3500+$CH      OPSYN CGH
+                                                  3501+$CHI     OPSYN CGHI
+                                                  3502+$L       OPSYN LG
+                                                  3503+$LH      OPSYN LGH
+                                                  3504+$LM      OPSYN LMG
+                                                  3505+$LPSW    OPSYN LPSWE
+                                                  3506+$LR      OPSYN LGR
+                                                  3507+$LTR     OPSYN LTGR
+                                                  3508+$NR      OPSYN NGR
+                                                  3509+$SL      OPSYN SLG
+                                                  3510+$SLR     OPSYN SLGR
+                                                  3511+$SR      OPSYN SGR
+                                                  3512+$ST      OPSYN STG
+                                                  3513+$STM     OPSYN STMG
+                                                  3514+$X       OPSYN XG
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3516 ***********************************************************************
+                                                  3517 *        Initiate the TESTTAPE CSECT in the CODE region
+                                                  3518 *        with the location counter at 0
+                                                  3519 ***********************************************************************
+
+                                                  3521 TESTTAPE ASALOAD  REGION=CODE
+                              00000000  000020FF  3522+TESTTAPE START 0,CODE
+00000000  00020000 00000000                       3524+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000010                      00000010  00000058  3525+         ORG   TESTTAPE+X'058'
+00000058  00020000 00000000                       3527+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000068  00020000 00000000                       3528+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000078  00020000 00000000                       3529+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000088  00020000 00000000                       3530+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000098  00020000 00000000                       3531+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+000000A8                      000000A8  000001A0  3532+         ORG   TESTTAPE+X'1A0'
+000001A0  00020000 00000000                       3534+         PSWZ  0,0,2,0,X'120'     Restart ISR Trap New PSW
+000001B0  00020000 00000000                       3535+         PSWZ  0,0,2,0,X'130'     External ISR Trap New PSW
+000001C0  00020000 00000000                       3536+         PSWZ  0,0,2,0,X'140'     Supervisor Call ISR Trap New PSW
+000001D0  00020000 00000000                       3537+         PSWZ  0,0,2,0,X'150'     Program ISR Trap New PSW
+000001E0  00020000 00000000                       3538+         PSWZ  0,0,2,0,X'160'     Machine Check Trap New PSW
+000001F0  00020000 00000000                       3539+         PSWZ  0,0,2,0,X'170'     Input/Output Trap New PSW
+
+
+
+                                                  3541 ***********************************************************************
+                                                  3542 *        Define the z/Arch RESTART PSW
+                                                  3543 ***********************************************************************
+
+                              00000200  00000001  3545 PREVORG  EQU   *
+00000200                      00000200  000001A0  3546          ORG   TESTTAPE+X'1A0'
+000001A0  00000001 80000000                       3547          DC    XL16'00000001800000000000000000000200'
+000001B0                      000001B0  000001A0  3548          ORG   TESTTAPE+X'1A0'
+                                                  3549 *        PSWZ  <sys>,<key>,<mwp>,<prog>,<addr>[,amode]
+000001A0  00000001 80000000                       3550          PSWZ  0,0,0,0,X'200',64
+000001B0                      000001B0  00000200  3551          ORG   PREVORG
+
+
+
+                                                  3553 ***********************************************************************
+                                                  3554 *        Create IPL (restart) PSW
+                                                  3555 ***********************************************************************
+
+                                                  3557          ASAIPL   IA=BEGIN
+                              00000000  000020FF  3558+TESTTAPE CSECT
+00000200                      00000200  00000000  3559+         ORG   TESTTAPE
+00000000  00080000 00000200                       3560+         PSWE390 0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3561+         ORG   TESTTAPE+512     Reset CSECT to end of assigned storage area
+                              00000000  000020FF  3562+TESTTAPE CSECT
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3564 ***********************************************************************
+                                                  3565 *               The actual TESTTAPE program itself...
+                                                  3566 ***********************************************************************
+                                                  3567 *
+                                                  3568 *  Architecture Mode: z/Arch
+                                                  3569 *  Addressing Mode:   64-bit
+                                                  3570 *  Register Usage:
+                                                  3571 *
+                                                  3572 *   R0       (work)
+                                                  3573 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3574 *   R2       Program base register
+                                                  3575 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3576 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3577 *   R5       Used for CPU register when signaling architecture change
+                                                  3578 *   R6,R7    Signaling registers when changing architecture
+                                                  3579 *   R8       ORB pointer
+                                                  3580 *   R9       SCSW pointer
+                                                  3581 *   R10-R15  (work)
+                                                  3582 *
+                                                  3583 ***********************************************************************
+
+
+00000200                      00000000            3585          USING  ASA,R0          Low core addressability
+00000200                      00000200            3586          USING  BEGIN,R2        Program Addressability
+00000200                      00000000            3587          USING  IOCB,R3         SATK Device I/O Control Block
+00000200                      00000000            3588          USING  ORB,R8          ESA/390 Operation Request Block
+00000200                      00000000            3589          USING  SCSW,R9         ESA/390 Subchannel Status Word
+
+
+00000200  0520                                    3591 BEGIN    BALR  R2,0             Initalize Base Register
+00000202  0620                                    3592          BCTR  R2,0             Initalize Base Register
+00000204  0620                                    3593          BCTR  R2,0             Initalize Base Register
+
+00000206  45E0 2098                     00000298  3595          BAL   R14,INIT         Initalize Program
+                                                  3596 *
+                                                  3597 **       Run the tests...
+                                                  3598 *
+0000020A  45E0 2012                     00000212  3599          BAL   R14,TEST01       Data-Chained CCWs > blocksize,
+                                                  3600 *                               with/without ORB ILS flag
+                                                  3601 *
+0000020E  47F0 20B6                     000002B6  3602          B     EOJ              Normal completion
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3604 ***********************************************************************
+                                                  3605 *        TEST01     Data-Chained CCWs test with/without ORB ILS flag
+                                                  3606 ***********************************************************************
+
+00000212  9201 2DFF                     00000FFF  3608 TEST01   MVI   TESTNUM,X'01'          Initialize test number
+
+00000216  9200 8005                     00000005  3610          MVI   ORB1_8,0               Initialize ORB flags
+0000021A  9200 8007                     00000007  3611          MVI   ORRB1_24,0             Initialize ORB flags
+0000021E  9680 8005                     00000005  3612          OI    ORB1_8,ORBF            Format-1 CCWs
+00000222  9680 8007                     00000007  3613          OI    ORRB1_24,ORBL          SLI mode for Immediate CCWs
+
+00000226  4100 22B8                     000004B8  3615          LA    R0,REWPROG             Rewind tape to load point
+0000022A  45F0 216A                     0000036A  3616          BAL   R15,EXCP               Do the I/O
+
+0000022E  950C 9008                     00000008  3618          CLI   SCSWUS,SCSWCE+SCSWDE   Expected Unit Status?
+00000232  4770 20E8                     000002E8  3619          BNE   FAILREW                No?! FAIL the test!
+00000236  9500 9009                     00000009  3620          CLI   SCSWCS,0               Expected Channel Status?
+0000023A  4770 20E8                     000002E8  3621          BNE   FAILREW                No?! FAIL the test!
+
+                                                  3623 ***********************************************************************
+                                                  3624 *     Tape block size is 20,480 bytes, so I/O should end on
+                                                  3625 *     the very first 32K CCW (but should point to the second
+                                                  3626 *     one) with a residual value of 12,288 (X'3000') bytes.
+                                                  3627 ***********************************************************************
+
+0000023E  4100 22C8                     000004C8  3629          LA    R0,READPROG            Read block using data chaining
+00000242  45F0 216A                     0000036A  3630          BAL   R15,EXCP               Do the I/O
+00000246  D203 2600 9004      00000800  00000004  3631          MVC   TESTCCWA,SCSWCCW       Save Ending CCW Address
+0000024C  D200 2604 9008      00000804  00000008  3632          MVC   TESTUS,SCSWUS          Save Unit Status
+00000252  D200 2605 9009      00000805  00000009  3633          MVC   TESTCS,SCSWCS          Save Channel Status
+00000258  D201 2606 900A      00000806  0000000A  3634          MVC   TESTRES,SCSWCNT        Save Residual
+
+0000025E  D507 2600 2608      00000800  00000808  3636          CLC   TESTRSLT,GOODRSLT      Is results what we expected?
+00000264  4770 20F8                     000002F8  3637          BNE   FAILTEST               No, FAIL the test
+
+                                                  3639 ***********************************************************************
+                                                  3640 *     Now do the same thing again, but WITHOUT the ORBL flag
+                                                  3641 *     to verify we still get a normal incorrect length result.
+                                                  3642 ***********************************************************************
+
+00000268  947F 8007                     00000007  3644          NI    ORRB1_24,255-ORBL      Turn off SLI mode ORB flag
+0000026C  4100 22C8                     000004C8  3645          LA    R0,READPROG            Read block using data chaining
+00000270  45F0 216A                     0000036A  3646          BAL   R15,EXCP               Do the I/O
+00000274  D203 2600 9004      00000800  00000004  3647          MVC   TESTCCWA,SCSWCCW       Save Ending CCW Address
+0000027A  D200 2604 9008      00000804  00000008  3648          MVC   TESTUS,SCSWUS          Save Unit Status
+00000280  D200 2605 9009      00000805  00000009  3649          MVC   TESTCS,SCSWCS          Save Channel Status
+00000286  D201 2606 900A      00000806  0000000A  3650          MVC   TESTRES,SCSWCNT        Save Residual
+
+0000028C  D507 2600 2608      00000800  00000808  3652          CLC   TESTRSLT,GOODRSLT      Is results what we expected?
+00000292  4770 20F8                     000002F8  3653          BNE   FAILTEST               No, FAIL the test
+00000296  07FE                                    3654          BR    R14                    Yes, test SUCCESS
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3656 ***********************************************************************
+                                                  3657 *        Program Initialization
+                                                  3658 ***********************************************************************
+
+00000298                                          3660 INIT     DS    0H               Program Initialization
+
+00000298  4130 2214                     00000414  3662          LA     R3,IOCB_580     Point to IOCB
+0000029C  E380 3018 0004                00000018  3663          $L     R8,IOCBORB      Point to ORB
+000002A2  E3F0 3020 0004                00000020  3664          $L     R15,IOCBIRB     Point to IRB
+000002A8                      00000000            3665          USING  IRB,R15         Temporary addressability
+000002A8  4190 F000                     00000000  3666          LA     R9,IRBSCSW      Point to SCSW
+000002AC                                          3667          DROP   R15             Done with IRB
+
+000002AC  45F0 2108                     00000308  3669          BAL    R15,IOINIT      Initialize the CPU for I/O operations
+000002B0  45F0 2116                     00000316  3670          BAL    R15,ENADEV      Enable our device making ready for use
+
+000002B4  07FE                                    3672          BR     R14             Return to caller
+
+
+
+                                                  3674 ***********************************************************************
+                                                  3675 *        Normal completion or Abnormal termination PSWs
+                                                  3676 ***********************************************************************
+
+                                                  3678 EOJ      DWAITEND LOAD=YES          Normal completion
+000002B6                                          3680+EOJ      DS    0H
+000002B6  8200 20C0                     000002C0  3681+         LPSW  DWAT0009
+000002C0  000A0000 00000000                       3682+DWAT0009 PSWE390 0,0,2,0,X'000000'
+
+                                                  3684 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
+000002C8                                          3685+FAILDEV  DS    0H
+000002C8  8200 20D0                     000002D0  3686+         LPSW  DWAT0010
+000002D0  000A0000 00010001                       3687+DWAT0010 PSWE390 0,0,2,0,X'010001'
+
+                                                  3689 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
+000002D8                                          3690+FAILIO   DS    0H
+000002D8  8200 20E0                     000002E0  3691+         LPSW  DWAT0011
+000002E0  000A0000 00010002                       3692+DWAT0011 PSWE390 0,0,2,0,X'010002'
+
+                                                  3694 FAILREW  DWAIT LOAD=YES,CODE=03     REWIND failed
+000002E8                                          3695+FAILREW  DS    0H
+000002E8  8200 20F0                     000002F0  3696+         LPSW  DWAT0012
+000002F0  000A0000 00010003                       3697+DWAT0012 PSWE390 0,0,2,0,X'010003'
+
+                                                  3699 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+000002F8                                          3700+FAILTEST DS    0H
+000002F8  8200 2100                     00000300  3701+         LPSW  DWAT0013
+00000300  000A0000 00010BAD                       3702+DWAT0013 PSWE390 0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3704 ***********************************************************************
+                                                  3705 *        Initialize the CPU for I/O operations
+                                                  3706 ***********************************************************************
+
+                                                  3708 IOINIT   IOINIT ,
+00000308  B766 2110                     00000310  3709+IOINIT   LCTL  6,6,IOMK0014       Enable subchannel subclasses for interruptions
+0000030C  47F0 2114                     00000314  3710+         B     IOMK0014+4
+00000310                                          3711+IOMK0014 DS    0F
+00000310  FF000000                                3712+         DC    XL4'FF000000'         All subchannel subclasses enabled
+00000314  07FF                                    3713          BR    R15              Return to caller
+
+
+
+                                                  3715 ***********************************************************************
+                                                  3716 *        Enable the device, making it ready for use
+                                                  3717 ***********************************************************************
+
+                                                  3719 ENADEV   ENADEV  ENAOKAY,FAILDEV,REG=4
+00000316  5810 2160                     00000360  3720+ENADEV   L     1,FIND0015
+0000031A  E340 3028 0004                00000028  3721+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+00000320                      00000000            3722+         USING SCHIB,4
+00000320                                          3723+FINL0015 DS    0H   Retrieve Subchannel Information Block for desired device number
+00000320  B234 4000                     00000000  3724+         STSCH 0(4)               Store the SCHIB for first subchannel
+00000324  A774 FFD2                     000002C8  3725+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+00000328  9101 4005                     00000005  3726+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+0000032C  A784 0011                     0000034E  3727+         $BZ   FINN0015           ..No, check the next subchannel
+00000330  D501 4006 3004      00000006  00000004  3728+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+00000336  A774 000C                     0000034E  3729+         $BNE  FINN0015           ..No, check the next subchannel
+                                                  3730+* Subchannel found!
+0000033A  5010 3000                     00000000  3731+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+0000033E  9680 4005                     00000005  3732+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+00000342  B232 4000                     00000000  3733+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+00000346  A784 0011                     00000368  3734+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+0000034A  A7F4 FFBF                     000002C8  3735+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+0000034E                                          3736+FINN0015 DS    0H  Advance to next subchannel
+0000034E  4110 1001                     00000001  3737+         LA    1,1(0,1)           Advance to next subchannel
+00000352  5510 2164                     00000364  3738+         CL    1,FINM0015         Beyond maximum subchannel
+00000356  A7D4 FFE5                     00000320  3739+         $BNH  FINL0015           ..No, examine the next subchannel
+0000035A  A724 FFB7                     000002C8  3740+         $BH   FAILDEV            ..Yes, failed to enable the device
+0000035E                                          3741+         DROP  4                  Forget SCHIB addressing
+00000360  00010000                                3742+FIND0015 DC    A(X'00010000')     First subchannel subsystem ID
+00000364  0001FFFF                                3743+FINM0015 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+                                                  3744 *
+00000368  07FF                                    3745 ENAOKAY  BR    R15            Return to caller if device enabled OK
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3747 ***********************************************************************
+                                                  3748 *        Execute the channel program pointed to by R0
+                                                  3749 ***********************************************************************
+
+0000036A  5000 8008                     00000008  3751 EXCP     ST    R0,ORBCCW      Plug Channel Program address into IORB
+
+                                                  3753          RAWIO 4,FAIL=FAILIO
+0000036E  9200 300E                     0000000E  3754+         MVI   IOCBSC,X'00'          Clear SC information
+00000372  D201 300A 3006      0000000A  00000006  3755+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+00000378  5810 3000                     00000000  3756+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  3757+* Initiate Subchannel-based input/output operation
+0000037C  E340 3018 0004                00000018  3758+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+00000382  B233 4000                     00000000  3759+         SSCH  0(4)                  Initiate the I/O operation
+00000386  A774 FFA9                     000002D8  3760+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+0000038A  E340 3020 0004                00000020  3761+         $L    4,IOCBIRB             Locate the IRB storage area
+00000390                      00000000            3762+         USING IRB,4                 Make it addressable
+
+                                                  3764+* Wait for I/O operation to present status via an interruption
+00000390                                          3765+IOWT0016 DS    0H  Wait for I/O to complete
+00000390  D20F 21C0 01F0      000003C0  000001F0  3767+         MVC   IOS0017(16),496(0)              Save Input/Output new PSW
+00000396  D20F 01F0 21B0      000001F0  000003B0  3768+         MVC   496(16,0),ION0017              Establish Input/Ouput new PSW
+0000039C  B2B2 21A0                     000003A0  3769+         $LPSW WPSW0017                       Wait for event
+000003A0  02020000 00000000                       3770+WPSW0017 PSW   2,0,2,0,0                      Wait for event
+000003B0  00002000 00000000                       3771+ION0017  PSW   0,0,0,32,IRST0017,24                I/O New PSW: cc==2
+000003C0  00000000 00000000                       3772+IOS0017  DC    XL16'00'
+                                                  3773+* Handle input/output interruption
+000003D0                                          3774+IRST0017 DS    0H
+000003D0  D20F 01F0 21C0      000001F0  000003C0  3775+         MVC   496(16,0),IOS0017            Restore input/output new PSW
+                                                  3776+* Process the interruption...
+                                                  3777+* Validate interruption is for the expected subchannel
+000003D6  5510 00B8                     000000B8  3778+         CL    1,IOSSID              Is this the device for which I am waiting?
+000003DA  A774 FFDB                     00000390  3779+         $BNE  IOWT0016              ..No, continue waiting for it
+                                                  3780+* Accumulate interruption information from IRB
+000003DE  B235 4000                     00000000  3781+         TSCH  0(4)                  Retrive interrupt information
+000003E2  A744 FFD7                     00000390  3782+         $BC   B'0100',IOWT0016      CC1 (not status pending), wait for it to arrive
+000003E6  A714 FF79                     000002D8  3783+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  3784+*                                    CC0 (status was pending), accumulate the status
+000003EA  D600 300E 4003      0000000E  00000003  3785+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+000003F0  D601 300A 4008      0000000A  00000008  3786+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+000003F6  9104 300E                     0000000E  3787+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+000003FA  A7E4 FFCB                     00000390  3788+         $BNO  IOWT0016              ..No, wait for primary status
+000003FE  D203 3010 4004      00000010  00000004  3789+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+00000404  D201 3016 400A      00000016  0000000A  3790+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  3791+* Test for errors as specified in the IOCB
+0000040A  910C 300A                     0000000A  3792+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+0000040E  A7E4 FF65                     000002D8  3793+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  3794+* Input/Output operation successful
+
+00000412  07FF                                    3796          BR    R15            Return to caller
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3798 ***********************************************************************
+                                                  3799 *         Structure used by RAWIO identifying
+                                                  3800 *         the device and operation being performed
+                                                  3801 ***********************************************************************
+
+                                                  3803 IOCB_580 IOCB  X'580'
+00000414  00000000                                3804+IOCB_580 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+00000418  0580                                    3805+         DC    AL2(X'580')     +4 Device address or device number
+0000041A  0000                                    3806+         DC    H'0'            +6 Must be zeros
+0000041C  D3                                      3807+         DC    AL1(X'D3')      +8 Default detected unit errors
+0000041D  3F                                      3808+         DC    AL1(X'3F')      +9 Default detected channel errors
+0000041E  0000                                    3809+         DC    HL2'0'          +10 Accumulated unit and channel errors
+00000420  0000                                    3810+         DC    HL2'0'          +12 Tested unit and channel status
+00000422  00                                      3811+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+00000423  80                                      3812+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00000424  00000000                                3813+         DC    F'0'            +16 I/O status CCW address
+00000428  00000000                                3814+         DC    F'0'            +20 residual count
+0000042C  00000000 000004A4                       3815+         DC    ADL8(IORB0018)  +24  Address where ORB is located
+00000434  00000000 00000444                       3816+         DC    ADL8(IIRB0018)  +32 Address where IRB stored
+0000043C  00000000 00000444                       3817+         DC    ADL8(IIRB0018)  +40 Address where SCHIB stored
+00000444  00000000 00000000                       3818+IIRB0018 DC    24F'0'              Embedded shared IRB and SCHIB area
+000004A4                                          3820+IORB0018 DS    0XL12
+000004A4  00000000                                3821+         DC    A(0)                         Word 0 - Interruption Parameter
+000004A8  00                                      3822+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+000004A9  80                                      3823+         DC    BL1'10000000'                Word 1, bits 8-15
+000004AA  FF                                      3824+         DC    AL1(255)                     Word 1, bits 16-23
+000004AB  00                                      3825+         DC    BL1'00000000'                 Word 1, bits 24-31
+000004AC  00000000                                3826+         DC    AL4(0)                       Word 2 - CCW address
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3828 ***********************************************************************
+                                                  3829 *        Working Storage
+                                                  3830 ***********************************************************************
+
+000004B0                                          3832          LTORG ,          Literals pool
+
+000004B0  10                                      3834 MODE     DC    X'10'      Mode Set argument
+
+                              00000400  00000001  3836 K        EQU   1024       One kilobyte  (OK! OK! "Kibibyte!" Sheesh!)
+
+                              00000800  00000001  3838 RESLTADR EQU   (2*K)      Address where test results will be placed
+                              00000FFF  00000001  3839 TESTADDR EQU   (4*K)-1    Address where test number will be placed
+                              00001000  00000001  3840 CDCCWADR EQU   (4*K)      Address of data-chained CCWs
+                              00002000  00000001  3841 IDALADDR EQU   (8*K)      Address of Indirect Data Address Lists
+
+                              00008000  00000001  3843 BUFSADDR EQU   (32*K)     Address where first I/O buffer will start
+                              00008000  00000001  3844 IOBUFLEN EQU   (32*K)     Length of one I/O buffer  (32768 bytes)
+                              00005000  00000001  3845 BLOCKLEN EQU   (20*K)     Size of tape block        (20480 bytes)
+
+                              00003000  00000001  3847 RESIDUAL EQU   (IOBUFLEN-BLOCKLEN)  Expected residual value
+
+
+                                                  3849 ***********************************************************************
+                                                  3850 *        CCW opcode equates, etc.
+                                                  3851 ***********************************************************************
+
+                              00000080  00000001  3853 CD       EQU   X'80'    Chain Data
+                              00000040  00000001  3854 CC       EQU   X'40'    Chain Command
+                              00000020  00000001  3855 SLI      EQU   X'20'    Suppress Incorrect Length Indication
+                              00000010  00000001  3856 SKIP     EQU   X'10'    Skip Data Transfer
+                              00000004  00000001  3857 IDA      EQU   X'04'    Indirect Data Address
+
+                              00000002  00000001  3859 READ     EQU   X'02'    Read or Read IPL
+                              00000006  00000001  3860 READFWD  EQU   X'06'    Read Forward (3590 only)
+                              00000007  00000001  3861 REWIND   EQU   X'07'    Rewind to load point
+                              00000008  00000001  3862 TIC      EQU   X'08'    Transfer In Channel (branch to another CCW)
+                              000000DB  00000001  3863 MODESET  EQU   X'DB'    Mode Set
+
+
+                                                  3865 ***********************************************************************
+                                                  3866 *        Channel Programs
+                                                  3867 ***********************************************************************
+
+000004B8  DB600001 000004B0                       3869 REWPROG  CCW1  MODESET,MODE,CC+SLI,1
+000004C0  08000000 000004D8                       3870          CCW1  TIC,REW2LDPT,0,0
+
+000004C8  DB600001 000004B0                       3872 READPROG CCW1  MODESET,MODE,CC+SLI,1
+000004D0  08000000 00001000                       3873          CCW1  TIC,READ256K,0,0
+
+000004D8  07200001 00000000                       3875 REW2LDPT CCW1  REWIND,0,SLI,1
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3877 ***********************************************************************
+                                                  3878 *        Fixed storage locations
+                                                  3879 ***********************************************************************
+
+000004E0                      000004E0  00000800  3881          ORG   TESTTAPE+RESLTADR      (s/b @ X'0800')
+
+00000800                                          3883 TESTRSLT DS   0XL8                    Saved Test Results...
+00000800  00000000                                3884 TESTCCWA DC    A(0)                   Ending CCW Address
+00000804  00                                      3885 TESTUS   DC    X'00'                  Unit Status
+00000805  00                                      3886 TESTCS   DC    X'00'                  Channel Status
+00000806  0000                                    3887 TESTRES  DC    H'0'                   Residual
+00000808  00001008                                3888 GOODRSLT DC    A(READ256K+8)
+0000080C  0C403000                                3889          DC    AL1(SCSWCE+SCSWDE),AL1(SCSWIL),AL2(IOBUFLEN-BLOCKLEN)
+
+
+
+
+00000810                      00000810  00000FFF  3891          ORG   TESTTAPE+TESTADDR      (s/b @ X'0FFF')
+
+00000FFF  00                                      3893 TESTNUM  DC    X'00'      Test number of active test
+
+
+
+
+00001000                      00001000  00001000  3895          ORG   TESTTAPE+CDCCWADR      (s/b @ X'1000')
+
+00001000  02848000 00002000                       3897 READ256K CCW1  READ,IDAL1,CD+IDA,IOBUFLEN
+00001008  02848000 00002020                       3898          CCW1  READ,IDAL2,CD+IDA,IOBUFLEN
+00001010  02848000 00002040                       3899          CCW1  READ,IDAL3,CD+IDA,IOBUFLEN
+00001018  02848000 00002060                       3900          CCW1  READ,IDAL4,CD+IDA,IOBUFLEN
+00001020  02848000 00002080                       3901          CCW1  READ,IDAL5,CD+IDA,IOBUFLEN
+00001028  02848000 000020A0                       3902          CCW1  READ,IDAL6,CD+IDA,IOBUFLEN
+00001030  02848000 000020C0                       3903          CCW1  READ,IDAL7,CD+IDA,IOBUFLEN
+00001038  02048000 000020E0                       3904          CCW1  READ,IDAL8,IDA,IOBUFLEN
+
+
+
+
+                                                  3906 ***********************************************************************
+                                                  3907 *        I/O Buffers referenced by IDALs
+                                                  3908 ***********************************************************************
+
+                              00008000  00000001  3910 IOBUFFS  EQU   BUFSADDR       Where first I/O buffer will begin
+                                                  3911 *
+                              00008000  00000001  3912 IOBUFF1  EQU   IOBUFFS+(0*IOBUFLEN)
+                              00010000  00000001  3913 IOBUFF2  EQU   IOBUFFS+(1*IOBUFLEN)
+                              00018000  00000001  3914 IOBUFF3  EQU   IOBUFFS+(2*IOBUFLEN)
+                              00020000  00000001  3915 IOBUFF4  EQU   IOBUFFS+(3*IOBUFLEN)
+                              00028000  00000001  3916 IOBUFF5  EQU   IOBUFFS+(4*IOBUFLEN)
+                              00030000  00000001  3917 IOBUFF6  EQU   IOBUFFS+(5*IOBUFLEN)
+                              00038000  00000001  3918 IOBUFF7  EQU   IOBUFFS+(6*IOBUFLEN)
+                              00040000  00000001  3919 IOBUFF8  EQU   IOBUFFS+(7*IOBUFLEN)
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3921 ***********************************************************************
+                                                  3922 *        Indirect Data Address Lists 1 - 4
+                                                  3923 ***********************************************************************
+
+00001040                      00001040  00002000  3925          ORG   TESTTAPE+IDALADDR      (s/b @ X'2000')
+
+00002000  00008000                                3927 IDAL1    DC    A(IOBUFF1+(0*(4*K)))
+00002004  00009000                                3928          DC    A(IOBUFF1+(1*(4*K)))
+00002008  0000A000                                3929          DC    A(IOBUFF1+(2*(4*K)))
+0000200C  0000B000                                3930          DC    A(IOBUFF1+(3*(4*K)))
+00002010  0000C000                                3931          DC    A(IOBUFF1+(4*(4*K)))
+00002014  0000D000                                3932          DC    A(IOBUFF1+(5*(4*K)))
+00002018  0000E000                                3933          DC    A(IOBUFF1+(6*(4*K)))
+0000201C  0000F000                                3934          DC    A(IOBUFF1+(7*(4*K)))
+
+
+
+00002020  00010000                                3936 IDAL2    DC    A(IOBUFF2+(0*(4*K)))
+00002024  00011000                                3937          DC    A(IOBUFF2+(1*(4*K)))
+00002028  00012000                                3938          DC    A(IOBUFF2+(2*(4*K)))
+0000202C  00013000                                3939          DC    A(IOBUFF2+(3*(4*K)))
+00002030  00014000                                3940          DC    A(IOBUFF2+(4*(4*K)))
+00002034  00015000                                3941          DC    A(IOBUFF2+(5*(4*K)))
+00002038  00016000                                3942          DC    A(IOBUFF2+(6*(4*K)))
+0000203C  00017000                                3943          DC    A(IOBUFF2+(7*(4*K)))
+
+
+
+00002040  00018000                                3945 IDAL3    DC    A(IOBUFF3+(0*(4*K)))
+00002044  00019000                                3946          DC    A(IOBUFF3+(1*(4*K)))
+00002048  0001A000                                3947          DC    A(IOBUFF3+(2*(4*K)))
+0000204C  0001B000                                3948          DC    A(IOBUFF3+(3*(4*K)))
+00002050  0001C000                                3949          DC    A(IOBUFF3+(4*(4*K)))
+00002054  0001D000                                3950          DC    A(IOBUFF3+(5*(4*K)))
+00002058  0001E000                                3951          DC    A(IOBUFF3+(6*(4*K)))
+0000205C  0001F000                                3952          DC    A(IOBUFF3+(7*(4*K)))
+
+
+
+00002060  00020000                                3954 IDAL4    DC    A(IOBUFF4+(0*(4*K)))
+00002064  00021000                                3955          DC    A(IOBUFF4+(1*(4*K)))
+00002068  00022000                                3956          DC    A(IOBUFF4+(2*(4*K)))
+0000206C  00023000                                3957          DC    A(IOBUFF4+(3*(4*K)))
+00002070  00024000                                3958          DC    A(IOBUFF4+(4*(4*K)))
+00002074  00025000                                3959          DC    A(IOBUFF4+(5*(4*K)))
+00002078  00026000                                3960          DC    A(IOBUFF4+(6*(4*K)))
+0000207C  00027000                                3961          DC    A(IOBUFF4+(7*(4*K)))
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3963 ***********************************************************************
+                                                  3964 *        Indirect Data Address Lists 5 - 8
+                                                  3965 ***********************************************************************
+
+
+
+00002080  00028000                                3967 IDAL5    DC    A(IOBUFF5+(0*(4*K)))
+00002084  00029000                                3968          DC    A(IOBUFF5+(1*(4*K)))
+00002088  0002A000                                3969          DC    A(IOBUFF5+(2*(4*K)))
+0000208C  0002B000                                3970          DC    A(IOBUFF5+(3*(4*K)))
+00002090  0002C000                                3971          DC    A(IOBUFF5+(4*(4*K)))
+00002094  0002D000                                3972          DC    A(IOBUFF5+(5*(4*K)))
+00002098  0002E000                                3973          DC    A(IOBUFF5+(6*(4*K)))
+0000209C  0002F000                                3974          DC    A(IOBUFF5+(7*(4*K)))
+
+
+
+000020A0  00030000                                3976 IDAL6    DC    A(IOBUFF6+(0*(4*K)))
+000020A4  00031000                                3977          DC    A(IOBUFF6+(1*(4*K)))
+000020A8  00032000                                3978          DC    A(IOBUFF6+(2*(4*K)))
+000020AC  00033000                                3979          DC    A(IOBUFF6+(3*(4*K)))
+000020B0  00034000                                3980          DC    A(IOBUFF6+(4*(4*K)))
+000020B4  00035000                                3981          DC    A(IOBUFF6+(5*(4*K)))
+000020B8  00036000                                3982          DC    A(IOBUFF6+(6*(4*K)))
+000020BC  00037000                                3983          DC    A(IOBUFF6+(7*(4*K)))
+
+
+
+000020C0  00038000                                3985 IDAL7    DC    A(IOBUFF7+(0*(4*K)))
+000020C4  00039000                                3986          DC    A(IOBUFF7+(1*(4*K)))
+000020C8  0003A000                                3987          DC    A(IOBUFF7+(2*(4*K)))
+000020CC  0003B000                                3988          DC    A(IOBUFF7+(3*(4*K)))
+000020D0  0003C000                                3989          DC    A(IOBUFF7+(4*(4*K)))
+000020D4  0003D000                                3990          DC    A(IOBUFF7+(5*(4*K)))
+000020D8  0003E000                                3991          DC    A(IOBUFF7+(6*(4*K)))
+000020DC  0003F000                                3992          DC    A(IOBUFF7+(7*(4*K)))
+
+
+
+000020E0  00040000                                3994 IDAL8    DC    A(IOBUFF8+(0*(4*K)))
+000020E4  00041000                                3995          DC    A(IOBUFF8+(1*(4*K)))
+000020E8  00042000                                3996          DC    A(IOBUFF8+(2*(4*K)))
+000020EC  00043000                                3997          DC    A(IOBUFF8+(3*(4*K)))
+000020F0  00044000                                3998          DC    A(IOBUFF8+(4*(4*K)))
+000020F4  00045000                                3999          DC    A(IOBUFF8+(5*(4*K)))
+000020F8  00046000                                4000          DC    A(IOBUFF8+(6*(4*K)))
+000020FC  00047000                                4001          DC    A(IOBUFF8+(7*(4*K)))
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4003 ***********************************************************************
+                                                  4004 *        IOCB DSECT
+                                                  4005 ***********************************************************************
+
+                                                  4007          DSECTS NAME=IOCB
+                                                  4009+IOCB     DSECT
+                                                  4010+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          4011+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    4012+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    4013+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    4014+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    4015+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      4016+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      4017+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          4018+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      4019+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      4020+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      4021+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      4022+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      4023+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      4024+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                4025+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          4026+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    4027+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    4028+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          4029+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       4030+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       4031+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       4032+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  4033+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4035 ***********************************************************************
+                                                  4036 *        ORB DSECT
+                                                  4037 ***********************************************************************
+
+                                                  4039          DSECTS NAME=ORB
+                                                  4041+ORB      DSECT
+00000000  00000000                                4042+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      4044+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  4045+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  4046+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  4047+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  4048+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  4049+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      4051+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  4052+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  4053+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  4054+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  4055+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  4056+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  4057+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  4058+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  4059+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      4060+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      4061+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  4062+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  4063+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  4064+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  4065+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  4066+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  4067+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                4069+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  4070+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  4071+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  4072+* Extended ORB fields
+0000000C  00                                      4073+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      4074+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          4075+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      4076+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      4077+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       4078+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+                              00000020  00000001  4079+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4082 ***********************************************************************
+                                                  4083 *        IRB DSECT
+                                                  4084 ***********************************************************************
+
+                                                  4086          DSECTS NAME=IRB
+                                                  4088+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       4089+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+0000000C  00000000 00000000                       4090+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000020  00000000 00000000                       4091+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+                              00000040  00000001  4092+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       4093+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+                              00000060  00000001  4094+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4097 ***********************************************************************
+                                                  4098 *        SCSW DSECT
+                                                  4099 ***********************************************************************
+
+                                                  4101          DSECTS NAME=SCSW
+                                                  4103+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      4104+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  4105+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  4106+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  4107+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  4108+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  4109+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  4110+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  4111+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      4113+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  4114+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  4115+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  4116+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  4117+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  4118+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  4119+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  4120+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  4121+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      4123+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  4124+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  4125+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  4126+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  4127+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  4128+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  4129+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  4130+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  4131+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      4132+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  4133+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  4134+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  4135+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  4136+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  4137+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  4138+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  4139+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  4140+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                4142+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      4144+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  4145+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  4146+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  4147+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  4148+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  4149+SCSWCE   EQU   X'08'    Channel end
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000004  00000001  4150+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  4151+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  4152+SCSWUX   EQU   X'01'    Unit exception
+
+00000009  00                                      4154+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  4155+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  4156+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  4157+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  4158+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  4159+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  4160+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  4161+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  4162+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    4164+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  4165+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4168 ***********************************************************************
+                                                  4169 *        (other DSECTS needed by SATK)
+                                                  4170 ***********************************************************************
+
+                                                  4172          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  4448          PRINT ON
+
+
+
+
+
+                                                  4450 ***********************************************************************
+                                                  4451 *        Register equates
+                                                  4452 ***********************************************************************
+
+
+                              00000000  00000001  4454 R0       EQU   0
+                              00000001  00000001  4455 R1       EQU   1
+                              00000002  00000001  4456 R2       EQU   2
+                              00000003  00000001  4457 R3       EQU   3
+                              00000004  00000001  4458 R4       EQU   4
+                              00000005  00000001  4459 R5       EQU   5
+                              00000006  00000001  4460 R6       EQU   6
+                              00000007  00000001  4461 R7       EQU   7
+                              00000008  00000001  4462 R8       EQU   8
+                              00000009  00000001  4463 R9       EQU   9
+                              0000000A  00000001  4464 R10      EQU   10
+                              0000000B  00000001  4465 R11      EQU   11
+                              0000000C  00000001  4466 R12      EQU   12
+                              0000000D  00000001  4467 R13      EQU   13
+                              0000000E  00000001  4468 R14      EQU   14
+                              0000000F  00000001  4469 R15      EQU   15
+
+
+
+                                                  4471          END
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    21
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ASA                 4    000000     512  4176  3585
+ASBEGIN             U    000000       1  4177  4182  4224  4260  4269  4287  4294  4300  4304  4308  4314  4331
+ASEND               U    000200       1  4330  4331
+ASLENGTH            U    000200       1  4331
+BCEXTCOD            H    00001A       2  4194
+BCIOCOD             H    00003A       2  4202
+BCMCKCOD            H    000032       2  4200
+BCPGMCOD            H    00002A       2  4198
+BCSVCCOD            H    000022       2  4196
+BEGIN               I    000200       2  3591  3560  3586
+BLOCKLEN            U    005000       1  3845  3847  3889
+BUFSADDR            U    008000       1  3843  3910
+CAW                 F    000048       4  4206
+CAWADDR             R    000049       3  4209
+CAWKEY              X    000048       1  4207
+CAWSUSP             U    000008       1  4208
+CC                  U    000040       1  3854  3869  3872
+CCW0                4    000000       8  4335  4341
+CCW0ADDR            R    000001       3  4337
+CCW0CNT             H    000006       2  4340
+CCW0CODE            X    000000       1  4336
+CCW0FLGS            X    000004       1  4338
+CCW0L               U    000008       1  4341
+CCW1                4    000000       8  4353  4358
+CCW1ADDR            A    000004       4  4357
+CCW1CNT             H    000002       2  4356
+CCW1CODE            X    000000       1  4354
+CCW1FLGS            X    000001       1  4355
+CCW1L               U    000008       1  4358
+CCWCC               U    000040       1  4345
+CCWCD               U    000080       1  4344
+CCWIDA              U    000004       1  4349
+CCWPCI              U    000008       1  4348
+CCWSKIP             U    000010       1  4347
+CCWSLI              U    000020       1  4346
+CCWSUSP             U    000002       1  4350
+CD                  U    000080       1  3853  3897  3898  3899  3900  3901  3902  3903
+CDCCWADR            U    001000       1  3840  3895
+CHANID              F    0000A8       4  4261
+CODE                2    000000    8448  3522
+CPUID               U    00031B       1  4333
+CSW                 F    000040       8  4205
+CSWATTN             U    000080       1  4375
+CSWBUSY             U    000010       1  4378
+CSWCCTL             U    000004       1  4390
+CSWCCW              R    000001       3  4372
+CSWCDAT             U    000008       1  4389
+CSWCE               U    000008       1  4379  3792
+CSWCHNG             U    000001       1  4392
+CSWCNT              H    000006       2  4394
+CSWCS               X    000005       1  4384
+CSWCUE              U    000020       1  4377
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    22
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CSWDCC0             U    000000       1  4368
+CSWDCC1             U    000001       1  4369
+CSWDCC3             U    000003       1  4370
+CSWDCCM             U    000003       1  4367
+CSWDE               U    000004       1  4380  3792
+CSWFLAG             X    000000       1  4362
+CSWFMT              4    000000       8  4361  4395
+CSWFMTL             U    000008       1  4395
+CSWICTL             U    000002       1  4391
+CSWIL               U    000040       1  4386
+CSWKEYM             U    0000F0       1  4363
+CSWLOG              U    000004       1  4366
+CSWPCI              U    000080       1  4385
+CSWPRGM             U    000020       1  4387
+CSWPROT             U    000010       1  4388
+CSWSM               U    000040       1  4376
+CSWSUSP             U    000008       1  4365
+CSWUC               U    000002       1  4381
+CSWUS               X    000004       1  4374
+CSWUX               U    000001       1  4382
+DWAT0009            3    0002C0       8  3682  3681
+DWAT0010            3    0002D0       8  3687  3686
+DWAT0011            3    0002E0       8  3692  3691
+DWAT0012            3    0002F0       8  3697  3696
+DWAT0013            3    000300       8  3702  3701
+ENADEV              I    000316       4  3720  3670
+ENAOKAY             I    000368       2  3745  3734
+EOJ                 H    0002B6       2  3680  3602
+EXCP                I    00036A       4  3751  3616  3630  3646
+EXTCPUAD            H    000084       2  4226
+EXTICODE            H    000086       2  4227
+EXTIPARM            F    000080       4  4225
+EXTNPSW             F    000058       8  4215
+EXTOPSW             F    000018       8  4187  4193
+FAILDEV             H    0002C8       2  3685  3725  3735  3740
+FAILIO              H    0002D8       2  3690  3760  3783  3793
+FAILREW             H    0002E8       2  3695  3619  3621
+FAILTEST            H    0002F8       2  3700  3637  3653
+FIND0015            A    000360       4  3742  3720
+FINL0015            H    000320       2  3723  3739
+FINM0015            A    000364       4  3743  3738
+FINN0015            H    00034E       2  3736  3727  3729
+GOODRSLT            A    000808       4  3888  3636  3652
+IDA                 U    000004       1  3857  3897  3898  3899  3900  3901  3902  3903  3904
+IDAL1               A    002000       4  3927  3897
+IDAL2               A    002020       4  3936  3898
+IDAL3               A    002040       4  3945  3899
+IDAL4               A    002060       4  3954  3900
+IDAL5               A    002080       4  3967  3901
+IDAL6               A    0020A0       4  3976  3902
+IDAL7               A    0020C0       4  3985  3903
+IDAL8               A    0020E0       4  3994  3904
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IDALADDR            U    002000       1  3841  3925
+IIRB0018            F    000444       4  3818  3816  3817
+IMAGE               1    000000    8448     0
+INIT                H    000298       2  3660  3595
+IOBUFF1             U    008000       1  3912  3927  3928  3929  3930  3931  3932  3933  3934
+IOBUFF2             U    010000       1  3913  3936  3937  3938  3939  3940  3941  3942  3943
+IOBUFF3             U    018000       1  3914  3945  3946  3947  3948  3949  3950  3951  3952
+IOBUFF4             U    020000       1  3915  3954  3955  3956  3957  3958  3959  3960  3961
+IOBUFF5             U    028000       1  3916  3967  3968  3969  3970  3971  3972  3973  3974
+IOBUFF6             U    030000       1  3917  3976  3977  3978  3979  3980  3981  3982  3983
+IOBUFF7             U    038000       1  3918  3985  3986  3987  3988  3989  3990  3991  3992
+IOBUFF8             U    040000       1  3919  3994  3995  3996  3997  3998  3999  4000  4001
+IOBUFFS             U    008000       1  3910  3912  3913  3914  3915  3916  3917  3918  3919
+IOBUFLEN            U    008000       1  3844  3847  3912  3913  3914  3915  3916  3917  3918  3919  3889  3897  3898  3899  3900
+                                               3901  3902  3903  3904
+IOCB                4    000000      48  4009  4033  3587
+IOCBCAW             A    000018       4  4029
+IOCBCM              X    000009       1  4017
+IOCBCS              X    00000B       1  4020
+IOCBCT              X    00000D       1  4022
+IOCBDEV             H    000004       2  4014  3728
+IOCBDID             F    000000       4  4011  3731  3756
+IOCBDV              H    000002       2  4013
+IOCBIRB             A    000020       8  4031  3664  3761
+IOCBL               U    000030       1  4033
+IOCBORB             A    000018       8  4030  3663  3758
+IOCBRCNT            H    000016       2  4028  3790
+IOCBSC              X    00000E       1  4023  3754  3785  3787
+IOCBSCCW            A    000010       4  4025  3789
+IOCBSCNT            F    000014       4  4026
+IOCBSIB             A    000028       8  4032  3721
+IOCBST              H    00000A       2  4018  3755  3786
+IOCBUM              X    000008       1  4016
+IOCBUS              X    00000A       1  4019  3792
+IOCBUT              X    00000C       1  4021
+IOCBWAIT            X    00000F       1  4024
+IOCBZERO            H    000006       2  4015  3755
+IOCB_580            A    000414       4  3804  3662
+IOELADDR            F    0000AC       4  4262
+IOICODE             H    0000BA       2  4267
+IOIID               F    0000C0       4  4272
+IOINIT              I    000308       4  3709  3669
+IOIPARM             F    0000BC       4  4271
+IOMK0014            F    000310       4  3711  3709  3710
+ION0017             U    0003B0      16  3771  3768
+IONPSW              F    000078       8  4219
+IOOPSW              F    000038       8  4191  4201
+IORB0018            X    0004A4      12  3820  3815
+IOS0017             X    0003C0      16  3772  3767  3775
+IOSSID              F    0000B8       4  4270  3778
+IOWT0016            H    000390       2  3765  3779  3782  3788
+IPLCCW1             F    000008       8  4179
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    24
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IPLCCW2             F    000010       8  4180
+IPLPSW              F    000000       8  4178
+IRB                 4    000000      96  4088  4092  4094  3665  3762
+IRBECW              X    000020      32  4091
+IRBEMW              X    000040      32  4093
+IRBESW              X    00000C      20  4090
+IRBL                U    000040       1  4092
+IRBSCSW             X    000000      12  4089  3666  3785  3786  3789  3790
+IRBXL               U    000060       1  4094
+IRST0017            H    0003D0       2  3774  3771
+K                   U    000400       1  3836  3838  3839  3840  3841  3843  3844  3845  3927  3928  3929  3930  3931  3932  3933
+                                               3934  3936  3937  3938  3939  3940  3941  3942  3943  3945  3946  3947  3948  3949
+                                               3950  3951  3952  3954  3955  3956  3957  3958  3959  3960  3961  3967  3968  3969
+                                               3970  3971  3972  3973  3974  3976  3977  3978  3979  3980  3981  3982  3983  3985
+                                               3986  3987  3988  3989  3990  3991  3992  3994  3995  3996  3997  3998  3999  4000
+                                               4001
+LCHANLOG            F    0000B0       4  4263
+MCKLOG              F    000100       4  4295
+MCKNPSW             F    000070       8  4218
+MCKOPSW             F    000030       8  4190  4199
+MEASUREB            X    0000B9       1  4266
+MKARCHMD            X    0000A3       1  4254
+MKARS               F    000120       4  4293
+MKCLKCMP            F    0000E0       8  4279
+MKCPUTIM            F    0000D8       8  4278
+MKCRS               F    0001C0       4  4298
+MKDMGCOD            F    0000F4       4  4282
+MKFAILA             F    0000F8       4  4284
+MKFPRS              D    000160       8  4296
+MKICODE             F    0000E8       4  4280
+MKLOGOUT            F    000100       4  4286
+MKMODEL             F    0000FC       4  4285
+MKXSAA              F    0000D4       4  4277
+MODE                X    0004B0       1  3834  3869  3872
+MODESET             U    0000DB       1  3863  3869  3872
+MONCLS              H    000094       2  4242
+MONCODE             F    00009C       4  4249
+MONNUMBR            X    000095       1  4244
+MPGACCID            X    0000A2       1  4252
+NKGRS               F    000180       4  4297
+ORB                 4    000000      32  4041  4071  4079  3588
+ORB1_0              X    000004       1  4044
+ORB1_8              X    000005       1  4051  3610  3612
+ORBA                U    000010       1  4055
+ORBB                U    000004       1  4057
+ORBC                U    000004       1  4047
+ORBCCW              A    000008       4  4069  3751
+ORBCSS              X    00000C       1  4073
+ORBCU               X    00000E       1  4076
+ORBD                U    000040       1  4064
+ORBF                U    000080       1  4052  3612
+ORBH                U    000002       1  4058
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ORBI                U    000020       1  4054
+ORBKEYM             U    0000F0       1  4045
+ORBL                U    000080       1  4062  3613  3644
+ORBLEN              U    00000C       1  4071
+ORBLPM              X    000006       1  4060
+ORBM                U    000002       1  4048
+ORBP                U    000040       1  4053
+ORBPARM             F    000000       4  4042
+ORBPGM              X    00000E       1  4075
+ORBRSV25            U    00007E       1  4066
+ORBRSV26            U    00003E       1  4065
+ORBRSV3             U    00007F       1  4063
+ORBRSV4             U    000080       1  4070
+ORBRSV5             X    00000D       1  4074
+ORBRSV6             X    00000F       1  4077
+ORBRSV7             X    000010      16  4078
+ORBS                U    000008       1  4046
+ORBT                U    000001       1  4059
+ORBU                U    000008       1  4056
+ORBX                U    000001       1  4067
+ORBXLEN             U    000020       1  4079
+ORBY                U    000001       1  4049
+ORRB1_24            X    000007       1  4061  3611  3613  3644
+PCFETO              A    0000C4       4  4273
+PERACCID            X    0000A1       1  4251
+PERADDR             F    000098       4  4248
+PERCODE             X    000096       1  4245
+PERCODMK            U    0000F0       1  4246
+PGMACCID            X    0000A0       1  4250
+PGMDXC              F    000090       4  4240
+PGMICODE            H    00008E       2  4239
+PGMIID              F    00008C       4  4235
+PGMIILC             X    00008D       1  4237
+PGMIILCM            U    00000C       1  4238
+PGMNPSW             F    000068       8  4217
+PGMOPSW             F    000028       8  4189  4197
+PGMTRX              F    000090       4  4241
+PMCW1_0             X    000004       1  4402
+PMCW1_8             X    000005       1  4405  3726  3732
+PMCWB               U    000004       1  4437
+PMCWCHP0            X    000010       1  4426
+PMCWCHP1            X    000011       1  4427
+PMCWCHP2            X    000012       1  4428
+PMCWCHP3            X    000013       1  4429
+PMCWCHP4            X    000014       1  4430
+PMCWCHP5            X    000015       1  4431
+PMCWCHP6            X    000016       1  4432
+PMCWCHP7            X    000017       1  4433
+PMCWDNUM            H    000006       2  4417  3728
+PMCWE               U    000080       1  4406  3732
+PMCWEXC             X    00001B       1  4436
+PMCWIP              F    000000       4  4401
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    26
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PMCWISCM            U    000038       1  4403
+PMCWLM              U    000060       1  4407
+PMCWLMG             U    000020       1  4408
+PMCWLML             U    000040       1  4409
+PMCWLPM             X    000008       1  4419
+PMCWLPUM            X    00000A       1  4421
+PMCWM               U    000004       1  4413
+PMCWMBI             H    00000C       2  4423
+PMCWMM              U    000018       1  4410
+PMCWMMC             U    000008       1  4412
+PMCWMME             U    000010       1  4411
+PMCWPAM             X    00000F       1  4425
+PMCWPIM             X    00000B       1  4422
+PMCWPNOM            X    000009       1  4420
+PMCWPOM             X    00000E       1  4424
+PMCWRES1            X    000018       4  4434
+PMCWRES2            X    000018       3  4435
+PMCWS               U    000001       1  4439
+PMCWT               U    000002       1  4414
+PMCWV               U    000001       1  4415  3726
+PMCWX               U    000002       1  4438
+PREVORG             U    000200       1  3545  3551
+R0                  U    000000       1  4454  3585  3615  3629  3645  3751
+R1                  U    000001       1  4455
+R10                 U    00000A       1  4464
+R11                 U    00000B       1  4465
+R12                 U    00000C       1  4466
+R13                 U    00000D       1  4467
+R14                 U    00000E       1  4468  3595  3599  3654  3672
+R15                 U    00000F       1  4469  3616  3630  3646  3664  3665  3667  3669  3670  3713  3745  3796
+R2                  U    000002       1  4456  3586  3591  3592  3593
+R3                  U    000003       1  4457  3587  3662
+R4                  U    000004       1  4458
+R5                  U    000005       1  4459
+R6                  U    000006       1  4460
+R7                  U    000007       1  4461
+R8                  U    000008       1  4462  3588  3663
+R9                  U    000009       1  4463  3589  3666
+READ                U    000002       1  3859  3897  3898  3899  3900  3901  3902  3903  3904
+READ256K            W    001000       8  3897  3873  3888
+READFWD             U    000006       1  3860
+READPROG            W    0004C8       8  3872  3629  3645
+RESIDUAL            U    003000       1  3847
+RESLTADR            U    000800       1  3838  3881
+REW2LDPT            W    0004D8       8  3875  3870
+REWIND              U    000007       1  3861  3875
+REWPROG             W    0004B8       8  3869  3615
+RSTNPSW             F    000000       8  4183
+RSTOPSW             F    000008       8  4184
+SCANOUT             X    000080       1  4221  4222
+SCANOUTL            U    000000       1  4222
+SCHIB               4    000000      52  4398  4445  3722
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    27
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SCHIBL              U    000034       1  4445
+SCHMBA              A    000028       8  4443
+SCHMDA1             X    000030       4  4444
+SCHMDA3             X    000028      12  4442
+SCHPMCW             X    000000      28  4400
+SCHSCSW             X    00001C      12  4441
+SCSW                4    000000      12  4103  4165  3589
+SCSW0CC             U    000004       1  4119
+SCSW1               X    000002       1  4123
+SCSW2               X    000003       1  4132  3785
+SCSWACP             U    000001       1  4131
+SCSWADA             U    000040       1  4134
+SCSWAHP             U    000002       1  4130
+SCSWALKC            U    000010       1  4117
+SCSWARP             U    000008       1  4128
+SCSWASA             U    000080       1  4133
+SCSWASP             U    000004       1  4129
+SCSWASUS            U    000020       1  4135
+SCSWATTN            U    000080       1  4145
+SCSWBUSY            U    000010       1  4148
+SCSWCCTL            U    000004       1  4160
+SCSWCCW             A    000004       4  4142  3631  3647  3789
+SCSWCCWF            U    000080       1  4114
+SCSWCCWP            U    000040       1  4115
+SCSWCDAT            U    000008       1  4159
+SCSWCE              U    000008       1  4149  3618  3889
+SCSWCHNG            U    000001       1  4162
+SCSWCNT             H    00000A       2  4164  3634  3650  3790
+SCSWCS              X    000009       1  4154  3620  3633  3649
+SCSWCTLS            X    000001       1  4113
+SCSWCUE             U    000020       1  4147
+SCSWDCC0            U    000000       1  4109
+SCSWDCC1            U    000001       1  4110
+SCSWDCC3            U    000003       1  4111
+SCSWDCCM            U    000003       1  4108
+SCSWDE              U    000004       1  4150  3618  3889
+SCSWECWC            U    000002       1  4120
+SCSWESWF            U    000004       1  4107
+SCSWFC              U    000010       1  4127
+SCSWFH              U    000020       1  4126
+SCSWFLAG            X    000000       1  4104
+SCSWFM              U    000070       1  4124
+SCSWFS              U    000040       1  4125
+SCSWICTL            U    000002       1  4161
+SCSWIL              U    000040       1  4156  3889
+SCSWISIC            U    000020       1  4116
+SCSWKEYM            U    0000F0       1  4105
+SCSWL               U    00000C       1  4165
+SCSWPCI             U    000080       1  4155
+SCSWPNOP            U    000001       1  4121
+SCSWPRGM            U    000020       1  4157
+SCSWPROT            U    000010       1  4158
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    28
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SCSWSAS             U    000010       1  4136
+SCSWSINT            U    000008       1  4137
+SCSWSM              U    000040       1  4146
+SCSWSPEN            U    000001       1  4140
+SCSWSPRI            U    000004       1  4138  3787
+SCSWSSEC            U    000002       1  4139
+SCSWSSIC            U    000008       1  4118
+SCSWSUSC            U    000008       1  4106
+SCSWUC              U    000002       1  4151
+SCSWUS              X    000008       1  4144  3618  3632  3648  3786
+SCSWUX              U    000001       1  4152
+SKIP                U    000010       1  3856
+SLI                 U    000020       1  3855  3869  3872  3875
+SSARCHMD            X    0000A3       1  4253
+SSARS               F    000120       4  4309
+SSCLKCMP            F    0000E0       8  4303
+SSCPUTIM            F    0000D8       8  4302
+SSCRS               F    0001C0       4  4312
+SSFPRS              D    000160       8  4310
+SSGRS               F    000180       4  4311
+SSMODEL             F    00010C       4  4307
+SSPREFIX            F    000108       4  4306
+SSPSW               F    000100       8  4305
+SSXSAA              A    0000D4       4  4301
+STFLDATA            F    0000C8       4  4274
+SVCICODE            H    00008A       2  4233
+SVCIID              F    000088       4  4229
+SVCIILC             X    000089       1  4231
+SVCIILCM            U    00000C       1  4232
+SVCNPSW             F    000060       8  4216
+SVCOPSW             F    000020       8  4188  4195
+TEST01              I    000212       4  3608  3599
+TESTADDR            U    000FFF       1  3839  3891
+TESTCCWA            A    000800       4  3884  3631  3647
+TESTCS              X    000805       1  3886  3633  3649
+TESTNUM             X    000FFF       1  3893  3608
+TESTRES             H    000806       2  3887  3634  3650
+TESTRSLT            X    000800       8  3883  3636  3652
+TESTTAPE            J    000000    8448  3522  3525  3532  3546  3548  3559  3561  3881  3891  3895  3925
+TESTUS              X    000804       1  3885  3632  3648
+TIC                 U    000008       1  3862  3870  3873
+TIMER               F    000050       4  4212
+TTDES               F    000054       4  4213
+UA0                 F    000010       8  4185
+UA1                 F    00004C       4  4210
+UA2                 F    0000A4       4  4255
+UA3                 F    0000B4       4  4264
+UA4                 X    0000B8       1  4265
+UA5                 X    0000CC       8  4275
+UA6                 X    0000EC       8  4281
+UA7                 F    000118       8  4292
+UA8                 X    000180      32  4321
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    29
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+WPSW0017            U    0003A0      16  3770  3769
+ZBRKADDR            A    000110       8  4291
+ZEMONCNT            F    00010C       4  4290
+ZEMONCTR            A    000100       8  4288
+ZEMONSIZ            F    000108       4  4289
+ZEXTNPSW            X    0001B0      16  4324
+ZEXTOPSW            X    000130      16  4316
+ZIONPSW             X    0001F0      16  4328
+ZIOOPSW             X    000170      16  4320
+ZMCKNPSW            X    0001E0      16  4327
+ZMCKOPSW            X    000160      16  4319
+ZMKFAILA            F    0000F8       8  4283
+ZMONCODE            F    0000B0       8  4258
+ZPGMNPSW            X    0001D0      16  4326
+ZPGMOPSW            X    000150      16  4318
+ZPGMTRX             F    0000A8       8  4257
+ZRSTNPSW            X    0001A0      16  4323
+ZRSTOPSW            X    000120      16  4315
+ZSASDISP            U    0011C0       1  4329
+ZSVCNPSW            X    0001C0      16  4325
+ZSVCOPSW            X    000140      16  4317
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    30
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        117
+APROB       249
+ARCHIND     409   3439
+ARCHLVL     550   3438
+ASAIPL      676   3557
+ASALOAD     756   3521
+ASAREA      811   4175
+ASAZAREA    996
+CPUWAIT    1079   3766
+DSECTS     1405   4007   4039   4086   4101   4172
+DWAIT      1608   3679   3684   3689   3694   3699
+DWAITEND   1665   3678
+ENADEV     1673   3719
+ESA390     1773
+IOCB       1784   3803
+IOCBDS     1960   4008
+IOFMT      1994   4040   4087   4102   4334   4352   4360   4397
+IOINIT     2332   3708
+IOTRFR     2373
+ORB        2421   3819
+POINTER    2610
+PSWFMT     2638
+RAWAIT     2772
+RAWIO      2868   3753
+SIGCPU     3026
+SMMGR      3084
+SMMGRB     3184
+TRAP128    3233   3533
+TRAP64     3210   3523   3526
+TRAPS      3246
+ZARCH      3320
+ZEROH      3332
+ZEROL      3360
+ZEROLH     3388
+ZEROLL     3411
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    31
+
+   DESC     SYMBOL   SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE     8448  0000-20FF  0000-20FF
+  Region   CODE      8448  0000-20FF  0000-20FF
+    CSECT  TESTTAPE  8448  0000-20FF  0000-20FF
+ASMA Ver. 0.2.0                                Tape Data Chaining Test                              22 Jul 2017 15:53:26  Page    32
+
+   STMT                                             FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\tape\tape.asm
+2     C:\Users\Fish\Documents\Visual Studio 2008\Projects\Hercules\_Git\_Harold\SATK-0\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+
