@@ -67,7 +67,8 @@ extern DEVHND cardrdr_device_hndinfo;
 extern DEVHND cardpch_device_hndinfo;
 extern DEVHND printer_device_hndinfo;
 extern DEVHND prt3203_device_hndinfo
-extern DEVHND tapedev_device_hndinfo;
+extern DEVHND tape_other_devhnd;
+extern DEVHND tape_3590_devhnd;
 extern DEVHND qeth_device_hndinfo;
 extern DEVHND zfcp_device_hndinfo;
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/

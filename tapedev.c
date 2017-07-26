@@ -128,7 +128,7 @@
 
 /*-------------------------------------------------------------------*/
 
-DEVHND  tapedev_device_hndinfo   =
+DEVHND  tape_other_devhnd   =
 {
         &tapedev_init_handler,         /* Device Initialisation      */
         &tapedev_execute_ccw,          /* Device CCW execute         */
@@ -146,7 +146,36 @@ DEVHND  tapedev_device_hndinfo   =
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
-        TapeImmedCommands,             /* Immediate CCW Codes        */
+        TapeImmedOther,                /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Signal Adapter Sync        */
+        NULL,                          /* Signal Adapter Output Mult */
+        NULL,                          /* QDIO subsys desc           */
+        NULL,                          /* QDIO set subchan ind       */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
+};
+
+DEVHND  tape_3590_devhnd   =
+{
+        &tapedev_init_handler,         /* Device Initialisation      */
+        &tapedev_execute_ccw,          /* Device CCW execute         */
+        &tapedev_close_device,         /* Device Close               */
+        &tapedev_query_device,         /* Device Query               */
+        NULL,                          /* Device Extended Query      */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Halt channel pgm    */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
+        TapeImmed3590,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
@@ -188,17 +217,17 @@ END_DEPENDENCY_SECTION
 
 HDL_DEVICE_SECTION;
 {
-    HDL_DEVICE ( 3410, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3411, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3420, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3422, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3430, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3480, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3490, tapedev_device_hndinfo );
-    HDL_DEVICE ( 3590, tapedev_device_hndinfo );
-    HDL_DEVICE ( 8809, tapedev_device_hndinfo );
-    HDL_DEVICE ( 9347, tapedev_device_hndinfo );
-    HDL_DEVICE ( 9348, tapedev_device_hndinfo );
+    HDL_DEVICE ( 3410, tape_other_devhnd );
+    HDL_DEVICE ( 3411, tape_other_devhnd );
+    HDL_DEVICE ( 3420, tape_other_devhnd );
+    HDL_DEVICE ( 3422, tape_other_devhnd );
+    HDL_DEVICE ( 3430, tape_other_devhnd );
+    HDL_DEVICE ( 3480, tape_other_devhnd );
+    HDL_DEVICE ( 3490, tape_other_devhnd );
+    HDL_DEVICE ( 3590, tape_3590_devhnd );
+    HDL_DEVICE ( 8809, tape_other_devhnd );
+    HDL_DEVICE ( 9347, tape_other_devhnd );
+    HDL_DEVICE ( 9348, tape_other_devhnd );
 }
 END_DEVICE_SECTION
 
@@ -398,11 +427,13 @@ typedef struct DEVINITTAB               /* Initialization values     */
     BYTE        devmodel;               /* Device model number       */
     U16         cutype;                 /* Control unit type         */
     BYTE        cumodel;                /* Control unit model number */
-    U32         sctlfeat;               /* Storage control features  */
-    BYTE        devclass;               /* Device class code         */
-    BYTE        devtcode;               /* Device type code          */
+    U32         feats1;                 /* Storage control features  */
+    U32         feats2;                 /* Storage control features  */
+    U32         maxblk;                 /* Maximum supported blksize */
     BYTE        MDR;                    /* Misc. Data Record ID      */
     BYTE        OBR;                    /* Outboard Recorder ID      */
+    BYTE        devclass;               /* Device class code         */
+    BYTE        devtcode;               /* Device type code          */
     int         numdevid;               /* #of SNSID bytes (see NOTE)*/
     int         numsense;               /* #of SENSE bytes           */
     int         haverdc;                /* RDC Supported             */
@@ -427,15 +458,15 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 //            3410/3411/3420/3422/3430/8809/9347/9348
 //--------------------------------------------------------------------
 //
-// devtype/mod  cutype/mod    sctlfeat  cls typ MDR OBR sid sns rdc dsp
- { 0x3410,0x01, 0x3115,0x01, 0x00000000, 0,  0,  0,  0,  0,  9,  0,  0 },
- { 0x3411,0x01, 0x3115,0x01, 0x00000000, 0,  0,  0,  0,  0,  9,  0,  0 },
- { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0,  0,  0,  0,  0, 24,  0,  0 }, // (DEFAULT: 3420)
- { 0x3422,0x01, 0x3422,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x3430,0x01, 0x3422,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x8809,0x01, 0x8809,0x01, 0x00000000, 0,  0,  0,  0,  0, 32,  0,  0 },
- { 0x9347,0x01, 0x9347,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x9348,0x01, 0x9348,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
+// devtype/mod  cutype/mod     feats1      feats2    maxblk MDR OBR cls typ sid sns rdc dsp
+ { 0x3410,0x01, 0x3115,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3411,0x01, 0x3115,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0, 24,  0,  0 }, // (DEFAULT: 3420)
+ { 0x3422,0x01, 0x3422,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x3430,0x01, 0x3422,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x8809,0x01, 0x8809,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0, 32,  0,  0 },
+ { 0x9347,0x01, 0x9347,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x9348,0x01, 0x9348,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
 
 //--------------------------------------------------------------------
 //                          3480/3490/3590
@@ -454,49 +485,19 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 // subsystem design.
 //
 // PROGRAMMING NOTE: if you change the below devtype/mod or cutype/mod
-// values, be sure to ALSO change tapeccws.c's READ CONFIGURATION DATA
-// (CCW opcode 0xFA) values as well!
+// values, be sure to ALSO change the same corresponding values in the
+// tapeccws.c's READ CONFIGURATION DATA (CCW opcode 0xFA) logic too!
+// (i.e. the "tape_read_configuration_data()" function further below)
 //
-// PROGRAMMING NOTE: the bit values of the 'sctlfeat' field are:
+// For the layout of the 'feats1' and 'feats2' fields, please refer to
+// the 'TAPERDC' struct defined in the tapedev.h header file.
 //
-//     RDC Byte
-//     6.7.8.9.
-//     ..80....   RBL Format-30 media information available
-//     ..40....   (unknown)
-//     ..20....   (unknown)
-//     ....80..   Device or media emulation active; emulated media
-//                information available in RBL Format-30 data. Set to
-//                zero when normal 3490E or earlier, or real device.
-//     ....40..   (unknown)
-//     ....20..   Set when bits 0-9 of the Block ID are zero for Locate
-//                Block on select device types
-//     ....10..   (unknown)
-//     ....08..   Set Special Intercept Condition (SIC) supported
-//     ....04..   Channel Path No-Operation supported (always
-//                on if Library Attachment Facility installed)
-//     ....02..   Logical Write-Protect supported (always on
-//                if Read Device Characteristics is supported)
-//     ....01..   Extended Buffered Log support enabled (if 64
-//                bytes of buffered log data, else 32 bytes)
-//     ......80   Automatic Cartridge Loader installed/enabled
-//     ......40   Improved Data Recording Capability (compression
-//                support) installed/enabled
-//     ......20   Suppress Volume Fencing
-//     ......10   Library Interface online/enabled
-//     ......08   Library Attachment Facility installed
-//     ......04   (unknown)
-//     ......02   (unknown)
-//     ......01   (unknown)
-//
-// PROGRAMMING NOTE: the below "0x00004EC4" value for the 'sctlfeat'
-// field for Model 3590 was determined empirically on a real machine.
-//
-// devtype/mod  cutype/mod    sctlfeat   cls  typ   MDR  OBR  sid sns  rdc dsp
- { 0x3480,0x31, 0x3480,0x31, 0x000002C0, 0x80,0x80, 0x41,0x80,  7, 24,  1,  1 },  // 0x31 = D31
- { 0x3490,0x50, 0x3490,0x50, 0x000002C0, 0x80,0x80, 0x42,0x81,  7, 32,  1,  1 },  // 0x50 = C10
- { 0x3590,0x10, 0x3590,0x50, 0x00004EC4, 0x80,0x80, 0x46,0x83,  7, 32,  1,  1 },  // 0x10 = B1A, 0x50 = A50
- { 0xFFFF,0xFF, 0xFFFF,0xFF, 0xFFFFFFFF, 0xFF,0xFF, 0xFF,0xFF, -1, -1, -1, -1 },  //**** END OF TABLE ****
- { 0x3420,0x06, 0x3803,0x02, 0x00000000,   0,   0,    0,   0,   0, 24,  0,  0 },  // (DEFAULT: 3420)
+// devtype/mod  cutype/mod     feats1      feats2    maxblk  MDR  OBR   cls  typ  sid sns rdc dsp
+ { 0x3480,0x31, 0x3480,0x31, FEAT1_3480, FEAT2_3480,  65535, M48, O48, 0x80,0x80,  7, 24,  1,  1 },  // 0x31 = D31
+ { 0x3490,0x50, 0x3490,0x50, FEAT1_3490, FEAT2_3490,  65535, M49, O49, 0x80,0x80,  7, 32,  1,  1 },  // 0x50 = C10
+ { 0x3590,0x10, 0x3590,0x50, FEAT1_3590, FEAT2_3590, 262144, M59, O59, 0x80,0x80,  7, 32,  1,  1 },  // 0x10 = B1A, 0x50 = A50
+ { 0xFFFF,0xFF, 0xFFFF,0xFF, 0xFFFFFFFF, 0xFFFFFFFF,   -1,  0xFF,0xFF, 0xFF,0xFF, -1, -1, -1, -1 },  //**** END OF TABLE ****
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000,  65535,  0,   0,    0,   0,   0, 24,  0,  0 },  // (DEFAULT: 3420)
 };
 
 /*-------------------------------------------------------------------*/
@@ -648,6 +649,7 @@ static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int             rc;
 DEVINITTAB*     pDevInitTab;
+TAPERDC*        rdc = (TAPERDC*) dev->devchar;
 
     dev->rcd = &tape_read_configuration_data;
 
@@ -730,21 +732,17 @@ DEVINITTAB*     pDevInitTab;
            )
     )
     {
-        dev->numdevid = 7;                  // (allow for this legacy device)
+        dev->numdevid = 7;      // (allow only this much for legacy devices)
     }
 
     /* Initialize the Sense-Id bytes if needed... */
     if (dev->numdevid > 0)
     {
-        dev->devid[0] = 0xFF;
-
-        dev->devid[1] = (pDevInitTab->cutype >> 8) & 0xFF;
-        dev->devid[2] = (pDevInitTab->cutype >> 0) & 0xFF;
-        dev->devid[3] =  pDevInitTab->cumodel;
-
-        dev->devid[4] = (pDevInitTab->devtype >> 8) & 0xFF;
-        dev->devid[5] = (pDevInitTab->devtype >> 0) & 0xFF;
-        dev->devid[6] =  pDevInitTab->devmodel;
+                   dev->devid[0] = 0xFF;
+        STORE_HW( &dev->devid[1],  pDevInitTab->cutype  );
+                   dev->devid[3] = pDevInitTab->cumodel;
+        STORE_HW( &dev->devid[4],  pDevInitTab->devtype );
+                   dev->devid[6] = pDevInitTab->devmodel;
 
         /* Initialize the CIW information if needed... */
         if (dev->numdevid > 7)
@@ -753,57 +751,45 @@ DEVINITTAB*     pDevInitTab;
             // struct definition regarding requirements for
             // supporting more than 7 bytes of SNSID info.
 
-            memcpy (&dev->devid[8],  "\x40\xFA\x00\xA0", 4);  // CIW Read Configuration Data  (0xFA)
-            memcpy (&dev->devid[12], "\x41\x73\x00\x04", 4);  // CIW Set Interface Identifier (0x73)
-            memcpy (&dev->devid[16], "\x42\x3E\x00\x60", 4);  // CIW Read Subsystem Data      (0x3E)
+            memcpy( &dev->devid[8],  "\x40\xFA\x00\xA0", 4 ); // CIW Read Configuration Data  (0xFA)
+            memcpy( &dev->devid[12], "\x41\x73\x00\x04", 4 ); // CIW Set Interface Identifier (0x73)
+            memcpy( &dev->devid[16], "\x42\x3E\x00\x60", 4 ); // CIW Read Subsystem Data      (0x3E)
         }
     }
 
     /* Initialize the Read Device Characteristics (RDC) bytes... */
     if (pDevInitTab->haverdc)
     {
-        dev->numdevchar = 64;
+        dev->numdevchar = sizeof( dev->devchar );
+        memset( dev->devchar, 0, dev->numdevchar );
 
-        memset (dev->devchar, 0, sizeof(dev->devchar));
-        memcpy (dev->devchar, dev->devid+1, 6);
+        /* Initialize feature bytes and other values */
+        STORE_FW( rdc->feats1,    pDevInitTab->feats1 );
+        STORE_FW( rdc->feats2,    pDevInitTab->feats2 );
+        STORE_HW( rdc->cutype,    pDevInitTab->cutype  );
+        STORE_HW( rdc->ncutype,   pDevInitTab->cutype  );
+        STORE_HW( rdc->tutype,    pDevInitTab->devtype );
+        STORE_HW( rdc->ntutype,   pDevInitTab->devtype );
+                  rdc->cumodel  = pDevInitTab->cumodel;
+                  rdc->ncumodel = pDevInitTab->cumodel;
+                  rdc->tumodel  = pDevInitTab->devmodel;
+                  rdc->ntumodel = pDevInitTab->devmodel;
+                  rdc->devclass = pDevInitTab->devclass;
+                  rdc->devtcode = pDevInitTab->devtcode;
+                  rdc->mdr      = pDevInitTab->MDR;
+                  rdc->obr      = pDevInitTab->OBR;
 
-        // Bytes 6-9: Subsystem Facilities...
-
-        dev->devchar[6] = (pDevInitTab->sctlfeat >> 24) & 0xFF;
-        dev->devchar[7] = (pDevInitTab->sctlfeat >> 16) & 0xFF;
-        dev->devchar[8] = (pDevInitTab->sctlfeat >>  8) & 0xFF;
-        dev->devchar[9] = (pDevInitTab->sctlfeat >>  0) & 0xFF;
-
-        // Bytes 10/11: Device Class/Type ...
-
-        dev->devchar[10] = pDevInitTab->devclass;
-        dev->devchar[11] = pDevInitTab->devtcode;
-
-        // Bytes 24-29: cutype/model & devtype/model ...
-        // (Note: undocumented; determined empirically)
-
-        dev->devchar[24] = (pDevInitTab->cutype >> 8) & 0xFF;
-        dev->devchar[25] = (pDevInitTab->cutype >> 0) & 0xFF;
-        dev->devchar[26] =  pDevInitTab->cumodel;
-
-        dev->devchar[27] = (pDevInitTab->devtype >> 8) & 0xFF;
-        dev->devchar[28] = (pDevInitTab->devtype >> 0) & 0xFF;
-        dev->devchar[29] =  pDevInitTab->devmodel;
-
-        // Bytes 40-41: MDR/OBR code...
-
-        dev->devchar[40] = pDevInitTab->MDR;
-        dev->devchar[41] = pDevInitTab->OBR;
+        /* Set maximum blocksize and default blocksize values */
+        STORE_FW( rdc->maxblk, pDevInitTab->maxblk );
+        STORE_FW( rdc->defblk, pDevInitTab->maxblk );
     }
 
     /* Initialize other fields */
-//  dev->numdevid            = pDevInitTab->numdevid;   // (handled above)
+//  dev->numdevid            = pDevInitTab->numdevid;   // (we already did this)
     dev->numsense            = pDevInitTab->numsense;
     dev->tdparms.displayfeat = pDevInitTab->displayfeat;
-
     dev->fenced              = 0;   // (always, initially)
     dev->SIC_active          = 0;   // (always, initially)
-    dev->SIC_supported       = 0;   // (until we're sure)
     dev->forced_logging      = 0;   // (always, initially)
     dev->noautomount         = 0;   // (always, initially)
 
@@ -826,15 +812,18 @@ DEVINITTAB*     pDevInitTab;
 
     // Initialize the [non-SCSI] auto-loader...
 
-    // PROGRAMMING NOTE: we don't [yet] know at this early stage
-    // what type of tape device we're dealing with (SCSI (non-virtual)
-    // or non-SCSI (virtual)) since 'mountnewtape' hasn't been called
-    // yet (which is the function that determines which media handler
-    // should be used and is the one that initializes dev->tapedevt)
-
-    // The only thing we know (or WILL know once 'autoload_init'
-    // is called) is whether or not there was a [non-SCSI] auto-
-    // loader defined for the device. That's it and nothing more.
+    //-----------------------------------------------------------------
+    //                IMPORTANT PROGRAMMING NOTE!
+    //-----------------------------------------------------------------
+    //    "dev->tapedevt" is still uninitialized at this point!
+    //-----------------------------------------------------------------
+    // We don't know yet what type of tape device we're dealing with
+    // (SCSI (non-virtual) or non-SCSI (virtual)) since 'mountnewtape'
+    // hasn't been called yet (which determines the media handler to
+    // be used and initializes dev->tapedevt).  The only thing we know
+    // (or WILL know once 'autoload_init' is called) is whether or not
+    // there was a [non-SCSI] auto-loader defined for the device.
+    //-----------------------------------------------------------------
 
     autoload_init( dev, argc, argv );
 
@@ -862,9 +851,6 @@ DEVINITTAB*     pDevInitTab;
             rc = dev->als ? rc : -1;
         }
     }
-
-    if (dev->devchar[8] & 0x08)     // SIC supported?
-        dev->SIC_supported = 1;     // remember that fact
 
 #if defined(OPTION_SCSI_TAPE)
     /* Initialize SCSI tape status field (must not do

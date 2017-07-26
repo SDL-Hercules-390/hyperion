@@ -290,7 +290,7 @@ BYTE  TapeCommands3590 [256] =
    0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
-   0,0,2,2,0,0,0,2,0,0,0,0,0,0,0,2, /* C0 */
+   0,0,2,2,0,0,0,2,0,0,0,3,0,0,0,3, /* C0 */  // CB=? CF=?
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
    0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
    0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0  /* F0 */
@@ -335,7 +335,7 @@ BYTE  TapeCommands9347 [256] =
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-BYTE  TapeImmedCommands [256] =
+BYTE  TapeImmedOther [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
    0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* 00 */
@@ -351,6 +351,27 @@ BYTE  TapeImmedCommands [256] =
    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, /* A0 */
    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* B0 */
    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* C0 */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* D0 */
+   0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1, /* E0 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1  /* F0 */
+};
+
+BYTE  TapeImmed3590 [256] =               /* (modified copy of the above) */
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* 00 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 20 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 30 */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 50 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 60 */
+   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* 70 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 80 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, /* 90 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, /* A0 */
+   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* B0 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, /* C0 */    // CB=? CF=?
    0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* D0 */
    0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1, /* E0 */
    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1  /* F0 */
@@ -607,7 +628,12 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
                 // 3480, "Set Tape-Write-Immediate" for 3480 and later.
                 // NOTE: handled by command-table for all models earlier
                 // than 3480; 3480 and later handled further below.
-    case 0xCB: /* 9-track 800 bpi */
+//  case 0xCB:  // "Mode Set" (9-track 800 bpi) for some models (3410,
+                // 3420, etc.) but some other unknown command for other
+                // models (3480, 3590, etc) and completely invalid for
+                // yet other models (3422, 3430). For all device types
+                // except 3590, this code is handled by command-table
+                // and not here. For 3590, it is handled further below.
     case 0xD3: /* 9-track 6250 bpi */
     case 0xEB: /* invalid mode set issued by DOS/VS */
     {
@@ -665,6 +691,12 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
     /*---------------------------------------------------------------*/
     case 0x06:
     {
+        if (!RDFWD_SUPPORTED())
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /*   SG24-2506 IBM 3590 Tape Subsystem Technical Guide
 
         5.2.1 Separate Channel Commands for IPL Read and Normal Read
@@ -825,7 +857,8 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         /* Check for error */
         if (rc < 0)
         {
-            dev->fenced = 1;
+            if (!SVF_ENABLED())
+                dev->fenced = 1;  // (position lost; fence the volume)
             break;
         }
 
@@ -1878,7 +1911,9 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         if ((rc = dev->tmh->locateblk( dev, locblock, unitstat, code )) < 0)
         {
             errcode = TAPE_BSENSE_LOCATEERR;
-            dev->fenced = 1;  // (position lost; fence the volume)
+
+            if (!SVF_ENABLED())
+                dev->fenced = 1; // (position lost; fence the volume)
         }
 
         /* Update display if needed */
@@ -2376,7 +2411,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             */
 
             /* Command reject if Special Intercept Condition not supported */
-            if (!dev->SIC_supported)      // (not supported?)
+            if (!SIC_SUPPORTED())
             {
                 build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
                 break;
@@ -2794,6 +2829,11 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
            the state of the medium currently associated with
            the device, if any.
         */
+        if (!MEDSNS_SUPPORTED())
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
 
 #if 0 //  ZZ FIXME: not coded yet
 
@@ -2956,7 +2996,19 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
     }
 
     /*---------------------------------------------------------------*/
-    /* MODE SENSE   (3590)                                           */
+    /* ???????????? (3590)       (MODE SELECT maybe?)                */
+    /*---------------------------------------------------------------*/
+    case 0xCB:
+    {
+        // ZZ FIXME: not written yet. (No available documentation!)
+
+        /* Not currently supported; treat as no-op */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+        break;
+    }
+
+    /*---------------------------------------------------------------*/
+    /* ???????????? (3590)       (MODE SENSE maybe?)                 */
     /*---------------------------------------------------------------*/
     case 0xCF:
     {
@@ -2973,10 +3025,10 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         "Mode Sense" Pages that the 3590 supports.
         */
 
-        // ZZ FIXME: not written yet.
+        // ZZ FIXME: not written yet. (No available documentation!)
 
-        /* Set command reject sense byte, and unit check status */
-        build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+        /* Not currently supported; treat as no-op */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
     }
 
@@ -3062,6 +3114,15 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
         if (iobuf[0] & MSET_WRITE_IMMED)
             dev->write_immed = 1;           /* set write-immed. mode */
+
+        if (iobuf[0] & MSET_IDRC)           /* set compression mode  */
+        {
+            if (!IDR_SUPPORTED())           /* Reject if unsupported */
+            {
+                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+                break;
+            }
+        }
 
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
@@ -4176,217 +4237,3 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     }
 
 } /* end function build_sense_Streaming */
-
-
-/*********************************************************************/
-/*********************************************************************/
-/**                                                                 **/
-/**               ((  I N C O M P L E T E  ))                       **/
-/**                                                                 **/
-/**      (experimental possible new sense handling function)        **/
-/**                                                                 **/
-/*********************************************************************/
-/*********************************************************************/
-
-#if 0 //  ZZ FIXME:  To Do...
-
-/*-------------------------------------------------------------------*/
-/*                 Error Recovery Action codes                       */
-/*-------------------------------------------------------------------*/
-/*
-    Even though ERA codes are, technically, only applicable for
-    model 3480/3490/3590 tape drives (the sense information that
-    is returned for model 3480/3490/3590 tape drives include the
-    ERA code in them), we can nonetheless still use them as an
-    argument for our 'BuildTapeSense' function even for other
-    model tape drives (e.g. 3420's for example). That is to say,
-    even though model 3420's for example, don't have an ERA code
-    anywhere in their sense information, we can still use the
-    ERA code as an argument in our call to our 'BuildTapeSense'
-    function without actually using it anywhere in our sense info.
-    In such a case we would be just using it as an internal value
-    to tell us what type of sense information to build for the
-    model 3420, but not for any other purpose. For 3480/3490/3590
-    model drives however, we not only use it for the same purpose
-    (i.e. as an internal value to tell us what format of sense
-    we need to build) but ALSO as an actual value to be placed
-    into the actual formatted sense information itself too.
-*/
-
-#define  TAPE_ERA_UNSOLICITED_SENSE           0x00
-
-#define  TAPE_ERA_DATA_STREAMING_NOT_OPER     0x21
-#define  TAPE_ERA_PATH_EQUIPMENT_CHECK        0x22
-#define  TAPE_ERA_READ_DATA_CHECK             0x23
-#define  TAPE_ERA_LOAD_DISPLAY_CHECK          0x24
-#define  TAPE_ERA_WRITE_DATA_CHECK            0x25
-#define  TAPE_ERA_READ_OPPOSITE               0x26
-#define  TAPE_ERA_COMMAND_REJECT              0x27
-#define  TAPE_ERA_WRITE_ID_MARK_CHECK         0x28
-#define  TAPE_ERA_FUNCTION_INCOMPATIBLE       0x29
-#define  TAPE_ERA_UNSOL_ENVIRONMENTAL_DATA    0x2A
-#define  TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT  0x2B
-#define  TAPE_ERA_PERMANENT_EQUIPMENT_CHECK   0x2C
-#define  TAPE_ERA_DATA_SECURE_ERASE_FAILURE   0x2D
-#define  TAPE_ERA_NOT_CAPABLE_BOT_ERROR       0x2E
-
-#define  TAPE_ERA_WRITE_PROTECTED             0x30
-#define  TAPE_ERA_TAPE_VOID                   0x31
-#define  TAPE_ERA_TENSION_LOST                0x32
-#define  TAPE_ERA_LOAD_FAILURE                0x33
-#define  TAPE_ERA_UNLOAD_FAILURE              0x34
-#define  TAPE_ERA_DRIVE_EQUIPMENT_CHECK       0x35
-#define  TAPE_ERA_END_OF_DATA                 0x36
-#define  TAPE_ERA_TAPE_LENGTH_ERROR           0x37
-#define  TAPE_ERA_PHYSICAL_END_OF_TAPE        0x38
-#define  TAPE_ERA_BACKWARD_AT_BOT             0x39
-#define  TAPE_ERA_DRIVE_SWITCHED_NOT_READY    0x3A
-#define  TAPE_ERA_MANUAL_REWIND_OR_UNLOAD     0x3B
-
-#define  TAPE_ERA_OVERRUN                     0x40
-#define  TAPE_ERA_RECORD_SEQUENCE_ERROR       0x41
-#define  TAPE_ERA_DEGRADED_MODE               0x42
-#define  TAPE_ERA_DRIVE_NOT_READY             0x43
-#define  TAPE_ERA_LOCATE_BLOCK_FAILED         0x44
-#define  TAPE_ERA_DRIVE_ASSIGNED_ELSEWHERE    0x45
-#define  TAPE_ERA_DRIVE_NOT_ONLINE            0x46
-#define  TAPE_ERA_VOLUME_FENCED               0x47
-#define  TAPE_ERA_UNSOL_INFORMATIONAL_DATA    0x48
-#define  TAPE_ERA_BUS_OUT_CHECK               0x49
-#define  TAPE_ERA_CONTROL_UNIT_ERP_FAILURE    0x4A
-#define  TAPE_ERA_CU_AND_DRIVE_INCOMPATIBLE   0x4B
-#define  TAPE_ERA_RECOVERED_CHECKONE_FAILED   0x4C
-#define  TAPE_ERA_RESETTING_EVENT             0x4D
-#define  TAPE_ERA_MAX_BLOCKSIZE_EXCEEDED      0x4E
-
-#define  TAPE_ERA_BUFFERED_LOG_OVERFLOW       0x50
-#define  TAPE_ERA_BUFFERED_LOG_END_OF_VOLUME  0x51
-#define  TAPE_ERA_END_OF_VOLUME_COMPLETE      0x52
-#define  TAPE_ERA_GLOBAL_COMMAND_INTERCEPT    0x53
-#define  TAPE_ERA_TEMP_CHANN_INTFACE_ERROR    0x54
-#define  TAPE_ERA_PERM_CHANN_INTFACE_ERROR    0x55
-#define  TAPE_ERA_CHANN_PROTOCOL_ERROR        0x56
-#define  TAPE_ERA_GLOBAL_STATUS_INTERCEPT     0x57
-#define  TAPE_ERA_TAPE_LENGTH_INCOMPATIBLE    0x5A
-#define  TAPE_ERA_FORMAT_3480_XF_INCOMPAT     0x5B
-#define  TAPE_ERA_FORMAT_3480_2_XF_INCOMPAT   0x5C
-#define  TAPE_ERA_TAPE_LENGTH_VIOLATION       0x5D
-#define  TAPE_ERA_COMPACT_ALGORITHM_INCOMPAT  0x5E
-
-// Sense byte 0
-
-#define  TAPE_SNS0_CMDREJ     0x80          // Command Reject
-#define  TAPE_SNS0_INTVREQ    0x40          // Intervention Required
-#define  TAPE_SNS0_BUSCHK     0x20          // Bus-out Check
-#define  TAPE_SNS0_EQUIPCHK   0x10          // Equipment Check
-#define  TAPE_SNS0_DATACHK    0x08          // Data check
-#define  TAPE_SNS0_OVERRUN    0x04          // Overrun
-#define  TAPE_SNS0_DEFUNITCK  0x02          // Deferred Unit Check
-#define  TAPE_SNS0_ASSIGNED   0x01          // Assigned Elsewhere
-
-// Sense byte 1
-
-#define  TAPE_SNS1_LOCFAIL    0x80          // Locate Failure
-#define  TAPE_SNS1_ONLINE     0x40          // Drive Online to CU
-#define  TAPE_SNS1_RSRVD      0x20          // Reserved
-#define  TAPE_SNS1_RCDSEQ     0x10          // Record Sequence Error
-#define  TAPE_SNS1_BOT        0x08          // Beginning of Tape
-#define  TAPE_SNS1_WRTMODE    0x04          // Write Mode
-#define  TAPE_SNS1_FILEPROT   0x02          // Write Protect
-#define  TAPE_SNS1_NOTCAPBL   0x01          // Not Capable
-
-// Sense byte 2
-
-//efine  TAPE_SNS2_XXXXXXX    0x80-0x04     // (not defined)
-#define  TAPE_SNS2_SYNCMODE   0x02          // Tape Synchronous Mode
-#define  TAPE_SNS2_POSITION   0x01          // Tape Positioning
-
-#define  BUILD_TAPE_SENSE( _era )   BuildTapeSense( _era, dev, unitstat, code )
-//    BUILD_TAPE_SENSE( TAPE_ERA_COMMAND_REJECT );
-
-
-/*-------------------------------------------------------------------*/
-/*                        BuildTapeSense                             */
-/*-------------------------------------------------------------------*/
-/* Build appropriate sense information based on passed ERA code...   */
-/*-------------------------------------------------------------------*/
-
-void BuildTapeSense( BYTE era, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode )
-{
-    BYTE fmt;
-
-    // ---------------- Determine Sense Format -----------------------
-
-    switch (era)
-    {
-    default:
-
-        fmt = 0x20;
-        break;
-
-    case TAPE_ERA_UNSOL_ENVIRONMENTAL_DATA:     // ERA 2A
-
-        fmt = 0x21;
-        break;
-
-    case TAPE_ERA_ENVIRONMENTAL_DATA_PRESENT:   // ERA 2B
-
-        if (dev->devchar[8] & 0x01)             // Extended Buffered Log support enabled?
-            fmt = 0x30;                         // Yes, IDRC; 64-bytes of sense data
-        else
-            fmt = 0x21;                         // No, no IDRC; only 32-bytes of sense
-        break;
-
-    case TAPE_ERA_UNSOL_INFORMATIONAL_DATA:     // ERA 48
-
-        if (dev->forced_logging)                // Forced Error Logging enabled?
-            fmt = 0x19;                         // Yes, Forced Error Logging sense
-        else
-            fmt = 0x20;                         // No, Normal Informational sense
-        break;
-
-    case TAPE_ERA_END_OF_VOLUME_COMPLETE:       // ERA 52
-
-        fmt = 0x22;
-        break;
-
-    case TAPE_ERA_FORMAT_3480_2_XF_INCOMPAT:    // ERA 5C
-
-        fmt = 0x24;
-        break;
-
-    } // End switch (era)
-
-    // ---------------- Build Sense Format -----------------------
-
-    switch (fmt)
-    {
-    case 0x19:
-        break;
-
-    default:
-    case 0x20:
-        break;
-
-    case 0x21:
-        break;
-
-    case 0x22:
-        break;
-
-    case 0x24:
-        break;
-
-    case 0x30:
-        break;
-
-    } // End switch (fmt)
-
-} /* end function BuildTapeSense */
-
-
-#endif //  ZZ FIXME:  To Do...
-
-
-/*********************************************************************/
-/*********************************************************************/

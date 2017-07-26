@@ -26,6 +26,160 @@
 #define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/
+/* Read Device Characteristics (RDC) structure                       */
+/*-------------------------------------------------------------------*/
+struct TAPERDC
+{
+    HWORD   cutype;         //  0-1     // Control unit type
+    BYTE    cumodel;        //  2       // Control unit model
+    HWORD   tutype;         //  3-4     // Tape unit type
+    BYTE    tumodel;        //  5       // Tape unit model
+
+/*-------------------------------------------------------------------*/
+    FWORD   feats1;         //  6-9     // Features and Facilities 1
+
+#define TRDC_NTP        0x01000000      //  New tape product (NTP)
+                                        //  (i.e. 3590 or greater)
+                                        //  RDC 19-29 defined/valid
+#define TRDC_RBL30      0x00800000      //  RBL-30 media info avail
+#define TRDC_BLKID      0x00004000      //  Bits 0-9 of blkid 0 for locate
+#define TRDC_ASYNCMSG   0x00001000      //  Asynchronous message support
+#define TRDC_SIC        0x00000800      //  Special Intercept Condition
+#define TRDC_CHPNOOP    0x00000400      //  Channel path no-op support
+#define TRDC_LWP        0x00000200      //  Logical write-protect support
+#define TRDC_EBL        0x00000100      //  Extended buffered log active
+                                        //  On: 64 bytes of Format-30 data
+                                        //  for ERA 2B w/ERA 50-52 support
+                                        //  Off: only 32-bytes of Format-21
+                                        //  data for ERA 2A/2B.
+#define TRDC_ACL        0x00000080      //  Automatic Cartridge Loader
+#define TRDC_IDR        0x00000040      //  Improved Data Recording
+#define TRDC_SVF        0x00000020      //  Suppress Volume Fencing
+#define TRDC_LIBO       0x00000010      //  Library Interface online
+#define TRDC_LIBA       0x00000008      //  Library Attachment Facility
+#define TRDC_1_00000004 0x00000004      //  (unknown)
+/*-------------------------------------------------------------------*/
+
+    BYTE    devclass;       //  10      // Device class code (x'80')
+    BYTE    devtcode;       //  11      // Device type code  (x'80')
+
+/*-------------------------------------------------------------------*/
+    FWORD   feats2;         //  12-15   // Features and Facilities 2
+
+#define TRDC_RDFWD    0x00800000        //  NTP: Read Forward support
+#define TRDC_MODSET   0x00040000        //  NTP: Mode set/sense support
+#define TRDC_SSC      0x00002000        //  NTP: Set System Char. support
+#define TRDC_MEDSNS   0x00000400        //  NTP: Medium Sense/Char. support
+/*-------------------------------------------------------------------*/
+
+    BYTE    dtmodel;        //  16      // NTP: Device type model
+    BYTE    devmfg;         //  17      // NTP: Device manufacturer
+    BYTE    plantmfg;       //  18      // NTP: Plant of manufacture
+
+/*-------------------------------------------------------------------*/
+
+    //  Bytes 19-29:  NTP: only valid if feat1 TRDC_NTP is on
+
+    BYTE    rsrvd1;         //  19      // NTP: Reserved
+    BYTE    rsrvd2;         //  20      // NTP: Reserved
+    BYTE    rsrvd3;         //  21      // NTP: Reserved
+    BYTE    rsrvd4;         //  22      // NTP: Reserved
+    BYTE    rsrvd5;         //  23      // NTP: Reserved
+
+    HWORD   ncutype;        //  24-25   // NTP: Control unit type
+    BYTE    ncumodel;       //  26      // NTP: Control unit model
+
+    HWORD   ntutype;        //  27-28   // NTP: Device type
+    BYTE    ntumodel;       //  29      // NTP: Device model
+
+/*-------------------------------------------------------------------*/
+
+    BYTE    rsrvd6;         //  30      // Reserved
+
+/*-------------------------------------------------------------------*/
+    BYTE    feat5;          //  31      // Features byte 5
+                                        // NTP: ERDS physical id
+#define TRDC_ENCR     0x13              //  Encryption support
+#define TRDC_ENCR2    0x15              //  Encryption 2 support
+#define TRDC_92E5XF   0x13              //  NTP: 3592-E05 Extended features
+/*-------------------------------------------------------------------*/
+
+    BYTE    libseq[3];      //  32-34   // NTP: Library sequence number
+    BYTE    libid;          //  35      // NTP: Library subsystem id
+    HWORD   vldrid;         //  36-37   // NTP: Volume loader id
+    BYTE    devid;          //  38      // NTP: Device id
+    BYTE    rsrvd7;         //  39      // Reserved
+
+    BYTE    mdr;            //  40      // NTP: MDR id
+
+#define TRDC_MDR48    0x41              //  MDR: 3480
+#define TRDC_MDR49    0x42              //  MDR: 3490
+#define TRDC_MDR59    0x46              //  MDR: 3590
+
+    BYTE    obr;            //  41      // NTP: OBR id
+
+#define TRDC_OBR48    0x80              //  OBR: 3480
+#define TRDC_OBR49    0x81              //  OBR: 3490
+#define TRDC_OBR59    0x83              //  OBR: 3590
+
+    BYTE    mvscode;        //  42      // NTP: MVS Dev Code/Class/Type
+    
+    FWORD   maxblk;         //  43-46   // NTP: Maximum block size?
+    FWORD   defblk;         //  47-50   // NTP: Recommended block size?
+
+    BYTE    rsrvd8[5];      //  51-55   // Reserved
+    HWORD   medid;          //  56-57   // NTP: Media id (0x0400, 0x0380)
+    BYTE    medfmt;         //  58      // NTP: Media format id (0x00)
+    BYTE    wrapped;        //  59      // NTP: Wrapped flag
+    BYTE    rsrvd9[4];      //  60-63   // Reserved
+};
+typedef struct TAPERDC  TAPERDC;
+
+CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h )
+
+/*-------------------------------------------------------------------*/
+/* Just some shorter names                                           */
+/*-------------------------------------------------------------------*/
+#define M48         (TRDC_MDR48)
+#define M49         (TRDC_MDR49)
+#define M59         (TRDC_MDR59)
+
+#define O48         (TRDC_OBR48)
+#define O49         (TRDC_OBR49)
+#define O59         (TRDC_OBR59)
+
+#define FEAT1_3480  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
+#define FEAT1_3490  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
+
+#define FEAT2_3480  (0)
+#define FEAT2_3490  (0)
+
+#define FEAT1_3590  (0                                          \
+                     | TRDC_NTP                                 \
+                     | TRDC_BLKID                               \
+                     | TRDC_SIC | TRDC_CHPNOOP | TRDC_LWP       \
+                     | TRDC_ACL | TRDC_IDR                      \
+                     | TRDC_1_00000004                          \
+                    )
+#define FEAT2_3590  (0                  \
+                     | TRDC_RDFWD       \
+                     | TRDC_MEDSNS      \
+                    )
+
+/*-------------------------------------------------------------------*/
+/* Helper macros to check RDC for feature support / enablement       */
+/*-------------------------------------------------------------------*/
+#define TAPERDC_FEAT( feats, flags )                \
+                                                    \
+    (CSWAP32(*((U32*)((TAPERDC*)&dev->devchar[0])->feats)) & (flags))
+
+#define SIC_SUPPORTED()         TAPERDC_FEAT( feats1, TRDC_SIC    )
+#define IDR_SUPPORTED()         TAPERDC_FEAT( feats1, TRDC_IDR    )
+#define SVF_ENABLED()           TAPERDC_FEAT( feats1, TRDC_SVF    )
+#define RDFWD_SUPPORTED()       TAPERDC_FEAT( feats2, TRDC_RDFWD  )
+#define MEDSNS_SUPPORTED()      TAPERDC_FEAT( feats2, TRDC_MEDSNS )
+
+/*-------------------------------------------------------------------*/
 /* Definitions for 3420/3480 sense bytes                             */
 /*-------------------------------------------------------------------*/
 #define SENSE1_TAPE_NOISE       0x80    /* Noise                     */
@@ -386,7 +540,8 @@ extern int             TapeDevtypeList[];
 extern BYTE*           TapeCommandTable[];
 extern TapeSenseFunc*  TapeSenseTable[];
 //tern BYTE            TapeCommandsXXXX[256]...
-extern BYTE            TapeImmedCommands[];
+extern BYTE            TapeImmedOther[];
+extern BYTE            TapeImmed3590[];
 
 extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
 extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
@@ -509,20 +664,18 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
                                              S32 *pprvhdro, S32 *pnxthdro,     BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
-/* Functions defined in SCSITAPE.C                                   */
+/*                Tape ERA, HRA and SENSE constants                  */
 /*-------------------------------------------------------------------*/
-// (see SCSITAPE.H)
+/* For 3480/3490 tape drives HRA was an assumed function of the OS.  */
+/* For 3590 (NTP) tape drives HRA is no longer assumed. The labels   */
+/* here are the 3480/3590 labels but the values are NTP values.      */
+/* Refer to sense byte 2 for additional information.                 */
+/*-------------------------------------------------------------------*/
 
-/*
-|| Tape ERA, HRA and SENSE constants
-|| Note: For 3480/3490 tape drives HRA was an assumed function of the OS
-||       For 3590 (NTP) tape drives HRA is no longer assumed. The labels
-||       here are the 3480/3590 labels but the values are NTP values. See
-||       sense byte 2 for additional information.
-*/
 /*-------------------------------------------------------------------*/
 /* Host Recovery Action (HRA)    (these are the 3590 codes           */
 /*-------------------------------------------------------------------*/
+
 #define TAPE_HRA_PERMANENT_ERROR             0x00
 #define TAPE_HRA_RETRY                       0x80
 #define TAPE_HRA_DDR                         0x00       // Same as error for VT
@@ -551,11 +704,9 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS1_FILEPROT   0x02          // Write Protect
 #define  TAPE_SNS1_NOTCAPBL   0x01          // Not Capable
 
-// Sense byte 2
-/*
-||  NTP SENSE BYTE 2
-||  Log code is in byte 2(3-4), BRAC is in byte 2(0-1)
-*/
+//  Sense byte 2 (NTP)
+//  Log code is in byte 2 (3-4), BRAC is in byte 2 (0-1)
+
 #define  TAPE_SNS2_NTP_BRAC_00_PERM_ERR     0x00      // BRAC 00 - PERM ERR
 #define  TAPE_SNS2_NTP_BRAC_01_CONTINUE     0x40      // BRAC 01 - Continue ( RESUME )
 #define  TAPE_SNS2_NTP_BRAC_10_REISSUE      0x80      // BRAC 10 - Reissue  ( RETRY  )
@@ -573,9 +724,8 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS2_SYNCMODE                 0x02      // Tape Synchronous Mode
 #define  TAPE_SNS2_POSITION                 0x01      // Tape Positioning
 
-// Sense Byte 3
 /*-------------------------------------------------------------------*/
-/* Error Recovery Action (ERA) SENSE BYTE 3                          */
+/* Sense byte 3:  Error Recovery Action (ERA)                        */
 /*-------------------------------------------------------------------*/
 
 #define  TAPE_ERA_00_UNSOLICITED_SENSE           0x00
@@ -651,9 +801,8 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_ERA_5D_TAPE_LENGTH_VIOLATION       0x5D
 #define  TAPE_ERA_5E_COMPACT_ALGORITHM_INCOMPAT  0x5E
 
-/*
-|| 3490/3590/NTP IN AN AUTOMATED LIBRARY SYSTEM
-*/
+//  3490/3590/NTP IN AN AUTOMATED LIBRARY SYSTEM
+
 #define  TAPE_ERA_60_LIB_ATT_FAC_EQ_CHK          0x60
 #define  TAPE_ERA_62_LIB_MGR_OFFLINE_TO_SUBSYS   0x62
 #define  TAPE_ERA_63_LIB_MGR_CU_INCOMPAT         0x63
@@ -696,9 +845,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 
 #define  TAPE_ERA_91_LIB_VOLUME_INACCESSIBLE     0x91
 
-/*
-|| SENSE BYTE 3 for NTP (3590) TAPES
-*/
+// Sense byte 3 for NTP (3590) TAPES
 
 #define  TAPE_ERA_C0_RAC_USE_BRAC                0xC0
 #define  TAPE_ERA_C1_RAC_FENCE_DEVICE            0xC1
@@ -707,9 +854,7 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_ERA_D2_RAC_READ_ALT                0xD2
 
 // Sense byte 4
-/*
-||  SENSE BYTE 4 FOR TAPES
-*/
+
 #define  TAPE_SNS4_3420_TAPE_INDICATE         0x20      // EOT FOUND
 #define  TAPE_SNS4_3480_FORMAT_MODE           0xC0
 #define  TAPE_SNS4_3480_FORMAT_MODE_XF        0x80
@@ -721,20 +866,12 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS4_3480_HO_CHAN_LOG_BLK_ID    0x3F      // 22-bits for BLK ID
 
 // Sense byte 5
-/*
-||  SENSE BYTE 5 FOR TAPES
-*/
+
 #define  TAPE_SNS5_3480_MO_CHAN_LOG_BLK_ID    0xFF
 
-// Sense byte 6
-/*
-||  SENSE BYTE 6 FOR TAPES
-*/
-#define  TAPE_SNS6_3480_LO_CHAN_LOG_BLK_ID    0xFF
+// Sense bytes 4-5 for NTP: Byte 4 is Reason Code (RC)
+//                          Byte 5 is Reason Qualifer Code (RQC)
 
-/*
-|| SENSE BYTES 4-5 FOR NTP BYTE 4 is Reason Code(RC) and 5 is Reason Qualifer Code(RQC)
-*/
 #define  TAPE_SNS4_5_NTP_RC_11_UA_RQC_11_DEV_LOG      0x1110      // UNIT ATTENTION/Device Log
 
 #define  TAPE_SNS4_5_NTP_RC_12_LA_RQC_11_DEV_CLEANED  0x1211      // LIBRARY ATTENTION/Device CLEANED
@@ -756,10 +893,12 @@ extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
 #define  TAPE_SNS4_5_NTP_RC_40_OE_RQC_12_DEV_LONG_BSY 0x4012      // OPERATIONAL EXCEPTION/Device long busy
 #define  TAPE_SNS4_5_NTP_RC_40_OE_RQC_20_LDR_IR       0x4020      // OPERATIONAL EXCEPTION/Loader Interv Req'd
 
+// Sense byte 6
+
+#define  TAPE_SNS6_3480_LO_CHAN_LOG_BLK_ID    0xFF
+
 // Sense byte 7
-/*
-||  SENSE BYTE 7 FOR TAPES
-*/
+
 #define  TAPE_SNS7_TAPE_SECURITY_ERASE_CMD    0x08
 #define  TAPE_SNS7_FMT_20_3480                0x20 // DRIVE AND CU ERROR INFORMATION
 #define  TAPE_SNS7_FMT_21_3480_READ_BUF_LOG   0x21 // BUFFERED LOG DATA WHEN NO IDRC is installed

@@ -135,16 +135,17 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3211, printer_device_hndinfo );
 
     /* Tape drives */
-    HDL_DEVICE(3410, tapedev_device_hndinfo );
-    HDL_DEVICE(3411, tapedev_device_hndinfo );
-    HDL_DEVICE(3420, tapedev_device_hndinfo );
-    HDL_DEVICE(3480, tapedev_device_hndinfo );
-    HDL_DEVICE(3490, tapedev_device_hndinfo );
-    HDL_DEVICE(9347, tapedev_device_hndinfo );
-    HDL_DEVICE(9348, tapedev_device_hndinfo );
-    HDL_DEVICE(8809, tapedev_device_hndinfo );
-    HDL_DEVICE(3422, tapedev_device_hndinfo );
-    HDL_DEVICE(3430, tapedev_device_hndinfo );
+    HDL_DEVICE ( 3410, tape_other_devhnd );
+    HDL_DEVICE ( 3411, tape_other_devhnd );
+    HDL_DEVICE ( 3420, tape_other_devhnd );
+    HDL_DEVICE ( 3422, tape_other_devhnd );
+    HDL_DEVICE ( 3430, tape_other_devhnd );
+    HDL_DEVICE ( 3480, tape_other_devhnd );
+    HDL_DEVICE ( 3490, tape_other_devhnd );
+    HDL_DEVICE ( 3590, tape_3590_devhnd );
+    HDL_DEVICE ( 8809, tape_other_devhnd );
+    HDL_DEVICE ( 9347, tape_other_devhnd );
+    HDL_DEVICE ( 9348, tape_other_devhnd );
 
     /* Communications devices */
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );

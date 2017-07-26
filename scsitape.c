@@ -381,7 +381,7 @@ void close_scsitape(DEVBLK *dev)
     }
 
     dev->sstat  = dev->stape_online ? 0 : GMT_DR_OPEN(-1); // (forced)
-    dev->fenced = (rc >= 0) ? 0 : 1;
+    dev->fenced = (rc < 0 && !SVF_ENABLED()) ? 1 : 0;
 
     release_lock( &sysblk.stape_lock );
 
@@ -1016,8 +1016,8 @@ struct mtop opblk;
     }
 
     /* Handle error condition */
-
-    dev->fenced = 1;        // (actual position now unknown!)
+    if (!SVF_ENABLED())
+        dev->fenced = 1;    // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -1120,8 +1120,8 @@ struct mtop opblk;
     }
 
     /* Handle error condition */
-
-    dev->fenced = 1;        // (actual position now unknown!)
+    if (!SVF_ENABLED())
+        dev->fenced = 1;    // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -1172,7 +1172,8 @@ struct mtop opblk;
         return 0;
     }
 
-    dev->fenced = 1;        // (because the rewind failed)
+    if (!SVF_ENABLED())
+        dev->fenced = 1;    // (because the rewind failed)
     dev->blockid  = -1;     // (because the rewind failed)
     dev->curfilen = -1;     // (because the rewind failed)
 
@@ -1220,7 +1221,8 @@ struct mtop opblk;
         return;
     }
 
-    dev->fenced = 1;    // (because the rewind-unload failed)
+    if (!SVF_ENABLED())
+        dev->fenced = 1;// (because the rewind-unload failed)
     dev->curfilen = -1; // (because the rewind-unload failed)
     dev->blockid  = -1; // (because the rewind-unload failed)
 

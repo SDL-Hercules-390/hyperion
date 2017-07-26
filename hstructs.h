@@ -1409,7 +1409,6 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* NOTE : flag cleared by    */
                                         /*        sense command only */
                                         /*        or a device init   */
-        u_int   SIC_supported:1;        /* 1=Spec Intcpt Cond support*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
