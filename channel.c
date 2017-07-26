@@ -5234,24 +5234,22 @@ prefetch:
             if (((residual && !(flags & CCW_FLAGS_SLI)) ||
                  ((more || (residual && prefetch.seq)) &&
                   !(flags & (CCW_FLAGS_CD | CCW_FLAGS_SLI))))
+
                 && !(dev->is_immed && (flags & CCW_FLAGS_CC))  /* DSF Debug */
-#if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
-                /* Set incorrect length indication if not Format-1   */
-                /* CCW and incorrect length suppression is not       */
-                /* indicated in the ORB                              */
-                /* SA22-7201-05:                                     */
-                /*  p. 15-6, Figure 15-6, Subchannel Chaining Action */
-                /*  p. 16-25, Incorrect Length                       */
-                && !((dev->orb.flag5 & ORB5_F) &&
-                     (dev->orb.flag7 & ORB7_L))
-#else
-                /* S/370 Channel or suppression facility not         */
-                /* available                                         */
-                /* GA22-7000-10:                                     */
-                /*  p. 13-70, Incorrect Length                       */
-                && !dev->is_immed
-#endif /*defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
-                    )
+
+                && (0
+                    || !dev->is_immed
+#if defined( FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION )
+                    /* Incorrect Length Suppression mode only occurs when
+                       both the Incorrect Length Suppression Mode bit and
+                       CCW Format Control bits are on in the ORB and only
+                       applies to Immediate operations.
+                    */
+                    || !(dev->orb.flag7 & ORB7_L)
+                    || !(dev->orb.flag5 & ORB5_F)
+#endif /* defined( FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION ) */
+                   )
+            )
                 chanstat |= CSW_IL;
         }
 
