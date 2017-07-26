@@ -895,6 +895,12 @@
     <None Include="tests\stfl.list" />
     <None Include="tests\stfl.tst" />
     <None Include="tests\stidp.tst" />
+    <None Include="tests\tape.asm" />
+    <None Include="tests\tape.aws" />
+    <None Include="tests\tape.core" />
+    <None Include="tests\tape.list" />
+    <None Include="tests\tape.pdf" />
+    <None Include="tests\tape.tst" />
     <None Include="tests\tapebsf.subtst" />
     <None Include="tests\tests.conf" />
     <None Include="tests\timeout.tst" />

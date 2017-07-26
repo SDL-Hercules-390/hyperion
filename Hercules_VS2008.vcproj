@@ -3048,6 +3048,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\tape.aws"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\tests.conf"
 					>
 				</File>
@@ -3160,6 +3164,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\stfl.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\tape.core"
 						>
 					</File>
 				</Filter>
@@ -4154,6 +4162,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\tape.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\timeout.tst"
 							>
 						</File>
@@ -4345,6 +4357,10 @@
 							RelativePath=".\tests\stfl.asm"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\tape.asm"
+							>
+						</File>
 						<Filter
 							Name="list"
 							>
@@ -4470,6 +4486,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\stfl.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\tape.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\tape.pdf"
 								>
 							</File>
 						</Filter>

@@ -322,6 +322,12 @@ EXTRA_DIST =                    \
      stidp.txt                  \
      stsi.txt                   \
      sus40002.txt               \
+     tape.asm                   \
+     tape.aws                   \
+     tape.core                  \
+     tape.list                  \
+     tape.pdf                   \
+     tape.tst                   \
      tape.240k-2.txt            \
      tape.240k.txt              \
      tape.2m.txt                \
