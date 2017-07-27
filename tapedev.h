@@ -35,7 +35,8 @@ struct TAPERDC
     HWORD   tutype;         //  3-4     // Tape unit type
     BYTE    tumodel;        //  5       // Tape unit model
 
-/*-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------*/
+
     FWORD   feats1;         //  6-9     // Features and Facilities 1
 
 #define TRDC_NTP        0x01000000      //  New tape product (NTP)
@@ -57,28 +58,31 @@ struct TAPERDC
 #define TRDC_SVF        0x00000020      //  Suppress Volume Fencing
 #define TRDC_LIBO       0x00000010      //  Library Interface online
 #define TRDC_LIBA       0x00000008      //  Library Attachment Facility
-#define TRDC_1_00000004 0x00000004      //  (unknown)
-/*-------------------------------------------------------------------*/
 
-    BYTE    devclass;       //  10      // Device class code (x'80')
-    BYTE    devtcode;       //  11      // Device type code  (x'80')
+    /*---------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------*/
+    BYTE    devclass;       //  10      // Device class code
+    BYTE    devtcode;       //  11      // Device type code
+
+    /*---------------------------------------------------------------*/
+
     FWORD   feats2;         //  12-15   // Features and Facilities 2
 
-#define TRDC_RDFWD    0x00800000        //  NTP: Read Forward support
-#define TRDC_MODSET   0x00040000        //  NTP: Mode set/sense support
-#define TRDC_SSC      0x00002000        //  NTP: Set System Char. support
-#define TRDC_MEDSNS   0x00000400        //  NTP: Medium Sense/Char. support
-/*-------------------------------------------------------------------*/
+#define TRDC_RDFWD      0x00800000      //  NTP: Read Forward support
+#define TRDC_2_BLK2DCE  0x00100000      //  (unknown, but if set copies
+                                        //   both maxblk/recblk to DCE)
+#define TRDC_MODSET     0x00040000      //  NTP: Mode set/sense support
+#define TRDC_SSC        0x00002000      //  NTP: Set System Char. support
+#define TRDC_MEDSNS     0x00000400      //  NTP: Medium Sense/Char. support
+
+    /*---------------------------------------------------------------*/
 
     BYTE    dtmodel;        //  16      // NTP: Device type model
     BYTE    devmfg;         //  17      // NTP: Device manufacturer
     BYTE    plantmfg;       //  18      // NTP: Plant of manufacture
 
-/*-------------------------------------------------------------------*/
-
-    //  Bytes 19-29:  NTP: only valid if feat1 TRDC_NTP is on
+    /*---------------------------------------------------------------*/
+    /*  Bytes 19-29:  NTP: only valid if feat1 TRDC_NTP is on        */
 
     BYTE    rsrvd1;         //  19      // NTP: Reserved
     BYTE    rsrvd2;         //  20      // NTP: Reserved
@@ -92,17 +96,19 @@ struct TAPERDC
     HWORD   ntutype;        //  27-28   // NTP: Device type
     BYTE    ntumodel;       //  29      // NTP: Device model
 
-/*-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------*/
 
     BYTE    rsrvd6;         //  30      // Reserved
 
-/*-------------------------------------------------------------------*/
+    /*---------------------------------------------------------------*/
+
     BYTE    feat5;          //  31      // Features byte 5
                                         // NTP: ERDS physical id
-#define TRDC_ENCR     0x13              //  Encryption support
-#define TRDC_ENCR2    0x15              //  Encryption 2 support
-#define TRDC_92E5XF   0x13              //  NTP: 3592-E05 Extended features
-/*-------------------------------------------------------------------*/
+#define TRDC_ENCR       0x13            //  Encryption support
+#define TRDC_ENCR2      0x15            //  Encryption 2 support
+#define TRDC_92E5XF     0x13            //  NTP: 3592-E05 Extended features
+
+    /*---------------------------------------------------------------*/
 
     BYTE    libseq[3];      //  32-34   // NTP: Library sequence number
     BYTE    libid;          //  35      // NTP: Library subsystem id
@@ -110,28 +116,35 @@ struct TAPERDC
     BYTE    devid;          //  38      // NTP: Device id
     BYTE    rsrvd7;         //  39      // Reserved
 
+    /*---------------------------------------------------------------*/
+
     BYTE    mdr;            //  40      // NTP: MDR id
 
-#define TRDC_MDR48    0x41              //  MDR: 3480
-#define TRDC_MDR49    0x42              //  MDR: 3490
-#define TRDC_MDR59    0x46              //  MDR: 3590
+#define TRDC_MDR48      0x41            //  MDR: 3480
+#define TRDC_MDR49      0x42            //  MDR: 3490
+#define TRDC_MDR59      0x46            //  MDR: 3590
 
     BYTE    obr;            //  41      // NTP: OBR id
 
-#define TRDC_OBR48    0x80              //  OBR: 3480
-#define TRDC_OBR49    0x81              //  OBR: 3490
-#define TRDC_OBR59    0x83              //  OBR: 3590
+#define TRDC_OBR48      0x80            //  OBR: 3480
+#define TRDC_OBR49      0x81            //  OBR: 3490
+#define TRDC_OBR59      0x83            //  OBR: 3590
 
     BYTE    mvscode;        //  42      // NTP: MVS Dev Code/Class/Type
-    
-    FWORD   maxblk;         //  43-46   // NTP: Maximum block size?
-    FWORD   defblk;         //  47-50   // NTP: Recommended block size?
 
-    BYTE    rsrvd8[5];      //  51-55   // Reserved
+    /*---------------------------------------------------------------*/
+
+    FWORD   maxblk;         //  43-46   // NTP: Maximum block size
+    FWORD   recblk;         //  47-50   // NTP: Recommended block size
+
+    /*---------------------------------------------------------------*/
+
+    BYTE    rsrvd8[2];      //  51-52   // Reserved
+    BYTE    rsrvd9[3];      //  53-55   // Reserved
     HWORD   medid;          //  56-57   // NTP: Media id (0x0400, 0x0380)
     BYTE    medfmt;         //  58      // NTP: Media format id (0x00)
     BYTE    wrapped;        //  59      // NTP: Wrapped flag
-    BYTE    rsrvd9[4];      //  60-63   // Reserved
+    BYTE    rsrvd10[4];      //  60-63   // Reserved
 };
 typedef struct TAPERDC  TAPERDC;
 
@@ -148,22 +161,29 @@ CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h )
 #define O49         (TRDC_OBR49)
 #define O59         (TRDC_OBR59)
 
+#define BLK64       ((64 * 1024)-1)
+#define BLK256      (256 * 1024)
+#define BLKMAX      (MAX_BLKLEN)
+
 #define FEAT1_3480  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
 #define FEAT1_3490  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
 
 #define FEAT2_3480  (0)
 #define FEAT2_3490  (0)
 
-#define FEAT1_3590  (0                                          \
-                     | TRDC_NTP                                 \
-                     | TRDC_BLKID                               \
-                     | TRDC_SIC | TRDC_CHPNOOP | TRDC_LWP       \
-                     | TRDC_ACL | TRDC_IDR                      \
-                     | TRDC_1_00000004                          \
+#define FEAT1_3590  (0                      \
+                     | TRDC_NTP             \
+                     | TRDC_BLKID           \
+                     | TRDC_SIC             \
+                     | TRDC_CHPNOOP         \
+                     | TRDC_LWP             \
+                     | TRDC_ACL             \
+                     | TRDC_IDR             \
                     )
-#define FEAT2_3590  (0                  \
-                     | TRDC_RDFWD       \
-                     | TRDC_MEDSNS      \
+
+#define FEAT2_3590  (0                      \
+                     | TRDC_RDFWD           \
+                     | TRDC_2_BLK2DCE       \
                     )
 
 /*-------------------------------------------------------------------*/

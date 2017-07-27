@@ -430,8 +430,10 @@ typedef struct DEVINITTAB               /* Initialization values     */
     U32         feats1;                 /* Storage control features  */
     U32         feats2;                 /* Storage control features  */
     U32         maxblk;                 /* Maximum supported blksize */
+    U32         recblk;                 /* Recommended blksize       */
     BYTE        MDR;                    /* Misc. Data Record ID      */
     BYTE        OBR;                    /* Outboard Recorder ID      */
+    BYTE        mvscode;                /* MVS Dev Code/Class/Type   */
     BYTE        devclass;               /* Device class code         */
     BYTE        devtcode;               /* Device type code          */
     int         numdevid;               /* #of SNSID bytes (see NOTE)*/
@@ -458,15 +460,15 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 //            3410/3411/3420/3422/3430/8809/9347/9348
 //--------------------------------------------------------------------
 //
-// devtype/mod  cutype/mod     feats1      feats2    maxblk MDR OBR cls typ sid sns rdc dsp
- { 0x3410,0x01, 0x3115,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0,  9,  0,  0 },
- { 0x3411,0x01, 0x3115,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0,  9,  0,  0 },
- { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0, 24,  0,  0 }, // (DEFAULT: 3420)
- { 0x3422,0x01, 0x3422,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x3430,0x01, 0x3422,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x8809,0x01, 0x8809,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  0, 32,  0,  0 },
- { 0x9347,0x01, 0x9347,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
- { 0x9348,0x01, 0x9348,0x01, 0x00000000, 0x00000000,  65535, 0,  0,  0,  0,  7, 32,  0,  0 },
+// devtype/mod  cutype/mod     feats1      feats2   maxblk recblk MDR OBR mvs cls typ sid sns rdc dsp
+ { 0x3410,0x01, 0x3115,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3411,0x01, 0x3115,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  0, 24,  0,  0 }, // (DEFAULT: 3420)
+ { 0x3422,0x01, 0x3422,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x3430,0x01, 0x3422,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x8809,0x01, 0x8809,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  0, 32,  0,  0 },
+ { 0x9347,0x01, 0x9347,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x9348,0x01, 0x9348,0x01, 0x00000000, 0x00000000, BLK64, BLK64, 0,  0,  0,  0,  0,  7, 32,  0,  0 },
 
 //--------------------------------------------------------------------
 //                          3480/3490/3590
@@ -492,12 +494,12 @@ DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
 // For the layout of the 'feats1' and 'feats2' fields, please refer to
 // the 'TAPERDC' struct defined in the tapedev.h header file.
 //
-// devtype/mod  cutype/mod     feats1      feats2    maxblk  MDR  OBR   cls  typ  sid sns rdc dsp
- { 0x3480,0x31, 0x3480,0x31, FEAT1_3480, FEAT2_3480,  65535, M48, O48, 0x80,0x80,  7, 24,  1,  1 },  // 0x31 = D31
- { 0x3490,0x50, 0x3490,0x50, FEAT1_3490, FEAT2_3490,  65535, M49, O49, 0x80,0x80,  7, 32,  1,  1 },  // 0x50 = C10
- { 0x3590,0x10, 0x3590,0x50, FEAT1_3590, FEAT2_3590, 262144, M59, O59, 0x80,0x80,  7, 32,  1,  1 },  // 0x10 = B1A, 0x50 = A50
- { 0xFFFF,0xFF, 0xFFFF,0xFF, 0xFFFFFFFF, 0xFFFFFFFF,   -1,  0xFF,0xFF, 0xFF,0xFF, -1, -1, -1, -1 },  //**** END OF TABLE ****
- { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000,  65535,  0,   0,    0,   0,   0, 24,  0,  0 },  // (DEFAULT: 3420)
+// devtype/mod  cutype/mod     feats1      feats2    maxblk  recblk  MDR  OBR   mvs   cls  typ  sid sns rdc dsp
+ { 0x3480,0x31, 0x3480,0x31, FEAT1_3480, FEAT2_3480,  BLK64,  BLK64, M48, O48, 0x00, 0x80,0x80,  7, 24,  1,  1 },  // 0x31=D31
+ { 0x3490,0x50, 0x3490,0x50, FEAT1_3490, FEAT2_3490,  BLK64,  BLK64, M49, O49, 0x00, 0x80,0x80,  7, 32,  1,  1 },  // 0x50=C10
+ { 0x3590,0x60, 0x3590,0x11, FEAT1_3590, FEAT2_3590, BLK256, BLK256, M59, O59, 0x80, 0x00,0x00,  7, 32,  1,  1 },  // 0x60=A50, 0x11=B1A
+ { 0xFFFF,0xFF, 0xFFFF,0xFF, 0xFFFFFFFF, 0xFFFFFFFF,   -1,     -1,  0xFF,0xFF, 0xFF, 0xFF,0xFF, -1, -1, -1, -1 },  //**** END OF TABLE ****
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0x00000000,  BLK64,  BLK64,  0,   0,    0,    0,   0,   0, 24,  0,  0 },  // (DEFAULT: 3420)
 };
 
 /*-------------------------------------------------------------------*/
@@ -778,10 +780,11 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
                   rdc->devtcode = pDevInitTab->devtcode;
                   rdc->mdr      = pDevInitTab->MDR;
                   rdc->obr      = pDevInitTab->OBR;
+                  rdc->mvscode  = pDevInitTab->mvscode;
 
         /* Set maximum blocksize and default blocksize values */
         STORE_FW( rdc->maxblk, pDevInitTab->maxblk );
-        STORE_FW( rdc->defblk, pDevInitTab->maxblk );
+        STORE_FW( rdc->recblk, pDevInitTab->recblk );
     }
 
     /* Initialize other fields */
