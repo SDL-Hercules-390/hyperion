@@ -975,7 +975,6 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
             grp->ttifname, not, "drive IP address", grp->szDriveLLAddr6 );
     }
 #endif /* defined(ENABLE_IPV6) */
-
 }
 
 
@@ -1109,30 +1108,6 @@ static int ctci_win_setdestaddr( DEVBLK* dev, OSA_GRP* grp, char* pszGuestIPAddr
 
     return rc;
 }
-
-
-/*-------------------------------------------------------------------*/
-/*    ctci_win_setipaddr  -- choose host adapter by IP/MAC address   */
-/*-------------------------------------------------------------------*/
-/* If the interface is already enabled/up we need to temporarily     */
-/* bring it down (disable it) so we can change the IP address        */
-/* and then afterwards bring it back up again (enable it).           */
-/*-------------------------------------------------------------------*/
-static int ctci_win_setipaddr( DEVBLK* dev, OSA_GRP* grp, char* pszHostIPAddr )
-{
-    int rc;
-    BYTE was_enabled = grp->enabled ? TRUE : FALSE;
-
-    if (was_enabled)
-        VERIFY( qeth_disable_interface( dev, grp ) == 0);
-
-    rc = TUNTAP_SetIPAddr( grp->ttifname, pszHostIPAddr );
-
-    if (was_enabled)
-        VERIFY( qeth_enable_interface( dev, grp ) == 0);
-
-    return rc;
-}
 #endif // defined( OPTION_W32_CTCI )
 
 
@@ -1240,35 +1215,26 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     }
 
     /* If possible, assign an IPv4 address to the guest interface */
-    /* and for CTCI-WIN, choose which host adapter it should use  */
-    if (grp->ttipaddr || grp->tuntap)
-    {
-        char buf[64];
+    if (1
 #if defined( OPTION_W32_CTCI )
-        if (grp->l3 && grp->ttipaddr)
+        && grp->l3
+#endif
+        && grp->ttipaddr
+    )
+    {
+#if defined( OPTION_W32_CTCI )
+        if ((rc = ctci_win_setdestaddr( dev, grp, grp->ttipaddr )) != 0)
         {
-            if ((rc = ctci_win_setdestaddr( dev, grp, grp->ttipaddr )) != 0)
-            {
-                MSGBUF( buf, "ctci_win_setdestaddr(\"%s\") failed", grp->ttipaddr );
-                return qeth_errnum_msg( dev, grp, errno, "E", buf );
-            }
-        }
-        if (grp->tuntap)
-        {
-            if ((rc = ctci_win_setipaddr( dev, grp, grp->tuntap )) != 0)
-            {
-                MSGBUF( buf, "ctci_win_setipaddr(\"%s\") failed", grp->tuntap );
-                return qeth_errnum_msg( dev, grp, errno, "E", buf );
-            }
+            char buf[64];
+            MSGBUF( buf, "ctci_win_setdestaddr(\"%s\") failed", grp->ttipaddr );
+            return qeth_errnum_msg( dev, grp, errno, "E", buf );
         }
 #else /* Linux */
-        if (grp->ttipaddr)
+        if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
         {
-            if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
-            {
-                MSGBUF( buf, "TUNTAP_SetIPAddr(\"%s\") failed", grp->ttipaddr );
-                return qeth_errnum_msg( dev, grp, errno, "E", buf );
-            }
+            char buf[64];
+            MSGBUF( buf, "TUNTAP_SetIPAddr(\"%s\") failed", grp->ttipaddr );
+            return qeth_errnum_msg( dev, grp, errno, "E", buf );
         }
 #endif /* CTCI-WIN or Linux */
     }
@@ -1805,7 +1771,6 @@ U16 offph;
                             retcode = IPA_RC_FFFF;
                         }
 #endif // defined(OPTION_W32_CTCI)
-
                       }
                     }
 #if defined(ENABLE_IPV6)
@@ -1899,7 +1864,6 @@ U16 offph;
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                     }
-
                 }
                 /* end case IPA_CMD_SETASSPARMS: */
                 break;
@@ -1980,7 +1944,6 @@ U16 offph;
                         } else {                 /* IP address removed from to table */
                           retcode = IPA_RC_SUCCESS;
                         }
-
                       }
                     }
 #endif /*defined(ENABLE_IPV6)*/
@@ -2049,7 +2012,6 @@ U16 offph;
         WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                "Unknown RHH_TYPE_xxx" );
         net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
-
     }
     /* end switch(req_rrh->type) */
 }
@@ -2100,6 +2062,7 @@ U16 reqtype;
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
+
         strcat( dev->dev_data, "IDX_ACT_TYPE_READ" );  /* Prepare the contentstring */
         rsp_bhr->content = strdup( dev->dev_data );
 
@@ -2126,6 +2089,7 @@ U16 reqtype;
         break;
 
     case IDX_ACT_TYPE_WRITE:
+
         strcat( dev->dev_data, "IDX_ACT_TYPE_WRITE" );  /* Prepare the contentstring */
         rsp_bhr->content = strdup( dev->dev_data );
 
@@ -2156,6 +2120,7 @@ U16 reqtype;
         break;
 
     default:
+
         // HHC03991 "%1d:%04X %s: %s"
         WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                "Unknown IDX_ACT_TYPE_xxx" );
@@ -5383,7 +5348,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
-
     return NULL;
 }
 
@@ -5402,7 +5366,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
-
     return NULL;
 }
 
@@ -5452,6 +5415,7 @@ MPC_PUS *req_pus_0A;
 /* There is one ULP_ENABLE request, irrespective of the number of    */
 /* data paths, which indicates whether the data paths will be using  */
 /* layer2 or layer3. A ULP_ENABLE response is returned.              */
+/*-------------------------------------------------------------------*/
 static OSA_BHR* process_ulp_enable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -5573,6 +5537,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* There is one ULP_SETUP request for each of the data paths.        */
 /* A ULP_CONFIRM response is returned.                               */
+/*-------------------------------------------------------------------*/
 static OSA_BHR* process_ulp_setup( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -5715,6 +5680,7 @@ U16 uLength4;
 /*-------------------------------------------------------------------*/
 /* There is one ULP_ACTIVE request for each of the data paths.       */
 /* A ULP_ACTIVE response is returned.                                */
+/*-------------------------------------------------------------------*/
 static OSA_BHR* process_dm_act( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -5806,6 +5772,7 @@ U16 uLength4;
 /* There is one ULP_TAKEDOWN request for each of the data paths?     */
 /* There is no response. If there is only one data path there is     */
 /* often no ULP_TAKEDOWN request, just a ULP_DISABLE request.        */
+/*-------------------------------------------------------------------*/
 static OSA_BHR* process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -5818,7 +5785,6 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
-
     return NULL;
 }
 
@@ -5827,6 +5793,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 /*-------------------------------------------------------------------*/
 /* There is one ULP_DISABLE request, irrespective of the number of   */
 /* data paths. There is no response.                                 */
+/*-------------------------------------------------------------------*/
 static OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -5839,12 +5806,11 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* There will be a single MPC_PUS_03 containing the grp->gtcmfilt token */
 
-    /* There will be no response. */
-
     /* Disable the TUN interface */
     if (grp->l3)
         qeth_disable_interface( dev, grp );
 
+    /* There will be no response. */
     return NULL;
 }
 
@@ -5906,8 +5872,6 @@ static void  add_buffer_to_chain( OSA_BAN* ban, OSA_BHR* bhr )
 
     // Release the buffer chain lock.
     release_lock( &ban->lockbhr );
-
-    return;
 }
 
 /*--------------------------------------------------------------------*/
@@ -5969,9 +5933,6 @@ static void  remove_and_free_any_buffers_on_chain( OSA_BAN* ban )
 
     // Release the buffer chain lock.
     release_lock( &ban->lockbhr );
-
-    return;
-
 }
 
 
@@ -5983,7 +5944,6 @@ static void  signal_idx_event( OSA_GRP* grp )
     obtain_lock( &grp->qlock );
     signal_condition( &grp->qrcond );
     release_lock( &grp->qlock );
-    return;
 }
 
 
@@ -6074,9 +6034,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         memcpy( &grp->iaDriveLLAddr6, &addr6, sizeof(grp->iaDriveLLAddr6) );
         hinet_ntop( AF_INET6, &addr6, grp->szDriveLLAddr6, sizeof(grp->szDriveLLAddr6) );
 #endif /* defined(ENABLE_IPV6) */
-
     }
-
 }
 
 
@@ -6260,7 +6218,6 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
           memcmp( &ip6->bDstAddr[0], &solicitednode, 13 ) == 0 &&
           memcmp( &ip6->bDstAddr[13], &icmp[8+13], 3 ) == 0)
       {
-
         // Prepare various sizes
         ip6re_header_size = sizeof(IP6FRM);
         ip6re_payload_size = 32;
@@ -6308,29 +6265,33 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
 
     // Hmm... an ICMPv6 message sent by the guest
     // that we don't handle.
-    return;
 }
 #endif /* defined(ENABLE_IPV6) */
 
 
 #if defined(ENABLE_IPV6)
 /* ------------------------------------------------------------------ */
-/* calculate_icmpv6_checksum()                                        */
+/*                 calculate_icmpv6_checksum()                        */
 /* ------------------------------------------------------------------ */
+//
 // This is not a general purpose function, it is solely for calculating
 // the checksum of ICMPv6 packets sent to the guest on the y-side. The
-// following restriction apply:-
-// - If the ICMPv6 header and message has a length that is an odd number
-//   of bytes, they must be followed by a byte containing zero.
-// - Any existing checksum in the ICMPv6 header will be over-written.
+// following restriction apply:
 //
-// The ICMPv6 header and message layout is:-
+//   1. If the ICMPv6 header and message has a length that is an odd
+//      number of bytes they must be followed by a byte containing zero.
+//
+//   2. Any existing checksum in the ICMPv6 header will be over-written.
+//
+// The ICMPv6 header and message layout is:
+//
 //   byte  0    Type: specifies the format of the message.
 //   byte  1    Code: further qualifies the message
 //   bytes 2-3  Checksum.
 //   byte  4-n  Message.
 //
-// The Hop-by-Hop Options extension header layout is:-
+// The Hop-by-Hop Options extension header layout is:
+//
 //   byte  0    Next Header: will be 58 (0x3a), ICMPv6 header.
 //   byte  1    Header Extension Length: the header's overall length
 //              0 = 8-bytes, 1 = 16-bytes, 2 = 24-bytes, etc.
@@ -6348,7 +6309,6 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
                                      // 32-35  Upper-layer packet length
                                      // 36-38  zero
                                      //   39   Next Header (i.e. 58 (0x3a))
-
 
     // Clear the checksum in the ICMP header before calculating the checksum.
     STORE_HW( pIcmpHdr+2, 0x0000 );
@@ -6396,7 +6356,6 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
     // Set the checksum in the ICMP header.
     STORE_HW( pIcmpHdr+2, uTwobytes );
 
-    return;
 }   /* End function  calculate_icmpv6_checksum() */
 #endif /* defined(ENABLE_IPV6) */
 
