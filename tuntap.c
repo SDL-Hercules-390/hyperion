@@ -359,7 +359,7 @@ int             TUNTAP_SetIPAddr( char*  pszNetDevName,
     if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        // "Net device %s: Invalid ip %s"
+        // "Net device %s: Invalid IP %s"
         WRMSG( HHC00141, "E", pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
@@ -495,7 +495,7 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
 
     if( !pszIPAddr6 )
     {
-        // "Net device %s: Invalid ip %s"
+        // "Net device %s: Invalid IP %s"
         WRMSG( HHC00141, "E", pszNetDevName, "NULL" );
         return -1;
     }
@@ -520,7 +520,7 @@ int             TUNTAP_SetIPAddr6( char*  pszNetDevName,
 
     if( hinet_pton( AF_INET6, pszIPAddr6, &hifr.hifr6_addr ) != 1 )
     {
-        // "Net device %s: Invalid ip %s"
+        // "Net device %s: Invalid IP %s"
         WRMSG( HHC00141, "E", pszNetDevName, pszIPAddr6 );
         return -1;
     }

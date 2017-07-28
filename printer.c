@@ -239,7 +239,7 @@ int rc;
                 int fd = dev->fd;
                 dev->fd = -1;
                 close_socket( fd );
-                // "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
+                // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
                 WRMSG( HHC01100, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
                     dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
             }
@@ -678,7 +678,7 @@ static void* spthread (void* arg)
     {
         dev->fd = -1;
         close_socket( fd );
-        // "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
+        // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
         WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
                dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
     }
@@ -1768,7 +1768,7 @@ int fd = dev->fd;
         if (dev->bs)
         {
             close_socket (fd);
-            // "%1d:%04X Printer: client %s, ip %s disconnected from device %s"
+            // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
             WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
         }
         else
