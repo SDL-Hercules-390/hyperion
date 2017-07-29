@@ -890,34 +890,55 @@ static int qeth_write_pipe (int fd, BYTE *sig)
 
 
 /*-------------------------------------------------------------------*/
+/*  Helper macro to call "qeth_errnum_msg()" function                */
+/*-------------------------------------------------------------------*/
+#define QERRMSG( dev, grp, errnum, msgcode, errmsg )  \
+    qeth_errnum_msg( (dev), (grp), (errnum), (msgcode), (errmsg), \
+        __FUNCTION__, __FILE__, __LINE__ )
+
+/*-------------------------------------------------------------------*/
 /* Issue generic error message with return code and strerror msg.    */
 /* Returns the same errnum value that was passed.                    */
 /*-------------------------------------------------------------------*/
-static int qeth_errnum_msg(DEVBLK *dev, OSA_GRP *grp,
-                            int errnum, char* msgcode, char* errmsg )
+static int qeth_errnum_msg( DEVBLK* dev, OSA_GRP* grp,
+                            int errnum, char* msgcode, char* errmsg,
+                            const char* func, const char* filename, int line )
 {
     char strerr[256] = {0};
     char msgbuf[256] = {0};
+    char msgloc[256] = {0};
 
     if (errnum >= 0)
-        STRLCPY( strerr, strerror( errnum ) );
+        STRLCPY( strerr, strerror( errnum ));
     else
         STRLCPY( strerr, "An unidentified error has occurred" );
 
+    /* Manually identify ACTUAL source of error if emsgloc is enabled,
+       since normal emsgloc identifies US as source which doesn't help.
+    */
+    if (MLVL( EMSGLOC ) && (0
+        || 'S' == *msgcode
+        || 'E' == *msgcode
+        || 'W' == *msgcode
+    ))
+        MSGBUF( msgloc, "%s() at %s(%d): ",
+            func, TRIMLOC( filename ), line );
+
     /* "function() failed, rc=99 (0x00000063): an error occurred" */
-    MSGBUF( msgbuf, "%s, rc=%d (0x%08X): %s",
-        errmsg, errnum, errnum, strerr);
+    MSGBUF( msgbuf, "%s%s, rc=%d (0x%08X): %s",
+        msgloc, errmsg, errnum, errnum, strerr );
 
     // HHC03996 "%1d:%04X %s: %s: %s"
-    if (str_caseless_eq("E",msgcode))
-        WRMSG( HHC03996, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->typname, grp->ttifname, msgbuf);
-    else if (str_caseless_eq("W",msgcode))
-        WRMSG( HHC03996, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->typname, grp->ttifname, msgbuf);
-    else /* "I" information presumed */
-        WRMSG( HHC03996, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
-            dev->typname, grp->ttifname, msgbuf);
+    if (str_caseless_eq( "E", msgcode ))
+        WRMSG( HHC03996, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->typname, grp->ttifname, msgbuf );
+    else if (str_caseless_eq( "W", msgcode ))
+        WRMSG( HHC03996,      "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->typname, grp->ttifname, msgbuf );
+    else
+        WRMSG( HHC03996, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->typname, grp->ttifname, msgbuf );
+
     return errnum;
 }
 
@@ -1005,7 +1026,7 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
     rc = TUNTAP_SetFlags( grp->ttifname, flags );
     if (rc != 0)
     {
-        qeth_errnum_msg( dev, grp, errno,
+        QERRMSG( dev, grp, errno,
             "E", "qeth_enable_interface() failed" );
         return rc;
     }
@@ -1047,7 +1068,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         rc = TUNTAP_SetFlags( grp->ttifname, flags );
         if (rc != 0)
         {
-            qeth_errnum_msg( dev, grp, errno,
+            QERRMSG( dev, grp, errno,
                 "E", "qeth_disable_interface() failed" );
             return rc;
         }
@@ -1140,7 +1161,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         grp->ttifname
 
     )) != 0)
-        return qeth_errnum_msg( dev, grp, errno,
+        return QERRMSG( dev, grp, errno,
             "E", "TUNTAP_CreateInterface() failed" );
 
     /* Update DEVBLK file descriptors */
@@ -1156,7 +1177,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
     /* Set NON-Blocking mode by disabling Blocking mode */
     if ((rc = socket_set_blocking_mode(grp->ttfd,0)) != 0)
-        qeth_errnum_msg( dev, grp, rc,
+        QERRMSG( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
     /* Set the interface's MTU size, if possible */
@@ -1193,7 +1214,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 
             MSGBUF( buf, "TUNTAP_SetMTU(%s) failed", grp->ttmtu );
             if ((rc = TUNTAP_SetMTU( grp->ttifname, grp->ttmtu )) != 0)
-                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+                return QERRMSG( dev, grp, errno, "E", buf );
         }
     }
 
@@ -1206,7 +1227,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             if ((rc = TUNTAP_SetMACAddr( grp->ttifname, grp->tthwaddr )) != 0)
             {
                 MSGBUF( buf, "TUNTAP_SetMACAddr(%s) failed", grp->tthwaddr );
-                return qeth_errnum_msg( dev, grp, errno, "E", buf );
+                return QERRMSG( dev, grp, errno, "E", buf );
             }
         }
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
@@ -1227,14 +1248,14 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         {
             char buf[64];
             MSGBUF( buf, "ctci_win_setdestaddr(\"%s\") failed", grp->ttipaddr );
-            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            return QERRMSG( dev, grp, errno, "E", buf );
         }
 #else /* Linux */
         if ((rc = TUNTAP_SetIPAddr( grp->ttifname, grp->ttipaddr )) != 0)
         {
             char buf[64];
             MSGBUF( buf, "TUNTAP_SetIPAddr(\"%s\") failed", grp->ttipaddr );
-            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            return QERRMSG( dev, grp, errno, "E", buf );
         }
 #endif /* CTCI-WIN or Linux */
     }
@@ -1250,7 +1271,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         if ((rc = TUNTAP_SetNetMask( grp->ttifname, grp->ttnetmask )) != 0)
         {
             MSGBUF( buf, "TUNTAP_SetNetMask(%s) failed", grp->ttnetmask );
-            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            return QERRMSG( dev, grp, errno, "E", buf );
         }
     }
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
@@ -1266,7 +1287,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
         {
             MSGBUF( buf, "TUNTAP_SetIPAddr6(%s) failed", grp->ttipaddr6 );
-            return qeth_errnum_msg( dev, grp, errno, "E", buf );
+            return QERRMSG( dev, grp, errno, "E", buf );
         }
     }
 #endif /*defined(ENABLE_IPV6)*/
@@ -1368,7 +1389,7 @@ U16 offph;
                 }
                 if (grp->ttfd < 0)
                     if (qeth_create_interface( dev, grp ) != 0)
-                        qeth_errnum_msg( dev, grp, -1,
+                        QERRMSG( dev, grp, -1,
                             "E", "qeth_create_interface() failed" );
                 rsp_bhr = process_ulp_enable( dev, req_th, req_rrh, req_puk );
                 break;
@@ -1614,7 +1635,7 @@ U16 offph;
                             "IPA_CMD_SETVMAC: ctci_win_setmacaddr(%s,%s) failed",
                             grp->ttifname, pszMAC );
                         free( pszMAC );
-                        qeth_errnum_msg( dev, grp, errno, "E", msgbuf );
+                        QERRMSG( dev, grp, errno, "E", msgbuf );
                         STORE_HW( ipa->rc, IPA_RC_FFFF );
                     }
                     else // (success)
@@ -1756,7 +1777,7 @@ U16 offph;
                         {
                             char buf[64];
                             MSGBUF( buf, "ctci_win_setdestaddr(%s) failed", ipaddr );
-                            qeth_errnum_msg( dev, grp, errno, "E", buf );
+                            QERRMSG( dev, grp, errno, "E", buf );
                             retcode = IPA_RC_FFFF;
                         }
 #else // !defined(OPTION_W32_CTCI)  // (i.e. Liux)
@@ -1767,7 +1788,7 @@ U16 offph;
                         {
                             char buf[64];
                             MSGBUF( buf, "TUNTAP_SetDestAddr(%s) failed", ipaddr );
-                            qeth_errnum_msg( dev, grp, errno, "E", buf );
+                            QERRMSG( dev, grp, errno, "E", buf );
                             retcode = IPA_RC_FFFF;
                         }
 #endif // defined(OPTION_W32_CTCI)
