@@ -2549,7 +2549,14 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
     {
         WRMSG( HHC05072, "S",  /* CTCE: Not all sockets connected: send=%d, receive=%d */
             CTCX_DEVNUM( pDEVBLK ), pDEVBLK->fd, pDEVBLK->ctcefd );
+/* PJJ VTAM */
+        if( !IS_CTCE_CCW_SCB( pDEVBLK->ctcexCmd ) )
+        {
+            *pUnitStat = 0;
+        }
+/* PJJ VTAM *
         *pUnitStat = 0;
+ * PJJ VTAM */
         return ;
     }
     pCTCE_Info->sent = 1;
