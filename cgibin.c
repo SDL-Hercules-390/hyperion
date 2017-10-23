@@ -67,6 +67,56 @@
 #include "httpmisc.h"
 
 /*-------------------------------------------------------------------*/
+/*                     cgibin_blinkenlights_cpu                      */
+/*-------------------------------------------------------------------*/
+/*     contributed by Doug Wegscheid [dwegscheid@sbcglobal.net]      */
+/*                         tweaked by Fish                           */
+/*-------------------------------------------------------------------*/
+void cgibin_blinkenlights_cpu( WEBBLK* webblk )
+{
+    REGS*  regs;
+    QWORD  psw;
+    int    cpu, gpr;
+
+    hprintf( webblk->sock, "Expires: 0\n" );
+    hprintf( webblk->sock, "Content-type: text/csv;\n\n" );
+
+    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+    {
+        if (!(regs = sysblk.regs[ cpu ]))
+            regs = &sysblk.dummyregs;
+
+        copy_psw( regs, psw );
+
+        if (ARCH_900_IDX == regs->arch_mode)
+        {
+            hprintf( webblk->sock,
+                "CPU%4.4d,PSW,%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"
+                , cpu
+                , psw[  0 ], psw[  1 ], psw[  2 ], psw[  3 ]
+                , psw[  4 ], psw[  5 ], psw[  6 ], psw[  7 ]
+                , psw[  8 ], psw[  9 ], psw[ 10 ], psw[ 11 ]
+                , psw[ 12 ], psw[ 13 ], psw[ 14 ], psw[ 15 ]
+            );
+        }
+        else
+        {
+            hprintf( webblk->sock,
+                "CPU%4.4d,PSW,%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"
+                , cpu
+                , psw[0], psw[1], psw[2], psw[3]
+                , psw[4], psw[5], psw[6], psw[7]
+            );
+        }
+
+        if (ARCH_900_IDX == regs->arch_mode)
+            for (gpr=0; gpr < 16; gpr++) hprintf( webblk->sock, "CPU%4.4d,GR%1.1X=%16.16"PRIX64"\n", cpu, gpr, (U64) regs->GR_G( gpr ));
+        else
+            for (gpr=0; gpr < 16; gpr++) hprintf( webblk->sock, "CPU%4.4d,GR%2.2d,%8.8"  PRIX32"\n", cpu, gpr, (U32) regs->GR_L( gpr ));
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                       cgibin_reg_control                          */
 /*-------------------------------------------------------------------*/
 void cgibin_reg_control(WEBBLK *webblk)
@@ -1277,6 +1327,8 @@ char   *command;
 /*-------------------------------------------------------------------*/
 CGITAB cgidir[] =
 {
+    { "blinkenlights/cpu",   &cgibin_blinkenlights_cpu   },
+
     { "configure/cpu",       &cgibin_configure_cpu       },
 
     { "debug/registers",     &cgibin_debug_registers     },
