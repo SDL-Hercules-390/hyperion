@@ -5231,6 +5231,43 @@ prefetch:
             /*  pp. 16-24 -- 16-25, Incorrect Length                 */
             /* GA22-7000-10:                                         */
             /*  p. 13-70, Incorrect Length                           */
+            /*
+
+            The SLI bit in the CCW ALWAYS suppresses incorrect length,
+            regardless of Format-0 or Format-1 and regardless of whether
+            the CCW is an immediate operation or not and regardless of
+            whether the count field is zero or not (i.e. regardless of
+            whether there is a residual or not).
+
+            Incorrect length is also NEVER indicated for an immediate
+            operation if the count field is zero, REGARDLESS of the
+            SLI bit setting and REGARDLESS of Format-0 or Format-1.
+
+            So we only need to check for possible incorrect length
+            if we have a residual.
+
+            BUT... when:
+
+                a)  the CCW is an IMMEDIATE operation, and
+                b)  SLI bit NOT set (is zero), and
+                c)  the count field (residual) is non-zero,
+
+            Then:
+
+              Format-0:  Incorrect length is always SUPPRESSED.
+
+              Format-1:  Incorrect length is always INDICATED...
+                         UNLESS Incorrect-Length-Suppression Mode
+                         is requested via the ORB 'L' flag!
+
+                         That is to say, without the 'L' flag, Incor-
+                         rect Length errors WILL occur for Format-1
+                         immediate operations when there's a residual.
+
+                         The ORB 'L' flag however, SUPPRESSES Incorrect
+                         Length error for Format-1 immediate operations
+                         causing them to behave the same as Format-0.
+            */
             if (((residual && !(flags & CCW_FLAGS_SLI)) ||
                  ((more || (residual && prefetch.seq)) &&
                   !(flags & (CCW_FLAGS_CD | CCW_FLAGS_SLI))))
@@ -5240,13 +5277,17 @@ prefetch:
                 && (0
                     || !dev->is_immed
 #if defined( FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION )
-                    /* Incorrect Length Suppression mode only occurs when
-                       both the Incorrect Length Suppression Mode bit and
-                       CCW Format Control bits are on in the ORB and only
-                       applies to Immediate operations.
+
+                    /* Immediate operation. If Format-1 WITHOUT the
+                       ORB 'L' flag, then Incorrect Length. Otherwise
+                       if Format-0, or Format-1 WITH Incorrect Length
+                       Suppresion enabled, then IL is NOT indicated
+                       (i.e. is SUPPRESSED).
                     */
-                    || !(dev->orb.flag7 & ORB7_L)
-                    || !(dev->orb.flag5 & ORB5_F)
+                    || (1
+                        &&  (dev->orb.flag5 & ORB5_F)
+                        && !(dev->orb.flag7 & ORB7_L)
+                       )
 #endif /* defined( FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION ) */
                    )
             )
