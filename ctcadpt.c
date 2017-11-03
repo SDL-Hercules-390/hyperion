@@ -559,7 +559,7 @@ static BYTE CTCE_immed_commands[256] =
 
 DEVHND ctcadpt_device_hndinfo =
 {
-        &CTCX_Init,                    /* Device Initialisation      */
+        &CTCX_Init,                    /* Device Initialization      */
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
@@ -588,7 +588,7 @@ DEVHND ctcadpt_device_hndinfo =
 
 DEVHND ctct_device_hndinfo =
 {
-        &CTCT_Init,                    /* Device Initialisation      */
+        &CTCT_Init,                    /* Device Initialization      */
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
@@ -617,7 +617,7 @@ DEVHND ctct_device_hndinfo =
 
 DEVHND ctce_device_hndinfo =
 {
-        &CTCE_Init,                    /* Device Initialisation      */
+        &CTCE_Init,                    /* Device Initialization      */
         &CTCE_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */
@@ -646,7 +646,7 @@ DEVHND ctce_device_hndinfo =
 
 DEVHND vmnet_device_hndinfo =
 {
-        &VMNET_Init,                   /* Device Initialisation      */
+        &VMNET_Init,                   /* Device Initialization      */
         &CTCX_ExecuteCCW,              /* Device CCW execute         */
         &CTCX_Close,                   /* Device Close               */
         &CTCX_Query,                   /* Device Query               */

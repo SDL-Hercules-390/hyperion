@@ -391,7 +391,7 @@ BYTE            c;                      /* Output character          */
 static
 #endif
 DEVHND cardpch_device_hndinfo = {
-        &cardpch_init_handler,         /* Device Initialisation      */
+        &cardpch_init_handler,         /* Device Initialization      */
         &cardpch_execute_ccw,          /* Device CCW execute         */
         &cardpch_close_device,         /* Device Close               */
         &cardpch_query_device,         /* Device Query               */

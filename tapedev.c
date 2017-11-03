@@ -130,7 +130,7 @@
 
 DEVHND  tape_other_devhnd   =
 {
-        &tapedev_init_handler,         /* Device Initialisation      */
+        &tapedev_init_handler,         /* Device Initialization      */
         &tapedev_execute_ccw,          /* Device CCW execute         */
         &tapedev_close_device,         /* Device Close               */
         &tapedev_query_device,         /* Device Query               */
@@ -159,7 +159,7 @@ DEVHND  tape_other_devhnd   =
 
 DEVHND  tape_3590_devhnd   =
 {
-        &tapedev_init_handler,         /* Device Initialisation      */
+        &tapedev_init_handler,         /* Device Initialization      */
         &tapedev_execute_ccw,          /* Device CCW execute         */
         &tapedev_close_device,         /* Device Close               */
         &tapedev_query_device,         /* Device Query               */

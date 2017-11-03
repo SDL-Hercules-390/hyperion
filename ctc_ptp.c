@@ -225,7 +225,7 @@ static BYTE ptp_immed_commands[256] =
 // #endif /* defined(OPTION_DYNAMIC_LOAD) */
 DEVHND ptp_device_hndinfo =
 {
-        &ptp_init,                     /* Device Initialisation       */
+        &ptp_init,                     /* Device Initialization       */
         &ptp_execute_ccw,              /* Device CCW execute          */
         &ptp_close,                    /* Device Close                */
         &ptp_query,                    /* Device Query                */

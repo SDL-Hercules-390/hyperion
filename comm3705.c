@@ -1297,7 +1297,7 @@ static void msg013e(DEVBLK *dev,char *kw,char *kv)
     WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
 }
 /*-------------------------------------------------------------------*/
-/* Device Initialisation                                             */
+/* Device Initialization                                             */
 /*-------------------------------------------------------------------*/
 static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
@@ -2242,7 +2242,7 @@ int     llsize;
 static
 #endif
 DEVHND com3705_device_hndinfo = {
-    &commadpt_init_handler,        /* Device Initialisation      */
+    &commadpt_init_handler,        /* Device Initialization      */
     &commadpt_execute_ccw,         /* Device CCW execute         */
     &commadpt_close_device,        /* Device Close               */
     &commadpt_query_device,        /* Device Query               */

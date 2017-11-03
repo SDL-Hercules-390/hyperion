@@ -566,7 +566,7 @@ static
 #endif
 DEVHND  con1052_device_hndinfo =
 {
-        &con1052_init_handler,         /* Device Initialisation      */
+        &con1052_init_handler,         /* Device Initialization      */
         &con1052_execute_ccw,          /* Device CCW execute         */
         &con1052_close_device,         /* Device Close               */
         &con1052_query_device,         /* Device Query               */

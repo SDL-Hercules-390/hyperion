@@ -4430,7 +4430,7 @@ static
 
 DEVHND  constty_device_hndinfo  =
 {
-        &constty_init_handler,         /* Device Initialisation      */
+        &constty_init_handler,         /* Device Initialization      */
         &constty_execute_ccw,          /* Device CCW execute         */
         &constty_close_device,         /* Device Close               */
         &constty_query_device,         /* Device Query               */
@@ -4463,7 +4463,7 @@ static
 
 DEVHND  loc3270_device_hndinfo  =
 {
-        &loc3270_init_handler,         /* Device Initialisation      */
+        &loc3270_init_handler,         /* Device Initialization      */
         &loc3270_execute_ccw,          /* Device CCW execute         */
         &loc3270_close_device,         /* Device Close               */
         &loc3270_query_device,         /* Device Query               */

@@ -161,7 +161,7 @@ LT_BEGIN_C_DECLS
 
 typedef struct lt_dlhandle_struct *lt_dlhandle; /* A loaded module.  */
 
-/* Initialisation and finalisation functions for libltdl. */
+/* Initialization and finalisation functions for libltdl. */
 LT_SCOPE    int     lt_dlinit       LT_PARAMS((void));
 LT_SCOPE    int     lt_dlexit       LT_PARAMS((void));
 

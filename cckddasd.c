@@ -6034,7 +6034,7 @@ int             l;
 } /* end function cckd_trace */
 
 DEVHND cckddasd_device_hndinfo = {
-        &ckddasd_init_handler,         /* Device Initialisation      */
+        &ckddasd_init_handler,         /* Device Initialization      */
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &cckddasd_close_device,        /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
@@ -6062,7 +6062,7 @@ DEVHND cckddasd_device_hndinfo = {
 };
 
 DEVHND cfbadasd_device_hndinfo = {
-        &fbadasd_init_handler,         /* Device Initialisation      */
+        &fbadasd_init_handler,         /* Device Initialization      */
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &cckddasd_close_device,        /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */

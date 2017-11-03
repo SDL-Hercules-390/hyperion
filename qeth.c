@@ -6391,7 +6391,7 @@ static
 #endif
 DEVHND qeth_device_hndinfo =
 {
-        &qeth_init_handler,            /* Device Initialisation      */
+        &qeth_init_handler,            /* Device Initialization      */
         &qeth_execute_ccw,             /* Device CCW execute         */
         &qeth_close_device,            /* Device Close               */
         &qeth_query_device,            /* Device Query               */

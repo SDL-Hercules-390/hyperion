@@ -29,7 +29,7 @@
 #endif
 
 /*
- * Initialisation string for a Generic Subchannel
+ * Initialization string for a Generic Subchannel
  *
  * Format :
  *        <method> parms
@@ -166,7 +166,7 @@ static void hchan_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 static
 #endif
 DEVHND hchan_device_hndinfo = {
-        &hchan_init_handler,           /* Device Initialisation      */
+        &hchan_init_handler,           /* Device Initialization      */
         &hchan_execute_ccw,            /* Device CCW execute         */
         &hchan_close_device,           /* Device Close               */
         &hchan_query_device,           /* Device Query               */

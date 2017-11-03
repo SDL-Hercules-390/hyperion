@@ -1568,7 +1568,7 @@ BYTE byte;
 }
 
 DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
-        &fbadasd_init_handler,         /* Device Initialisation      */
+        &fbadasd_init_handler,         /* Device Initialization      */
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &fbadasd_close_device,         /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */

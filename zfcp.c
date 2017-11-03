@@ -1435,7 +1435,7 @@ static
 #endif
 DEVHND zfcp_device_hndinfo =
 {
-        &zfcp_init_handler,            /* Device Initialisation      */
+        &zfcp_init_handler,            /* Device Initialization      */
         &zfcp_execute_ccw,             /* Device CCW execute         */
         &zfcp_close_device,            /* Device Close               */
         &zfcp_query_device,            /* Device Query               */

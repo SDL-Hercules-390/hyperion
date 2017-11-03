@@ -2984,7 +2984,7 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 }
 
 DEVHND shared_ckd_device_hndinfo = {
-        &shared_ckd_init,              /* Device Initialisation      */
+        &shared_ckd_init,              /* Device Initialization      */
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &shared_ckd_close,             /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
@@ -3012,7 +3012,7 @@ DEVHND shared_ckd_device_hndinfo = {
 };
 
 DEVHND shared_fba_device_hndinfo = {
-        &shared_fba_init,              /* Device Initialisation      */
+        &shared_fba_init,              /* Device Initialization      */
         &fbadasd_execute_ccw,          /* Device CCW execute         */
         &shared_fba_close,             /* Device Close               */
         &fbadasd_query_device,         /* Device Query               */

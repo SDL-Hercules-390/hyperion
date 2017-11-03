@@ -2060,7 +2060,7 @@ static void msg01009w(DEVBLK *dev,char *dialt,char *kw,char *kv)
 }
 
 /*-------------------------------------------------------------------*/
-/* Device Initialisation                                             */
+/* Device Initialization                                             */
 /*-------------------------------------------------------------------*/
 static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
@@ -3686,7 +3686,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
 static
 #endif
 DEVHND comadpt_device_hndinfo = {
-        &commadpt_init_handler,        /* Device Initialisation      */
+        &commadpt_init_handler,        /* Device Initialization      */
         &commadpt_execute_ccw,         /* Device CCW execute         */
         &commadpt_close_device,        /* Device Close               */
         &commadpt_query_device,        /* Device Query               */

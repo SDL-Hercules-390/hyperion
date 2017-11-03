@@ -113,7 +113,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
 DEVHND ctci_device_hndinfo =
 {
-        &CTCI_Init,                    /* Device Initialisation      */
+        &CTCI_Init,                    /* Device Initialization      */
         &CTCI_ExecuteCCW,              /* Device CCW execute         */
         &CTCI_Close,                   /* Device Close               */
         &CTCI_Query,                   /* Device Query               */

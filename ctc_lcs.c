@@ -3294,7 +3294,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 /* NOTE : lcs_device_hndinfo is NEVER static as it is referenced by the CTC meta driver */
 DEVHND lcs_device_hndinfo =
 {
-        &LCS_Init,                     /* Device Initialisation      */
+        &LCS_Init,                     /* Device Initialization      */
         &LCS_ExecuteCCW,               /* Device CCW execute         */
         &LCS_Close,                    /* Device Close               */
         &LCS_Query,                    /* Device Query               */

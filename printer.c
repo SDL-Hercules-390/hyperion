@@ -2537,7 +2537,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 static
 #endif
 DEVHND printer_device_hndinfo = {
-        &printer_init_handler,         /* Device Initialisation      */
+        &printer_init_handler,         /* Device Initialization      */
         &printer_execute_ccw,          /* Device CCW execute         */
         &printer_close_device,         /* Device Close               */
         &printer_query_device,         /* Device Query               */
@@ -2564,7 +2564,7 @@ DEVHND printer_device_hndinfo = {
         NULL                           /* Hercules resume            */
 };
 DEVHND prt3203_device_hndinfo = {
-        &printer_init_handler,         /* Device Initialisation      */
+        &printer_init_handler,         /* Device Initialization      */
         &printer_execute_ccw,          /* Device CCW execute         */
         &printer_close_device,         /* Device Close               */
         &printer_query_device,         /* Device Query               */

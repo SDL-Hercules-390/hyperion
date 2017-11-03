@@ -960,7 +960,7 @@ U32     num;                            /* Number of bytes to move   */
 static
 #endif
 DEVHND cardrdr_device_hndinfo = {
-        &cardrdr_init_handler,         /* Device Initialisation      */
+        &cardrdr_init_handler,         /* Device Initialization      */
         &cardrdr_execute_ccw,          /* Device CCW execute         */
         &cardrdr_close_device,         /* Device Close               */
         &cardrdr_query_device,         /* Device Query               */

@@ -27,7 +27,7 @@
 
 
 struct DEVHND {
-        DEVIF  *init;                  /* Device Initialisation      */
+        DEVIF  *init;                  /* Device Initialization      */
         DEVXF  *exec;                  /* Device CCW execute         */
         DEVCF  *close;                 /* Device Close               */
         DEVQF  *query;                 /* Device Query               */

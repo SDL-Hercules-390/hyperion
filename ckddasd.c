@@ -6072,7 +6072,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 } /* end function ckddasd_execute_ccw */
 
 DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
-        &ckddasd_init_handler,         /* Device Initialisation      */
+        &ckddasd_init_handler,         /* Device Initialization      */
         &ckddasd_execute_ccw,          /* Device CCW execute         */
         &ckddasd_close_device,         /* Device Close               */
         &ckddasd_query_device,         /* Device Query               */
