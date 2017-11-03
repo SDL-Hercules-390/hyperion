@@ -7237,11 +7237,13 @@ BYTE c;                                 /* Character work area       */
         else if (cmd[0] == 't')
         {
             typ = "CCW trace";
+            dev->orbtrace = oneorzero;
             dev->ccwtrace = oneorzero;
         }
         else // (cmd[0] == 's')
         {
             typ = "CCW step";
+            dev->orbtrace = oneorzero;
             dev->ccwtrace = oneorzero;
             dev->ccwstep  = oneorzero;
         }
