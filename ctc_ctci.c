@@ -99,6 +99,8 @@ static BYTE CTCI_Immed_Commands[256]=
 // Declarations
 // ====================================================================
 
+static BYTE     ctc_halt_or_clear( DEVBLK* pDEVBLK );
+
 static void*    CTCI_ReadThread( void* arg /*PCTCBLK pCTCBLK */ );
 
 static int      CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
@@ -122,7 +124,7 @@ DEVHND ctci_device_hndinfo =
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        NULL,                          /* Device Halt channel pgm    */
+        &ctc_halt_or_clear,            /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */
@@ -667,6 +669,28 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
 }
 
 // -------------------------------------------------------------------
+//                     ctc_halt_or_clear
+// -------------------------------------------------------------------
+// The channel is processing a Halt Subchannel or Clear Subchannel
+// instruction and is notifying us of that fact so we can stop our
+// CTCI_Read CCW processing loop.
+
+static BYTE ctc_halt_or_clear( DEVBLK* pDEVBLK )
+{
+    PCTCBLK pCTCBLK = (PCTCBLK) pDEVBLK->dev_data;
+    obtain_lock( &pCTCBLK->EventLock );
+    {
+        if (pCTCBLK->fReadWaiting)
+        {
+            pCTCBLK->fHaltOrClear = 1;
+            signal_condition( &pCTCBLK->Event );
+        }
+    }
+    release_lock( &pCTCBLK->EventLock );
+    return (CSW_CE | CSW_DE);
+}
+
+// -------------------------------------------------------------------
 // CTCI_Read
 // -------------------------------------------------------------------
 //
@@ -697,15 +721,15 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
     PCTCIHDR    pFrame   = NULL;
     size_t      iLength  = 0;
     int         rc       = 0;
+    BYTE        haltorclear = FALSE;
 
     for ( ; ; )
     {
         obtain_lock( &pCTCBLK->Lock );
 
-        if( !pCTCBLK->fDataPending )
+        if (!pCTCBLK->fDataPending)
         {
             release_lock( &pCTCBLK->Lock );
-
             {
                 struct timespec waittime;
                 struct timeval  now;
@@ -716,32 +740,37 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
                 waittime.tv_nsec = now.tv_usec * 1000;
 
                 obtain_lock( &pCTCBLK->EventLock );
+                pCTCBLK->fReadWaiting = 1;
                 rc = timed_wait_condition( &pCTCBLK->Event,
                                            &pCTCBLK->EventLock,
                                            &waittime );
+                pCTCBLK->fReadWaiting = 0;
             }
-
+            // check for halt condition
+            if (pCTCBLK->fHaltOrClear)
+            {
+                haltorclear = TRUE;
+                pCTCBLK->fHaltOrClear = 0;
+            }
             release_lock( &pCTCBLK->EventLock );
 
-            if( rc == ETIMEDOUT || rc == EINTR )
+            // check for halt condition
+            if (haltorclear)
             {
-                // check for halt condition
-                if( pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
-                    pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
+                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
                 {
-                    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                    {
-                        // "%1d:%04X %s: halt or clear recognized"
-                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
-                    }
-
-                    *pUnitStat = CSW_CE | CSW_DE;
-                    *pResidual = sCount;
-                    return;
+                    // "%1d:%04X %s: halt or clear recognized"
+                    WRMSG( HHC00904, "I", SSID_TO_LCSS( pDEVBLK->ssid ),
+                        pDEVBLK->devnum, "CTCI" );
                 }
 
-                continue;
+                *pUnitStat = CSW_CE | CSW_DE;
+                *pResidual = sCount;
+                return;
             }
+
+            if (rc == ETIMEDOUT || rc == EINTR)
+                continue;
 
             obtain_lock( &pCTCBLK->Lock );
         }

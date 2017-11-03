@@ -107,6 +107,8 @@ struct  _PTPBLK
     u_int       fActiveLL6:1;              // IPv6 link local connection active
     u_int       fPreconfigured:1;          // TUN interface pre-configured
     u_int       fPreGuestIPAddr4:1;        // TUN interface pre-configured with guest IPv4 address
+    u_int       fReadWaiting:1;            // ptp_read waiting
+    u_int       fHaltOrClear:1;            // HSCH or CSCH issued
 
     int         iKernBuff;                 // Kernel buffer in K bytes.
     int         iIOBuff;                   // I/O buffer in K bytes.

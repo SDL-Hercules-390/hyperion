@@ -316,10 +316,11 @@ struct  _CTCBLK
     u_int       fOldFormat:1;             // Old Config Format
     u_int       fCreated:1;               // Interface Created
     u_int       fStarted:1;               // Startup Received
-    u_int       fDataPending:1;           // Data is pending for
-                                          //   read device
+    u_int       fDataPending:1;           // Data is pending for read device
     u_int       fCloseInProgress:1;       // Close in progress
     u_int       fPreconfigured:1;         // TUN device pre-configured
+    u_int       fReadWaiting:1;           // CTCI_Read waiting
+    u_int       fHaltOrClear:1;           // HSCH or CSCH issued
 
     int         iKernBuff;                // Kernel buffer in K bytes.
     int         iIOBuff;                  // I/O buffer in K bytes.
@@ -409,6 +410,8 @@ struct  _LCSDEV
     u_int       fRouteAdded:1;          // Routing Added
     u_int       fReplyPending:1;        // Cmd Reply is Pending
     u_int       fDataPending:1;         // Data is Pending
+    u_int       fReadWaiting:1;         // LCS_Read waiting
+    u_int       fHaltOrClear:1;         // HSCH or CSCH issued
 
     PLCSDEV     pNext;                  // Next device
 };

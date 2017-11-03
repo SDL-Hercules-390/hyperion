@@ -2455,6 +2455,29 @@ static int  LCS_DoEnqueueEthFrame( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, siz
 }
 
 // ====================================================================
+//                     lcs_halt_or_clear
+// ====================================================================
+// The channel is processing a Halt Subchannel or Clear Subchannel
+// instruction and is notifying us of that fact so we can stop our
+// LCS_Read CCW processing loop.
+// --------------------------------------------------------------------
+
+static BYTE lcs_halt_or_clear( DEVBLK* pDEVBLK )
+{
+    PLCSDEV pLCSDEV = (PLCSDEV) pDEVBLK->dev_data;
+    obtain_lock( &pLCSDEV->DevEventLock );
+    {
+        if (pLCSDEV->fReadWaiting)
+        {
+            pLCSDEV->fHaltOrClear = 1;
+            signal_condition( &pLCSDEV->DevEvent );
+        }
+    }
+    release_lock( &pLCSDEV->DevEventLock );
+    return (CSW_CE | CSW_DE);
+}
+
+// ====================================================================
 //                         LCS_Read
 // ====================================================================
 // The guest o/s is issuing a Read CCW for our LCS device. Return to
@@ -2468,6 +2491,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
     PLCSHDR     pLCSHdr;
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
     size_t      iLength = 0;
+    BYTE        haltorclear = FALSE;
 
     struct timespec  waittime;
     struct timeval   now;
@@ -2504,18 +2528,24 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
         PTT_DEBUG(       "GOT  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         {
             PTT_DEBUG( "WAIT DevEventLock ", 000, pDEVBLK->devnum, -1 );
+            pLCSDEV->fReadWaiting = 1;
             timed_wait_condition( &pLCSDEV->DevEvent,
                                   &pLCSDEV->DevEventLock,
                                   &waittime );
+            pLCSDEV->fReadWaiting = 0;
         }
         PTT_DEBUG(        "WOKE DevEventLock ", 000, pDEVBLK->devnum, -1 );
+        if (pLCSDEV->fHaltOrClear)
+        {
+            haltorclear = TRUE;
+            pLCSDEV->fHaltOrClear = 0;
+        }
         PTT_DEBUG(        "REL  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         release_lock( &pLCSDEV->DevEventLock );
 
         // Check for channel conditions...
 
-        if (pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
-            pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR)
+        if (haltorclear)
         {
             *pUnitStat = CSW_CE | CSW_DE;
             *pResidual = sCount;
@@ -3303,7 +3333,7 @@ DEVHND lcs_device_hndinfo =
         NULL,                          /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
         NULL,                          /* Device Suspend channel pgm */
-        NULL,                          /* Device Halt channel pgm    */
+        &lcs_halt_or_clear,            /* Device Halt channel pgm    */
         NULL,                          /* Device Read                */
         NULL,                          /* Device Write               */
         NULL,                          /* Device Query used          */

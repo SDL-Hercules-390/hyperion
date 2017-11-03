@@ -76,6 +76,8 @@ static void     write_th( DEVBLK* pDEVBLK,  U32  uCount,
 
 static int      write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
+static BYTE     ptp_halt_or_clear( DEVBLK* pDEVBLK );
+
 static void     ptp_read( DEVBLK* pDEVBLK,  U32   uCount,
                           int     iCCWSeq,  BYTE* pIOBuf,
                           BYTE*   pMore,    BYTE* pUnitStat,
@@ -234,7 +236,7 @@ DEVHND ptp_device_hndinfo =
         NULL,                          /* Device End channel pgm      */
         NULL,                          /* Device Resume channel pgm   */
         NULL,                          /* Device Suspend channel pgm  */
-        NULL,                          /* Device Halt channel pgm     */
+        &ptp_halt_or_clear,            /* Device Halt channel pgm     */
         NULL,                          /* Device Read                 */
         NULL,                          /* Device Write                */
         NULL,                          /* Device Query used           */
@@ -1483,6 +1485,28 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
     return rv;
 }   /* End function  write_rrh_8108() */
 
+// -------------------------------------------------------------------
+//                     ptp_halt_or_clear
+// -------------------------------------------------------------------
+// The channel is processing a Halt Subchannel or Clear Subchannel
+// instruction and is notifying us of that fact so we can stop our
+// ptp_read CCW processing loop.
+
+static BYTE ptp_halt_or_clear( DEVBLK* pDEVBLK )
+{
+    PTPATH*    pPTPATH  = pDEVBLK->dev_data;
+    PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
+    obtain_lock( &pPTPBLK->ReadEventLock );
+    {
+        if (pPTPBLK->fReadWaiting)
+        {
+            pPTPBLK->fHaltOrClear = 1;
+            signal_condition( &pPTPBLK->ReadEvent );
+        }
+    }
+    release_lock( &pPTPBLK->ReadEventLock );
+    return (CSW_CE | CSW_DE);
+}
 
 /* ------------------------------------------------------------------ */
 /* ptp_read()                                                         */
@@ -1509,17 +1533,13 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
     int        rc       = 0;
     struct timespec waittime;
     struct timeval  now;
+    BYTE       haltorclear = FALSE;
 
-
-    //
     if (pPTPATH->bDLCtype == DLCTYPE_READ)     // Read from the y-sides Read path?
     {
         // The read is from the y-sides Read path.
-
-        //
-        for ( ; ; )
+        for (;;)
         {
-
             // Return the data from a chain buffer to the guest OS.
             // There will be chain buffers on the Read path during
             // handshaking, and just after the IPv6 connection has
@@ -1535,7 +1555,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 
                 // Free the buffer.
                 free( pPTPHDR );
-
                 return;
             }
 
@@ -1547,7 +1566,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
             // Obtain the read buffer lock.
             obtain_lock( &pPTPBLK->ReadBufferLock );
 
-            //
             pPTPHDR = pPTPBLK->pReadBuffer;
             if (pPTPHDR && pPTPHDR->iDataLen > LEN_OF_PAGE_ONE)
             {
@@ -1557,7 +1575,6 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 
                 // Release the read buffer lock.
                 release_lock( &pPTPBLK->ReadBufferLock );
-
                 return;
             }
 
@@ -1575,33 +1592,35 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
             obtain_lock( &pPTPBLK->ReadEventLock );
 
             // Use a calculated wait
+            pPTPBLK->fReadWaiting = 1;
             rc = timed_wait_condition( &pPTPBLK->ReadEvent,
                                        &pPTPBLK->ReadEventLock,
                                        &waittime );
+            pPTPBLK->fReadWaiting = 0;
+
+            // check for halt condition
+            if (pPTPBLK->fHaltOrClear)
+            {
+                haltorclear = TRUE;
+                pPTPBLK->fHaltOrClear = 0;
+            }
 
             // Release the event lock
             release_lock( &pPTPBLK->ReadEventLock );
 
-            //
-            if (rc == ETIMEDOUT || rc == EINTR)
+            // check for halt condition
+            if (haltorclear)
             {
-                // check for halt condition
-                if (pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
-                    pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR)
+                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
                 {
-                    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
-                    {
-                        // HHC00904 "%1d:%04X %s: halt or clear recognized"
-                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
-                    }
-                    *pUnitStat = CSW_CE | CSW_DE;
-                    *pResidual = uCount;
-                    return;
+                    // HHC00904 "%1d:%04X %s: halt or clear recognized"
+                    WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
                 }
+                *pUnitStat = CSW_CE | CSW_DE;
+                *pResidual = uCount;
+                return;
             }
-
-        }   /* for ( ; ; ) */
-
+        } /* for (;;) */
     }
     else
     {
