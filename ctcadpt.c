@@ -1034,7 +1034,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     // remote side of the point-to-point link
     remaddr = *argv++;
 
-    if( inet_aton( remaddr, &ipaddr ) == 0 )
+    if (!inet_aton( remaddr, &ipaddr ))
     {
         struct hostent *hp;
 
@@ -2275,7 +2275,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
     // remote side of the point-to-point link
     remaddr = *argv++;
 
-    if( inet_aton( remaddr, &dev->ctce_ipaddr ) == 0 )
+    if (!inet_aton( remaddr, &dev->ctce_ipaddr ))
     {
         struct hostent *hp;
 
