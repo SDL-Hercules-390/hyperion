@@ -5241,7 +5241,10 @@ prefetch:
 
             Incorrect length is also NEVER indicated for an immediate
             operation if the count field is zero, REGARDLESS of the
-            SLI bit setting and REGARDLESS of Format-0 or Format-1.
+            SLI bit setting. This however only pertains to Format-1
+            CCWs as only Format-1 CCWs may contain a length field of
+            zero. The length field for a Format-0 CCW must always have
+            a non-zero value from 1 to 65,535.
 
             So we only need to check for possible incorrect length
             if we have a residual.
