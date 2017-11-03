@@ -30,7 +30,11 @@ int  MACTabAdd ( MACTAB* tab, const BYTE* mac, const BYTE flags )
         if (tab[i].inuse)
         {
             if (memcmp( tab[i].mac, mac, sizeof( tab[i].mac )) == 0)
+#if 0 // technically this should be an error
                 return -EEXIST; // (already exists)
+#else // but we'll treat it as success
+                return 0;       // (already exists)
+#endif
         }
         else // (unused entry)
         {
@@ -65,7 +69,11 @@ int  MACTabRem ( MACTAB* tab, const BYTE* mac )
         }
     }
 
+#if 0 // technically this should be an error
     return -ENOENT; // (not found)
+#else // but we'll treat it as success
+    return 0;       // (not found)
+#endif
 }
 
 /*-------------------------------------------------------------------*/
