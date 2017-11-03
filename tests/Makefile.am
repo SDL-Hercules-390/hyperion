@@ -109,6 +109,12 @@ EXTRA_DIST =                    \
      bfp-023-threads.list       \
      bfp-023-threads.sptst      \
      brc.txt                    \
+     CCW-ILS.asm                \
+     CCW-ILS.list               \
+     CCW-ILS.pdf                \
+     CCW-ILS.core               \
+     CCW-ILS.tst                \
+     CCWILS.3390-1.comp-z       \
      cdfr.txt                   \
      cdgr.txt                   \
      cdsg.txt                   \
