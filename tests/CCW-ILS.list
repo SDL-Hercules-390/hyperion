@@ -1,0 +1,1269 @@
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *                CCW Incorrect Length Suppression Test
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *  This program verifies proper Hercules channel subsystem handling
+                                                     9 *  of immediate CCWs (e.g. 0x03 NOP CCW) with a non-zero length field
+                                                    10 *  and WITHOUT the SLI flag set, for both Format-0 and Format-1, and
+                                                    11 *  both with and without the ORB 'L' Incorrect Length Suppression Mode
+                                                    12 *  flag.
+                                                    13 *
+                                                    14 ***********************************************************************
+                                                    15 *
+                                                    16 *   Example Hercules Testcase:
+                                                    17 *
+                                                    18 *       *Testcase CCW-ILS (CCW Incorrect Length Suppression)
+                                                    19 *
+                                                    20 *       # Prepare test environment
+                                                    21 *
+                                                    22 *       mainsize    1
+                                                    23 *       numcpu      1
+                                                    24 *       sysclear
+                                                    25 *       archlvl     z/Arch
+                                                    26 *       detach      390
+                                                    27 *       attach      390  3390  "$(testpath)/CCWILS.3390-1.comp-z"
+                                                    28 *       loadcore               "$(testpath)/CCW-ILS.core"
+                                                    29 *
+                                                    30 *       t+390                   # (trace device CCWs)
+                                                    31 *       o+390                   # (trace device ORBs)
+                                                    32 *
+                                                    33 *       # Run the test...
+                                                    34 *       runtest   0.25          # (plenty of time)
+                                                    35 *
+                                                    36 *
+                                                    37 *       # Clean up afterwards
+                                                    38 *       detach    390           # (no longer needed)
+                                                    39 *
+                                                    40 *       *Compare
+                                                    41 *       r FFF.1
+                                                    42 *       *Want "Ending test number" 03
+                                                    43 *
+                                                    44 *       *Done
+                                                    45 *
+                                                    46 ***********************************************************************
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    48          PRINT OFF
+                                                  3429          PRINT ON
+
+                                                  3431 ***********************************************************************
+                                                  3432 *        SATK prolog stuff...
+                                                  3433 ***********************************************************************
+
+                                                  3435          ARCHLVL  MNOTE=NO
+                                                  3437+$AL      OPSYN AL
+                                                  3438+$ALR     OPSYN ALR
+                                                  3439+$B       OPSYN B
+                                                  3440+$BAS     OPSYN BAS
+                                                  3441+$BASR    OPSYN BASR
+                                                  3442+$BC      OPSYN BC
+                                                  3443+$BCTR    OPSYN BCTR
+                                                  3444+$BE      OPSYN BE
+                                                  3445+$BH      OPSYN BH
+                                                  3446+$BL      OPSYN BL
+                                                  3447+$BM      OPSYN BM
+                                                  3448+$BNE     OPSYN BNE
+                                                  3449+$BNH     OPSYN BNH
+                                                  3450+$BNL     OPSYN BNL
+                                                  3451+$BNM     OPSYN BNM
+                                                  3452+$BNO     OPSYN BNO
+                                                  3453+$BNP     OPSYN BNP
+                                                  3454+$BNZ     OPSYN BNZ
+                                                  3455+$BO      OPSYN BO
+                                                  3456+$BP      OPSYN BP
+                                                  3457+$BXLE    OPSYN BXLE
+                                                  3458+$BZ      OPSYN BZ
+                                                  3459+$CH      OPSYN CH
+                                                  3460+$L       OPSYN L
+                                                  3461+$LH      OPSYN LH
+                                                  3462+$LM      OPSYN LM
+                                                  3463+$LPSW    OPSYN LPSW
+                                                  3464+$LR      OPSYN LR
+                                                  3465+$LTR     OPSYN LTR
+                                                  3466+$NR      OPSYN NR
+                                                  3467+$SL      OPSYN SL
+                                                  3468+$SLR     OPSYN SLR
+                                                  3469+$SR      OPSYN SR
+                                                  3470+$ST      OPSYN ST
+                                                  3471+$STM     OPSYN STM
+                                                  3472+$X       OPSYN X
+                                                  3473+$AHI     OPSYN AHI
+                                                  3474+$B       OPSYN J
+                                                  3475+$BC      OPSYN BRC
+                                                  3476+$BE      OPSYN JE
+                                                  3477+$BH      OPSYN JH
+                                                  3478+$BL      OPSYN JL
+                                                  3479+$BM      OPSYN JM
+                                                  3480+$BNE     OPSYN JNE
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3481+$BNH     OPSYN JNH
+                                                  3482+$BNL     OPSYN JNL
+                                                  3483+$BNM     OPSYN JNM
+                                                  3484+$BNO     OPSYN JNO
+                                                  3485+$BNP     OPSYN JNP
+                                                  3486+$BNZ     OPSYN JNZ
+                                                  3487+$BO      OPSYN JO
+                                                  3488+$BP      OPSYN JP
+                                                  3489+$BXLE    OPSYN JXLE
+                                                  3490+$BZ      OPSYN JZ
+                                                  3491+$CHI     OPSYN CHI
+                                                  3492+$AHI     OPSYN AGHI
+                                                  3493+$AL      OPSYN ALG
+                                                  3494+$ALR     OPSYN ALGR
+                                                  3495+$BCTR    OPSYN BCTGR
+                                                  3496+$BXLE    OPSYN JXLEG
+                                                  3497+$CH      OPSYN CGH
+                                                  3498+$CHI     OPSYN CGHI
+                                                  3499+$L       OPSYN LG
+                                                  3500+$LH      OPSYN LGH
+                                                  3501+$LM      OPSYN LMG
+                                                  3502+$LPSW    OPSYN LPSWE
+                                                  3503+$LR      OPSYN LGR
+                                                  3504+$LTR     OPSYN LTGR
+                                                  3505+$NR      OPSYN NGR
+                                                  3506+$SL      OPSYN SLG
+                                                  3507+$SLR     OPSYN SLGR
+                                                  3508+$SR      OPSYN SGR
+                                                  3509+$ST      OPSYN STG
+                                                  3510+$STM     OPSYN STMG
+                                                  3511+$X       OPSYN XG
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3513 ***********************************************************************
+                                                  3514 *        Initiate the CCWILS CSECT in the CODE region
+                                                  3515 *        with the location counter at 0
+                                                  3516 ***********************************************************************
+
+                                                  3518 CCWILS   ASALOAD  REGION=CODE
+                              00000000  00000FFF  3519+CCWILS   START 0,CODE
+00000000  00020000 00000000                       3521+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000010                      00000010  00000058  3522+         ORG   CCWILS+X'058'
+00000058  00020000 00000000                       3524+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000068  00020000 00000000                       3525+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000078  00020000 00000000                       3526+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000088  00020000 00000000                       3527+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000098  00020000 00000000                       3528+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+000000A8                      000000A8  000001A0  3529+         ORG   CCWILS+X'1A0'
+000001A0  00020000 00000000                       3531+         PSWZ  0,0,2,0,X'120'     Restart ISR Trap New PSW
+000001B0  00020000 00000000                       3532+         PSWZ  0,0,2,0,X'130'     External ISR Trap New PSW
+000001C0  00020000 00000000                       3533+         PSWZ  0,0,2,0,X'140'     Supervisor Call ISR Trap New PSW
+000001D0  00020000 00000000                       3534+         PSWZ  0,0,2,0,X'150'     Program ISR Trap New PSW
+000001E0  00020000 00000000                       3535+         PSWZ  0,0,2,0,X'160'     Machine Check Trap New PSW
+000001F0  00020000 00000000                       3536+         PSWZ  0,0,2,0,X'170'     Input/Output Trap New PSW
+
+
+
+                                                  3538 ***********************************************************************
+                                                  3539 *        Define the z/Arch RESTART PSW
+                                                  3540 ***********************************************************************
+
+                              00000200  00000001  3542 PREVORG  EQU   *
+00000200                      00000200  000001A0  3543          ORG   CCWILS+X'1A0'
+                                                  3544 *        PSWZ  <sys>,<key>,<mwp>,<prog>,<addr>[,amode]
+000001A0  00000001 80000000                       3545          PSWZ  0,0,0,0,X'200',64
+000001B0                      000001B0  00000200  3546          ORG   PREVORG
+
+
+
+                                                  3548 ***********************************************************************
+                                                  3549 *        Create IPL (restart) PSW
+                                                  3550 ***********************************************************************
+
+                                                  3552          ASAIPL   IA=BEGIN
+                              00000000  00000FFF  3553+CCWILS   CSECT
+00000200                      00000200  00000000  3554+         ORG   CCWILS
+00000000  00080000 00000200                       3555+         PSWE390 0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3556+         ORG   CCWILS+512       Reset CSECT to end of assigned storage area
+                              00000000  00000FFF  3557+CCWILS   CSECT
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3559 ***********************************************************************
+                                                  3560 *               The actual CCWILS program itself...
+                                                  3561 ***********************************************************************
+                                                  3562 *
+                                                  3563 *  Architecture Mode: z/Arch
+                                                  3564 *  Addressing Mode:   64-bit
+                                                  3565 *  Register Usage:
+                                                  3566 *
+                                                  3567 *   R0       (work)
+                                                  3568 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3569 *   R2       Program base register
+                                                  3570 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3571 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3572 *   R5       Used for CPU register when signaling architecture change
+                                                  3573 *   R6,R7    Signaling registers when changing architecture
+                                                  3574 *   R8       ORB pointer
+                                                  3575 *   R9       SCSW pointer
+                                                  3576 *   R10-R15  (work)
+                                                  3577 *
+                                                  3578 ***********************************************************************
+
+
+00000200                      00000000            3580          USING  ASA,R0          Low core addressability
+00000200                      00000200            3581          USING  BEGIN,R2        Program Addressability
+00000200                      00000000            3582          USING  IOCB,R3         SATK Device I/O Control Block
+00000200                      00000000            3583          USING  ORB,R8          ESA/390 Operation Request Block
+00000200                      00000000            3584          USING  SCSW,R9         ESA/390 Subchannel Status Word
+
+
+00000200  0520                                    3586 BEGIN    BALR  R2,0             Initalize Base Register
+00000202  0620                                    3587          BCTR  R2,0             Initalize Base Register
+00000204  0620                                    3588          BCTR  R2,0             Initalize Base Register
+
+00000206  45E0 20DA                     000002DA  3590          BAL   R14,INIT         Initalize Program
+                                                  3591 *
+                                                  3592 **       Run the tests...
+                                                  3593 *
+0000020A  45E0 201A                     0000021A  3594          BAL   R14,TEST01       Format-0
+0000020E  45E0 205A                     0000025A  3595          BAL   R14,TEST02       Format-1, without ORB ILS flag
+00000212  45E0 209A                     0000029A  3596          BAL   R14,TEST03       Format-1, with    ORB ILS flag
+                                                  3597 *
+00000216  47F0 20F8                     000002F8  3598          B     EOJ              Normal completion
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3600 ***********************************************************************
+                                                  3601 *        TEST01:          Format-0
+                                                  3602 ***********************************************************************
+
+0000021A  9201 2DFF                     00000FFF  3604 TEST01   MVI   TESTNUM,X'01'          Initialize test number
+
+0000021E  9200 8005                     00000005  3606          MVI   ORB1_8,0               Initialize ORB flags
+00000222  9200 8007                     00000007  3607          MVI   ORRB1_24,0             Initialize ORB flags
+                                                  3608 *
+00000226  947F 8005                     00000005  3609          NI    ORB1_8,X'FF'-ORBF      Format-0 CCWs
+0000022A  947F 8007                     00000007  3610          NI    ORRB1_24,X'FF'-ORBL    (ILS mode irrelevant)
+
+0000022E  4100 2300                     00000500  3612          LA    R0,NOPPROG             No-Operation channel program
+00000232  45F0 219A                     0000039A  3613          BAL   R15,EXCP               Do the I/O
+
+00000236  D203 2600 9004      00000800  00000004  3615          MVC   TESTCCWA,SCSWCCW       Save Ending CCW Address
+0000023C  D200 2604 9008      00000804  00000008  3616          MVC   TESTUS,SCSWUS          Save Unit Status
+00000242  D200 2605 9009      00000805  00000009  3617          MVC   TESTCS,SCSWCS          Save Channel Status
+00000248  D201 2606 900A      00000806  0000000A  3618          MVC   TESTRES,SCSWCNT        Save Residual
+
+0000024E  D507 2600 2608      00000800  00000808  3620          CLC   TESTRSLT,GOODRSLT      Is results what we expected?
+00000254  4770 2128                     00000328  3621          BNE   FAILTEST               No, FAIL the test
+00000258  07FE                                    3622          BR    R14                    Yes, test SUCCESS
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3624 ***********************************************************************
+                                                  3625 *        TEST02:          Format-1, without ORB ILS flag
+                                                  3626 ***********************************************************************
+
+0000025A  9202 2DFF                     00000FFF  3628 TEST02   MVI   TESTNUM,X'02'          Initialize test number
+
+0000025E  9200 8005                     00000005  3630          MVI   ORB1_8,0               Initialize ORB flags
+00000262  9200 8007                     00000007  3631          MVI   ORRB1_24,0             Initialize ORB flags
+                                                  3632 *
+00000266  9680 8005                     00000005  3633          OI    ORB1_8,ORBF            Format-1 CCWs
+0000026A  947F 8007                     00000007  3634          NI    ORRB1_24,X'FF'-ORBL    ILS mode off
+
+0000026E  4100 2300                     00000500  3636          LA    R0,NOPPROG             No-Operation channel program
+00000272  45F0 219A                     0000039A  3637          BAL   R15,EXCP               Do the I/O
+
+00000276  D203 2600 9004      00000800  00000004  3639          MVC   TESTCCWA,SCSWCCW       Save Ending CCW Address
+0000027C  D200 2604 9008      00000804  00000008  3640          MVC   TESTUS,SCSWUS          Save Unit Status
+00000282  D200 2605 9009      00000805  00000009  3641          MVC   TESTCS,SCSWCS          Save Channel Status
+00000288  D201 2606 900A      00000806  0000000A  3642          MVC   TESTRES,SCSWCNT        Save Residual
+
+0000028E  D507 2600 2610      00000800  00000810  3644          CLC   TESTRSLT,BADRSLT       Is results what we expected?
+00000294  4770 2128                     00000328  3645          BNE   FAILTEST               No, FAIL the test
+00000298  07FE                                    3646          BR    R14                    Yes, test SUCCESS
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3648 ***********************************************************************
+                                                  3649 *        TEST03:          Format-1, with ORB ILS flag
+                                                  3650 ***********************************************************************
+
+0000029A  9203 2DFF                     00000FFF  3652 TEST03   MVI   TESTNUM,X'03'          Initialize test number
+
+0000029E  9200 8005                     00000005  3654          MVI   ORB1_8,0               Initialize ORB flags
+000002A2  9200 8007                     00000007  3655          MVI   ORRB1_24,0             Initialize ORB flags
+                                                  3656 *
+000002A6  9680 8005                     00000005  3657          OI    ORB1_8,ORBF            Format-1 CCWs
+000002AA  9680 8007                     00000007  3658          OI    ORRB1_24,ORBL          ILS mode on
+
+000002AE  4100 2300                     00000500  3660          LA    R0,NOPPROG             No-Operation channel program
+000002B2  45F0 219A                     0000039A  3661          BAL   R15,EXCP               Do the I/O
+
+000002B6  D203 2600 9004      00000800  00000004  3663          MVC   TESTCCWA,SCSWCCW       Save Ending CCW Address
+000002BC  D200 2604 9008      00000804  00000008  3664          MVC   TESTUS,SCSWUS          Save Unit Status
+000002C2  D200 2605 9009      00000805  00000009  3665          MVC   TESTCS,SCSWCS          Save Channel Status
+000002C8  D201 2606 900A      00000806  0000000A  3666          MVC   TESTRES,SCSWCNT        Save Residual
+
+000002CE  D507 2600 2608      00000800  00000808  3668          CLC   TESTRSLT,GOODRSLT      Is results what we expected?
+000002D4  4770 2128                     00000328  3669          BNE   FAILTEST               No, FAIL the test
+000002D8  07FE                                    3670          BR    R14                    Yes, test SUCCESS
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3672 ***********************************************************************
+                                                  3673 *        Program Initialization
+                                                  3674 ***********************************************************************
+
+000002DA                                          3676 INIT     DS    0H               Program Initialization
+
+000002DA  4130 2244                     00000444  3678          LA     R3,IOCB_390     Point to IOCB
+000002DE  E380 3018 0004                00000018  3679          $L     R8,IOCBORB      Point to ORB
+000002E4  E3F0 3020 0004                00000020  3680          $L     R15,IOCBIRB     Point to IRB
+000002EA                      00000000            3681          USING  IRB,R15         Temporary addressability
+000002EA  4190 F000                     00000000  3682          LA     R9,IRBSCSW      Point to SCSW
+000002EE                                          3683          DROP   R15             Done with IRB
+
+000002EE  45F0 2138                     00000338  3685          BAL    R15,IOINIT      Initialize the CPU for I/O operations
+000002F2  45F0 2146                     00000346  3686          BAL    R15,ENADEV      Enable our device making ready for use
+
+000002F6  07FE                                    3688          BR     R14             Return to caller
+
+
+
+                                                  3690 ***********************************************************************
+                                                  3691 *        Normal completion or Abnormal termination PSWs
+                                                  3692 ***********************************************************************
+
+                                                  3694 EOJ      DWAITEND LOAD=YES          Normal completion
+000002F8                                          3696+EOJ      DS    0H
+000002F8  8200 2100                     00000300  3697+         LPSW  DWAT0009
+00000300  000A0000 00000000                       3698+DWAT0009 PSWE390 0,0,2,0,X'000000'
+
+                                                  3700 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
+00000308                                          3701+FAILDEV  DS    0H
+00000308  8200 2110                     00000310  3702+         LPSW  DWAT0010
+00000310  000A0000 00010001                       3703+DWAT0010 PSWE390 0,0,2,0,X'010001'
+
+                                                  3705 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
+00000318                                          3706+FAILIO   DS    0H
+00000318  8200 2120                     00000320  3707+         LPSW  DWAT0011
+00000320  000A0000 00010002                       3708+DWAT0011 PSWE390 0,0,2,0,X'010002'
+
+                                                  3710 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+00000328                                          3711+FAILTEST DS    0H
+00000328  8200 2130                     00000330  3712+         LPSW  DWAT0012
+00000330  000A0000 00010BAD                       3713+DWAT0012 PSWE390 0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3715 ***********************************************************************
+                                                  3716 *        Initialize the CPU for I/O operations
+                                                  3717 ***********************************************************************
+
+                                                  3719 IOINIT   IOINIT ,
+00000338  B766 2140                     00000340  3720+IOINIT   LCTL  6,6,IOMK0013       Enable subchannel subclasses for interruptions
+0000033C  47F0 2144                     00000344  3721+         B     IOMK0013+4
+00000340                                          3722+IOMK0013 DS    0F
+00000340  FF000000                                3723+         DC    XL4'FF000000'         All subchannel subclasses enabled
+00000344  07FF                                    3724          BR    R15              Return to caller
+
+
+
+                                                  3726 ***********************************************************************
+                                                  3727 *        Enable the device, making it ready for use
+                                                  3728 ***********************************************************************
+
+                                                  3730 ENADEV   ENADEV  ENAOKAY,FAILDEV,REG=4
+00000346  5810 2190                     00000390  3731+ENADEV   L     1,FIND0014
+0000034A  E340 3028 0004                00000028  3732+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+00000350                      00000000            3733+         USING SCHIB,4
+00000350                                          3734+FINL0014 DS    0H   Retrieve Subchannel Information Block for desired device number
+00000350  B234 4000                     00000000  3735+         STSCH 0(4)               Store the SCHIB for first subchannel
+00000354  A774 FFDA                     00000308  3736+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+00000358  9101 4005                     00000005  3737+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+0000035C  A784 0011                     0000037E  3738+         $BZ   FINN0014           ..No, check the next subchannel
+00000360  D501 4006 3004      00000006  00000004  3739+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+00000366  A774 000C                     0000037E  3740+         $BNE  FINN0014           ..No, check the next subchannel
+                                                  3741+* Subchannel found!
+0000036A  5010 3000                     00000000  3742+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+0000036E  9680 4005                     00000005  3743+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+00000372  B232 4000                     00000000  3744+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+00000376  A784 0011                     00000398  3745+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+0000037A  A7F4 FFC7                     00000308  3746+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+0000037E                                          3747+FINN0014 DS    0H  Advance to next subchannel
+0000037E  4110 1001                     00000001  3748+         LA    1,1(0,1)           Advance to next subchannel
+00000382  5510 2194                     00000394  3749+         CL    1,FINM0014         Beyond maximum subchannel
+00000386  A7D4 FFE5                     00000350  3750+         $BNH  FINL0014           ..No, examine the next subchannel
+0000038A  A724 FFBF                     00000308  3751+         $BH   FAILDEV            ..Yes, failed to enable the device
+0000038E                                          3752+         DROP  4                  Forget SCHIB addressing
+00000390  00010000                                3753+FIND0014 DC    A(X'00010000')     First subchannel subsystem ID
+00000394  0001FFFF                                3754+FINM0014 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+                                                  3755 *
+00000398  07FF                                    3756 ENAOKAY  BR    R15            Return to caller if device enabled OK
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3758 ***********************************************************************
+                                                  3759 *        Execute the channel program pointed to by R0
+                                                  3760 ***********************************************************************
+
+0000039A  5000 8008                     00000008  3762 EXCP     ST    R0,ORBCCW      Plug Channel Program address into IORB
+
+                                                  3764          RAWIO 4,FAIL=FAILIO
+0000039E  9200 300E                     0000000E  3765+         MVI   IOCBSC,X'00'          Clear SC information
+000003A2  D201 300A 3006      0000000A  00000006  3766+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+000003A8  5810 3000                     00000000  3767+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  3768+* Initiate Subchannel-based input/output operation
+000003AC  E340 3018 0004                00000018  3769+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+000003B2  B233 4000                     00000000  3770+         SSCH  0(4)                  Initiate the I/O operation
+000003B6  A774 FFB1                     00000318  3771+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+000003BA  E340 3020 0004                00000020  3772+         $L    4,IOCBIRB             Locate the IRB storage area
+000003C0                      00000000            3773+         USING IRB,4                 Make it addressable
+
+                                                  3775+* Wait for I/O operation to present status via an interruption
+000003C0                                          3776+IOWT0015 DS    0H  Wait for I/O to complete
+000003C0  D20F 21F0 01F0      000003F0  000001F0  3778+         MVC   IOS0016(16),496(0)              Save Input/Output new PSW
+000003C6  D20F 01F0 21E0      000001F0  000003E0  3779+         MVC   496(16,0),ION0016              Establish Input/Ouput new PSW
+000003CC  B2B2 21D0                     000003D0  3780+         $LPSW WPSW0016                       Wait for event
+000003D0  02020000 00000000                       3781+WPSW0016 PSW   2,0,2,0,0                      Wait for event
+000003E0  00002000 00000000                       3782+ION0016  PSW   0,0,0,32,IRST0016,24                I/O New PSW: cc==2
+000003F0  00000000 00000000                       3783+IOS0016  DC    XL16'00'
+                                                  3784+* Handle input/output interruption
+00000400                                          3785+IRST0016 DS    0H
+00000400  D20F 01F0 21F0      000001F0  000003F0  3786+         MVC   496(16,0),IOS0016            Restore input/output new PSW
+                                                  3787+* Process the interruption...
+                                                  3788+* Validate interruption is for the expected subchannel
+00000406  5510 00B8                     000000B8  3789+         CL    1,IOSSID              Is this the device for which I am waiting?
+0000040A  A774 FFDB                     000003C0  3790+         $BNE  IOWT0015              ..No, continue waiting for it
+                                                  3791+* Accumulate interruption information from IRB
+0000040E  B235 4000                     00000000  3792+         TSCH  0(4)                  Retrive interrupt information
+00000412  A744 FFD7                     000003C0  3793+         $BC   B'0100',IOWT0015      CC1 (not status pending), wait for it to arrive
+00000416  A714 FF81                     00000318  3794+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  3795+*                                    CC0 (status was pending), accumulate the status
+0000041A  D600 300E 4003      0000000E  00000003  3796+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+00000420  D601 300A 4008      0000000A  00000008  3797+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+00000426  9104 300E                     0000000E  3798+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+0000042A  A7E4 FFCB                     000003C0  3799+         $BNO  IOWT0015              ..No, wait for primary status
+0000042E  D203 3010 4004      00000010  00000004  3800+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+00000434  D201 3016 400A      00000016  0000000A  3801+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  3802+* Test for errors as specified in the IOCB
+0000043A  910C 300A                     0000000A  3803+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+0000043E  A7E4 FF6D                     00000318  3804+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  3805+* Input/Output operation successful
+
+00000442  07FF                                    3807          BR    R15            Return to caller
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3809 ***********************************************************************
+                                                  3810 *         Structure used by RAWIO identifying
+                                                  3811 *         the device and operation being performed
+                                                  3812 ***********************************************************************
+
+                                                  3814 IOCB_390 IOCB  X'390'
+00000444  00000000                                3815+IOCB_390 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+00000448  0390                                    3816+         DC    AL2(X'390')     +4 Device address or device number
+0000044A  0000                                    3817+         DC    H'0'            +6 Must be zeros
+0000044C  D3                                      3818+         DC    AL1(X'D3')      +8 Default detected unit errors
+0000044D  3F                                      3819+         DC    AL1(X'3F')      +9 Default detected channel errors
+0000044E  0000                                    3820+         DC    HL2'0'          +10 Accumulated unit and channel errors
+00000450  0000                                    3821+         DC    HL2'0'          +12 Tested unit and channel status
+00000452  00                                      3822+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+00000453  80                                      3823+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00000454  00000000                                3824+         DC    F'0'            +16 I/O status CCW address
+00000458  00000000                                3825+         DC    F'0'            +20 residual count
+0000045C  00000000 000004D4                       3826+         DC    ADL8(IORB0017)  +24  Address where ORB is located
+00000464  00000000 00000474                       3827+         DC    ADL8(IIRB0017)  +32 Address where IRB stored
+0000046C  00000000 00000474                       3828+         DC    ADL8(IIRB0017)  +40 Address where SCHIB stored
+00000474  00000000 00000000                       3829+IIRB0017 DC    24F'0'              Embedded shared IRB and SCHIB area
+000004D4                                          3831+IORB0017 DS    0XL12
+000004D4  00000000                                3832+         DC    A(0)                         Word 0 - Interruption Parameter
+000004D8  00                                      3833+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+000004D9  80                                      3834+         DC    BL1'10000000'                Word 1, bits 8-15
+000004DA  FF                                      3835+         DC    AL1(255)                     Word 1, bits 16-23
+000004DB  00                                      3836+         DC    BL1'00000000'                 Word 1, bits 24-31
+000004DC  00000000                                3837+         DC    AL4(0)                       Word 2 - CCW address
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3839 ***********************************************************************
+                                                  3840 *        Working Storage
+                                                  3841 ***********************************************************************
+
+000004E0                                          3843          LTORG ,          Literals pool
+
+                              00000400  00000001  3845 K        EQU   1024       One kilobyte  (OK! OK! "Kibibyte!" Sheesh!)
+
+                              00000500  00000001  3847 HEX500   EQU   X'500'     NOP CCW buffer address and buffer length
+                              00000800  00000001  3848 RESLTADR EQU   (2*K)      Address where test results will be placed
+                              00000FFF  00000001  3849 TESTADDR EQU   (4*K)-1    Address where test number will be placed
+
+
+                                                  3851 ***********************************************************************
+                                                  3852 *        Format-0/1 Neutral NOP CCW Channel Program
+                                                  3853 ***********************************************************************
+
+000004E0                      000004E0  00000500  3855          ORG   CCWILS+HEX500          (s/b @ X'0500')
+
+                              00000003  00000001  3857 NOOP     EQU   X'03'                  No Operation CCW opcode
+
+00000500  03000500 00000500                       3859 NOPPROG  DC    AL1(NOOP),AL1(0),AL2(HEX500),AL1(0),AL1(0),AL2(HEX500)
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3861 ***********************************************************************
+                                                  3862 *        Fixed storage locations
+                                                  3863 ***********************************************************************
+
+00000508                      00000508  00000800  3865          ORG   CCWILS+RESLTADR        (s/b @ X'0800')
+
+00000800                                          3867 TESTRSLT DS   0XL8                    Saved Test Results...
+00000800  00000000                                3868 TESTCCWA DC    A(0)                   Ending CCW Address
+00000804  00                                      3869 TESTUS   DC    X'00'                  Unit Status
+00000805  00                                      3870 TESTCS   DC    X'00'                  Channel Status
+00000806  0000                                    3871 TESTRES  DC    H'0'                   Residual
+
+00000808  00000508                                3873 GOODRSLT DC    XL4'00000508'
+0000080C  0C000500                                3874          DC    AL1(SCSWCE+SCSWDE),AL1(0),AL2(1280)
+
+00000810  00000508                                3876 BADRSLT  DC    XL4'00000508'
+00000814  0C400500                                3877          DC    AL1(SCSWCE+SCSWDE),AL1(SCSWIL),AL2(1280)
+
+
+
+
+00000818                      00000818  00000FFF  3879          ORG   CCWILS+TESTADDR        (s/b @ X'0FFF')
+
+00000FFF  00                                      3881 TESTNUM  DC    X'00'      Test number of active test
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3883 ***********************************************************************
+                                                  3884 *        IOCB DSECT
+                                                  3885 ***********************************************************************
+
+                                                  3887          DSECTS NAME=IOCB
+                                                  3889+IOCB     DSECT
+                                                  3890+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          3891+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    3892+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    3893+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    3894+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    3895+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      3896+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      3897+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          3898+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      3899+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      3900+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      3901+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      3902+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      3903+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      3904+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                3905+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          3906+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    3907+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    3908+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          3909+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       3910+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       3911+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       3912+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  3913+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3915 ***********************************************************************
+                                                  3916 *        ORB DSECT
+                                                  3917 ***********************************************************************
+
+                                                  3919          DSECTS NAME=ORB
+                                                  3921+ORB      DSECT
+00000000  00000000                                3922+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      3924+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  3925+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  3926+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  3927+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  3928+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  3929+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      3931+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  3932+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  3933+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  3934+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  3935+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  3936+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  3937+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  3938+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  3939+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      3940+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      3941+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  3942+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  3943+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  3944+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  3945+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  3946+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  3947+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                3949+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  3950+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  3951+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  3952+* Extended ORB fields
+0000000C  00                                      3953+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      3954+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          3955+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      3956+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      3957+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       3958+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+                              00000020  00000001  3959+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3962 ***********************************************************************
+                                                  3963 *        IRB DSECT
+                                                  3964 ***********************************************************************
+
+                                                  3966          DSECTS NAME=IRB
+                                                  3968+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       3969+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+0000000C  00000000 00000000                       3970+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000020  00000000 00000000                       3971+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+                              00000040  00000001  3972+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       3973+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+                              00000060  00000001  3974+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3977 ***********************************************************************
+                                                  3978 *        SCSW DSECT
+                                                  3979 ***********************************************************************
+
+                                                  3981          DSECTS NAME=SCSW
+                                                  3983+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      3984+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  3985+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  3986+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  3987+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  3988+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  3989+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  3990+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  3991+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      3993+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  3994+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  3995+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  3996+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  3997+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  3998+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  3999+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  4000+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  4001+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      4003+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  4004+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  4005+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  4006+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  4007+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  4008+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  4009+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  4010+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  4011+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      4012+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  4013+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  4014+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  4015+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  4016+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  4017+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  4018+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  4019+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  4020+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                4022+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      4024+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  4025+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  4026+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  4027+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  4028+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  4029+SCSWCE   EQU   X'08'    Channel end
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000004  00000001  4030+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  4031+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  4032+SCSWUX   EQU   X'01'    Unit exception
+
+00000009  00                                      4034+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  4035+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  4036+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  4037+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  4038+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  4039+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  4040+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  4041+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  4042+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    4044+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  4045+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4048 ***********************************************************************
+                                                  4049 *        (other DSECTS needed by SATK)
+                                                  4050 ***********************************************************************
+
+                                                  4052          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  4328          PRINT ON
+
+
+
+
+
+                                                  4330 ***********************************************************************
+                                                  4331 *        Register equates
+                                                  4332 ***********************************************************************
+
+
+                              00000000  00000001  4334 R0       EQU   0
+                              00000001  00000001  4335 R1       EQU   1
+                              00000002  00000001  4336 R2       EQU   2
+                              00000003  00000001  4337 R3       EQU   3
+                              00000004  00000001  4338 R4       EQU   4
+                              00000005  00000001  4339 R5       EQU   5
+                              00000006  00000001  4340 R6       EQU   6
+                              00000007  00000001  4341 R7       EQU   7
+                              00000008  00000001  4342 R8       EQU   8
+                              00000009  00000001  4343 R9       EQU   9
+                              0000000A  00000001  4344 R10      EQU   10
+                              0000000B  00000001  4345 R11      EQU   11
+                              0000000C  00000001  4346 R12      EQU   12
+                              0000000D  00000001  4347 R13      EQU   13
+                              0000000E  00000001  4348 R14      EQU   14
+                              0000000F  00000001  4349 R15      EQU   15
+
+
+
+                                                  4351          END
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    21
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ASA                 4    000000     512  4056  3580
+ASBEGIN             U    000000       1  4057  4062  4104  4140  4149  4167  4174  4180  4184  4188  4194  4211
+ASEND               U    000200       1  4210  4211
+ASLENGTH            U    000200       1  4211
+BADRSLT             X    000810       4  3876  3644
+BCEXTCOD            H    00001A       2  4074
+BCIOCOD             H    00003A       2  4082
+BCMCKCOD            H    000032       2  4080
+BCPGMCOD            H    00002A       2  4078
+BCSVCCOD            H    000022       2  4076
+BEGIN               I    000200       2  3586  3555  3581
+CAW                 F    000048       4  4086
+CAWADDR             R    000049       3  4089
+CAWKEY              X    000048       1  4087
+CAWSUSP             U    000008       1  4088
+CCW0                4    000000       8  4215  4221
+CCW0ADDR            R    000001       3  4217
+CCW0CNT             H    000006       2  4220
+CCW0CODE            X    000000       1  4216
+CCW0FLGS            X    000004       1  4218
+CCW0L               U    000008       1  4221
+CCW1                4    000000       8  4233  4238
+CCW1ADDR            A    000004       4  4237
+CCW1CNT             H    000002       2  4236
+CCW1CODE            X    000000       1  4234
+CCW1FLGS            X    000001       1  4235
+CCW1L               U    000008       1  4238
+CCWCC               U    000040       1  4225
+CCWCD               U    000080       1  4224
+CCWIDA              U    000004       1  4229
+CCWILS              J    000000    4096  3519  3522  3529  3543  3554  3556  3855  3865  3879
+CCWPCI              U    000008       1  4228
+CCWSKIP             U    000010       1  4227
+CCWSLI              U    000020       1  4226
+CCWSUSP             U    000002       1  4230
+CHANID              F    0000A8       4  4141
+CODE                2    000000    4096  3519
+CPUID               U    00031B       1  4213
+CSW                 F    000040       8  4085
+CSWATTN             U    000080       1  4255
+CSWBUSY             U    000010       1  4258
+CSWCCTL             U    000004       1  4270
+CSWCCW              R    000001       3  4252
+CSWCDAT             U    000008       1  4269
+CSWCE               U    000008       1  4259  3803
+CSWCHNG             U    000001       1  4272
+CSWCNT              H    000006       2  4274
+CSWCS               X    000005       1  4264
+CSWCUE              U    000020       1  4257
+CSWDCC0             U    000000       1  4248
+CSWDCC1             U    000001       1  4249
+CSWDCC3             U    000003       1  4250
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    22
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+CSWDCCM             U    000003       1  4247
+CSWDE               U    000004       1  4260  3803
+CSWFLAG             X    000000       1  4242
+CSWFMT              4    000000       8  4241  4275
+CSWFMTL             U    000008       1  4275
+CSWICTL             U    000002       1  4271
+CSWIL               U    000040       1  4266
+CSWKEYM             U    0000F0       1  4243
+CSWLOG              U    000004       1  4246
+CSWPCI              U    000080       1  4265
+CSWPRGM             U    000020       1  4267
+CSWPROT             U    000010       1  4268
+CSWSM               U    000040       1  4256
+CSWSUSP             U    000008       1  4245
+CSWUC               U    000002       1  4261
+CSWUS               X    000004       1  4254
+CSWUX               U    000001       1  4262
+DWAT0009            3    000300       8  3698  3697
+DWAT0010            3    000310       8  3703  3702
+DWAT0011            3    000320       8  3708  3707
+DWAT0012            3    000330       8  3713  3712
+ENADEV              I    000346       4  3731  3686
+ENAOKAY             I    000398       2  3756  3745
+EOJ                 H    0002F8       2  3696  3598
+EXCP                I    00039A       4  3762  3613  3637  3661
+EXTCPUAD            H    000084       2  4106
+EXTICODE            H    000086       2  4107
+EXTIPARM            F    000080       4  4105
+EXTNPSW             F    000058       8  4095
+EXTOPSW             F    000018       8  4067  4073
+FAILDEV             H    000308       2  3701  3736  3746  3751
+FAILIO              H    000318       2  3706  3771  3794  3804
+FAILTEST            H    000328       2  3711  3621  3645  3669
+FIND0014            A    000390       4  3753  3731
+FINL0014            H    000350       2  3734  3750
+FINM0014            A    000394       4  3754  3749
+FINN0014            H    00037E       2  3747  3738  3740
+GOODRSLT            X    000808       4  3873  3620  3668
+HEX500              U    000500       1  3847  3855  3859
+IIRB0017            F    000474       4  3829  3827  3828
+IMAGE               1    000000    4096     0
+INIT                H    0002DA       2  3676  3590
+IOCB                4    000000      48  3889  3913  3582
+IOCBCAW             A    000018       4  3909
+IOCBCM              X    000009       1  3897
+IOCBCS              X    00000B       1  3900
+IOCBCT              X    00000D       1  3902
+IOCBDEV             H    000004       2  3894  3739
+IOCBDID             F    000000       4  3891  3742  3767
+IOCBDV              H    000002       2  3893
+IOCBIRB             A    000020       8  3911  3680  3772
+IOCBL               U    000030       1  3913
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+IOCBORB             A    000018       8  3910  3679  3769
+IOCBRCNT            H    000016       2  3908  3801
+IOCBSC              X    00000E       1  3903  3765  3796  3798
+IOCBSCCW            A    000010       4  3905  3800
+IOCBSCNT            F    000014       4  3906
+IOCBSIB             A    000028       8  3912  3732
+IOCBST              H    00000A       2  3898  3766  3797
+IOCBUM              X    000008       1  3896
+IOCBUS              X    00000A       1  3899  3803
+IOCBUT              X    00000C       1  3901
+IOCBWAIT            X    00000F       1  3904
+IOCBZERO            H    000006       2  3895  3766
+IOCB_390            A    000444       4  3815  3678
+IOELADDR            F    0000AC       4  4142
+IOICODE             H    0000BA       2  4147
+IOIID               F    0000C0       4  4152
+IOINIT              I    000338       4  3720  3685
+IOIPARM             F    0000BC       4  4151
+IOMK0013            F    000340       4  3722  3720  3721
+ION0016             U    0003E0      16  3782  3779
+IONPSW              F    000078       8  4099
+IOOPSW              F    000038       8  4071  4081
+IORB0017            X    0004D4      12  3831  3826
+IOS0016             X    0003F0      16  3783  3778  3786
+IOSSID              F    0000B8       4  4150  3789
+IOWT0015            H    0003C0       2  3776  3790  3793  3799
+IPLCCW1             F    000008       8  4059
+IPLCCW2             F    000010       8  4060
+IPLPSW              F    000000       8  4058
+IRB                 4    000000      96  3968  3972  3974  3681  3773
+IRBECW              X    000020      32  3971
+IRBEMW              X    000040      32  3973
+IRBESW              X    00000C      20  3970
+IRBL                U    000040       1  3972
+IRBSCSW             X    000000      12  3969  3682  3796  3797  3800  3801
+IRBXL               U    000060       1  3974
+IRST0016            H    000400       2  3785  3782
+K                   U    000400       1  3845  3848  3849
+LCHANLOG            F    0000B0       4  4143
+MCKLOG              F    000100       4  4175
+MCKNPSW             F    000070       8  4098
+MCKOPSW             F    000030       8  4070  4079
+MEASUREB            X    0000B9       1  4146
+MKARCHMD            X    0000A3       1  4134
+MKARS               F    000120       4  4173
+MKCLKCMP            F    0000E0       8  4159
+MKCPUTIM            F    0000D8       8  4158
+MKCRS               F    0001C0       4  4178
+MKDMGCOD            F    0000F4       4  4162
+MKFAILA             F    0000F8       4  4164
+MKFPRS              D    000160       8  4176
+MKICODE             F    0000E8       4  4160
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    24
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+MKLOGOUT            F    000100       4  4166
+MKMODEL             F    0000FC       4  4165
+MKXSAA              F    0000D4       4  4157
+MONCLS              H    000094       2  4122
+MONCODE             F    00009C       4  4129
+MONNUMBR            X    000095       1  4124
+MPGACCID            X    0000A2       1  4132
+NKGRS               F    000180       4  4177
+NOOP                U    000003       1  3857  3859
+NOPPROG             R    000500       1  3859  3612  3636  3660
+ORB                 4    000000      32  3921  3951  3959  3583
+ORB1_0              X    000004       1  3924
+ORB1_8              X    000005       1  3931  3606  3609  3630  3633  3654  3657
+ORBA                U    000010       1  3935
+ORBB                U    000004       1  3937
+ORBC                U    000004       1  3927
+ORBCCW              A    000008       4  3949  3762
+ORBCSS              X    00000C       1  3953
+ORBCU               X    00000E       1  3956
+ORBD                U    000040       1  3944
+ORBF                U    000080       1  3932  3609  3633  3657
+ORBH                U    000002       1  3938
+ORBI                U    000020       1  3934
+ORBKEYM             U    0000F0       1  3925
+ORBL                U    000080       1  3942  3610  3634  3658
+ORBLEN              U    00000C       1  3951
+ORBLPM              X    000006       1  3940
+ORBM                U    000002       1  3928
+ORBP                U    000040       1  3933
+ORBPARM             F    000000       4  3922
+ORBPGM              X    00000E       1  3955
+ORBRSV25            U    00007E       1  3946
+ORBRSV26            U    00003E       1  3945
+ORBRSV3             U    00007F       1  3943
+ORBRSV4             U    000080       1  3950
+ORBRSV5             X    00000D       1  3954
+ORBRSV6             X    00000F       1  3957
+ORBRSV7             X    000010      16  3958
+ORBS                U    000008       1  3926
+ORBT                U    000001       1  3939
+ORBU                U    000008       1  3936
+ORBX                U    000001       1  3947
+ORBXLEN             U    000020       1  3959
+ORBY                U    000001       1  3929
+ORRB1_24            X    000007       1  3941  3607  3610  3631  3634  3655  3658
+PCFETO              A    0000C4       4  4153
+PERACCID            X    0000A1       1  4131
+PERADDR             F    000098       4  4128
+PERCODE             X    000096       1  4125
+PERCODMK            U    0000F0       1  4126
+PGMACCID            X    0000A0       1  4130
+PGMDXC              F    000090       4  4120
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PGMICODE            H    00008E       2  4119
+PGMIID              F    00008C       4  4115
+PGMIILC             X    00008D       1  4117
+PGMIILCM            U    00000C       1  4118
+PGMNPSW             F    000068       8  4097
+PGMOPSW             F    000028       8  4069  4077
+PGMTRX              F    000090       4  4121
+PMCW1_0             X    000004       1  4282
+PMCW1_8             X    000005       1  4285  3737  3743
+PMCWB               U    000004       1  4317
+PMCWCHP0            X    000010       1  4306
+PMCWCHP1            X    000011       1  4307
+PMCWCHP2            X    000012       1  4308
+PMCWCHP3            X    000013       1  4309
+PMCWCHP4            X    000014       1  4310
+PMCWCHP5            X    000015       1  4311
+PMCWCHP6            X    000016       1  4312
+PMCWCHP7            X    000017       1  4313
+PMCWDNUM            H    000006       2  4297  3739
+PMCWE               U    000080       1  4286  3743
+PMCWEXC             X    00001B       1  4316
+PMCWIP              F    000000       4  4281
+PMCWISCM            U    000038       1  4283
+PMCWLM              U    000060       1  4287
+PMCWLMG             U    000020       1  4288
+PMCWLML             U    000040       1  4289
+PMCWLPM             X    000008       1  4299
+PMCWLPUM            X    00000A       1  4301
+PMCWM               U    000004       1  4293
+PMCWMBI             H    00000C       2  4303
+PMCWMM              U    000018       1  4290
+PMCWMMC             U    000008       1  4292
+PMCWMME             U    000010       1  4291
+PMCWPAM             X    00000F       1  4305
+PMCWPIM             X    00000B       1  4302
+PMCWPNOM            X    000009       1  4300
+PMCWPOM             X    00000E       1  4304
+PMCWRES1            X    000018       4  4314
+PMCWRES2            X    000018       3  4315
+PMCWS               U    000001       1  4319
+PMCWT               U    000002       1  4294
+PMCWV               U    000001       1  4295  3737
+PMCWX               U    000002       1  4318
+PREVORG             U    000200       1  3542  3546
+R0                  U    000000       1  4334  3580  3612  3636  3660  3762
+R1                  U    000001       1  4335
+R10                 U    00000A       1  4344
+R11                 U    00000B       1  4345
+R12                 U    00000C       1  4346
+R13                 U    00000D       1  4347
+R14                 U    00000E       1  4348  3590  3594  3595  3596  3622  3646  3670  3688
+R15                 U    00000F       1  4349  3613  3637  3661  3680  3681  3683  3685  3686  3724  3756  3807
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    26
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R2                  U    000002       1  4336  3581  3586  3587  3588
+R3                  U    000003       1  4337  3582  3678
+R4                  U    000004       1  4338
+R5                  U    000005       1  4339
+R6                  U    000006       1  4340
+R7                  U    000007       1  4341
+R8                  U    000008       1  4342  3583  3679
+R9                  U    000009       1  4343  3584  3682
+RESLTADR            U    000800       1  3848  3865
+RSTNPSW             F    000000       8  4063
+RSTOPSW             F    000008       8  4064
+SCANOUT             X    000080       1  4101  4102
+SCANOUTL            U    000000       1  4102
+SCHIB               4    000000      52  4278  4325  3733
+SCHIBL              U    000034       1  4325
+SCHMBA              A    000028       8  4323
+SCHMDA1             X    000030       4  4324
+SCHMDA3             X    000028      12  4322
+SCHPMCW             X    000000      28  4280
+SCHSCSW             X    00001C      12  4321
+SCSW                4    000000      12  3983  4045  3584
+SCSW0CC             U    000004       1  3999
+SCSW1               X    000002       1  4003
+SCSW2               X    000003       1  4012  3796
+SCSWACP             U    000001       1  4011
+SCSWADA             U    000040       1  4014
+SCSWAHP             U    000002       1  4010
+SCSWALKC            U    000010       1  3997
+SCSWARP             U    000008       1  4008
+SCSWASA             U    000080       1  4013
+SCSWASP             U    000004       1  4009
+SCSWASUS            U    000020       1  4015
+SCSWATTN            U    000080       1  4025
+SCSWBUSY            U    000010       1  4028
+SCSWCCTL            U    000004       1  4040
+SCSWCCW             A    000004       4  4022  3615  3639  3663  3800
+SCSWCCWF            U    000080       1  3994
+SCSWCCWP            U    000040       1  3995
+SCSWCDAT            U    000008       1  4039
+SCSWCE              U    000008       1  4029  3874  3877
+SCSWCHNG            U    000001       1  4042
+SCSWCNT             H    00000A       2  4044  3618  3642  3666  3801
+SCSWCS              X    000009       1  4034  3617  3641  3665
+SCSWCTLS            X    000001       1  3993
+SCSWCUE             U    000020       1  4027
+SCSWDCC0            U    000000       1  3989
+SCSWDCC1            U    000001       1  3990
+SCSWDCC3            U    000003       1  3991
+SCSWDCCM            U    000003       1  3988
+SCSWDE              U    000004       1  4030  3874  3877
+SCSWECWC            U    000002       1  4000
+SCSWESWF            U    000004       1  3987
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    27
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SCSWFC              U    000010       1  4007
+SCSWFH              U    000020       1  4006
+SCSWFLAG            X    000000       1  3984
+SCSWFM              U    000070       1  4004
+SCSWFS              U    000040       1  4005
+SCSWICTL            U    000002       1  4041
+SCSWIL              U    000040       1  4036  3877
+SCSWISIC            U    000020       1  3996
+SCSWKEYM            U    0000F0       1  3985
+SCSWL               U    00000C       1  4045
+SCSWPCI             U    000080       1  4035
+SCSWPNOP            U    000001       1  4001
+SCSWPRGM            U    000020       1  4037
+SCSWPROT            U    000010       1  4038
+SCSWSAS             U    000010       1  4016
+SCSWSINT            U    000008       1  4017
+SCSWSM              U    000040       1  4026
+SCSWSPEN            U    000001       1  4020
+SCSWSPRI            U    000004       1  4018  3798
+SCSWSSEC            U    000002       1  4019
+SCSWSSIC            U    000008       1  3998
+SCSWSUSC            U    000008       1  3986
+SCSWUC              U    000002       1  4031
+SCSWUS              X    000008       1  4024  3616  3640  3664  3797
+SCSWUX              U    000001       1  4032
+SSARCHMD            X    0000A3       1  4133
+SSARS               F    000120       4  4189
+SSCLKCMP            F    0000E0       8  4183
+SSCPUTIM            F    0000D8       8  4182
+SSCRS               F    0001C0       4  4192
+SSFPRS              D    000160       8  4190
+SSGRS               F    000180       4  4191
+SSMODEL             F    00010C       4  4187
+SSPREFIX            F    000108       4  4186
+SSPSW               F    000100       8  4185
+SSXSAA              A    0000D4       4  4181
+STFLDATA            F    0000C8       4  4154
+SVCICODE            H    00008A       2  4113
+SVCIID              F    000088       4  4109
+SVCIILC             X    000089       1  4111
+SVCIILCM            U    00000C       1  4112
+SVCNPSW             F    000060       8  4096
+SVCOPSW             F    000020       8  4068  4075
+TEST01              I    00021A       4  3604  3594
+TEST02              I    00025A       4  3628  3595
+TEST03              I    00029A       4  3652  3596
+TESTADDR            U    000FFF       1  3849  3879
+TESTCCWA            A    000800       4  3868  3615  3639  3663
+TESTCS              X    000805       1  3870  3617  3641  3665
+TESTNUM             X    000FFF       1  3881  3604  3628  3652
+TESTRES             H    000806       2  3871  3618  3642  3666
+TESTRSLT            X    000800       8  3867  3620  3644  3668
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    28
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+TESTUS              X    000804       1  3869  3616  3640  3664
+TIMER               F    000050       4  4092
+TTDES               F    000054       4  4093
+UA0                 F    000010       8  4065
+UA1                 F    00004C       4  4090
+UA2                 F    0000A4       4  4135
+UA3                 F    0000B4       4  4144
+UA4                 X    0000B8       1  4145
+UA5                 X    0000CC       8  4155
+UA6                 X    0000EC       8  4161
+UA7                 F    000118       8  4172
+UA8                 X    000180      32  4201
+WPSW0016            U    0003D0      16  3781  3780
+ZBRKADDR            A    000110       8  4171
+ZEMONCNT            F    00010C       4  4170
+ZEMONCTR            A    000100       8  4168
+ZEMONSIZ            F    000108       4  4169
+ZEXTNPSW            X    0001B0      16  4204
+ZEXTOPSW            X    000130      16  4196
+ZIONPSW             X    0001F0      16  4208
+ZIOOPSW             X    000170      16  4200
+ZMCKNPSW            X    0001E0      16  4207
+ZMCKOPSW            X    000160      16  4199
+ZMKFAILA            F    0000F8       8  4163
+ZMONCODE            F    0000B0       8  4138
+ZPGMNPSW            X    0001D0      16  4206
+ZPGMOPSW            X    000150      16  4198
+ZPGMTRX             F    0000A8       8  4137
+ZRSTNPSW            X    0001A0      16  4203
+ZRSTOPSW            X    000120      16  4195
+ZSASDISP            U    0011C0       1  4209
+ZSVCNPSW            X    0001C0      16  4205
+ZSVCOPSW            X    000140      16  4197
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    29
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        114
+APROB       246
+ARCHIND     406   3436
+ARCHLVL     547   3435
+ASAIPL      673   3552
+ASALOAD     753   3518
+ASAREA      808   4055
+ASAZAREA    993
+CPUWAIT    1076   3777
+DSECTS     1402   3887   3919   3966   3981   4052
+DWAIT      1605   3695   3700   3705   3710
+DWAITEND   1662   3694
+ENADEV     1670   3730
+ESA390     1770
+IOCB       1781   3814
+IOCBDS     1957   3888
+IOFMT      1991   3920   3967   3982   4214   4232   4240   4277
+IOINIT     2329   3719
+IOTRFR     2370
+ORB        2418   3830
+POINTER    2607
+PSWFMT     2635
+RAWAIT     2769
+RAWIO      2865   3764
+SIGCPU     3023
+SMMGR      3081
+SMMGRB     3181
+TRAP128    3230   3530
+TRAP64     3207   3520   3523
+TRAPS      3243
+ZARCH      3317
+ZEROH      3329
+ZEROL      3357
+ZEROLH     3385
+ZEROLL     3408
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    30
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   4096  000-FFF  000-FFF
+  Region   CODE    4096  000-FFF  000-FFF
+    CSECT  CCWILS  4096  000-FFF  000-FFF
+ASMA Ver. 0.2.0                          CCW Incorrect Length Suppression Test                      02 Nov 2017 20:16:21  Page    31
+
+   STMT                                             FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\CCW-ILS\CCW-ILS.asm
+2     C:\Users\Fish\Documents\Visual Studio 2008\Projects\Hercules\_Git\_Harold\SATK-0\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+

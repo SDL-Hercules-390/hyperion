@@ -3016,6 +3016,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\CCWILS.3390-1.comp-z"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\hetbsf-bzip2.het"
 					>
 				</File>
@@ -3152,6 +3156,10 @@
 					</File>
 					<File
 						RelativePath=".\tests\bfp-023-threads.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\CCW-ILS.core"
 						>
 					</File>
 					<File
@@ -4018,6 +4026,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CCW-ILS.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cipher.tst"
 							>
 						</File>
@@ -4330,6 +4342,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CCW-ILS.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
@@ -4462,6 +4478,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\bfp-023-threads.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CCW-ILS.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CCW-ILS.pdf"
 								>
 							</File>
 							<File

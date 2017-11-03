@@ -800,6 +800,12 @@
     <None Include="tests\bfp-023-threads.core" />
     <None Include="tests\bfp-023-threads.list" />
     <None Include="tests\bfp-023-threads.sptst" />
+    <None Include="tests\CCW-ILS.asm" />
+    <None Include="tests\CCWILS.3390-1.comp-z" />
+    <None Include="tests\CCW-ILS.core" />
+    <None Include="tests\CCW-ILS.list" />
+    <None Include="tests\CCW-ILS.pdf" />
+    <None Include="tests\CCW-ILS.tst" />
     <None Include="tests\cipher.assemble" />
     <None Include="tests\cipher.listing" />
     <None Include="tests\cipher.tst" />
