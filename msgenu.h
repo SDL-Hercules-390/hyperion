@@ -2227,7 +2227,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC05075 "%1d:%04X CTCE: Halt or Clear Recognized"
 #define HHC05076 "%1d:%04X CTCE: Connection closed; %"PRIu64" MB received in %"PRIu64" packets from %s"
 #define HHC05077 "%1d:%04X CTCE: Error reading from %s: %s"
-#define HHC05078 "%1d:%04X CTCE: -| Halt x=%s y=%s"
+#define HHC05078 "%1d:%04X CTCE: -| %s%s%s%s x=%s y=%s cmd=%s"
 #define HHC05079 "%1d:%04X CTCE: %s %.6s #%04X cmd=%s=%02X xy=%.2s%s%.2s l=%04X k=%08X %s%s%s%s%s%s"
 
 // range 05100 - 05199 available
