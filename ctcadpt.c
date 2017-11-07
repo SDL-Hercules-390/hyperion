@@ -2537,7 +2537,6 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
 {
     CTCE_SOKPFX   *pSokBuf;                 // overlay for buf inside DEVBLK
     int            rc;                      // Return code
-    BYTE           haltorclear = FALSE;
 
     if( ! IS_CTCE_SEND( pCTCE_Info->actions ) )
     {
@@ -2637,6 +2636,7 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
     // (non-matching) PREPARE CCW commands, so we set it to 1000 sec.
     if( IS_CTCE_WAIT( pCTCE_Info->actions ) )
     {
+
         // Produce a CTCE Trace logging if requested.
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
@@ -2646,28 +2646,21 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
         obtain_lock( &pDEVBLK->ctceEventLock );
         release_lock( &pDEVBLK->lock );
 
-        pDEVBLK->ctce_sendwaiting = 1;
         pCTCE_Info->wait_rc = timed_wait_condition_relative_usecs(
             &pDEVBLK->ctceEvent,
             &pDEVBLK->ctceEventLock,
             1000000000,
             NULL );
-        pDEVBLK->ctce_sendwaiting = 0;
-
-        // Check for Halt or Clear Subchannel
-        if (pDEVBLK->ctce_haltorclear)
-        {
-            haltorclear = TRUE;
-            pDEVBLK->ctce_haltorclear = 0;
-        }
 
         obtain_lock( &pDEVBLK->lock );
         release_lock( &pDEVBLK->ctceEventLock );
 
         // First we check for Halt or Clear Subchannel
-        if (haltorclear || pCTCE_Info->wait_rc == ETIMEDOUT || pCTCE_Info->wait_rc == EINTR)
+        if( pCTCE_Info->wait_rc == ETIMEDOUT || pCTCE_Info->wait_rc == EINTR )
         {
-            if (haltorclear)
+            // check for halt condition
+            if( pDEVBLK->scsw.flag2 & SCSW2_FC_HALT ||
+                pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
             {
                 if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
                 {
@@ -3189,11 +3182,7 @@ static BYTE   CTCE_Reset( DEVBLK* pDEVBLK )
     {
         obtain_lock( &pDEVBLK->ctceEventLock );
         {
-            if (pDEVBLK->ctce_sendwaiting)
-            {
-                pDEVBLK->ctce_haltorclear = 1;
-                signal_condition( &pDEVBLK->ctceEvent );
-            }
+            signal_condition( &pDEVBLK->ctceEvent );
         }
         release_lock( &pDEVBLK->ctceEventLock );
 
