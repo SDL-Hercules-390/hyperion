@@ -1175,10 +1175,10 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
     }
 
     if ( argc == 1 )
-        WRMSG(HHC02203, "I", argv[0], sysblk.noautoinit ? "off" : "on" );
+        WRMSG(HHC02203, "I", argv[0], sysblk.noautoinit ? "OFF" : "ON" );
     else
         if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], sysblk.noautoinit ? "off" : "on" );
+            WRMSG(HHC02204, "I", argv[0], sysblk.noautoinit ? "OFF" : "ON" );
 
     return 0;
 }
@@ -2029,7 +2029,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         {
           char buf[128];
           MSGBUF( buf, "%s for %s device %1d:%04X pair",
-                  onoff ? "on" : "off",
+                  onoff ? "ON" : "OFF",
                   CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
                   lcss, devnum );
           WRMSG(HHC02204, "I", "CTC DEBUG", buf);
@@ -2206,7 +2206,7 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
             {
             char buf[128];
             MSGBUF( buf, "%s for %s device %1d:%04X pair",
-                    onoff ? "on" : "off",
+                    onoff ? "ON" : "OFF",
                     "PTP",
                     lcss, devnum );
             // HHC02204 "%-14s set to %s"
@@ -2440,7 +2440,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             {
             char buf[128];
             MSGBUF( buf, "%s for %s device %1d:%04X group",
-                    onoff ? "on" : "off",
+                    onoff ? "ON" : "OFF",
                     "QETH",
                     lcss, devnum );
             // "%-14s set to %s"
@@ -7152,10 +7152,10 @@ BYTE c;                                 /* Character work area       */
 
     if (cmd[1] == '+') {
         oneorzero = 1;
-        onoroff = "on";
+        onoroff = "ON";
     } else {
         oneorzero = 0;
-        onoroff = "off";
+        onoroff = "OFF";
     }
 
     OBTAIN_INTLOCK(NULL);
@@ -7263,53 +7263,78 @@ BYTE c;                                 /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* cmdsep                                                            */
 /*-------------------------------------------------------------------*/
-int cmdsep_cmd(int argc, char *argv[], char *cmdline)
+int cmdsep_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    int rc = 0;
+
+    UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    if ( argc == 1 )
+    // Display current setting if requested
+
+    if (argc == 1)
     {
-        if ( sysblk.cmdsep == NULL )
+        if (!sysblk.cmdsep)
+        {
+            // "%-14s: %s"
             WRMSG( HHC02203, "I", argv[0], "Not set" );
+        }
         else
+        {
+            // "%-14s: %s"
             WRMSG( HHC02203, "I", argv[0], sysblk.cmdsep );
+        }
     }
-    else if ( argc == 2 && CMD(argv[1],off,3) )
+
+    // Turn it OFF if requested
+
+    else if (argc == 2 && CMD( argv[1], off, 3 ))
     {
-        if ( sysblk.cmdsep != NULL )
+        free( sysblk.cmdsep );
+        sysblk.cmdsep = NULL;
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], "OFF" );
+    }
+
+    // Turn it ON if requested
+
+    else if (argc == 2 && strlen( argv[1] ) == 1)
+    {
+        if (0
+            || strcmp( argv[1], "-" ) == 0
+            || strcmp( argv[1], "." ) == 0
+            || strcmp( argv[1], "!" ) == 0
+        )
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "; '.', '-', and '!' are invalid characters" );
+            rc = -1;
+        }
+        else
         {
             free( sysblk.cmdsep );
-            sysblk.cmdsep = NULL;
-        }
-        WRMSG( HHC02204, "I", argv[0], "off" );
-    }
-    else if ( argc == 2 && strlen( argv[1] ) == 1 )
-    {
-        if ( !strcmp(argv[1], "-") || !strcmp(argv[1], ".") || !strcmp(argv[1], "!") )
-            WRMSG( HHC02205, "E", argv[1], "; '.', '-', and '!' are invalid characters" );
-        else
-        {
-            if ( sysblk.cmdsep != NULL )
-            {
-                free(sysblk.cmdsep);
-                sysblk.cmdsep = NULL;
-            }
-            sysblk.cmdsep = strdup(argv[1]);
+            sysblk.cmdsep = strdup( argv[1] );
+
+            // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], sysblk.cmdsep );
         }
     }
-    else if ( argc > 2 )
+    else if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
+        rc = -1;
     }
     else
     {
+        // "Invalid argument %s%s"
         WRMSG( HHC02205, "E", argv[1], ", must be a single character" );
+        rc = -1;
     }
 
-    return 0;
+    return rc;
 }
 
 #if defined(_FEATURE_SYSTEM_CONSOLE)
@@ -7387,9 +7412,9 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
     if ( argc == 1 )
-        WRMSG(HHC02203, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
+        WRMSG(HHC02203, "I", argv[0], (sysblk.scpecho ? "ON" : "OFF") );
     else
-        WRMSG(HHC02204, "I", "SCP, PSCP echo", (sysblk.scpecho ? "on" : "off") );
+        WRMSG(HHC02204, "I", argv[0], (sysblk.scpecho ? "ON" : "OFF") );
 
     return 0;
 }
@@ -7423,9 +7448,9 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
     }
 
     if ( argc == 1 )
-        WRMSG(HHC02203, "I", argv[0], (sysblk.scpimply ? "on" : "off") );
+        WRMSG(HHC02203, "I", argv[0], (sysblk.scpimply ? "ON" : "OFF") );
     else
-        WRMSG(HHC02204, "I", argv[0], (sysblk.scpimply ? "on" : "off") );
+        WRMSG(HHC02204, "I", argv[0], (sysblk.scpimply ? "ON" : "OFF") );
     return 0;
 }
 #endif

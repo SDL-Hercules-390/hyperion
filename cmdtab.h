@@ -216,11 +216,6 @@
   "                lines with comments from being processed correctly.\n"       \
   "        off     disables command separation.\n"
 
-#define cmdtgt_cmd_desc         "Specify the command target"
-#define cmdtgt_cmd_help         \
-                                \
-  "Format: \"cmdtgt [herc | scp | pscp | ?]\". Specify the command target.\n"
-
 #define cnslport_cmd_desc       "Set console port"
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 #define cmpscpad_cmd_desc       "Set/display the CMPSC zero padding value."
@@ -587,11 +582,6 @@
   "Help text may be limited to explaining the general format of the\n"           \
   "command and its various required or optional parameters and is not\n"         \
   "meant to replace the appropriate manual.\n"
-
-#define herc_cmd_desc           "Hercules command"
-#define herc_cmd_help           \
-                                \
-  "Format: \"herc [cmd]\". Send hercules cmd in any cmdtgt mode.\n"
 
 #define herclogo_cmd_desc       "Read a new hercules logo file"
 #define herclogo_cmd_help       \
@@ -960,11 +950,6 @@
   "to display the current value. Use the'cpu' command beforehand to choose\n"    \
   "which processor's prefix register should be displayed or altered.\n"
 
-#define pscp_cmd_desc           "Send prio message scp command"
-#define pscp_cmd_help           \
-                                \
-  "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n"
-
 #define psw_cmd_desc            "Display or alter program status word"
 #define psw_cmd_help            \
                                 \
@@ -1251,17 +1236,12 @@
   "disables SCLP disk I/O. If no operand is specified, sclproot displays\n"      \
   "the current setting.\n"
 
-#define scp_cmd_desc            "Send scp command"
-#define scp_cmd_help            \
-                                \
-  "Format: \"scp [cmd]\". Send scp cmd in any cmdtgt mode.\n"
-
 #define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replys"
 #define scpecho_cmd_help        \
                                 \
   "Format: \"scpecho [ on | off ]\"\n"                                           \
   "When scpecho is set ON, scp commands entered on the console are\n"            \
-  "echoed to console and recording in command history.\n"                        \
+  "echoed to the console and recorded in the command history.\n"                 \
   "The default is on. When scpecho is entered without any options,\n"            \
   "the current state is displayed. This is to help manage passwords\n"           \
   "sent to the scp from being displayed and journaled.\n"
