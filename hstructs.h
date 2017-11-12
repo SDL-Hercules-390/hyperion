@@ -600,7 +600,7 @@ struct SYSBLK {
         int     scrtest;                /* 1 == test mode active     */
         double  scrfactor;              /* Testing timeout factor    */
         TID     cmdtid;                 /* Active command thread     */
-        char   *cmdsep;                 /* Single Char cmd Sep       */
+        char    cmdsep;                 /* Command Separator char    */
         BYTE    sysgroup;               /* Panel Command grouping    */
 #define SYSGROUP_SYSOPER     0x01       /* Computer operator group   */
 #define SYSGROUP_SYSMAINT    0x02       /* System Maintainer group   */

@@ -7282,30 +7282,35 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
         }
         else
         {
+            char sepchar[2];
+
+            sepchar[0] = sysblk.cmdsep;
+            sepchar[1] = 0;
+
             // "%-14s: %s"
-            WRMSG( HHC02203, "I", argv[0], sysblk.cmdsep );
+            WRMSG( HHC02203, "I", argv[0], sepchar );
         }
     }
 
-    // Turn it OFF if requested
+    // Disable
 
     else if (argc == 2 && CMD( argv[1], off, 3 ))
     {
-        free( sysblk.cmdsep );
-        sysblk.cmdsep = NULL;
+        sysblk.cmdsep = 0;
 
         // "%-14s set to %s"
         WRMSG( HHC02204, "I", argv[0], "OFF" );
     }
 
-    // Turn it ON if requested
+    // Enable
 
-    else if (argc == 2 && strlen( argv[1] ) == 1)
+    else if (argc == 2 && argv[1][1] == 0)
     {
+        /* Reject invalid separator characters */
         if (0
-            || strcmp( argv[1], "-" ) == 0
-            || strcmp( argv[1], "." ) == 0
-            || strcmp( argv[1], "!" ) == 0
+            || argv[1][0] == '-'
+            || argv[1][0] == '.'
+            || argv[1][0] == '!'
         )
         {
             // "Invalid argument %s%s"
@@ -7314,11 +7319,13 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
         }
         else
         {
-            free( sysblk.cmdsep );
-            sysblk.cmdsep = strdup( argv[1] );
+            char sepchar[2];
+
+            sepchar[0] = sysblk.cmdsep = argv[1][0];
+            sepchar[1] = 0;
 
             // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], sysblk.cmdsep );
+            WRMSG( HHC02204, "I", argv[0], sepchar );
         }
     }
     else if (argc > 2)

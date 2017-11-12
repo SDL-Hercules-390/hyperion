@@ -210,11 +210,9 @@
   "A command line separator character allows multiple commands\n"               \
   "to be entered on a single line.\n"                                           \
   "\n"                                                                          \
-  "Format: cmdsep [c | off ]\n"                                                 \
-  "        c       a single character used for command separation. Must\n"      \
-  "                not be '.', '!', or '-'.  Note: using '#' may prevent\n"     \
-  "                lines with comments from being processed correctly.\n"       \
-  "        off     disables command separation.\n"
+  "Format: CMDSEP  [OFF | c ]\n"                                                \
+  "        c       a single character used to separate commands.\n"             \
+  "        OFF     disables command separation.\n"
 
 #define cnslport_cmd_desc       "Set console port"
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
