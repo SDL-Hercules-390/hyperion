@@ -649,8 +649,8 @@ int     rc;
     sysblk.quitmout = QUITTIME_PERIOD;
 #endif
 
-    /* Default command separator to off (NULL) */
-    sysblk.cmdsep = NULL;
+    /* Default command separator is OFF (disabled) */
+    sysblk.cmdsep = 0;
 
 #if defined(_FEATURE_SYSTEM_CONSOLE)
     /* set default for scpecho to TRUE */

@@ -95,6 +95,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#SHCMDOPT">SHCMDOPT</a>   disable  nodiag8
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable  noecho
+    <a href="#CMDSEP">CMDSEP</a>     OFF
 
     <a href="#DEFSYM">DEFSYM</a>     TAPEDIR   "<a href="#subs">$(HOME)</a>/tapes"
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  $(TAPEDIR)
@@ -331,12 +332,55 @@ a real System/390.  The configuration file is an ASCII text file.
     web page for more information.
     <p>
 
+<a name="CMDSEP"></a>
+<dt><code>CMDSEP &nbsp; <u>OFF</u> &#124; <em>c</em></code>
+<dd><p>
+    A command line separator character allows multiple commands to be
+    entered on a single line. The character '<i><code>c</code></i>'
+    defines the command separator character. The values
+    '<i><code>.</code></i>' (period or dot),
+    '<i><code>!</code></i>' (exclamation mark or bang) and
+    '<i><code>-</code></i>' (dash or hypen)
+    are reserved and cannot be used.
+    The default value is 'OFF' indicating command separation is disabled.
+    <p>
+
+    <i>
+    <b>Warning:</b> choose your separator character carefully. Setting it
+    to an alphabetic value for example disables all commands containing
+    that character. Setting it to '<code>e</code>' for example will disable
+    the 'exit' command making it impossible to exit the emulator. Similarly,
+    setting it to '<code>o</code>' or '<code>f</code>' will make it impossible
+    to disable command separation once enabled, and setting it to 
+    '<code>#</code>' (hash) will prevent lines with comments from being
+    processed correctly.
+    </i>
+
+    <p>
+
 <a name="CMPSCPAD"></a>
 <dt><code>CMPSCPAD &nbsp; <em>alignment</em></code>
 <dd><p>
     The CMPSCPAD command and initialization statement is used to define
     the zero padding storage alignment boundary for the CMPSC-Enhancement
     Facility. It must be a power of 2 value ranging anywhere from 1 to 12.
+    <p>
+
+<a name="CNSLPORT"></a>
+<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code> &nbsp; &nbsp; <i>-or-</i> &nbsp; &nbsp;<code><i>host:port</i></code>
+<dd><p>
+    Specifies (typically) the port number (in decimal) to which tn3270
+    and telnet clients should connect. If an invalid value is specified
+    Hercules defaults to port 3270.
+    <p>
+    The <code>CNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the telnet console server should
+    bind to (listen for connections on). If not specified the server
+    will accept connections from any host interface.
+    <p>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    for additional information about setting up a telnet or tn3270 client.
     <p>
 
 <a name="CODEPAGE"></a>
@@ -513,22 +557,6 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
 
-<a name="CNSLPORT"></a>
-<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code> &nbsp; &nbsp; <i>-or-</i> &nbsp; &nbsp;<code><i>host:port</i></code>
-<dd><p>
-    Specifies (typically) the port number (in decimal) to which tn3270
-    and telnet clients should connect. If an invalid value is specified
-    Hercules defaults to port 3270.
-    <p>
-    The <code>CNSLPORT</code> statement may also be specified as
-    <code>host:port</code>, where <code>host</code> identifies the
-    IP address of the host interface the telnet console server should
-    bind to (listen for connections on). If not specified the server
-    will accept connections from any host interface.
-    <p>
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
-    for additional information about setting up a telnet or tn3270 client.
-    <p>
 
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>

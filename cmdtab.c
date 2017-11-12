@@ -678,49 +678,88 @@ static void EchoHercCmdLine( const char* cmd )
 void* FindSCRCTL( TID tid );// (external helper function; see script.c)
 
 /*-------------------------------------------------------------------*/
-/* panel_command entry-point:  determine if Hercules or scp_command  */
+/* panel_command entry-point:  determine if Hercules or SCP command  */
 /*-------------------------------------------------------------------*/
 #if defined( OPTION_DYNAMIC_LOAD )
-DLL_EXPORT void *panel_command_r (void *cmdline)
+DLL_EXPORT void* panel_command_r ( void* cmdline )
 #else
-void *panel_command (void *cmdline)
+           void* panel_command   ( void* cmdline )
 #endif
 {
 #define MAX_CMD_LEN (32768)
+
     char  cmd[ MAX_CMD_LEN ];           /* Copy of panel command     */
     char *pCmdLine;
     unsigned i;
     int hercecho = 1;                   /* Default echo to console   */
     int rc = 0;                         /* Return Code from command  */
 
+    /* Handle command separation */
+    if (sysblk.cmdsep)
+    {
+        /* Does cmdline contain any separator characters? */
+        char*  firstsep  = strchr( (char*) cmdline, sysblk.cmdsep );
+        if (firstsep)
+        {
+            /* Yes! Must process commands separately */
+            void*   rc;
+            size_t  sepcharindex  = (firstsep - (char*) cmdline);
+            char*   first_cmd     = strdup( cmdline );
+
+            /* Mark end of first command */
+            first_cmd[ sepcharindex ] = 0;
+
+            /* Process first command */
+            panel_command( first_cmd );
+
+            /* Process remaining command(s) */
+            rc = panel_command( first_cmd + sepcharindex + 1 );
+
+            /* Prevent memory leak */
+            free( first_cmd );
+
+            /* Return with retcode of second command */
+            return rc;
+        }
+    }
+
     pCmdLine = cmdline; ASSERT( pCmdLine );
+
     /* Every command will be stored in history list,
        EXCEPT: null commands, script commands, scp input,
-       and "silent" commands (prefixed with '-') */
+       and "silent" commands (prefixed with '-')
+    */
     if (*pCmdLine != 0 && !FindSCRCTL( thread_id() ))
     {
         if (!(*pCmdLine == '-'))    /* (normal command?) */
         {
+
 #if defined( _FEATURE_SYSTEM_CONSOLE )
+
             if (*pCmdLine == '.' || *pCmdLine == '!')
             {
                 if (sysblk.scpecho)
                     history_add( cmdline );
             }
             else
+
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
+
                 history_add( cmdline );
         }
     }
 
-    /* Copy panel command to work area, skipping leading blanks */
+    /* Copy panel command to work area, skipping leading blanks.
+       If the command starts with a -, then strip it and indicate
+       that we do NOT want the command echoed to the console.
+    */
+    hercecho = 1;   // (default)
 
-    /* If the command starts with a -, then strip it and indicate
-     * that we do NOT want the command echoed to the console. */
-    hercecho = 1; /* (default) */
     while (*pCmdLine && isspace( *pCmdLine ))
         pCmdLine++;
+
     i = 0;
+
     while (*pCmdLine && i < (MAX_CMD_LEN-1))
     {
         if (i == 0 && (0            /* (1st character?) */
@@ -729,14 +768,17 @@ void *panel_command (void *cmdline)
         ))
         {
             hercecho = 0;           /* (silence please) */
-            if (*pCmdLine == '-')   /* (silent command) */
+
+            if (*pCmdLine == '-')   /* (silent command?)*/
             {
                 pCmdLine++;         /* (skip past the '-' ... */
                                     /* ... and remove blanks) */
-                while (*pCmdLine && isspace(*pCmdLine))
+
+                while (*pCmdLine && isspace( *pCmdLine ))
                     pCmdLine++;     /* (get past blank) */
             }
         }
+
         cmd[i] = *pCmdLine;
         i++;
         pCmdLine++;
@@ -748,37 +790,52 @@ void *panel_command (void *cmdline)
         hercecho = 0;               /* (silence please) */
 
 #if defined( _FEATURE_SYSTEM_CONSOLE )
+
+    /* Check if SCP command */
     if(cmd[0] == '.' || cmd[0] == '!')
     {
-    int priomsg = cmd[0] == '!'  ? TRUE : FALSE;
-    int scpecho = sysblk.scpecho ? TRUE : FALSE;
+        int  priomsg  = cmd[0] == '!'  ? TRUE : FALSE;
+        int  scpecho  = sysblk.scpecho ? TRUE : FALSE;
+
         if (!cmd[1]) {      /* (empty command given?) */
             cmd[1] = ' ';   /* (must send something!) */
             cmd[2] = 0;
         }
+
         rc = scp_command( cmd+1, priomsg, scpecho );
     }
     else
+
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
+
     {
+
 #if defined( ENABLE_SYSTEM_SYMBOLS )
+
         /* Perform variable substitution */
-        char *cl;
+        char* cl;
+
 #if defined( ENABLE_BUILTIN_SYMBOLS )
+
         set_symbol( "CUU",  "$(CUU)"  );
         set_symbol( "CCUU", "$(CCUU)" );
         set_symbol( "DEVN", "$(DEVN)" );
+
 #endif /* ENABLE_BUILTIN_SYMBOLS */
+
         cl = resolve_symbol_string( cmd );
+
         if (cl)
         {
             STRLCPY( cmd, cl );
             free( cl );
         }
+
 #endif /* ENABLE_SYSTEM_SYMBOLS */
 
         if (hercecho && *cmd)
             EchoHercCmdLine( cmd );
+
         rc = HercCmdLine( cmd );
     }
 

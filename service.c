@@ -50,7 +50,9 @@
 static  U32     servc_cp_recv_mask;     /* Syscons CP receive mask   */
 static  U32     servc_cp_send_mask;     /* Syscons CP send mask      */
 static  U32     servc_attn_pending;     /* Attention pending mask    */
+
 static  char    servc_scpcmdstr[123+1]; /* Operator command string   */
+
 static  U16     servc_signal_quiesce_count;
 static  BYTE    servc_signal_quiesce_unit;
 static  BYTE    servc_sysg_cmdcode;     /* Pending SYSG read command */
@@ -102,9 +104,10 @@ static void* sclp_attn_thread(void* arg)
 
     // The VM boys appear to have made an error in not
     // allowing for asyncronous attentions to be merged
-    // with pending interrupts as such we will wait here
-    // until a pending interrupt has been cleared. *JJ
-    while(IS_IC_SERVSIG)
+    // with pending interrupts. As such, we will wait here
+    // until the pending interrupt has been cleared. *JJ
+
+    while (IS_IC_SERVSIG)
     {
         RELEASE_INTLOCK(NULL);
         sched_yield();
@@ -159,6 +162,7 @@ U32 pending;
 /*                                                                   */
 /* This function is called from the control panel when the operator  */
 /* enters an HMC system console SCP command or SCP priority message. */
+/*                                                                   */
 /* The command is queued for processing by the SCLP_READ_EVENT_DATA  */
 /* service call, and a service signal interrupt is made pending.     */
 /*                                                                   */
@@ -166,51 +170,52 @@ U32 pending;
 /*      command Null-terminated ASCII command string                 */
 /*      priomsg 0=SCP command, 1=SCP priority message                */
 /*-------------------------------------------------------------------*/
-int scp_command (char *command, int priomsg, int echo)
+int scp_command( char* command, int priomsg, int echo )
 {
-    int rc = 0;
-
     /* Error if disabled for priority messages */
-    if (priomsg && !SCLP_RECV_ENABLED(PRIOR))
+    if (priomsg && !SCLP_RECV_ENABLED( PRIOR ))
     {
-        WRMSG (HHC00002, "E", "priority commands");
+        // "SCLP console not receiving %s"
+        WRMSG( HHC00002, "E", "priority commands" );
         return -1;
     }
 
     /* Error if disabled for commands */
-    if (!priomsg && !SCLP_RECV_ENABLED(OPCMD))
+    if (!priomsg && !SCLP_RECV_ENABLED( OPCMD ))
     {
-        WRMSG (HHC00002, "E", "operator commands");
+        // "SCLP console not receiving %s"
+        WRMSG( HHC00002, "E", "operator commands" );
         return -1;
     }
 
     /* Error if command string is missing */
-    if (strlen(command) < 1)
+    if (!command[0] )
     {
-        WRMSG (HHC00003, "E");
+        // "Empty SCP command issued"
+        WRMSG( HHC00003, "E" );
         return -1;
     }
 
+    /* Echo command to HMC console iuf requested */
     if (echo)
-        WRMSG(HHC00160, "I", priomsg ? "priority " : "", command);
+    {
+        // "SCP %scommand: %s"
+        WRMSG( HHC00160, "I", priomsg ? "priority " : "", command );
+    }
 
     /* Obtain the interrupt lock */
-    OBTAIN_INTLOCK(NULL);
+    OBTAIN_INTLOCK( NULL );
 
     /* Save command string and message type for read event data */
-    strncpy (servc_scpcmdstr, command, sizeof(servc_scpcmdstr));
-
-    /* Ensure termination of the command string */
-    servc_scpcmdstr[sizeof(servc_scpcmdstr)-1] = '\0';
+    STRLCPY( servc_scpcmdstr, command );
 
     /* Raise attention service signal */
     sclp_attention( priomsg ? SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD );
-    rc = 0;
 
     /* Release the interrupt lock */
-    RELEASE_INTLOCK(NULL);
+    RELEASE_INTLOCK( NULL );
 
-    return rc;
+    return 0;
 
 } /* end function scp_command */
 

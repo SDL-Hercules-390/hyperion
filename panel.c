@@ -364,35 +364,20 @@ static void scroll_to_bottom_screen()
 
 static void do_panel_command( void* cmd )
 {
-    char *cmdsep;
     if (!is_currline_visible())
         scroll_to_bottom_screen();
-    if (cmd != (void*)cmdline)
+
+    if (cmd != (void*) cmdline)
         STRLCPY( cmdline, cmd );
-    if ( sysblk.cmdsep != NULL &&
-         strlen(sysblk.cmdsep) == 1 &&
-         strstr(cmdline, sysblk.cmdsep) != NULL )
-    {
-        char *command;
-        char *strtok_str = NULL;
 
-        command = strdup(cmdline);
+    panel_command( cmdline );
 
-        cmdsep = strtok_r(cmdline, sysblk.cmdsep, &strtok_str);
-        while ( cmdsep != NULL )
-        {
-            panel_command( cmdsep );
-            cmdsep = strtok_r(NULL, sysblk.cmdsep, &strtok_str);
-        }
+    // Reset global variables
 
-        history_add( command );
-        free(command);
-    }
-    else
-        panel_command( cmdline );
-    cmdline[0] = '\0';
-    cmdlen = 0;
-    cmdoff = 0;
+    cmdline[0] = 0;
+    cmdlen     = 0;
+    cmdoff     = 0;
+
     ADJ_CMDCOL();
 }
 
