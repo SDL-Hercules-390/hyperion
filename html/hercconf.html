@@ -2078,21 +2078,19 @@ a real System/390.  The configuration file is an ASCII text file.
             </tr>
 
 
+
             <tr>
                 <td>
-                        <a href="#3088">
-                            3088
-                        </a>
+                        &nbsp; &nbsp;<a href="#COMM"><i>many</i></a>
                 </td>
                 <td>
-                        Channel-to-Channel Adapter device
+                        Communication and Channel-to-Channel devices
                 </td>
                 <td>
-                        <a href="#CTCT">"CTCT" driver</a>
-                        or
-                        <a href="#CTCE">"CTCE" driver</a>
+                        &nbsp; &nbsp; &nbsp; <a href="#COMM"><i>many</i></a>
                 </td>
             </tr>
+
 
 
             <tr>
@@ -2103,10 +2101,34 @@ a real System/390.  The configuration file is an ASCII text file.
                         Channel-to-Channel link to host TCP/IP stack
                 </td>
                 <td>
-                        <a href="#CTCI">"CTCI" TUN/TAP Driver</a>
+                        <a href="#CTCI">"CTCI" Tun/Tap Driver</a>
                 </td>
             </tr>
 
+            <tr>
+                <td>
+                        (( <a href="#CTCT">CTCT</a> ))
+                </td>
+                <td>
+                        Channel to Channel Emulation via TCP connection
+                </td>
+                <td>
+                        <a href="#CTCT">"CTCT" driver</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                        (( <a href="#CTCE">CTCE</a> ))
+                </td>
+                <td>
+                        Enhanced Channel-to-Channel Emulation<br>
+                        via TCP connection <i>(true 3088 CTCA)</i>
+                </td>
+                <td>
+                        <a href="#CTCE">"CTCE" driver</a>
+                </td>
+            </tr>
 
             <tr>
                 <td>
@@ -2119,10 +2141,9 @@ a real System/390.  The configuration file is an ASCII text file.
                 </td>
                 <td>
                         <a href="#LCS">"LCS" (LAN Channel Station)
-                        <br>TUN/TAP Driver</a>
+                        <br>Tun/Tap Driver</a>
                 </td>
             </tr>
-
 
             <tr>
                 <td>
@@ -2132,11 +2153,9 @@ a real System/390.  The configuration file is an ASCII text file.
                         MPCPTP/MPCPTP6 Channel to Channel link
                 </td>
                 <td>
-                        <a href="#PTP">"PTP" TUN/TAP Driver</a>
+                        <a href="#PTP">"PTP" Tun/Tap Driver</a>
                 </td>
             </tr>
-
-
 
             <tr>
                 <td>
@@ -2148,7 +2167,7 @@ a real System/390.  The configuration file is an ASCII text file.
                 </td>
                 <td>
                         <a href="#QETH">"QETH" (OSA/QDIO Ethernet Adapter)
-                        <br>TUN/TAP Driver</a>
+                        <br>Tun/Tap Driver</a>
                 </td>
             </tr>
 
@@ -3271,19 +3290,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
 <hr width="50%"><p>
 
-<a name="ctca"></a>
-<a name="3088"></a>
-<dt><em>Channel-to-channel adapters</em>
+<a name="COMM"></a>
+<dt><em>Communication and Channel-to-Channel devices</em>
 <dd><p>
     The first argument defines the emulation type, and the remaining
-    arguments depend on the chosen emulation type. If the first argument
-    is not a recognized emulation type, then the driver will operate as
-    in Hercules Version 1, using Willem Konynenberg's vmnet package, as
-    described in Axel Schwarzer's
-    <a href="http://www.kiyoinc.com/herc3088.html">CTCA 3088</a> document.
+    arguments depend on the chosen emulation type.
     <p>
 
-    The following are the emulation types currently supported:
+    The following are the emulation types that are currently supported:
     <p>
 
     <dl> <!-- begin emulation types -->
@@ -3503,7 +3517,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <p><br>
 
 <a name="CTCE"></a>
-    <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel to Channel Emulation via TCP connection)
+    <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel-to-Channel Emulation via TCP connection <i>(true 3088 CTCA)</i>)
     <dd><p>
         The CTCE device type will emulate a real 3088 Channel to
         Channnel Adapter also for non-IP traffic, enhancing the CTCT
@@ -3607,7 +3621,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt>(Linux/Unix)
                 <dd><p>
-                    the name of the TUN/TAP special character device,
+                    the name of the Tun/Tap special character device,
                     normally /dev/net/tun.
                     <p>
 
@@ -4042,9 +4056,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
         <p>
 
-        Also, instead of <code>QETH</code>, the device/emulation type specified
-        on your Hercules device statement may optionally be specified as
-        either <code>OSA</code> or <code>OSD</code> instead of <code>QETH</code>..
+        The device/emulation type may optionally be specified as <code>OSA</code>
+        or <code>OSD</code> instead of <code>QETH</code>.
 
         <br><br>
 
