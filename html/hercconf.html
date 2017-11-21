@@ -3519,64 +3519,78 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CTCE"></a>
     <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel-to-Channel Emulation via TCP connection <i>(true 3088 CTCA)</i>)
     <dd><p>
-        The CTCE device type will emulate a real 3088 Channel to
-        Channnel Adapter also for non-IP traffic, enhancing the CTCT
-        capabilities. CTCE connections are also based on TCP/IP between
-        two (or more) Hercules instances, and requires an even-odd pair
-        of port numbers per device side. Only the even port numbers are
-        to be configured; the odd numbers are just derived by adding 1
-        to the (configured) even port numbers. The socket connection
-        pairs cross-connect, the arrows showing the send->receive
-        direction :
+        The CTCE device type emulates a true 3088 Channel to Channel
+        Adapter.  CTCE devices are emulated via TCP/IP connections between
+        two or more Hercules instances.
+        <p>
+        A Hercules CTCE device requires two even-odd pairs of devices, one for
+        reading and the other for writing.  Each individual device of the even-odd
+        device pair requires and even-odd pair of port numbers.  Only the even
+        numbered port number needs to be specified however.  The odd port number
+        is automatically derived from the even port number by simply adding 1
+        to the even port number.
+        <p>
+        The socket connection pairs cross-connect,
+        the arrows showing the send->receive direction :
         <pre>
-           x-lport-even -> y-rport-odd
-           x-lport-odd  <- y-rport-even
-        </pre>
+        x-lport-even  -->  y-rport-odd
+        x-lport-odd   <--  y-rport-even</pre>
+        <p>
+        CTCE connected Hercules instances can be hosted on either Unix
+        or Windows platforms.  Neither side needs to be the same as the other.
+        Each side can be different from the other if needed. One side
+        can be Windows and the other side can be Linux if so desired.
+        <p>
+        <dl> <!-- begin required CTCE parameters -->
+        <dt>There are three <i>required</i> positional arguments:
+        <dd><p>
+            <dl>
+                <dt><code><em>lport</em></code>
+                <dd>The even numbered TCP/IP port number on the <i>local</i> system.
+
+                <p>
+
+                <dt><code><em>raddress</em></code>
+                <dd>The IP address of the remote system.
+
+                <p>
+
+                <dt><code><em>rport</em></code>
+                <dd>The even numbered TCP/IP port number on the <i>remote</i> system.
+            </dl>
+        </dl> <!-- end required CTCE parameters -->
 
         <p>
-        Three arguments are required:
-        <p>
 
-        <dl> <!-- begin CTCE parms -->
+        <dl> <!-- begin optional CTCE parameters -->
+        <dt>The remaining positional arguments are optional:
+        <dd><p>
+            <dl>
+                <dt><code><em>mtu</em></code>
+                <dd>Maximum Transmission Unit buffer size.
+                    The default value is 32768 bytes.
 
-        <dt><code><em>lport</em></code>
-        <dd>is the even TCP/IP port on the local system.
+                <p>
 
-        <dt><code><em>raddress</em></code>
-        <dd>is the IP address of the remote system.
-
-        <dt><code><em>rport</em></code>
-        <dd>is the even TCP/IP port on the remote system.
-        </dl>
-
-        <p>
-        The remaining arguments are optional:
-        <p>
-        <dl>
-
-        <dt><code><em>mtu</em></code>
-        <dd>optional mtu buffer size, defaults to 32778
-
-        <dt><code><em>sml</em></code>
-        <dd>optional small minimum for mtu, defaults to 8
-
-        </dl> <!-- end CTCE parms -->
+                <dt><code><em>sml</em></code>
+                <dd>Small minimum for MTU. The default value is 8 bytes.
+            </dl>
+        </dl> <!-- end optional CTCE parameters -->
 
         <p>
         A sample CTCE device configuration is shown below:
-        <p>
-        Hercules PC Host A with IP address 192.168.1.100 :
-        <pre>
-              0E40  CTCE  30880  192.168.1.200  30880
-              0E41  CTCE  30882  192.168.1.200  30882 </pre>
-        <p>
-        Hercules PC Host B with IP address 192.168.1.200 :
-        <pre>
-              0E40  CTCE  30880  192.168.1.100  30880
-              0E41  CTCE  30882  192.168.1.100  30882 </pre>
-        <p>
-        CTCE connected Hercules instances can be hosted on either Unix
-        or Windows platforms, both sides do not need to be the same.
+        <blockquote>
+            <p>
+            First Hercules PC Host with IP address 192.168.1.100:
+            <pre>
+    0E40  CTCE  30880  192.168.1.200  30880
+    0E41  CTCE  30882  192.168.1.200  30882 </pre>
+            <p>
+            Second Hercules PC Host with IP address 192.168.1.200:
+            <pre>
+    0E40  CTCE  30880  192.168.1.100  30880
+    0E41  CTCE  30882  192.168.1.100  30882 </pre>
+        </blockquote>
         <p>
 
 <p><br>
