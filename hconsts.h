@@ -346,17 +346,10 @@
 /* Definitions for CTC protocol types                                */
 /*-------------------------------------------------------------------*/
 
-#define CTC_XCA         1               /* XCA device                */
-#define CTC_LCS         2               /* LCS device                */
-#define CTC_CETI        3               /* CETI device               */
-#define CTC_CLAW        4               /* CLAW device               */
-#define CTC_CTCN        5               /* CTC link via NETBIOS      */
-#define CTC_CTCT        6               /* CTC link via TCP          */
-#define CTC_CTCI        7               /* CTC link to TCP/IP stack  */
-#define CTC_VMNET       8               /* CTC link via wfk's vmnet  */
-#define CTC_CFC         9               /* Coupling facility channel */
-#define CTC_PTP        10               /* PTP link to TCP/IP stack  */
-#define CTC_CTCE       11               /* Enhanced CTC link via TCP */
+#define CTC_LCS                 1       /* LCS device                */
+#define CTC_CTCI                2       /* CTC link to TCP/IP stack  */
+#define CTC_PTP                 3       /* PTP link to TCP/IP stack  */
+#define CTC_CTCE                4       /* Enhanced CTC link via TCP */
 
 /*-------------------------------------------------------------------*/
 /* Minimum, maximum and default scripting timeout values             */
