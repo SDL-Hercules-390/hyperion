@@ -1228,10 +1228,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     }
     // Compatability with old format configuration files needs to be
     // maintained. Old format statements have the tun character device
-    // name as the second argument on Linux, or CTCI-W32 as the first
-    // argument on Windows.
-    if( ( strncasecmp( argv[0], "/", 1 ) == 0 ) ||
-        ( strncasecmp( pDEVBLK->typname, "CTCI-W32", 8 ) == 0 ) )
+    // name as the second argument on Linux.
+    if (strncasecmp( argv[0], "/", 1 ) == 0)
     {
         pCTCBLK->fOldFormat = 1;
     }

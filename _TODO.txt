@@ -44,24 +44,6 @@
 
 -------------------------------------------------------------------------------
 
-  *BUG*: printer FCB parsing is FUBAR (wrong):
-
-  Old (original) style was: "fcb=66010713192531374361495561",
-  which yields:    66 1 7 13 19 25 31 37 43 61 49 55 61
-  int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
-
-  Notice the old style is a string of 26 digits (13 pairs), which are NOT
-  separated by commas. The current parsing code presumes comma separators
-  which is WRONG and incorrectly causes old format to always be rejected.
-
-  Also notice channel 9 and 12 are on same line number 61. This is valid
-  for old 1403 paper carraige-control tapes, but is invalid on newer 3211
-  FCB image printers which support only one channel defined per line. We
-  need to fix this (provide supported for BOTH) which is REQUIRED to fix
-  the incorrect parsing/support of the original "fcb=" option format.
-
--------------------------------------------------------------------------------
-
   BUG: instruction tracing: control registers not being shown for some
   instructions which use/modify them. We need a better way to determine
   if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
