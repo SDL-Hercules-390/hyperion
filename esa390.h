@@ -2467,7 +2467,6 @@ struct SYSIB222                         /* Logical partition CPUs    */
 
 #define SYSIB222_LCPUC_DEDICATED    0x80
 #define SYSIB222_LCPUC_SHARED       0x40
-#define SYSIB222_LCPUC_CAPPED       0x20
 
     HWORD   totcpu;                     /* Total CPU count           */
     HWORD   confcpu;                    /* Configured CPU count      */

@@ -286,7 +286,6 @@ int  configure_memlock(int);
 int  configure_memfree(int);
 int  configure_storage(U64);
 int  configure_xstorage(U64);
-int  configure_capping(U32 value);
 
 int  configure_herc_priority(int prio);
 int  configure_cpu_priority(int prio);
@@ -490,7 +489,6 @@ IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
 /* Functions in module timer.c */
 void *timer_update_thread (void *argp);
-void *capping_manager_thread(void *argp);
 
 /* Functions in module clock.c */
 void update_TOD_clock (void);

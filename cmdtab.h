@@ -164,17 +164,6 @@
 
 #define bplus_cmd_desc          "Set breakpoint"
 #define cachestats_cmd_desc     "Cache stats command"
-#define capping_cmd_desc        "Set/display capping value"
-#define capping_cmd_help        \
-                                \
-  "Format: capping [ n | off ]\n"                                                       \
-  "         If no operands are specified, the current capping value is displayed,\n"    \
-  "         the value represents the maximum total number of MIPS for all of the\n"     \
-  "         'CP' type processors.\n"                                                    \
-  "\n"                                                                                  \
-  "     n    Maximum total number of MIPS for all of the 'CP' type processors.\n"       \
-  "          A zero value will turn off MIP capping\n"                                  \
-  "     off  Turn off capping\n"
 
 #define cckd_cmd_desc           "cckd command"
 #define cckd_cmd_help           \
@@ -1654,8 +1643,6 @@ COMMAND( "stopall",                 stopall_cmd,            SYSCMDNDIAG8,       
 COMMAND( "store",                   store_cmd,              SYSCMDNDIAG8,       store_cmd_desc,         NULL                )
 COMMAND( "sysclear",                sysclear_cmd,           SYSCMDNDIAG8,       sysclear_cmd_desc,      sysclear_cmd_help   )
 COMMAND( "sysreset",                sysreset_cmd,           SYSCMDNDIAG8,       sysreset_cmd_desc,      sysreset_cmd_help   )
-
-COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )
 COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       cnslport_cmd_desc,      NULL                )
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )

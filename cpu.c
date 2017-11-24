@@ -1717,8 +1717,6 @@ register REGS   *regs;
 BYTE   *ip;
 int     i;
 int     aswitch;
-register int    *caplocked = &sysblk.caplocked[cpu];
-         LOCK   *caplock = &sysblk.caplock[cpu];
 
     /* Assign new regs if not already assigned */
     regs = sysblk.regs[cpu] ?
@@ -1817,11 +1815,6 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     do {
         if (INTERRUPT_PENDING(regs))
             ARCH_DEP(process_interrupt)(regs);
-        else if (caplocked[0])
-        {
-            obtain_lock(caplock);
-            release_lock(caplock);
-        }
 
         ip = INSTRUCTION_FETCH(regs, 0);
 

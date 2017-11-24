@@ -1380,20 +1380,6 @@ static void NP_update(REGS *regs)
                 NPcpugraphpct[i] = sysblk.regs[i]->cpupct;
             }
 
-            if(sysblk.capvalue)
-            {
-              if(sysblk.ptyp[i] == SCCB_PTYP_CP)
-              {
-                if(sysblk.ptyp[i] == SCCB_PTYP_CP && sysblk.caplocked[i])
-                  set_color(COLOR_LIGHT_RED, COLOR_BLACK);
-                else
-                  set_color(COLOR_LIGHT_GREY, COLOR_BLACK);
-                set_pos(CPU_GRAPH_LINE + i + 1, 1);
-                snprintf(buf, sizeof(buf), "%s%02X", PTYPSTR(i), i);
-                draw_text(buf);
-              }
-            }
-
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
         }
         NPcpugraph_valid = 1;

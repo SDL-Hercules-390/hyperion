@@ -524,10 +524,6 @@ struct SYSBLK {
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
-        LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
-        int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
-        TID     captid;                 /* TID capping manager       */
-        U32     capvalue;               /* Capping value in mips     */
 
         /* Active Facility List */
         BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];

@@ -520,52 +520,6 @@ int iplc_cmd(int argc, char *argv[], char *cmdline)
 
 
 /*-------------------------------------------------------------------*/
-/* capping - limit MIPS rate                                         */
-/*-------------------------------------------------------------------*/
-int capping_cmd(int argc, char *argv[], char *cmdline)
-{
-U32     cap;
-BYTE    c;
-int     rc = HNOERROR;
-
-    UNREFERENCED(cmdline);
-
-    /* Update capping value */
-    if ( argc == 2 )
-    {
-        if( CMD( argv[1], off, 3))
-            rc = configure_capping(0);
-        else
-        if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%u%c", &cap, &c) == 1)
-        {
-            rc = configure_capping(cap);
-        }
-        else
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            rc = HERROR;
-        }
-    }
-    else
-    if ( argc > 2 )
-    {
-        WRMSG( HHC02299, "E", argv[0] );
-        rc = HERROR;
-    }
-    else
-    {
-        if ( sysblk.capvalue == 0 )
-            WRMSG( HHC00838, "I" );
-        else
-            WRMSG( HHC00832, "I", sysblk.capvalue );
-    }
-
-    return rc;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* restart command - generate restart interrupt                      */
 /*-------------------------------------------------------------------*/
 int restart_cmd( int argc, char* argv[], char* cmdline )

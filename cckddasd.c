@@ -1601,8 +1601,7 @@ TID             tid;                    /* Writer thread id          */
     /* Scan cache for updated cache entries */
     obtain_lock (&cckdblk.wrlock);
     cache_lock (CACHE_DEVBUF);
-    //BHe: rc is never used?
-    rc = cache_scan (CACHE_DEVBUF, cckd_flush_cache_scan, dev);
+    cache_scan (CACHE_DEVBUF, cckd_flush_cache_scan, dev);
     cache_unlock (CACHE_DEVBUF);
 
     /* Schedule the writer if any writes are pending */

@@ -978,8 +978,6 @@ static int ARCH_DEP(run_sie) (REGS *regs)
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
     const zz_func *current_opcode_table;
-    register    int     *caplocked = &sysblk.caplocked[regs->cpuad];
-                LOCK    *caplock = &sysblk.caplock[regs->cpuad];
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -1139,13 +1137,6 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
                 }
                 regs->instcount += i * 2;
-
-                if (caplocked[0])
-                {
-                    obtain_lock(caplock);
-                    /* Greg must be proud of me */
-                    release_lock(caplock);
-                }
 
             } while( unlikely(!SIE_I_HOST(regs)
                             && !SIE_I_WAIT(GUESTREGS)

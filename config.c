@@ -874,48 +874,6 @@ int     cpu;
 
 } /* end function release_config */
 
-/*-------------------------------------------------------------------*/
-/*                       configure_capping                           */
-/*-------------------------------------------------------------------*/
-int configure_capping(U32 value)
-{
-    if(sysblk.capvalue)
-        sysblk.capvalue = value;
-    else
-    {
-        int cnt;
-        for (cnt = 100; cnt > 0; cnt-- )
-        {
-            if ( sysblk.captid != 0 )
-            {
-                sysblk.capvalue = 0;
-                usleep(10000);          // give the thread a chance to wake
-            }
-            else
-                break;
-        }
-
-        if ( cnt == 0 )
-        {
-            WRMSG( HHC00105, "E", (u_long)sysblk.captid, "Capping manager" );
-            return HERRTHREADACT;
-        }
-
-        if((sysblk.capvalue = value))
-        {
-            int rc;
-            rc = create_thread(&sysblk.captid, DETACHED, capping_manager_thread, NULL, "Capping manager");
-            if ( rc )
-            {
-                WRMSG(HHC00102, "E", strerror(rc));
-                return HERROR;
-            }
-        }
-
-    }
-    return HNOERROR;
-}
-
 #ifdef OPTION_SHARED_DEVICES
 /*-------------------------------------------------------------------*/
 /*                    shrdport_connecting_thread                     */
