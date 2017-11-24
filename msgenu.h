@@ -285,7 +285,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name %s ended"
 #define HHC00102 "Error in function create_thread(): %s"
 //efine HHC00103 (available)
-#define HHC00105 "Thread id "TIDPAT" name %s is still active"
+//efine HHC00105 (available)
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
@@ -643,13 +643,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
 //efine HHC00830 (available)
 //efine HHC00831 (available)
-#define HHC00832 "Central processors will be capped at %u MIPS"
+//efine HHC00832 (available)
 //efine HHC00833 (available)
 #define HHC00834 "Processor %s%02X: %s"
 //efine HHC00835 (available)
 //efine HHC00836 (available)
 //efine HHC00837 (available)
-#define HHC00838 "Capping is not enabled"
+//efine HHC00838 (available)
 #define HHC00839 "Processor %s%02X: ipl failed: %s"
 
 /* external.c */
@@ -689,7 +689,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00874 "mainlock %sheld; owner %4.4x"
 #define HHC00875 "intlock %sheld; owner %4.4x"
 #define HHC00876 "ioq lock %sheld"
-#define HHC00877 "Central processors are capped at %u MIPS"
+//efine HHC00877 (available)
 //efine HHC00878 (available)
 //efine HHC00879 (available)
 
@@ -2259,7 +2259,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17008 "Avgproc  %2.2d %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17009 "PROC %s%2.2X %c %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17010 " - Started        : Stopping        * Stopped"
-#define HHC17011 "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
+//efine HHC17011 (available)
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "Specified value is invalid or outside of range %d to %d"

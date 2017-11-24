@@ -6540,41 +6540,27 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /*  MIPSreal - Gather and generate MIPS per real CPU second          */
 /*-------------------------------------------------------------------*/
-enum
-{
-    stsicap_current,                    /* Current performance       */
-    stsicap_nominal                     /* Real values, if capped    */
-} stsicap_type;
-
-long double MIPSreal (const int stsicap_type)
+long double MIPSreal()
 {
     U64             instcount = 0;     /* Combined instruction count */
     U64             cputime = 0;       /* Combined CPU time in us    */
     int             cpu;               /* CPU loop variable          */
     long double     result;
-
-    /* If capping, use MIPS per processor cap value
-     * as MIPS per real second and return.
-     */
-    if (sysblk.capvalue)
-    {
-        if (stsicap_type == stsicap_current)
-            return (sysblk.capvalue);
-    }
-    else if (stsicap_type == stsicap_nominal)
-        return (0);
+    REGS*           regs;
 
     /* Gather real CPU time and instruction count for each processor.
      * Since the real CPU time is managed by the clock, only the
      * corresponding previous instruction counts are used.
      */
-    for ( cpu = 0; cpu < sysblk.maxcpu; ++cpu )
+    for (cpu = 0; cpu < sysblk.maxcpu; ++cpu)
     {
         /* Loop through online CP CPUs */
-        if ( IS_CPU_ONLINE(cpu) &&
-             sysblk.ptyp[cpu] == SCCB_PTYP_CP )
+        if (1
+            && IS_CPU_ONLINE( cpu )
+            && SCCB_PTYP_CP == sysblk.ptyp[ cpu ]
+        )
         {
-            REGS* regs = sysblk.regs[cpu];
+            regs = sysblk.regs[ cpu ];
 
             cputime   += regs->rcputime;
             instcount += regs->prevcount;
@@ -6608,76 +6594,41 @@ static void stsi_capability (const int stsicap_request)
      * to the hardware are determined by exhaustive testing and vendor
      * marketing requirements.
      */
-
     static const long double    CPU_Factor = 764748;
     static const long double    MSU_Factor_Multiplier =
                                     9.99209649643744627640427E-1L;
 
     static long double  MSU_Factor;
-    static int          RealCPUs;
-
-    long double     MIPScpu_current;   /* MIPS per CPU               */
-    long double     MIPScpu_nominal;   /* ...                        */
+    static int          Real_CPUs;
+    long double         MIPS_cpu;       /* MIPS per CPU */
 
     /* If valid data and a read request, just return */
-    if (sysblk.cpmcap &&
-        stsicap_request == stsicap_read)
+    if (sysblk.cpmcap && stsicap_request == stsicap_read)
         return;
 
     /* Initialize current real CP CPU count; that is the lessor of the
      * number of online CP engines plus reserved (possible CP) CPU
      * count, or the number of host real logical processors.
      */
-    RealCPUs = get_RealCPCount();
+    Real_CPUs = get_RealCPCount();
 
     /* Create an MSU factor based on the number of possible CPs */
-    MSU_Factor  = 0.125 * pow(MSU_Factor_Multiplier,
-                              MIN(RealCPUs, 1) - 1);
+    MSU_Factor = 0.125 * pow( MSU_Factor_Multiplier, MIN( Real_CPUs, 1 ) - 1 );
 
     /* Request MIPS per real CPU second */
-    MIPScpu_current = MIPSreal(stsicap_current);
-    MIPScpu_nominal = MIPSreal(stsicap_nominal);
+    MIPS_cpu = MIPSreal();
 
     /* Generate a rough MSU and CPU capabilities based on current MIPS
      * per real CPU second, with a range of 1 - 2**23-1.
      */
-    sysblk.cpmcap = (U32)(CPU_Factor / MIPScpu_current) & 0x007FFFFFU;
+    sysblk.cpmcap = (U32)(CPU_Factor / MIPS_cpu) & 0x007FFFFFU;
+
     if (!sysblk.cpmcap)
         sysblk.cpmcap = 1;
 
-    sysblk.cpmcr = MIPScpu_current * RealCPUs * MSU_Factor;
-
-    /* Generate a rough MSU and CPU capabilities based on nominal MIPS
-     * per real CPU second, with a range of 0 - 2**23-1.
-     */
-    if (MIPScpu_nominal)
-    {
-        sysblk.cpcai = (MIN((MIPScpu_current / MIPScpu_nominal),
-                            1) * 100) + 0.5;
-        if (sysblk.cpcai < 100)
-        {
-            sysblk.cpncap = (U32)(CPU_Factor / MIPScpu_nominal) &
-                            0x007FFFFFU;
-            if (!sysblk.cpncap)
-                sysblk.cpncap = 1;
-            sysblk.cpncr = MIPScpu_nominal * RealCPUs * MSU_Factor;
-        }
-        else
-        {
-            /* Limit rates and capacity to not exceed 100%. This may
-             * occur when the capping rate exceeds the hardware
-             * capabilities.
-             */
-            sysblk.cpncr  = sysblk.cpmcr;
-            sysblk.cpncap = sysblk.cpmcap;
-        }
-    }
-    else
-    {
-        sysblk.cpncap = sysblk.cpmcap;
-        sysblk.cpccr = sysblk.cpcai = sysblk.cpncr = 0;
-    }
-
+    sysblk.cpmcr  = MIPS_cpu * Real_CPUs * MSU_Factor;
+    sysblk.cpncap = sysblk.cpmcap;
+    sysblk.cpccr  = sysblk.cpcai  = sysblk.cpncr = 0;
     sysblk.cpmpcr = sysblk.cpmtcr = sysblk.cpmcr;
     sysblk.cpnpcr = sysblk.cpntcr = sysblk.cpncr;
     sysblk.cpscap = sysblk.cpmcap;
@@ -7000,8 +6951,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 sysib222 = (SYSIB222 *)(m);
                 memset(sysib222, 0, MAX(sizeof(SYSIB222),64*4));
                 STORE_HW(sysib222->lparnum,sysblk.lparnum);
-                sysib222->lcpuc = SYSIB222_LCPUC_SHARED |
-                                  sysblk.capvalue ? SYSIB222_LCPUC_CAPPED : 0;
+                sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
                 STORE_HW(sysib222->totcpu, MAX_CPU_ENGINES);
                 STORE_HW(sysib222->confcpu,sysblk.cpus);
                 STORE_HW(sysib222->sbcpu,sysblk.maxcpu - sysblk.cpus);

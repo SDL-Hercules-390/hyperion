@@ -8223,7 +8223,7 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int qproc_cmd( int argc, char* argv[], char* cmdline )
 {
-    int   i, j, k;
+    int   i, j;
     int   cpupct = 0;
     U32   mipsrate = 0;
     char  msgbuf[128];
@@ -8275,39 +8275,6 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
         (mipsrate % 1000000) / 10000,
         sysblk.siosrate, "" );
 #endif
-
-    if (sysblk.capvalue > 0)
-    {
-        cpupct   = 0;
-        mipsrate = 0;
-
-        for (i=k=0; i < sysblk.maxcpu; i++)
-        {
-            if (1
-                && IS_CPU_ONLINE( i )
-                && (0
-                    || sysblk.ptyp[i] == SCCB_PTYP_CP
-                    || sysblk.ptyp[i] == SCCB_PTYP_ZAAP
-                   )
-                && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
-            )
-            {
-                k++;
-                cpupct   += sysblk.regs[i]->cpupct;
-                mipsrate += sysblk.regs[i]->mipsrate;
-            }
-        }
-
-        if (k > 0 && k != j)
-        {
-            // "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
-            WRMSG( HHC17011, "I",
-                (k),
-                (k == 0 ? 0 : (cpupct / k)),
-                (mipsrate / 1000000),
-                (mipsrate % 1000000) / 10000 );
-        }
-    }
 
     for (i=0; i < sysblk.maxcpu; i++)
     {
