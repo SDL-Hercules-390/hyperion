@@ -51,7 +51,6 @@ NOECHO"xpndsize"     0
 NOECHO"maxcpu"       maxcpu
 NOECHO"numcpu"       maxcpu
 NOECHO"numvec"       0
-NOECHO"capping"      0
 NOECHO"archlvl"      "z/Arch"
 NOECHO"archlvl"      "DISABLE ASN_LX_REUSE"
 
