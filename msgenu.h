@@ -1099,10 +1099,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01502 "HDL: %s complete"
 //efine HHC01503 (available)
 #define HHC01504 "HDL: shutdown sequence complete"
-#define HHC01505 "HDL: path name length %d exceeds maximum of %d"
-#define HHC01506 "HDL: change request of directory to %s is ignored"
-#define HHC01507 "HDL: directory remains %s; taken from startup"
-#define HHC01508 "HDL: loadable module directory is %s"
+#define HHC01505 "HDL: directory '%s' rejected; exceeds maximum length of %d"
+#define HHC01506 "HDL: directory '%s' rejected; '-p' cmdline option rules"
+#define HHC01507 "HDL: directory remains '%s' from '-p' cmdline option"
+#define HHC01508 "HDL: loadable module directory is '%s'"
 #define HHC01509 "HDL: dependency check failed for %s, version %s expected %s"
 #define HHC01510 "HDL: dependency check failed for %s, size %d expected %d"
 #define HHC01511 "HDL: error in function %s: %s"
@@ -1130,7 +1130,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01533 "HDL:  devtype(s) =%s"
 #define HHC01534 "HDL:  instruction = %s, opcode = %4.4X%s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
-#define HHC01536 "HDL: %s is not a valid directory"
+#define HHC01536 "HDL: WARNING: '%s' is not a valid directory"
 //efine HHC01537 (available)
 //efine HHC01538 (available)
 //efine HHC01539 (available)
