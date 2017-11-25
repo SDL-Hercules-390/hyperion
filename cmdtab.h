@@ -862,15 +862,16 @@
                                 \
   "Specifies the name (or for Windows, the IP or MAC address) of the\n"          \
   "underlying default host network device to be used for all Hercules\n"         \
-  "communications devices (e.g. CTCI, LCS, QETH, etc) unless overridden\n"       \
-  "on the device statement.\n"                                                   \
+  "communications devices unless overridden on the device statement.\n"          \
   "\n"                                                                           \
   "The default for Linux (except Apple and FreeBSD) is '/dev/net/tun'.\n"        \
   "The default for Apple and FreeBSD is '/dev/tun'.\n"                           \
-  "The default for Windows is the first host network card that CTCI-WIN\n"       \
-  "finds in the Windows host's binding order, which may not be desirable\n"      \
-  "for users running versions of Windows that do not not support modifying\n"    \
-  "the adapter binding order (i.e. Windows 10 or greater).\n"
+  "\n"                                                                           \
+  "The default for Windows is whatever SoftDevLabs's CTCI-WIN product\n"         \
+  "returns as its default CTCI-WIN host network adapter, which for older\n"      \
+  "versions of CTCI-WIN (3.5.0) is the first network adapter returned by\n"      \
+  "Windows in its adapter binding order or for newer versions of CTCI-WIN\n"     \
+  "(3.6.0) what you defined as your default CTCI-WIN host network adapter.\n"
 
 #define numcpu_cmd_desc         "Set numcpu parameter"
 #define numvec_cmd_desc         "Set numvec parameter"
