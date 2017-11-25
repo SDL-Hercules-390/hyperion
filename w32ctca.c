@@ -181,7 +181,7 @@ BOOL tt32_loaddll()
     {
         // It's not a path, so make it one, using loadable module path
 
-        STRLCPY( tt32_dllname_in_buff, hdl_setpath( NULL, TRUE ));
+        STRLCPY( tt32_dllname_in_buff, hdl_getpath());
         STRLCAT( tt32_dllname_in_buff, PATHSEPS );
         STRLCAT( tt32_dllname_in_buff, pszDLLName );
     }

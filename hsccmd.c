@@ -1100,7 +1100,8 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     }
 #endif /*EXTERNALGUI*/
     sysblk.npquiet = !sysblk.npquiet;
-    WRMSG(HHC02203, "I", "automatic refresh", sysblk.npquiet ? "disabled" : "enabled" );
+    // "%-14s: %s"
+    WRMSG( HHC02203, "I", argv[0], sysblk.npquiet ? "DISABLED" : "ENABLED" );
     return 0;
 }
 
@@ -3717,6 +3718,59 @@ BYTE c;
 }
 
 /*-------------------------------------------------------------------*/
+/* netdev command                                                    */
+/*-------------------------------------------------------------------*/
+int netdev_cmd( int argc, char* argv[], char* cmdline )
+{
+    // Specifies the name (or for Windows, the IP or MAC address)
+    // of the underlying default host network device to be used for
+    // all Hercules communications devices (CTCI, LCS, QETH, etc)
+    // unless overridden on the device statement.
+    //
+    // The default for Linux is '/dev/net/tun'.
+    // The default for Apple and FreeBSD is '/dev/tun'.
+    //
+    // The default for Windows is the first host network card
+    // that CTCI-WIN finds in the Windows host's binding order.
+
+    char* netdev = sysblk.netdev;
+
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
+    if (argc < 2)
+    {
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], netdev );
+        return 0;
+    }
+
+    if (argc > 2)
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    netdev = argv[1];
+
+    if (strlen( netdev ) < 2)
+    {
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", netdev, argv[0] );
+        return -1;
+    }
+
+    free( sysblk.netdev );
+    sysblk.netdev = strdup( netdev );
+
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", argv[0], sysblk.netdev );
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* numcpu command                                                    */
 /*-------------------------------------------------------------------*/
 int numcpu_cmd( int argc, char* argv[], char* cmdline )
@@ -4337,7 +4391,7 @@ int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
         );
 
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", "SHCMDOPT", buf );
+        WRMSG( HHC02203, "I", argv[0], buf );
     }
 
     return 0;
@@ -4595,7 +4649,8 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         char msgbuf[128];
         MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
                         str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );
-        WRMSG( HHC02203, "I", "model", msgbuf );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
@@ -7546,32 +7601,38 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* modpath - set module path                                         */
 /*-------------------------------------------------------------------*/
-int modpath_cmd(int argc, char *argv[], char *cmdline)
+int modpath_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 2 )
+    strupper( argv[0], argv[0] );
+
+    if (argc > 2)
     {
-        WRMSG(HHC01530,"E",argv[0]);
+        // "HDL: usage: %s <path>"
+        WRMSG( HHC01530, "E", argv[0] );
         return -1;
     }
-    else if (argc == 2)
+
+    if (argc < 2)
     {
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-        set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
-#else
-        hdl_setpath(argv[1], TRUE);
-#endif
-
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], hdl_getpath() );
     }
     else
     {
-        WRMSG (HHC01508, "I", hdl_setpath( NULL, TRUE) );
+        int rc = hdl_setpath( argv[1] );
+
+        if (rc != 0)
+            return rc;  // (error or warning message already issued)
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], hdl_getpath() );
     }
+
     return 0;
 }
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 #ifdef FEATURE_ECPSVM
 /*-------------------------------------------------------------------*/

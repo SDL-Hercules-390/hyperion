@@ -43,7 +43,7 @@ $(X)htape.dll:    $(htape_OBJ) \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib \
+$(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)w32ctca.obj \
                   $(O)hutil.lib  $(O)hsys.lib  $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)

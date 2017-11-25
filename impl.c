@@ -30,6 +30,9 @@
 #include "hostinfo.h"
 #include "history.h"
 #include "hRexx.h"
+#if defined( OPTION_W32_CTCI )      // (need tt32_get_default_iface)
+#include "w32ctca.h"
+#endif
 
 static char shortopts[] =
 
@@ -105,7 +108,8 @@ extern int process_script_file(char *,int);
 /* extern int quit_cmd(int argc, char *argv[],char *cmdline);        */
 
 /* Forward declarations:                                             */
-static int process_args(int argc, char *argv[]);
+static void init_progname( int argc, char* argv[] );
+static int process_args( int argc, char* argv[] );
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -563,6 +567,9 @@ int     rc;
     }
     sysblk.msglvl = DEFAULT_MLVL;
 
+    /* Initialize program name */
+    init_progname( argc, argv );
+
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
 
@@ -576,16 +583,6 @@ int     rc;
         argc--;
     }
 #endif
-
-    /* Scan  argv  array  up  front  and  set decoded variables.  As */
-    /* nothing has been started we can just exit on serious errors.  */
-    rc = process_args( argc, argv );
-    if (rc)
-    {
-        // "Terminating due to %d argument errors"
-        WRMSG( HHC02343, "S", rc );
-        exit( rc );      /* Serously bad arguments?  Stop right here */
-    }
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
@@ -829,6 +826,20 @@ int     rc;
     */
     set_codepage(NULL);
 
+    /* Initialize default HDL modules load directory */
+#if defined( OPTION_DYNAMIC_LOAD )
+    hdl_initpath( NULL );
+#endif
+
+    /* Process command-line arguments. Exit if any serious errors. */
+    if ((rc = process_args( argc, argv )) != 0)
+    {
+        // "Terminating due to %d argument errors"
+        WRMSG( HHC02343, "S", rc );
+        usleep( 250000 );   // give logger time to display message(s)
+        exit( rc );
+    }
+
     /* Now display the version information again after logger_init
        has been called so that either the panel display thread or the
        external gui can see the version which was previously possibly
@@ -851,11 +862,13 @@ int     rc;
 #if defined( _MSVC_ ) // (remove this test once non-Windows version of "is_elevated()" is coded)
     // HHC00018 "Hercules is %srunning in elevated mode"
     if (is_elevated())
-        WRMSG (HHC00018, "I", "" );
+        WRMSG( HHC00018, "I", "" );
     else
-        WRMSG (HHC00018, "W", "NOT " );
+        WRMSG( HHC00018, "W", "NOT " );
 #endif // defined( _MSVC_ )
 
+    /* Initialize default NETDEV */
+    sysblk.netdev = strdup( DEFAULT_NETDEV );
 
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
@@ -1224,51 +1237,57 @@ int     rc;
     return 0; /* return back to bootstrap.c */
 } /* end function impl */
 
-/*********************************************************************/
-/* Process  arguments  up front, but build the command string before */
-/* getopt mangles argv[]                                             */
-/*********************************************************************/
-static int
-process_args(int argc, char *argv[])
+/*-------------------------------------------------------------------*/
+/* Initialize program name                                           */
+/*-------------------------------------------------------------------*/
+static void init_progname( int argc, char* argv[] )
 {
-int     arg_error = 0;                  /* 1=Invalid arguments       */
-int     c = 0;                          /* Next option flag          */
+    free( sysblk.hercules_pgmname );
+    free( sysblk.hercules_pgmpath );
 
-    /* Set program name */
-    if ( argc > 0 && strlen(argv[0]) )
+    if (argc < 1 || !strlen( argv[0] ))
     {
-        char path[MAX_PATH];
-#if defined( _MSVC_ )
-        GetModuleFileName( NULL, path, MAX_PATH );
-#else
-        strncpy(path,argv[0],sizeof(path)-1);
-#endif
-        sysblk.hercules_pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-        strncpy(path,argv[0],sizeof(path)-1);
-#endif
-        sysblk.hercules_pgmpath = strdup(dirname(path));
+        sysblk.hercules_pgmname = strdup( "hercules" );
+        sysblk.hercules_pgmpath = strdup( "" );
     }
     else
     {
-            sysblk.hercules_pgmname = strdup("hercules");
-            sysblk.hercules_pgmpath = strdup("");
-    }
+        char path[ MAX_PATH ];
 
-    if ( argc > 0 )
+#if defined( _MSVC_ )
+        GetModuleFileName( NULL, path, _countof( path ));
+#else
+        STRLCPY( path, argv[0] );
+#endif
+        sysblk.hercules_pgmname = strdup( basename( path ));
+        sysblk.hercules_pgmpath = strdup( dirname( path ));
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*         process_args - Process command-line arguments             */
+/*-------------------------------------------------------------------*/
+static int process_args( int argc, char* argv[] )
+{
+    int  arg_error = 0;                 /* 1=Invalid arguments       */
+    int  c = 0;                         /* Next option flag          */
+
+    // Save a copy of the command line before getopt mangles argv[]
+
+    if (argc > 0)
     {
         int i;
         size_t len;
 
-        for (len = 0, i = 0; i < argc; i++ )
+        for (len=0, i=0; i < argc; i++ )
             len += strlen( argv[i] ) + 1;
 
-        sysblk.hercules_cmdline = (char *)malloc( len );
-
+        sysblk.hercules_cmdline = malloc( len );
         strlcpy( sysblk.hercules_cmdline, argv[0], len );
-        for ( i = 1; i < argc; i++ )
+
+        for (i=1; i < argc; i++)
         {
-            strlcat( sysblk.hercules_cmdline, " ", len );
+            strlcat( sysblk.hercules_cmdline,  " ",    len );
             strlcat( sysblk.hercules_cmdline, argv[i], len );
         }
     }
@@ -1284,180 +1303,210 @@ int     c = 0;                          /* Next option flag          */
     for (; EOF != c ;)
     {
         c =                       /* Work area for getopt */
-#if defined(HAVE_GETOPT_LONG)
+
+#if defined( HAVE_GETOPT_LONG )
             getopt_long( argc, argv, shortopts, longopts, NULL );
 #else
             getopt( argc, argv, shortopts );
 #endif
-        switch (c) {
-        case EOF:
-            break;
-        case 0:         /* getopt_long() set a variable; keep going */
-            break;
-        case 'h':       /* -h[=type] or --help[=type] */
 
-            if (optarg) /* help type specified? */
+        switch (c)
+        {
+            case EOF:
+
+                break;      /* (we're done) */
+
+            case 0:         /* getopt_long() set a variable; keep going */
+
+                break;
+
+            case 'h':       /* -h[=type] or --help[=type] */
+
+                if (optarg) /* help type specified? */
+                {
+                    if (0
+                        || strcasecmp( optarg, "short"  ) == 0
+                    )
+                    {
+                        ;   // (do nothing)
+                    }
+                    else if (0
+                        || strcasecmp( optarg, "version" ) == 0
+                    )
+                    {
+                        display_version( stdout, 0, "Hercules" );
+                    }
+                    else if (0
+                        || strcasecmp( optarg, "build"   ) == 0
+                    )
+                    {
+                        display_build_options( stdout, 0 );
+                    }
+                    else if (0
+                        || strcasecmp( optarg, "all"  ) == 0
+                        || strcasecmp( optarg, "long" ) == 0
+                        || strcasecmp( optarg, "full" ) == 0
+                    )
+                    {
+                        display_version( stdout, 0, "Hercules" );
+                        display_build_options( stdout, 0 );
+                        display_extpkg_vers  ( stdout, 0 );
+                    }
+                    else
+                    {
+                        // "Invalid help option argument: %s"
+                        WRMSG( HHC00025, "E", optarg );
+                    }
+                }
+
+                arg_error++;  // (forced by help option)
+                break;
+
+            case 'f':
+
+                cfgorrc[ want_cfg ].filename = optarg;
+                break;
+
+            case 'r':
+
+                cfgorrc[ want_rc ].filename = optarg;
+                break;
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+
+            case 's':
             {
-                if (0
-                    || strcasecmp( optarg, "short"  ) == 0
-                )
-                {
-                    ;   // (do nothing)
-                }
-                else if (0
-                    || strcasecmp( optarg, "version" ) == 0
-                )
-                {
-                    display_version( stdout, 0, "Hercules" );
-                }
-                else if (0
-                    || strcasecmp( optarg, "build"   ) == 0
-                )
-                {
-                    display_build_options( stdout, 0 );
-                }
-                else if (0
-                    || strcasecmp( optarg, "all"  ) == 0
-                    || strcasecmp( optarg, "long" ) == 0
-                    || strcasecmp( optarg, "full" ) == 0
-                )
-                {
-                    display_version( stdout, 0, "Hercules" );
-                    display_build_options( stdout, 0 );
-                    display_extpkg_vers  ( stdout, 0 );
-                }
-                else
-                {
-                    // "Invalid help option argument: %s"
-                    WRMSG( HHC00025, "E", optarg );
-                }
-            }
+                char* sym        = NULL;
+                char* value      = NULL;
+                char* strtok_str = NULL;
 
-            arg_error++;  // (forced by help option)
-            break;
-
-        case 'f':
-            cfgorrc[want_cfg].filename = optarg;
-            break;
-        case 'r':
-            cfgorrc[want_rc].filename = optarg;
-            break;
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-        case 's':
-            {
-            char *sym        = NULL;
-            char *value      = NULL;
-            char *strtok_str = NULL;
-                if ( strlen( optarg ) >= 3 )
+                if (strlen( optarg ) >= 3)
                 {
                     sym   = strtok_r( optarg, "=", &strtok_str);
                     value = strtok_r( NULL,   "=", &strtok_str);
-                    if ( sym != NULL && value != NULL )
+
+                    if (sym && value)
                     {
-                    int j;
-                        for( j = 0; j < (int)strlen( sym ); j++ )
-                            if ( islower( sym[j] ) )
-                            {
+                        int j;
+
+                        for (j=0; j < (int) strlen( sym ); j++)
+                        {
+                            if (islower( sym[j] ))
                                 sym[j] = toupper( sym[j] );
-                            }
-                        set_symbol(sym, value);
+                        }
+
+                        set_symbol( sym, value );
                     }
                     else
                         // "Symbol and/or Value is invalid; ignored"
-                        WRMSG(HHC01419, "E" );
+                        WRMSG( HHC01419, "E" );
                 }
                 else
                     // "Symbol and/or Value is invalid; ignored"
-                    WRMSG(HHC01419, "E");
+                    WRMSG( HHC01419, "E" );
             }
             break;
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
-        case 'p':
-            if (optarg && !hdl_setpath(optarg, FALSE))
-                arg_error++;
-            break;
-        case 'l':
+#if defined( OPTION_DYNAMIC_LOAD )
+
+            case 'p':
+
+                hdl_initpath( optarg );
+                break;
+
+            case 'l':
             {
-            char *dllname, *strtok_str = NULL;
+                char *dllname, *strtok_str = NULL;
+
                 for(dllname = strtok_r(optarg,", ",&strtok_str);
                     dllname;
                     dllname = strtok_r(NULL,", ",&strtok_str))
                 {
                     if (dll_count < MAX_DLL_TO_LOAD - 1)
-                        dll_load[++dll_count] = strdup(dllname);
+                        dll_load[ ++dll_count ] = strdup( dllname );
                     else
                     {
                         // "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-                        WRMSG(HHC01406, "W", MAX_DLL_TO_LOAD);
+                        WRMSG( HHC01406, "W", MAX_DLL_TO_LOAD );
                         break;
                     }
                 }
             }
             break;
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-        case 'b':
-            sysblk.logofile = optarg;
-            break;
-        case 'v':
-            sysblk.msglvl |= MLVL_VERBOSE;
-            break;
-        case 'd':
-            sysblk.daemon_mode = 1;
-            break;
+
+#endif // defined( OPTION_DYNAMIC_LOAD )
+
+            case 'b':
+
+                sysblk.logofile = optarg;
+                break;
+
+            case 'v':
+
+                sysblk.msglvl |= MLVL_VERBOSE;
+                break;
+
+            case 'd':
+
+                sysblk.daemon_mode = 1;
+                break;
+
 #if defined( EXTERNALGUI )
-        case 'e':
-            extgui = 1;
-            break;
+
+            case 'e':
+
+                extgui = 1;
+                break;
 #endif
 
-        case 't':
-            sysblk.scrtest = 1;
-            sysblk.scrfactor = 1.0;
+            case 't':
 
-            if (optarg)
-            {
-                double scrfactor;
-                double max_factor = MAX_RUNTEST_FACTOR;
-                /* Round down to nearest 10th of a second */
-                max_factor = floor( max_factor * 10.0 ) / 10.0;
-                //logmsg("*** max_factor = %3.1f\n", max_factor );
+                sysblk.scrtest = 1;
+                sysblk.scrfactor = 1.0;
 
-                scrfactor = atof( optarg );
-
-                if (scrfactor >= 1.0 && scrfactor <= max_factor)
-                    sysblk.scrfactor = scrfactor;
-                else
+                if (optarg)
                 {
-                    // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
-                    WRMSG( HHC00020, "S", optarg, max_factor );
-                    arg_error++;
-                }
-            }
-            break;
+                    double scrfactor;
+                    double max_factor = MAX_RUNTEST_FACTOR;
 
-        default:
+                    /* Round down to nearest 10th of a second */
+                    max_factor = floor( max_factor * 10.0 ) / 10.0;
+                    scrfactor = atof( optarg );
+
+                    if (scrfactor >= 1.0 && scrfactor <= max_factor)
+                        sysblk.scrfactor = scrfactor;
+                    else
+                    {
+                        // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
+                        WRMSG( HHC00020, "S", optarg, max_factor );
+                        arg_error++;
+                    }
+                }
+                break;
+
+            default:
             {
                 char buf[16];
+
                 if (isprint( optopt ))
                     MSGBUF( buf, "'-%c'", optopt );
                 else
                     MSGBUF( buf, "(hex %2.2x)", optopt );
+
                 // "Invalid/unsupported option: %s"
                 WRMSG( HHC00023, "S", buf );
                 arg_error++;
             }
             break;
 
-        } /* end switch(c) */
-    } /* end while */
+        } // end switch(c)
+    } // end while
 
     while (optind < argc)
     {
         // "Unrecognized option: %s"
-        WRMSG( HHC00024, "S", argv[optind++] );
+        WRMSG( HHC00024, "S", argv[ optind++ ]);
         arg_error++;
     }
 
@@ -1466,63 +1515,70 @@ error:
     /* Terminate if invalid arguments were detected */
     if (arg_error)
     {
-        char pgm[MAX_PATH];
-        char* strtok_str = NULL;
+        char   pgm[ MAX_PATH ];
+        char*  strtok_str = NULL;
+
         const char symsub[] =
-#if defined(ENABLE_BUILTIN_SYMBOLS)
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
             " [-s sym=val]";
 #else
             "";
 #endif
         const char dlsub[] =
-#if defined(OPTION_DYNAMIC_LOAD)
+
+#if defined( OPTION_DYNAMIC_LOAD )
             " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
 #else
             "";
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
+#endif
 
         /* Show them all of our command-line arguments... */
-        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
-        // "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
-        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), symsub, dlsub);
+        STRLCPY( pgm, sysblk.hercules_pgmname );
 
+        // "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
+        WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ), symsub, dlsub );
     }
     else /* Check for config and rc file, but don't open */
     {
-        int i;
         struct stat st;
-        int rv;
+        int i, rv;
 
-        for (i = 0; cfgorrccount > i; i++)
+        for (i=0; cfgorrccount > i; i++)
         {
             if (!cfgorrc[i].filename)       /* No value specified */
-                cfgorrc[i].filename = getenv(cfgorrc[i].envname);
+                cfgorrc[i].filename = getenv( cfgorrc[i].envname );
+
             if (!cfgorrc[i].filename)       /* No environment var */
             {
-                rv = stat(cfgorrc[i].defaultfile, &st);
-                if (!rv) cfgorrc[i].filename = cfgorrc[i].defaultfile;
+                if (!(rv = stat( cfgorrc[i].defaultfile, &st )))
+                    cfgorrc[i].filename = cfgorrc[i].defaultfile;
                 continue;
             }
-            if (!cfgorrc[i].filename[0]     /* Null name */
-                || !strcasecmp(cfgorrc[i].filename, "None"))
+
+            if (0
+                || !cfgorrc[i].filename[0]     /* Null name */
+                || !strcasecmp( cfgorrc[i].filename, "None" )
+            )
             {
                cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
             /* File specified explicitly or by environment */
-            rv = stat(cfgorrc[i].filename, &st);
-            if (-1 == rv)
+            if (-1 == (rv = stat(cfgorrc[i].filename, &st)))
             {
                 // "%s file %s not found:  %s"
-                WRMSG (HHC02342, "S", cfgorrc[i].whatfile,
-                    cfgorrc[i].filename, strerror(errno));
+                WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
+                    cfgorrc[i].filename, strerror( errno ));
                 arg_error++;
             }
         }
     }
-    fflush(stderr);
-    fflush(stdout);
+
+    fflush( stderr );
+    fflush( stdout );
+
     return arg_error;
 }
 

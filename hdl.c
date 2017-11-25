@@ -9,11 +9,17 @@
 #include "hercules.h"
 #include "opcode.h"
 
-#if defined(OPTION_DYNAMIC_LOAD)
+/*-------------------------------------------------------------------*/
+/*    List of dynamic modules to pre-load at hdl_main startup        */
+/*-------------------------------------------------------------------*/
+#if defined( OPTION_DYNAMIC_LOAD )
+
 HDLPRE hdl_preload[] =
 {
     { "hdteq",              HDL_LOAD_NOMSG                     },
     { "dyncrypt",           HDL_LOAD_NOMSG                     },
+
+    //                      (examples...)
 #if 0
     { "dyn_test1",          HDL_LOAD_DEFAULT                   },
     { "/foo/dyn_test2",     HDL_LOAD_NOMSG                     },
@@ -22,29 +28,36 @@ HDLPRE hdl_preload[] =
     { NULL,                 0                                  },
 };
 
-static DLLENT *hdl_dll;                  /* dll chain                */
-static LOCK   hdl_lock;                  /* loader lock              */
-static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
+/*-------------------------------------------------------------------*/
+/*                     Global variables                              */
+/*-------------------------------------------------------------------*/
+static LOCK     hdl_lock;                /* loader lock              */
+static DLLENT*  hdl_dll      = NULL;     /* dll chain                */
+static DLLENT*  hdl_cdll     = NULL;     /* current dll (hdl_lock)   */
+static HDLDEP*  hdl_depend   = NULL;     /* Version codes in hdlmain */
+static char*    hdl_modpath  = NULL;     /* modules load path        */
+static int      hdl_arg_p    = FALSE;    /* -p cmdline opt specified */
 
-static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
+/*-------------------------------------------------------------------*/
+/*                 Function forward references                       */
+/*-------------------------------------------------------------------*/
+static void hdl_didf( int, int, char*, void* );
+static void hdl_modify_opcode( int, HDLINS* );
 
-static char *hdl_modpath = NULL;
-static int   hdl_arg_p = FALSE;
+#endif // defined( OPTION_DYNAMIC_LOAD )
 
-static void hdl_didf (int, int, char *, void *);
-static void hdl_modify_opcode(int, HDLINS *);
+/*-------------------------------------------------------------------*/
+/*     More global variables and function forward references         */
+/*-------------------------------------------------------------------*/
 
-#endif
+static HDLSHD* hdl_shdlist  = NULL;      /* Shutdown call list       */
+static int     hdl_sdip     = FALSE;     /* hdl shutdown in progesss */
 
-static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
-static int   hdl_sdip = FALSE;           /* hdl shutdown in progesss */
+DLL_EXPORT char* (*hdl_device_type_equates)( const char* );
 
-/* Global hdl_device_type_equates */
-
-DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
-
-/* hdl_adsc - add shutdown call
- */
+/*-------------------------------------------------------------------*/
+/*              hdl_adsc - add shutdown call                         */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
@@ -68,8 +81,9 @@ HDLSHD **tmpcall;
 
 }
 
-/* hdl_rmsc - remove shutdown call
- */
+/*-------------------------------------------------------------------*/
+/*             hdl_rmsc - remove shutdown call                       */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_rmsc (void *shdcall, void *shdarg)
 {
 HDLSHD **tmpcall;
@@ -94,8 +108,9 @@ int rc = -1;
 }
 
 
-/* hdl_shut - call all shutdown call entries in LIFO order
- */
+/*-------------------------------------------------------------------*/
+/*          hdl_shut - call shutdown entries in LIFO order           */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_shut (void)
 {
 HDLSHD *shdent;
@@ -130,170 +145,302 @@ HDLSHD *shdent;
             WRMSG( HHC01504, "I" );
 }
 
-#if defined(OPTION_DYNAMIC_LOAD)
+#if defined( OPTION_DYNAMIC_LOAD )
 
-
-/* hdl_setpath - set path for module load
- * If path is NULL, then return the current path
- * If path length is greater than MAX_PATH, send message and return NULL
- *     indicating an error has occurred.
- * If flag is TRUE, then only set new path if not already defined
- * If flag is FALSE, then always set the new path.
- */
-DLL_EXPORT char *hdl_setpath( const char *path, int flag )
+/*-------------------------------------------------------------------*/
+/*             hdl_checkpath - check module path                     */
+/*-------------------------------------------------------------------*/
+/* Returns: TRUE == path is valid, FALSE == path is invalid          */
+/*-------------------------------------------------------------------*/
+static BYTE hdl_checkpath( const char* path )
 {
-    char    pathname[MAX_PATH];         /* pathname conversion  */
-    char    abspath[MAX_PATH];          /* pathname conversion  */
+    // MAYBE issue HHC01536 warning message if directory is invalid
 
-    if (!path)
-        return hdl_modpath;             /* return module path to caller */
+    char workpath[ MAX_PATH ];
+    struct stat statbuf;
+    int invalid;
+#ifdef _MSVC_
+    int len; char c;
+#endif
 
-    if ( strlen(path) > MAX_PATH )
+    STRLCPY( workpath, path );
+
+#ifdef _MSVC_
+
+    // stat: If path contains the location of a directory,
+    // it cannot contain a trailing backslash. If it does,
+    // -1 will be returned and errno will be set to ENOENT.
+    // Therefore we need to remove any trailing backslash.
+
+    c = 0;
+    len = strlen( workpath );
+
+    // Trailing path separator?
+
+    if (0
+        || workpath[ len - 1 ] == '/'
+        || workpath[ len - 1 ] == '\\'
+    )
     {
-        // "HDL: path name length %d exceeds maximum of %d"
-        WRMSG( HHC01505, "E", (int)strlen(path), MAX_PATH );
-        return NULL;
+        // Yes, remove it and remember that we did so.
+
+        c = workpath[ len - 1 ];     // (remember)
+        workpath[ len - 1 ] = 0;     // (remove it)
+    }
+#endif
+
+    // Is the directory valid? (does it exist?)
+
+    invalid =
+    (0
+        || stat( workpath, &statbuf ) != 0
+        || !S_ISDIR( statbuf.st_mode )
+    );
+
+#ifdef _MSVC_
+
+    // (restore trailing path separator if removed)
+
+    if (c)
+        workpath[ len - 1 ] = c;
+#endif
+
+    if (invalid && MLVL( VERBOSE ))
+    {
+        // "HDL: WARNING: '%s' is not a valid directory"
+        WRMSG( HHC01536, "W", path );
+    }
+
+    return !invalid ? TRUE : FALSE;     // (valid or invalid)
+}
+
+/*-------------------------------------------------------------------*/
+/*              hdl_initpath - initialize module path                */
+/*-------------------------------------------------------------------*/
+/*
+    1) -p from startup 
+    2) HERCULES_LIB environment variable 
+    3) MODULESDIR compile time define 
+    4) Hercules executable directory
+    5) "hercules"
+*/
+DLL_EXPORT void hdl_initpath( const char* path )
+{
+    free( hdl_modpath );    // (discard old value, if any)
+
+    // 1) -p from startup
+
+    if (path)
+    {
+        hdl_arg_p = TRUE;  // (remember -p cmdline option specified)
+        hdl_modpath = strdup( path );
+    }
+    else
+    {
+        // 2) HERCULES_LIB environment variable
+
+        char* def;
+        char pathname[ MAX_PATH ];
+
+        if ((def = getenv("HERCULES_LIB")))
+        {
+            hostpath( pathname, def, sizeof( pathname ));
+            hdl_modpath = strdup( pathname );
+        }
+        else
+        {
+            // 3) MODULESDIR compile time define
+
+#if defined( MODULESDIR )
+            hostpath( pathname, MODULESDIR, sizeof( pathname ));
+            hdl_modpath = strdup( pathname );
+#else
+            // 4) Hercules executable directory
+
+            if (sysblk.hercules_pgmpath && strlen( sysblk.hercules_pgmpath ))
+            {
+                hdl_modpath = strdup( sysblk.hercules_pgmpath );
+            }
+            else
+            {
+                // 5) "hercules"
+
+                hostpath( pathname, "hercules", sizeof( pathname ));
+                hdl_modpath = strdup( pathname );
+            }
+#endif
+        }
+    }
+
+    // Check path and MAYBE issue HHC01536 warning if it's invalid
+
+    hdl_checkpath( hdl_getpath() );
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "MODPATH", hdl_getpath() );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*                 hdl_getpath - return module path                  */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* hdl_getpath()
+{
+    if (!hdl_modpath)           // (if default not set yet)
+        hdl_initpath( NULL );   // (then initilize default)
+    return hdl_modpath;         // (return current value)
+}
+
+/*-------------------------------------------------------------------*/
+/*             hdl_setpath - Set module load path                    */
+/*-------------------------------------------------------------------*/
+/* Return: -1 error (not set), +1 warning (not set), 0 okay (set)    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_setpath( const char* path )
+{
+    char    pathname[ MAX_PATH ];       /* pathname conversion       */
+    char    abspath [ MAX_PATH ];       /* pathname conversion       */
+
+    ASSERT( path );                     /* Sanity check              */
+
+    // Reject paths that are too long
+
+    if (strlen( path ) >= MAX_PATH)
+    {
+        // "HDL: directory '%s' rejected; exceeds maximum length of %d"
+        WRMSG( HHC01505, "E", path, MAX_PATH );
+        return -1;      // (error; not set)
+    }
+
+    // Ignore 'modpath_cmd()' when -p cmdline option is specified
+
+    if (hdl_arg_p)
+    {
+        // "HDL: directory '%s' rejected; '-p' cmdline option rules"
+        WRMSG( HHC01506, "W", path );
+
+        // "HDL: directory remains '%s' from '-p' cmdline option"
+        WRMSG( HHC01507, "W", hdl_modpath );
+        return +1;      // (warning; not set)
     }
 
     // Convert path to host format
-    hostpath( pathname, path, sizeof (pathname ));
+
+    hostpath( pathname, path, sizeof( pathname ));
 
     // Convert path to absolute path if it's relative
+
     abspath[0] = 0;
-    if ('.' == pathname[0] && !realpath( pathname, abspath ))
+
+    if (1
+        && '.' == pathname[0]               // (relative path?)
+        && !realpath( pathname, abspath )   // (doesn't exist?)
+    )
     {
-        char buf[MAX_PATH+128];
-        MSGBUF( buf,  "\"%s\": %s", pathname, strerror( errno ) );
+        char buf[ MAX_PATH + 128 ];
+
+        MSGBUF( buf,  "\"%s\": %s", pathname, strerror( errno ));
+
         // "HDL: error in function %s: %s"
         WRMSG( HHC01511, "W", "realpath()", buf );
         abspath[0] = 0;
     }
+
+    // Use unresolved path if unable to resolve to an absolute path
+
     if (!abspath[0])
         STRLCPY( abspath, pathname );
 
-    // Check flag: TRUE == conditional, FALSE == unconditional
-    if (flag)
-    {
-        if (hdl_modpath)
-        {
-            if (!hdl_arg_p)
-            {
-                free( hdl_modpath );
-            }
-            else
-            {
-                // "HDL: change request of directory to %s is ignored"
-                WRMSG( HHC01506, "W", pathname );
-                // "HDL: directory remains %s; taken from startup"
-                WRMSG( HHC01507, "W", hdl_modpath );
-                return hdl_modpath;
-            }
-        }
-    }
-    else
-    {
-        hdl_arg_p = TRUE;
+    // Set the path as requested
 
-        if (hdl_modpath)
-            free( hdl_modpath );
-    }
-
+    free( hdl_modpath );
     hdl_modpath = strdup( abspath );
 
-    if (MLVL( VERBOSE ))
-    {
-        struct stat statbuf;
-#ifdef _MSVC_
-        int len; char c;
+    // Update the MODPATH symbol
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "MODPATH", hdl_getpath() );
 #endif
 
-        // "HDL: loadable module directory is %s"
-        WRMSG( HHC01508, "I", hdl_modpath );
-#ifdef _MSVC_
-        // stat: If path contains the location of a directory,
-        // it cannot contain a trailing backslash. If it does,
-        // -1 will be returned and errno will be set to ENOENT.
-        c = 0;
-        len = strlen( hdl_modpath );
-        if (0
-            || hdl_modpath[len-1] == '/'
-            || hdl_modpath[len-1] == '\\'
-        )
-        {
-            c = hdl_modpath[len-1];
-            hdl_modpath[len-1] = 0;
-        }
-#endif
-        if (stat( hdl_modpath, &statbuf ) != 0 || !S_ISDIR( statbuf.st_mode ))
-        {
-            // "HDL: %s is not a valid directory"
-            WRMSG( HHC01536, "W", hdl_modpath );
-        }
-#ifdef _MSVC_
-        if (c)
-            hdl_modpath[len-1] = c;
-#endif
-    }
+    // "HDL: loadable module directory is '%s'"
+    WRMSG( HHC01508, "I", hdl_getpath() );
 
-    return hdl_modpath;
+    // Check path and MAYBE issue HHC01536 warning if it's invalid
+
+    hdl_checkpath( hdl_getpath() );
+
+    return 0;   // (success; set)
 }
 
-/*
- * Check in this order:
- * 1) filename as passed
- * 2) filename with extension if needed
- * 3) modpath added if basename(filename)
- * 4) extension added to #3
- */
-static void * hdl_dlopen(char *filename, int flag _HDL_UNUSED)
+/*-------------------------------------------------------------------*/
+/*            hdl_dlopen - load a dynamic module                     */
+/*-------------------------------------------------------------------*/
+static void* hdl_dlopen( char* filename, int flag _HDL_UNUSED )
 {
 char   *fullname;
 void   *ret;
 size_t  fulllen = 0;
 
-    if ( (ret = dlopen(filename,flag)) )       /* try filename as is first */
+    /*
+     *  Check in this order:
+     *
+     *    1. filename as passed
+     *    2. filename with extension if needed
+     *    3. modpath added if basename( filename )
+     *    4. extension added to #3
+     */
+    if ( (ret = dlopen( filename,flag )))   /* try filename as-is first */
         return ret;
 
-    fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
-    fullname = (char *)calloc(1,fulllen);
+     //  2. filename with extension if needed
 
-    if ( fullname == NULL )
+    fulllen = strlen( filename ) + strlen( hdl_modpath ) + 2 + HDL_SUFFIX_LENGTH;
+    fullname = calloc( 1, fulllen );
+
+    if (!fullname)
         return NULL;
 
-#if defined(HDL_MODULE_SUFFIX)
-    strlcpy(fullname,filename,fulllen);
-    strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+#if defined( HDL_MODULE_SUFFIX )
 
-    if ( (ret = dlopen(fullname,flag)) )       /* try filename with suffix next */
+    strlcpy( fullname, filename,          fulllen );
+    strlcat( fullname, HDL_MODULE_SUFFIX, fulllen );
+
+    if ((ret = dlopen( fullname, flag )))   /* try filename with suffix next */
     {
-        free(fullname);
+        free( fullname );
         return ret;
     }
 #endif
+     //  3. modpath added if basename( filename )
 
     if (hdl_modpath && *hdl_modpath)
     {
         char* filenamecopy = strdup( filename );
+
         strlcpy( fullname, hdl_modpath,              fulllen );
         strlcat( fullname, PATHSEPS,                 fulllen );
         strlcat( fullname, basename( filenamecopy ), fulllen );
+
         free( filenamecopy );
     }
     else
-        strlcpy(fullname,filename,fulllen);
+        strlcpy( fullname, filename, fulllen );
 
-    if ( (ret = dlopen(fullname,flag)) )
+    if ((ret = dlopen( fullname, flag )))
     {
-        free(fullname);
+        free( fullname );
         return ret;
     }
 
-#if defined(HDL_MODULE_SUFFIX)
-    strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+    //  4. extension added to #3
 
-    if((ret = dlopen(fullname,flag)))
+#if defined( HDL_MODULE_SUFFIX )
+
+    strlcat( fullname, HDL_MODULE_SUFFIX, fulllen );
+
+    if ((ret = dlopen( fullname, flag )))
     {
-        free(fullname);
+        free( fullname );
         return ret;
     }
 #endif
@@ -302,8 +449,9 @@ size_t  fulllen = 0;
 }
 
 
-/* hdl_dvad - register device type
- */
+/*-------------------------------------------------------------------*/
+/*              hdl_dvad - register device type                      */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_dvad (char *devname, DEVHND *devhnd)
 {
 HDLDEV *newhnd;
@@ -316,8 +464,9 @@ HDLDEV *newhnd;
 }
 
 
-/* hdl_fhnd - find registered device handler
- */
+/*-------------------------------------------------------------------*/
+/*              hdl_fhnd - find registered device handler            */
+/*-------------------------------------------------------------------*/
 static DEVHND * hdl_fhnd (const char *devname)
 {
 DLLENT *dllent;
@@ -338,8 +487,9 @@ HDLDEV *hndent;
 }
 
 
-/* hdl_bdnm - build device module name
- */
+/*-------------------------------------------------------------------*/
+/*            hdl_bdnm - build device module name                    */
+/*-------------------------------------------------------------------*/
 static char * hdl_bdnm (const char *ltype)
 {
 char        *dtname;
@@ -360,8 +510,9 @@ size_t       m;
 }
 
 
-/* hdl_ghnd - obtain device handler
- */
+/*-------------------------------------------------------------------*/
+/*                  hdl_ghnd - obtain device handler                 */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT DEVHND * hdl_ghnd (const char *devtype)
 {
 DEVHND *hnd;
@@ -394,8 +545,9 @@ char *ltype;
 }
 
 
-/* hdl_list - list all entry points
- */
+/*-------------------------------------------------------------------*/
+/*              hdl_list - list all entry points                     */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_list (int flags)
 {
 DLLENT *dllent;
@@ -464,8 +616,9 @@ int len;
 }
 
 
-/* hdl_dlst - list all dependencies
- */
+/*-------------------------------------------------------------------*/
+/*              hdl_dlst - list all dependencies                     */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_dlst (void)
 {
 HDLDEP *depent;
@@ -478,8 +631,9 @@ HDLDEP *depent;
 }
 
 
-/* hdl_dadd - add dependency
- */
+/*-------------------------------------------------------------------*/
+/*         hdl_dadd - add dependency                                 */
+/*-------------------------------------------------------------------*/
 static int hdl_dadd (char *name, char *version, int size)
 {
 HDLDEP **newdep;
@@ -498,8 +652,9 @@ HDLDEP **newdep;
 }
 
 
-/* hdl_dchk - dependency check
- */
+/*-------------------------------------------------------------------*/
+/*         hdl_dchk - dependency check                               */
+/*-------------------------------------------------------------------*/
 static int hdl_dchk (char *name, char *version, int size)
 {
 HDLDEP *depent;
@@ -533,8 +688,9 @@ HDLDEP *depent;
 }
 
 
-/* hdl_fent - find entry point
- */
+/*-------------------------------------------------------------------*/
+/*                hdl_fent - find entry point                        */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void * hdl_fent (char *name)
 {
 DLLENT *dllent;
@@ -583,8 +739,9 @@ void *fep;
 }
 
 
-/* hdl_nent - find next entry point in chain
- */
+/*-------------------------------------------------------------------*/
+/*                hdl_nent - find next entry point in chain          */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void * hdl_nent (void *fep)
 {
 DLLENT *dllent;
@@ -632,8 +789,9 @@ char   *name;
 }
 
 
-/* hdl_regi - register entry point
- */
+/*-------------------------------------------------------------------*/
+/*          hdl_regi - register entry point                          */
+/*-------------------------------------------------------------------*/
 static void hdl_regi (char *name, void *fep)
 {
 MODENT *modent;
@@ -650,8 +808,9 @@ MODENT *modent;
 }
 
 
-/* hdl_term - process all "HDL_FINAL_SECTION"s
- */
+/*-------------------------------------------------------------------*/
+/*          hdl_term - process all "HDL_FINAL_SECTION"s              */
+/*-------------------------------------------------------------------*/
 static void hdl_term (void *unused _HDL_UNUSED)
 {
 DLLENT *dllent;
@@ -684,8 +843,9 @@ DLLENT *dllent;
 
 
 #if defined(_MSVC_)
-/* hdl_lexe - load exe
- */
+/*-------------------------------------------------------------------*/
+/*         hdl_lexe - load exe                                       */
+/*-------------------------------------------------------------------*/
 static int hdl_lexe ()
 {
 DLLENT *dllent;
@@ -778,8 +938,9 @@ MODENT *modent;
 #endif
 
 
-/* hdl_main - initialize hercules dynamic loader
- */
+/*-------------------------------------------------------------------*/
+/*          hdl_main - initialize hercules dynamic loader            */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_main (void)
 {
 HDLPRE *preload;
@@ -787,35 +948,6 @@ HDLPRE *preload;
     initialize_lock(&hdl_lock);
 
     hdl_sdip = FALSE;
-
-    if ( hdl_modpath == NULL )
-    {
-        char *def;
-        char pathname[MAX_PATH];
-
-        if (!(def = getenv("HERCULES_LIB")))
-        {
-            if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
-            {
-                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
-                hdl_setpath(pathname, TRUE);
-            }
-            else
-            {
-#if !defined (MODULESDIR)
-                hdl_setpath(sysblk.hercules_pgmpath, TRUE);
-#else
-                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
-                hdl_setpath(pathname, TRUE);
-#endif
-            }
-        }
-        else
-        {
-            hostpath(pathname, def, sizeof(pathname));
-            hdl_setpath(pathname, TRUE);
-        }
-    }
 
     dlinit();
 
@@ -829,11 +961,11 @@ HDLPRE *preload;
 
     hdl_cdll->name = strdup("*Hercules");
 
-/* This was a nice trick. Unfortunately, on some platforms  */
-/* it becomes impossible. Some platforms need fully defined */
-/* DLLs, some other platforms do not allow dlopen(self)     */
-
 #if 1
+
+    /* This was a nice trick. Unfortunately, on some platforms  */
+    /* it becomes impossible. Some platforms need fully defined */
+    /* DLLs, some other platforms do not allow dlopen(self)     */
 
     if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
     {
@@ -914,8 +1046,9 @@ HDLPRE *preload;
 }
 
 
-/* hdl_load - load a dll
- */
+/*-------------------------------------------------------------------*/
+/*             hdl_load - load a dll                                 */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_load (char *name,int flags)
 {
 DLLENT *dllent, *tmpdll;
@@ -1048,8 +1181,9 @@ char *modname;
 }
 
 
-/* hdl_dele - unload a dll
- */
+/*-------------------------------------------------------------------*/
+/*             hdl_dele - unload a dll                               */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_dele (char *name)
 {
 DLLENT **dllent, *tmpdll;
@@ -1172,6 +1306,9 @@ char *modname;
 }
 
 
+/*-------------------------------------------------------------------*/
+/*                     hdl_modify_opcode                             */
+/*-------------------------------------------------------------------*/
 static void hdl_modify_opcode(int insert, HDLINS *instr)
 {
   if(insert)
@@ -1208,7 +1345,9 @@ static void hdl_modify_opcode(int insert, HDLINS *instr)
 }
 
 
-/* hdl_didf - Define instruction call */
+/*-------------------------------------------------------------------*/
+/*          hdl_didf - Define instruction call                       */
+/*-------------------------------------------------------------------*/
 static void hdl_didf (int archflags, int opcode, char *name, void *routine)
 {
 HDLINS *newins;
@@ -1223,4 +1362,4 @@ HDLINS *newins;
     hdl_modify_opcode(TRUE, newins);
 }
 
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif /*defined( OPTION_DYNAMIC_LOAD )*/

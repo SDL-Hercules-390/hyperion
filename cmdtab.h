@@ -857,6 +857,21 @@
   "       dse       data secure erase\n"                                         \
   "       dvol1     display VOL1 header\n"
 
+#define netdev_cmd_desc         "Set default host networking device"
+#define netdev_cmd_help         \
+                                \
+  "Specifies the name (or for Windows, the IP or MAC address) of the\n"          \
+  "underlying default host network device to be used for all Hercules\n"         \
+  "communications devices (e.g. CTCI, LCS, QETH, etc) unless overridden\n"       \
+  "on the device statement.\n"                                                   \
+  "\n"                                                                           \
+  "The default for Linux (except Apple and FreeBSD) is '/dev/net/tun'.\n"        \
+  "The default for Apple and FreeBSD is '/dev/tun'.\n"                           \
+  "The default for Windows is the first host network card that CTCI-WIN\n"       \
+  "finds in the Windows host's binding order, which may not be desirable\n"      \
+  "for users running versions of Windows that do not not support modifying\n"    \
+  "the adapter binding order (i.e. Windows 10 or greater).\n"
+
 #define numcpu_cmd_desc         "Set numcpu parameter"
 #define numvec_cmd_desc         "Set numvec parameter"
 #define osa_cmd_desc            "(Synonym for 'qeth')"
@@ -1592,6 +1607,7 @@ COMMAND( "loadcore",                loadcore_cmd,           SYSCMDNOPER,        
 COMMAND( "loadtext",                loadtext_cmd,           SYSCMDNOPER,        loadtext_cmd_desc,      loadtext_cmd_help   )
 COMMAND( "maxcpu",                  maxcpu_cmd,             SYSCMDNOPER,        maxcpu_cmd_desc,        NULL                )
 CMDABBR( "mounted_tape_reinit",  9, mounted_tape_reinit_cmd,SYSCMDNOPER,        mtapeinit_cmd_desc,     mtapeinit_cmd_help  )
+COMMAND( "netdev",                  netdev_cmd,             SYSCMDNOPER,        netdev_cmd_desc,        netdev_cmd_help     )
 COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        numcpu_cmd_desc,        NULL                )
 COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
 COMMAND( "osa",                     qeth_cmd,               SYSCMDNOPER,        osa_cmd_desc,           qeth_cmd_help       )
