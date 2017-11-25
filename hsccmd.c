@@ -3724,14 +3724,18 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
 {
     // Specifies the name (or for Windows, the IP or MAC address)
     // of the underlying default host network device to be used for
-    // all Hercules communications devices (CTCI, LCS, QETH, etc)
-    // unless overridden on the device statement.
+    // all Hercules communications devices unless overridden on
+    // the device statement itself.
     //
-    // The default for Linux is '/dev/net/tun'.
-    // The default for Apple and FreeBSD is '/dev/tun'.
+    // The default for Linux is '/dev/net/tun'. The default for Apple
+    // and FreeBSD is '/dev/tun'.
     //
-    // The default for Windows is the first host network card
-    // that CTCI-WIN finds in the Windows host's binding order.
+    // The default for Windows is whatever SoftDevLabs's CTCI-WIN
+    // product returns as its default CTCI-WIN host network adapter,
+    // which for older versions of CTCI-WIN (3.5.0) is the first
+    // network adapter returned by Windows in its adapter binding
+    // order or for newer versions of CTCI-WIN (3.6.0) whatever is
+    // defined as your default CTCI-WIN host network adapter.
 
     char* netdev = sysblk.netdev;
 
