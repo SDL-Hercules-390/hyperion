@@ -1707,37 +1707,41 @@ typedef struct MBK  MBK;
                                            Extension 3 installed  810*/
 #define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810
                                            Extension 4 installed  810*/
+#define STFL_IBMMAX              255    /* Maximum IBM facility bit  */
 
-#define STFL_MAX                  77
-#define STFL_BYTESIZE (((STFL_MAX+8))/8)
-#define STFL_DWRDSIZE ((STFL_BYTESIZE+7)/8)
+#define STFL_IBMBYSIZE              ((STFL_IBMMAX+7)/8)
+#define STFL_IBMDWSIZE              ((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))
 
 /*-------------------------------------------------------------------*/
 /* The below facility definitions are HERCULES SPECIFIC and not part */
 /* of the architecture.  They are placed here for the convenience of */
 /* being able to use the Virtual Architecture Level facility.        */
+/* Note that Hercules's facility bits always start on the first bit  */
+/* of the first byte of the NEXT doubleword (DW) beyond the last     */
+/* defined (or reserved) IBM facilities list doubleword.             */
 /*-------------------------------------------------------------------*/
-#define STFL_HBASE                  (STFL_DWRDSIZE*64)
 
-#define STFL_MOVE_INVERSE           (STFL_HBASE+0)
-#define STFL_MSA_EXTENSION_1        (STFL_HBASE+1)
-#define STFL_MSA_EXTENSION_2        (STFL_HBASE+2)
-#define STFL_PROBSTATE_DIAGF08      (STFL_HBASE+3)
-#define STFL_SIGP_SETARCH_S370      (STFL_HBASE+4)
-#define STFL_HOST_RESOURCE_ACCESS   (STFL_HBASE+5)
-#define STFL_QEBSM                  (STFL_HBASE+6)
-#define STFL_QDIO_TDD               (STFL_HBASE+7)
-#define STFL_QDIO_THININT           (STFL_HBASE+8)
-#define STFL_SVS                    (STFL_HBASE+9)
-#define STFL_LOGICAL_PARTITION      (STFL_HBASE+10)
-#define STFL_VIRTUAL_MACHINE        (STFL_HBASE+11)
-#define STFL_QDIO_ASSIST            (STFL_HBASE+12)
-#define STFL_INTERVAL_TIMER         (STFL_HBASE+13)
-#define STFL_DETECT_PGMINTLOOP      (STFL_HBASE+14)
-#define STFL_HMAX                   (STFL_HBASE+14)
+#define STFL_HERCBITS               ((((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))*sizeof(DW))*8)
 
-#define STFL_HBYTESIZE              (((STFL_HMAX+8))/8)
-#define STFL_HDWRDSIZE              ((STFL_HBYTESIZE+7)/8)
+#define STFL_MOVE_INVERSE           (STFL_HERCBITS+0)
+#define STFL_MSA_EXTENSION_1        (STFL_HERCBITS+1)
+#define STFL_MSA_EXTENSION_2        (STFL_HERCBITS+2)
+#define STFL_PROBSTATE_DIAGF08      (STFL_HERCBITS+3)
+#define STFL_SIGP_SETARCH_S370      (STFL_HERCBITS+4)
+#define STFL_HOST_RESOURCE_ACCESS   (STFL_HERCBITS+5)
+#define STFL_QEBSM                  (STFL_HERCBITS+6)
+#define STFL_QDIO_TDD               (STFL_HERCBITS+7)
+#define STFL_QDIO_THININT           (STFL_HERCBITS+8)
+#define STFL_SVS                    (STFL_HERCBITS+9)
+#define STFL_LOGICAL_PARTITION      (STFL_HERCBITS+10)
+#define STFL_VIRTUAL_MACHINE        (STFL_HERCBITS+11)
+#define STFL_QDIO_ASSIST            (STFL_HERCBITS+12)
+#define STFL_INTERVAL_TIMER         (STFL_HERCBITS+13)
+#define STFL_DETECT_PGMINTLOOP      (STFL_HERCBITS+14)
+#define STFL_HERCMAX                (STFL_HERCBITS+14)   /* Max Herc */
+
+#define STFL_HERCBYSIZE             ((STFL_HERCMAX+7)/8)
+#define STFL_HERCDWSIZE             ((STFL_HERCBYSIZE+sizeof(DW)-1)/sizeof(DW))
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */

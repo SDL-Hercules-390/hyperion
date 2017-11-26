@@ -7798,36 +7798,43 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* sizeof - Display sizes of various structures/tables               */
 /*-------------------------------------------------------------------*/
-int sizeof_cmd(int argc, char *argv[], char *cmdline)
+int sizeof_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( cmdline );
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     // #define HHC02257 "%s%7d"
 
-    WRMSG(HHC02257, "I", "(unsigned short) ..",(int)sizeof(unsigned short));
-    WRMSG(HHC02257, "I", "(void *) ..........",(int)sizeof(void *));
-    WRMSG(HHC02257, "I", "(unsigned int) ....",(int)sizeof(unsigned int));
-    WRMSG(HHC02257, "I", "(long) ............",(int)sizeof(long));
-    WRMSG(HHC02257, "I", "(long long) .......",(int)sizeof(long long));
-    WRMSG(HHC02257, "I", "(size_t) ..........",(int)sizeof(size_t));
-    WRMSG(HHC02257, "I", "(off_t) ...........",(int)sizeof(off_t));
-    WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
-    WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
-    WRMSG(HHC02257, "I", "SYSBLK ............",(int)sizeof(SYSBLK));
-    WRMSG(HHC02257, "I", "REGS ..............",(int)sizeof(REGS));
-    WRMSG(HHC02257, "I", "REGS (copy len) ...",sysblk.regs_copy_len);
-    WRMSG(HHC02257, "I", "PSW ...............",(int)sizeof(PSW));
-    WRMSG(HHC02257, "I", "DEVBLK ............",(int)sizeof(DEVBLK));
-    WRMSG(HHC02257, "I", "TLB entry .........",(int)sizeof(TLB)/TLBN);
-    WRMSG(HHC02257, "I", "TLB table .........",(int)sizeof(TLB));
-    WRMSG(HHC02257, "I", "CPU_BITMAP ........",(int)sizeof(CPU_BITMAP));
-    WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
-    WRMSG(HHC02257, "I", "FD_SETSIZE ........",FD_SETSIZE);
-    WRMSG(HHC02257, "I", "TID ...............",(int)sizeof(TID));
-    WRMSG(HHC00001, "I", "", "TIDPAT ............ " TIDPAT );
-    WRMSG(HHC00001, "I", "", "SCN_TIDPAT ........ " SCN_TIDPAT );
+    WRMSG( HHC02257, "I", "(unsigned short) ..", (int)sizeof(unsigned short));
+    WRMSG( HHC02257, "I", "(void *) ..........", (int)sizeof(void *));
+    WRMSG( HHC02257, "I", "(unsigned int) ....", (int)sizeof(unsigned int));
+    WRMSG( HHC02257, "I", "(long) ............", (int)sizeof(long));
+    WRMSG( HHC02257, "I", "(long long) .......", (int)sizeof(long long));
+    WRMSG( HHC02257, "I", "(size_t) ..........", (int)sizeof(size_t));
+    WRMSG( HHC02257, "I", "(off_t) ...........", (int)sizeof(off_t));
+    WRMSG( HHC02257, "I", "FILENAME_MAX ......", FILENAME_MAX);
+    WRMSG( HHC02257, "I", "PATH_MAX ..........", PATH_MAX);
+    WRMSG( HHC02257, "I", "SYSBLK ............", (int)sizeof(SYSBLK));
+    WRMSG( HHC02257, "I", "REGS ..............", (int)sizeof(REGS));
+    WRMSG( HHC02257, "I", "REGS (copy len) ...", sysblk.regs_copy_len);
+    WRMSG( HHC02257, "I", "PSW ...............", (int)sizeof(PSW));
+    WRMSG( HHC02257, "I", "DEVBLK ............", (int)sizeof(DEVBLK));
+    WRMSG( HHC02257, "I", "TLB entry .........", (int)sizeof(TLB)/TLBN);
+    WRMSG( HHC02257, "I", "TLB table .........", (int)sizeof(TLB));
+    WRMSG( HHC02257, "I", "CPU_BITMAP ........", (int)sizeof(CPU_BITMAP));
+    WRMSG( HHC02257, "I", "STFL_IBMMAX .......", STFL_IBMMAX);
+    WRMSG( HHC02257, "I", "STFL_IBMBYSIZE.....", STFL_IBMBYSIZE);
+    WRMSG( HHC02257, "I", "STFL_IBMDWSIZE.....", STFL_IBMDWSIZE);
+    WRMSG( HHC02257, "I", "STFL_HERCBITS......", STFL_HERCBITS);
+    WRMSG( HHC02257, "I", "STFL_HERCMAX.......", STFL_HERCMAX);
+    WRMSG( HHC02257, "I", "STFL_HERCBYSIZE....", STFL_HERCBYSIZE);
+    WRMSG( HHC02257, "I", "STFL_HERCDWSIZE....", STFL_HERCDWSIZE);
+    WRMSG( HHC02257, "I", "FD_SETSIZE ........", FD_SETSIZE);
+    WRMSG( HHC02257, "I", "TID ...............", (int)sizeof(TID));
+
+    WRMSG( HHC00001, "I", "", "TIDPAT ............ " TIDPAT );
+    WRMSG( HHC00001, "I", "", "SCN_TIDPAT ........ " SCN_TIDPAT );
     return 0;
 }
 

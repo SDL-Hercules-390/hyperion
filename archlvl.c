@@ -107,7 +107,7 @@ static ARCHTAB archtab[] =
 struct FACTAB
 {
     const char*  name;             /* Facility Name                  */
-    const BYTE   bitno;            /* Bit number                     */
+    const int    bitno;            /* Bit number                     */
     const BYTE   mode;             /* Mode indicator                 */
 
 #define S370     0x01              /* S/370 feature                  */
@@ -386,7 +386,7 @@ FACILITY( DETECT_PGMINTLOOP,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS
 void init_als( REGS* regs )
 {
     int  i;
-    for (i=0; i < STFL_HBYTESIZE; i++)
+    for (i=0; i < STFL_HERCBYSIZE; i++)
         regs->facility_list[i] =
             sysblk.facility_list[ regs->arch_mode ][i];
 }
@@ -399,7 +399,7 @@ static void set_alslevel( int alslevel )
     FACTAB*  ft;
     int      i, j;
 
-    for(i = 0; i < STFL_HBYTESIZE; i++)
+    for(i = 0; i < STFL_HERCBYSIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 
@@ -446,19 +446,23 @@ static ARCHTAB* get_archtab( const char* name )
 /*-------------------------------------------------------------------*/
 /*                          get_facname                              */
 /*-------------------------------------------------------------------*/
-static const char* get_facname( int bitno )
+static const char* get_facname( int bitno, const char** name )
 {
-    FACTAB*      ft;
-    static char  name[8];
+    FACTAB*  ft;
+    char work[8];
 
     for (ft = factab; ft->name; ft++)
     {
         if (ft->bitno == bitno)
-            return ft->name;
+        {
+            *name = strdup( ft->name );
+            return *name;
+        }
     }
 
-    snprintf( name, sizeof( name ), "bit%d", bitno );
-    return name;
+    snprintf( work, sizeof( work ), "bit%d", bitno );
+    *name = strdup( work );
+    return *name;
 }
 
 /*-------------------------------------------------------------------*/
@@ -532,8 +536,13 @@ static void do_force_facbit( int bitno, BYTE enable, BYTE mode,
 
     if (MLVL( VERBOSE ))
     {
+        const char* name = NULL;
+        name = get_facname( bitno, &name );
+
         // "Facility(%s) %sabled for archmode %s"
-        WRMSG( HHC00898, "I", get_facname( bitno ), endis, archname );
+        WRMSG( HHC00898, "I", name, endis, archname );
+
+        free( (void*) name );
     }
 }
 
@@ -709,7 +718,7 @@ static BYTE update_facility( int argc, char* argv[] )
         && isdigit( *( argv[2] + 3))
         && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
         && bitno >= 0
-        && bitno <= STFL_HMAX
+        && bitno <= STFL_HERCMAX
     )
     {
         force_facbit( bitno, enable, als );
@@ -810,16 +819,22 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
                 && isdigit( *( argv[2] + 3 ))
                 && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
                 && bitno >= 0
-                && bitno <= STFL_HMAX
+                && bitno <= STFL_HERCMAX
             )
             {
+                const char* name = NULL;
+
                 fbyte = bitno / 8;
                 fbit  = 0x80 >> (bitno % 8);
 
+                name = get_facname( bitno, &name );
+
                 // "Facility( %-20s ) %sabled"
-                WRMSG( HHC00890, "I", get_facname( bitno ),
+                WRMSG( HHC00890, "I", name,
                     sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
                     "En" : "Dis" );
+
+                free( (void*) name );
             }
             else
             {
