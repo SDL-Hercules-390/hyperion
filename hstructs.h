@@ -357,7 +357,7 @@ struct REGS {                           /* Processor registers       */
         func    trace_br;
 
      /* Active Facility List */
-        BYTE    facility_list[STFL_HBYTESIZE];
+        BYTE    facility_list[STFL_HERCBYSIZE];
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
@@ -534,7 +534,7 @@ struct SYSBLK {
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 
         /* Active Facility List */
-        BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];
+        BYTE    facility_list[GEN_MAXARCH][STFL_HERCBYSIZE];
 
      /* CPU Measurement Counter facility
         CPU Measurement Sampling facility
