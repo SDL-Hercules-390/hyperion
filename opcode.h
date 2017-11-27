@@ -972,6 +972,52 @@ do { \
 #define E_DECODER(_inst, _regs, _len, _ilc) \
         { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+            UNREFERENCED(_inst); \
+        }
+
+/* IE extended op code with two 4-bit immediate fields */       /*912*/
+#undef IE
+#undef IE0
+
+#define IE(_inst, _regs, _i1, _i2)  \
+        IE_DECODER(_inst, _regs, _i1, _i2, 4, 4)
+#define IE0(_inst, _regs, _i1, _i2) \
+        IE_DECODER(_inst, _regs, _i1, _i2, 4, 0)
+
+#define IE_DECODER(_inst, _regs, _i1, _i2, _len, _ilc) \
+        { \
+            int i = (_inst)[3]; \
+            (_i1) = i >> 4; \
+            (_i2) = i & 0x0F; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+
+/* MII mask with 12-bit and 24-bit relative address fields */   /*912*/
+#undef MII_A
+#undef MII_A0
+
+#define MII_A(_inst, _regs, _m1, _addr2, _addr3) \
+        MII_A_DECODER(_inst, _regs, _m1, _addr2, _addr3, 6, 6)
+#define MII_A0(_inst, _regs, _m1, _addr2, _addr3) \
+        MII_A_DECODER(_inst, _regs, _m1, _addr2, _addr3, 6, 0)
+
+#define MII_A_DECODER(_inst, _regs, _m1, _addr2, _addr3, _len, _ilc) \
+        { \
+            U32 ri2, ri3; S64 offset; \
+            U32 temp = fetch_fw(&(_inst)[2]); \
+            int i = (_inst)[1]; \
+            (_m1) = (i >> 4) & 0x0F; \
+            ri2 = (i << 4) | (temp >> 24); \
+            ri3 = temp & 0xFFFFFF; \
+            offset = 2LL*(S32)ri2; \
+            (_addr2) = (likely(!(_regs)->execflag)) ? \
+                    PSW_IA((_regs), offset) : \
+                    ((_regs)->ET + offset) & ADDRESS_MAXWRAP((_regs)); \
+            offset = 2LL*(S32)ri3; \
+            (_addr3) = (likely(!(_regs)->execflag)) ? \
+                    PSW_IA((_regs), offset) : \
+                    ((_regs)->ET + offset) & ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
         }
 
 /* RR register to register */
@@ -1887,6 +1933,26 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
         }
 
+/* RSL register and storage with extended op code, 8-bit L field, and mask */
+#undef RSL_RM
+
+#define RSL_RM(_inst, _regs, _r1, _l2, _b2, _effective_addr2, _m3) \
+        RSL_RM_DECODER(_inst, _regs, _r1, _l2, _b2, _effective_addr2, _m3, 6, 6)
+
+#define RSL_RM_DECODER(_inst, _regs, _r1, _l2, _b2, _effective_addr2, _m3, _len, _ilc) \
+    {   U32 temp = fetch_fw(&(_inst)[1]); \
+            (_m3) = temp & 0xf; \
+            (_r1) = (temp >> 4) & 0xf; \
+            (_effective_addr2) = (temp >> 8) & 0xfff; \
+            (_b2) = (temp >> 20) & 0xf; \
+            (_l2) = (temp >> 24) & 0xff; \
+            if((_b2)) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
 /* RSI register and immediate with additional R3 field */
 #undef RSI
 #undef RSI0
@@ -2355,6 +2421,36 @@ do { \
                 (_effective_addr1) += (_regs)->GR((_b1)); \
                 (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
             } \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* SMI storage with mask and 16-bit relative address */         /*912*/
+#undef SMI_A
+#undef SMI_A0
+
+#define SMI_A(_inst, _regs, _m1, _addr2, _b3, _addr3) \
+        SMI_A_DECODER(_inst, _regs, _m1, _addr2, _b3, _addr3, 6, 6)
+#define SMI_A0(_inst, _regs, _m1, _addr2, _b3, _addr3) \
+        SMI_A_DECODER(_inst, _regs, _m1, _addr2, _b3, _addr3, 6, 0)
+
+#define SMI_A_DECODER(_inst, _regs, _m1, _addr2, _b3, _addr3, _len, _ilc) \
+    { \
+            U32 ri2; S64 offset; \
+            U32 temp = fetch_fw(&(_inst)[2]); \
+            int i = (_inst)[1]; \
+            (_m1) = (i >> 4) & 0x0F; \
+            ri2 = temp & 0xFFFF; \
+            (_addr3) = (temp >> 16) & 0xFFF; \
+            (_b3) = (temp >> 28) & 0x0F; \
+            if((_b3)) \
+            { \
+                (_addr3) += (_regs)->GR((_b3)); \
+                (_addr3) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            offset = 2LL*(S32)ri2; \
+            (_addr2) = (likely(!(_regs)->execflag)) ? \
+                    PSW_IA((_regs), offset) : \
+                    ((_regs)->ET + offset) & ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
@@ -4052,6 +4148,25 @@ DEF_INST(subtract_logical_distinct_long_register);              /*810*/
 DEF_INST(population_count);                                     /*810*/
 #endif /*defined(FEATURE_POPULATION_COUNT_FACILITY)*/
 
+#if defined(FEATURE_LOAD_AND_TRAP_FACILITY)
+DEF_INST(load_and_trap);                                        /*912*/
+DEF_INST(load_long_and_trap);                                   /*912*/
+DEF_INST(load_fullword_high_and_trap);                          /*912*/
+DEF_INST(load_logical_long_fullword_and_trap);                  /*912*/
+DEF_INST(load_logical_long_thirtyone_and_trap);                 /*912*/
+#endif /*defined(FEATURE_LOAD_AND_TRAP_FACILITY)*/
+
+#if defined(FEATURE_MISC_INSTRUCTION_EXTENSIONS_FACILITY)
+DEF_INST(compare_logical_and_trap);                             /*912*/
+DEF_INST(compare_logical_and_trap_long);                        /*912*/
+DEF_INST(rotate_then_insert_selected_bits_long_reg_n);          /*912*/
+#endif /*defined(FEATURE_MISC_INSTRUCTION_EXTENSIONS_FACILITY)*/
+
+#if defined(FEATURE_EXECUTION_HINT_FACILITY)
+DEF_INST(branch_prediction_preload);                            /*912*/
+DEF_INST(branch_prediction_relative_preload);                   /*912*/
+DEF_INST(next_instruction_access_intent);                       /*912*/
+#endif /*defined(FEATURE_EXECUTION_HINT_FACILITY)*/
 
 /* Instructions in io.c */
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
@@ -4673,6 +4788,13 @@ DEF_INST(test_data_group_dfp_ext);
 DEF_INST(test_data_group_dfp_long);
 DEF_INST(test_data_group_dfp_short);
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+
+#if defined(FEATURE_DFP_ZONED_CONVERSION_FACILITY)
+DEF_INST(convert_zoned_to_dfp_ext);                             /*912*/
+DEF_INST(convert_zoned_to_dfp_long);                            /*912*/
+DEF_INST(convert_dfp_ext_to_zoned);                             /*912*/
+DEF_INST(convert_dfp_long_to_zoned);                            /*912*/
+#endif /*defined(FEATURE_DFP_ZONED_CONVERSION_FACILITY)*/
 
 /* Instructions in pfpo.c */
 #if defined(FEATURE_PFPO)
