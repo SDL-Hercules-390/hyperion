@@ -1,3 +1,10 @@
+-------------------------------------------------------------------------------
+
+Add new z/Arch facilities to github issues.
+
+Is "hercfaq.html" list of supported z/Architecure facilities correct/accurate?
+
+-------------------------------------------------------------------------------
 
 
                           ---------------------
@@ -6,6 +13,10 @@
 
 
                    (in absolutely *NO* particular order)
+
+
+
+ NOTE: ideally a separate GitHub "Issue" should be created for each of these!
 
 
 -------------------------------------------------------------------------------
@@ -66,20 +77,6 @@
 
 -------------------------------------------------------------------------------
 
-  BUG: instruction tracing: control registers not being shown for some
-  instructions which use/modify them. We need a better way to determine
-  if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
-  (see "display_inst_regs" function in "hscmisc.c")
-
-  Modify/enhance instruction/device tracing to write raw trace information
-  to a file (instead of formatting it to console which is slow/inefficient)
-  and develop a new offline utility to then format/display only the desired
-  information (selected registers, instructions, time range, buffers, etc).
-
-  Instruction Tracing: ability to specify multiple disparate trace ranges.
-
--------------------------------------------------------------------------------
-
   DUMP command (Windows only) to create on-demand mini-dump.
 
   modify fthread to maintain the thread's name in its FTHREAD list of
@@ -106,10 +103,6 @@
 -------------------------------------------------------------------------------
 
   Add 'const' to as many functions' arguments as possible.
-
--------------------------------------------------------------------------------
-
-  Document all DIAGNOSE instruction support
 
 -------------------------------------------------------------------------------
 

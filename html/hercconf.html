@@ -3349,13 +3349,6 @@ a real System/390.  The configuration file is an ASCII text file.
 
             <dl> <!-- begin REQUIRED for both Windows and *nix -->
 
-                <dt><code>iface &nbsp;<em>device</em></code>
-                <dd><p>
-                    Specifies the name of the host tunnel device to use.
-                    The default for this option is the value specified
-                    by the <a href="#netdev">NETDEV</a> configuration file statement.
-                    <p>
-
                 <dt><code>ipaddr &nbsp;<em>address</em></code>
                 <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
                 <dd><p>
@@ -3413,6 +3406,14 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
 
             <dl> <!-- begin Optional for both *nix and Windows -->
+
+                <dt><code>iface &nbsp;<em>device</em></code>
+                <dd><p>
+                    Specifies the name of the host tunnel device to use.
+                    The default for this option is the value specified
+                    by the <a href="#netdev">NETDEV</a> configuration file
+                    statement.
+                    <p>
 
                 <dt><code>ipaddr6 &nbsp;<em>address</em></code>
                 <dt><code>ipaddr6 &nbsp;<em>address/prefix</em></code>

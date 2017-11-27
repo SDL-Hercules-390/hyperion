@@ -387,7 +387,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
 
     // Parse configuration file statement.
-    if (parse_conf_stmt( pDEVBLK, pPTPBLK, argc, (char**)argv ) != 0)
+    if (parse_conf_stmt( pDEVBLK, pPTPBLK, argc, (char**) argv ) != 0)
     {
         free( pPTPATHwr );
         free( pPTPATHre );
@@ -2587,35 +2587,33 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //  }
 
     // Housekeeping
-#if defined(ENABLE_IPV6)
-    memset( &addr6, 0, sizeof(struct in6_addr) );
-#endif /* defined(ENABLE_IPV6) */
-    memset( &addr4, 0, sizeof(struct in_addr) );
-    memset( &mac,  0, sizeof(MAC) );
+    memset( &addr4, 0, sizeof( struct in_addr  ));
+    memset( &mac,   0, sizeof(      MAC        ));
+#if defined( ENABLE_IPV6 )
+    memset( &addr6, 0, sizeof( struct in6_addr ));
+#endif
 
     // Set some initial defaults
-#if defined(OPTION_W32_CTCI)
+    STRLCPY( pPTPBLK->szTUNCharDevName, sysblk.netdev );
+#if defined( OPTION_W32_CTCI )
     pPTPBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pPTPBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
-    STRLCPY( pPTPBLK->szTUNCharDevName, tt32_get_default_iface() );
-#else /* defined(OPTION_W32_CTCI) */
-    STRLCPY( pPTPBLK->szTUNCharDevName, HERCTUN_DEV );
-#endif /* defined(OPTION_W32_CTCI) */
-#if defined(ENABLE_IPV6)
+#endif
+#if defined( ENABLE_IPV6 )
     pPTPBLK->iAFamily = AF_UNSPEC;
-#else /* defined(ENABLE_IPV6) */
+#else
     pPTPBLK->iAFamily = AF_INET;
-#endif /* defined(ENABLE_IPV6) */
+#endif
     STRLCPY( pPTPBLK->szMaxBfru, "5" );
     pPTPBLK->iMaxBfru = 5;
     STRLCPY( pPTPBLK->szMTU, "1500" );
     pPTPBLK->iMTU = 1500;
     STRLCPY( pPTPBLK->szDrivePfxSiz4, "32" );
     STRLCPY( pPTPBLK->szNetMask, "255.255.255.255" );
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
     STRLCPY( pPTPBLK->szDrivePfxSiz6, "128" );
     STRLCPY( pPTPBLK->szDriveLLxSiz6, "64" );
-#endif /* defined(ENABLE_IPV6) */
+#endif
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
@@ -2666,7 +2664,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         {
 
         case 'n':     // Network Device
-#if defined(OPTION_W32_CTCI)
+
+#if defined( OPTION_W32_CTCI )
+
             // This could be the IP or MAC address of the
             // host ethernet adapter.
             if (inet_aton( optarg, &addr4 ) == 0)
@@ -2680,31 +2680,36 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                     return -1;
                 }
             }
-#endif /* defined(OPTION_W32_CTCI) */
+#endif
             // This is the file name of the special TUN/TAP character device
-            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharDevName)-1)
+            if (strlen( optarg ) > sizeof( pPTPBLK->szTUNCharDevName )-1)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "device name", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, pDEVBLK->typname, "device name", optarg );
                 return -1;
             }
+
             STRLCPY( pPTPBLK->szTUNCharDevName, optarg );
             break;
 
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
+
         case 'x':     // TUN network interface name
-            if (strlen( optarg ) > sizeof(pPTPBLK->szTUNIfName)-1)
+
+            if (strlen( optarg ) > sizeof( pPTPBLK->szTUNIfName )-1)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "TUN device name", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, pDEVBLK->typname, "TUN device name", optarg );
                 return -1;
             }
+
             STRLCPY( pPTPBLK->szTUNIfName, optarg );
             saw_if = 1;
             break;
-#endif /* !defined(OPTION_W32_CTCI) */
+
+#endif
 
         case 't':     // MTU of link (ignored if Windows) (default 1500).
 
@@ -2786,14 +2791,15 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //          break;
 
         case 'd':     // Diagnostics
+
             if (optarg)
             {
                 iDebugMask = atoi( optarg );
                 if (iDebugMask < 1 || iDebugMask > 255)
                 {
                     // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                    WRMSG(HHC00916, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                          "debug mask", optarg );
+                    WRMSG( HHC00916, "W", SSID_TO_LCSS( pDEVBLK->ssid ),
+                        pDEVBLK->devnum, pDEVBLK->typname, "debug mask", optarg );
                     iDebugMask = DBGPTPPACKET;
                 }
                 pPTPBLK->uDebugMask = iDebugMask;
@@ -2805,19 +2811,23 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             break;
 
         case '4':     // Address family.
-#if defined(ENABLE_IPV6)
+
+#if defined( ENABLE_IPV6 )
             pPTPBLK->iAFamily = AF_INET;
-#endif /* defined(ENABLE_IPV6) */
+#endif
             break;
 
         case '6':     // Address family.
-#if defined(ENABLE_IPV6)
+
+#if defined( ENABLE_IPV6 )
             pPTPBLK->iAFamily = AF_INET6;
-#endif /* defined(ENABLE_IPV6) */
+#endif
             break;
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
+
         case 'm':
+
             if (0
                 || strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1
                 || ParseMAC( optarg, mac ) != 0 // (invalid format)
@@ -2826,46 +2836,56 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             )
             {
                 // "%1d:%04X %s: Option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "MAC address", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, pDEVBLK->typname, "MAC address", optarg );
                 return -1;
             }
+
             STRLCPY( pPTPBLK->szMACAddress, optarg );
             break;
 
         case 'k':     // Kernel Buffer Size (Windows only)
+
             iKernBuff = atoi( optarg );
+
             if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "kernel buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, pDEVBLK->typname, "kernel buffer size", optarg );
                 return -1;
             }
+
             pPTPBLK->iKernBuff = iKernBuff * 1024;
             break;
 
         case 'i':     // I/O Buffer Size (Windows only)
+
             iIOBuff = atoi( optarg );
+
             if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "dll i/o buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, pDEVBLK->typname, "dll i/o buffer size", optarg );
                 return -1;
             }
+
             pPTPBLK->iIOBuff = iIOBuff * 1024;
             break;
+
 #endif /* defined(OPTION_W32_CTCI) */
 
-        default:  /* Note: the variable c has a value that makes default: equivalent to case '?': */
+        default:  /*  Note: the variable c has a value that
+                      makes default: equivalent to case '?':  */
+
             // HHC00918 "%1d:%04X %s: option %s unknown or specified incorrectly"
-            WRMSG(HHC00918, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, argv[optind-1]);
+            WRMSG( HHC00918, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                pDEVBLK->devnum, pDEVBLK->typname, argv[optind-1]);
             return -1;
         }
-
     }
 
     // Shift past any options
@@ -2896,17 +2916,20 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //  {
 //      char    tmp[256];
 //      snprintf( (char*)tmp, 256, "argc %d  saw_if %d  saw_conf %d", argc, saw_if, saw_conf );
-//      WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
+//      WRMSG( HHC03991, "I", SSID_TO_LCSS( pDEVBLK->ssid ),
+//          pDEVBLK->devnum, pDEVBLK->typname, tmp );
 //  }
     if (argc == 2
-#if defined(ENABLE_IPV6)
-                       || argc == 4
-#endif /* defined(ENABLE_IPV6) */
-                                   ) /* Not pre-configured, but possibly pre-named */
+#if defined( ENABLE_IPV6 )
+        || argc == 4
+#endif
+    ) /* Not pre-configured, but possibly pre-named */
     {
         pPTPBLK->fPreconfigured = FALSE;
     }
-#if !defined(OPTION_W32_CTCI)
+
+#if !defined( OPTION_W32_CTCI )
+
     else if (argc == 1 && !saw_if && !saw_conf) /* Pre-configured using name */
     {
         if (strlen( argv[0] ) > sizeof(pPTPBLK->szTUNIfName)-1)
@@ -2924,7 +2947,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     {
         pPTPBLK->fPreconfigured = TRUE;
     }
+
 #endif /* !defined(OPTION_W32_CTCI) */
+
     else
     {
         // HHC00915 "%1d:%04X %s: incorrect number of parameters"
@@ -2933,17 +2958,20 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     }
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
+
     if (pPTPBLK->fPreconfigured == TRUE)
     {
-        /* Need  to append the interface number to the character */
-        /* device name to open the requested interface.          */
+        /*  Need to append the interface number to the
+         *  character device name to open the requested interface.
+         */
+        char* s = pPTPBLK->szTUNIfName + strlen( pPTPBLK->szTUNIfName );
 
-        char * s = pPTPBLK->szTUNIfName + strlen(pPTPBLK->szTUNIfName);
+        while (isdigit( s[-1] ))
+            s--;
 
-        while(isdigit(s[- 1])) s--;
         STRLCAT( pPTPBLK->szTUNCharDevName, s );
     }
-#endif
+#endif // defined(__APPLE__) || defined(__FreeBSD__)
 
     //
     iWantFamily = pPTPBLK->iAFamily;
@@ -2952,9 +2980,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     j = 0;
 
     // Process the remaining parameters.
-    while( argc > 0 )
+    while (argc > 0)
     {
-
         // Guest IPv4 address.
         //  e.g. 192.168.1.1
 

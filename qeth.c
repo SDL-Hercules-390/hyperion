@@ -1151,7 +1151,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     /* Create the new interface by opening the TUNTAP device */
     if ((rc = TUNTAP_CreateInterface
     (
-        grp->tuntap,
+        grp->ttdev,
         0
             | IFF_NO_PI
             | IFF_OSOCK
@@ -3472,7 +3472,7 @@ static int qeth_read_configuration_data( DEVBLK* dev, BYTE* buffer, int bufsz )
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
+static int qeth_init_handler( DEVBLK *dev, int argc, char *argv[] )
 {
 OSA_GRP *grp;
 int groupsize = OSA_GROUP_SIZE;
@@ -3484,7 +3484,7 @@ U32 mask4;
 //  if (dev->numconfdev > groupsize)
 //      groupsize = dev->numconfdev;
 
-    if(!dev->group)
+    if (!dev->group)
     {
         /* This code is executed for each device in the group. */
         dev->rcd = &qeth_read_configuration_data;
@@ -3525,11 +3525,7 @@ U32 mask4;
             VERIFY( socket_set_blocking_mode(grp->ppfd[1],0) == 0);
 
             /* Set defaults */
-#if defined( OPTION_W32_CTCI )
-            grp->tuntap = strdup( tt32_get_default_iface() );
-#else /*defined( OPTION_W32_CTCI )*/
-            grp->tuntap = strdup(TUNTAP_NAME);
-#endif /*defined( OPTION_W32_CTCI )*/
+            grp->ttdev = strdup( sysblk.netdev );
             grp->ttfd = -1;
         }
         else
@@ -3565,13 +3561,12 @@ U32 mask4;
        group is complete. Thus the below argument processing loop
        just saves the argument values but doesn't validate them. */
 
-    for(i = 0; i < argc; i++)
+    for (i=0; i < argc; i++)
     {
-        if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
+        if (!strcasecmp("iface",argv[i]) && (i+1) < argc)
         {
-            if(grp->tuntap)
-                free(grp->tuntap);
-            grp->tuntap = strdup(argv[++i]);
+            free( grp->ttdev );
+            grp->ttdev = strdup(argv[++i]);
             continue;
         }
 #if !defined(OPTION_W32_CTCI)
@@ -3583,8 +3578,7 @@ U32 mask4;
 #endif /*!defined(OPTION_W32_CTCI)*/
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
-            if(grp->tthwaddr)
-                free(grp->tthwaddr);
+            free( grp->tthwaddr );
             grp->tthwaddr = strdup(argv[++i]);
             continue;
         }
@@ -3595,19 +3589,16 @@ U32 mask4;
             if (slash) {                       /* If there is a slash      */
                 slash[0] = 0;                  /* Replace slash with null  */
                 prfx = slash + 1;              /* Point to prefix size     */
-                if(grp->ttpfxlen)
-                    free(grp->ttpfxlen);
+                free( grp->ttpfxlen );
                 grp->ttpfxlen = strdup(prfx);
             }
-            if(grp->ttipaddr)
-                free(grp->ttipaddr);
+            free( grp->ttipaddr );
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttnetmask)
-                free(grp->ttnetmask);
+            free( grp->ttnetmask );
             grp->ttnetmask = strdup(argv[++i]);
             continue;
         }
@@ -3615,10 +3606,8 @@ U32 mask4;
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-            if(grp->ttipaddr6)
-                free(grp->ttipaddr6);
-            if(grp->ttpfxlen6)
-                free(grp->ttpfxlen6);
+            free( grp->ttipaddr6 );
+            free( grp->ttpfxlen6 );
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
                 prfx = slash + 1;              /* Point to prefix size     */
@@ -3634,15 +3623,13 @@ U32 mask4;
 #endif /*defined(ENABLE_IPV6)*/
         else if(!strcasecmp("mtu",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttmtu)
-                free(grp->ttmtu);
+            free( grp->ttmtu );
             grp->ttmtu = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("chpid",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttchpid)
-                free(grp->ttchpid);
+            free( grp->ttchpid );
             grp->ttchpid = strdup(argv[++i]);
             continue;
         }
@@ -3691,13 +3678,7 @@ U32 mask4;
         char    *p;
         static const BYTE zeromac[IFHWADDRLEN] = {0};
 
-        /* The 'iface', 'ipaddr' and 'netmask' are REQUIRED parameters */
-        if (!grp->tuntap)
-        {
-            // "%1d:%04X %s: Required parameter '%s' missing"
-            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "iface" );
-            retcode = -1;
-        }
+        /* The 'ipaddr' and 'netmask' are REQUIRED parameters */
         if (!grp->ttipaddr)
         {
             // "%1d:%04X %s: Required parameter '%s' missing"
@@ -3710,6 +3691,10 @@ U32 mask4;
             WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "netmask" );
             retcode = -1;
         }
+
+        /* If no tuntap device was specified use the defined default */
+        if (!grp->ttdev)
+            grp->ttdev = sysblk.netdev;
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
@@ -3778,14 +3763,12 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "netmask", grp->ttnetmask );
                 retcode = -1;
-                free(grp->ttnetmask);
-                if(grp->ttipaddr)
-                    free(grp->ttipaddr);
-                if(grp->ttpfxlen)
-                    free(grp->ttpfxlen);
+                free( grp->ttnetmask );
+                free( grp->ttipaddr  );
+                free( grp->ttpfxlen  );
                 grp->ttnetmask = NULL;
-                grp->ttipaddr = NULL;
-                grp->ttpfxlen = NULL;
+                grp->ttipaddr  = NULL;
+                grp->ttpfxlen  = NULL;
             }
             else if (grp->ttpfxlen)
             {
@@ -3799,8 +3782,7 @@ U32 mask4;
                         "prefix length", "netmask" );
                 }
                 /* Use consistent prefix length */
-                if (grp->ttpfxlen)
-                    free( grp->ttpfxlen );
+                free( grp->ttpfxlen );
                 grp->ttpfxlen = new_ttpfxlen;
             }
         }
@@ -3814,13 +3796,11 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 retcode = -1;
-                free(grp->ttpfxlen);
-                if(grp->ttipaddr)
-                    free(grp->ttipaddr);
-                if(grp->ttnetmask)
-                    free(grp->ttnetmask);
-                grp->ttpfxlen = NULL;
-                grp->ttipaddr = NULL;
+                free( grp->ttpfxlen  );
+                free( grp->ttipaddr  );
+                free( grp->ttnetmask );
+                grp->ttpfxlen  = NULL;
+                grp->ttipaddr  = NULL;
                 grp->ttnetmask = NULL;
             }
             else if (grp->ttnetmask)
@@ -3835,8 +3815,7 @@ U32 mask4;
                         "netmask", "prefix length" );
                 }
                 /* Use consistent netmask */
-                if (grp->ttnetmask)
-                    free( grp->ttnetmask );
+                free( grp->ttnetmask );
                 grp->ttnetmask = new_ttnetmask;
             }
         }
@@ -3861,13 +3840,10 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttipaddr6 );
                 retcode = -1;
-                free(grp->ttipaddr6);
+                free( grp->ttipaddr6 );
+                free( grp->ttpfxlen6 );
                 grp->ttipaddr6 = NULL;
-                if(grp->ttpfxlen6)
-                {
-                    free(grp->ttpfxlen6);
-                    grp->ttpfxlen6 = NULL;
-                }
+                grp->ttpfxlen6 = NULL;
             }
         }
         if (grp->ttpfxlen6)
@@ -3884,13 +3860,10 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttpfxlen6 );
                 retcode = -1;
-                free(grp->ttpfxlen6);
+                free( grp->ttpfxlen6 );
+                free( grp->ttipaddr6 );
                 grp->ttpfxlen6 = NULL;
-                if(grp->ttipaddr6)
-                {
-                    free(grp->ttipaddr6);
-                    grp->ttipaddr6 = NULL;
-                }
+                grp->ttipaddr6 = NULL;
             }
         }
 #endif /*defined(ENABLE_IPV6)*/
@@ -4047,24 +4020,17 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         PTT_QETH_TRACE( "af clos pipe", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos othr", 0,0,0 );
-        if(grp->tuntap)
-            free(grp->tuntap);
-        if(grp->tthwaddr)
-            free(grp->tthwaddr);
-        if(grp->ttipaddr)
-            free(grp->ttipaddr);
-        if(grp->ttpfxlen)
-            free(grp->ttpfxlen);
-        if(grp->ttnetmask)
-            free(grp->ttnetmask);
-        if(grp->ttipaddr6)
-            free(grp->ttipaddr6);
-        if(grp->ttpfxlen6)
-            free(grp->ttpfxlen6);
-        if(grp->ttmtu)
-            free(grp->ttmtu);
-        if(grp->ttchpid)
-            free(grp->ttchpid);
+
+        free( grp->ttdev    );
+        free( grp->tthwaddr  );
+        free( grp->ttipaddr  );
+        free( grp->ttpfxlen  );
+        free( grp->ttnetmask );
+        free( grp->ttipaddr6 );
+        free( grp->ttpfxlen6 );
+        free( grp->ttmtu     );
+        free( grp->ttchpid   );
+
         PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos fbuf", 0,0,0 );
@@ -4383,7 +4349,7 @@ U32 num;                                /* Number of bytes to move   */
                 memcpy( iobuf, iodata, datalen );
 
                 /* Free IDX response buffer. Read is complete. */
-                if (bhr->content) free( bhr->content );
+                free( bhr->content );
                 free( bhr );
                 break; /*while*/
             }
@@ -5943,7 +5909,7 @@ static void  remove_and_free_any_buffers_on_chain( OSA_BAN* ban )
     {
         bhr = ban->firstbhr;               // Pointer to first OSA_BHR
         ban->firstbhr = bhr->next;         // Make the next the first OSA_BHR
-        if (bhr->content) free( bhr->content );  // Free the buffer content string
+        free( bhr->content );              // Free the buffer content string
         free( bhr );                       // Free the message buffer
     }
 
@@ -6026,7 +5992,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         {
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         } else {
-            if (grp->tthwaddr) free(grp->tthwaddr);
+            free( grp->tthwaddr );
             build_herc_iface_mac( iMAC, NULL );
             MSGBUF( szMAC, "%02x:%02x:%02x:%02x:%02x:%02x",
                     iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
@@ -6081,8 +6047,7 @@ static void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     {
         UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
-        if (ttmtu)
-            free( ttmtu );
+        free( ttmtu );
         ttmtu = strdup( QETH_DEF_MTU );
         uMTU = (U16) atoi( ttmtu );
     }
@@ -6113,8 +6078,7 @@ static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
     if (netmask != (0xFFFFFFFF << (32-pfxlen)))
         return -1;
     MSGBUF( cbuf, "%u", pfxlen );
-    if (*ttpfxlen)
-        free( *ttpfxlen );
+    free( *ttpfxlen );
     *ttpfxlen = strdup( cbuf );
     return 0;
 }
@@ -6136,8 +6100,7 @@ static int  prefix2netmask( char* ttpfxlen, char** ttnetmask )
     addr4.s_addr = ~makepfxmask4( ttpfxlen );
     if (!(p = inet_ntoa( addr4 )))
         return -1;
-    if (*ttnetmask)
-        free( *ttnetmask );
+    free( *ttnetmask );
     *ttnetmask = strdup(p);
     return 0;
 }
