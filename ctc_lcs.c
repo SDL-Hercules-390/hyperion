@@ -2683,11 +2683,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     memset( &addr, 0, sizeof( struct in_addr ) );
 
     // Set some initial defaults
-#if defined( OPTION_W32_CTCI )
-    pLCSBLK->pszTUNDevice   = strdup( tt32_get_default_iface() );
-#else
-    pLCSBLK->pszTUNDevice   = strdup( HERCTUN_DEV );
-#endif
+    pLCSBLK->pszTUNDevice   = strdup( sysblk.netdev );
     pLCSBLK->pszOATFilename = NULL;
     pLCSBLK->pszIPAddress   = NULL;
 #if defined( OPTION_W32_CTCI )
