@@ -9,6 +9,7 @@
 -------------------------------------------------------------------------------
 
                             CHANGE LOG
+
 04/12/17 : Updated supported functions to include LRA instruction 
            assist; fixed DISP0 assist issue where VMPSWAIT was not
            being set.
