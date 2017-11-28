@@ -1,11 +1,5 @@
 -------------------------------------------------------------------------------
 
-Add new z/Arch facilities to github issues.
-
-Is "hercfaq.html" list of supported z/Architecure facilities correct/accurate?
-
--------------------------------------------------------------------------------
-
 
                           ---------------------
                            HERCULES TODO IDEAS
