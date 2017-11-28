@@ -991,7 +991,7 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
     return rc;
 }
 
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
+#if defined(_FEATURE_ASN_AND_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* alrf command - display or set asn_and_lx_reuse                    */
 /*-------------------------------------------------------------------*/
@@ -1023,7 +1023,7 @@ char   *archlvl_func;
     WRMSG( HHC02256, "W", "ALRF", buffer );
     return InternalHercCmd( buffer );
 }
-#endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(_FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 /*-------------------------------------------------------------------*/

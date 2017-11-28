@@ -847,7 +847,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99A EPAIR - Extract Primary ASN and Instance               [RRE] */
 /*-------------------------------------------------------------------*/
@@ -883,7 +883,7 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(4);
 
 } /* end DEF_INST(extract_primary_asn_and_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
@@ -916,7 +916,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99B ESAIR - Extract Secondary ASN and Instance             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -953,7 +953,7 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(3);
 
 } /* end DEF_INST(extract_secondary_asn_and_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)
@@ -1006,7 +1006,7 @@ int     max_esta_code;
     /* Load the extraction code from low-order byte of R2 register */
     code = regs->GR_LHLCL(r2);
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
     max_esta_code=FACILITY_ENABLED(ASN_LX_REUSE,regs)?5:4;
 #elif defined(FEATURE_ESAME)
     max_esta_code=4;
@@ -3924,7 +3924,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99E PTI - Program Transfer with Instance                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3941,7 +3941,7 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(program_transfer_with_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -4890,7 +4890,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99F SSAIR - Set Secondary ASN with Instance                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4907,7 +4907,7 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(set_secondary_asn_with_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_BASIC_STORAGE_KEYS)
@@ -5098,7 +5098,7 @@ RADR    n;                              /* Absolute storage addr     */
 
 
 #if defined(FEATURE_EXTENDED_STORAGE_KEYS)
-#if defined(FEATURE_CONDITIONAL_SSKE)
+#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL SSKE PROCESSING                 */
 /* Input:                                                            */
@@ -5177,7 +5177,7 @@ static inline int ARCH_DEP(conditional_sske_procedure)
     return 0;
 
 } /* end function conditional_sske_procedure */
-#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
+#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
 #endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
@@ -5190,9 +5190,9 @@ DEF_INST(set_storage_key_extended)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask field                */
 RADR    a,n;                            /* Abs frame addr stor key   */
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
 int     fc;                             /* Frame Count               */
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 BYTE    r1key;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -5209,8 +5209,8 @@ BYTE    r1key;
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-    if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+    if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
      && (m3 & SSKE_MASK_MB))
         fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
     else
@@ -5219,13 +5219,13 @@ BYTE    r1key;
     for( ; fc--; )
     {
 
-        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+        if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
          && (m3 & SSKE_MASK_MB))
             /* r2 contains an absolute address when
                       multiple block control is one */
             n = a;
         else
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
             /* Convert real address to absolute address */
             n = APPLY_PREFIXING (a, regs->PX);
 
@@ -5339,11 +5339,11 @@ BYTE    r1key;
                         realkey = protkey & (STORKEY_REF | STORKEY_CHANGE);
                     }
 
-#if defined(FEATURE_CONDITIONAL_SSKE)
+#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
                     /* Perform conditional SSKE procedure */
                     if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey, r1key))
                         return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
+#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
                     /* or with host set */
                     rcpkey |= realkey << 4;
                     /* insert new settings of the guest set */
@@ -5380,7 +5380,7 @@ BYTE    r1key;
             }
             else
             {
-#if defined(FEATURE_CONDITIONAL_SSKE)
+#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5390,7 +5390,7 @@ BYTE    r1key;
 #endif
                     r1key))
                     return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
+#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
                 /* Update the storage key from R1 register bits 24-30 */
 #if !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
@@ -5406,7 +5406,7 @@ BYTE    r1key;
         else
 #endif /*defined(_FEATURE_SIE)*/
         {
-#if defined(FEATURE_CONDITIONAL_SSKE)
+#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
             /* Perform conditional SSKE procedure */
             if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5416,7 +5416,7 @@ BYTE    r1key;
 #endif
                 r1key))
                 return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
+#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
 
             /* Update the storage key from R1 register bits 24-30 */
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5434,9 +5434,9 @@ BYTE    r1key;
            when referenced next */
         STORKEY_INVALIDATE(regs, n);
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
         /* Update r2 in the case of a multiple page update */
-        if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+        if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
          && (m3 & SSKE_MASK_MB))
         {
             /* Advance r2 to the next page */
@@ -5448,7 +5448,7 @@ BYTE    r1key;
                 regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
         }
     }
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);

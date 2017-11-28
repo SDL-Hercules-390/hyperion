@@ -1041,7 +1041,7 @@ RADR    abs;                            /* Absolute address          */
     } /* if(code==1||code==4) */
   #endif /*defined(FEATURE_ESAME)*/
 
-  #if defined(FEATURE_ASN_AND_LX_REUSE)
+  #if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
     /* For code 5, extract bytes 176-183 */
     if (code == 5)
     {
@@ -1057,7 +1057,7 @@ RADR    abs;                            /* Absolute address          */
         return;
 
     } /* if(code==5) */
-  #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+  #endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
     /* For codes 0,2,3 in ESAME, and codes 0,1,2,3 in ESA/390 */
     /* Point to byte 128, 136, 144, or 152 depending on the code */

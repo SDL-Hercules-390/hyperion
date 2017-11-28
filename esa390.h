@@ -1602,7 +1602,19 @@ typedef struct MBK  MBK;
 #define PFMF_RESERVED        0xFFF00101 /* Reserved                  */
 
 /*-------------------------------------------------------------------*/
-/*                  Facility List definitions                        */
+/*               Store Facility List definitions                     */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The below are all known facility bits defined by IBM as of the    */
+/* latest z/Architecture Pinciples of Operation and correspond to    */
+/* associated "FEATURE_XXX" names which should also be isted in      */
+/* the featall.h header, regardless of whether Hercules supports     */
+/* the defined feature/facility or not.                              */
+/*                                                                   */
+/* Their names (minus the 'STFL_' prefix) are used by the FACILITY   */
+/* macro that defines the actual FACTAB facilities table entries     */
+/* defined in source file archlvl.c                                  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #define STFL_N3                    0    /* Instructions marked N3 in
@@ -1613,6 +1625,7 @@ typedef struct MBK  MBK;
 #define STFL_ESAME_ACTIVE          2    /* ESAME mode is active on
                                            this processor            */
 #define STFL_IDTE_INSTALLED        3    /* IDTE installed ESAME mode */
+
 #define STFL_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
                                            when segtab invalidated   */
 #define STFL_IDTE_SC_REGTAB        5    /* IDTE selective clearing
@@ -1621,7 +1634,7 @@ typedef struct MBK  MBK;
                                            is installed              */
 #define STFL_STFL_EXTENDED         7    /* Store facility list    @Z9
                                            extended is installed  @Z9*/
-#define STFL_ENHANCED_DAT          8    /* Enhanced-DAT facility  208
+#define STFL_ENHANCED_DAT_1        8    /* Enhanced-DAT facility  208
                                            is installed           208*/
 #define STFL_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
                                            facility is installed  @Z9*/
@@ -1629,11 +1642,15 @@ typedef struct MBK  MBK;
                                            is installed           407*/
 #define STFL_CONFIG_TOPOLOGY      11    /* STSI-enhancement for
                                            configuration topology    */
+#define STFL_IBM_INTERNAL_12      12    /* IBM internal use          */
+
 #define STFL_IPTE_RANGE           13    /* IPTE-Range facility      810
                                            installed              810*/
 #define STFL_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting 810
                                            Facility installed     810*/
-#define STFL_TRAN_FAC2            16    /* Extended translation
+#define STFL_IBM_INTERNAL_15      15    /* IBM internal use          */
+
+#define STFL_EXT_TRANSL_FAC_2     16    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_MSG_SECURITY         17    /* Message security assist
                                            feature is installed      */
@@ -1645,7 +1662,7 @@ typedef struct MBK  MBK;
                                            facility is installed     */
 #define STFL_EXTENDED_IMMED       21    /* Extended immediate     @Z9
                                            facility is installed  @Z9*/
-#define STFL_TRAN_FAC3            22    /* Extended translation
+#define STFL_EXT_TRANSL_FAC_3     22    /* Extended translation
                                            facility 3 is installed   */
 #define STFL_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
                                            facility is installed  @Z9*/
@@ -1659,6 +1676,8 @@ typedef struct MBK  MBK;
                                            is installed           407*/
 #define STFL_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
                                            facility is installed  @Z9*/
+#define STFL_UNASSIGNED_29        29    /* Unassigned                */
+
 #define STFL_ETF3_ENHANCEMENT     30    /* Extended translation   @Z9
                                            facility 3 enhancement @Z9*/
 #define STFL_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
@@ -1675,7 +1694,10 @@ typedef struct MBK  MBK;
                                            facility installed     810*/
 #define STFL_FP_EXTENSION         37    /* Floating-point extension
                                            facility installed     810*/
-#define STFL_RESERVED_39          39    /* Reserved */
+#define STFL_ORDER_PRESERVE_CMPSC 38    /* Order-preserving-compression
+                                           facility is installed     */
+#define STFL_IBM_INTERNAL_39      39    /* IBM internal use          */
+
 #define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                            facility installed (ESAME)*/
 #define STFL_FPS_ENHANCEMENT      41    /* Floating point support
@@ -1685,40 +1707,145 @@ typedef struct MBK  MBK;
 #define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
                                            (DFP) facility            */
 #define STFL_DFP_HPERF            43    /* DFP has high performance  */
+
 #define STFL_PFPO                 44    /* PFPO instruction installed*/
+
 #define STFL_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
                                            Facility installed     810*/
-#define STFL_RESERVED_46          46    /* Reserved */
+#define STFL_IBM_INTERNAL_46      46    /* IBM internal use          */
+
 #define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
                                            Facility installed     810*/
-#define STFL_INTERLOCKED_ACCESS_2 52 /* Interlocked access facility 2 */
+#define STFL_DEC_FP_ZONE_CONV     48    /* Decimal-floating-point-
+                                           zoned-conversion facility */
+#define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
+                                           trap, processor-assist and
+                                           miscellaneous-instruction-
+                                           extension-1               */
+#define STFL_CONSTR_TRANSACT      50    /* Constrained-transactional-
+                                           execution facility        */
+#define STFL_LOCAL_TLB_CLEARING   51    /* Local-TLB-clearing        */
 
-#define STFL_RESERVED_62          62    /* Reserved */
-#define STFL_RESERVED_63          63    /* Reserved */
+#define STFL_INTERLOCKED_ACCESS_2 52    /* Interlocked-access-2      */
+
+#define STFL_LOAD_ON_CONDITION_2  53    /* Load/store-on-condition-2,
+                                           load-and-zero-rightmost-byte */
+#define STFL_ENTROPY_ENC_CMPSC    54    /* Entropy-encoding compress */
+
+#define STFL_IBM_INTERNAL_55      55    /* IBM internal use          */
+
+#define STFL_UNASSIGNED_56        56    /* Unassigned                */
+
+#define STFL_MSA_EXTENSION_5      57    /* Message-security-assist-
+                                           extension-5               */
+#define STFL_MISC_INSTR_EXT_2     58    /* Miscellaneous-instructions-
+                                           extension-2               */
+#define STFL_IBM_INTERNAL_59      59    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_60      60    /* IBM internal use          */
+
+#define STFL_UNASSIGNED_61        61    /* Unassigned                */
+
+#define STFL_IBM_INTERNAL_62      62    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_63      63    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_64      64    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_65      65    /* IBM internal use          */
+
 #define STFL_RES_REF_BITS_MUL     66    /* Reset-Reference-Bits-    810
                                            Multiple Fac installed 810*/
 #define STFL_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
                                            facility installed (ESAME)*/
 #define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
                                            facility installed (ESAME)*/
+#define STFL_IBM_INTERNAL_69      69    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_70      70    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_71      71    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_72      72    /* IBM internal use          */
+
+#define STFL_TRANSACT_EXEC        73    /* Transactional-execution   */
+
+#define STFL_STORE_HYPER_INFO     74    /* Store-hypervisor-info     */
+
 #define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
                                            indication facility    810*/
 #define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810
                                            Extension 3 installed  810*/
 #define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810
                                            Extension 4 installed  810*/
+#define STFL_ENHANCED_DAT_2       78    /* Enhanced-DAT-2            */
+
+#define STFL_UNASSIGNED_79        79    /* Unassigned                */
+
+#define STFL_DEC_FP_PACK_CONV     80    /* Deciaml-floating-point
+                                           packed-conversion         */
+//efine STFL_UNASSIGNED_nn    81-127    /* Unassigned                */
+
+#define STFL_IBM_INTERNAL_128    128    /* IBM internal use          */
+
+#define STFL_VECTOR              129    /* Vector facility           */
+
+#define STFL_INSTR_EXEC_PROT     130    /* Instruction-execution-
+                                           protection facility       */
+#define STFL_SIDE_EFFECT_ACCESS  131    /* Side-effect-access        */
+
+#define STFL_UNASSIGNED_132      132    /* Unassigned                */
+
+#define STFL_GUARDED_STORAGE     133    /* Guarded-storage facility  */
+
+#define STFL_VECTOR_PACK_DEC     134    /* Vector-packed-decimal     */
+
+#define STFL_VECTOR_ENH_1        135    /* Vector-enhancements-1     */
+
+#define STFL_UNASSIGNED_136      136    /* Unassigned                */
+
+#define STFL_UNASSIGNED_137      137    /* Unassigned                */
+
+#define STFL_CONFIG_ZARCH_MODE   138    /* Configuration-z/Architecture-
+                                           architectural-mode        */
+#define STFL_MULTIPLE_EPOCH      139    /* Multiple-epoch facility   */
+
+#define STFL_IBM_INTERNAL_140    140    /* IBM internal use          */
+
+#define STFL_IBM_INTERNAL_141    141    /* IBM internal use          */
+
+#define STFL_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple*/
+
+#define STFL_UNASSIGNED_143      143    /* Unassigned                */
+
+#define STFL_TEST_PEND_EXTERNAL  144    /* Test-pending-external-
+                                           interruption facility     */
+#define STFL_INS_REF_BITS_MULT   145    /* Insert-reference-bits-
+                                           multiple facility         */
+#define STFL_MSA_EXTENSION_8     146    /* Message-security-assist-
+                                           extension-8               */
+#define STFL_IBM_INTERNAL_147    147    /* IBM internal use          */
+
+//efine STFL_UNASSIGNED_nn   148-167    /* Unassigned                */
+
+#define STFL_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode*/
+
+//efine STFL_UNASSIGNED_nn   169-255    /* Unassigned                */
+
 #define STFL_IBMMAX              255    /* Maximum IBM facility bit  */
 
 #define STFL_IBMBYSIZE              ((STFL_IBMMAX+7)/8)
 #define STFL_IBMDWSIZE              ((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))
 
 /*-------------------------------------------------------------------*/
+/*                      Hercules Facility bits                       */
+/*-------------------------------------------------------------------*/
 /* The below facility definitions are HERCULES SPECIFIC and not part */
-/* of the architecture.  They are placed here for the convenience of */
-/* being able to use the Virtual Architecture Level facility.        */
+/* of the architecture.  They are placed here for the convenience    */
+/* of being able to use the Virtual Architecture Level facility.     */
 /* Note that Hercules's facility bits always start on the first bit  */
-/* of the first byte of the NEXT doubleword (DW) beyond the last     */
-/* defined (or reserved) IBM facilities list doubleword.             */
+/* of the first byte of the NEXT doubleword beyond the last defined  */
+/* (or reserved) IBM facilities list doubleword.                     */
 /*-------------------------------------------------------------------*/
 
 #define STFL_HERCBITS               ((((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))*sizeof(DW))*8)

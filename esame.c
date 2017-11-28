@@ -929,7 +929,7 @@ U64     n;
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_DAT_ENHANCEMENT)
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98A CSPG  - Compare and Swap and Purge Long                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1006,10 +1006,10 @@ U64     old;                            /* Old value                 */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_purge_long) */
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
-#if defined(FEATURE_DAT_ENHANCEMENT)
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98E IDTE  - Invalidate DAT Table Entry                     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -1132,7 +1132,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(invalidate_dat_table_entry) */
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
 #if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)
@@ -2151,7 +2151,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_EXTRACT_CPU_TIME)
+#if defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C8x1 ECTG  - Extract CPU Time                               [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2214,7 +2214,7 @@ U64     gr0, gr1;                       /* Result register workareas */
 
     RETURN_INTCHECK(regs);
 } /* end DEF_INST(extract_cpu_time) */
-#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
+#endif /*defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)*/
 
 
 #if defined(FEATURE_ESAME)
@@ -5223,7 +5223,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif /*defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
 
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL KEY PROCESSING is deleted       */
 /*                                                                   */
@@ -5244,7 +5244,7 @@ int     page_offset;                    /* Low order bits of R2      */
 
     RRE(inst, regs, r1, r2);
 
-    FACILITY_CHECK(ENHANCED_DAT,regs);
+    FACILITY_CHECK(ENHANCED_DAT_1,regs);
 
     PRIV_CHECK(regs);
 
@@ -5521,7 +5521,7 @@ int     page_offset;                    /* Low order bits of R2      */
     }
 
 } /* end DEF_INST(perform_frame_management_function) */
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
 
 #if defined(FEATURE_STORE_FACILITY_LIST)
@@ -5969,7 +5969,7 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -5981,7 +5981,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6012,7 +6012,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6023,7 +6023,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6064,7 +6064,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
 U16     dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6076,7 +6076,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6107,7 +6107,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6118,7 +6118,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6159,7 +6159,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6171,7 +6171,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6187,7 +6187,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
 #else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
@@ -6208,7 +6208,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6219,7 +6219,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6259,7 +6259,7 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6271,7 +6271,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6287,7 +6287,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
 #else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
@@ -6308,7 +6308,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6319,7 +6319,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -7789,7 +7789,7 @@ BYTE    tbyte;                          /* Work byte                 */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
-#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)                /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* C2x9 AFI   - Add Fullword Immediate                         [RIL] */
 /*-------------------------------------------------------------------*/
@@ -8190,10 +8190,10 @@ U32     i2;                             /* 32-bit operand value      */
                                       i2);
 
 } /* end DEF_INST(subtract_logical_long_fullword_immediate) */
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/         /*@Z9*/
 
 
-#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)                /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* E312 LT    - Load and Test                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -8430,9 +8430,9 @@ int     n;                              /* Position of leftmost one  */
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/         /*@Z9*/
 
-#if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)            /* 810 */
+#if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)            /*810*/
 /*-------------------------------------------------------------------*/
 /* B280 LPP - LOAD PROGRAM PARAMETER                             [S] */
 /*-------------------------------------------------------------------*/
@@ -8453,7 +8453,7 @@ U64     effective_addr2;                /* Effective address         */
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
 } /* end DEF_INST(load_program_parameter) */
-#endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */
+#endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /*810*/
 
 #if !defined(_GEN_ARCH)
 

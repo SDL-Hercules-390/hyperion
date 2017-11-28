@@ -1234,12 +1234,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R1TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the region-second table origin, offset, and
                    length from the region-first table entry */
@@ -1288,12 +1288,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R2TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the region-third table origin, offset, and
                    length from the region-second table entry */
@@ -1342,12 +1342,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R3TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the segment table origin, offset, and
                    length from the region-third table entry */
@@ -1399,8 +1399,8 @@ U16     sx, px;                         /* Segment and page index,
             if (regs->dat.pvtaddr && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-            if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+            if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
               && (regs->CR_L(0) & CR0_ED)
               && (ste & ZSEGTAB_FC))
             {
@@ -1444,7 +1444,7 @@ U16     sx, px;                         /* Segment and page index,
                 return 0;
 
             }
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
             /* Extract the page table origin from segment table entry */
             pto = ste & ZSEGTAB_PTO;
@@ -1461,12 +1461,12 @@ U16     sx, px;                         /* Segment and page index,
                 regs->dat.raddr = pto;
                 regs->dat.xcode = 0;
                 cc = (ste & ZSEGTAB_P) ? 1 : 0;
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
-                if(FACILITY_ENABLED(ENHANCED_DAT,regs)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
                   && (regs->CR_L(0) & CR0_ED)
                   && regs->dat.protect)
                     cc = 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
                 return cc;
             } /* end if(ACCTYPE_LPTEA) */
 

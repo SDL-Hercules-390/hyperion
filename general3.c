@@ -2908,7 +2908,7 @@ U64     w1, w2;                         /* Refetched values          */
 #endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
 
 
-#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)           /*810*/
+#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)         /*810*/
 
 /*-------------------------------------------------------------------*/
 /* B9F2 LOCR  - Load on Condition Register                     [RRF] */
@@ -3043,7 +3043,7 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store_on_condition_long) */
 #endif /*defined(FEATURE_ESAME)*/
 
-#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/    /*810*/
+#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/  /*810*/
 
 
 #if defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                 /*810*/

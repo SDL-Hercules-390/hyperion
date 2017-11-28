@@ -1720,7 +1720,7 @@ int     i;                              /* Integer work areas        */
 }
 
 
-#ifdef FEATURE_EXTENDED_TRANSLATION
+#ifdef FEATURE_EXTENDED_TRANSLATION_FACILITY_1
 /*-------------------------------------------------------------------*/
 /* B2A5 TRE   - Translate Extended                             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1794,7 +1794,7 @@ BYTE    trtab[256];                     /* Translate table           */
     regs->psw.cc =  cc;
 
 } /* end translate_extended */
-#endif /*FEATURE_EXTENDED_TRANSLATION*/
+#endif /*FEATURE_EXTENDED_TRANSLATION_FACILITY_1*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2028,9 +2028,9 @@ DEF_INST(convert_utf8_to_utf32)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2045,12 +2045,12 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2084,7 +2084,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2094,7 +2094,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* Check end of source */
       if(srcelen < 2)
@@ -2106,7 +2106,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2116,7 +2116,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
@@ -2137,7 +2137,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellformednessChecking */
       if(wfc)
       {
@@ -2166,7 +2166,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
@@ -2177,7 +2177,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2187,7 +2187,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* Check end of source */
       if(srcelen < 4)
@@ -2199,7 +2199,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormdnessChecking */
       if(wfc)
       {
@@ -2228,7 +2228,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2272,9 +2272,9 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2289,12 +2289,12 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2338,7 +2338,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT)
+#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2348,7 +2348,7 @@ DEF_INST(convert_utf16_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
