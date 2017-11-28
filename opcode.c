@@ -200,12 +200,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if !defined(FEATURE_ASN_AND_LX_REUSE)
+#if !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
  UNDEF_INST(extract_primary_asn_and_instance)
  UNDEF_INST(extract_secondary_asn_and_instance)
  UNDEF_INST(program_transfer_with_instance)
  UNDEF_INST(set_secondary_asn_with_instance)
-#endif /*!defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*!defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 
 
 #if !defined(FEATURE_ACCESS_REGISTERS)
@@ -242,14 +242,14 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
 
 
-#if !defined(FEATURE_EXTRACT_CPU_TIME)
+#if !defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)
  UNDEF_INST(extract_cpu_time)
-#endif /*!defined(FEATURE_EXTRACT_CPU_TIME)*/
+#endif /*!defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)*/
 
 
-#if !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
+#if !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)
  UNDEF_INST(compare_and_swap_and_store)
-#endif /*!defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
+#endif /*!defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)*/
 
 
 #if !defined(FEATURE_STORE_SYSTEM_INFORMATION)
@@ -262,9 +262,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/    /*208*/
 
 
-#if !defined(FEATURE_ENHANCED_DAT_FACILITY)                     /*208*/
+#if !defined(FEATURE_ENHANCED_DAT_FACILITY_1)                   /*208*/
  UNDEF_INST(perform_frame_management_function)                  /*208*/
-#endif /*!defined(FEATURE_ENHANCED_DAT_FACILITY)*/              /*208*/
+#endif /*!defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/            /*208*/
 
 
 #if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)               /*208*/
@@ -406,14 +406,14 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/        /*810*/
 
 
-#if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)          /*810*/
+#if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)        /*810*/
  UNDEF_INST(load_on_condition_register)                         /*810*/
  UNDEF_INST(load_on_condition_long_register)                    /*810*/
  UNDEF_INST(load_on_condition)                                  /*810*/
  UNDEF_INST(load_on_condition_long)                             /*810*/
  UNDEF_INST(store_on_condition)                                 /*810*/
  UNDEF_INST(store_on_condition_long)                            /*810*/
-#endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/   /*810*/
+#endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/ /*810*/
 
 
 #if !defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                /*810*/
@@ -726,7 +726,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
-#if !defined(FEATURE_DECIMAL_FLOATING_POINT)
+#if !defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
  UNDEF_INST(add_dfp_ext_reg)
  UNDEF_INST(add_dfp_long_reg)
  UNDEF_INST(compare_dfp_ext_reg)
@@ -781,7 +781,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(test_data_group_dfp_ext)
  UNDEF_INST(test_data_group_dfp_long)
  UNDEF_INST(test_data_group_dfp_short)
-#endif /*!defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+#endif /*!defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)*/
 
 
 #if !defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)         /*810*/
@@ -909,11 +909,11 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /* !defined(FEATURE_STORE_CPU_MULTIPLE_COUNTER_FACILITY) */
 
 
-#if !defined(FEATURE_EXTENDED_TRANSLATION)
+#if !defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)
  UNDEF_INST(translate_extended)
  UNDEF_INST(convert_utf16_to_utf8)
  UNDEF_INST(convert_utf8_to_utf16)
-#endif /*!defined(FEATURE_EXTENDED_TRANSLATION)*/
+#endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)*/
 
 
 #if !defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
@@ -1103,13 +1103,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)*/
 
 
-#if !defined(FEATURE_DAT_ENHANCEMENT)
+#if !defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
  UNDEF_INST(compare_and_swap_and_purge_long)
  UNDEF_INST(invalidate_dat_table_entry)
-#endif /*!defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
-#if !defined(FEATURE_EXTENDED_IMMEDIATE)                        /*@Z9*/
+#if !defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)               /*@Z9*/
  UNDEF_INST(add_fullword_immediate)                             /*@Z9*/
  UNDEF_INST(add_long_fullword_immediate)                        /*@Z9*/
  UNDEF_INST(add_logical_fullword_immediate)                     /*@Z9*/
@@ -1131,10 +1131,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(or_immediate_low_fullword)                          /*@Z9*/
  UNDEF_INST(subtract_logical_fullword_immediate)                /*@Z9*/
  UNDEF_INST(subtract_logical_long_fullword_immediate)           /*@Z9*/
-#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE)*/                 /*@Z9*/
+#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/        /*@Z9*/
 
 
-#if !defined(FEATURE_EXTENDED_IMMEDIATE)                        /*@Z9*/
+#if !defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)               /*@Z9*/
  UNDEF_INST(load_and_test)                                      /*@Z9*/
  UNDEF_INST(load_and_test_long)                                 /*@Z9*/
  UNDEF_INST(load_byte_register)                                 /*@Z9*/
@@ -1148,7 +1148,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_logical_halfword_register)                     /*@Z9*/
  UNDEF_INST(load_logical_long_halfword_register)                /*@Z9*/
  UNDEF_INST(find_leftmost_one_long_register)                    /*@Z9*/
-#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE)*/                 /*@Z9*/
+#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/        /*@Z9*/
 
 
 #if !defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)                /*@Z9*/

@@ -1702,7 +1702,7 @@ COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 COMMAND( "cmpscpad",                cmpscpad_cmd,           SYSCFGNDIAG8,       cmpscpad_cmd_desc,      cmpscpad_cmd_help   )
 #endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
-#if defined( _FEATURE_ASN_AND_LX_REUSE )
+#if defined( _FEATURE_ASN_AND_LX_REUSE_FACILITY )
 COMMAND( "alrf",                    alrf_cmd,               SYSCMDNOPER,        alrf_cmd_desc,          NULL                )
 COMMAND( "asn_and_lx_reuse",        alrf_cmd,               SYSCMDNOPER,        asnlx_cmd_desc,         NULL                )
 #endif
