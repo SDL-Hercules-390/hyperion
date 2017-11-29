@@ -1525,7 +1525,7 @@ do { \
 #undef RXY0
 #undef RXY_B
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXY)
   #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
@@ -1541,7 +1541,7 @@ do { \
   #define RXY_B(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_LD_TEST(_inst, _regs, _r1, _b2, _effective_addr2, 0, 0)
  #endif
-#else /* !defined(FEATURE_LONG_DISPLACEMENT) */
+#else /* !defined(FEATURE_LONG_DISPLACEMENT_FACILITY) */
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXY)
   #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
@@ -1637,13 +1637,13 @@ do { \
 #ifdef OPTION_OPTINST
 /* Optimized RXY decoder in case of zero X2 */
 #undef RXYX0
-#ifdef FEATURE_LONG_DISPLACEMENT
+#ifdef FEATURE_LONG_DISPLACEMENT_FACILITY
   #define RXYX0(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXYX0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
 #else
   #define RXYX0(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXYX0_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
-#endif /* #ifdef FEATURE_LONG_DISPLACEMENT */
+#endif /* #ifdef FEATURE_LONG_DISPLACEMENT_FACILITY */
 
 #define RXYX0_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
 { \
@@ -1799,7 +1799,7 @@ do { \
 #undef RSY0
 #undef RSY_B
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSY)
   #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER_LD(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6)
@@ -2345,7 +2345,7 @@ do { \
 /* SIY storage and immediate with long displacement */
 #undef SIY
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SIY)
   #define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
           SIY_DECODER_LD(_inst, _regs, _i2, _b1, _effective_addr1, 6, 6)
@@ -2353,7 +2353,7 @@ do { \
   #define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
           SIY_DECODER_LD_TEST(_inst, _regs, _i2, _b1, _effective_addr1, 6, 6)
  #endif
-#endif /* defined(FEATURE_LONG_DISPLACEMENT) */
+#endif /* defined(FEATURE_LONG_DISPLACEMENT_FACILITY) */
 
 #define SIY_DECODER_LD(_inst, _regs, _i2, _b1, _effective_addr1, _len, _ilc) \
     {   U32 temp; S32 temp1; \
@@ -3235,15 +3235,15 @@ DEF_INST(diagnose);
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 DEF_INST(extract_primary_asn);
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 DEF_INST(extract_primary_asn_and_instance);
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 DEF_INST(extract_secondary_asn);
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 DEF_INST(extract_secondary_asn_and_instance);
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 #if defined(FEATURE_LINKAGE_STACK)
 DEF_INST(extract_stacked_registers);
 DEF_INST(extract_stacked_state);
@@ -3296,9 +3296,9 @@ DEF_INST(program_return);
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 DEF_INST(program_transfer);
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 DEF_INST(program_transfer_with_instance);
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(purge_accesslist_lookaside_buffer);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -3326,9 +3326,9 @@ DEF_INST(set_psw_key_from_address);
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 DEF_INST(set_secondary_asn);
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
 DEF_INST(set_secondary_asn_with_instance);
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
 #if defined(FEATURE_BASIC_STORAGE_KEYS)
 DEF_INST(set_storage_key);
 #endif /*defined(FEATURE_BASIC_STORAGE_KEYS)*/
@@ -3534,12 +3534,12 @@ DEF_INST(multiply_add_unnormal_float_long_to_ext_low);          /*@Z9*/
 DEF_INST(multiply_add_unnormal_float_long_to_ext_high);         /*@Z9*/
 #endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
 
-#if defined(FEATURE_LONG_DISPLACEMENT) && defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY) && defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
 DEF_INST(load_float_long_y);
 DEF_INST(load_float_short_y);
 DEF_INST(store_float_long_y);
 DEF_INST(store_float_short_y);
-#endif /*defined(FEATURE_LONG_DISPLACEMENT) && defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY) && defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
 
 
 /* Instructions in general1.c */
@@ -3581,9 +3581,9 @@ DEF_INST(compare);
 DEF_INST(compare_and_form_codeword);
 DEF_INST(compare_and_swap);
 DEF_INST(compare_double_and_swap);
-#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
+#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)
 DEF_INST(compare_and_swap_and_store);
-#endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
+#endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)*/
 DEF_INST(compare_halfword);
 DEF_INST(compare_logical_register);
 DEF_INST(compare_logical);
@@ -3598,10 +3598,10 @@ DEF_INST(compare_logical_long_extended);
 DEF_INST(compare_logical_string);
 DEF_INST(compare_until_substring_equal);
 #endif /*defined(FEATURE_STRING_INSTRUCTION)*/
-#if defined(FEATURE_EXTENDED_TRANSLATION)
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)
 DEF_INST(convert_utf16_to_utf8);
 DEF_INST(convert_utf8_to_utf16);
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)*/
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
 DEF_INST(convert_utf16_to_utf32);
 DEF_INST(convert_utf32_to_utf16);
@@ -3907,9 +3907,9 @@ DEF_INST(store_clock);
 #if defined(FEATURE_EXTENDED_TOD_CLOCK)
 DEF_INST(store_clock_extended);
 #endif /*defined(FEATURE_EXTENDED_TOD_CLOCK)*/
-#if defined(FEATURE_STORE_CLOCK_FAST)
+#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
 DEF_INST(store_clock_fast);                                     /*@Z9*/
-#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
 DEF_INST(store_halfword);
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
@@ -3932,9 +3932,9 @@ DEF_INST(translate_and_test_extended);                          /*208*/
 DEF_INST(translate_and_test_reverse_extended);                  /*208*/
 #endif /*defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)*/
 
-#if defined(FEATURE_EXTENDED_TRANSLATION)
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)
 DEF_INST(translate_extended);
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)*/
 DEF_INST(unpack);
 DEF_INST(update_tree);
 #ifdef OPTION_OPTINST
@@ -4092,32 +4092,32 @@ DEF_INST(subtract_logical_high_high_high_register);             /*810*/
 DEF_INST(subtract_logical_high_high_low_register);              /*810*/
 #endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/
 
-#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)
 DEF_INST(load_and_add);                                         /*810*/
 DEF_INST(load_and_add_logical);                                 /*810*/
 DEF_INST(load_and_and);                                         /*810*/
 DEF_INST(load_and_exclusive_or);                                /*810*/
 DEF_INST(load_and_or);                                          /*810*/
 DEF_INST(load_pair_disjoint);                                   /*810*/
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/
 
-#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY) && defined(FEATURE_ESAME)
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1) && defined(FEATURE_ESAME)
 DEF_INST(load_and_add_long);                                    /*810*/
 DEF_INST(load_and_add_logical_long);                            /*810*/
 DEF_INST(load_and_and_long);                                    /*810*/
 DEF_INST(load_and_exclusive_or_long);                           /*810*/
 DEF_INST(load_and_or_long);                                     /*810*/
 DEF_INST(load_pair_disjoint_long);                              /*810*/
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY) && defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1) && defined(FEATURE_ESAME)*/
 
-#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)
+#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)
 DEF_INST(load_on_condition_register);                           /*810*/
 DEF_INST(load_on_condition_long_register);                      /*810*/
 DEF_INST(load_on_condition);                                    /*810*/
 DEF_INST(load_on_condition_long);                               /*810*/
 DEF_INST(store_on_condition);                                   /*810*/
 DEF_INST(store_on_condition_long);                              /*810*/
-#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY)*/
+#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/
 
 #if defined(FEATURE_DISTINCT_OPERANDS_FACILITY)
 DEF_INST(add_distinct_register);                                /*810*/
@@ -4310,12 +4310,12 @@ DEF_INST(load_pair_from_quadword);
 DEF_INST(extract_stacked_registers_long);
 DEF_INST(extract_and_set_extended_authority);
 DEF_INST(test_addressing_mode);
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
 DEF_INST(perform_frame_management_function);                    /*208*/
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
-#if defined(FEATURE_TOD_CLOCK_STEERING)
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#if defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)
 DEF_INST(perform_timing_facility_function);                     /*@Z9*/
-#endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
+#endif /*defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)*/
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
 DEF_INST(perform_topology_function);                            /*208*/
 #endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
@@ -4325,9 +4325,9 @@ DEF_INST(reset_reference_bits_multiple);                        /*810*/
 #if defined(FEATURE_STORE_FACILITY_LIST)
 DEF_INST(store_facility_list);
 #endif /*defined(STORE_FACILITY_LIST)*/
-#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
+#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)
 DEF_INST(store_facility_list_extended);                         /*@Z9*/
-#endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
+#endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)*/
 DEF_INST(load_long_halfword_immediate);
 DEF_INST(add_long_halfword_immediate);
 DEF_INST(multiply_long_halfword_immediate);
@@ -4460,7 +4460,7 @@ DEF_INST(translate_one_to_one);
 DEF_INST(move_long_unicode);
 DEF_INST(compare_logical_long_unicode);
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 DEF_INST(add_y);
 DEF_INST(add_halfword_y);
 DEF_INST(add_logical_y);
@@ -4505,16 +4505,16 @@ DEF_INST(subtract_y);
 DEF_INST(subtract_halfword_y);
 DEF_INST(subtract_logical_y);
 DEF_INST(test_under_mask_y);
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
-#if defined(FEATURE_DAT_ENHANCEMENT)
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 DEF_INST(compare_and_swap_and_purge_long);
 DEF_INST(invalidate_dat_table_entry);
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 #if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)
 DEF_INST(load_page_table_entry_address);                        /*@Z9*/
 #endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/
-#if defined(FEATURE_EXTENDED_IMMEDIATE)
+#if defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)
 DEF_INST(add_fullword_immediate);                               /*@Z9*/
 DEF_INST(add_long_fullword_immediate);                          /*@Z9*/
 DEF_INST(add_logical_fullword_immediate);                       /*@Z9*/
@@ -4550,10 +4550,10 @@ DEF_INST(load_logical_halfword);                                /*@Z9*/
 DEF_INST(load_logical_halfword_register);                       /*@Z9*/
 DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
 DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/
-#if defined(FEATURE_EXTRACT_CPU_TIME)
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/
+#if defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)
 DEF_INST(extract_cpu_time);
-#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
+#endif /*defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)*/
 #if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
 DEF_INST(load_program_parameter);                               /*810*/
 #endif /*defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)*/
@@ -4732,7 +4732,7 @@ DEF_INST(load_fpc_and_signal);
 DEF_INST(set_fpc_and_signal);
 #endif /*defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
 
-#if defined(FEATURE_DECIMAL_FLOATING_POINT)
+#if defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
 DEF_INST(add_dfp_ext_reg);
 DEF_INST(add_dfp_long_reg);
 DEF_INST(compare_dfp_ext_reg);
@@ -4787,7 +4787,7 @@ DEF_INST(test_data_class_dfp_short);
 DEF_INST(test_data_group_dfp_ext);
 DEF_INST(test_data_group_dfp_long);
 DEF_INST(test_data_group_dfp_short);
-#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)*/
 
 #if defined(FEATURE_DFP_ZONED_CONVERSION_FACILITY)
 DEF_INST(convert_zoned_to_dfp_ext);                             /*912*/

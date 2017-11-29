@@ -414,12 +414,12 @@ s390_ ## _name
 
 /* ASN-and-LX-reuse is enabled if the ASN-and-LX-reuse
    facility is installed and CR0 bit 44 is 1 */
-#if defined(FEATURE_ASN_AND_LX_REUSE)
+#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
   #define ASN_AND_LX_REUSE_ENABLED(_regs) \
       (FACILITY_ENABLED(ASN_LX_REUSE,(_regs)) && ((_regs)->CR_L(0) & CR0_ASN_LX_REUS))
-#else /* !defined(FEATURE_ASN_AND_LX_REUSE) */
+#else /* !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY) */
   #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
-#endif /* !defined(FEATURE_ASN_AND_LX_REUSE) */
+#endif /* !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY) */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
     (((U64)((_aste)[2])<<32)|(U64)((_aste)[3]))

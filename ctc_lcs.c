@@ -2683,11 +2683,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     memset( &addr, 0, sizeof( struct in_addr ) );
 
     // Set some initial defaults
-#if defined( OPTION_W32_CTCI )
-    pLCSBLK->pszTUNDevice   = strdup( tt32_get_default_iface() );
-#else
-    pLCSBLK->pszTUNDevice   = strdup( HERCTUN_DEV );
-#endif
+    pLCSBLK->pszTUNDevice   = strdup( sysblk.netdev );
     pLCSBLK->pszOATFilename = NULL;
     pLCSBLK->pszIPAddress   = NULL;
 #if defined( OPTION_W32_CTCI )
@@ -3391,14 +3387,8 @@ HDL_DEVICE_SECTION;
 
 // ZZ the following device types should be moved to
 // ZZ their own loadable modules
-    HDL_DEVICE(3088, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCI, ctci_device_hndinfo    );
-    HDL_DEVICE(CTCT, ctct_device_hndinfo    );
     HDL_DEVICE(CTCE, ctce_device_hndinfo    );
-    HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
-#if defined(WIN32)
-    HDL_DEVICE(CTCI-W32,ctci_device_hndinfo );
-#endif
 }
 END_DEVICE_SECTION
 #endif

@@ -3033,7 +3033,7 @@ BYTE    storkey;                        /* Storage key               */
 } /* end function fetch_idaw */
 
 
-#if defined(FEATURE_MIDAW)                                      /*@MW*/
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
 /*-------------------------------------------------------------------*/
 /* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
 /*-------------------------------------------------------------------*/
@@ -3142,7 +3142,7 @@ U16     maxlen;                         /* Maximum allowable length  */
     *flags = mflags;
 
 } /* end function fetch_midaw */                                /*@MW*/
-#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
 
 /*-------------------------------------------------------------------*/
@@ -3177,14 +3177,14 @@ RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    to_iobuf;                       /* 1=READ, SENSE, or RDBACK  */
 BYTE    to_memory;                      /* 1=READ, SENSE, or RDBACK  */
 BYTE    readbackwards;                  /* 1=RDBACK                  */
-#if defined(FEATURE_MIDAW)                                      /*@MW*/
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
 int     midawseq;                       /* MIDAW counter (0=1st)  @MW*/
 U32     midawptr;                       /* Real addr of MIDAW     @MW*/
 U16     midawrem;                       /* CCW bytes remaining    @MW*/
 U16     midawlen=0;                     /* MIDAW data length      @MW*/
 RADR    midawdat=0;                     /* MIDAW data area addr   @MW*/
 BYTE    midawflg;                       /* MIDAW flags            @MW*/
-#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
 #if !defined(set_chanstat)
 #define set_chanstat(_status)                                          \
@@ -3252,7 +3252,7 @@ do {                                                                   \
     }
 
 
-#if defined(FEATURE_MIDAW)                                      /*@MW*/
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
     /* Move data when modified indirect data addressing is used */
     if (flags & CCW_FLAGS_MIDAW)
     {
@@ -3430,7 +3430,7 @@ do {                                                                   \
 
     } /* end if(CCW_FLAGS_MIDAW) */                             /*@MW*/
     else                                                        /*@MW*/
-#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
     /* Move data when indirect data addressing is used */
     if (flags & CCW_FLAGS_IDA)
     {
@@ -4649,7 +4649,7 @@ execute_halt:
         // {}
         -------------------------------------------------------------*/
 
-#if !defined(FEATURE_MIDAW)                                     /*@MW*/
+#if !defined(FEATURE_MIDAW_FACILITY)                            /*@MW*/
         /* Channel program check if MIDAW not installed */      /*@MW*/
         if (flags & CCW_FLAGS_MIDAW)                            /*@MW*/
         {
@@ -4658,9 +4658,9 @@ execute_halt:
                 goto prefetch;
             goto breakchain;
         }
-#endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
+#endif /*!defined(FEATURE_MIDAW_FACILITY)*/                     /*@MW*/
 
-#if defined(FEATURE_MIDAW)                                      /*@MW*/
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
         /* Channel program check if MIDAW not enabled in ORB, or     */
         /* with SKIP or IDA specified                                */
         if ((flags & CCW_FLAGS_MIDAW) &&                        /*@MW*/
@@ -4672,7 +4672,7 @@ execute_halt:
                 goto prefetch;
             goto breakchain;
         }                                                       /*@MW*/
-#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
         /* Suspend supported prior to GA22-7000-10 for the S/370     */
         /* Suspend channel program if suspend flag is set */
@@ -4830,11 +4830,11 @@ execute_halt:
              (((flags & CCW_FLAGS_IDA)   &&
                ((addr & 0x03) ||
                 CHADDRCHK(addr, dev)))                      ||
-#if defined(FEATURE_MIDAW)
+#if defined(FEATURE_MIDAW_FACILITY)
               ((flags & CCW_FLAGS_MIDAW) &&
                ((addr & 0x0F) ||
                 CHADDRCHK(addr, dev)))                      ||
-#endif /*defined(FEATURE_MIDAW)*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/
               (!(flags & (CCW_FLAGS_IDA | CCW_FLAGS_MIDAW))     &&
                ((ccwfmt == 0 &&
                  ((addr & ~0x00FFFFFF)                      ||

@@ -141,12 +141,6 @@ typedef struct _DLLENT {                /* DLL entry                 */
 } DLLENT;
 
 
-#if defined(MODULESDIR)
-#define HDL_DEFAULT_PATH     MODULESDIR
-#else
-#define HDL_DEFAULT_PATH     "hercules"
-#endif
-
 /* SHLIBEXT defined by ISW in configure.ac/config.h */
 #if defined( HDL_BUILD_SHARED ) && defined( LTDL_SHLIB_EXT )
   #define   HDL_MODULE_SUFFIX   LTDL_SHLIB_EXT
@@ -195,7 +189,11 @@ DLL_EXPORT
 void hdl_main();                        /* Main initialization rtn   */
 
 DLL_EXPORT
-char *hdl_setpath( const char*, int );  /* Set module path           */
+void hdl_initpath( const char* );       /* Initialize module path    */
+DLL_EXPORT
+int hdl_setpath( const char* );         /* Set module path (-1/+1/0) */
+DLL_EXPORT
+const char* hdl_getpath();              /* Return module path        */
 
 DLL_EXPORT
 void * hdl_fent(char *);                /* Find entry name           */

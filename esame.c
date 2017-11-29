@@ -929,7 +929,7 @@ U64     n;
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_DAT_ENHANCEMENT)
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98A CSPG  - Compare and Swap and Purge Long                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1006,10 +1006,10 @@ U64     old;                            /* Old value                 */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_purge_long) */
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
-#if defined(FEATURE_DAT_ENHANCEMENT)
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98E IDTE  - Invalidate DAT Table Entry                     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -1132,7 +1132,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(invalidate_dat_table_entry) */
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
 #if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)
@@ -2151,7 +2151,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_EXTRACT_CPU_TIME)
+#if defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C8x1 ECTG  - Extract CPU Time                               [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2214,7 +2214,7 @@ U64     gr0, gr1;                       /* Result register workareas */
 
     RETURN_INTCHECK(regs);
 } /* end DEF_INST(extract_cpu_time) */
-#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
+#endif /*defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)*/
 
 
 #if defined(FEATURE_ESAME)
@@ -4876,7 +4876,7 @@ int     cc;                             /* Condition code            */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_TOD_CLOCK_STEERING)
+#if defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)
 /*-------------------------------------------------------------------*/
 /* 0104 PTFF  - Perform Timing Facility Function                 [E] */
 /*-------------------------------------------------------------------*/
@@ -4936,7 +4936,7 @@ DEF_INST(perform_timing_facility_function)
             regs->psw.cc = 3;
     }
 }
-#endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
+#endif /*defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)*/
 
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
@@ -5223,7 +5223,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif /*defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
 
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY)
+#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL KEY PROCESSING is deleted       */
 /*                                                                   */
@@ -5244,7 +5244,7 @@ int     page_offset;                    /* Low order bits of R2      */
 
     RRE(inst, regs, r1, r2);
 
-    FACILITY_CHECK(ENHANCED_DAT,regs);
+    FACILITY_CHECK(ENHANCED_DAT_1,regs);
 
     PRIV_CHECK(regs);
 
@@ -5521,7 +5521,7 @@ int     page_offset;                    /* Low order bits of R2      */
     }
 
 } /* end DEF_INST(perform_frame_management_function) */
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
 
 
 #if defined(FEATURE_STORE_FACILITY_LIST)
@@ -5559,7 +5559,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #endif /*defined(FEATURE_STORE_FACILITY_LIST) */
 
 
-#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)
+#if defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B2B0 STFLE - Store Facility List Extended                     [S] */
 /*-------------------------------------------------------------------*/
@@ -5588,7 +5588,7 @@ int     cc;                             /* Condition code            */
     ndbl = regs->GR_LHLCL(0) + 1;
 
     /* Determine the STFLE array size from the available facilities */
-    sdbl = STFL_BYTESIZE;
+    sdbl = STFL_IBMBYSIZE;
     while(--sdbl && !regs->facility_list[sdbl]);
     sdbl = (sdbl>>3)+1;
 
@@ -5623,7 +5623,7 @@ int     cc;                             /* Condition code            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(store_facility_list_extended) */
-#endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
+#endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)*/
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
@@ -5969,7 +5969,7 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -5981,7 +5981,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6012,7 +6012,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6023,7 +6023,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6064,7 +6064,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
 U16     dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6076,7 +6076,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6107,7 +6107,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6118,7 +6118,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6159,7 +6159,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6171,7 +6171,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6187,7 +6187,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
 #else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
@@ -6208,7 +6208,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6219,7 +6219,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6259,7 +6259,7 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
@@ -6271,7 +6271,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     ODD_CHECK(r1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
@@ -6287,7 +6287,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
 #else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
@@ -6308,7 +6308,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
@@ -6319,7 +6319,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
             regs->psw.cc = 1;
             break;
           }
-#ifdef FEATURE_ETF2_ENHANCEMENT
+#ifdef FEATURE_ETF2_ENHANCEMENT_FACILITY
         }
 #endif
 
@@ -6524,7 +6524,7 @@ int     cpu_length;                     /* cpu determined length     */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E376 LB    - Load Byte                                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6540,10 +6540,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E377 LGB   - Load Byte Long                                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6559,10 +6559,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte_long) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E35A AY    - Add (Long Displacement)                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6589,10 +6589,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E37A AHY   - Add Halfword (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6619,10 +6619,10 @@ S32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_halfword_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E35E ALY   - Add Logical (Long Displacement)                [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6645,10 +6645,10 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
 } /* end DEF_INST(add_logical_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB54 NIY   - And Immediate (Long Displacement)              [SIY] */
 /*-------------------------------------------------------------------*/
@@ -6672,10 +6672,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
     ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(and_immediate_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E354 NY    - And (Long Displacement)                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6695,10 +6695,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
 
 } /* end DEF_INST(and_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E359 CY    - Compare (Long Displacement)                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6720,10 +6720,10 @@ U32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
 
 } /* end DEF_INST(compare_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E379 CHY   - Compare Halfword (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6745,10 +6745,10 @@ S32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_halfword_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E355 CLY   - Compare Logical (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6769,10 +6769,10 @@ U32     n;                              /* 32-bit operand values     */
                    regs->GR_L(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB55 CLIY  - Compare Logical Immediate (Long Displacement)  [SIY] */
 /*-------------------------------------------------------------------*/
@@ -6793,10 +6793,10 @@ BYTE    cbyte;                          /* Compare byte              */
                    (cbyte > i2) ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_immediate_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB21 CLMY  - Compare Logical Characters under Mask Long Disp[RSY] */
 /*-------------------------------------------------------------------*/
@@ -6834,10 +6834,10 @@ BYTE    rbyte[4],                       /* Register bytes            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(compare_logical_characters_under_mask_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB14 CSY   - Compare and Swap (Long Displacement)           [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6892,10 +6892,10 @@ U32     old;                            /* old value                 */
     }
 
 } /* end DEF_INST(compare_and_swap_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB31 CDSY  - Compare Double and Swap (Long Displacement)    [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6954,10 +6954,10 @@ U64     old, new;                       /* old, new values           */
     }
 
 } /* end DEF_INST(compare_double_and_swap_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E306 CVBY  - Convert to Binary (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6998,10 +6998,10 @@ BYTE    dec[8];                         /* Packed decimal operand    */
         regs->program_interrupt (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
 }
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E326 CVDY  - Convert to Decimal (Long Displacement)         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7025,10 +7025,10 @@ BYTE    dec[16];                        /* Packed decimal result     */
     ARCH_DEP(vstorec) ( dec+8, 8-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(convert_to_decimal_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7052,10 +7052,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
     ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(exclusive_or_immediate_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E357 XY    - Exclusive Or (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7075,10 +7075,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
 
 } /* end DEF_INST(exclusive_or_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E373 ICY   - Insert Character (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7094,10 +7094,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(insert_character_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB81 ICMY  - Insert Characters under Mask Long Displacement [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7154,10 +7154,10 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 } /* end DEF_INST(insert_characters_under_mask_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E358 LY    - Load (Long Displacement)                       [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7173,10 +7173,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* EB9A LAMY  - Load Access Multiple (Long Displacement)       [RSY] */
@@ -7224,10 +7224,10 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 } /* end DEF_INST(load_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E371 LAY   - Load Address (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7243,10 +7243,10 @@ VADR    effective_addr2;                /* Effective address         */
     SET_GR_A(r1, regs, effective_addr2);
 
 } /* end DEF_INST(load_address_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E378 LHY   - Load Halfword (Long Displacement)              [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7262,10 +7262,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_halfword_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB98 LMY   - Load Multiple (Long Displacement)              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7333,10 +7333,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(load_multiple_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E313 LRAY  - Load Real Address (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7351,10 +7351,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
 } /* end DEF_INST(load_real_address_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB52 MVIY  - Move Immediate (Long Displacement)             [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7370,10 +7370,10 @@ VADR    effective_addr1;                /* Effective address         */
     ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
 
 } /* end DEF_INST(move_immediate_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E351 MSY   - Multiply Single (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7393,10 +7393,10 @@ S32     n;                              /* 32-bit operand values     */
     regs->GR_L(r1) = (S32)regs->GR_L(r1) * n;
 
 } /* end DEF_INST(multiply_single) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB56 OIY   - Or Immediate (Long Displacement)               [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7421,10 +7421,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
 
 
 } /* end DEF_INST(or_immediate_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E356 OY    - Or (Long Displacement)                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7444,10 +7444,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
 
 } /* end DEF_INST(or_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E350 STY   - Store (Long Displacement)                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7463,10 +7463,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* EB9B STAMY - Store Access Multiple (Long Displacement)      [RSY] */
@@ -7515,10 +7515,10 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 } /* end DEF_INST(store_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E372 STCY  - Store Character (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7534,10 +7534,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_character_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB2D STCMY - Store Characters under Mask (Long Displacement)[RSY] */
 /*-------------------------------------------------------------------*/
@@ -7581,10 +7581,10 @@ BYTE    rbyte[4];                       /* Byte work area            */
     } /* switch (r3) */
 
 } /* end DEF_INST(store_characters_under_mask_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E370 STHY  - Store Halfword (Long Displacement)             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7600,10 +7600,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_halfword_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB90 STMY  - Store Multiple (Long Displacement)             [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7671,10 +7671,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(store_multiple_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E35B SY    - Subtract (Long Displacement)                   [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7701,10 +7701,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E37B SHY   - Subtract Halfword (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7731,10 +7731,10 @@ S32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_halfword_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E35F SLY   - Subtract Logical (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7757,10 +7757,10 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
 } /* end DEF_INST(subtract_logical_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB51 TMY   - Test under Mask (Long Displacement)            [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7786,10 +7786,10 @@ BYTE    tbyte;                          /* Work byte                 */
             1 ;                             /* result mixed      */
 
 } /* end DEF_INST(test_under_mask_y) */
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)                /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* C2x9 AFI   - Add Fullword Immediate                         [RIL] */
 /*-------------------------------------------------------------------*/
@@ -8190,10 +8190,10 @@ U32     i2;                             /* 32-bit operand value      */
                                       i2);
 
 } /* end DEF_INST(subtract_logical_long_fullword_immediate) */
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/         /*@Z9*/
 
 
-#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)                /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* E312 LT    - Load and Test                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -8430,9 +8430,9 @@ int     n;                              /* Position of leftmost one  */
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
-#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/         /*@Z9*/
 
-#if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)            /* 810 */
+#if defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)            /*810*/
 /*-------------------------------------------------------------------*/
 /* B280 LPP - LOAD PROGRAM PARAMETER                             [S] */
 /*-------------------------------------------------------------------*/
@@ -8453,7 +8453,7 @@ U64     effective_addr2;                /* Effective address         */
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
 } /* end DEF_INST(load_program_parameter) */
-#endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */
+#endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /*810*/
 
 #if !defined(_GEN_ARCH)
 

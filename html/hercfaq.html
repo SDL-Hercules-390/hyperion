@@ -677,184 +677,229 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <H4><A NAME="5.01">5.01</A>
     What architectural features are implemented?
 </H4>
+
 <P>The following standard features of ESA/390 have been implemented: </P>
+
 <UL>
-<LI>Address-Limit Checking </LI>
-<LI>Commercial Instruction Set </LI>
-<LI>Decimal Instructions </LI>
-<LI>Hexadecimal Floating-Point Instructions </LI>
-<LI>24-bit and 31-bit addressing </LI>
-<LI>Key-Controlled Protection </LI>
-<LI>Page Protection </LI>
-<LI>Low-Address Protection </LI>
-<LI>Dynamic Address Translation </LI>
-<LI>370-XA Channel Subsystem </LI>
-<LI>Channel Indirect Data Addressing </LI>
-<LI>Program Controlled Interruption (PCI) </LI>
-<LI>Channel Program Suspend/Resume </LI>
-<LI>Dual Address Space </LI>
-<LI>Access Register Mode </LI>
-<LI>Home Space Mode </LI>
-<LI>Branch and Save </LI>
-<LI>Conditional Swapping </LI>
-<LI>TOD Clock, Clock Comparator, and CPU Timer </LI>
-<LI>MVCS/MVCP/MVCK/MVCSK/MVCDK instructions </LI>
-<LI>TB/TPROT instructions </LI>
-<LI>LURA/STURA instructions </LI>
-<LI>BAKR/PC/PR/PT instructions </LI>
-<LI>Linkage Stack </LI>
-<LI>Compare and Form Codeword and Update Tree instructions </LI>
+<LI>24-bit and 31-bit addressing
+<LI>370-XA Channel Subsystem
+<LI>Access Register Mode
+<LI>Address-Limit Checking
+<LI>BAKR/PC/PR/PT instructions
+<LI>Branch and Save
+<LI>Channel Indirect Data Addressing
+<LI>Channel Program Suspend/Resume
+<LI>Commercial Instruction Set
+<LI>Compare and Form Codeword and Update Tree instructions
+<LI>Conditional Swapping
+<LI>Decimal Instructions
+<LI>Dual Address Space
+<LI>Dynamic Address Translation
+<LI>Hexadecimal Floating-Point Instructions
+<LI>Home Space Mode
+<LI>Key-Controlled Protection
+<LI>Linkage Stack
+<LI>Low-Address Protection
+<LI>LURA/STURA instructions
+<LI>MVCS/MVCP/MVCK/MVCSK/MVCDK instructions
+<LI>Page Protection
+<LI>Program Controlled Interruption (PCI)
+<LI>TB/TPROT instructions
+<LI>TOD Clock, Clock Comparator, and CPU Timer
 </UL>
 
-<P>The following optional features of ESA/390 have been implemented: </P>
+<P>The following optional features of ESA/390 have been implemented:</P>
 
 <UL>
-<LI>Access-List-Controlled Protection </LI>
-<LI>Binary Floating-Point instructions </LI>
-<LI>Branch and Set Authority </LI>
-<LI>Broadcasted Purging </LI>
-<LI>Checksum instruction </LI>
-<LI>Compare and Move Extended instructions </LI>
-<LI>Dynamic Reconfiguration </LI>
-<LI>Expanded Storage </LI>
-<LI>Fast Synchronous Data Mover Facility</LI>
-<LI>Floating-Point-Support Extensions </LI>
-<LI>Halfword-Immediate instructions </LI>
-<LI>Branch-Relative instructions </LI>
-<LI>Incorrect-Length-Indication Suppression </LI>
-<li>Interpretive Execution (SIE) </li>
-<LI>Move Inverse </LI>
-<LI>Move Page (Facility 2) </LI>
-<LI>MVS assists </LI>
-<LI>Operational Extensions: Console Integration </LI>
-<LI>Private Space </LI>
-<LI>Set Address Space Control Fast </LI>
-<li>Service-call-logical-processor (SCLP) facility </li>
-<li>Square Root</li>
-<LI>Storage-Protection Override </LI>
-<li>Storage Key assist</li>
-<LI>String instructions </LI>
-<LI>Subspace Group </LI>
-<LI>Compare Until Substring Equal </LI>
-<LI>Concurrent Sense </LI>
-<LI>Suppression on Protection with Virtual-Address enhancement </LI>
-<LI>Extended TOD clock </LI>
-<li>Compression</li>
-<LI>Perform Locked Operation </LI>
-<li>Vector Facility</li>
-<li>Multiple Controlled Data Space (VM dataspaces) </li>
-<LI>Extended Translation </LI>
-<li>Extended Translation Facility 2</li>
-<LI>Store System Information </LI>
-<LI>Cancel I/O Facility</LI>
-<li>Program Event Recording</li>
-<li>Guest PER enhancement</li>
+<LI>Access-List-Controlled Protection
+<LI>Binary Floating-Point instructions
+<LI>Branch and Set Authority
+<LI>Branch-Relative instructions
+<LI>Broadcasted Purging
+<LI>Cancel I/O Facility
+<LI>Checksum instruction
+<LI>Compare and Move Extended instructions
+<LI>Compare Until Substring Equal
+<LI>Compression
+<LI>Concurrent Sense
+<LI>Dynamic Reconfiguration
+<LI>Expanded Storage
+<LI>Extended TOD clock
+<LI>Extended Translation
+<LI>Extended Translation Facility 2
+<LI>Fast Synchronous Data Mover Facility
+<LI>Floating-Point-Support Extensions
+<LI>Guest PER enhancement
+<LI>Halfword-Immediate instructions
+<LI>Incorrect-Length-Indication Suppression
+<LI>Interpretive Execution (SIE)
+<LI>Move Inverse
+<LI>Move Page (Facility 2)
+<LI>Multiple Controlled Data Space (VM dataspaces)
+<LI>MVS assists
+<LI>Operational Extensions: Console Integration
+<LI>Perform Locked Operation
+<LI>Private Space
+<LI>Program Event Recording
+<LI>Service-call-logical-processor (SCLP) facility
+<LI>Set Address Space Control Fast
+<LI>Square Root
+<LI>Storage Key assist
+<LI>Storage-Protection Override
+<LI>Store System Information
+<LI>String instructions
+<LI>Subspace Group
+<LI>Suppression on Protection with Virtual-Address enhancement
+<LI>Vector Facility
 </UL>
 
-<P>The following optional features of z/Architecture have been implemented: </P>
+<P>The following optional features of z/Architecture have been implemented:</P>
 
 <UL>
-<li>HFP Multiply-and-Add/Subtract Facility</li>
-<li>Message Security Assist</li>
-<li>Long-Displacement Facility</li>
-<li>DAT-Enhancement Facility</li>
-<li>Extended-Translation Facility 3</li>
-<li>ASN-and-LX-Reuse Facility</li>
-<li>List-Directed Initial Program Load</li>
-<li>Modified CCW Indirect Data Addressing (MIDAW) Facility</li>
-<li>Extended-Immediate Facility</li>
-<li>Message-Security-Assist Extension 1</li>
-<li>Message-Security-Assist Extension 2</li>
-<li>DAT-Enhancement Facility 2</li>
-<li>Store-Clock-Fast Facility</li>
-<li>Store-Facility-List-Extended Facility</li>
-<li>ETF2-Enhancement Facility</li>
-<li>ETF3-Enhancement Facility</li>
-<li>PER-3 Facility</li>
-<li>TOD-Clock-Steering Facility</li>
-<li>Conditional-Emergency-Signal and Sense-Running-Status Facility</li>
-<li>Multiple Logical Channel Subsystems Facility</li>
-<li>Floating-Point-Support Enhancement Facilities
-(FPR-GR-Loading, FPS-Sign-Handling, and DFP-Rounding)</li>
-<li>Decimal Floating Point Facility</li>
-<li>IEEE-Exception-Simulation Facility</li>
-<li>Extract-CPU-Time Facility</li>
-<li>Conditional-SSKE Facility</li>
-<li>Compare-and-Swap-and-Store Facility</li>
-<li>Execute-Extensions Facility</li>
-<li>General-Instructions-Extension Facility
-<li>Move-with-Optional-Specifications Facility</li>
-<li>Parsing-Enhancement Facility
-<li>Compare-and-Swap-and-Store Facility 2
-<li>Integrated 3270 (SYSG) Console
-<li>Configuration-Topology Facility
-<li>HFP-Unnormalized-Extensions Facility
-<li>CMPSC-Enhancement Facility
-<li>High-Word Facility
-<li>Interlocked-Access Facility
-<li>Load/Store-on-Condition Facility
-<li>Distinct-Operands Facility
-<li>Population-Count Facility
-<li>Message-Security-Assist Extension 3
-<li>Message-Security-Assist Extension 4
-<li>Fast-BCR-Serialization Facility
-<li>Enhanced-Monitor Facility
-<li>Reset-Reference-Bits-Multiple Facility
-<li>Access-Exception-Fetch/Store-Indication Facility
-<li>Load-Program-Parameter Facility
-<li>IPTE-Range Facility
-<li>Enhanced-DAT Facility
-<li>Queued Direct I/O (QDIO)
-<li>Interlocked-Access Facility 2
-</ul>
+<LI>Access-Exception-Fetch/Store-Indication Facility
+<LI>ASN-and-LX-Reuse Facility
+<LI>CMPSC-Enhancement Facility
+<LI>Compare-and-Swap-and-Store Facility
+<LI>Compare-and-Swap-and-Store Facility 2
+<LI>Conditional-Emergency-Signal and Sense-Running-Status Facility
+<LI>Conditional-SSKE Facility
+<LI>Configuration-Topology Facility
+<LI>DAT-Enhancement Facility 1
+<LI>DAT-Enhancement Facility 2
+<LI>Decimal Floating Point Facility
+<LI>Decimal-Floating-Point-Rounding Facility
+<LI>Distinct-Operands Facility
+<LI>Enhanced-DAT Facility 1
+<LI>Enhanced-Monitor Facility
+<LI>ETF2-Enhancement Facility
+<LI>ETF3-Enhancement Facility
+<LI>Execute-Extensions Facility
+<LI>Extended-Immediate Facility
+<LI>Extended-Translation Facility 1
+<LI>Extended-Translation Facility 2
+<LI>Extended-Translation Facility 3
+<LI>Extract-CPU-Time Facility
+<LI>Fast-BCR-Serialization Facility
+<LI>Floating-Point-Extension Facility
+<LI>Floating-Point-Support-Sign-Handling Facility
+<LI>FPR-GR-Transfer Facility
+<LI>General-Instructions-Extension Facility
+<LI>HFP Multiply-and-Add/Subtract Facility
+<LI>HFP-Unnormalized-Extensions Facility
+<LI>High-Word Facility
+<LI>IEEE-Exception-Simulation Facility
+<LI>Integrated 3270 (SYSG) Console
+<LI>Interlocked-Access Facility 1
+<LI>Interlocked-Access Facility 2
+<LI>IPTE-Range Facility
+<LI>List-Directed Initial Program Load
+<LI>Load-Program-Parameter Facility
+<LI>Load/Store-on-Condition Facility 1
+<LI>Long-Displacement Facility
+<LI>Message Security Assist
+<LI>Message-Security-Assist Extension 1
+<LI>Message-Security-Assist Extension 2
+<LI>Message-Security-Assist Extension 3
+<LI>Message-Security-Assist Extension 4
+<LI>Modified CCW Indirect Data Addressing (MIDAW) Facility
+<LI>Move-with-Optional-Specifications Facility
+<LI>Multiple-Subchannel-Set Facility
+<LI>Parsing-Enhancement Facility
+<LI>PER-3 Facility
+<LI>Population-Count Facility
+<LI>Queued Direct I/O (QDIO)
+<LI>Reset-Reference-Bits-Multiple Facility
+<LI>Store-Clock-Fast Facility
+<LI>Store-Facility-List-Extended Facility
+<LI>TOD-Clock-Steering Facility
+</UL>
 
 <P>The following optional features of z/Architecture have not yet been implemented:</P>
-<ul>
-<li>PFPO Facility
-<li>Restore-Subchannel Facility
-<li>Integrated ASCII (SYSA) Console
-<li>CPU-Measurement Counter Facility
-<li>CPU-Measurement Sampling Facility
-<li>Floating-Point-Extension Facility
-<li>Nonquiescing Key-Setting Facility
-<li>Enhanced-DAT Facility 2
-<li>Local-TLB-Clearing Facility
-<li>PER Zero-Address-Detection Facility
-<li>Processor-Assist Facility
-<li>Transactional-Execution Facility
-<li>Warning-Track-Interruption Facility
-</ul>
 
-<P>The following standard feature has not yet been implemented: </P>
 <UL>
-<LI>Clear I/O (full functionality for S/370) </LI></ul>
-<P>The following optional features have been partially implemented: </P>
-<UL>
-<LI>Channel-Subsystem Call </LI>
-<LI>VM/370 assists </LI>
+<LI>Configuration-z/Architecture-Architectural-Mode Facility
+<LI>Constrained-Transactional-Execution Facility
+<LI>CPU-Measurement Counter Facility
+<LI>CPU-Measurement Sampling Facility
+<LI>Decimal-Floating-Point-Packed-Conversion Facility
+<LI>Decimal-Floating-Point-Zoned-Conversion Facility
+<LI>Enhanced-DAT Facility 2
+<LI>Entropy-Encoding-Compression Facility
+<LI>ESA/390-Compatability-Mode Facility
+<LI>Execution-Hint Facility
+<LI>Extended-I/O-Measurement-Block Facility
+<LI>Extended-I/O-Measurement-Word Facility
+<LI>FCX-Bidirectional-Data-Transfer Facility
+<LI>Fibre-Channel-Extensions (FCX) Facility
+<LI>Guarded-Storage Facility
+<LI>Insert-Reference-Bits-Multiple Facility
+<LI>Instruction-Execution-Protection Facility
+<LI>Integrated ASCII (SYSA) Console
+<LI>Load-and-Trap Facility
+<LI>Load-and-Zero-Rightmost-Byte Facility
+<LI>Load/Store-on-Condition Facility 2
+<LI>Local-TLB-Clearing Facility
+<LI>Message-Security-Assist Extension 5
+<LI>Message-Security-Assist Extension 6
+<LI>Message-Security-Assist Extension 7
+<LI>Message-Security-Assist Extension 8
+<LI>Miscellaneous-Instruction-Extensions Facility 1
+<LI>Miscellaneous-Instruction-Extensions Facility 2
+<LI>Multiple-Epoch Facility
+<LI>Multithreading Facility
+<LI>Nonquiescing Key-Setting Facility
+<LI>Order-Preserving-Compression Facility
+<LI>PER Zero-Address-Detection Facility
+<LI>PFPO Facility
+<LI>Processor-Assist Facility
+<LI>Program-Directed IPL feature (proper Diagnose x'308' support) (Note: is a <i>feature</i>, <i>not</i> a facility)
+<LI>Restore-Subchannel Facility
+<LI>Server-Time-Protocol Facility
+<LI>Side-Effect-Access Facility
+<LI>Test-Pending-External-Interruption Facility
+<LI>Transactional-Execution Facility
+<LI>Vector Facility for z/Architecture
+<LI>Vector Packed-Decimal Facility
+<LI>Vector-Enhancements Facility 1
+<LI>Warning-Track-Interruption Facility
 </UL>
+
+<P>The following standard feature has not yet been implemented:</P>
+
+<UL>
+<LI>Clear I/O (full functionality for S/370)
+</UL>
+
+<P>The following optional features have been partially implemented:</P>
+
+<UL>
+<LI>Channel-Subsystem Call
+<LI>VM/370 Assists (mostly implemented but not fully implemented)
+</UL>
+
 <P>The following features are not yet implemented, either due to lack
 of documentation, limited host system capability, or lack of
-supporting hardware: </P>
+supporting hardware:</P>
+
 <UL>
-<LI>Asynchronous Data Mover Facility </LI>
-<LI>Asynchronous Pageout Facility </LI>
-<LI>Coupling Links </LI>
-<LI>ESCON </LI>
-<LI>FICON </LI>
-<LI>MIF (Multiple Image Facility) </LI>
-<LI>Extended Sorting </LI>
-<LI>External Time Reference (Sysplex Timer) </LI>
-<LI>ICRF (Cryptography) </LI>
-<LI>Operational Extensions: Automatic Reconfiguration, Storage
-Reconfiguration, SCP-initiated Reset, Processor Availability </LI>
-<LI>PR/SM </LI>
-<LI>Program-Controlled re-IPL </LI>
+<LI>Asynchronous Data Mover Facility
+<LI>Asynchronous Pageout Facility
+<LI>Coupling Links
+<LI>ESCON
+<LI>Extended Sorting
+<LI>External Time Reference (Sysplex Timer)
+<LI>FICON
+<LI>ICRF (Cryptography)
+<LI>MIF (Multiple Image Facility)
+<LI>Operational Extensions: Automatic Reconfiguration, Storage Reconfiguration, SCP-initiated Reset, Processor Availability
+<LI>PR/SM
+<LI>Program-Controlled re-IPL
 </UL>
+
 <p>Hercules is compliant with IBM's ALS-1, ALS-2 and ALS-3
 architectural level sets to the degree necessary to run all OS/390
 versions through 2.10 and known versions of z/OS in both ARCHLVL 1
-and ARCHLVL 2 mode, and Linux and z/VM in both ESA/390 and
+and ARCHLVL 2 mode, and Linux and z/VM and z/VSE in both ESA/390 and
 z/Architecture mode.</p>
 <P>
 <HR>

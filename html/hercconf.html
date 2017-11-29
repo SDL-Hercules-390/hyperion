@@ -72,6 +72,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#HTTPROOT">HTTP</a>       ROOT   /usr/local/share/hercules/
     <a href="#HTTPSTRT">HTTP</a>       START
 
+    <a href="#NETDEV">NETDEV</a>     /dev/net/tun
+
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
@@ -148,16 +150,14 @@ a real System/390.  The configuration file is an ASCII text file.
     0141      <a href="#3370">3370</a>    syswk1.141
     0300      <a href="#3370">3370</a>    sysres.300
 
-    0400      <a href="#CTCT">CTCT</a>    30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
-    0401      <a href="#CTCT">CTCT</a>    30881  192.168.100.2  30881  2048
+    0A00.3    <a href="#QETH">QETH</a>    chpid F0  iface /dev/net/tun  ipaddr 192.168.0.4  netmask 255.255.0.0
+    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
     0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
     0430.2    <a href="#CTCI">CTCI</a>    tun0
-    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
-    0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
-    0470.2    <a href="#PTP">PTP</a>     tun0
-    0A00.3    <a href="#QETH">QETH</a>    chpid F0  iface /dev/net/tun  ipaddr 192.168.0.4  netmask 255.255.0.0
     0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
     0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
+    0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
+    0470.2    <a href="#PTP">PTP</a>     tun0
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
     0581      <a href="#3420">3420</a>    \\.\Tape0   # <a href="#SCSI">SCSI</a>  (Windows only)
@@ -1157,6 +1157,28 @@ a real System/390.  The configuration file is an ASCII text file.
     a real physical device and not one emulated via a disk file like .AWS tapes).
     <p>
 
+<a name="NETDEV"></a>
+<dt><code>NETDEV &nbsp; <em>devname</em></code>
+<dd><p>
+    Specifies the name (or for Windows, the IP or MAC address) of the underlying
+    default host network device to be used for all Hercules communications devices
+    unless overridden on the device statement itself.
+    <p>
+    The default for Linux (except Apple and FreeBSD) is <code>/dev/net/tun</code>.
+    The default for Apple and FreeBSD is <code>/dev/tun</code>.
+    <p>
+    The default for Windows is the whichever host adapter that SoftDevLab's
+    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
+    returns as its "default host network adapter" which for older versions of CTCI-WIN
+    (3.5.0 and earlier) is the first network adapter in the Windows host's binding
+    order, which may not be desirable for some users.
+    <p>
+    Refer to the 'Help' file included in newer versions of
+    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> (version 3.6.0 or greater)
+    for information regarding modifying Windows's adapter binding order and/or defining
+    a preferred CTCI-WIN default host network adapter (for Windows 10 for example).
+    <p>
+
 <a name="NUMCPU"></a>
 <dt><code>NUMCPU &nbsp; <em>nn</em></code>
 <dd><p>
@@ -2091,7 +2113,33 @@ a real System/390.  The configuration file is an ASCII text file.
                 </td>
             </tr>
 
+            <tr>
+                <td>
+                        (( <a href="#QETH">OSA</a> ))
+                </td>
+                <td>
+                            OSA Express adapter operating on QDIO mode.
+                            Both layer-2 and layer-3 modes are supported.
+                </td>
+                <td>
+                        <a href="#QETH">"QETH" (OSA/QDIO Ethernet Adapter)
+                        <br>Tun/Tap Driver</a>
+                </td>
+            </tr>
 
+            <tr>
+                <td>
+                        (( <a href="#LCS">LCS</a> ))
+                </td>
+                <td>
+                            IBM 8232 LCS device, LCS3172 driver of a P/390,
+                            IBM 2216 router, IBM 3172 running ICP.
+                </td>
+                <td>
+                        <a href="#LCS">"LCS" (LAN Channel Station)
+                        <br>Tun/Tap Driver</a>
+                </td>
+            </tr>
 
             <tr>
                 <td>
@@ -2102,18 +2150,6 @@ a real System/390.  The configuration file is an ASCII text file.
                 </td>
                 <td>
                         <a href="#CTCI">"CTCI" Tun/Tap Driver</a>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                        (( <a href="#CTCT">CTCT</a> ))
-                </td>
-                <td>
-                        Channel to Channel Emulation via TCP connection
-                </td>
-                <td>
-                        <a href="#CTCT">"CTCT" driver</a>
                 </td>
             </tr>
 
@@ -2132,21 +2168,6 @@ a real System/390.  The configuration file is an ASCII text file.
 
             <tr>
                 <td>
-                        (( <a href="#LCS">LCS</a> ))
-                </td>
-                <td>
-                            IBM 2216 router, IBM 3172 running ICP,
-                            IBM 8232 LCS device, LCS3172 driver of a P/390,
-                            IBM Open Systems Adapter (OSA)
-                </td>
-                <td>
-                        <a href="#LCS">"LCS" (LAN Channel Station)
-                        <br>Tun/Tap Driver</a>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
                         (( <a href="#PTP">PTP</a> ))
                 </td>
                 <td>
@@ -2154,20 +2175,6 @@ a real System/390.  The configuration file is an ASCII text file.
                 </td>
                 <td>
                         <a href="#PTP">"PTP" Tun/Tap Driver</a>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                        (( <a href="#QETH">OSA</a> ))
-                </td>
-                <td>
-                            OSA Express adapter operating on QDIO mode.
-                            Both layer-2 and layer-3 modes are supported.
-                </td>
-                <td>
-                        <a href="#QETH">"QETH" (OSA/QDIO Ethernet Adapter)
-                        <br>Tun/Tap Driver</a>
                 </td>
             </tr>
 
@@ -2798,8 +2805,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     <a href="http://www.timpinkawa.net/hercules/prtspool.html">Tim Pinkawa</a>
     has an example which shows how the print-to-pipe feature can be used to
-    create output in PDF format. For Windows users, "Fish" provides a very nice
-    PDF spooler for Hercules called
+    create output in PDF format. For Windows users, SoftDevLabs provides a very
+    nice PDF spooler for Hercules called
     "<a href="http://www.softdevlabs.com/hercprt">HercPrt</a>".
     <p><br>
 
@@ -3264,7 +3271,7 @@ a real System/390.  The configuration file is an ASCII text file.
             to the actual SCSI hardware.
             <p>
             Check the manufacturer information for your particular model of
-            SCSI attached tape drive (and/or use Fish's
+            SCSI attached tape drive (and/or use SoftDevLabs's
             "<a href="http://www.softdevlabs.com/ftape">ftape</a>"
             Windows utility)
             to determine whether or not this option is needed for your
@@ -3302,296 +3309,184 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dl> <!-- begin emulation types -->
 
-<a name="CTCI"></a>
-    <dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)
+<a name="QETH"></a>
+    <dt><b>QETH</b> &nbsp; &nbsp; (OSA/QDIO Ethernet Adapter)
     <dd><p>
-        A point-to-point IP connection with the TCP/IP stack of the
-        driving system on which Hercules is running.  See the
-        <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
-        in particular the use of preconfigured interfaces.
-        <p>
-        The Windows implementation is different from the unix one. See Fish's
-        <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
-        page for further details and information.
-        <p>
-        For unix systems, such as Linux, BSD, and OSX, you may use
-        preconfigured interfaces or you may
-        request Hercules to configure the interface for you.
-        In the first case you must know and supply the name of the interface to use;
-        in the second case the kernel supplies an interface name.
+
+        Emulates an OSA Express card running in QDIO mode.
+        Both layer-2 and layer-3 are currently supported.
+
         <p>
 
-        <dl> <!-- begin CTCI parms -->
-        <dt>Required for Linux when using a preconfigured interface:
+        For technical reasons, the <code>iface</code>,&nbsp;<code>ipaddr</code>
+        and <code>netmask</code> parameters are <i><u>required parameters</u></i>
+        for both Windows and *nix. All other parameters however, are optional.
 
+        <p>
+
+        The device/emulation type may optionally be specified as <code>OSA</code>
+        or <code>OSD</code> instead of <code>QETH</code>.
+
+        <br><br>
+
+        <i>
+        <b>Please note</b> that this is still considered to be an
+        <u>experimental driver still under development</u>.
+        Not all of the features or functionality that real OSA devices have
+        are currently supported. For example, the current implementation
+        only supports three devices: the read device, the write device and
+        the datapath device. Real OSA devices support multiple datapath
+        devices. Support for this feature is planned, but is not yet
+        implemented.
+        </i>
+
+        <br><br>
+
+        <dl> <!-- begin QETH parms -->
+
+        <dt><i><u>Required</u></i> parameters for both Windows and *nix:
         <dd><p>
-            <dl>
-                <dt><code><em>ifname</em></code>
-                <dd><p>
-                    Specifies the interface name of an
-                    interface that is already configured.
-                    The flag <code>--if</code> may optionally be specified
-                    before the name.
-                    <p>
-                    Specify no IP addresses or other arguments as the
-                    information is already configured into the interface.
-                    <p>
-            </dl>
 
-        <dt>Required for Linux when not using a preconfigured interface,
-        and for Windows:
+            <dl> <!-- begin REQUIRED for both Windows and *nix -->
+
+                <dt><code>ipaddr &nbsp;<em>address</em></code>
+                <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
+                <dd><p>
+                    Specifies the IPv4 address to be assigned to your virtual
+                    OSA Express card. This IP Address should match the IP
+                    address in your guest's TCPIP PROFILE, although this is
+                    not a requirement; during guest initialization your guest
+                    should automatically assign the proper IP address to your
+                    OSA device.
+                    <p>
+                    The address can be optionally followed by a prefix size
+                    expressed in CIDR notation, e.g. <code>192.168.1.1/24</code>.
+                    For IPv4 the prefix size can have a value from 0 to 32.
+                    If not specified a value of 32 is assumed.
+                    The prefix size is used to produce an equivalent subnet mask.
+                    For example, a value of 24 produces a subnet mask of 255.255.255.0.
+                    Otherwise the subnet mask must be specify via the
+                    <code>netmask</code> parameter.
+
+                    <p>
+
+                <dt><code>netmask &nbsp;<em>mask</em></code>
+                <dd><p>
+                    Specifies the subnet mask to be used with your OSA card.
+                    On Windows, this value should be the same subnet mask that
+                    your Windows system is using (i.e. that the 'iface' adapter
+                    is using).
+                    <p>
+                    The <code>netmask</code> option may only be specified when
+                    the subnet mask is not already defined via the optional
+                    prefix size parameter of the <code>ipaddr</code> option.
+                    <p>
+
+            </dl> <!-- end REQUIRED for both Windows and *nix -->
+
+        <br>
+
+        <dt>Optional for *nix only:
         <dd><p>
 
-            <dl> <!-- begin Required for both Linux and Windows -->
+            <dl> <!-- begin Optional for *nix -->
 
-                <dt><code><em>guestip</em></code>
+                <dt><code>ifname &nbsp;<em>interface</em></code>
                 <dd><p>
-                    Specifies the IP address of the guest operating system
-                    running under Hercules.
+                    Specifies the interface name of a host interface
+                    that is already configured (e.g. <code>tun</code>,
+                    <code>tun0</code>, etc). &nbsp;(*nix only)
                     <p>
 
-                <dt><code><em>hostip</em></code>
-                <dd><p>
-                    Specifies the IP address of the host (Linux or Windows) side
-                    of the point-to-point link. This may or may not be the same
-                    as your system's regular IP address. For Windows, if the
-                    host system is configured with DHCP, this should instead be
-                    the MAC address of the Ethernet adapter you wish to use to
-                    have Hercules communicate with the outside world.
-                    <p>
+            </dl> <!-- end Optional for *nix -->
 
-            </dl> <!-- end Required for both Linux and Windows -->
+        <br>
 
-            <p>
-
-        <dt>Optional for Windows:
+        <dt>Optional for both Windows and *nix:
         <dd><p>
-            If these arguments are specified, they must precede the required
-            arguments.
-            <p>
 
-            <dl> <!-- begin Optional for Windows -->
+            <dl> <!-- begin Optional for both *nix and Windows -->
 
-                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
+                <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
-                    where <code><em>'MAC address'</em></code> is the optional hardware address
-                    for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
-                    The default value is '02:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
-                    is constructed from the last 3 octets of the specified
-                    <code><i>guestip</i></code>.
+                    Specifies the name of the host tunnel device to use.
+                    The default for this option is the value specified
+                    by the <a href="#netdev">NETDEV</a> configuration file
+                    statement.
+                    <p>
+
+                <dt><code>ipaddr6 &nbsp;<em>address</em></code>
+                <dt><code>ipaddr6 &nbsp;<em>address/prefix</em></code>
+                <dd><p>
+                    Specifies the IPv6 address to be assigned to your OSA card.
+                    <p>
+                    The address can be optionally followed by the prefix size
+                    expressed in CIDR notation, e.g.
+                    <code>2001:db8:3003:1::543:210f/48</code>.
+                    For IPv6 the prefix size can have a value from 0 to 128. If
+                    not specified a value of 128 is assumed. The prefix size
+                    is used to produce an equivalent subnet mask.
+                    <p>
+
+                <dt><code>hwaddr &nbsp;<em>MAC</em></code>
+                <dd><p>
+                    Specifies the MAC address to be assigned to your OSA card.
+                    <p>
+                    If not specified then one will be internally generated
+                    in the range 02:00:5E:80:00:00 - 02:00:5E:FF:FF:FF using
+                    the low order 23 bits of the IPv4 address. For example,
+                    if the ipv4 address is 10.1.2.3 the generated MAC address
+                    will be 02:00:5E:81:02:03.
                     <p>
                     <i>
-                    <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
-                    assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
-                    on in the first byte, and MUST be unique as seen by all other devices on
-                    your network segment. It should never, for example, be the same as the host
-                    adapter MAC address specified on the <code><em>-n</em></code> parameter.
+                    <b>Note:</b> The MAC address you specify for this option MUST have
+                    the 02 locally assigned MAC bit on in the first byte, must NOT have
+                    the 01 broadcast bit on in the first byte, and MUST be unique as seen
+                    by all other devices on your network segment.
+                    It should never, for example, be the same as the host adapter MAC
+                    address specified on the <code><em>iface</em></code> parameter.
                     </i>
                     <p>
 
-                <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
-                    <dd>
-                <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
+                <dt><code>mtu &nbsp;<em>bytes</em></code>
                 <dd><p>
-                    See Fish's
-                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
-                    page for further details and information.
+                    Specifies the Maximum Transmission Unit to be used.
+                    The maximum transmission unit (MTU) is the largest
+                    packet size, measured in bytes, that can be transmitted
+                    over a network.
+                    <p>
+                    On Windows, if the value is not specified or is larger than
+                    what <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN's</a>
+                    WinPCap driver can support for the specified
+                    <code>iface</code> host adapter, a warning is issued and the
+                    specified value is ignored and the maximum supported value
+                    is used instead.
                     <p>
 
-            </dl> <!-- end Optional for Windows -->
-
-            <p>
-
-        <dt>Optional for both Linux and Windows:
-        <dd><p>
-            If these arguments are specified, they must precede the required
-            arguments:
-            <p>
-
-            <dl> <!-- begin Optional for both Linux and Windows -->
-
-                <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
+                <dt><code>chpid &nbsp;<em>id</em></code>
                 <dd><p>
-                    Specifies the name of the tunnel device to use.
+                    Specifies the channel path identifier to be used with the device.
                     <p>
-                    The default
-                    for Linux is <code>/dev/net/tun</code>
-                    (which is correct for version 2.4
-                    and above of the Linux kernel).
-                    The default for OSX is <code>/dev/tun0</code>.
-                    <p>
-                    For Windows, specify the IP address or MAC address of the
-                    real Windows adapter to emulate the virtual guest's adapter on.
-                    The default is the first adapter found according to Windows'
-                    adapter binding order, which may not be the one you want if
-                    you have multiple adapters.
-                    <p>
-                    Refer to the Help file included with Fish's
-                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
-                    for for more information about adapter binding order and
-                    for general information regarding CTCI-WIN configuration.
+                    This is mostly a cosmetic value, but some guest operating systems
+                    such as z/OS might require it to operate correctly.
                     <p>
 
-                <dt><code>-s <em>netmask</em></code>
+                <dt><code>debug</code>
                 <dd><p>
-                    where <em>netmask</em> is the netmask to use for the
-                    automatically added point-to-point route in standard
-                    dotted internet noitation (e.g. 255.255.255.0)
+                    Enables debug logging for the device.
+                    <p>
+                    When logging is enabled the Hercules driver logs
+                    extra progress and status messages used to help
+                    debug an incorrectly functioning driver. The
+                    Hercules <code>qeth</code> panel command can be used
+                    to limit the type of debug information that is logged.
+                    Enter the command <code>help qeth</code> for more
+                    information.
                     <p>
 
-                <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
-                <dd><p>
-                    Specifies the name of the network interface to use.
-                    <p>
-                    There is no default for this argument as the kernel
-                    assigns an interface name if none is provided.
-                    <p>
+            </dl> <!-- end Optional for both *nix and Windows -->
 
-                <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
-                <dd><p>
-                    Specifies that debugging output is to be produced on the
-                    Hercules control panel. This should normally be left
-                    unspecified.
-                    <p>
-
-            </dl> <!-- end Optional for both Linux and Windows -->
-
-        </dl> <!-- end CTCI parms -->
-
-<p><br>
-
-<a name="CTCT"></a>
-    <dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)
-    <dd><p>
-        An emulated CTCA to another Hercules system.
-        This emulation mode appears to the operating system running in
-        the Hercules machine as an IBM 3088 Channel to Channel Adapter.
-        It provides communication via a TCP connection with another
-        instance of the CTCT driver, and is designed to carry TCP/IP
-        communications between two guest TCP/IP stacks.
-        CTCT may also be used for communication between the client and
-        server components of the
-        <a href="http://home.comcast.net/~mvsddt/">MVS Dynamic Debug Tool</a>.
-        <p>
-        Four arguments are required:
-        <p>
-
-        <dl> <!-- begin CTCT parms -->
-
-        <dt><code><em>lport</em></code>
-        <dd><p>
-            Specifies the local TCP port. This is the TCP port that
-            Hercules will listen on for this CTCA.
-            <p>
-
-        <dt><code><em>rhost</em></code>
-        <dd><p>
-            Specifies the remote host. This is the name or IP address
-            of the remote system that Hercules is running on, not the
-            name or IP address of the OS running on that copy of
-            Hercules.
-            <p>
-
-        <dt><code><em>rport</em></code>
-        <dd><p>
-            Specifies the remote TCP port. The rport parameter on this
-            system must match the lport parameter on the remote system,
-            and vice versa.
-            <p>
-
-        <dt><code><em>bufsize</em></code>
-        <dd><p>
-            Specifies the buffer size for the link. If this link is used
-            for IP traffic, this parameter should be more than the MTU
-            of the interface definition in the OS.
-            <p>
-
-        </dl> <!-- end CTCT parms -->
-
-        <p>
-
-        Note: CTCT only supports IP traffic. Use <a href="#CTCE">CTCE</a>
-        to transport general purpose payloads such as NJE, SNA, PVM, etc.
-        <p>
-
-<p><br>
-
-<a name="CTCE"></a>
-    <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel-to-Channel Emulation via TCP connection <i>(true 3088 CTCA)</i>)
-    <dd><p>
-        The CTCE device type emulates a true 3088 Channel to Channel
-        Adapter.  CTCE devices are emulated via TCP/IP connections between
-        two or more Hercules instances.
-        <p>
-        A Hercules CTCE device requires two even-odd pairs of devices, one for
-        reading and the other for writing.  Each individual device of the even-odd
-        device pair requires and even-odd pair of port numbers.  Only the even
-        numbered port number needs to be specified however.  The odd port number
-        is automatically derived from the even port number by simply adding 1
-        to the even port number.
-        <p>
-        The socket connection pairs cross-connect,
-        the arrows showing the send->receive direction :
-        <pre>
-        x-lport-even  -->  y-rport-odd
-        x-lport-odd   <--  y-rport-even</pre>
-        <p>
-        CTCE connected Hercules instances can be hosted on either Unix
-        or Windows platforms.  Neither side needs to be the same as the other.
-        Each side can be different from the other if needed. One side
-        can be Windows and the other side can be Linux if so desired.
-        <p>
-        <dl> <!-- begin required CTCE parameters -->
-        <dt>There are three <i>required</i> positional arguments:
-        <dd><p>
-            <dl>
-                <dt><code><em>lport</em></code>
-                <dd>The even numbered TCP/IP port number on the <i>local</i> system.
-
-                <p>
-
-                <dt><code><em>raddress</em></code>
-                <dd>The IP address of the remote system.
-
-                <p>
-
-                <dt><code><em>rport</em></code>
-                <dd>The even numbered TCP/IP port number on the <i>remote</i> system.
-            </dl>
-        </dl> <!-- end required CTCE parameters -->
-
-        <p>
-
-        <dl> <!-- begin optional CTCE parameters -->
-        <dt>The remaining positional arguments are optional:
-        <dd><p>
-            <dl>
-                <dt><code><em>mtu</em></code>
-                <dd>Maximum Transmission Unit buffer size.
-                    The default value is 32768 bytes.
-
-                <p>
-
-                <dt><code><em>sml</em></code>
-                <dd>Small minimum for MTU. The default value is 8 bytes.
-            </dl>
-        </dl> <!-- end optional CTCE parameters -->
-
-        <p>
-        A sample CTCE device configuration is shown below:
-        <blockquote>
-            <p>
-            First Hercules PC Host with IP address 192.168.1.100:
-            <pre>
-    0E40  CTCE  30880  192.168.1.200  30880
-    0E41  CTCE  30882  192.168.1.200  30882 </pre>
-            <p>
-            Second Hercules PC Host with IP address 192.168.1.200:
-            <pre>
-    0E40  CTCE  30880  192.168.1.100  30880
-    0E41  CTCE  30882  192.168.1.100  30882 </pre>
-        </blockquote>
-        <p>
+        </dl> <!-- end QETH parms -->
 
 <p><br>
 
@@ -3600,9 +3495,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <dd><p>
         An emulated Lan Channel Station Adapter.
         This emulation mode appears to the operating system running in
-        the Hercules machine as an IBM 8232 LCS device, an IBM 2216
-        router, a 3172 running ICP (Interconnect Communications Program),
-        the LCS3172 driver of a P/390, or an IBM Open Systems Adapter.
+        the Hercules machine as either an IBM 8232 LCS device, the LCS3172
+        driver of a P/390, a 3172 running ICP (Interconnect Communications
+        Program), or as a simple IBM 2216 router.
+
         <p>
 
         Rather than a point-to-point link, this emulation creates a
@@ -3610,19 +3506,19 @@ a real System/390.  The configuration file is an ASCII text file.
         running in the Hercules machine can communicate. As such, this
         mode is not limited to TCP/IP traffic, but in fact will handle
         any ethernet frame.
+
         <p>
 
-        The configuration statement for LCS is as follows:
-        <p>
-
-        NOTE: There are no required parameters for the LCS emulation,
+        There are no required parameters for the LCS emulation,
         however there are several options that can be specified on the
-        config statement:
+        device statement. Also note that on the MAC OS X platform, the
+        long option format (--xxx) is not supported. On MAC, only the
+        short option format (-x) should be used.
+
         <p>
 
-        NOTE: On the MAC OS X Platform, the long option format (--xxx) is not
-        supported. Only the short option format (-x : one dash, one letter) should
-        be used.
+        The format of the configuration statement for LCS devices is as follows:
+
         <p>
 
         <dl> <!-- begin LCS parms -->
@@ -3641,18 +3537,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt>(Windows)
                 <dd><p>
-                    is either the IP or MAC address of the driving
-                    systems network card. Note: If this option is omitted,
-                    then TunTap32 automatically selects the first network card
-                    it finds, which may not be desirable for some users.
-                    <p>
-                    Refer to the Help file included with Fish's
-                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
-                    for for more information about adapter binding order and
-                    for general information regarding CTCI-WIN configuration.
+                    either the IP or MAC address of the host system's network card.
                     <p>
 
              </dl> <!-- end 'devname' -->
+
+            The default for this option is the value specified
+            by the <a href="#netdev">NETDEV</a> configuration file statement.
+            <p>
 
         <dt><code>-o <em>filename</em></code> &nbsp;&nbsp; or &nbsp; <code>--oat <em>filename</em></code>
         <dd><p>
@@ -3835,6 +3727,228 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
 <p><br>
 
+<a name="CTCI"></a>
+    <dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)
+    <dd><p>
+        A point-to-point IP connection with the TCP/IP stack of the
+        driving system on which Hercules is running.  See the
+        <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
+        in particular the use of preconfigured interfaces.
+        <p>
+        The Windows implementation is different from the unix one. See
+        SoftDevLab's <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
+        page for further details and information.
+        <p>
+        For unix systems, such as Linux, BSD, and OSX, you may use
+        preconfigured interfaces or you may
+        request Hercules to configure the interface for you.
+        In the first case you must know and supply the name of the interface to use;
+        in the second case the kernel supplies an interface name.
+        <p>
+
+        <dl> <!-- begin CTCI parms -->
+        <dt>Required for Linux when using a preconfigured interface:
+
+        <dd><p>
+            <dl>
+                <dt><code><em>ifname</em></code>
+                <dd><p>
+                    Specifies the interface name of an
+                    interface that is already configured.
+                    The flag <code>--if</code> may optionally be specified
+                    before the name.
+                    <p>
+                    Specify no IP addresses or other arguments as the
+                    information is already configured into the interface.
+                    <p>
+            </dl>
+
+        <dt>Required for Linux when not using a preconfigured interface,
+        and for Windows:
+        <dd><p>
+
+            <dl> <!-- begin Required for both Linux and Windows -->
+
+                <dt><code><em>guestip</em></code>
+                <dd><p>
+                    Specifies the IP address of the guest operating system
+                    running under Hercules.
+                    <p>
+
+                <dt><code><em>hostip</em></code>
+                <dd><p>
+                    Specifies the IP address of the host (Linux or Windows) side
+                    of the point-to-point link. This may or may not be the same
+                    as your system's regular IP address. For Windows, if the
+                    host system is configured with DHCP, this should instead be
+                    the MAC address of the Ethernet adapter you wish to use to
+                    have Hercules communicate with the outside world.
+                    <p>
+
+            </dl> <!-- end Required for both Linux and Windows -->
+
+            <p>
+
+        <dt>Optional for Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments.
+            <p>
+
+            <dl> <!-- begin Optional for Windows -->
+
+                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
+                <dd><p>
+                    where <code><em>'MAC address'</em></code> is the optional hardware address
+                    for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
+                    The default value is '02:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
+                    is constructed from the last 3 octets of the specified
+                    <code><i>guestip</i></code>.
+                    <p>
+                    <i>
+                    <b>Note:</b> The MAC address you specify for this option MUST have the 02 locally
+                    assigned MAC bit on in the first byte, must NOT have the 01 broadcast bit
+                    on in the first byte, and MUST be unique as seen by all other devices on
+                    your network segment. It should never, for example, be the same as the host
+                    adapter MAC address specified on the <code><em>-n</em></code> parameter.
+                    </i>
+                    <p>
+
+                <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
+                    <dd>
+                <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
+                <dd><p>
+                    See SoftDevLabs's
+                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
+                    page for further details and information.
+                    <p>
+
+            </dl> <!-- end Optional for Windows -->
+
+            <p>
+
+        <dt>Optional for both Linux and Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments:
+            <p>
+
+            <dl> <!-- begin Optional for both Linux and Windows -->
+
+                <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
+                <dd><p>
+                    Specifies the name of the tunnel device to use.
+                    The default is the value specified by the
+                    <a href="#netdev">NETDEV</a> configuration file statement.
+                    <p>
+
+                <dt><code>-s <em>netmask</em></code>
+                <dd><p>
+                    where <em>netmask</em> is the netmask to use for the
+                    automatically added point-to-point route in standard
+                    dotted internet noitation (e.g. 255.255.255.0)
+                    <p>
+
+                <dt><code>-x <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--if <em>name</em></code>
+                <dd><p>
+                    Specifies the name of the network interface to use.
+                    <p>
+                    There is no default for this argument as the kernel
+                    assigns an interface name if none is provided.
+                    <p>
+
+                <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
+                <dd><p>
+                    Specifies that debugging output is to be produced on the
+                    Hercules control panel. This should normally be left
+                    unspecified.
+                    <p>
+
+            </dl> <!-- end Optional for both Linux and Windows -->
+
+        </dl> <!-- end CTCI parms -->
+
+<p><br>
+
+<a name="CTCE"></a>
+    <dt><b>CTCE</b> &nbsp; &nbsp; (Enhanced Channel-to-Channel Emulation via TCP connection <i>(true 3088 CTCA)</i>)
+    <dd><p>
+        The CTCE device type emulates a true 3088 Channel to Channel
+        Adapter.  CTCE devices are emulated via TCP/IP connections between
+        two or more Hercules instances.
+        <p>
+        A Hercules CTCE device requires two even-odd pairs of devices, one for
+        reading and the other for writing.  Each individual device of the even-odd
+        device pair requires and even-odd pair of port numbers.  Only the even
+        numbered port number needs to be specified however.  The odd port number
+        is automatically derived from the even port number by simply adding 1
+        to the even port number.
+        <p>
+        The socket connection pairs cross-connect,
+        the arrows showing the send->receive direction :
+        <pre>
+        x-lport-even  -->  y-rport-odd
+        x-lport-odd   <--  y-rport-even</pre>
+        <p>
+        CTCE connected Hercules instances can be hosted on either Unix
+        or Windows platforms.  Neither side needs to be the same as the other.
+        Each side can be different from the other if needed. One side
+        can be Windows and the other side can be Linux if so desired.
+        <p>
+        <dl> <!-- begin required CTCE parameters -->
+        <dt>There are three <i>required</i> positional arguments:
+        <dd><p>
+            <dl>
+                <dt><code><em>lport</em></code>
+                <dd>The even numbered TCP/IP port number on the <i>local</i> system.
+
+                <p>
+
+                <dt><code><em>raddress</em></code>
+                <dd>The IP address of the remote system.
+
+                <p>
+
+                <dt><code><em>rport</em></code>
+                <dd>The even numbered TCP/IP port number on the <i>remote</i> system.
+            </dl>
+        </dl> <!-- end required CTCE parameters -->
+
+        <p>
+
+        <dl> <!-- begin optional CTCE parameters -->
+        <dt>The remaining positional arguments are optional:
+        <dd><p>
+            <dl>
+                <dt><code><em>mtu</em></code>
+                <dd>Maximum Transmission Unit buffer size.
+                    The default value is 32768 bytes.
+
+                <p>
+
+                <dt><code><em>sml</em></code>
+                <dd>Small minimum for MTU. The default value is 8 bytes.
+            </dl>
+        </dl> <!-- end optional CTCE parameters -->
+
+        <p>
+        A sample CTCE device configuration is shown below:
+        <blockquote>
+            <p>
+            First Hercules PC Host with IP address 192.168.1.100:
+            <pre>
+    0E40  CTCE  30880  192.168.1.200  30880
+    0E41  CTCE  30882  192.168.1.200  30882 </pre>
+            <p>
+            Second Hercules PC Host with IP address 192.168.1.200:
+            <pre>
+    0E40  CTCE  30880  192.168.1.100  30880
+    0E41  CTCE  30882  192.168.1.100  30882 </pre>
+        </blockquote>
+        <p>
+
+<p><br>
+
 <a name="PTP"></a>
     <dt><b>PTP</b> &nbsp; &nbsp; (MPCPTP/MPCPTP6 Channel to Channel link)
     <dd><p>
@@ -3991,7 +4105,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                     <dd>
                 <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
                 <dd><p>
-                    Refer to the Help file included with Fish's
+                    Refer to the Help file included with SoftDevLabs's
                     <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
                     for further details and information.
                     <p>
@@ -4011,23 +4125,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
                 <dd><p>
                     Specifies the name of the tunnel device to use.
-                    <p>
-                    The default
-                    for Linux is <code>/dev/net/tun</code>
-                    (which is correct for version 2.4
-                    and above of the Linux kernel).
-                    The default for OSX is <code>/dev/tun0</code>.
-                    <p>
-                    For Windows, specify the IP address or MAC address of the
-                    real Windows adapter to emulate the virtual guest's adapter on.
-                    The default is the first adapter found according to Windows'
-                    adapter binding order, which may not be the one you want if
-                    you have multiple adapters.
-                    <p>
-                    Refer to the Help file included with Fish's
-                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
-                    for for more information about adapter binding order and
-                    for general information regarding CTCI-WIN configuration.
+                    The default for this option is the value specified
+                    by the <a href="#netdev">NETDEV</a> configuration file statement.
                     <p>
 
                 <dt><code>-4</code> &nbsp;&nbsp; or &nbsp; <code>--inet</code>
@@ -4052,191 +4151,6 @@ ROUTE  00  172.21.3.32  255.255.255.224
             </dl> <!-- end Optional for both *nix and Windows -->
 
         </dl> <!-- end PTP parms -->
-
-<p><br>
-
-<a name="QETH"></a>
-    <dt><b>QETH</b> &nbsp; &nbsp; (OSA/QDIO Ethernet Adapter)
-    <dd><p>
-
-        Emulates an OSA Express card running in QDIO mode.
-        Both layer-2 and layer-3 are currently supported.
-
-        <p>
-
-        For technical reasons, the <code>iface</code>,&nbsp;<code>ipaddr</code>
-        and <code>netmask</code> parameters are <i><u>required parameters</u></i>
-        for both Windows and *nix. All other parameters however, are optional.
-
-        <p>
-
-        The device/emulation type may optionally be specified as <code>OSA</code>
-        or <code>OSD</code> instead of <code>QETH</code>.
-
-        <br><br>
-
-        <i>
-        <b>Please note</b> that this is still considered to be an
-        <u>experimental driver still under development</u>.
-        Not all of the features or functionality that real OSA devices have
-        are currently supported. For example, the current implementation
-        only supports three devices: the read device, the write device and
-        the datapath device. Real OSA devices support multiple datapath
-        devices. Support for this feature is planned, but is not yet
-        implemented.
-        </i>
-
-        <br><br>
-
-        <dl> <!-- begin QETH parms -->
-
-        <dt><i><u>Required</u></i> parameters for both Windows and *nix:
-        <dd><p>
-
-            <dl> <!-- begin REQUIRED for both Windows and *nix -->
-
-                <dt><code>iface &nbsp;<em>device</em></code>
-                <dd><p>
-                    Specifies the name of the host tunnel device to use.
-                    <p>
-                    The default for Linux is <code>/dev/net/tun</code>
-                    (which is correct for version 2.4 and above of the Linux
-                    kernel). The default for OSX is <code>/dev/tun0</code>.
-                    <p>
-                    For Windows, specify the IP address of your Windows host's
-                    real network adapter that the Hercules driver should use
-                    to emulate your virtual guest's adapter on.
-                    <p>
-
-                <dt><code>ipaddr &nbsp;<em>address</em></code>
-                <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
-                <dd><p>
-                    Specifies the IPv4 address to be assigned to your virtual
-                    OSA Express card. This IP Address should match the IP
-                    address in your guest's TCPIP PROFILE, although this is
-                    not a requirement; during guest initialization your guest
-                    should automatically assign the proper IP address to your
-                    OSA device.
-                    <p>
-                    The address can be optionally followed by a prefix size
-                    expressed in CIDR notation, e.g. <code>192.168.1.1/24</code>.
-                    For IPv4 the prefix size can have a value from 0 to 32.
-                    If not specified a value of 32 is assumed.
-                    The prefix size is used to produce an equivalent subnet mask.
-                    For example, a value of 24 produces a subnet mask of 255.255.255.0.
-                    Otherwise the subnet mask must be specify via the
-                    <code>netmask</code> parameter.
-
-                    <p>
-
-                <dt><code>netmask &nbsp;<em>mask</em></code>
-                <dd><p>
-                    Specifies the subnet mask to be used with your OSA card.
-                    On Windows, this value should be the same subnet mask that
-                    your Windows system is using (i.e. that the 'iface' adapter
-                    is using).
-                    <p>
-                    The <code>netmask</code> option may only be specified when
-                    the subnet mask is not already defined via the optional
-                    prefix size parameter of the <code>ipaddr</code> option.
-                    <p>
-
-            </dl> <!-- end REQUIRED for both Windows and *nix -->
-
-        <br>
-
-        <dt>Optional for *nix only:
-        <dd><p>
-
-            <dl> <!-- begin Optional for *nix -->
-
-                <dt><code>ifname &nbsp;<em>interface</em></code>
-                <dd><p>
-                    Specifies the interface name of a host interface
-                    that is already configured (e.g. <code>tun</code>,
-                    <code>tun0</code>, etc). &nbsp;(*nix only)
-                    <p>
-
-            </dl> <!-- end Optional for *nix -->
-
-        <br>
-
-        <dt>Optional for both Windows and *nix:
-        <dd><p>
-
-            <dl> <!-- begin Optional for both *nix and Windows -->
-
-                <dt><code>ipaddr6 &nbsp;<em>address</em></code>
-                <dt><code>ipaddr6 &nbsp;<em>address/prefix</em></code>
-                <dd><p>
-                    Specifies the IPv6 address to be assigned to your OSA card.
-                    <p>
-                    The address can be optionally followed by the prefix size
-                    expressed in CIDR notation, e.g.
-                    <code>2001:db8:3003:1::543:210f/48</code>.
-                    For IPv6 the prefix size can have a value from 0 to 128. If
-                    not specified a value of 128 is assumed. The prefix size
-                    is used to produce an equivalent subnet mask.
-                    <p>
-
-                <dt><code>hwaddr &nbsp;<em>MAC</em></code>
-                <dd><p>
-                    Specifies the MAC address to be assigned to your OSA card.
-                    <p>
-                    If not specified then one will be internally generated
-                    in the range 02:00:5E:80:00:00 - 02:00:5E:FF:FF:FF using
-                    the low order 23 bits of the IPv4 address. For example,
-                    if the ipv4 address is 10.1.2.3 the generated MAC address
-                    will be 02:00:5E:81:02:03.
-                    <p>
-                    <i>
-                    <b>Note:</b> The MAC address you specify for this option MUST have
-                    the 02 locally assigned MAC bit on in the first byte, must NOT have
-                    the 01 broadcast bit on in the first byte, and MUST be unique as seen
-                    by all other devices on your network segment.
-                    It should never, for example, be the same as the host adapter MAC
-                    address specified on the <code><em>iface</em></code> parameter.
-                    </i>
-                    <p>
-
-                <dt><code>mtu &nbsp;<em>bytes</em></code>
-                <dd><p>
-                    Specifies the Maximum Transmission Unit to be used.
-                    The maximum transmission unit (MTU) is the largest
-                    packet size, measured in bytes, that can be transmitted
-                    over a network.
-                    <p>
-                    On Windows, if the value is not specified or is larger than
-                    what CTCI-WIN's WinPCap driver can support for the specified
-                    <code>iface</code> host adapter, a warning is issued and the
-                    specified value is ignored and the maximum supported value
-                    is used instead.
-                    <p>
-
-                <dt><code>chpid &nbsp;<em>id</em></code>
-                <dd><p>
-                    Specifies the channel path identifier to be used with the device.
-                    <p>
-                    This is mostly a cosmetic value, but some guest operating systems
-                    such as z/OS might require it to operate correctly.
-                    <p>
-
-                <dt><code>debug</code>
-                <dd><p>
-                    Enables debug logging for the device.
-                    <p>
-                    When logging is enabled the Hercules driver logs
-                    extra progress and status messages used to help
-                    debug an incorrectly functioning driver. The
-                    Hercules <code>qeth</code> panel command can be used
-                    to limit the type of debug information that is logged.
-                    Enter the command <code>help qeth</code> for more
-                    information.
-                    <p>
-
-            </dl> <!-- end Optional for both *nix and Windows -->
-
-        </dl> <!-- end QETH parms -->
 
     </dl> <!-- end emulation types -->
 

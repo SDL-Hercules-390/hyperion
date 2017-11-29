@@ -167,7 +167,7 @@ typedef struct _OSA_GRP {
 
     OSA_BAN  l3r;               /* Layer 3 response buffer anchor    */
 
-    char *tuntap;               /* Interface path name               */
+    char *ttdev;                /* Interface path name               */
     char  ttifname[IFNAMSIZ];   /* Interface network name            */
 
     char *tthwaddr;             /* MAC address of the interface      */

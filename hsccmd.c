@@ -1100,7 +1100,8 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     }
 #endif /*EXTERNALGUI*/
     sysblk.npquiet = !sysblk.npquiet;
-    WRMSG(HHC02203, "I", "automatic refresh", sysblk.npquiet ? "disabled" : "enabled" );
+    // "%-14s: %s"
+    WRMSG( HHC02203, "I", argv[0], sysblk.npquiet ? "DISABLED" : "ENABLED" );
     return 0;
 }
 
@@ -3717,6 +3718,63 @@ BYTE c;
 }
 
 /*-------------------------------------------------------------------*/
+/* netdev command                                                    */
+/*-------------------------------------------------------------------*/
+int netdev_cmd( int argc, char* argv[], char* cmdline )
+{
+    // Specifies the name (or for Windows, the IP or MAC address)
+    // of the underlying default host network device to be used for
+    // all Hercules communications devices unless overridden on
+    // the device statement itself.
+    //
+    // The default for Linux is '/dev/net/tun'. The default for Apple
+    // and FreeBSD is '/dev/tun'.
+    //
+    // The default for Windows is whatever SoftDevLabs's CTCI-WIN
+    // product returns as its default CTCI-WIN host network adapter,
+    // which for older versions of CTCI-WIN (3.5.0) is the first
+    // network adapter returned by Windows in its adapter binding
+    // order or for newer versions of CTCI-WIN (3.6.0) whatever is
+    // defined as your default CTCI-WIN host network adapter.
+
+    char* netdev = sysblk.netdev;
+
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
+    if (argc < 2)
+    {
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], netdev );
+        return 0;
+    }
+
+    if (argc > 2)
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    netdev = argv[1];
+
+    if (strlen( netdev ) < 2)
+    {
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", netdev, argv[0] );
+        return -1;
+    }
+
+    free( sysblk.netdev );
+    sysblk.netdev = strdup( netdev );
+
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", argv[0], sysblk.netdev );
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* numcpu command                                                    */
 /*-------------------------------------------------------------------*/
 int numcpu_cmd( int argc, char* argv[], char* cmdline )
@@ -4337,7 +4395,7 @@ int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
         );
 
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", "SHCMDOPT", buf );
+        WRMSG( HHC02203, "I", argv[0], buf );
     }
 
     return 0;
@@ -4595,7 +4653,8 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
         char msgbuf[128];
         MSGBUF( msgbuf, "hardware(%s) capacity(%s) perm(%s) temp(%s)",
                         str_modelhard(), str_modelcapa(), str_modelperm(), str_modeltemp() );
-        WRMSG( HHC02203, "I", "model", msgbuf );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
@@ -7546,32 +7605,38 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* modpath - set module path                                         */
 /*-------------------------------------------------------------------*/
-int modpath_cmd(int argc, char *argv[], char *cmdline)
+int modpath_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 2 )
+    strupper( argv[0], argv[0] );
+
+    if (argc > 2)
     {
-        WRMSG(HHC01530,"E",argv[0]);
+        // "HDL: usage: %s <path>"
+        WRMSG( HHC01530, "E", argv[0] );
         return -1;
     }
-    else if (argc == 2)
+
+    if (argc < 2)
     {
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-        set_symbol( "MODPATH", hdl_setpath(argv[1], TRUE) );
-#else
-        hdl_setpath(argv[1], TRUE);
-#endif
-
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], hdl_getpath() );
     }
     else
     {
-        WRMSG (HHC01508, "I", hdl_setpath( NULL, TRUE) );
+        int rc = hdl_setpath( argv[1] );
+
+        if (rc != 0)
+            return rc;  // (error or warning message already issued)
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], hdl_getpath() );
     }
+
     return 0;
 }
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 #ifdef FEATURE_ECPSVM
 /*-------------------------------------------------------------------*/
@@ -7733,36 +7798,43 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* sizeof - Display sizes of various structures/tables               */
 /*-------------------------------------------------------------------*/
-int sizeof_cmd(int argc, char *argv[], char *cmdline)
+int sizeof_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( cmdline );
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     // #define HHC02257 "%s%7d"
 
-    WRMSG(HHC02257, "I", "(unsigned short) ..",(int)sizeof(unsigned short));
-    WRMSG(HHC02257, "I", "(void *) ..........",(int)sizeof(void *));
-    WRMSG(HHC02257, "I", "(unsigned int) ....",(int)sizeof(unsigned int));
-    WRMSG(HHC02257, "I", "(long) ............",(int)sizeof(long));
-    WRMSG(HHC02257, "I", "(long long) .......",(int)sizeof(long long));
-    WRMSG(HHC02257, "I", "(size_t) ..........",(int)sizeof(size_t));
-    WRMSG(HHC02257, "I", "(off_t) ...........",(int)sizeof(off_t));
-    WRMSG(HHC02257, "I", "FILENAME_MAX ......",FILENAME_MAX);
-    WRMSG(HHC02257, "I", "PATH_MAX ..........",PATH_MAX);
-    WRMSG(HHC02257, "I", "SYSBLK ............",(int)sizeof(SYSBLK));
-    WRMSG(HHC02257, "I", "REGS ..............",(int)sizeof(REGS));
-    WRMSG(HHC02257, "I", "REGS (copy len) ...",sysblk.regs_copy_len);
-    WRMSG(HHC02257, "I", "PSW ...............",(int)sizeof(PSW));
-    WRMSG(HHC02257, "I", "DEVBLK ............",(int)sizeof(DEVBLK));
-    WRMSG(HHC02257, "I", "TLB entry .........",(int)sizeof(TLB)/TLBN);
-    WRMSG(HHC02257, "I", "TLB table .........",(int)sizeof(TLB));
-    WRMSG(HHC02257, "I", "CPU_BITMAP ........",(int)sizeof(CPU_BITMAP));
-    WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
-    WRMSG(HHC02257, "I", "FD_SETSIZE ........",FD_SETSIZE);
-    WRMSG(HHC02257, "I", "TID ...............",(int)sizeof(TID));
-    WRMSG(HHC00001, "I", "", "TIDPAT ............ " TIDPAT );
-    WRMSG(HHC00001, "I", "", "SCN_TIDPAT ........ " SCN_TIDPAT );
+    WRMSG( HHC02257, "I", "(unsigned short) ..", (int)sizeof(unsigned short));
+    WRMSG( HHC02257, "I", "(void *) ..........", (int)sizeof(void *));
+    WRMSG( HHC02257, "I", "(unsigned int) ....", (int)sizeof(unsigned int));
+    WRMSG( HHC02257, "I", "(long) ............", (int)sizeof(long));
+    WRMSG( HHC02257, "I", "(long long) .......", (int)sizeof(long long));
+    WRMSG( HHC02257, "I", "(size_t) ..........", (int)sizeof(size_t));
+    WRMSG( HHC02257, "I", "(off_t) ...........", (int)sizeof(off_t));
+    WRMSG( HHC02257, "I", "FILENAME_MAX ......", FILENAME_MAX);
+    WRMSG( HHC02257, "I", "PATH_MAX ..........", PATH_MAX);
+    WRMSG( HHC02257, "I", "SYSBLK ............", (int)sizeof(SYSBLK));
+    WRMSG( HHC02257, "I", "REGS ..............", (int)sizeof(REGS));
+    WRMSG( HHC02257, "I", "REGS (copy len) ...", sysblk.regs_copy_len);
+    WRMSG( HHC02257, "I", "PSW ...............", (int)sizeof(PSW));
+    WRMSG( HHC02257, "I", "DEVBLK ............", (int)sizeof(DEVBLK));
+    WRMSG( HHC02257, "I", "TLB entry .........", (int)sizeof(TLB)/TLBN);
+    WRMSG( HHC02257, "I", "TLB table .........", (int)sizeof(TLB));
+    WRMSG( HHC02257, "I", "CPU_BITMAP ........", (int)sizeof(CPU_BITMAP));
+    WRMSG( HHC02257, "I", "STFL_IBMMAX .......", STFL_IBMMAX);
+    WRMSG( HHC02257, "I", "STFL_IBMBYSIZE.....", STFL_IBMBYSIZE);
+    WRMSG( HHC02257, "I", "STFL_IBMDWSIZE.....", STFL_IBMDWSIZE);
+    WRMSG( HHC02257, "I", "STFL_HERCBITS......", STFL_HERCBITS);
+    WRMSG( HHC02257, "I", "STFL_HERCMAX.......", STFL_HERCMAX);
+    WRMSG( HHC02257, "I", "STFL_HERCBYSIZE....", STFL_HERCBYSIZE);
+    WRMSG( HHC02257, "I", "STFL_HERCDWSIZE....", STFL_HERCDWSIZE);
+    WRMSG( HHC02257, "I", "FD_SETSIZE ........", FD_SETSIZE);
+    WRMSG( HHC02257, "I", "TID ...............", (int)sizeof(TID));
+
+    WRMSG( HHC00001, "I", "", "TIDPAT ............ " TIDPAT );
+    WRMSG( HHC00001, "I", "", "SCN_TIDPAT ........ " SCN_TIDPAT );
     return 0;
 }
 
@@ -8223,7 +8295,7 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int qproc_cmd( int argc, char* argv[], char* cmdline )
 {
-    int   i, j, k;
+    int   i, j;
     int   cpupct = 0;
     U32   mipsrate = 0;
     char  msgbuf[128];
@@ -8275,39 +8347,6 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
         (mipsrate % 1000000) / 10000,
         sysblk.siosrate, "" );
 #endif
-
-    if (sysblk.capvalue > 0)
-    {
-        cpupct   = 0;
-        mipsrate = 0;
-
-        for (i=k=0; i < sysblk.maxcpu; i++)
-        {
-            if (1
-                && IS_CPU_ONLINE( i )
-                && (0
-                    || sysblk.ptyp[i] == SCCB_PTYP_CP
-                    || sysblk.ptyp[i] == SCCB_PTYP_ZAAP
-                   )
-                && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
-            )
-            {
-                k++;
-                cpupct   += sysblk.regs[i]->cpupct;
-                mipsrate += sysblk.regs[i]->mipsrate;
-            }
-        }
-
-        if (k > 0 && k != j)
-        {
-            // "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
-            WRMSG( HHC17011, "I",
-                (k),
-                (k == 0 ? 0 : (cpupct / k)),
-                (mipsrate / 1000000),
-                (mipsrate % 1000000) / 10000 );
-        }
-    }
 
     for (i=0; i < sysblk.maxcpu; i++)
     {

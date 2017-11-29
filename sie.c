@@ -516,7 +516,7 @@ U64     dreg;
     int i;
     BYTE *facility_mask;
 
-        for(i = 0; i < STFL_HBYTESIZE; i++)
+        for(i = 0; i < STFL_HERCBYSIZE; i++)
             GUESTREGS->facility_list[i] = regs->facility_list[i];
 
         FETCH_FW(fld,STATEBK->fld);
@@ -537,7 +537,7 @@ U64     dreg;
         /* Prevent current architecture mode being masked */ | 0x40
 #endif
                                                                    );
-            for(i = 1; i < STFL_BYTESIZE; i++)
+            for(i = 1; i < STFL_IBMBYSIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }
@@ -978,8 +978,6 @@ static int ARCH_DEP(run_sie) (REGS *regs)
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
     const zz_func *current_opcode_table;
-    register    int     *caplocked = &sysblk.caplocked[regs->cpuad];
-                LOCK    *caplock = &sysblk.caplock[regs->cpuad];
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -1000,6 +998,7 @@ static int ARCH_DEP(run_sie) (REGS *regs)
     do {
         SIE_PERFMON(SIE_PERF_RUNLOOP_1);
         if(!(icode = setjmp(GUESTREGS->progjmp)))
+        {
             do
             {
                 SIE_PERFMON(SIE_PERF_RUNLOOP_2);
@@ -1121,71 +1120,72 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                          GUESTREGS->instinvalid ? NULL : ip);
 #endif /*defined(SIE_DEBUG)*/
 
-                SIE_PERFMON(SIE_PERF_EXEC);
+                SIE_PERFMON( SIE_PERF_EXEC );
 
                 //regs->instcount++;
-                EXECUTE_INSTRUCTION(current_opcode_table, ip, GUESTREGS);
+                EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
                 regs->instcount++;
 
-                SIE_PERFMON(SIE_PERF_EXEC_U);
+                SIE_PERFMON( SIE_PERF_EXEC_U );
 
-                /* BHe: I have tried several settings. But 2 unrolled */
-                /* executes gives (core i7 at my place) the best results. */
-                /* Even a do { } while(0); with several unrolled executes */
-                /* and without the 'i' was slower. That surprised me. */
-                for(i = 0; i < 128; i++)
+                /* BHe: I have tried several settings. But 2 unrolled
+                   executes gives (core i7 at my place) the best results.
+
+                   Even a 'do { } while(0);' with several unrolled executes
+                   and without the 'i' was slower.
+
+                   That surprised me.
+                */
+                for (i=0; i < 128; i++)
                 {
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
-                    UNROLLED_EXECUTE(current_opcode_table, GUESTREGS);
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                regs->instcount += i * 2;
-
-                if (caplocked[0])
-                {
-                    obtain_lock(caplock);
-                    /* Greg must be proud of me */
-                    release_lock(caplock);
-                }
-
-            } while( unlikely(!SIE_I_HOST(regs)
-                            && !SIE_I_WAIT(GUESTREGS)
-                            && !SIE_I_EXT(GUESTREGS)
-                            && !SIE_I_IO(GUESTREGS)
-                            && !SIE_INTERRUPT_PENDING(GUESTREGS)));
+                regs->instcount += (i * 2);
+            }
             /******************************************/
-            /* ABOVE : Remain in SIE until...         */
+            /* Remain in SIE (above loop) until ...   */
             /*  - A Host Interrupt is made pending    */
             /*  - A Sie defined irpt becomes enabled  */
             /*  - A guest interrupt is made pending   */
             /******************************************/
+            while (unlikely
+            (1
+                && !SIE_I_HOST            (    regs   )
+                && !SIE_I_WAIT            ( GUESTREGS )
+                && !SIE_I_EXT             ( GUESTREGS )
+                && !SIE_I_IO              ( GUESTREGS )
+                && !SIE_INTERRUPT_PENDING ( GUESTREGS )
+            ));
+        }
 
-
-        if(icode == 0 || icode == SIE_NO_INTERCEPT)
+        if (icode == 0 || icode == SIE_NO_INTERCEPT)
         {
             /* Check PER first, higher priority */
-            if( OPEN_IC_PER(GUESTREGS) )
-                ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
+            if (OPEN_IC_PER( GUESTREGS ))
+                ARCH_DEP( program_interrupt )( GUESTREGS, PGM_PER_EVENT );
 
-            if( SIE_I_EXT(GUESTREGS) )
+            if (SIE_I_EXT( GUESTREGS ))
                 icode = SIE_INTERCEPT_EXTREQ;
             else
-                if( SIE_I_IO(GUESTREGS) )
+                if (SIE_I_IO( GUESTREGS ))
                     icode = SIE_INTERCEPT_IOREQ;
                 else
-                    if( SIE_I_STOP(GUESTREGS) )
+                    if (SIE_I_STOP( GUESTREGS ))
                         icode = SIE_INTERCEPT_STOPREQ;
                     else
-                        if( SIE_I_WAIT(GUESTREGS) )
+                        if (SIE_I_WAIT( GUESTREGS ))
                             icode = SIE_INTERCEPT_WAIT;
                         else
-                            if( SIE_I_HOST(regs) )
+                            if (SIE_I_HOST( regs ))
                                 icode = SIE_HOST_INTERRUPT;
         }
 
-    } while(icode == 0 || icode == SIE_NO_INTERCEPT);
+    }
+    while (icode == 0 || icode == SIE_NO_INTERCEPT);
 
     return icode;
-}
+} /* end function run_sie */
 
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)

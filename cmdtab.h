@@ -164,17 +164,6 @@
 
 #define bplus_cmd_desc          "Set breakpoint"
 #define cachestats_cmd_desc     "Cache stats command"
-#define capping_cmd_desc        "Set/display capping value"
-#define capping_cmd_help        \
-                                \
-  "Format: capping [ n | off ]\n"                                                       \
-  "         If no operands are specified, the current capping value is displayed,\n"    \
-  "         the value represents the maximum total number of MIPS for all of the\n"     \
-  "         'CP' type processors.\n"                                                    \
-  "\n"                                                                                  \
-  "     n    Maximum total number of MIPS for all of the 'CP' type processors.\n"       \
-  "          A zero value will turn off MIP capping\n"                                  \
-  "     off  Turn off capping\n"
 
 #define cckd_cmd_desc           "cckd command"
 #define cckd_cmd_help           \
@@ -867,6 +856,22 @@
   "       wtm n     write 'n' tapemarks        (default = 1)\n"                  \
   "       dse       data secure erase\n"                                         \
   "       dvol1     display VOL1 header\n"
+
+#define netdev_cmd_desc         "Set default host networking device"
+#define netdev_cmd_help         \
+                                \
+  "Specifies the name (or for Windows, the IP or MAC address) of the\n"          \
+  "underlying default host network device to be used for all Hercules\n"         \
+  "communications devices unless overridden on the device statement.\n"          \
+  "\n"                                                                           \
+  "The default for Linux (except Apple and FreeBSD) is '/dev/net/tun'.\n"        \
+  "The default for Apple and FreeBSD is '/dev/tun'.\n"                           \
+  "\n"                                                                           \
+  "The default for Windows is whatever SoftDevLabs's CTCI-WIN product\n"         \
+  "returns as its default CTCI-WIN host network adapter, which for older\n"      \
+  "versions of CTCI-WIN (3.5.0) is the first network adapter returned by\n"      \
+  "Windows in its adapter binding order or for newer versions of CTCI-WIN\n"     \
+  "(3.6.0) what you defined as your default CTCI-WIN host network adapter.\n"
 
 #define numcpu_cmd_desc         "Set numcpu parameter"
 #define numvec_cmd_desc         "Set numvec parameter"
@@ -1603,6 +1608,7 @@ COMMAND( "loadcore",                loadcore_cmd,           SYSCMDNOPER,        
 COMMAND( "loadtext",                loadtext_cmd,           SYSCMDNOPER,        loadtext_cmd_desc,      loadtext_cmd_help   )
 COMMAND( "maxcpu",                  maxcpu_cmd,             SYSCMDNOPER,        maxcpu_cmd_desc,        NULL                )
 CMDABBR( "mounted_tape_reinit",  9, mounted_tape_reinit_cmd,SYSCMDNOPER,        mtapeinit_cmd_desc,     mtapeinit_cmd_help  )
+COMMAND( "netdev",                  netdev_cmd,             SYSCMDNOPER,        netdev_cmd_desc,        netdev_cmd_help     )
 COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        numcpu_cmd_desc,        NULL                )
 COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
 COMMAND( "osa",                     qeth_cmd,               SYSCMDNOPER,        osa_cmd_desc,           qeth_cmd_help       )
@@ -1654,8 +1660,6 @@ COMMAND( "stopall",                 stopall_cmd,            SYSCMDNDIAG8,       
 COMMAND( "store",                   store_cmd,              SYSCMDNDIAG8,       store_cmd_desc,         NULL                )
 COMMAND( "sysclear",                sysclear_cmd,           SYSCMDNDIAG8,       sysclear_cmd_desc,      sysclear_cmd_help   )
 COMMAND( "sysreset",                sysreset_cmd,           SYSCMDNDIAG8,       sysreset_cmd_desc,      sysreset_cmd_help   )
-
-COMMAND( "capping",                 capping_cmd,            SYSCFGNDIAG8,       capping_cmd_desc,       capping_cmd_help    )
 COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       cnslport_cmd_desc,      NULL                )
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )
@@ -1698,7 +1702,7 @@ COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 COMMAND( "cmpscpad",                cmpscpad_cmd,           SYSCFGNDIAG8,       cmpscpad_cmd_desc,      cmpscpad_cmd_help   )
 #endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
-#if defined( _FEATURE_ASN_AND_LX_REUSE )
+#if defined( _FEATURE_ASN_AND_LX_REUSE_FACILITY )
 COMMAND( "alrf",                    alrf_cmd,               SYSCMDNOPER,        alrf_cmd_desc,          NULL                )
 COMMAND( "asn_and_lx_reuse",        alrf_cmd,               SYSCMDNOPER,        asnlx_cmd_desc,         NULL                )
 #endif

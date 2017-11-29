@@ -1309,7 +1309,7 @@ int   rc;
     RELEASE_INTLOCK(NULL);
 
     return NULL;
-}
+} /* end function cpu_thread */
 
 
 /*-------------------------------------------------------------------*/
@@ -1717,8 +1717,6 @@ register REGS   *regs;
 BYTE   *ip;
 int     i;
 int     aswitch;
-register int    *caplocked = &sysblk.caplocked[cpu];
-         LOCK   *caplock = &sysblk.caplock[cpu];
 
     /* Assign new regs if not already assigned */
     regs = sysblk.regs[cpu] ?
@@ -1815,35 +1813,35 @@ register int    *caplocked = &sysblk.caplocked[cpu];
     regs->execflag = 0;
 
     do {
-        if (INTERRUPT_PENDING(regs))
-            ARCH_DEP(process_interrupt)(regs);
-        else if (caplocked[0])
-        {
-            obtain_lock(caplock);
-            release_lock(caplock);
-        }
+        if (INTERRUPT_PENDING( regs ))
+            ARCH_DEP( process_interrupt )( regs );
 
-        ip = INSTRUCTION_FETCH(regs, 0);
+        ip = INSTRUCTION_FETCH( regs, 0 );
 
-        EXECUTE_INSTRUCTION(current_opcode_table, ip, regs);
+        EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
         regs->instcount++;
 
-        /* BHe: I have tried several settings. But 2 unrolled */
-        /* executes gives (core i7 at my place) the best results. */
-        /* Even a 'do { } while(0);' with several unrolled executes */
-        /* and without the 'i' was slower. That surprised me. */
-        for(i = 0; i < 128; i++)
-        {
-            UNROLLED_EXECUTE(current_opcode_table, regs);
-            UNROLLED_EXECUTE(current_opcode_table, regs);
-        }
-        regs->instcount += i * 2;
+        /* BHe: I have tried several settings. But 2 unrolled
+           executes gives (core i7 at my place) the best results.
 
-    } while (1);
+           Even a 'do { } while(0);' with several unrolled executes
+           and without the 'i' was slower.
+
+           That surprised me.
+        */
+        for (i=0; i < 128; i++)
+        {
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+        }
+        regs->instcount += (i * 2);
+
+    }
+    while (1);
 
     UNREACHABLE_CODE( return NULL );
 
-} /* end function cpu_thread */
+} /* end function run_cpu */
 
 /*-------------------------------------------------------------------*/
 /* Process Trace                                                     */

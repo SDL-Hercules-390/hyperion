@@ -1047,10 +1047,10 @@
 06 Oct 2005 Implemented ETF2 enhancements, still having the flu - Bernard van der Helm
 06 Oct 2005 Implemented ETF3 and crypto while having the flu - Bernard van der Helm
 05 Oct 2005 Fix segfault in HSCH if device is startpending - Greg
-05 Oct 2005 Activate FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
+05 Oct 2005 Activate FEATURE_EXTENDED_IMMEDIATE_FACILITY - Roger Bowler
 05 Oct 2005 Corrections to FLOGR instruction - Roger Bowler
 05 Oct 2005 MIDAW corrections - Roger Bowler
-04 Oct 2005 merge FEATURE_LOAD_ADDITIONAL into FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
+04 Oct 2005 merge FEATURE_LOAD_ADDITIONAL into FEATURE_EXTENDED_IMMEDIATE_FACILITY - Roger Bowler
 04 Oct 2005 rename FEATURE_LOAD_PAGE_TABLE_ENTRY_ADDRESS as FEATURE_DAT_ENHANCEMENT_FACILITY_2 - Roger Bowler
 04 Oct 2005 rename FEATURE_BRANCH_DETECTION as FEATURE_PER3 - Roger Bowler
 04 Oct 2005 rename FEATURE_CPACF_ENHANCEMENTS as FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 - Roger Bowler
@@ -1116,7 +1116,7 @@
 29 Jul 2005 Reapply Ivan's 16 Mar 2005 console close logic update errone-
             ously negated trying to keep MSVC sync'ed with cvs head - Fish
 28 Jul 2005 Fix MVCL clobber if ESAME but not amode64 - Greg Smith
-28 Jul 2005 ALS5 framework: FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
+28 Jul 2005 ALS5 framework: FEATURE_EXTENDED_IMMEDIATE_FACILITY - Roger Bowler
 27 Jul 2005 ALS5 framework: FEATURE_HFP_UNNORMALIZED_EXTENSION - Roger Bowler
 19 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
 05 Jul 2005 pttrace.c(ptt_pthread_print): remove erroneous assumption

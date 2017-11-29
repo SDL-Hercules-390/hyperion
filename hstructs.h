@@ -357,7 +357,7 @@ struct REGS {                           /* Processor registers       */
         func    trace_br;
 
      /* Active Facility List */
-        BYTE    facility_list[STFL_HBYTESIZE];
+        BYTE    facility_list[STFL_HERCBYSIZE];
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
@@ -465,6 +465,16 @@ struct SYSBLK {
         char   *hercules_pgmname;       /* Starting program name     */
         char   *hercules_pgmpath;       /* Starting pgm path name    */
         char   *hercules_cmdline;       /* Hercules Command line     */
+        char   *netdev;                 /* Network device name       */
+
+#if defined( __APPLE__ ) || defined( __FreeBSD__ )
+  #define  DEFAULT_NETDEV   "/dev/tun"
+#elif !defined( OPTION_W32_CTCI )
+  #define  DEFAULT_NETDEV   "/dev/net/tun"
+#else
+  #define  DEFAULT_NETDEV   tt32_get_default_iface()
+#endif
+
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    config;                 /* (Re)Configuration Lock    */
@@ -524,13 +534,9 @@ struct SYSBLK {
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
-        LOCK    caplock[MAX_CPU_ENGINES]; /* CP capping locks        */
-        int     caplocked[MAX_CPU_ENGINES]; /* Indication locked     */
-        TID     captid;                 /* TID capping manager       */
-        U32     capvalue;               /* Capping value in mips     */
 
         /* Active Facility List */
-        BYTE    facility_list[GEN_MAXARCH][STFL_HBYTESIZE];
+        BYTE    facility_list[GEN_MAXARCH][STFL_HERCBYSIZE];
 
      /* CPU Measurement Counter facility
         CPU Measurement Sampling facility

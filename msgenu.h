@@ -232,18 +232,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00010 "Enter input for console %1d:%04X"
 #define HHC00011 "Function %s failed; cache %d size %d: [%02d] %s"
 #define HHC00012 "Releasing inactive buffer storage"
-#define HHC00013 "Herc command: %s"
+//efine HHC00013 (available)
 #define HHC00014 "select: %s"
 #define HHC00015 "keyboard read: %s"
-#define HHC00016 "Message lock hold longer than 1 second, release forced"
-#define HHC00017 "Message:\n" \
-       "HHC00017I     %s\n" \
-       "HHC00017I Explanation:\n" \
-       "HHC00017I     %s\n" \
-       "HHC00017I Severity\n" \
-       "HHC00017I     %s\n" \
-       "HHC00017I Action:\n" \
-       "HHC00017I     %s"
+//efine HHC00016 (available)
+//efine HHC00017 (available)
 #define HHC00018 "Hercules is %srunning in elevated mode"
 #define HHC00019 "Hercules IS running in test mode"
 
@@ -291,8 +284,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00100 "Thread id "TIDPAT", prio %2d, name %s started"
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name %s ended"
 #define HHC00102 "Error in function create_thread(): %s"
-#define HHC00103 "Thread id "TIDPAT" name %s, priority change: old %2d, new %2d"
-#define HHC00105 "Thread id "TIDPAT" name %s is still active"
+//efine HHC00103 (available)
+//efine HHC00105 (available)
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
@@ -362,19 +355,19 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00227 "%1d:%04X Tape file %s, type %s: %s tape volume %s being auto loaded"
 #define HHC00228 "Tape autoloader: file request fn %s"
 #define HHC00229 "Tape autoloader: adding %s value %s"
-#define HHC00230 "%1d:%04X Tape file %s, %s volume %s: not loaded; file not found"
-#define HHC00231 "%1d:%04X Tape file %s, %s volume %s: not loaded; manual mount pending"
-#define HHC00232 "%1d:%04X Tape file %s, %s volume %s: not loaded; duplicate file found"
-#define HHC00233 "%1d:%04X Tape file %s, %s volume %s: not loaded; rename failed"
-#define HHC00234 "%1d:%04X Tape file %s, %s volume %s: not loaded; not enough space on volume"
+//efine HHC00230 (available)
+//efine HHC00231 (available)
+//efine HHC00232 (available)
+//efine HHC00233 (available)
+//efine HHC00234 (available)
 #define HHC00235 "%1d:%04X Tape file %s, type %s: tape created"
-#define HHC00236 "%1d:%04X Tape SCRATCH LIST for %s tapes not found"
-#define HHC00237 "%1d:%04X Tape SCRATCH %s, type %s: tape volume %s being auto loaded"
-#define HHC00238 "%1d:%04X Tape file %s, type %s: tape not created"
-#define HHC00239 "%1d:%04X Tape AUTO_CREATE or AUTOINIT not specified; Mount request failed"
-#define HHC00240 "%1d:%04X Tape SCRATCH %s, type %s: tape volume %s being returned to pool"
-#define HHC00241 "%1d:%04X Tape file %s, type %s: %s"
-#define HHC00242 "%1d:%04X Tape DWTVFscrtap must be 6 character volser; defaulting to SCRTAP"
+//efine HHC00236 (available)
+//efine HHC00237 (available)
+//efine HHC00238 (available)
+//efine HHC00239 (available)
+//efine HHC00240 (available)
+//efine HHC00241 (available)
+//efine HHC00242 (available)
 #define HHC00243 "%1d:%04X Tape status retrieval timeout"
 
 // reserve 003xx for compressed dasd device related
@@ -510,7 +503,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00440 "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
 #define HHC00441 "%1d:%04X CKD file %s: ipdating cyl %d head %d record %d dl %d"
 #define HHC00442 "%1d:%04X CKD file %s: set file mask %02X"
-#define HHC00443 "%1d:%04X Error: wrong recordheader: cc hh r=%d %d %d, should be:cc hh r=%d %d %d"
+//efine HHC00443 (available)
+//efine HHC00444 (available)
 
 /* dasdutil.c */
 #define HHC00445 "%1d:%04X CKD file %s: updating cyl %d head %d"
@@ -647,15 +641,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00826 "%1d:%04X: USR2 signal received"
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
-#define HHC00830 "Capping active, specialty engines excluded from MIPS calculation"
-#define HHC00831 "No central processors found, capping disabled"
-#define HHC00832 "Central processors will be capped at %u MIPS"
-#define HHC00833 "Invalid capping argument %s, capping disabled"
+//efine HHC00830 (available)
+//efine HHC00831 (available)
+//efine HHC00832 (available)
+//efine HHC00833 (available)
 #define HHC00834 "Processor %s%02X: %s"
-#define HHC00835 "Processor %s%02X: offline; not eligible for ipl nor restart"
-#define HHC00836 "%d processor%s %s"
-#define HHC00837 "No processors started in configuration"
-#define HHC00838 "Capping is not enabled"
+//efine HHC00835 (available)
+//efine HHC00836 (available)
+//efine HHC00837 (available)
+//efine HHC00838 (available)
 #define HHC00839 "Processor %s%02X: ipl failed: %s"
 
 /* external.c */
@@ -695,8 +689,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00874 "mainlock %sheld; owner %4.4x"
 #define HHC00875 "intlock %sheld; owner %4.4x"
 #define HHC00876 "ioq lock %sheld"
-#define HHC00877 "Central processors are capped at %u MIPS"
-#define HHC00878 "No central processors found, capping disabled"
+//efine HHC00877 (available)
+//efine HHC00878 (available)
 //efine HHC00879 (available)
 
 #define HHC00880 "device %1d:%04X: status %s"
@@ -747,7 +741,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
 #define HHC00933 "%1d:%04X CTC: executing command %s"
-#define HHC00934 "%1d:%04X CTC: sending packet to file %s"
+//efine HHC00934 (available)
 #define HHC00935 "CTC: lcs device port %2.2X: %s Checksum Offload enabled"
 #define HHC00936 "%1d:%04X CTC: error writing to file %s: %s"
 #define HHC00937 "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
@@ -786,13 +780,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 /*ctcadpt.c */
 // Note: CTCE messages are in the 050xx range
-#define HHC00970 "%1d:%04X CTC: unrecognized emulation type %s"
-#define HHC00971 "%1d:%04X CTC: connect to %s:%s failed, starting server"
-#define HHC00972 "%1d:%04X CTC: connected to %s:%s"
-#define HHC00973 "%1d:%04X CTC: error reading from file %s: %s"
-#define HHC00974 "%1d:%04X CTC: incorrect client or config error: config file %s connecting client %s"
-#define HHC00975 "%1d:%04X CTC: invalid %s length: %d < %d"
-#define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
+//efine HHC00970 (available)
+//efine HHC00971 (available)
+//efine HHC00972 (available)
+//efine HHC00973 (available)
+//efine HHC00974 (available)
+//efine HHC00975 (available)
+//efine HHC00976 (available)
 #define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == LGW)"
 #define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
 #define HHC00979 "%s: %s: %s %s %s"
@@ -830,7 +824,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01018 "%1d:%04X COMM: client %s devtype %4.4X: connected"
 #define HHC01019 "%1d:%04X COMM: unrecognized parameter %s"
 #define HHC01020 "%1d:%04X COMM: no buffers trying to send %s"
-#define HHC01021 "%1d:%04X COMM: client %s devtype %4.4X: connection closed"
+//efine HHC01021 (available)
 #define HHC01022 "%1d:%04X COMM: client %s devtype %4.4X: connection closed by client"
 #define HHC01023 "Waiting for port %u to become free for console connections"
 #define HHC01024 "Waiting for console connections on port %u"
@@ -1015,7 +1009,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 /* hscmisc.c */
 #define HHC01420 "Begin Hercules shutdown"
-#define HHC01421 "Main Storage %sreconfigured to %s due to machine architecture change"
+//efine HHC01421 (available)
 #define HHC01422 "Configuration released"
 #define HHC01423 "Calling termination routines"
 #define HHC01424 "All termination routines complete"
@@ -1024,15 +1018,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01427 "%s storage %sreleased"
 
 /* config.c */
-#define HHC01428 "Locking %s storage"
-#define HHC01429 "Unlocking %s storage"
+//efine HHC01428 (available)
+//efine HHC01429 (available)
 
 /* bldcfg.c */
 #define HHC01430 "Error in function %s: %s"
 #define HHC01431 "Expanded storage support not installed"
 #define HHC01432 "Config file[%d] %s: error in function %s: %s"
 #define HHC01433 "Config file[%d] %s: line is too long"
-#define HHC01434 "Config file %s: no device statements in file"
+//efine HHC01434 (available)
 #define HHC01435 "Config file %s: will ignore include errors"
 #define HHC01436 "Config file[%d] %s: maximum nesting level %d reached"
 #define HHC01437 "Config file[%d] %s: including file %s"
@@ -1040,19 +1034,19 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01439 "Config file %s: open error file %s: %s"
 //efine HHC01440 (available)
 #define HHC01441 "Config file[%d] %s: error processing statement: %s"
-#define HHC01442 "Config file[%d] %s: incorrect number of operands"
+//efine HHC01442 (available)
 #define HHC01443 "Config file[%d] %s: %s is not a valid %s"
-#define HHC01444 "Hercules is not running as root, cannot raise %s"
-#define HHC01445 "Vector Facility support not configured"
-#define HHC01446 "Config file[%d] %s: %s is not a valid %s, assumed %s"
+//efine HHC01444 (available)
+//efine HHC01445 (available)
+//efine HHC01446 (available)
 #define HHC01447 "Default allowed AUTOMOUNT directory: %s"
 #define HHC01448 "Config file[%d] %s: missing device number or device type"
-#define HHC01449 "NUMCPU %d exceeds MAXCPU %d; MAXCPU set to NUMCPU"
-#define HHC01450 "Config file[%d] %s: %s not supported in this build; see option %s"
+//efine HHC01449 (available)
+//efine HHC01450 (available)
 #define HHC01451 "Invalid value %s specified for %s"
 #define HHC01452 "Default port %s being used for %s"
-#define HHC01453 "Config file %s: lock failure:%s; multiple instances restricted"
-#define HHC01454 "Config file %s: error in function %s: %s"
+//efine HHC01453 (available)
+//efine HHC01454 (available)
 #define HHC01455 "Invalid number of arguments for %s"
 #define HHC01456 "Invalid syntax %s for %s"
 #define HHC01457 "Valid years for %s are %s; other values no longer supported"
@@ -1105,10 +1099,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01502 "HDL: %s complete"
 //efine HHC01503 (available)
 #define HHC01504 "HDL: shutdown sequence complete"
-#define HHC01505 "HDL: path name length %d exceeds maximum of %d"
-#define HHC01506 "HDL: change request of directory to %s is ignored"
-#define HHC01507 "HDL: directory remains %s; taken from startup"
-#define HHC01508 "HDL: loadable module directory is %s"
+#define HHC01505 "HDL: directory '%s' rejected; exceeds maximum length of %d"
+#define HHC01506 "HDL: directory '%s' rejected; '-p' cmdline option rules"
+#define HHC01507 "HDL: directory remains '%s' from '-p' cmdline option"
+#define HHC01508 "HDL: loadable module directory is '%s'"
 #define HHC01509 "HDL: dependency check failed for %s, version %s expected %s"
 #define HHC01510 "HDL: dependency check failed for %s, size %d expected %d"
 #define HHC01511 "HDL: error in function %s: %s"
@@ -1136,7 +1130,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01533 "HDL:  devtype(s) =%s"
 #define HHC01534 "HDL:  instruction = %s, opcode = %4.4X%s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
-#define HHC01536 "HDL: %s is not a valid directory"
+#define HHC01536 "HDL: WARNING: '%s' is not a valid directory"
 //efine HHC01537 (available)
 //efine HHC01538 (available)
 //efine HHC01539 (available)
@@ -1148,8 +1142,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01543 - HHC01549 (available)
 
 /* hdl.c */
-#define HHC01550 "HDL: startup sequence beginning"
-#define HHC01551 "HDL: startup sequence completed"
+//efine HHC01550 (available)
+//efine HHC01551 (available)
 //efine HHC01552 - HHC01599 (available)
 
 // reserve 016xx for panel communication
@@ -1159,7 +1153,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01604 "Unknown command %s, no help available"
 #define HHC01605 "Invalid cmdlevel option: %s"
 #define HHC01606 "cmdlevel[%2.2X] is %s"
-#define HHC01607 "No help available yet for message %s"
+//efine HHC01607 (available)
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
 #define HHC01609 "No help available for mask %s"
 #define HHC01610 " (*)  Enter \"help <command>\" for more info."
@@ -1329,7 +1323,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02208 "Uptime %02u:%02u:%02u"
 #define HHC02209 "%1d:%04X device is not a %s"
 #define HHC02210 "%1d:%04X %s"
-#define HHC02211 "%1d:%04X device not stopped"
+//efine HHC02211 (available)
 #define HHC02212 "%1d:%04X device started"
 #define HHC02213 "%1d:%04X device not started%s"
 #define HHC02214 "%1d:%04X device stopped"
@@ -1343,8 +1337,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02222 "Unsupported function"
 #define HHC02223 "%s of %s-labeled volume %s pending for drive %u:%4.4X %s"
 #define HHC02224 "Store status rejected: CPU not stopped"
-#define HHC02225 "HTTP server already active"
-#define HHC02226 "Held messages cleared"
+//efine HHC02225 (available)
+//efine HHC02226 (available)
 #define HHC02227 "Shell/Exec commands are disabled"
 #define HHC02228 "%s key pressed"
 #define HHC02229 "Instruction %s %s %s"
@@ -1353,13 +1347,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02232 "%1d:%04X attention request rejected"
 #define HHC02233 "%1d:%04X subchannel not enabled"
 #define HHC02234 "Are you sure you didn't mean 'ipl %04X'"
-#define HHC02235 "System reset/clear rejected: all CPU's must be stopped"
-#define HHC02236 "IPL rejected: All CPU's must be stopped"
+//efine HHC02235 (available)
+//efine HHC02236 (available)
 #define HHC02237 "Not all devices shown (max %d)"
 #define HHC02238 "Device numbers can only be redefined within the same Logical Channel SubSystem"
 #define HHC02239 "command '%s' invalid for device type %04X"
 #define HHC02240 "Processor %s%02X%s"
-#define HHC02241 "Max device threads: %d, current: %d, most: %d, waiting: %d, max exceeded: %d"
+//efine HHC02241 (available)
 #define HHC02242 "Max device threads: %d, current: %d, most: %d, waiting: %d, total I/Os queued: %d"
 #define HHC02243 "%1d:%04X reinit rejected; drive not empty"
 #define HHC02244 "%1d:%04X device initialization failed"
@@ -1376,7 +1370,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02255 "%3d: %12"PRId64
 #define HHC02256 "Command %s is deprecated, use %s instead"
 #define HHC02257 "%s%7d"
-#define HHC02258 "Only 1 %s may be invoked from the panel at any time"
+//efine HHC02258 (available)
 #define HHC02259 "Script %d aborted: %s"
 #define HHC02260 "Script %d: begin processing file %s"
 #define HHC02261 "Script %d: syntax error; statement ignored: %s"
@@ -1386,7 +1380,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02265 "Script %d: file %s aborted due to previous conditions"
 #define HHC02266 "Confirm command by entering %s again within %d seconds"
 #define HHC02267 "%s" // (trace instr: Real address is not valid)
-#define HHC02268 "%s" // (ds - display subchannel command)
+//efine HHC02268 (available)
 #define HHC02269 "%s" // General purpose registers
 #define HHC02270 "%s" // Floating point registers
 #define HHC02271 "%s" // Control registers
@@ -1406,16 +1400,16 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02285 "Counted %5u %s events"
 #define HHC02286 "Average instructions / SIE invocation: %5u"
 #define HHC02287 "No SIE performance data"
-#define HHC02288 "Commands are sent to %s"
+//efine HHC02288 (available)
 #define HHC02289 "%s" // disasm_stor
 #define HHC02290 "%s" // 'abs', 'r' and 'v' commands, and 'dump_abs_page' function
 #define HHC02291 "%s" // 'abs', 'r' and 'v' commands, and 'dump_abs_page' function
 #define HHC02292 "%s" // icount_cmd
 #define HHC02293 "%s" // history.c: command history
 #define HHC02294 "%s" // cachestats_cmd
-#define HHC02295 "CP group capping rate is %d MIPS"
-#define HHC02296 "Capping rate for each non-CP CPU is %d MIPS"
-#define HHC02297 "MIP capping is not enabled"
+//efine HHC02295 (available)
+//efine HHC02296 (available)
+//efine HHC02297 (available)
 #define HHC02298 "%1d:%04X drive is empty"
 #define HHC02299 "Invalid command usage. Type 'help %s' for assistance."
 #define HHC02300 "sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"PRIX64
@@ -1431,7 +1425,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02310 "Panel command %s is not supported in this build; see option %s"
 #define HHC02311 "%s completed"
 #define HHC02312 "Empty list"
-#define HHC02313 "Empty list"
+//efine HHC02313 (available)
 #define HHC02314 "No scripts currently running"
 #define HHC02315 "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
 #define HHC02316 "Script %s not found"
@@ -1470,11 +1464,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // range 02350 - 02369 available
 
-#define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
-#define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"
-#define HHC02372 "%1d:%04X Device number already defined for CU and/or LCU"
-#define HHC02373 "CUNUM %04X does not match CUNUM %04X for SSID %04X"
-#define HHC02374 "%1d:%04X Attached to CUNUM %04X SSID %04X"
+//efine HHC02370 (available)
+//efine HHC02371 (available)
+//efine HHC02372 (available)
+//efine HHC02373 (available)
+//efine HHC02374 (available)
 
 #define HHC02386 "Configure CPU error %d"
 #define HHC02387 "Configure expanded storage error %d"
@@ -1482,8 +1476,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02389 "CPUs must be offline or stopped"
 
 // reserve 02390 for ieee.c
-#define HHC02390 "Function %s: unexpectedly converting to %s"
-#define HHC02391 "Inexact"
+//efine HHC02390 (available)
+//efine HHC02391 (available)
 
 // reserve 024xx for dasd* utilities
 //dasdcat.c
@@ -2009,7 +2003,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02725I 'nnn' specifies how many tapemark-separated files to copy to the\n" \
        "HHC02725I specified outfilename. If nnn is not given 32767 is used instead."
 #define HHC02726 "Usage: %s filename"
-#define HHC02727 "Usage: %s [-f n] infilename outfilename"
+//efine HHC02727 (available)
 #define HHC02728 "Usage: %s [options] hetfile outfile fileno [recfm lrecl blksize]\n" \
        "HHC02728I   hetfile   input file\n" \
        "HHC02728I   outfile   output file\n" \
@@ -2045,7 +2039,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02732 "Bytes read:    %"PRId64" (%3.1f MB), Blocks=%u, avg=%u"
 #define HHC02733 "Bytes written: %"PRId64" (%3.1f MB)"
 
-#define HHC02738 "%s"
+//efine HHC02738 (available)
 //efine HHC02739 (available)
 #define HHC02740 "File %s: writing output file"
 #define HHC02741 "File %s: Error, incomplete %s header"
@@ -2260,12 +2254,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17003 "%-8s storage is %s (%ssize); storage is %slocked"
 #define HHC17004 "%-6s: CPUID  = %16.16"PRIX64
 #define HHC17005 "%-6s: CPC SI = %4.4X.%s.%s.%s.%s"
-#define HHC17006 "LPARNAME[%2.2X] = %s"
+//efine HHC17006 (available)
 #define HHC17007 "NumCPU = %2.2d, NumVEC = %2.2d, ReservedCPU = %2.2d, MaxCPU = %2.2d"
 #define HHC17008 "Avgproc  %2.2d %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17009 "PROC %s%2.2X %c %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17010 " - Started        : Stopping        * Stopped"
-#define HHC17011 "Avg CP   %2.2d %3.3d%%; MIPS[%4d.%2d];"
+//efine HHC17011 (available)
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
 #define HHC17014 "Specified value is invalid or outside of range %d to %d"
@@ -2336,7 +2330,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
-#define HHC90001 " *** Assertion Failed! *** %s(%d); function: %s()"
+//efine HHC90001 (available)
 
 /* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"

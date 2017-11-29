@@ -7769,7 +7769,7 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 #endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* ED64 LEY   - Load Floating Point Short (Long Displacement)  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7848,7 +7848,7 @@ U64     dreg;                           /* Double word workarea      */
          | regs->fpr[i1+1];
     ARCH_DEP(vstore8) (dreg, effective_addr2, b2, regs);
 }
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
 #endif /* FEATURE_HEXADECIMAL_FLOATING_POINT */

@@ -107,7 +107,7 @@ static ARCHTAB archtab[] =
 struct FACTAB
 {
     const char*  name;             /* Facility Name                  */
-    const BYTE   bitno;            /* Bit number                     */
+    const int    bitno;            /* Bit number                     */
     const BYTE   mode;             /* Mode indicator                 */
 
 #define S370     0x01              /* S/370 feature                  */
@@ -138,6 +138,24 @@ typedef struct FACTAB   FACTAB;
 /*-------------------------------------------------------------------*/
 /*                      Facility Table (factab)                      */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The facility names used in the below FACILITY macro invocations   */
+/* are, when prefixed with 'STFL_', #defined in the esa390.h header. */
+/* E.g. FACILITY( ASN_LX_REUSE, ... ==> #define STFL_ASN_LX_REUSE.   */
+/*                                                                   */
+/* Also note that the entries in the below table do NOT have to be   */
+/* in any facility bit sequence as it is always seached serially.    */
+/* As a convention, all Hercules specific facilities that are not    */
+/* part of the architecture are defined at the end of the table.     */
+/*                                                                   */
+/* PROGRAMMING NOTE: Only define here a FACILITY macro if Hercules   */
+/* actually provides support for the facility. You should, however,  */
+/* continue to always #undef a FEATURE_XXX in featall.h and #define  */
+/* a STFL_XXXX macro in eas390.h irregardless of whether Hercules    */
+/* currently supports the feature/facility or not.                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
 static FACTAB factab[] =
 {
 /*        Facility          Default       Mandatory  Supported      Group        */
@@ -150,29 +168,29 @@ FACILITY( ESAME_INSTALLED,  ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|AL
 FACILITY( ESAME_ACTIVE,     ZARCH,        ZARCH,     ZARCH,              ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_DAT_ENHANCEMENT)
+#if defined(_FEATURE_DAT_ENHANCEMENT_FACILITY_1)
 FACILITY( IDTE_INSTALLED,   Z390,         NONE,      Z390,               ALS2|ALS3 )
 FACILITY( IDTE_SC_SEGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/        ALS2|ALS3 )
 FACILITY( IDTE_SC_REGTAB,   0, /*ZARCH*/  NONE,      0, /*ZARCH*/        ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_ASN_AND_LX_REUSE)
+#if defined(_FEATURE_ASN_AND_LX_REUSE_FACILITY)
 FACILITY( ASN_LX_REUSE,     0, /*Z390*/   NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_STORE_FACILITY_LIST_EXTENDED)
+#if defined(_FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)
 FACILITY( STFL_EXTENDED,    ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_ENHANCED_DAT_FACILITY)
-FACILITY( ENHANCED_DAT,     Z390,         NONE,      Z390,               ALS2|ALS3 )
+#if defined(_FEATURE_ENHANCED_DAT_FACILITY_1)
+FACILITY( ENHANCED_DAT_1,   Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_SENSE_RUNNING_STATUS)
 FACILITY( SENSE_RUN_STATUS, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_CONDITIONAL_SSKE)
+#if defined(_FEATURE_CONDITIONAL_SSKE_FACILITY)
 FACILITY( CONDITIONAL_SSKE, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
@@ -189,14 +207,14 @@ FACILITY( NONQ_KEY_SET,     Z390,         NONE,      Z390,                    AL
 #endif
 
 #if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-FACILITY( TRAN_FAC2,        ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
+FACILITY( EXT_TRANSL_FAC_2, ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
 FACILITY( MSG_SECURITY,     ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_LONG_DISPLACEMENT)
+#if defined(_FEATURE_LONG_DISPLACEMENT_FACILITY)
 FACILITY( LONG_DISPL_INST,  Z390,         NONE,      Z390,               ALS2|ALS3 )
 FACILITY( LONG_DISPL_HPERF, ZARCH,        NONE,      ZARCH,              ALS2|ALS3 )
 #endif
@@ -205,23 +223,23 @@ FACILITY( LONG_DISPL_HPERF, ZARCH,        NONE,      ZARCH,              ALS2|AL
 FACILITY( HFP_MULT_ADD_SUB, ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_EXTENDED_IMMEDIATE)
+#if defined(_FEATURE_EXTENDED_IMMEDIATE_FACILITY)
 FACILITY( EXTENDED_IMMED,   Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
-FACILITY( TRAN_FAC3,        Z390,         NONE,      Z390,               ALS2|ALS3 )
+FACILITY( EXT_TRANSL_FAC_3, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_HFP_UNNORMALIZED_EXTENSION)
 FACILITY( HFP_UNNORM_EXT,   Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_ETF2_ENHANCEMENT)
+#if defined(_FEATURE_ETF2_ENHANCEMENT_FACILITY)
 FACILITY( ETF2_ENHANCEMENT, ESA390|ZARCH, NONE,      ESA390|ZARCH,       ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_STORE_CLOCK_FAST)
+#if defined(_FEATURE_STORE_CLOCK_FAST_FACILITY)
 FACILITY( STORE_CLOCK_FAST, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
@@ -230,19 +248,19 @@ FACILITY( PARSING_ENHANCE,  Z390,         NONE,      Z390,               ALS2|AL
 FACILITY( MVCOS,            Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_TOD_CLOCK_STEERING)
+#if defined(_FEATURE_TOD_CLOCK_STEERING_FACILITY)
 FACILITY( TOD_CLOCK_STEER,  Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_ETF3_ENHANCEMENT)
+#if defined(_FEATURE_ETF3_ENHANCEMENT_FACILITY)
 FACILITY( ETF3_ENHANCEMENT, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_EXTRACT_CPU_TIME)
+#if defined(_FEATURE_EXTRACT_CPU_TIME_FACILITY)
 FACILITY( EXTRACT_CPU_TIME, Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE)
+#if defined(_FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)
 FACILITY( CSSF,             Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
@@ -272,7 +290,7 @@ FACILITY( LOAD_PROG_PARAM,  Z390,         NONE,      Z390,                    AL
 FACILITY( FPS_ENHANCEMENT,  Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_DECIMAL_FLOATING_POINT)
+#if defined(_FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
 FACILITY( DECIMAL_FLOAT,    Z390,         NONE,      Z390,               ALS2|ALS3 )
 FACILITY( DFP_HPERF,        Z390,         NONE,      Z390,               ALS2|ALS3 )
 #endif
@@ -287,6 +305,11 @@ FACILITY( FAST_BCR_SERIAL,  Z390,         NONE,      Z390,                    AL
 
 #if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
 FACILITY( CMPSC_ENH,        ZARCH,        NONE,      ZARCH,                   ALS3 )
+#endif
+
+// Note that the below facility is available in ESA mode too (SIE)
+#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
+FACILITY( INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1|ALS2|ALS3 )
 #endif
 
 #if defined(_FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)
@@ -314,14 +337,12 @@ FACILITY( MSA_EXTENSION_4,  Z390,         NONE,      Z390,                    AL
 #endif
 
 //------------------------------------------------------------------------------------
-// Note that this facility is available in ESA mode too (SIE)
-
-#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
-FACILITY( INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1|ALS2|ALS3 )
-#endif
-
+//                              Hercules Facilities                          
 //------------------------------------------------------------------------------------
-// The Following entries are not part of STFL(E) but do indicate the availability of facilities
+// The below facilities are HERCULES SPECIFIC and not part of the architecture
+// but DO indicate the availability of actual facilities and are returned to the
+// guest in the actual facilities list returned by the STFLE instruction.
+//------------------------------------------------------------------------------------
 
 FACILITY( MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1)
@@ -332,7 +353,6 @@ FACILITY( MSA_EXTENSION_1,  Z390,         NONE,      Z390,                    AL
 FACILITY( MSA_EXTENSION_2,  Z390,         NONE,      Z390,                    ALS3 )
 #endif
 
-//------------------------------------------------------------------------------------
 #if defined(_FEATURE_HERCULES_DIAGCALLS)
 FACILITY( PROBSTATE_DIAGF08,NONE,         NONE,      S370|ESA390|ZARCH,       NONE )
 FACILITY( SIGP_SETARCH_S370,NONE,         NONE,      S370|ESA390|ZARCH,       NONE )
@@ -341,7 +361,6 @@ FACILITY( SIGP_SETARCH_S370,NONE,         NONE,      S370|ESA390|ZARCH,       NO
 FACILITY( HOST_RESOURCE_ACCESS,NONE,      NONE,      S370|ESA390|ZARCH,       NONE )
 #endif
 #endif /*defined(_FEATURE_HERCULES_DIAGCALLS)*/
-//------------------------------------------------------------------------------------
 
 #if defined(_FEATURE_QEBSM)
 FACILITY( QEBSM,            Z390,         NONE,      Z390,                    ALS3 )
@@ -386,7 +405,7 @@ FACILITY( DETECT_PGMINTLOOP,S370|ESA390|ZARCH, NONE, S370|ESA390|ZARCH, ALS0|ALS
 void init_als( REGS* regs )
 {
     int  i;
-    for (i=0; i < STFL_HBYTESIZE; i++)
+    for (i=0; i < STFL_HERCBYSIZE; i++)
         regs->facility_list[i] =
             sysblk.facility_list[ regs->arch_mode ][i];
 }
@@ -399,7 +418,7 @@ static void set_alslevel( int alslevel )
     FACTAB*  ft;
     int      i, j;
 
-    for(i = 0; i < STFL_HBYTESIZE; i++)
+    for(i = 0; i < STFL_HERCBYSIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 
@@ -446,19 +465,23 @@ static ARCHTAB* get_archtab( const char* name )
 /*-------------------------------------------------------------------*/
 /*                          get_facname                              */
 /*-------------------------------------------------------------------*/
-static const char* get_facname( int bitno )
+static const char* get_facname( int bitno, const char** name )
 {
-    FACTAB*      ft;
-    static char  name[8];
+    FACTAB*  ft;
+    char work[8];
 
     for (ft = factab; ft->name; ft++)
     {
         if (ft->bitno == bitno)
-            return ft->name;
+        {
+            *name = strdup( ft->name );
+            return *name;
+        }
     }
 
-    snprintf( name, sizeof( name ), "bit%d", bitno );
-    return name;
+    snprintf( work, sizeof( work ), "bit%d", bitno );
+    *name = strdup( work );
+    return *name;
 }
 
 /*-------------------------------------------------------------------*/
@@ -532,8 +555,13 @@ static void do_force_facbit( int bitno, BYTE enable, BYTE mode,
 
     if (MLVL( VERBOSE ))
     {
+        const char* name = NULL;
+        name = get_facname( bitno, &name );
+
         // "Facility(%s) %sabled for archmode %s"
-        WRMSG( HHC00898, "I", get_facname( bitno ), endis, archname );
+        WRMSG( HHC00898, "I", name, endis, archname );
+
+        free( (void*) name );
     }
 }
 
@@ -709,7 +737,7 @@ static BYTE update_facility( int argc, char* argv[] )
         && isdigit( *( argv[2] + 3))
         && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
         && bitno >= 0
-        && bitno <= STFL_HMAX
+        && bitno <= STFL_HERCMAX
     )
     {
         force_facbit( bitno, enable, als );
@@ -810,16 +838,22 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
                 && isdigit( *( argv[2] + 3 ))
                 && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
                 && bitno >= 0
-                && bitno <= STFL_HMAX
+                && bitno <= STFL_HERCMAX
             )
             {
+                const char* name = NULL;
+
                 fbyte = bitno / 8;
                 fbit  = 0x80 >> (bitno % 8);
 
+                name = get_facname( bitno, &name );
+
                 // "Facility( %-20s ) %sabled"
-                WRMSG( HHC00890, "I", get_facname( bitno ),
+                WRMSG( HHC00890, "I", name,
                     sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
                     "En" : "Dis" );
+
+                free( (void*) name );
             }
             else
             {

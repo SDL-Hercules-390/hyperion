@@ -232,13 +232,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     // Give both Herc devices a reasonable name...
 
-    strlcpy( pDevCTCBLK->pDEVBLK[0]->filename,
-             pDevCTCBLK->szTUNCharDevName,
-     sizeof( pDevCTCBLK->pDEVBLK[0]->filename ) );
-
-    strlcpy( pDevCTCBLK->pDEVBLK[1]->filename,
-             pDevCTCBLK->szTUNCharDevName,
-     sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
+    STRLCPY( pDevCTCBLK->pDEVBLK[0]->filename, pDevCTCBLK->szTUNCharDevName );
+    STRLCPY( pDevCTCBLK->pDEVBLK[1]->filename, pDevCTCBLK->szTUNCharDevName );
 
     /* It  might  be  tempting  to  add IFF_TUN_EXCL to the flags to */
     /* avoid  a  race,  but it does not work like open exclusive; it */
@@ -1202,12 +1197,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Set some initial defaults
     STRLCPY( pCTCBLK->szMTU,     "1500" );
     STRLCPY( pCTCBLK->szNetMask, "255.255.255.255" );
-#if defined( OPTION_W32_CTCI )
-    strlcpy( pCTCBLK->szTUNCharDevName,  tt32_get_default_iface(),
-             sizeof(pCTCBLK->szTUNCharDevName) );
-#else
-    STRLCPY( pCTCBLK->szTUNCharDevName, HERCTUN_DEV );
-#endif
+    STRLCPY( pCTCBLK->szTUNCharDevName, sysblk.netdev );
 
 #if defined( OPTION_W32_CTCI )
     pCTCBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
@@ -1228,10 +1218,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     }
     // Compatability with old format configuration files needs to be
     // maintained. Old format statements have the tun character device
-    // name as the second argument on Linux, or CTCI-W32 as the first
-    // argument on Windows.
-    if( ( strncasecmp( argv[0], "/", 1 ) == 0 ) ||
-        ( strncasecmp( pDEVBLK->typname, "CTCI-W32", 8 ) == 0 ) )
+    // name as the second argument on Linux.
+    if (strncasecmp( argv[0], "/", 1 ) == 0)
     {
         pCTCBLK->fOldFormat = 1;
     }
@@ -1293,62 +1281,72 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         c = getopt( argc, argv, CTCI_OPTSTRING );
 #endif /* defined(HAVE_GETOPT_LONG) */
 
-        if( c == -1 ) // No more options found
+        if (c == -1)  // No more options found
             break;
 
-        switch( c )
+        switch (c)
         {
         case 'n':     // Network Device (special character device)
+
 #if defined( OPTION_W32_CTCI )
+
             // This could be the IP or MAC address of the
             // host ethernet adapter.
-            if( inet_aton( optarg, &addr ) == 0 )
+            if (!inet_aton( optarg, &addr ))
             {
                 // Not an IP address, check for valid MAC
-                if( ParseMAC( optarg, mac ) != 0 )
+                if (ParseMAC( optarg, mac ) != 0)
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                          "adapter address", optarg );
+                    WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                        pDEVBLK->devnum, "CTCI", "adapter address", optarg );
                     return -1;
                 }
             }
+
 #endif // defined( OPTION_W32_CTCI )
+
             // This is the file name of the special TUN/TAP character device
-            if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharDevName ) - 1 )
+            if (strlen( optarg ) > sizeof( pCTCBLK->szTUNCharDevName ) - 1)
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "device name", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "device name", optarg );
                 return -1;
             }
+
             STRLCPY( pCTCBLK->szTUNCharDevName, optarg );
             break;
 
 #if !defined( OPTION_W32_CTCI )
+
         case 'x':     // TUN network interface name
-            if( strlen( optarg ) > sizeof(pCTCBLK->szTUNIfName)-1 )
+
+            if (strlen( optarg ) > sizeof( pCTCBLK->szTUNIfName )-1)
             {
                 // HHC00916 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "TUN device name", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "TUN device name", optarg );
                 return -1;
             }
+
             STRLCPY( pCTCBLK->szTUNIfName, optarg );
             saw_if = 1;
             break;
 #endif
 
 #if defined( OPTION_W32_CTCI )
+
         case 'k':     // Kernel Buffer Size (Windows only)
+
             iKernBuff = atoi( optarg );
 
-            if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
-                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
+            if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
+                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "kernel buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "kernel buffer size", optarg );
                 return -1;
             }
 
@@ -1356,14 +1354,15 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'i':     // I/O Buffer Size (Windows only)
+
             iIOBuff = atoi( optarg );
 
-            if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
-                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
+            if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
+                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
             {
                 // "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "dll i/o buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "dll i/o buffer size", optarg );
                 return -1;
             }
 
@@ -1371,6 +1370,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'm':
+
             if (0
                 || ParseMAC( optarg, mac ) != 0 // (invalid format)
                 || !(mac[0] & 0x02)             // (locally assigned MAC bit not ON)
@@ -1378,25 +1378,26 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             )
             {
                 // "%1d:%04X %s: Option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "MAC address", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "MAC address", optarg );
                 return -1;
             }
 
             STRLCPY( pCTCBLK->szMACAddress, optarg );
             saw_conf = 1;
-
             break;
+
 #endif // defined( OPTION_W32_CTCI )
 
         case 't':     // MTU of point-to-point link (ignored if Windows)
+
             iMTU = atoi( optarg );
 
-            if( iMTU < 46 || iMTU > 65536 )
+            if (iMTU < 46 || iMTU > 65536)
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "MTU size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),\
+                    pDEVBLK->devnum, "CTCI", "MTU size", optarg );
                 return -1;
             }
 
@@ -1405,11 +1406,12 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 's':     // Netmask of point-to-point link
-            if( inet_aton( optarg, &addr ) == 0 )
+
+            if (!inet_aton( optarg, &addr ))
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                      "netmask", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI", "netmask", optarg );
                 return -1;
             }
 
@@ -1418,6 +1420,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'd':     // Diagnostics
+
             pCTCBLK->fDebug = TRUE;
             break;
 
@@ -1603,17 +1606,21 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
             return -1;
         }
+
 #else // defined( OPTION_W32_CTCI )
+
         // There are 2 non-optional arguments in the Windows old-format:
         //   Guest IP address and Gateway address.
         // There are also 2 additional optional arguments:
         //   Kernel buffer size and I/O buffer size.
 
-        while( argc > 0 )
+        while (argc > 0)
         {
-            switch( i )
+            switch (i)
             {
-            case 0:  // Non-optional arguments
+            // Non-optional arguments
+            case 0:
+
                 // Guest IP Address
                 if( inet_aton( *argv, &addr ) == 0 )
                 {
@@ -1653,52 +1660,51 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // This also fixes the confusing error messages from
                 // TunTap.c when a MAC is given for this argument.
 
-                strlcpy( pCTCBLK->szDriveIPAddr,
-                         pCTCBLK->szGuestIPAddr,
-                         sizeof(pCTCBLK->szDriveIPAddr) );
-
+                STRLCPY( pCTCBLK->szDriveIPAddr, pCTCBLK->szGuestIPAddr );
                 argc--; argv++; i++;
                 continue;
 
-            case 1:  // Optional arguments from here on:
-                // Kernel Buffer Size
+            // Optional arguments from here on:
+
+            case 1: // Kernel Buffer Size
+
                 iKernBuff = atoi( *argv );
 
-                if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
-                    iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
+                if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
+                    iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                          "kernel buffer size", *argv );
+                    WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                        pDEVBLK->devnum, "CTCI", "kernel buffer size", *argv );
                     return -1;
                 }
 
                 pCTCBLK->iKernBuff = iKernBuff * 1024;
-
                 argc--; argv++; i++;
                 continue;
 
-            case 2:
-                // I/O Buffer Size
+            case 2: // I/O Buffer Size
+
                 iIOBuff = atoi( *argv );
 
-                if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
-                    iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
+                if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
+                    iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
-                          "dll i/o buffer size", *argv );
+                    WRMSG( HHC00916, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                        pDEVBLK->devnum, "CTCI", "dll i/o buffer size", *argv );
                     return -1;
                 }
 
                 pCTCBLK->iIOBuff = iIOBuff * 1024;
-
                 argc--; argv++; i++;
                 continue;
 
             default:
+
                 // "%1d:%04X CTC: incorrect number of parameters"
-                WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
+                WRMSG( HHC00915, "E", SSID_TO_LCSS( pDEVBLK->ssid ),
+                    pDEVBLK->devnum, "CTCI" );
                 return -1;
             }
         }

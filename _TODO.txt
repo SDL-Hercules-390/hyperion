@@ -1,3 +1,4 @@
+-------------------------------------------------------------------------------
 
 
                           ---------------------
@@ -7,6 +8,32 @@
 
                    (in absolutely *NO* particular order)
 
+
+
+ NOTE: ideally a separate GitHub "Issue" should be created for each of these!
+
+
+-------------------------------------------------------------------------------
+
+  Determine optimal run_cpu/run_sie loop value taking into consideration
+  typical/average real host milliseconds/microseconds to complete a real
+  dasd I/O and typical/average number of typical workload guest instructions
+  that can be executed within that amount of time. The idea here is to NOT
+  continue looping executing guest instructions if there's a guest interrupt
+  waiting to be taken. This ensures timely guest notification that their
+  I/O has completed instead of having them "wait" much longer for the I/O
+  interrupt to occur because we're busy burning CPU executing instructions
+  instead of taking/processing an interrupt. (I.e. we don't want to "delay"
+  notifying them of their pending interrupts any longer than necessary.
+  IDEALLY we should call INTERRUPT_PENDING() macro after every instruction
+  but that slows Hercules down to crawl, which is why we execute multiple
+  instructions in a loop in the first place before calling INTERRUPT_PENDING()
+  macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
+  should MAYBE be callingit more frequently than we are. The trick is to
+  determine HOW often is should be called for best performance ON A GIVEN
+  HOST SYSTEM. It should be a dynamially calculated value that is calculated
+  during startup to prevent our current defined fixed value from unfairly
+  penalizing those users with slower/faster Hercules host systems.
 
 -------------------------------------------------------------------------------
 
@@ -44,38 +71,6 @@
 
 -------------------------------------------------------------------------------
 
-  *BUG*: printer FCB parsing is FUBAR (wrong):
-
-  Old (original) style was: "fcb=66010713192531374361495561",
-  which yields:    66 1 7 13 19 25 31 37 43 61 49 55 61
-  int FCBMASK[] = {66,1,7,13,19,25,31,37,43,63,49,55,61};
-
-  Notice the old style is a string of 26 digits (13 pairs), which are NOT
-  separated by commas. The current parsing code presumes comma separators
-  which is WRONG and incorrectly causes old format to always be rejected.
-
-  Also notice channel 9 and 12 are on same line number 61. This is valid
-  for old 1403 paper carraige-control tapes, but is invalid on newer 3211
-  FCB image printers which support only one channel defined per line. We
-  need to fix this (provide supported for BOTH) which is REQUIRED to fix
-  the incorrect parsing/support of the original "fcb=" option format.
-
--------------------------------------------------------------------------------
-
-  BUG: instruction tracing: control registers not being shown for some
-  instructions which use/modify them. We need a better way to determine
-  if FPRs/CRs/ARs should be traced or not. (New bits in OPCODE table?)
-  (see "display_inst_regs" function in "hscmisc.c")
-
-  Modify/enhance instruction/device tracing to write raw trace information
-  to a file (instead of formatting it to console which is slow/inefficient)
-  and develop a new offline utility to then format/display only the desired
-  information (selected registers, instructions, time range, buffers, etc).
-
-  Instruction Tracing: ability to specify multiple disparate trace ranges.
-
--------------------------------------------------------------------------------
-
   DUMP command (Windows only) to create on-demand mini-dump.
 
   modify fthread to maintain the thread's name in its FTHREAD list of
@@ -102,10 +97,6 @@
 -------------------------------------------------------------------------------
 
   Add 'const' to as many functions' arguments as possible.
-
--------------------------------------------------------------------------------
-
-  Document all DIAGNOSE instruction support
 
 -------------------------------------------------------------------------------
 
