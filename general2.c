@@ -970,7 +970,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(FEATURE_STORE_CLOCK_FAST)
+#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
     if (inst[1] == 0x7C) // STCKF only
     {
         /* Retrieve the TOD clock value without embedded CPU address */
@@ -978,15 +978,15 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     }
     else
     {
-#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
         /* Perform serialization before fetching clock */
         PERFORM_SERIALIZATION (regs);
 
         /* Retrieve the TOD clock value with embedded CPU address*/
         etod_clock(regs, &ETOD, ETOD_standard);
-#if defined(FEATURE_STORE_CLOCK_FAST)
+#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
     }
-#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
 
     /* Shift out epoch */
     dreg = ETOD2TOD(ETOD);
@@ -996,9 +996,9 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     /* Store TOD clock value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-#if defined(FEATURE_STORE_CLOCK_FAST)
+#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
     if(inst[1] != 0x7C) // not STCKF
-#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
         /* Perform serialization after storing clock */
         PERFORM_SERIALIZATION (regs);
 

@@ -226,7 +226,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
-#if !defined(FEATURE_TOD_CLOCK_STEERING)
+#if !defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)
  UNDEF_INST(perform_timing_facility_function)
 #endif
 
@@ -388,14 +388,14 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_HIGH_WORD_FACILITY)*/                 /*810*/
 
 
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
  UNDEF_INST(load_and_add)                                       /*810*/
  UNDEF_INST(load_and_add_logical)                               /*810*/
  UNDEF_INST(load_and_and)                                       /*810*/
  UNDEF_INST(load_and_exclusive_or)                              /*810*/
  UNDEF_INST(load_and_or)                                        /*810*/
  UNDEF_INST(load_pair_disjoint)                                 /*810*/
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY) || !defined(FEATURE_ESAME)
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1) || !defined(FEATURE_ESAME)
  UNDEF_INST(load_and_add_logical_long)                          /*810*/
  UNDEF_INST(load_and_add_long)                                  /*810*/
  UNDEF_INST(load_and_and_long)                                  /*810*/
@@ -403,7 +403,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_and_or_long)                                   /*810*/
  UNDEF_INST(load_pair_disjoint_long)                            /*810*/
 #endif
-#endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/        /*810*/
+#endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/      /*810*/
 
 
 #if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)        /*810*/
@@ -1021,7 +1021,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_ECPSVM)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT)
+#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  UNDEF_INST(add_y)
  UNDEF_INST(add_halfword_y)
  UNDEF_INST(add_logical_y)
@@ -1060,24 +1060,24 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_halfword_y)
  UNDEF_INST(subtract_logical_y)
  UNDEF_INST(test_under_mask_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT) \
+#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY) \
  || !defined(FEATURE_ACCESS_REGISTERS)
  UNDEF_INST(load_access_multiple_y)
  UNDEF_INST(store_access_multiple_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT)
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  || !defined(FEATURE_ACCESS_REGISTERS)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT) \
+#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY) \
  || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  UNDEF_INST(load_float_long_y)
  UNDEF_INST(load_float_short_y)
  UNDEF_INST(store_float_long_y)
  UNDEF_INST(store_float_short_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT)
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
  || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
 
 
@@ -1156,16 +1156,16 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/         /*@Z9*/
 
 
-#if !defined(FEATURE_STORE_CLOCK_FAST)
+#if !defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
  UNDEF_INST(store_clock_fast)
-#else /*!defined(FEATURE_STORE_CLOCK_FAST)*/
+#else /*!defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
  #define z900_store_clock_fast z900_store_clock
-#endif /*!defined(FEATURE_STORE_CLOCK_FAST)*/
+#endif /*!defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
 
 
-#if !defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)              /*@Z9*/
+#if !defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)     /*@Z9*/
  UNDEF_INST(store_facility_list_extended)                       /*@Z9*/
-#endif /*!defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/       /*@Z9*/
+#endif /*!defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)*//*@Z9*/
 
 
 /* The following execute_xxxx routines can be optimized by the
