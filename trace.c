@@ -1080,7 +1080,7 @@ ETOD ETOD;
         tte = (void*)(regs->mainstor + raddr);
 
         /* Determine if fast clock format */
-        #if defined(FEATURE_STORE_CLOCK_FAST)
+        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
             fast = (regs->CR(0) & CR0_TRACE_TOD) >> 31;
         #else
             fast = 0;
@@ -1103,7 +1103,7 @@ ETOD ETOD;
         STORE_DW(tte, dreg);
 
         /* Store trace operand */
-        #if defined(FEATURE_STORE_CLOCK_FAST)
+        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
             if (fast)
             {
                 op &= 0xFF00FFFF;
@@ -1183,7 +1183,7 @@ U64  dreg;
         STORE_FW(tte->clk48, ETOD.low >> 32);
 
         /* Store trace operand */
-        #if defined(FEATURE_STORE_CLOCK_FAST)
+        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
             if ((regs->CR(0) & CR0_TRACE_TOD))
             {
                 op &= 0xFF00FFFF;

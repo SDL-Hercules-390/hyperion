@@ -375,11 +375,11 @@ DEVBLK   *dev;                   /* -> DEVBLK                       */
     if (dev->hnd->reserve)           /* Indicate if RESERVE/RELEASE supported */
         vdat->vdevflag |= DF_RSRL;
 
-#if defined(FEATURE_MIDAW)
+#if defined(FEATURE_MIDAW_FACILITY)
     /* If DIAGNOSE X'210', indicate if MIDAW's are supported */
     if (code==0x210)
         vdat->vdevflag |= DF_MIDAW;
-#endif /* FEATURE_MIDAW */
+#endif /* FEATURE_MIDAW_FACILITY */
 
     switch (rdat->rdevcls) {
     case DC_DASD:

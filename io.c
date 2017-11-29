@@ -527,11 +527,11 @@ ORB     orb;                            /* Operation request block   */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 #endif /*!defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
 
-#if !defined(FEATURE_MIDAW)                                     /*@MW*/
+#if !defined(FEATURE_MIDAW_FACILITY)                            /*@MW*/
     /* Program check if modified indirect data addressing requested */
     if (orb.flag7 & ORB7_D)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-#endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
+#endif /*!defined(FEATURE_MIDAW_FACILITY)*/                     /*@MW*/
 
     /* Program check if the ssid including lcss is invalid */
     SSID_CHECK(regs);

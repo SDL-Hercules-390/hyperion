@@ -32,7 +32,7 @@ DISABLE_GCC_UNUSED_SET_WARNING
 
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
-#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)              /*810*/
 /*-------------------------------------------------------------------*/
 /* Perform Interlocked Storage Immediate Operation                   */
 /* Subroutine called by ASI and ALSI instructions                    */
@@ -158,14 +158,14 @@ int     rc;                             /* Return code               */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(perform_interlocked_long_storage_immediate) */
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
 /*-------------------------------------------------------------------*/
 /* EB6A ASI   - Add Immediate Storage                          [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_storage)
 {
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -186,9 +186,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/        /*810*/
     ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -202,7 +202,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_long_storage)
 {
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -223,9 +223,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/        /*810*/
     ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -239,7 +239,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate)
 {
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -262,9 +262,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/        /*810*/
     ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
 } /* end DEF_INST(add_logical_with_signed_immediate) */
 
@@ -274,7 +274,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate_long)
 {
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)               /*810*/
+#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -297,9 +297,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/          /*810*/
+#else /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/        /*810*/
     ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
 } /* end DEF_INST(add_logical_with_signed_immediate_long) */
 
@@ -2579,7 +2579,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 #endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/                  /*810*/
 
 
-#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)                /*810*/
+#if defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)              /*810*/
 
 /*-------------------------------------------------------------------*/
 /* Load and Perform Interlocked Access Operation                     */
@@ -2905,7 +2905,7 @@ U64     w1, w2;                         /* Refetched values          */
 
 } /* end DEF_INST(load_pair_disjoint_long) */
 
-#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY)*/         /*810*/
+#endif /*defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
 
 #if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)         /*810*/

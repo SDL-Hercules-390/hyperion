@@ -1144,7 +1144,7 @@ S32 itimer;
 #endif
 
 
-#if defined(FEATURE_TOD_CLOCK_STEERING)
+#if defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)
 
 void ARCH_DEP(set_gross_s_rate) (REGS *regs)
 {
@@ -1231,7 +1231,7 @@ PTFFQAF qaf;
 
     ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
-#endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
+#endif /*defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)*/
 
 #if !defined(_GEN_ARCH)
 
