@@ -42,7 +42,7 @@
 #define FEATURE_003_DAT_ENHANCEMENT_FACILITY_1
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_042_DECIMAL_FLOAT_FACILITY                 /*DFP*/
-#define FEATURE_DISTINCT_OPERANDS_FACILITY                      /*810*/
+#define FEATURE_045_DISTINCT_OPERANDS_FACILITY                      /*810*/
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 #define FEATURE_008_ENHANCED_DAT_FACILITY_1                         /*208*/
@@ -76,10 +76,10 @@
 #define FEATURE_HFP_EXTENSIONS
 #define FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 #define FEATURE_023_HFP_UNNORM_EXT_FACILITY                      /*@Z9*/
-#define FEATURE_HIGH_WORD_FACILITY                              /*810*/
+#define FEATURE_045_HIGH_WORD_FACILITY                              /*810*/
 #define FEATURE_HOST_RESOURCE_ACCESS_FACILITY
 #define FEATURE_HYPERVISOR
-#define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
+#define FEATURE_041_IEEE_EXCEPT_SIM_FACILITY                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #define FEATURE_INTEGRATED_3270_CONSOLE
@@ -95,7 +95,7 @@
 #define FEATURE_LINKAGE_STACK
 #define FEATURE_040_LOAD_PROG_PARAM_FACILITY                 /*810*/
 #define FEATURE_LOAD_REVERSED
-#define FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1              /*810*/
+#define FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1              /*810*/
 #define FEATURE_LOCK_PAGE
 #define FEATURE_018_LONG_DISPL_INST_FACILITY
 #define FEATURE_017_MSA_FACILITY
@@ -116,7 +116,7 @@
 #define FEATURE_PER2
 #define FEATURE_PER3                                            /*@Z9*/
 //#define FEATURE_044_PFPO_FACILITY                                            /*407*/
-#define FEATURE_POPULATION_COUNT_FACILITY                       /*810*/
+#define FEATURE_045_POPULATION_COUNT_FACILITY                       /*810*/
 #define FEATURE_PRIVATE_SPACE
 //#define FEATURE_PROGRAM_DIRECTED_REIPL /*DIAG308 incomplete*/  /*@Z9*/
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL

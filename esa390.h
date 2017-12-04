@@ -1701,9 +1701,10 @@ typedef struct MBK  MBK;
 #define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                            facility installed (ESAME)*/
 #define STFL_FPS_ENHANCEMENTS     41    /* Floating point support
-                                           enhancements (FPR-GR-loading
-                                           FPS-sign-handling, and
-                                           DFP-rounding) installed   */
+                                           enhancements (DFP-rounding,
+                                           FPR-GR-transfer, FPS-sign-
+                                           handling and IEEE-exception-
+                                           simulator) installed      */
 #define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
                                            (DFP) facility            */
 #define STFL_DFP_HPERF            43    /* DFP has high performance  */
@@ -1721,7 +1722,7 @@ typedef struct MBK  MBK;
 #define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
                                            trap, processor-assist and
                                            miscellaneous-instruction-
-                                           extension-1               */
+                                           extension-1 installed     */
 #define STFL_CONSTR_TRANSACT      50    /* Constrained-transactional-
                                            execution facility        */
 #define STFL_LOCAL_TLB_CLEARING   51    /* Local-TLB-clearing        */

@@ -3963,7 +3963,7 @@ DEF_INST(store_relative_long);                                  /*208*/
 DEF_INST(store_relative_long_long);                             /*208*/
 #endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
 
-#if defined(FEATURE_HIGH_WORD_FACILITY)
+#if defined(FEATURE_045_HIGH_WORD_FACILITY)
 DEF_INST(add_high_high_high_register);                          /*810*/
 DEF_INST(add_high_high_low_register);                           /*810*/
 DEF_INST(add_high_immediate);                                   /*810*/
@@ -3994,7 +3994,7 @@ DEF_INST(subtract_high_high_high_register);                     /*810*/
 DEF_INST(subtract_high_high_low_register);                      /*810*/
 DEF_INST(subtract_logical_high_high_high_register);             /*810*/
 DEF_INST(subtract_logical_high_high_low_register);              /*810*/
-#endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/
+#endif /*defined(FEATURE_045_HIGH_WORD_FACILITY)*/
 
 #if defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)
 DEF_INST(load_and_add);                                         /*810*/
@@ -4014,16 +4014,16 @@ DEF_INST(load_and_or_long);                                     /*810*/
 DEF_INST(load_pair_disjoint_long);                              /*810*/
 #endif /*defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)
+#if defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)
 DEF_INST(load_on_condition_register);                           /*810*/
 DEF_INST(load_on_condition_long_register);                      /*810*/
 DEF_INST(load_on_condition);                                    /*810*/
 DEF_INST(load_on_condition_long);                               /*810*/
 DEF_INST(store_on_condition);                                   /*810*/
 DEF_INST(store_on_condition_long);                              /*810*/
-#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/
+#endif /*defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)*/
 
-#if defined(FEATURE_DISTINCT_OPERANDS_FACILITY)
+#if defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)
 DEF_INST(add_distinct_register);                                /*810*/
 DEF_INST(add_distinct_long_register);                           /*810*/
 DEF_INST(add_distinct_halfword_immediate);                      /*810*/
@@ -4046,11 +4046,11 @@ DEF_INST(subtract_distinct_register);                           /*810*/
 DEF_INST(subtract_distinct_long_register);                      /*810*/
 DEF_INST(subtract_logical_distinct_register);                   /*810*/
 DEF_INST(subtract_logical_distinct_long_register);              /*810*/
-#endif /*defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/
+#endif /*defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)*/
 
-#if defined(FEATURE_POPULATION_COUNT_FACILITY)
+#if defined(FEATURE_045_POPULATION_COUNT_FACILITY)
 DEF_INST(population_count);                                     /*810*/
-#endif /*defined(FEATURE_POPULATION_COUNT_FACILITY)*/
+#endif /*defined(FEATURE_045_POPULATION_COUNT_FACILITY)*/
 
 
 /* Instructions in io.c */
@@ -4612,10 +4612,10 @@ DEF_INST(load_positive_fpr_long_reg);
 DEF_INST(set_dfp_rounding_mode);
 #endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
-#if defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
+#if defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
 DEF_INST(load_fpc_and_signal);
 DEF_INST(set_fpc_and_signal);
-#endif /*defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
+#endif /*defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
 
 #if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
 DEF_INST(add_dfp_ext_reg);

@@ -354,7 +354,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_026_PARSING_ENHANCE_FACILITY)*/       /*208*/
 
 
-#if !defined(FEATURE_HIGH_WORD_FACILITY)                        /*810*/
+#if !defined(FEATURE_045_HIGH_WORD_FACILITY)                        /*810*/
  UNDEF_INST(add_high_high_high_register)                        /*810*/
  UNDEF_INST(add_high_high_low_register)                         /*810*/
  UNDEF_INST(add_high_immediate)                                 /*810*/
@@ -385,7 +385,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_high_high_low_register)                    /*810*/
  UNDEF_INST(subtract_logical_high_high_high_register)           /*810*/
  UNDEF_INST(subtract_logical_high_high_low_register)            /*810*/
-#endif /*!defined(FEATURE_HIGH_WORD_FACILITY)*/                 /*810*/
+#endif /*!defined(FEATURE_045_HIGH_WORD_FACILITY)*/                 /*810*/
 
 
 #if !defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
@@ -406,17 +406,17 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)*/      /*810*/
 
 
-#if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)        /*810*/
+#if !defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)        /*810*/
  UNDEF_INST(load_on_condition_register)                         /*810*/
  UNDEF_INST(load_on_condition_long_register)                    /*810*/
  UNDEF_INST(load_on_condition)                                  /*810*/
  UNDEF_INST(load_on_condition_long)                             /*810*/
  UNDEF_INST(store_on_condition)                                 /*810*/
  UNDEF_INST(store_on_condition_long)                            /*810*/
-#endif /*!defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/ /*810*/
+#endif /*!defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)*/ /*810*/
 
 
-#if !defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                /*810*/
+#if !defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)                /*810*/
  UNDEF_INST(add_distinct_register)                              /*810*/
  UNDEF_INST(add_distinct_long_register)                         /*810*/
  UNDEF_INST(add_distinct_halfword_immediate)                    /*810*/
@@ -439,12 +439,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_distinct_long_register)                    /*810*/
  UNDEF_INST(subtract_logical_distinct_register)                 /*810*/
  UNDEF_INST(subtract_logical_distinct_long_register)            /*810*/
-#endif /*!defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/         /*810*/
+#endif /*!defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)*/         /*810*/
 
 
-#if !defined(FEATURE_POPULATION_COUNT_FACILITY)                 /*810*/
+#if !defined(FEATURE_045_POPULATION_COUNT_FACILITY)                 /*810*/
  UNDEF_INST(population_count)                                   /*810*/
-#endif /*!defined(FEATURE_POPULATION_COUNT_FACILITY)*/          /*810*/
+#endif /*!defined(FEATURE_045_POPULATION_COUNT_FACILITY)*/          /*810*/
 
 
 #if !defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)    /*810*/
@@ -591,10 +591,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
 
-#if !defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
+#if !defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
  UNDEF_INST(load_fpc_and_signal)
  UNDEF_INST(set_fpc_and_signal)
-#endif /*!defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
+#endif /*!defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
 
 
 #if !defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)

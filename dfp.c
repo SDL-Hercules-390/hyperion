@@ -186,7 +186,7 @@ VADR            effective_addr2;        /* Effective address         */
 #endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
 
-#if defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
+#if defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
 /*===================================================================*/
 /* IEEE-EXCEPTION-SIMULATION FACILITY INSTRUCTIONS                   */
 /*===================================================================*/
@@ -330,7 +330,7 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(set_fpc_and_signal) */
-#endif /*defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
+#endif /*defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
 
 
 #if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)

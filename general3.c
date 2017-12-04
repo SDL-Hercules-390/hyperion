@@ -1834,7 +1834,7 @@ VADR    addr2;                          /* Relative operand address  */
 #endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
 
 #if defined(FEATURE_034_GEN_INST_EXTN_FACILITY) \
- || defined(FEATURE_HIGH_WORD_FACILITY)                         /*810*/
+ || defined(FEATURE_045_HIGH_WORD_FACILITY)                         /*810*/
 /*-------------------------------------------------------------------*/
 /* Rotate Then Perform Operation On Selected Bits Long Register      */
 /* Subroutine is called by RNSBG,RISBG,ROSBG,RXSBG instructions      */
@@ -1940,7 +1940,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 
 } /* end DEF_INST(rotate_then_xxx_selected_bits_long_reg) */
 #endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
-       /*|| defined(FEATURE_HIGH_WORD_FACILITY)*/               /*810*/
+       /*|| defined(FEATURE_045_HIGH_WORD_FACILITY)*/               /*810*/
 
 #if defined(FEATURE_034_GEN_INST_EXTN_FACILITY)
 
@@ -2038,7 +2038,7 @@ VADR    addr2;                          /* Relative operand address  */
 #endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
 
 
-#if defined(FEATURE_HIGH_WORD_FACILITY)                         /*810*/
+#if defined(FEATURE_045_HIGH_WORD_FACILITY)                         /*810*/
 
 /*-------------------------------------------------------------------*/
 /* B9C8 AHHHR - Add High High High Register                    [RRR] */
@@ -2576,7 +2576,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 
 } /* end DEF_INST(subtract_logical_high_high_low_register) */
 
-#endif /*defined(FEATURE_HIGH_WORD_FACILITY)*/                  /*810*/
+#endif /*defined(FEATURE_045_HIGH_WORD_FACILITY)*/                  /*810*/
 
 
 #if defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)              /*810*/
@@ -2908,7 +2908,7 @@ U64     w1, w2;                         /* Refetched values          */
 #endif /*defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)*/       /*810*/
 
 
-#if defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)         /*810*/
+#if defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)         /*810*/
 
 /*-------------------------------------------------------------------*/
 /* B9F2 LOCR  - Load on Condition Register                     [RRF] */
@@ -3043,10 +3043,10 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store_on_condition_long) */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#endif /*defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)*/  /*810*/
+#endif /*defined(FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1)*/  /*810*/
 
 
-#if defined(FEATURE_DISTINCT_OPERANDS_FACILITY)                 /*810*/
+#if defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)                 /*810*/
 
 /*-------------------------------------------------------------------*/
 /* B9F8 ARK   - Add Distinct Register                          [RRR] */
@@ -3534,10 +3534,10 @@ int     r1, r2, r3;                     /* Values of R fields        */
 } /* end DEF_INST(subtract_logical_distinct_long_register) */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#endif /*defined(FEATURE_DISTINCT_OPERANDS_FACILITY)*/          /*810*/
+#endif /*defined(FEATURE_045_DISTINCT_OPERANDS_FACILITY)*/          /*810*/
 
 
-#if defined(FEATURE_POPULATION_COUNT_FACILITY)                  /*810*/
+#if defined(FEATURE_045_POPULATION_COUNT_FACILITY)                  /*810*/
 /*-------------------------------------------------------------------*/
 /* B9E1 POPCNT - Population Count                              [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3567,7 +3567,7 @@ U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
     regs->psw.cc = (result == 0) ? 0 : 1;
 
 } /* end DEF_INST(population_count) */
-#endif /*defined(FEATURE_POPULATION_COUNT_FACILITY)*/           /*810*/
+#endif /*defined(FEATURE_045_POPULATION_COUNT_FACILITY)*/           /*810*/
 
 
 #if !defined(_GEN_ARCH)
