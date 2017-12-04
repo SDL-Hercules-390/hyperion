@@ -159,7 +159,7 @@ typedef struct FACTAB   FACTAB;
 static FACTAB factab[] =
 {
 /*        Facility          Default       Mandatory  Supported      Group        */
-#if defined(_FEATURE_000_N3_ESA390_FACILITY)
+#if defined(_FEATURE_000_N3_INSTR_FACILITY)
 FACILITY( N3_ESA390,        ESA390|ZARCH, NONE,      ESA390|ZARCH,  ALS1|ALS2|ALS3 )
 #endif
 

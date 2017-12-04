@@ -941,7 +941,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
 
 
-#if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_ESA390_FACILITY)
+#if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_INSTR_FACILITY)
  UNDEF_INST(load_reversed_register)
  UNDEF_INST(load_reversed)
  UNDEF_INST(load_reversed_half)
@@ -951,7 +951,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_reversed_long_register)
  UNDEF_INST(store_reversed_long)
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*!defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_ESA390_FACILITY)*/
+#endif /*!defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_INSTR_FACILITY)*/
 
 
 #if !defined(FEATURE_SERVICE_PROCESSOR)
@@ -964,7 +964,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_CHSC)*/
 
 
-#if !defined(FEATURE_000_N3_ESA390_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined(FEATURE_000_N3_INSTR_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
  UNDEF_INST(add_logical_carry)
  UNDEF_INST(add_logical_carry_register)
  UNDEF_INST(branch_relative_and_save_long)
@@ -981,7 +981,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_logical_borrow)
  UNDEF_INST(subtract_logical_borrow_register)
  UNDEF_INST(test_addressing_mode)
-#endif /*!defined(FEATURE_000_N3_ESA390_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined(FEATURE_000_N3_INSTR_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if !defined(FEATURE_STORE_FACILITY_LIST)

@@ -126,8 +126,8 @@
  #define _FEATURE_001_ZARCH_INSTALLED_FACILITY
 #endif
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY)
- #define _FEATURE_000_N3_ESA390_FACILITY
+#if defined(FEATURE_000_N3_INSTR_FACILITY)
+ #define _FEATURE_000_N3_INSTR_FACILITY
 #endif
 
 #if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
@@ -460,7 +460,7 @@
    marked N3 in the reference are also available
    in ESA/390 mode */
 #if defined(_900) && (__GEN_ARCH == 390)
- #define FEATURE_000_N3_ESA390_FACILITY
+ #define FEATURE_000_N3_INSTR_FACILITY
 #endif
 
 #if !defined(FEATURE_2K_STORAGE_KEYS) \

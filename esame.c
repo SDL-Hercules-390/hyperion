@@ -622,7 +622,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E396 ML    - Multiply Logical                               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -649,7 +649,7 @@ U64     p;
     regs->GR_L(r1 + 1) = (p & 0xFFFFFFFF);
 
 } /* end DEF_INST(multiply_logical) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -681,7 +681,7 @@ U64     m, ph, pl;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B996 MLR   - Multiply Logical Register                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -702,7 +702,7 @@ U64     p;
     regs->GR_L(r1 + 1) = (p & 0xFFFFFFFF);
 
 } /* end DEF_INST(multiply_logical_register) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -729,7 +729,7 @@ U64     ph, pl;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E397 DL    - Divide Logical                                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -759,7 +759,7 @@ U64     n;
     regs->GR_L(r1 + 1) = n / d;
 
 } /* end DEF_INST(divide_logical) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -804,7 +804,7 @@ U64     d, r, q;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B997 DLR   - Divide Logical Register                        [RRE] */
 /*-------------------------------------------------------------------*/
@@ -831,7 +831,7 @@ U32     d;
     regs->GR_L(r1 + 1) = n / d;
 
 } /* end DEF_INST(divide_logical_register) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1255,7 +1255,7 @@ int     borrow = 2;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B998 ALCR  - Add Logical with Carry Register                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1280,10 +1280,10 @@ U32     n;
                                  regs->GR_L(r1),
                                  n) | carry;
 } /* end DEF_INST(add_logical_carry_register) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B999 SLBR  - Subtract Logical with Borrow Register          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1309,10 +1309,10 @@ U32     n;
                                  n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_register) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E398 ALC   - Add Logical with Carry                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1340,10 +1340,10 @@ int     carry = 0;
                                  regs->GR_L(r1),
                                  n) | carry;
 } /* end DEF_INST(add_logical_carry) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E399 SLB   - Subtract Logical with Borrow                   [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1372,7 +1372,7 @@ int     borrow = 2;
                                  n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1616,7 +1616,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B98D EPSW  - Extract PSW                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1652,7 +1652,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
     }
 
 } /* end DEF_INST(extract_psw) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1681,7 +1681,7 @@ int     r1, unused;                     /* Value of R field          */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C0x0 LARL  - Load Address Relative Long                     [RIL] */
 /*-------------------------------------------------------------------*/
@@ -1698,7 +1698,7 @@ U32     i2;                             /* 32-bit operand values     */
                      : (regs->ET + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs));
 
 } /* end DEF_INST(load_address_relative_long) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -2013,7 +2013,7 @@ U16     i2;                             /* 16-bit operand values     */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C0x4 BRCL  - Branch Relative on Condition Long              [RIL] */
 /*-------------------------------------------------------------------*/
@@ -2032,10 +2032,10 @@ DEF_INST(branch_relative_on_condition_long)
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_relative_on_condition_long) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C0x5 BRASL - Branch Relative And Save Long                  [RIL] */
 /*-------------------------------------------------------------------*/
@@ -2060,7 +2060,7 @@ U32     i2;                             /* 32-bit operand values     */
     SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*(S32)fetch_fw(inst+2));
 
 } /* end DEF_INST(branch_relative_and_save_long) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -3364,7 +3364,7 @@ U64     n;                              /* Integer work areas        */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EB1D RLL   - Rotate Left Single Logical                     [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3385,7 +3385,7 @@ U64     n;                              /* Integer work areas        */
                    | ((n == 0) ? 0 : (regs->GR_L(r3) >> (32 - n)));
 
 } /* end DEF_INST(rotate_left_single_logical) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -4483,7 +4483,7 @@ RADR    n;                              /* Unsigned work             */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* 010B TAM   - Test Addressing Mode                             [E] */
 /*-------------------------------------------------------------------*/
@@ -4500,10 +4500,10 @@ DEF_INST(test_addressing_mode)
                                               regs->psw.amode;
 
 } /* end DEF_INST(test_addressing_mode) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* 010C SAM24 - Set Addressing Mode 24                           [E] */
 /*-------------------------------------------------------------------*/
@@ -4535,10 +4535,10 @@ VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
     regs->psw.AMASK = AMASK24;
 
 } /* end DEF_INST(set_addressing_mode_24) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* 010D SAM31 - Set Addressing Mode 31                           [E] */
 /*-------------------------------------------------------------------*/
@@ -4571,7 +4571,7 @@ VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
     regs->psw.AMASK = AMASK31;
 
 } /* end DEF_INST(set_addressing_mode_31) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -5643,7 +5643,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
 /* B91F LRVR  - Load Reversed Register                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5657,7 +5657,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_L(r1) = bswap_32(regs->GR_L(r2));
 
 } /* end DEF_INST(load_reversed_register) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -5679,7 +5679,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
 /* E31E LRV   - Load Reversed                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5695,10 +5695,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = bswap_32(ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ));
 
 } /* end DEF_INST(load_reversed) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
 /* E31F LRVH  - Load Reversed Half                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5713,7 +5713,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Load R1 register from second operand */
     regs->GR_LHL(r1) = bswap_16(ARCH_DEP(vfetch2) ( effective_addr2, b2, regs ));
 } /* end DEF_INST(load_reversed_half) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -5735,7 +5735,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
 /* E33E STRV  - Store Reversed                                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5751,10 +5751,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore4) ( bswap_32(regs->GR_L(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
 
 
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
 /* E33F STRVH - Store Reversed Half                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5770,7 +5770,7 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore2) ( bswap_16(regs->GR_LHL(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed_half) */
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
 
 
 #if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)

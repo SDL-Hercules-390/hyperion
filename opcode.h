@@ -4167,7 +4167,7 @@ DEF_INST(add_logical_carry_long_register);
 DEF_INST(subtract_logical_borrow_long_register);
 DEF_INST(add_logical_carry_long);
 DEF_INST(subtract_logical_borrow_long);
-#if defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 DEF_INST(add_logical_carry);
 DEF_INST(add_logical_carry_register);
 DEF_INST(divide_logical);
@@ -4181,7 +4181,7 @@ DEF_INST(set_addressing_mode_24);
 DEF_INST(set_addressing_mode_31);
 DEF_INST(subtract_logical_borrow);
 DEF_INST(subtract_logical_borrow_register);
-#endif /*defined(FEATURE_000_N3_ESA390_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 DEF_INST(divide_single_long);
 DEF_INST(divide_single_long_fullword);
 DEF_INST(divide_single_long_register);
@@ -4319,7 +4319,7 @@ DEF_INST(load_logical_immediate_high_high);
 DEF_INST(load_logical_immediate_high_low);
 DEF_INST(load_logical_immediate_low_high);
 DEF_INST(load_logical_immediate_low_low);
-#if defined(FEATURE_LOAD_REVERSED) || defined(FEATURE_000_N3_ESA390_FACILITY)
+#if defined(FEATURE_LOAD_REVERSED) || defined(FEATURE_000_N3_INSTR_FACILITY)
 DEF_INST(load_reversed_register);
 DEF_INST(load_reversed_long);
 DEF_INST(load_reversed);
@@ -4330,7 +4330,7 @@ DEF_INST(store_reversed_half);
 DEF_INST(load_reversed_long_register);
 DEF_INST(store_reversed_long);
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*defined(FEATURE_LOAD_REVERSED) || defined(FEATURE_000_N3_ESA390_FACILITY)*/
+#endif /*defined(FEATURE_LOAD_REVERSED) || defined(FEATURE_000_N3_INSTR_FACILITY)*/
 #if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
 DEF_INST(pack_ascii);
 DEF_INST(pack_unicode);
