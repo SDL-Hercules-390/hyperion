@@ -12,7 +12,7 @@
 
 #if defined(_370)
 
-#if defined(OPTION_370_EXTENSION)
+#if defined( OPTION_370_EXTENSION )
 
 #if 0
 static void    *(*resolver)(char *ep);

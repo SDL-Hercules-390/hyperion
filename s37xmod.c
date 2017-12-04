@@ -17,7 +17,7 @@
    code may depend on the host operating system capabilities.
    The actual functional code resides in s37x.c */
 
-#if defined(OPTION_370_EXTENSION)
+#if defined( OPTION_370_EXTENSION )
 
 DLL_IMPORT void s37x_replace_opcode_scan(int x);
 
@@ -34,7 +34,7 @@ HDL_FINAL_SECTION;
 }
 END_FINAL_SECTION
 
-#else /* defined(OPTION_370_EXTENSION) */
+#else /* defined( OPTION_370_EXTENSION ) */
 
 HDL_REGISTER_SECTION;
 {
@@ -44,7 +44,7 @@ HDL_REGISTER_SECTION;
 END_REGISTER_SECTION
 
 
-#endif /* defined(OPTION_370_EXTENSION) */
+#endif /* defined( OPTION_370_EXTENSION ) */
 
 #endif // defined(_370)
 
