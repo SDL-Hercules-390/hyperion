@@ -447,9 +447,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_045_POPULATION_COUNT_FACILITY)*/          /*810*/
 
 
-#if !defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)    /*810*/
+#if !defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)    /*810*/
  UNDEF_INST(reset_reference_bits_multiple)                      /*810*/
-#endif /*!defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)*/
+#endif /*!defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)*/
 
 
 #if !defined( FEATURE_S370_S390_VECTOR_FACILITY )

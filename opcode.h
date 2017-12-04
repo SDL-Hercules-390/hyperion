@@ -4202,9 +4202,9 @@ DEF_INST(perform_timing_facility_function);                     /*@Z9*/
 #if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
 DEF_INST(perform_topology_function);                            /*208*/
 #endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
-#if defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)
+#if defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)
 DEF_INST(reset_reference_bits_multiple);                        /*810*/
-#endif /*defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)*/
+#endif /*defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)*/
 #if defined(FEATURE_STORE_FACILITY_LIST)
 DEF_INST(store_facility_list);
 #endif /*defined(STORE_FACILITY_LIST)*/

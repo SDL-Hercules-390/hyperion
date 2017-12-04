@@ -5018,7 +5018,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 #endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
 
 
-#if defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)
+#if defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5220,7 +5220,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
     regs->GR_G(r1) = bitmap;
 
 } /* end DEF_INST(reset_reference_bits_multiple) */
-#endif /*defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)*/
+#endif /*defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)*/
 
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)

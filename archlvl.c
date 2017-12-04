@@ -313,7 +313,7 @@ FACILITY( CMPSC_ENH,        ZARCH,        NONE,      ZARCH,                   AL
 FACILITY( INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1|ALS2|ALS3 )
 #endif
 
-#if defined(_FEATURE_066_RES_REF_BITS_MUL_FACILITY)
+#if defined(_FEATURE_066_RES_REF_BITS_MULT_FACILITY)
 FACILITY( RES_REF_BITS_MUL, Z390,         NONE,      Z390,                    ALS3 )
 #endif
 
