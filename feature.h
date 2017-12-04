@@ -369,7 +369,7 @@ s390_ ## _name
   #define STORAGE_KEY_PAGESHIFT     12
   #define STORAGE_KEY_PAGESIZE      4096
   #define STORAGE_KEY_BYTEMASK      0x00000FFF
-  #if !defined(FEATURE_ESAME)
+  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     #define STORAGE_KEY_PAGEMASK    0x7FFFF000
   #else
     #define STORAGE_KEY_PAGEMASK    0xFFFFFFFFFFFFF000ULL
@@ -414,12 +414,12 @@ s390_ ## _name
 
 /* ASN-and-LX-reuse is enabled if the ASN-and-LX-reuse
    facility is installed and CR0 bit 44 is 1 */
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
   #define ASN_AND_LX_REUSE_ENABLED(_regs) \
       (FACILITY_ENABLED(ASN_LX_REUSE,(_regs)) && ((_regs)->CR_L(0) & CR0_ASN_LX_REUS))
-#else /* !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY) */
+#else /* !defined(FEATURE_006_ASN_LX_REUSE_FACILITY) */
   #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
-#endif /* !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY) */
+#endif /* !defined(FEATURE_006_ASN_LX_REUSE_FACILITY) */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
     (((U64)((_aste)[2])<<32)|(U64)((_aste)[3]))
@@ -521,7 +521,7 @@ z900_ ## _name
   #define STORAGE_KEY_PAGESHIFT     12
   #define STORAGE_KEY_PAGESIZE      4096
   #define STORAGE_KEY_BYTEMASK      0x00000FFF
-  #if !defined(FEATURE_ESAME)
+  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     #define STORAGE_KEY_PAGEMASK    0x7FFFF000
   #else
     #define STORAGE_KEY_PAGEMASK    0xFFFFFFFFFFFFF000ULL
@@ -561,7 +561,7 @@ z900_ ## _name
 #undef PAGEFRAME_PAGEMASK
 #undef MAXADDRESS
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
   #define PAGEFRAME_PAGESIZE        4096
   #define PAGEFRAME_PAGESHIFT       12
   #define PAGEFRAME_BYTEMASK        0x00000FFF
@@ -593,7 +593,7 @@ z900_ ## _name
 #define XSTORE_PAGESHIFT            12
 #define XSTORE_PAGESIZE             4096
 #undef  XSTORE_PAGEMASK
-#if defined(FEATURE_ESAME) || defined(_FEATURE_ZSIE)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_ZSIE)
   #define XSTORE_PAGEMASK           0xFFFFFFFFFFFFF000ULL
 #else
   #define XSTORE_PAGEMASK           0x7FFFF000
@@ -637,7 +637,7 @@ z900_ ## _name
 #define  CFC_A64_OPSIZE    ( 6 )        /* amode-64 operand size     */
 #define  CFC_DEF_OPSIZE    ( 2 )        /* non-amode-64 operand size */
 #define  CFC_MAX_OPSIZE    ( CFC_A64_OPSIZE > CFC_DEF_OPSIZE ? CFC_A64_OPSIZE : CFC_DEF_OPSIZE )
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
   #define  CFC_OPSIZE      ( a64 ?   CFC_A64_OPSIZE       :   CFC_DEF_OPSIZE       )
   #define  CFC_GR2_SHIFT   ( a64 ? ( CFC_A64_OPSIZE * 8 ) : ( CFC_DEF_OPSIZE * 8 ) )
   #define  CFC_HIGH_BIT    ( a64 ?  0x8000000000000000ULL :  0x0000000080000000ULL )
@@ -655,7 +655,7 @@ z900_ ## _name
 #undef   UPT_HIGH_BIT
 #undef   AR4
 #define  AR4  (4)                       /* Access Register 4         */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
   #define  UPT_ALIGN_MASK   ( a64 ? 0x000000000000000FULL : 0x0000000000000007ULL )
   #define  UPT_SHIFT_MASK   ( a64 ? 0xFFFFFFFFFFFFFFF0ULL : 0xFFFFFFFFFFFFFFF8ULL )
   #define  UPT_HIGH_BIT     ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )

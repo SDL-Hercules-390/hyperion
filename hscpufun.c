@@ -991,7 +991,7 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
     return rc;
 }
 
-#if defined(_FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(_FEATURE_006_ASN_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* alrf command - display or set asn_and_lx_reuse                    */
 /*-------------------------------------------------------------------*/
@@ -1023,9 +1023,9 @@ char   *archlvl_func;
     WRMSG( HHC02256, "W", "ALRF", buffer );
     return InternalHercCmd( buffer );
 }
-#endif /*defined(_FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*defined(_FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
-#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
 /*-------------------------------------------------------------------*/
 /* cmpscpad command - set CMPSC instruction padding alignment        */
 /*-------------------------------------------------------------------*/
@@ -1101,4 +1101,4 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
 
     return HNOERROR;
 }
-#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
+#endif /* defined(_FEATURE_047_CMPSC_ENH_FACILITY) */

@@ -82,7 +82,7 @@ int     i;                              /* Array subscript           */
     if (afte & AFTE_INVALID)
         goto asn_afx_tran_excp;
 
-  #if !defined(FEATURE_ESAME)
+  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* ASN translation specification exception if reserved bits set */
     if (!ASF_ENABLED(regs)) {
         if (afte & AFTE_RESV_0)
@@ -91,7 +91,7 @@ int     i;                              /* Array subscript           */
         if (afte & AFTE_RESV_1)
               goto asn_asn_tran_spec_excp;
     }
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* [3.9.3.2] Use AFTE and ASX to obtain real address of ASTE */
     if (!ASF_ENABLED(regs)) {
@@ -132,7 +132,7 @@ int     i;                              /* Array subscript           */
     if (aste[0] & ASTE0_INVALID)
         goto asn_asx_tran_excp;
 
-  #if !defined(FEATURE_ESAME)
+  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Check the reserved bits in first two words of ASTE */
     if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
         || ((aste[0] & ASTE0_BASE)
@@ -141,7 +141,7 @@ int     i;                              /* Array subscript           */
           #endif /*FEATURE_SUBSPACE_GROUP*/
             ))
         goto asn_asn_tran_spec_excp;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     return 0;
 
@@ -150,11 +150,11 @@ asn_addr_excp:
     code = PGM_ADDRESSING_EXCEPTION;
     goto asn_prog_check;
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 asn_asn_tran_spec_excp:
     code = PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto asn_prog_check;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 asn_prog_check:
     regs->program_interrupt (regs, code);
@@ -413,7 +413,7 @@ int     i;                              /* Array subscript           */
         if ((ale[0] & ALE0_PRIVATE)
                 && (ale[0] & ALE0_ALEAX) != eax)
         {
-          #if !defined(FEATURE_ESAME)
+          #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             /* Check the reserved bits in first two words of ASTE */
             if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
                 || ((aste[0] & ASTE0_BASE)
@@ -422,7 +422,7 @@ int     i;                              /* Array subscript           */
                       #endif /*FEATURE_SUBSPACE_GROUP*/
                    ))
                 goto alet_asn_tran_spec_excp;
-          #endif /*!defined(FEATURE_ESAME)*/
+          #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
             /* Perform extended authorization */
             if (ARCH_DEP(authorize_asn)(eax, aste, ATE_SECONDARY, regs) != 0)
@@ -445,11 +445,11 @@ alet_addr_excp:
     regs->dat.xcode = PGM_ADDRESSING_EXCEPTION;
     goto alet_prog_check;
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 alet_asn_tran_spec_excp:
     regs->dat.xcode = PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto alet_prog_check;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 alet_prog_check:
     regs->program_interrupt (regs, regs->dat.xcode);
@@ -674,7 +674,7 @@ U16     eax;                            /* Authorization index       */
                     regs->dat.stid = TEA_ST_ARMODE;
                     if(regs->dat.protect & 2)
                     {
-                #if defined(FEATURE_ESAME)
+                #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                        regs->dat.asd ^= ASCE_RESV;
                        regs->dat.asd |= ASCE_P;
                 #else
@@ -825,7 +825,7 @@ RADR    pto = 0;                        /* Page table origin         */
 int     cc;                             /* Condition code            */
 int     tlbix = TLBIX(vaddr);           /* TLB entry index           */
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-----------------------------------*/
 /* S/370 Dynamic Address Translation */
 /*-----------------------------------*/
@@ -978,7 +978,7 @@ U32     ptl;                            /* Page table length         */
         (((U32)pte & PAGETAB_PFRA_2K) << 8) | (vaddr & 0x7FF);
 
     regs->dat.rpfra = regs->dat.raddr & PAGEFRAME_PAGEMASK;
-#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #if defined(FEATURE_S390_DAT)
 /*-----------------------------------*/
@@ -1108,7 +1108,7 @@ U32     ptl;                            /* Page table length         */
 
 #endif /*defined(FEATURE_S390_DAT)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-----------------------------------*/
 /* ESAME Dynamic Address Translation */
 /*-----------------------------------*/
@@ -1234,12 +1234,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R1TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(EDAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the region-second table origin, offset, and
                    length from the region-first table entry */
@@ -1288,12 +1288,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R2TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(EDAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the region-third table origin, offset, and
                    length from the region-second table entry */
@@ -1342,12 +1342,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R3TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(EDAT_1,regs)
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
                 /* Extract the segment table origin, offset, and
                    length from the region-third table entry */
@@ -1399,8 +1399,8 @@ U16     sx, px;                         /* Segment and page index,
             if (regs->dat.pvtaddr && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-            if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+            if(FACILITY_ENABLED(EDAT_1,regs)
               && (regs->CR_L(0) & CR0_ED)
               && (ste & ZSEGTAB_FC))
             {
@@ -1444,7 +1444,7 @@ U16     sx, px;                         /* Segment and page index,
                 return 0;
 
             }
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
             /* Extract the page table origin from segment table entry */
             pto = ste & ZSEGTAB_PTO;
@@ -1461,12 +1461,12 @@ U16     sx, px;                         /* Segment and page index,
                 regs->dat.raddr = pto;
                 regs->dat.xcode = 0;
                 cc = (ste & ZSEGTAB_P) ? 1 : 0;
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+                if(FACILITY_ENABLED(EDAT_1,regs)
                   && (regs->CR_L(0) & CR0_ED)
                   && regs->dat.protect)
                     cc = 1;
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
                 return cc;
             } /* end if(ACCTYPE_LPTEA) */
 
@@ -1516,7 +1516,7 @@ U16     sx, px;                         /* Segment and page index,
     }
     else
         regs->dat.raddr = pto;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* The following code is common to S/370, ESA/390, and ESAME */
 
@@ -1533,7 +1533,7 @@ address_excp:
     goto tran_prog_check;
 
 tran_spec_excp:
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 //    logmsg("dat.c: translation specification exception...\n");
 //    logmsg("       pte = %16.16"PRIX64", ste = %16.16"PRIX64", rte=%16.16"PRIX64"\n",
 //        pte, ste, rte);
@@ -1545,21 +1545,21 @@ tran_spec_excp:
     regs->dat.xcode = PGM_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto tran_prog_check;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 spec_oper_excp:
     regs->dat.xcode = PGM_SPECIAL_OPERATION_EXCEPTION;
     goto tran_prog_check;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 tran_prog_check:
-#if defined(FEATURE_ENHANCED_MONITOR_FACILITY)
+#if defined(FEATURE_036_ENH_MONITOR_FACILITY)
     /* No program interrupt for enhanced MC */
     if(acctype & ACC_ENH_MC)
     {
         cc = 5;
         return cc;
     }
-#endif /*defined(FEATURE_ENHANCED_MONITOR_FACILITY)*/
+#endif /*defined(FEATURE_036_ENH_MONITOR_FACILITY)*/
     regs->program_interrupt (regs, regs->dat.xcode);
 
 /* Conditions which the caller may or may not program check */
@@ -1585,13 +1585,13 @@ page_tran_invalid:
     cc = 2;
     goto tran_excp_addr;
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 page_tran_length:
     regs->dat.xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
     regs->dat.raddr = pto;
     cc = 3;
     goto tran_excp_addr;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 seg_tran_length:
 //  logmsg("dat.c: segment translation exception due to segment length\n");
@@ -1606,7 +1606,7 @@ tran_alet_excp:
     cc = (acctype & ACC_LPTEA) ? 3 : 4;
     return cc;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 reg_first_invalid:
     /* For LPTEA, return region table entry address with cc 2 */
     if (acctype & ACC_LPTEA)
@@ -1664,7 +1664,7 @@ reg_third_excp:
     regs->dat.xcode = PGM_REGION_THIRD_TRANSLATION_EXCEPTION;
     cc = 4;
     goto tran_excp_addr;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 tran_excp_addr:
     /* For LPTEA instruction, return xcode with cc = 3 */
@@ -1675,7 +1675,7 @@ tran_excp_addr:
     regs->TEA = vaddr & PAGEFRAME_PAGEMASK;
 
     /* Set the address space indication in the exception address */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(regs->dat.stid == TEA_ST_ARMODE)
     {
         if ((regs->dat.asd & ASCE_TO) == (regs->CR(1) & ASCE_TO))
@@ -1689,7 +1689,7 @@ tran_excp_addr:
     }
     else
         regs->TEA |= regs->dat.stid;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     if(regs->dat.stid == TEA_ST_ARMODE)
     {
         if ((regs->dat.asd & STD_STO) == (regs->CR(1) & STD_STO))
@@ -1708,16 +1708,16 @@ tran_excp_addr:
             regs->TEA |= TEA_ST_SECNDRY | TEA_SECADDR;
         else
             regs->TEA |= regs->dat.stid;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)         /*810*/
+#if defined(FEATURE_075_ACC_EX_FS_INDIC_FACILITY)         /*810*/
     /* Set the fetch/store indication bits 52-53 in the TEA */
     if (acctype & ACC_READ) {
         regs->TEA |= TEA_FETCH;
     } else if (acctype & (ACC_WRITE|ACC_CHECK)) {
         regs->TEA |= TEA_STORE;
     }
-#endif /*defined(FEATURE_ACCESS_EXCEPTION_FETCH_STORE_INDICATION)*/  /*810*/
+#endif /*defined(FEATURE_075_ACC_EX_FS_INDIC_FACILITY)*/  /*810*/
 
     /* Set the exception access identification */
     if (ACCESS_REGISTER_MODE(&regs->psw)
@@ -1781,7 +1781,7 @@ int  i;
 RADR pte;
 RADR ptemask;
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     ptemask = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
               PAGETAB_PFRA_4K : PAGETAB_PFRA_2K;
     pte = ((pfra & 0xFFFFFF) >> 8) & ptemask;
@@ -1792,10 +1792,10 @@ RADR ptemask;
     pte = pfra & ptemask;
 #endif /* defined(FEATURE_S390_DAT) */
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     ptemask = (RADR)ZPGETAB_PFRA;
     pte = pfra & ptemask;
-#endif /* defined(FEATURE_ESAME) */
+#endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
     INVALIDATE_AIA(regs);
     for (i = 0; i < TLBN; i++)
@@ -1941,7 +1941,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                      == mainwid)
         {
             regs->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                 regs->tlb.acc[i^1] = 0;
 #endif
@@ -1959,7 +1959,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                          == mainwid)
             {
                 regs->guestregs->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 if ((regs->guestregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     regs->guestregs->tlb.acc[i^1] = 0;
 #endif
@@ -1977,7 +1977,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                          == mainwid)
             {
                 regs->hostregs->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 if ((regs->hostregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     regs->hostregs->tlb.acc[i^1] = 0;
 #endif
@@ -2018,7 +2018,7 @@ RADR    pfra;
 
     UNREFERENCED_370(ibyte);
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     {
         /* Program check if translation format is invalid */
         if ((((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_2K) &&
@@ -2091,7 +2091,7 @@ RADR    pfra;
         ARCH_DEP(vstore4) ( pte, raddr, USE_REAL_ADDR, regs );
         pfra = pte & PAGETAB_PFRA;
     }
-#else /*defined(FEATURE_ESAME)*/
+#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         /* Combine the page table origin in the R1 register with
            the page index in the R2 register, ignoring carry, to
@@ -2118,7 +2118,7 @@ RADR    pfra;
         ARCH_DEP(vstore8) ( pte, raddr, USE_REAL_ADDR, regs );
         pfra = pte & ZPGETAB_PFRA;
     }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Invalidate TLB entries */
     ARCH_DEP(purge_tlbe_all) (pfra);
@@ -2362,10 +2362,10 @@ vabs_prot_excp:
     if (regs->dat.protect && (acctype & (ACC_WRITE|ACC_CHECK)) )
     {
         regs->TEA |= TEA_PROT_AP;
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->dat.protect & 2)
             regs->TEA |= TEA_PROT_A;
-  #endif /*defined(FEATURE_ESAME)*/
+  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     }
     regs->TEA |= regs->dat.stid;
     regs->excarid = (arn > 0 ? arn : 0);

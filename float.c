@@ -526,7 +526,7 @@ static inline void store_ef( EXTENDED_FLOAT *fl, U32 *fpr )
 
 } /* end function store_ef */
 
-#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+#if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Store extended float high-order part to register unnormalized     */
 /*                                                                   */
@@ -593,7 +593,7 @@ static inline void ARCH_DEP(lf_to_ef_unnorm)
 
 } /* end ARCH_DEP(lf_to_ef_unnorm) */
 
-#endif /* defined(FEATURE_HFP_UNNORMALIZED_EXTENSION) */
+#endif /* defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2996,7 +2996,7 @@ int     i;
 } /* end function div_U256 */
 #endif /* FEATURE_HFP_EXTENSIONS */
 
-#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+#if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Multiply long float to extended float unnormalized                */
 /*                                                                   */
@@ -3205,7 +3205,7 @@ int  xdigit;                       /* digit lost by addend shifting */
 
 } /* end ARCH_DEP(add_ef_unnorm) */
 
-#endif /* defined(FEATURE_HFP_UNNORMALIZED_EXTENSION) */
+#endif /* defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6974,7 +6974,7 @@ int     pgm_check;
 #endif /* FEATURE_HFP_EXTENSIONS */
 
 
-#if defined(FEATURE_FPS_EXTENSIONS)
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B365 LXR   - Load Floating Point Extended Register          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -7055,7 +7055,7 @@ int     i1;                             /* Index of R1 in fpr array  */
     regs->fpr[i1+FPREX+1] = 0;
 
 } /* end DEF_INST(load_zero_float_ext_reg) */
-#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 
 
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
@@ -7373,7 +7373,7 @@ int     pgm_check;
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
 
 
-#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+#if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B338 MAYLR - Multiply and Add Unnorm. Long to Ext. Low Reg. [RRF] */
 /*-------------------------------------------------------------------*/
@@ -7766,10 +7766,10 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
 } /* end DEF_INST(multiply_unnormal_float_long_to_ext_high) */
 
-#endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
+#endif /*defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)*/
 
 
-#if defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
+#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
 /*-------------------------------------------------------------------*/
 /* ED64 LEY   - Load Floating Point Short (Long Displacement)  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7848,7 +7848,7 @@ U64     dreg;                           /* Double word workarea      */
          | regs->fpr[i1+1];
     ARCH_DEP(vstore8) (dreg, effective_addr2, b2, regs);
 }
-#endif /*defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
+#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
 
 
 #endif /* FEATURE_HEXADECIMAL_FLOATING_POINT */

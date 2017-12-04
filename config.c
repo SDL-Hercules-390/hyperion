@@ -1069,7 +1069,7 @@ int configure_cpu( int target_cpu )
         if (arecpu)
             sysblk.regs[ ourcpu ]->intwait = 0;
 
-#if defined( FEATURE_CONFIGURATION_TOPOLOGY_FACILITY )
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */
         sysblk.topchnge = 1;
 #endif
@@ -1132,7 +1132,7 @@ int deconfigure_cpu( int target_cpu )
 
         sysblk.cputid[ target_cpu ] = 0;
 
-#if defined( FEATURE_CONFIGURATION_TOPOLOGY_FACILITY )
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */
         sysblk.topchnge = 1;
 #endif

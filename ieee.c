@@ -766,7 +766,7 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
  * Chapter 9. Floating-Point Overview and Support Instructions
  */
 
-#if defined(FEATURE_FPS_EXTENSIONS)
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
 #if !defined(_CBH_FUNC)
 /*
  * Convert binary floating point to hexadecimal long floating point
@@ -1082,7 +1082,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
 } /* end DEF_INST(convert_float_long_to_bfp_short_reg) */
-#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 
 /*-------------------------------------------------------------------*/
 /* B34A AXBR  - ADD (extended BFP)                             [RRE] */
@@ -1601,7 +1601,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
 
 }
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*----------------------------------------------------------------------*/
 /* B3A6 CXGBR  - CONVERT FROM FIXED (64 to extended BFP)        [RRE]   */
 /* B3A6 CXGBRA - CONVERT FROM FIXED (64 to extended BFP)        [RRF-e] */
@@ -1635,9 +1635,9 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     PUT_FLOAT128_NOCC(op1, r1, regs);
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*--------------------------------------------------------------------------*/
 /* B3A5 CDGBR  - CONVERT FROM FIXED (64 to long BFP)            [RRE]       */
 /* B3A5 CDGBRA - CONVERT FROM FIXED (64 to long BFP)            [RRF-e]     */
@@ -1678,9 +1678,9 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     };
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*--------------------------------------------------------------------------*/
 /* B3A4 CEGBR  - CONVERT FROM FIXED (64 to short BFP)           [RRE]       */
 /* B3A4 CEGBRA - CONVERT FROM FIXED (64 to short BFP)           [RRF-e]     */
@@ -1721,7 +1721,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     };
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 /*--------------------------------------------------------------------------*/
 /* CONVERT TO FIXED                                                         */
@@ -1952,7 +1952,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
 
 }
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B3AA CGXBR - CONVERT TO FIXED (extended BFP to 64)          [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2019,9 +2019,9 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B3A9 CGDBR - CONVERT TO FIXED (long BFP to 64)              [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2087,9 +2087,9 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B3A8 CGEBR - CONVERT TO FIXED (short BFP to 64)             [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2155,7 +2155,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)

@@ -1617,15 +1617,15 @@ typedef struct MBK  MBK;
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define STFL_N3                    0    /* Instructions marked N3 in
+#define STFL_N3_ESA390             0    /* Instructions marked N3 in
                                            the reference summary are
                                            available in ESA/390 mode */
-#define STFL_ESAME_INSTALLED       1    /* ESAME mode is available on
+#define STFL_ZARCH_INSTALLED       1    /* ESAME mode is available on
                                            this processor            */
-#define STFL_ESAME_ACTIVE          2    /* ESAME mode is active on
+#define STFL_ZARCH_ACTIVE          2    /* ESAME mode is active on
                                            this processor            */
-#define STFL_IDTE_INSTALLED        3    /* IDTE installed ESAME mode */
-
+#define STFL_DAT_ENHANCEMENT_1     3    /* DAT-enhancement facility 1
+                                           installed in ESAME modes  */
 #define STFL_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
                                            when segtab invalidated   */
 #define STFL_IDTE_SC_REGTAB        5    /* IDTE selective clearing
@@ -1634,7 +1634,7 @@ typedef struct MBK  MBK;
                                            is installed              */
 #define STFL_STFL_EXTENDED         7    /* Store facility list    @Z9
                                            extended is installed  @Z9*/
-#define STFL_ENHANCED_DAT_1        8    /* Enhanced-DAT facility  208
+#define STFL_EDAT_1                8    /* Enhanced-DAT facility  208
                                            is installed           208*/
 #define STFL_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
                                            facility is installed  @Z9*/
@@ -1650,9 +1650,9 @@ typedef struct MBK  MBK;
                                            Facility installed     810*/
 #define STFL_IBM_INTERNAL_15      15    /* IBM internal use          */
 
-#define STFL_EXT_TRANSL_FAC_2     16    /* Extended translation
+#define STFL_EXT_TRANSL_2         16    /* Extended translation
                                            facility 2 is installed   */
-#define STFL_MSG_SECURITY         17    /* Message security assist
+#define STFL_MSA                  17    /* Message security assist
                                            feature is installed      */
 #define STFL_LONG_DISPL_INST      18    /* Long displacement facility
                                            is installed              */
@@ -1662,7 +1662,7 @@ typedef struct MBK  MBK;
                                            facility is installed     */
 #define STFL_EXTENDED_IMMED       21    /* Extended immediate     @Z9
                                            facility is installed  @Z9*/
-#define STFL_EXT_TRANSL_FAC_3     22    /* Extended translation
+#define STFL_EXT_TRANSL_3         22    /* Extended translation
                                            facility 3 is installed   */
 #define STFL_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
                                            facility is installed  @Z9*/
@@ -1692,7 +1692,7 @@ typedef struct MBK  MBK;
                                            facility is installed  208*/
 #define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                            facility installed     810*/
-#define STFL_FP_EXTENSION         37    /* Floating-point extension
+#define STFL_FP_EXTENSIONS        37    /* Floating-point extension
                                            facility installed     810*/
 #define STFL_ORDER_PRESERVE_CMPSC 38    /* Order-preserving-compression
                                            facility is installed     */
@@ -1700,7 +1700,7 @@ typedef struct MBK  MBK;
 
 #define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                            facility installed (ESAME)*/
-#define STFL_FPS_ENHANCEMENT      41    /* Floating point support
+#define STFL_FPS_ENHANCEMENTS     41    /* Floating point support
                                            enhancements (FPR-GR-loading
                                            FPS-sign-handling, and
                                            DFP-rounding) installed   */
@@ -1778,7 +1778,7 @@ typedef struct MBK  MBK;
                                            Extension 3 installed  810*/
 #define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810
                                            Extension 4 installed  810*/
-#define STFL_ENHANCED_DAT_2       78    /* Enhanced-DAT-2            */
+#define STFL_EDAT_2               78    /* Enhanced-DAT-2            */
 
 #define STFL_UNASSIGNED_79        79    /* Unassigned                */
 

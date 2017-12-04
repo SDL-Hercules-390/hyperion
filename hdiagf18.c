@@ -223,7 +223,7 @@ U16     options;                     /* supplied options             */
 /*--------------------------------------------------------*/
     case CSOCKET:
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -239,7 +239,7 @@ U16     options;                     /* supplied options             */
 /*--------------------------------------------------------*/
     case CFILE:
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);

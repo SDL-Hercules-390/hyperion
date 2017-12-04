@@ -342,7 +342,7 @@ VADR    effective_addr2,
         case PLO_CSDSTG:
         case PLO_CSTST:
         case PLO_CSTSTG:
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         case PLO_CLGR:
         case PLO_CLX:
         case PLO_CSGR:
@@ -355,7 +355,7 @@ VADR    effective_addr2,
         case PLO_CSDSTX:
         case PLO_CSTSTGR:
         case PLO_CSTSTX:
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
             /* Indicate function supported */
             regs->psw.cc = 0;
@@ -426,7 +426,7 @@ VADR    effective_addr2,
                 regs->psw.cc = ARCH_DEP(plo_cststg) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             case PLO_CLGR:
                 regs->psw.cc = ARCH_DEP(plo_clgr) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
@@ -475,7 +475,7 @@ VADR    effective_addr2,
                 regs->psw.cc = ARCH_DEP(plo_cststx) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
             default:
@@ -970,7 +970,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
     if (inst[1] == 0x7C) // STCKF only
     {
         /* Retrieve the TOD clock value without embedded CPU address */
@@ -978,15 +978,15 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     }
     else
     {
-#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
+#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
         /* Perform serialization before fetching clock */
         PERFORM_SERIALIZATION (regs);
 
         /* Retrieve the TOD clock value with embedded CPU address*/
         etod_clock(regs, &ETOD, ETOD_standard);
-#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
     }
-#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
+#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
 
     /* Shift out epoch */
     dreg = ETOD2TOD(ETOD);
@@ -996,9 +996,9 @@ ETOD    ETOD;                           /* Extended TOD clock        */
     /* Store TOD clock value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-#if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
     if(inst[1] != 0x7C) // not STCKF
-#endif /*defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
+#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
         /* Perform serialization after storing clock */
         PERFORM_SERIALIZATION (regs);
 
@@ -1687,7 +1687,7 @@ int     i;                              /* Integer work areas        */
         if (sbyte != 0) {
 
             /* Store address of argument byte in register 1 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             if(regs->psw.amode64)
                 regs->GR_G(1) = effective_addr1;
             else
@@ -1876,7 +1876,7 @@ GREG    index;                          /* tree index                */
 GREG    nodecode;                       /* current node's codeword   */
 GREG    nodedata;                       /* current node's other data */
 VADR    nodeaddr;                       /* work addr of current node */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 #endif
 
@@ -1944,7 +1944,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
         nodeaddr = regs->GR(4) + index;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if ( a64 )
         {
             nodecode = ARCH_DEP(vfetch8) ( (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
@@ -1991,7 +1991,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         */
 
         /* Store obsolete GR0 and GR1 values into this node's entry */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if ( a64 )
         {
             ARCH_DEP(vstore8) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
@@ -2013,7 +2013,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
     SET_GR_A(5,regs,index);
 }
 
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+#if defined(FEATURE_022_EXT_TRANSL_FACILITY_3)
 /*-------------------------------------------------------------------*/
 /* B9B0 CU14  - Convert UTF-8 to UTF-32                        [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2028,9 +2028,9 @@ DEF_INST(convert_utf8_to_utf32)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2045,12 +2045,12 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2084,7 +2084,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2094,7 +2094,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* Check end of source */
       if(srcelen < 2)
@@ -2106,7 +2106,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2116,7 +2116,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
@@ -2137,7 +2137,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellformednessChecking */
       if(wfc)
       {
@@ -2166,7 +2166,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
@@ -2177,7 +2177,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2187,7 +2187,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* Check end of source */
       if(srcelen < 4)
@@ -2199,7 +2199,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormdnessChecking */
       if(wfc)
       {
@@ -2228,7 +2228,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2272,9 +2272,9 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2289,12 +2289,12 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2338,7 +2338,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
 
-#if defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)
+#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2348,7 +2348,7 @@ DEF_INST(convert_utf16_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
 
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2696,7 +2696,7 @@ DEF_INST(translate_and_test_reverse)
     if(sbyte != 0)
     {
       /* Store address of argument byte in register 1 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
       if(regs->psw.amode64)
         regs->GR_G(1) = effective_addr1;
       else
@@ -2732,9 +2732,9 @@ DEF_INST(translate_and_test_reverse)
   /* Update the condition code */
   regs->psw.cc = cc;
 }
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
+#endif /*defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
 
-#ifdef FEATURE_PARSING_ENHANCEMENT_FACILITY
+#ifdef FEATURE_026_PARSING_ENHANCE_FACILITY
 /*-------------------------------------------------------------------*/
 /* B9BF TRTE - Translate and Test Extended                     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2922,7 +2922,7 @@ DEF_INST(translate_and_test_reverse_extended)
   else
     regs->psw.cc = 0;
 }
-#endif /* FEATURE_PARSING_ENHANCEMENT_FACILITY */
+#endif /* FEATURE_026_PARSING_ENHANCE_FACILITY */
 
 #if !defined(_GEN_ARCH)
 

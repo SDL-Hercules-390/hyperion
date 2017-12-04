@@ -62,7 +62,7 @@
 #undef  LSTE_RESV
 #undef  LSTE_FVALID
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
   #define CR15_LSEA     CR15_LSEA_900   /* Bit mask for ESAME linkage
                                            stack entry addr in CR15  */
@@ -89,7 +89,7 @@
   #define LSTE_FVALID   0x01            /* Forward address is valid  */
   /* LSTE words 2 and 3 contain a linkage stack entry descriptor */
 
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
   #define CR15_LSEA     CR15_LSEA_390   /* Bit mask for ESA/390 linkage
                                            stack entry addr in CR15  */
@@ -119,7 +119,7 @@
   #define LSTE_RESV     0x00000007      /* Reserved bits - must be 0 */
   /* LSTE words 2 and 3 contain a linkage stack entry descriptor */
 
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)
@@ -149,9 +149,9 @@ RADR ducto;
 U32  duct11;
 U32  tcba;
 RADR atcba;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 U32  tcba0;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 U32  tsao;
 RADR tsaa1,
      tsaa2;
@@ -185,11 +185,11 @@ int  i;
     /* Isolate the Trap Control Block Address */
     tcba = duct11 & DUCT11_TCBA;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Fetch word 0 of the TCB */
     atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
     FETCH_FW(tcba0, regs->mainstor + atcba);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Advance to offset +12 */
     tcba += 12;
@@ -210,9 +210,9 @@ int  i;
 
     /* Calculate last byte stored */
     lastbyte = tsao + 95
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                          + ((tcba0 & TCB0_R) ? 64 : 0)
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                                                        ;
 
     /* Use abs_trap_addr as it conforms to trap save area access */
@@ -227,11 +227,11 @@ int  i;
         STORAGE_KEY(tsaa2, regs) |= STORKEY_CHANGE;
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Special operation exception if P == 0 and EA == 1 */
     if(!(tcba0 & TCB0_P) && regs->psw.amode64)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
   #ifdef FEATURE_TRACING
     if (regs->CR(12) & CR12_BRTRACE)
@@ -266,18 +266,18 @@ int  i;
     if((tsaa1 & PAGEFRAME_BYTEMASK) == 0)
         tsaa1 = tsaa2;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* If the P bit is one then store the PSW in esame format */
     if(tcba0 & TCB0_P)
         ARCH_DEP(store_psw) (regs, trap_psw);
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         s390_store_psw(regs, trap_psw);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Set the notesame mode bit for a esa/390 psw */
         trap_psw[1] |= 0x08;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     }
 
     /* bits 0-63 of PSW at offset +16 */
@@ -288,7 +288,7 @@ int  i;
         tsaa1 = tsaa2;
     }
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* If the P bit is one then store the PSW in esame format */
     /* bits 64-127 of PSW at offset +24 */
     if(tcba0 & TCB0_P)
@@ -297,16 +297,16 @@ int  i;
     }
     else
     {
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         memset(regs->mainstor + tsaa1, 0, 8);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     tsaa1 += 8;
     if((tsaa1 & PAGEFRAME_BYTEMASK) == 0)
         tsaa1 = tsaa2;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* General registers at offset +32 */
     if(tcba0 & TCB0_R)
         for(i = 0; i < 16; i++)
@@ -317,7 +317,7 @@ int  i;
                 tsaa1 = tsaa2;
         }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         for(i = 0; i < 16; i++)
         {
             STORE_FW(regs->mainstor + tsaa1, regs->GR_L(i));
@@ -327,11 +327,11 @@ int  i;
         }
 
     /* Load the Trap Control Block Address in gr15 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(regs->psw.amode64)
         regs->GR(15) = duct11 & DUCT11_TCBA & 0x00000000FFFFFFFF;
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->GR_L(15) = duct11 & DUCT11_TCBA;
 
     /* Ensure psw.IA is set */
@@ -497,7 +497,7 @@ int     i;                              /* Array subscript           */
        or bytes 0-127 (ESAME) of the new state entry */
     for (i = 0; i < 16; i++)
     {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Store the 64-bit general register in the stack entry */
         STORE_DW(regs->mainstor + abs, regs->GR_G(i));
 
@@ -505,7 +505,7 @@ int     i;                              /* Array subscript           */
         logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
                 " A:" F_RADR "\n"), i, regs->GR_G(i), lsea, abs);
       #endif /*STACK_DEBUG*/
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* Store the 32-bit general register in the stack entry */
         STORE_FW(regs->mainstor + abs, regs->GR_L(i));
 
@@ -513,7 +513,7 @@ int     i;                              /* Array subscript           */
         logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
                 " A:" F_RADR "\n"), i, regs->GR_L(i), lsea, abs);
       #endif /*STACK_DEBUG*/
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Update the virtual and absolute addresses */
         lsea += LSSE_REGSIZE;
@@ -526,7 +526,7 @@ int     i;                              /* Array subscript           */
 
     } /* end for(i) */
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESA/390, store access registers 0-15 in bytes 64-127 */
     for (i = 0; i < 16; i++)
     {
@@ -548,7 +548,7 @@ int     i;                              /* Array subscript           */
             abs = abs2;
 
     } /* end for(i) */
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Store the PKM, SASN, EAX, and PASN in bytes 128-135 */
     STORE_FW(regs->mainstor + abs, regs->CR_L(3));
@@ -579,7 +579,7 @@ int     i;                              /* Array subscript           */
     ARCH_DEP(store_psw) (regs, currpsw);
     memcpy (regs->mainstor + abs, currpsw, 8);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, use the addressing mode bits from the return
        address to set bits 31 and 32 of bytes 136-143 */
     if (retna & 0x01)
@@ -603,11 +603,11 @@ int     i;                              /* Array subscript           */
         regs->mainstor[abs+4] &= 0x7F;
         retna &= 0x00FFFFFF;
     }
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     /* For ESA/390, replace bytes 140-143 by the return address,
        with the high-order bit indicating the addressing mode */
     STORE_FW(regs->mainstor + abs + 4, retna);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
   #ifdef STACK_DEBUG
     logmsg (_("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
@@ -641,13 +641,13 @@ int     i;                              /* Array subscript           */
     }
     else
     {
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Store the called address and amode in bytes 144-151 */
         STORE_DW(regs->mainstor + abs, calla);
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* Store the called address and amode in bytes 148-151 */
         STORE_FW(regs->mainstor + abs + 4, calla);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     }
 
     /* Update virtual and absolute addresses to point to byte 152 */
@@ -671,7 +671,7 @@ int     i;                              /* Array subscript           */
     if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
         abs = abs2;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, store zeroes in bytes 160-167 */
     memset (regs->mainstor+abs, 0, 8);
 
@@ -757,7 +757,7 @@ int     i;                              /* Array subscript           */
             abs = abs2;
 
     } /* end for(i) */
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Build the new linkage stack entry descriptor */
     memset (&lsed2, 0, sizeof(LSED));
@@ -994,7 +994,7 @@ RADR    abs;                            /* Absolute address          */
     lsea -= LSSE_SIZE - sizeof(LSED);
     lsea += 128;
 
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For codes 1 and 4, extract bytes 136-143 and 168-175 */
     if (code == 1 || code == 4)
     {
@@ -1039,9 +1039,9 @@ RADR    abs;                            /* Absolute address          */
         return;
 
     } /* if(code==1||code==4) */
-  #endif /*defined(FEATURE_ESAME)*/
+  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-  #if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+  #if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
     /* For code 5, extract bytes 176-183 */
     if (code == 5)
     {
@@ -1057,7 +1057,7 @@ RADR    abs;                            /* Absolute address          */
         return;
 
     } /* if(code==5) */
-  #endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+  #endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
     /* For codes 0,2,3 in ESAME, and codes 0,1,2,3 in ESA/390 */
     /* Point to byte 128, 136, 144, or 152 depending on the code */
@@ -1140,7 +1140,7 @@ int     i;                              /* Array subscript           */
         if ((r1 <= r2 && i >= r1 && i <= r2)
             || (r1 > r2 && (i >= r1 || i <= r2)))
         {
-    #if defined(FEATURE_ESAME)
+    #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             if (gtype)
             {
                 /* For ESAME PR and EREGG instructions,
@@ -1156,7 +1156,7 @@ int     i;                              /* Array subscript           */
             logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
                     " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
-    #else /*!defined(FEATURE_ESAME)*/
+    #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             /* For ESA/390, load a 32-bit general register */
             FETCH_FW(regs->GR_L(i), regs->mainstor + abs);
 
@@ -1164,7 +1164,7 @@ int     i;                              /* Array subscript           */
             logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
                     " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
-    #endif /*!defined(FEATURE_ESAME)*/
+    #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         }
 
         /* Update the virtual and absolute addresses */
@@ -1178,14 +1178,14 @@ int     i;                              /* Array subscript           */
 
     } /* end for(i) */
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, skip the next 96 bytes of the state entry */
     lsea += 96; abs += 96;
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) < 96)
         abs = abs2 | (lsea & PAGEFRAME_BYTEMASK);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Load access registers from bytes 64-127 (for ESA/390), or
        bytes 224-280 (for ESAME) of the state entry */
@@ -1342,7 +1342,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     /* Copy PSW bits 0-63 from bytes 136-143 of the stack entry */
     memcpy (newpsw, regs->mainstor + abs, 8);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, advance to byte 168 of the stack entry */
     lsea += 32;
     LSEA_WRAP(lsea);
@@ -1386,7 +1386,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     } /* end if(LSED_UET_PC && ASN_AND_LX_REUSE_ENABLED) */
 
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* [5.12.4.4] Pass back the absolute address of the entry
        descriptor of the preceding linkage stack entry.  The

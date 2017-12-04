@@ -361,46 +361,46 @@ U64 totwrite = 0;
         return -1;
     }
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     sto &= ASCE_TO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     sto &= STD_STO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     for( ; size > 0 ; sto += sizeof(sto))
     {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     DBLWRD *ste;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     FWORD *ste;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     CREG pto, pti;
 
         /* Fetch segment table entry and calc Page Table Origin */
         if( sto >= sysblk.mainsize)
             goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         ste = (DBLWRD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FETCH_W(pto, ste);
         STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
         if( pto & SEGTAB_INVALID )
             goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         pto &= ZSEGTAB_PTO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         pto &= SEGTAB_PTO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         for(pti = 0; pti < 256 && size > 0; pti++, pto += sizeof(pto))
         {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         DBLWRD *pte;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FWORD *pte;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         CREG pgo;
         BYTE *page;
 
@@ -408,20 +408,20 @@ U64 totwrite = 0;
             if( pto >= sysblk.mainsize)
                 goto eof;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pte = (DBLWRD*)(sysblk.mainstor + pto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             pte = (FWORD*)(sysblk.mainstor + pto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pgo, pte);
             STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
             if( !(pgo & PAGETAB_INVALID) )
             {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 pgo &= ZPGETAB_PFRA;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 pgo &= PAGETAB_PFRA;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
                 /* Write page to SCE disk */
                 if( pgo >= sysblk.mainsize)
@@ -462,66 +462,66 @@ U64 totread = 0;
 
     if(lseek(fd, (off_t)seek, SEEK_SET) == (off_t)seek)
     {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         sto &= ASCE_TO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         sto &= STD_STO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         for( ; size > 0 ; sto += sizeof(sto))
         {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         DBLWRD *ste;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FWORD *ste;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         CREG pto, pti;
 
             /* Fetch segment table entry and calc Page Table Origin */
             if( sto >= sysblk.mainsize)
                 goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             ste = (DBLWRD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pto, ste);
             STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
             if( pto & SEGTAB_INVALID )
                 goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pto &= ZSEGTAB_PTO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             pto &= SEGTAB_PTO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
             for(pti = 0; pti < 256 && size > 0; pti++, pto += sizeof(pto))
             {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             DBLWRD *pte;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FWORD *pte;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             CREG pgo;
             BYTE *page;
 
                 /* Fetch Page Table Entry to get page origin */
                 if( pto >= sysblk.mainsize)
                     goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 pte = (DBLWRD*)(sysblk.mainstor + pto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 pte = (FWORD*)(sysblk.mainstor + pto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 FETCH_W(pgo, pte);
                 STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
                 if( pgo & PAGETAB_INVALID )
                     goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 pgo &= ZPGETAB_PFRA;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 pgo &= PAGETAB_PFRA;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
                 /* Read page into main storage */
                 if( pgo >= sysblk.mainsize)

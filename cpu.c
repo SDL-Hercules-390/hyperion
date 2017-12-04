@@ -88,7 +88,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 #if defined(FEATURE_BCMODE)
     if ( ECMODE(&regs->psw) ) {
 #endif /*defined(FEATURE_BCMODE)*/
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         STORE_FW ( addr,
                    ( (regs->psw.sysmask << 24)
                    | ((regs->psw.pkey | regs->psw.states) << 16)
@@ -106,7 +106,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
             STORE_FW ( addr + 4,
                    ( (regs->psw.IA & ADDRESS_MAXWRAP(regs)) | (regs->psw.amode ? 0x80000000 : 0) )
                  );
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 #if defined(FEATURE_BCMODE)
     } else {
         STORE_FW ( addr,
@@ -132,7 +132,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    ) | (regs->psw.IA & ADDRESS_MAXWRAP(regs))
                  );
     }
-#elif defined(FEATURE_ESAME)
+#elif defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         STORE_FW ( addr,
                    ( (regs->psw.sysmask << 24)
                    | ((regs->psw.pkey | regs->psw.states) << 16)
@@ -151,7 +151,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    )
                  );
         STORE_DW ( addr + 8, regs->psw.IA_G );
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 } /* end function ARCH_DEP(store_psw) */
 
 /*-------------------------------------------------------------------*/
@@ -181,25 +181,25 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         regs->psw.progmask = (addr[2] & 0x0F);
         regs->psw.amode    = (addr[4] & 0x80) ? 1 : 0;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         regs->psw.zerobyte = addr[3] & 0xFE;
         regs->psw.amode64  = addr[3] & 0x01;
         regs->psw.zeroword = fetch_fw(addr+4) & 0x7FFFFFFF;
         regs->psw.IA       = fetch_dw (addr + 8);
         regs->psw.AMASK    = regs->psw.amode64 ? AMASK64
                            : regs->psw.amode   ? AMASK31 : AMASK24;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->psw.zerobyte = addr[3];
         regs->psw.amode64  = 0;
         regs->psw.IA       = fetch_fw(addr + 4) & 0x7FFFFFFF;
         regs->psw.AMASK    = regs->psw.amode ? AMASK31 : AMASK24;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Bits 0 and 2-4 of system mask must be zero */
         if ((addr[0] & 0xB8) != 0)
             return PGM_SPECIFICATION_EXCEPTION;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* For ESAME, bit 12 must be zero */
         if (NOTESAME(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
@@ -211,7 +211,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         /* Bits 33-63 must be zero */
         if ( regs->psw.zeroword )
             return PGM_SPECIFICATION_EXCEPTION;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* Bits 24-31 must be zero */
         if ( regs->psw.zerobyte )
             return PGM_SPECIFICATION_EXCEPTION;
@@ -219,7 +219,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         /* For ESA/390, bit 12 must be one */
         if (!ECMODE(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #ifndef FEATURE_DUAL_ADDRESS_SPACE
         /* If DAS feature not installed then bit 16 must be zero */
@@ -234,7 +234,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 #endif /*!FEATURE_ACCESS_REGISTERS*/
 
         /* Check validity of amode and instruction address */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* For ESAME, bit 32 cannot be zero if bit 31 is one */
         if (regs->psw.amode64 && !regs->psw.amode)
             return PGM_SPECIFICATION_EXCEPTION;
@@ -246,7 +246,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         /* If bit 31 is zero then IA cannot exceed 31 bits */
         if (!regs->psw.amode64 && regs->psw.IA > 0x7FFFFFFF)
             return PGM_SPECIFICATION_EXCEPTION;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
   #ifdef FEATURE_BIMODAL_ADDRESSING
         /* For 370-XA, ESA/370, and ESA/390,
            if amode=24, bits 33-39 must be zero */
@@ -257,7 +257,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         if (addr[4] != 0x00)
             return PGM_SPECIFICATION_EXCEPTION;
   #endif /*!FEATURE_BIMODAL_ADDRESSING*/
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #if defined(FEATURE_BCMODE)
     } else {
@@ -310,7 +310,7 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /** FIXME : SEE ISW20090110-1 */
 void   *zmoncode=NULL;                  /* special reloc for z/Arch  */
                  /* FIXME : zmoncode not being initialized here raises
@@ -518,12 +518,12 @@ static char *pgmintname[] = {
        unless the exception occurred during instruction fetch */
     if ((code == PGM_PAGE_TRANSLATION_EXCEPTION
       || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
       || code == PGM_ASCE_TYPE_EXCEPTION
       || code == PGM_REGION_FIRST_TRANSLATION_EXCEPTION
       || code == PGM_REGION_SECOND_TRANSLATION_EXCEPTION
       || code == PGM_REGION_THIRD_TRANSLATION_EXCEPTION
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
       || code == PGM_TRACE_TABLE_EXCEPTION
       || code == PGM_AFX_TRANSLATION_EXCEPTION
       || code == PGM_ASX_TRANSLATION_EXCEPTION
@@ -696,7 +696,7 @@ static char *pgmintname[] = {
         /* Point to PSA in main storage */
         psa = (void*)(regs->mainstor + px);
 #if defined(_FEATURE_SIE)
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /** FIXME : SEE ISW20090110-1 */
         if(code == PGM_MONITOR_EVENT)
         {
@@ -715,7 +715,7 @@ static char *pgmintname[] = {
             psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
             /* Set the main storage reference and change bits */
             STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /** FIXME : SEE ISW20090110-1 */
             if(code == PGM_MONITOR_EVENT)
             {
@@ -798,12 +798,12 @@ static char *pgmintname[] = {
         /* Store the exception access identification at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
           || code == PGM_ASCE_TYPE_EXCEPTION
           || code == PGM_REGION_FIRST_TRANSLATION_EXCEPTION
           || code == PGM_REGION_SECOND_TRANSLATION_EXCEPTION
           || code == PGM_REGION_THIRD_TRANSLATION_EXCEPTION
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
           || code == PGM_ALEN_TRANSLATION_EXCEPTION
           || code == PGM_ALE_SEQUENCE_EXCEPTION
           || code == PGM_ASTE_VALIDITY_EXCEPTION
@@ -821,7 +821,7 @@ static char *pgmintname[] = {
             realregs->opndrid = 0;
         }
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Store the translation exception address at PSA+168 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
@@ -851,7 +851,7 @@ static char *pgmintname[] = {
         {
             STORE_FW(psa->TEA_L, regs->TEA);
         }
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* Store the translation exception address at PSA+144 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
@@ -869,7 +869,7 @@ static char *pgmintname[] = {
         {
             STORE_FW(psa->tea, regs->TEA);
         }
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         realregs->TEA = 0;
 
         /* Store Data exception code in PSA */
@@ -908,7 +908,7 @@ static char *pgmintname[] = {
             /*      and should be put somewhere in    */
             /*      esa390.h                          */
             /*  **** FIXME **** FIXME  *** FIXME ***  */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             STORE_DW(zmoncode, regs->MONCODE);
 #else
             STORE_W(psa->moncode, regs->MONCODE);
@@ -1119,18 +1119,18 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     /* Store the I/O interruption parameter at PSA+X'BC' */
     STORE_FW(psa->ioparm, ioparm);
 
-#if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
     /* Store the I/O interruption identification word at PSA+X'C0' */
     STORE_FW(psa->iointid, iointid);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Trace the I/O interrupt */
     if (CPU_STEPPING_OR_TRACING(regs, 0))
-#if !defined(FEATURE_ESAME) && !defined(_FEATURE_IO_ASSIST)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && !defined(_FEATURE_IO_ASSIST)
         WRMSG (HHC00805, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm);
-#else /*defined(FEATURE_ESAME)*/
+#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         WRMSG (HHC00806, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm, iointid);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
 #if defined(_FEATURE_IO_ASSIST)
@@ -1183,7 +1183,7 @@ RADR    fsta;                           /* Failing storage address   */
     /* Store registers in machine check save area */
     ARCH_DEP(store_status) (regs, regs->PX);
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 // ZZ
     /* Set the extended logout area to zeros */
     memset(psa->storepsw, 0, 16);
@@ -1199,13 +1199,13 @@ RADR    fsta;                           /* Failing storage address   */
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Store the failing storage address at PSA+248 */
     STORE_DW(psa->mcstorad, fsta);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     /* Store the failing storage address at PSA+248 */
     STORE_FW(psa->mcstorad, fsta);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Store current PSW at PSA+X'30' */
     ARCH_DEP(store_psw) ( regs, psa->mckold );

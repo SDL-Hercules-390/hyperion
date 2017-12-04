@@ -961,9 +961,9 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
 #if defined(FEATURE_LOAD_REVERSED)
                         | SCCB_CFG4_LOAD_REVERSED_FACILITY
 #endif /*defined(FEATURE_LOAD_REVERSED)*/
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
                         | SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
 #if defined(FEATURE_STORE_SYSTEM_INFORMATION)
                         | SCCB_CFG4_STORE_SYSTEM_INFORMATION
 #endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
@@ -971,9 +971,9 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         | SCCB_CFG4_IFA_FACILITY
                         ,
                         0
-#if defined(FEATURE_SENSE_RUNNING_STATUS)
+#if defined(FEATURE_009_SENSE_RUN_STATUS_FACILITY)
                         | SCCB_CFG5_SENSE_RUNNING_STATUS
-#endif /*FEATURE_SENSE_RUNNING_STATUS*/
+#endif /*FEATURE_009_SENSE_RUN_STATUS_FACILITY*/
                         };
 
 BYTE ARCH_DEP(scpinfo_cfg11) =
@@ -986,9 +986,9 @@ BYTE ARCH_DEP(scpinfo_cfg11) =
 BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
-#if defined(_370) && !defined(FEATURE_ESAME)
+#if defined(_370) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                             | SCCB_CPF0_SIE_370_MODE
-#endif /*defined(_370) && !defined(FEATURE_ESAME)*/
+#endif /*defined(_370) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                             | SCCB_CPF0_SIE_XA_MODE
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 //                          | SCCB_CPF0_SIE_SET_II_370_MODE
@@ -1289,14 +1289,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccbscp->realbszk = 4;
         STORE_HW(sccbscp->realiint, 1);
 
-#if defined(_900) || defined(FEATURE_ESAME)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* SIE supports the full address range */
         sccbscp->maxvm = 0;
         /* realiszm is valid */
         STORE_FW(sccbscp->grzm, 0);
         /* Number of storage increments installed in esame mode */
         STORE_DW(sccbscp->grnmx, realinc);
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #ifdef FEATURE_EXPANDED_STORAGE
         /* Set expanded storage size in SCCB */
@@ -1353,10 +1353,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
           )
             sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
 
-#if defined(_900) || defined(FEATURE_ESAME)
-        if(FACILITY_ENABLED(ESAME_INSTALLED,regs))
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+        if(FACILITY_ENABLED(ZARCH_INSTALLED,regs))
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                         ;
 
         /* Build the CPU information array after the SCP info */

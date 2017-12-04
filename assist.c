@@ -61,7 +61,7 @@
 #endif /*!defined(_ASSIST_C)*/
 
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E502       - Page Fix                                       [SSE] */
 /*-------------------------------------------------------------------*/
@@ -79,7 +79,7 @@ VADR    effective_addr1,
     /*INCOMPLETE*/
 
 }
-#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 /*-------------------------------------------------------------------*/

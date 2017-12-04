@@ -969,11 +969,11 @@ static int   ARCH_DEP(d250_iorq32)(DEVBLK *, int *, BIOPL_IORQ32 *, REGS *);
 static int   ARCH_DEP(d250_list32)(IOCTL32 *, int);
 static U16   ARCH_DEP(d250_addrck)(RADR, RADR, int, BYTE, REGS *);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 static int   ARCH_DEP(d250_iorq64)(DEVBLK *, int *, BIOPL_IORQ64 *, REGS *);
 /* void *ARCH_DEP(d250_async64)(void *); */
 static int   ARCH_DEP(d250_list64)(IOCTL64 *, int);
-#endif /* defined(FEATURE_ESAME) */
+#endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
 /*-------------------------------------------------------------------*/
 /* Process Standard Block I/O (Function code 0x250)                  */
@@ -988,10 +988,10 @@ union   parmlist{                      /* BIOPL formats that         */
         BIOPL_INIT32 init32;           /* guest                      */
         BIOPL_IORQ32 iorq32;
         BIOPL_REMOVE remove;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         BIOPL_INIT64 init64;
         BIOPL_IORQ64 iorq64;
-#endif /* defined(FEATURE_ESAME) */
+#endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
         };
 union   parmlist bioplin;              /* BIOPL from/to guest        */
 
@@ -1066,7 +1066,7 @@ int     cc;                            /* condition code             */
 /*--------------------------------------------------------*/
     case INIT:
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
          /* 64-bit formats not supported for S/370 or ESA/390 */
          /* and bits 1-7 must be zero                         */
          if (bioplin.biopl.flaga != 0x00)
@@ -1091,7 +1091,7 @@ int     cc;                            /* condition code             */
          {
             cc = d250_init32(dev,&rc,&bioplin.init32,regs);
          }
-#endif /* !FEATURE_ESAME */
+#endif /* !FEATURE_001_ZARCH_INSTALLED_FACILITY */
          break;
 
 /*--------------------------------------------------------*/
@@ -1099,7 +1099,7 @@ int     cc;                            /* condition code             */
 /*--------------------------------------------------------*/
     case IOREQ:
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
          /* 64-bit formats not supported for S/370 or ESA/390 */
          /* and bits 1-7 must be zero                         */
          if (bioplin.biopl.flaga != 0x00)
@@ -1122,7 +1122,7 @@ int     cc;                            /* condition code             */
          {
             cc = ARCH_DEP(d250_iorq32)(dev,&rc,&bioplin.iorq32,regs);
          }
-#endif /* !FEATURE_ESAME */
+#endif /* !FEATURE_001_ZARCH_INSTALLED_FACILITY */
          break;
 
 /*--------------------------------------------------------*/
@@ -1743,7 +1743,7 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
 } /* end of function ARCH_DEP(d250_addrck) */
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
 /*-------------------------------------------------------------------*/
 /*  Asynchronous Input/Output 64-bit Driver Thread                   */
@@ -2242,7 +2242,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
 } /* end function ARCH_DEP(d250_list64) */
 
-#endif /* defined(FEATURE_ESAME) */
+#endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
 #endif /*FEATURE_VM_BLOCKIO*/
 

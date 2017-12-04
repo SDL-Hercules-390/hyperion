@@ -828,9 +828,9 @@ RADR    pfx;                            /* Prefix                    */
                 /* If operand address is zero, store in PSA */
                 STORE_FW(psa->ioid,ioid);
                 STORE_FW(psa->ioparm,ioparm);
-#if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
                 STORE_FW(psa->iointid,iointid);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #if defined(_FEATURE_IO_ASSIST)
                 if(icode != SIE_NO_INTERCEPT)

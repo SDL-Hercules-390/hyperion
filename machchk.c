@@ -288,9 +288,9 @@ int rc = 0;
 #ifdef FEATURE_ACCESS_REGISTERS
                MCIC_AR |
 #endif /*FEATURE_ACCESS_REGISTERS*/
-#if defined(FEATURE_ESAME) && defined(FEATURE_EXTENDED_TOD_CLOCK)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)
                MCIC_PR |
-#endif /*defined(FEATURE_ESAME) && defined(FEATURE_EXTENDED_TOD_CLOCK)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 #if defined(FEATURE_BINARY_FLOATING_POINT)
                MCIC_XF |
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -330,9 +330,9 @@ U64     mcic = MCIC_P  |  /* Instruction processing damage */
 #ifdef FEATURE_ACCESS_REGISTERS
                MCIC_AR |
 #endif /*FEATURE_ACCESS_REGISTERS*/
-#if defined(FEATURE_ESAME) && defined(FEATURE_EXTENDED_TOD_CLOCK)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)
                MCIC_PR |
-#endif /*defined(FEATURE_ESAME) && defined(FEATURE_EXTENDED_TOD_CLOCK)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 #if defined(FEATURE_BINARY_FLOATING_POINT)
                MCIC_XF |
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -366,7 +366,7 @@ RADR    fsta = 0;
     /* Store registers in machine check save area */
     ARCH_DEP(store_status) (regs, regs->PX);
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 // ZZ
     /* Set the extended logout area to zeros */
     memset(psa->storepsw, 0, 16);
@@ -387,13 +387,13 @@ RADR    fsta = 0;
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Store the failing storage address at PSA+248 */
     STORE_DW(psa->mcstorad, fsta);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     /* Store the failing storage address at PSA+248 */
     STORE_FW(psa->mcstorad, fsta);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Store current PSW at PSA+X'30' */
     ARCH_DEP(store_psw) ( regs, psa->mckold );

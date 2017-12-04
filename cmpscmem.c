@@ -713,10 +713,10 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* reg
     pCMPSCBLK->f1       = (GR0 >>  9) & 0x01;
     pCMPSCBLK->cdss     = (GR0 >> 12) & 0x0F;
     pCMPSCBLK->st       = (GR0 >> 16) & 0x01;
-#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
     if (FACILITY_ENABLED( CMPSC_ENH, regs ))
     pCMPSCBLK->zp       = (GR0 >> 17) & 0x01; else
-#endif // defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+#endif
     pCMPSCBLK->zp       = FALSE;
 
     pCMPSCBLK->cbn      = (GR1 &  0x007);

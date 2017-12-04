@@ -628,7 +628,7 @@ HSYS_DLL_IMPORT void (*debug_tt32_tracing) (int);
 #endif // defined(OPTION_W32_CTCI)
 
 /* Function in crypto.c */
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
 void renew_wrapping_keys(void);
 #endif
 

@@ -32,7 +32,7 @@
 #include "decNumber/include/decimal32.h"
 #include "decNumber/include/decPacked.h"
 
-#if defined(FEATURE_PFPO)
+#if defined(FEATURE_044_PFPO_FACILITY)
 
 #define CLASS_ZERO      1
 #define CLASS_SUBNORMAL 2
@@ -570,7 +570,7 @@ DEF_INST(perform_floating_point_operation)
 
 } /* end DEF_INST(perform_floating_point_operation) */
 
-#endif /*defined(FEATURE_PFPO)*/
+#endif /*defined(FEATURE_044_PFPO_FACILITY)*/
 
 #if !defined(_GEN_ARCH)
 

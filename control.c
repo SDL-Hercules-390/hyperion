@@ -102,19 +102,19 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (ducto > regs->mainlim)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, load the PKM/Key/RA/P from DUCT word 5, and load
        the return address and amode from DUCT words 8 and 9
        (note: the DUCT cannot cross a page boundary) */
     duct_pkrp = ARCH_DEP(fetch_fullword_absolute) (ducto+20, regs);
     duct_reta = ARCH_DEP(fetch_doubleword_absolute) (ducto+32, regs);
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     /* For ESA/390, load the PKM/Key/RA/P from DUCT word 9, and load
        the return address and amode from DUCT word 8
        (note: the DUCT cannot cross a page boundary) */
     duct_pkrp = ARCH_DEP(fetch_fullword_absolute) (ducto+36, regs);
     duct_reta = ARCH_DEP(fetch_fullword_absolute) (ducto+32, regs);
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Perform base authority or reduced authority operation */
     if ((duct_pkrp & DUCT_RA) == 0)
@@ -140,13 +140,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
         /* Save current PSW amode and instruction address */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
         {
             duct_reta = PSW_IA(regs, 0);
         }
         else
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         {
             duct_reta = PSW_IA(regs, 0) & DUCT_IA31;
             if (regs->psw.amode) duct_reta |= DUCT_AM31;
@@ -159,19 +159,19 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set the reduced authority bit */
         duct_pkrp |= DUCT_RA;
 
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* For ESAME, store the PKM/Key/RA/P into DUCT word 5, and
            store the return address and amode into DUCT words 8 and 9
            (note: the DUCT cannot cross a page boundary) */
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+20, regs);
         ARCH_DEP(store_doubleword_absolute) (duct_reta, ducto+32, regs);
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         /* For ESA/390, store the PKM/Key/RA/P into DUCT word 9, and
            store the return address and amode into DUCT word 8
            (note: the DUCT cannot cross a page boundary) */
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+36, regs);
         ARCH_DEP(store_fullword_absolute) (duct_reta, ducto+32, regs);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Load new PSW key and PSW key mask from R1 register */
         regs->psw.pkey = key;
@@ -184,27 +184,27 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Set PSW instruction address and amode from R2 register */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
         {
             UPD_PSW_IA(regs, regs->GR_G(r2));
         }
         else
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if (regs->GR_L(r2) & 0x80000000)
         {
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             regs->psw.amode64 = 0;
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             regs->psw.amode = 1;
             regs->psw.AMASK = AMASK31;
             UPD_PSW_IA(regs, regs->GR_L(r2));
         }
         else
         {
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             regs->psw.amode64 =
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             regs->psw.amode = 0;
             regs->psw.AMASK = AMASK24;
             UPD_PSW_IA(regs, regs->GR_L(r2));
@@ -232,13 +232,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            and instruction address in the R1 register */
         if (r1 != 0)
         {
-          #if defined(FEATURE_ESAME)
+          #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             if (regs->psw.amode64)
             {
                 regs->GR_G(r1) = PSW_IA(regs, 0);
             }
             else
-          #endif /*defined(FEATURE_ESAME)*/
+          #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             {
                 regs->GR_L(r1) = PSW_IA(regs, 0);
                 if (regs->psw.amode) regs->GR_L(r1) |= 0x80000000;
@@ -246,13 +246,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Restore PSW amode and instruction address from the DUCT */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
         {
             UPD_PSW_IA(regs, duct_reta);
         }
         else
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         {
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
@@ -274,22 +274,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Reset the reduced authority bit in the DUCT */
         duct_pkrp &= ~DUCT_RA;
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+20, regs);
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+36, regs);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Specification exception if the PSW is now invalid. */
         /* (Since UPD_PSW_IA used above masks off inval bits  */
         /* in psw.IA, test duct_reta for invalid bits).       */
         if ((duct_reta & 1)
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             || (regs->psw.amode64 == 0 && regs->psw.amode == 0
                 && (duct_reta & 0x7F000000)))
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             || (regs->psw.amode == 0 && duct_reta > 0x00FFFFFF))
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         {
             /* program_interrupt will invoke INVALIDATE_AIA which */
             /* will apply address mask to psw.IA if aie valid. */
@@ -506,11 +506,11 @@ CREG    inst_cr;                        /* Instruction CR            */
        and instruction address in the R1 register */
     if (r1 != 0)
     {
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
             regs->GR_G(r1) = PSW_IA(regs, 0);
         else
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             regs->GR_L(r1) = PSW_IA(regs, 0) |
                                 (regs->psw.amode ? 0x80000000 : 0);
     }
@@ -518,11 +518,11 @@ CREG    inst_cr;                        /* Instruction CR            */
     /* Update the breaking event address register */
     SET_BEAR_REG(regs, regs->ip - 4);
 
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if (regs->psw.amode64 == 0 && (newia & 0x80000000))
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     if (newia & 0x80000000)
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         regs->psw.amode = 1;
         regs->psw.AMASK = AMASK31;
@@ -628,22 +628,22 @@ VADR    n = 0;                          /* Work area                 */
     if ( r1 != 0 )
     {
         n1 = regs->GR(r1);
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if ( (n1 & 0x01) == 0 )
             n1 &= (n1 & 0x80000000) ? 0xFFFFFFFF : 0x00FFFFFF;
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if ( (n1 & 0x80000000) == 0 )
             n1 &= 0x00FFFFFF;
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     }
     else
     {
         n1 = PSW_IA(regs, 0);
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if ( regs->psw.amode64 )
             n1 |= 0x01;
         else
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if ( regs->psw.amode )
             n1 |= 0x80000000;
     }
@@ -654,11 +654,11 @@ VADR    n = 0;                          /* Work area                 */
     n2 &= ADDRESS_MAXWRAP(regs);
 
     /* Set the addressing mode bit in the branch address */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if ( regs->psw.amode64 )
         n2 |= 0x01;
     else
-  #endif /*defined(FEATURE_ESAME)*/
+  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     if ( regs->psw.amode )
         n2 |= 0x80000000;
 
@@ -847,7 +847,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99A EPAIR - Extract Primary ASN and Instance               [RRE] */
 /*-------------------------------------------------------------------*/
@@ -883,7 +883,7 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(4);
 
 } /* end DEF_INST(extract_primary_asn_and_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
@@ -916,7 +916,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99B ESAIR - Extract Secondary ASN and Instance             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -953,7 +953,7 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(3);
 
 } /* end DEF_INST(extract_secondary_asn_and_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)
@@ -1006,13 +1006,13 @@ int     max_esta_code;
     /* Load the extraction code from low-order byte of R2 register */
     code = regs->GR_LHLCL(r2);
 
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
     max_esta_code=FACILITY_ENABLED(ASN_LX_REUSE,regs)?5:4;
-#elif defined(FEATURE_ESAME)
+#elif defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     max_esta_code=4;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     max_esta_code=3;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Program check if r1 is odd, or if extraction code is invalid */
     if ((r1 & 1) || code > max_esta_code)
@@ -1506,22 +1506,22 @@ DEF_INST(invalidate_page_table_entry)
 int     r1, r2;                         /* Values of R fields        */
 RADR    op1;
 U32     op2;
-#if defined(FEATURE_IPTE_RANGE_FACILITY)
+#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
 int     r3;
 int     op3;
-#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
 
-#if defined(FEATURE_IPTE_RANGE_FACILITY)
+#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
     RRR(inst, regs, r1, r2, r3);
-#else /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+#else /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
     RRE(inst, regs, r1, r2);
-#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
 
     PRIV_CHECK(regs);
 
     op1 = regs->GR(r1);
     op2 = regs->GR_L(r2);
-#if defined(FEATURE_IPTE_RANGE_FACILITY)
+#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
     if(FACILITY_ENABLED(IPTE_RANGE,regs) && r3)
     {
         op3 = regs->GR_LHLCL(r3);
@@ -1531,7 +1531,7 @@ int     op3;
     }
     else
         op3 = 0;
-#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC0, IPTECSP))
@@ -1557,11 +1557,11 @@ int     op3;
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(FEATURE_IPTE_RANGE_FACILITY)
+#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
     /* Invalidate the additional ptes as specfied by op3 */
     for( ; op3; op3--, op2 += 0x1000)
        ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
-#endif /*defined(FEATURE_IPTE_RANGE_FACILITY)*/
+#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
 
     /* Invalidate page table entry */
     ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
@@ -1955,9 +1955,9 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DBLWRD  dword;
 int     rc;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int     amode64;
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     S(inst, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
@@ -1987,10 +1987,10 @@ int     amode64;
     SET_BEAR_REG(regs, regs->ip - 4);
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if ((rc = ARCH_DEP(load_psw) ( regs, dword )))
         ARCH_DEP(program_interrupt) (regs, rc);
-#else /*defined(FEATURE_ESAME)*/
+#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Make the PSW valid for ESA/390 mode
        after first saving our amode64 flag */
@@ -2044,7 +2044,7 @@ int     amode64;
        the 's390_load_psw' function didn't do that for us */
     regs->psw.IA_H = 0;
 
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -2103,7 +2103,7 @@ int     cc;                             /* Condition code            */
     else
     {
         /* Set r1 and condition code as returned by translate_addr */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64 && cc != 3)
         {
             regs->GR_G(r1) = regs->dat.raddr;
@@ -2134,9 +2134,9 @@ int     cc;                             /* Condition code            */
                 cc = 3;
             } /* end else(regs->dat.raddr) */
         } /* end else(amode) */
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->GR_L(r1) = regs->dat.raddr;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     } /* end else(cc) */
 
     regs->psw.cc = cc;
@@ -2200,11 +2200,11 @@ CREG    pte;                            /* Page Table Entry          */
         rpte = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
         pte =
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
               ARCH_DEP(fetch_doubleword_absolute) (rpte, regs);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
               ARCH_DEP(fetch_fullword_absolute) (rpte, regs);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         if(regs->GR_L(0) & LKPG_GPR0_LOCKBIT)
         {
@@ -2220,11 +2220,11 @@ CREG    pte;                            /* Page Table Entry          */
                 }
 
                 pte |= PAGETAB_PGLOCK;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 ARCH_DEP(store_doubleword_absolute) (pte, rpte, regs);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 regs->GR(r1) = regs->dat.raddr;
                 regs->psw.cc = 0;
             }
@@ -2237,11 +2237,11 @@ CREG    pte;                            /* Page Table Entry          */
             if(pte & PAGETAB_PGLOCK)
             {
                 pte &= ~((U64)PAGETAB_PGLOCK);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                 ARCH_DEP(store_doubleword_absolute) (pte, rpte, regs);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 regs->psw.cc = 0;
             }
             else
@@ -2499,7 +2499,7 @@ GREG    l;                              /* Unsigned workarea         */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+#if defined(FEATURE_027_MVCOS_FACILITY)
 /*-------------------------------------------------------------------*/
 /* C8x0 MVCOS - Move with Optional Specifications              [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2604,7 +2604,7 @@ int     space1, space2;                 /* Address space modifiers   */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(move_with_optional_specifications) */
-#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
+#endif /*defined(FEATURE_027_MVCOS_FACILITY)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2681,9 +2681,9 @@ VADR    retn;                           /* Return address and amode  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 CREG    savecr12 = 0;                   /* CR12 save                 */
-#endif /*FEATURE_ESAME*/
+#endif /*FEATURE_001_ZARCH_INSTALLED_FACILITY*/
 
     S(inst, regs, b2, effective_addr2);
 
@@ -2765,11 +2765,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 
         /* Fetch primary ASTE words 3 or 6 from absolute storage
            (note: the ASTE cannot cross a page boundary) */
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         aste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
-#else /*defined(FEATURE_ESAME)*/
+#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         aste[6] = ARCH_DEP(fetch_fullword_absolute) (abs+24, regs);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Load LTD or LFTD from primary ASTE word 3 or 6 */
         ltdesig = ASTE_LT_DESIGNATOR(aste);
@@ -2954,29 +2954,29 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     if ((ete[4] & ETE4_T) == 0 && AR_BIT(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Program check if basic program call is attempting
        to switch into or out of 64-bit addressing mode */
     if ((ete[4] & ETE4_T) == 0
         && ((ete[4] & ETE4_G) ? 1 : 0) != regs->psw.amode64)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Program check if resulting addressing mode is 24 and the
        entry instruction address is not a 24-bit address */
     if ((ete[1] & ETE1_AMODE) == 0
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         && (ete[4] & ETE4_G) == 0
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         && (ete[1] & ETE1_EIA) > 0x00FFFFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_PC_TRANSLATION_SPECIFICATION_EXCEPTION);
 
     /* Obtain the authorization key mask from the entry table */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     akm = ete[2] & ETE2_AKM;
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     akm = ete[0] & ETE0_AKM;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Program check if in problem state and the PKM in control
        register 3 produces zero when ANDed with the AKM in the ETE */
@@ -2985,11 +2985,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
     /* Obtain the new primary ASN from the entry table */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     pasn = ete[2] & ETE2_ASN;
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     pasn = ete[0] & ETE0_ASN;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Obtain the ASTE if ASN is non-zero */
     if (pasn != 0)
@@ -3061,22 +3061,22 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     if ((ete[4] & ETE4_T) == 0)
     {
         /* For basic PC, load linkage info into general register 14 */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
             regs->GR_G(14) = PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
         else
             regs->GR_L(14) = (regs->psw.amode ? 0x80000000 : 0)
                             | PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->GR_L(14) = (regs->psw.amode ? 0x80000000 : 0)
                         | PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Set the breaking event address register */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Update the PSW from the entry table */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
             UPD_PSW_IA(regs , ((U64)(ete[0]) << 32)
                                 | (U64)(ete[1] & 0xFFFFFFFE));
@@ -3086,11 +3086,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
             UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
         }
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if (ete[1] & ETE1_PROB)
             regs->psw.states |= BIT(PSW_PROB_BIT);
         else
@@ -3104,13 +3104,13 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         regs->CR(3) |= (ete[3] & ETE3_EKM);
 
         /* Load the entry parameter into general register 4 */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
             regs->GR_H(4) = ete[6];
         regs->GR_L(4) = ete[7];
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->GR_L(4) = ete[2];
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     } /* end if(basic PC) */
     else
@@ -3122,7 +3122,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
 #ifdef FEATURE_TRACING
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Add a mode trace entry when switching in/out of 64 bit mode */
         if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != ((ete[4] & ETE4_G) ? 1 : 0)))
         {
@@ -3135,7 +3135,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             newcr12 = ARCH_DEP(trace_ms) (0, 0, regs);
             regs->CR(12) = savecr12;
         }
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 #endif /*FEATURE_TRACING*/
 
         /* Set the called-space identification */
@@ -3148,20 +3148,20 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 
         /* Set the addressing mode bits in the return address */
         retn = PSW_IA(regs, 0);
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if ( regs->psw.amode64 )
             retn |= 0x01;
         else
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if ( regs->psw.amode )
             retn |= 0x80000000;
 
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* Set the high-order bit of the PC number if
            the resulting addressing mode is 64-bit */
         if (ete[4] & ETE4_G)
             pcnum |= 0x80000000;
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Perform the stacking process */
         ARCH_DEP(form_stack_entry) (LSED_UET_PC, retn, 0, csi,
@@ -3171,7 +3171,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Update the PSW from the entry table */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (ete[4] & ETE4_G)
         {
             regs->psw.amode64 = 1;
@@ -3187,11 +3187,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
             UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
         }
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         if (ete[1] & ETE1_PROB)
             regs->psw.states |= BIT(PSW_PROB_BIT);
         else
@@ -3222,13 +3222,13 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.asc &= ~BIT(PSW_AR_BIT);
 
         /* Load the entry parameter into general register 4 */
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         if (regs->psw.amode64)
             regs->GR_H(4) = ete[6];
         regs->GR_L(4) = ete[7];
-      #else /*!defined(FEATURE_ESAME)*/
+      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->GR_L(4) = ete[2];
-      #endif /*!defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     } /* end if(stacking PC) */
 #else /*!defined(FEATURE_LINKAGE_STACK)*/
@@ -3398,14 +3398,14 @@ int     rc;                             /* return code from load_psw */
     etype = ARCH_DEP(program_return_unstack) (&newregs, &alsed, &rc);
 
 #ifdef FEATURE_TRACING
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         /* If unstacked entry was a BAKR:                              */
         /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((etype == LSED_UET_BAKR)
         && (regs->CR(12) & CR12_MTRACE)
         && (regs->psw.amode64 != newregs.psw.amode64))
         newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 #endif /*FEATURE_TRACING*/
 
     /* Perform PR-cp or PR-ss if unstacked entry was a program call */
@@ -3419,12 +3419,12 @@ int     rc;                             /* return code from load_psw */
         if (regs->CR(12) & CR12_ASNTRACE)
             newregs.CR(12) = ARCH_DEP(trace_pr) (&newregs, regs);
 
-      #if defined(FEATURE_ESAME)
+      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         else
         /* Add a mode trace entry when switching in/out of 64 bit mode */
         if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != newregs.psw.amode64))
             newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-      #endif /*defined(FEATURE_ESAME)*/
+      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #endif /*FEATURE_TRACING*/
 
@@ -3681,7 +3681,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
     /* Determine instruction address, amode, and problem state */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if (regs->psw.amode64)
     {
         /* In 64-bit address mode, extract instruction address from
@@ -3690,7 +3690,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         amode = regs->psw.amode;
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         /* In 31- or 24-bit mode, extract new amode from R2 bit 0 */
         amode = (regs->GR_L(r2) & 0x80000000) ? 1 : 0;
@@ -3722,11 +3722,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Fetch primary ASTE words 3 and 6 from absolute storage
            (note: the ASTE cannot cross a page boundary) */
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         aste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
-#else /*defined(FEATURE_ESAME)*/
+#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         aste[6] = ARCH_DEP(fetch_fullword_absolute) (abs+24, regs);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         /* Load LTD from primary ASTE word 3 or 6 */
         ltd = ASTE_LT_DESIGNATOR(aste);
@@ -3865,9 +3865,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.states &= ~BIT(PSW_PROB_BIT);
 
     regs->psw.AMASK =
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         regs->psw.amode64 ? AMASK64 :
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         regs->psw.amode ? AMASK31 : AMASK24;
 
     /* AND control register 3 bits 0-15 with the supplied PKM value
@@ -3924,7 +3924,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99E PTI - Program Transfer with Instance                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3941,7 +3941,7 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(program_transfer_with_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -4890,7 +4890,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B99F SSAIR - Set Secondary ASN with Instance                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4907,7 +4907,7 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(set_secondary_asn_with_instance) */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
 
 #if defined(FEATURE_BASIC_STORAGE_KEYS)
@@ -5098,7 +5098,7 @@ RADR    n;                              /* Absolute storage addr     */
 
 
 #if defined(FEATURE_EXTENDED_STORAGE_KEYS)
-#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
+#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL SSKE PROCESSING                 */
 /* Input:                                                            */
@@ -5177,7 +5177,7 @@ static inline int ARCH_DEP(conditional_sske_procedure)
     return 0;
 
 } /* end function conditional_sske_procedure */
-#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
+#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
 #endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
@@ -5190,9 +5190,9 @@ DEF_INST(set_storage_key_extended)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask field                */
 RADR    a,n;                            /* Abs frame addr stor key   */
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
 int     fc;                             /* Frame Count               */
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 BYTE    r1key;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -5209,8 +5209,8 @@ BYTE    r1key;
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
-    if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+    if(FACILITY_ENABLED(EDAT_1,regs)
      && (m3 & SSKE_MASK_MB))
         fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
     else
@@ -5219,13 +5219,13 @@ BYTE    r1key;
     for( ; fc--; )
     {
 
-        if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+        if(FACILITY_ENABLED(EDAT_1,regs)
          && (m3 & SSKE_MASK_MB))
             /* r2 contains an absolute address when
                       multiple block control is one */
             n = a;
         else
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
             /* Convert real address to absolute address */
             n = APPLY_PREFIXING (a, regs->PX);
 
@@ -5339,11 +5339,11 @@ BYTE    r1key;
                         realkey = protkey & (STORKEY_REF | STORKEY_CHANGE);
                     }
 
-#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
+#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
                     /* Perform conditional SSKE procedure */
                     if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey, r1key))
                         return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
+#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
                     /* or with host set */
                     rcpkey |= realkey << 4;
                     /* insert new settings of the guest set */
@@ -5380,7 +5380,7 @@ BYTE    r1key;
             }
             else
             {
-#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
+#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5390,7 +5390,7 @@ BYTE    r1key;
 #endif
                     r1key))
                     return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
+#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
                 /* Update the storage key from R1 register bits 24-30 */
 #if !defined(FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
@@ -5406,7 +5406,7 @@ BYTE    r1key;
         else
 #endif /*defined(_FEATURE_SIE)*/
         {
-#if defined(FEATURE_CONDITIONAL_SSKE_FACILITY)
+#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
             /* Perform conditional SSKE procedure */
             if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5416,7 +5416,7 @@ BYTE    r1key;
 #endif
                 r1key))
                 return;
-#endif /*defined(FEATURE_CONDITIONAL_SSKE_FACILITY)*/
+#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
 
             /* Update the storage key from R1 register bits 24-30 */
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5434,9 +5434,9 @@ BYTE    r1key;
            when referenced next */
         STORKEY_INVALIDATE(regs, n);
 
-#if defined(FEATURE_ENHANCED_DAT_FACILITY_1)
+#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
         /* Update r2 in the case of a multiple page update */
-        if(FACILITY_ENABLED(ENHANCED_DAT_1,regs)
+        if(FACILITY_ENABLED(EDAT_1,regs)
          && (m3 & SSKE_MASK_MB))
         {
             /* Advance r2 to the next page */
@@ -5448,7 +5448,7 @@ BYTE    r1key;
                 regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
         }
     }
-#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/
+#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -5536,10 +5536,10 @@ GREG    status = 0;                     /* Signal status             */
 RADR    abs;                            /* Absolute address          */
 U16     cpad;                           /* Target CPU address        */
 BYTE    order;                          /* SIGP order code           */
-#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
 int     cpu;                            /* cpu number                */
 int     set_arch = 0;                   /* Need to switch mode       */
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 size_t  log_sigp = 0;                   /* Log SIGP instruction flag */
 char    log_buf[128];                   /* Log buffer                */
 static char *ordername[] = {
@@ -5739,7 +5739,7 @@ static char *ordername[] = {
 
             break;
 
-#if defined(_900) || defined(FEATURE_ESAME)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
         case SIGP_COND_EMERGENCY:
 
@@ -5783,7 +5783,7 @@ static char *ordername[] = {
             }
             break;
 
-#endif /* defined(_900) || defined(FEATURE_ESAME) */
+#endif /* defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
         case SIGP_EMERGENCY:
             /* Test for checkstop state */
@@ -6057,11 +6057,11 @@ static char *ordername[] = {
         break;
 #endif /* defined(_390) */
 
-#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
-            if(!FACILITY_ENABLED(ESAME_INSTALLED,regs))
+            if(!FACILITY_ENABLED(ZARCH_INSTALLED,regs))
                 status = SIGP_STATUS_INVALID_ORDER;
 
             PERFORM_SERIALIZATION (regs);
@@ -6076,7 +6076,7 @@ static char *ordername[] = {
             if(!status) {
                 switch(parm & 0xFF) {
 
-#if defined(_900) || defined(FEATURE_ESAME)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
                     case 0:  // from: --  z/Arch   --to-->   390
 
@@ -6161,7 +6161,7 @@ static char *ordername[] = {
                         }
                         break;
 
-#endif // defined(_900) || defined(FEATURE_ESAME)
+#endif // defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
 #if defined(FEATURE_HERCULES_DIAGCALLS)
 
@@ -6199,9 +6199,9 @@ static char *ordername[] = {
             PERFORM_CHKPT_SYNC (regs);
 
             break;
-#endif /*defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)*/
+#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)*/
 
-#if defined(FEATURE_SENSE_RUNNING_STATUS)
+#if defined(FEATURE_009_SENSE_RUN_STATUS_FACILITY)
 
         case SIGP_SENSE_RUNNING_STATE:
 
@@ -6210,7 +6210,7 @@ static char *ordername[] = {
 
             break;
 
-#endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
+#endif /*defined(FEATURE_009_SENSE_RUN_STATUS_FACILITY)*/
 
         default:
             status = SIGP_STATUS_INVALID_ORDER;
@@ -6255,13 +6255,13 @@ static char *ordername[] = {
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
     if(set_arch)
     {
         OBTAIN_INTLOCK(regs);
         longjmp(regs->archjmp, 0);
     }
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     RETURN_INTCHECK(regs);
 
@@ -6660,7 +6660,7 @@ SYSIB222  *sysib222;                    /* LPAR CPUs                 */
 SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysibvmdb;                   /* VM description block      */
 
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
 SYSIB1512 *sysib1512;                   /* Configuration Topology    */
 BYTE      *tle;                         /* Pointer to next TLE       */
 TLECNTNR  *tlecntnr;                    /* Container TLE pointer     */
@@ -6669,7 +6669,7 @@ U64        cpumask;                     /* work                      */
 int        cputype;                     /* work                      */
 U16        cpuad;                       /* CPU address               */
 BYTE       cntnrid;                     /* Container ID              */
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
 
                            /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
@@ -6708,9 +6708,9 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
     /* Check function code */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > curlvl
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
         && (regs->GR_L(0) & STSI_GPR0_FC_MASK) != STSI_GPR0_FC_CURRINFO
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
     )
     {
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
@@ -6787,14 +6787,14 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                )
            )
 #endif /*defined(_FEATURE_EMULATE_VM)*/
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRINFO
             && (0
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 1
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
                )
            )
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
     )
     {
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
@@ -7002,7 +7002,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         regs->psw.cc = 0;
         break;
 
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
     case STSI_GPR0_FC_CURRINFO:
 
         /* Obtain absolute address of main storage block,
@@ -7098,7 +7098,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
 
     default:
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));

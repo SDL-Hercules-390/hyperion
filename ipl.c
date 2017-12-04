@@ -26,7 +26,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
 #include "hexterns.h"
 #endif
 
@@ -297,13 +297,13 @@ int ARCH_DEP(system_reset)
         sysblk.ipled = FALSE;
     }
 
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
+#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
     /* Set horizontal polarization */
     sysblk.topology = TOPOLOGY_HORIZ;
 
     /* Clear topology-change-report-pending condition */
     sysblk.topchnge = 0;
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/
+#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
 
     /* set default system state to reset */
     sysblk.sys_reset = TRUE;
@@ -685,9 +685,9 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
       if( (rc = ARCH_DEP(initial_cpu_reset)(regs->guestregs)) )
         rc1 = rc;
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     renew_wrapping_keys();
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
     return rc1;
 } /* end function initial_cpu_reset */

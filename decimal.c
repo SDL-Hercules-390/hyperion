@@ -991,7 +991,7 @@ BYTE    rbyte;                          /* Result byte               */
                    is non-zero and significance indicator was off */
                 if (!trial_run && (inst[0] == 0xDF) && h > 0 && sig == 0)
                 {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                     if (regs->psw.amode64)
                         regs->GR_G(1) = addr1;
                     else
@@ -1370,7 +1370,7 @@ int     sign;                           /* Sign                      */
 } /* end DEF_INST(zero_and_add) */
 
 
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
 /*-------------------------------------------------------------------*/
 /* EBC0 TP    - Test Decimal                                   [RSL] */
 /*-------------------------------------------------------------------*/
@@ -1411,7 +1411,7 @@ BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(test_decimal) */
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
 
 
 #if !defined(_GEN_ARCH)

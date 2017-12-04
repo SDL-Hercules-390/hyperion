@@ -463,7 +463,7 @@ RADR raddr;
 RADR ag;
 int  size;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(amode && ia > 0xFFFFFFFFULL)
     {
         TRACE_F3_BR *tte;
@@ -476,7 +476,7 @@ int  size;
         STORE_DW(tte->newia64,ia);
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     if(amode)
     {
         TRACE_F2_BR *tte;
@@ -518,7 +518,7 @@ RADR raddr;
 RADR ag;
 int  size;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(regs->psw.amode64)
     {
         TRACE_F2_BSG *tte;
@@ -532,7 +532,7 @@ int  size;
         STORE_DW(tte->newia,ia);
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         TRACE_F1_BSG *tte;
         size = sizeof(TRACE_F1_BSG);
@@ -603,13 +603,13 @@ CREG ARCH_DEP(trace_pc) (U32 pcea, REGS *regs)
 RADR raddr;
 RADR ag;
 int  size;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int  eamode;
 #endif
 
     SET_PSW_IA(regs);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
     eamode = regs->psw.amode64;
 
@@ -704,7 +704,7 @@ int  eamode;
         STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         /* In 24-bit or 31-bit mode, regardless of resulting mode,
            when ASN-and-LX-reuse is not enabled */
@@ -748,9 +748,9 @@ int  size;
     SET_PSW_IA(regs);
     SET_PSW_IA(newregs);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(!regs->psw.amode64 && !newregs->psw.amode64)
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         TRACE_F1_PR *tte;
         size = sizeof(TRACE_F1_PR);
@@ -764,7 +764,7 @@ int  size;
         STORE_FW(tte->newia, (regs->psw.amode << 31)
                                  | regs->psw.IA_L);
     }
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     else
     if(regs->psw.amode64 && regs->psw.IA_H == 0 && !newregs->psw.amode64)
     {
@@ -873,7 +873,7 @@ int  size;
         STORE_DW(tte->retna,  newregs->psw.IA_G | PROBSTATE(&newregs->psw));
         STORE_DW(tte->newia, regs->psw.IA_G);
     }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
 
@@ -905,7 +905,7 @@ RADR ag;
 int  size;
 BYTE nbit = (pti ? 1 : 0);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(regs->psw.amode64 && gpr2 > 0xFFFFFFFFULL)
     {
         TRACE_F3_PT *tte;
@@ -930,7 +930,7 @@ BYTE nbit = (pti ? 1 : 0);
         STORE_FW(tte->r2, gpr2 & 0xFFFFFFFF);
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
         TRACE_F1_PT *tte;
         size = sizeof(TRACE_F1_PT);
@@ -947,7 +947,7 @@ BYTE nbit = (pti ? 1 : 0);
 } /* end function ARCH_DEP(trace_pt) */
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Form implicit MS trace entry                                      */
 /*                                                                   */
@@ -1047,7 +1047,7 @@ int  size;
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
 
 } /* end function ARCH_DEP(trace_ms) */
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -1080,7 +1080,7 @@ ETOD ETOD;
         tte = (void*)(regs->mainstor + raddr);
 
         /* Determine if fast clock format */
-        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
             fast = (regs->CR(0) & CR0_TRACE_TOD) >> 31;
         #else
             fast = 0;
@@ -1103,7 +1103,7 @@ ETOD ETOD;
         STORE_DW(tte, dreg);
 
         /* Store trace operand */
-        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
             if (fast)
             {
                 op &= 0xFF00FFFF;
@@ -1132,7 +1132,7 @@ ETOD ETOD;
 } /* end function ARCH_DEP(trace_tr) */
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Form explicit TRACG trace entry                                   */
 /*                                                                   */
@@ -1183,7 +1183,7 @@ U64  dreg;
         STORE_FW(tte->clk48, ETOD.low >> 32);
 
         /* Store trace operand */
-        #if defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+        #if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
             if ((regs->CR(0) & CR0_TRACE_TOD))
             {
                 op &= 0xFF00FFFF;
@@ -1210,7 +1210,7 @@ U64  dreg;
     return ARCH_DEP(set_trace_entry) (ag, raddr, size - (8 * (15 - n)), regs);
 
 } /* end function ARCH_DEP(trace_tg) */
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #endif /*defined(FEATURE_TRACING)*/
 

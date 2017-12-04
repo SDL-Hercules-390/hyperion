@@ -442,13 +442,13 @@ U16             devnum;                 /* Device number             */
 VRDCVDAT        vdat;                   /* Virtual device data       */
 VRDCRCDT        rdat;                   /* Real device data          */
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
      /* Program check if 64-bit addressing is being used. */
      if (regs->psw.amode64)
      {
          ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
      }
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
 
     /* Return console information if R1 register is all ones */
     if (regs->GR_L(r1) == 0xFFFFFFFF)
@@ -1278,9 +1278,9 @@ U16      devnum;           /* Device number from the VRDCBLOK        */
     UNREFERENCED(r2);
 
     if (regs->GR_L(r1) & 0x3
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         || (regs->psw.amode64)
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
        )
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -1386,16 +1386,16 @@ void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs)
 {
 DEVBLK  *dev;                          /* -> Device block            */
 U16     devnum;                        /* Device number              */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 RADR    stgarea;                       /* Storage extent area        */
 S64     stglen;                        /* Storage extent area length */
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
 
     /* Ry contains the subcode */
     switch(regs->GR_L(r2))
     {
     case 0x00000000: /* Highest addressable byte */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
         /* Program check if running in z/Architecture mode and */
         /* 64-bit addressing is being used.                    */
@@ -1403,7 +1403,7 @@ S64     stglen;                        /* Storage extent area length */
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
         regs->GR_L(r1) = regs->mainlim; /* provide highest addressable byte */
         return;
 
@@ -1414,9 +1414,9 @@ S64     stglen;                        /* Storage extent area length */
         /* in Rx is not on a doubleword boundary or if running         */
         /* in z/Architecture mode and 64-bit addressing is being used. */
         if ( r1 == r2 || r2 & 0x1 || regs->GR_L(r1) & 0x7
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
              || (regs->psw.amode64)
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
            )
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -1425,7 +1425,7 @@ S64     stglen;                        /* Storage extent area length */
         return;
 
     case 0x00000008: /* Return number of lines per page */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
         /* Program check if running in z/Architecture mode and */
         /* 64-bit addressing is being used.                    */
@@ -1433,7 +1433,7 @@ S64     stglen;                        /* Storage extent area length */
         {
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
 
         /* Get the device number from the Rx register */
         devnum=regs->GR_LHL(r1);
@@ -1458,7 +1458,7 @@ S64     stglen;                        /* Storage extent area length */
         }
         return;
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     case 0x0000000C: /* Return highest addressable byte for z/Architecture machine */
          regs->GR_G(r1) = regs->mainlim;
          regs->GR_G(r2) = regs->mainlim;
@@ -1496,7 +1496,7 @@ S64     stglen;                        /* Storage extent area length */
          /* Indicate all extents returned */
          regs->psw.cc = 0;
          return;
-#endif /* FEATURE_ESAME */
+#endif /* FEATURE_001_ZARCH_INSTALLED_FACILITY */
 
     default: /* Invalid subcode */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);

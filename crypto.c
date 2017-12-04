@@ -6,7 +6,7 @@
 
 #define _CRYPTO_C_
 
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+#if defined(FEATURE_017_MSA_FACILITY)
 
 /*----------------------------------------------------------------------------*/
 /* Function: renew_wrapping_keys                                              */
@@ -85,5 +85,5 @@ void renew_wrapping_keys(void)
   WRMSG(HHC90190, "D", buf);
 #endif
 }
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 

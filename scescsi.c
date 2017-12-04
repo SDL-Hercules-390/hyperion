@@ -171,64 +171,64 @@ int fd;
 
     /* Segment Table Origin */
     FETCH_DW(sto,hwl_bk->sto);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     sto &= ASCE_TO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     sto &= STD_STO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     for( ; ; sto += sizeof(sto))
     {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     DBLWRD *ste;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     FWORD *ste;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     CREG pto, pti;
 
         /* Fetch segment table entry and calculate Page Table Origin */
         if( sto >= sysblk.mainsize)
             goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         ste = (DBLWRD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FETCH_W(pto, ste);
         if( pto & SEGTAB_INVALID )
             goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         pto &= ZSEGTAB_PTO;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         pto &= SEGTAB_PTO;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
         for(pti = 0; pti < 256 ; pti++, pto += sizeof(pto))
         {
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         DBLWRD *pte;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FWORD *pte;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         CREG pgo;
         BYTE *page;
 
             /* Fetch Page Table Entry to get page origin */
             if( pto >= sysblk.mainsize)
                 goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pte = (DBLWRD*)(sysblk.mainstor + pto);
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             pte = (FWORD*)(sysblk.mainstor + pto);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pgo, pte);
             if( pgo & PAGETAB_INVALID )
                 goto eof;
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pgo &= ZPGETAB_PFRA;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             pgo &= PAGETAB_PFRA;
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
             /* Read page into main storage */
             if( pgo >= sysblk.mainsize)
@@ -280,11 +280,11 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
         /* Load request will load the image into fixed virtual storage
            the Segment Table Origin is listed in the hwl_bk */
         case SCCB_HWL_TYPE_LOAD:
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             if(!hwl_bk->asa)
                 s390_hwl_loadfile(hwl_bk);
             else
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 ARCH_DEP(hwl_loadfile)(hwl_bk);
             break;
 

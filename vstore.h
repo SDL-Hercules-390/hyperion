@@ -940,7 +940,7 @@ int     len2, len3;                     /* Lengths to copy           */
 } /* end function ARCH_DEP(move_chars) */
 
 
-#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+#if defined(FEATURE_027_MVCOS_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Move characters with optional specifications                      */
 /*                                                                   */
@@ -1035,7 +1035,7 @@ int     len1, len2, len3;               /* Work areas for lengths    */
     ITIMER_UPDATE(addr1,len-1,regs);
 
 } /* end function ARCH_DEP(move_charx) */
-#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
+#endif /*defined(FEATURE_027_MVCOS_FACILITY)*/
 
 
 /*-------------------------------------------------------------------*/

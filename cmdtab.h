@@ -204,7 +204,8 @@
   "        OFF     disables command separation.\n"
 
 #define cnslport_cmd_desc       "Set console port"
-#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+
+#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
 #define cmpscpad_cmd_desc       "Set/display the CMPSC zero padding value."
 #define cmpscpad_cmd_help       \
                                 \
@@ -213,7 +214,8 @@
   "anywhere from " QSTR( MIN_CMPSC_ZP_BITS ) " to " QSTR( MAX_CMPSC_ZP_BITS ) ". Enter the command with no arguments to display the\n" \
   "current value.\n"
 
-#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
+#endif /* defined(_FEATURE_047_CMPSC_ENH_FACILITY) */
+
 #define codepage_cmd_desc       "Set/display code page conversion table"
 #define codepage_cmd_help       \
                                 \
@@ -1699,10 +1701,10 @@ COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       
 /*-------------------------------------------------------------------*/
 
 //       "1...5...9",               function                type flags          description             long help
-#if defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY)
+#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
 COMMAND( "cmpscpad",                cmpscpad_cmd,           SYSCFGNDIAG8,       cmpscpad_cmd_desc,      cmpscpad_cmd_help   )
-#endif /* defined(_FEATURE_CMPSC_ENHANCEMENT_FACILITY) */
-#if defined( _FEATURE_ASN_AND_LX_REUSE_FACILITY )
+#endif
+#if defined( _FEATURE_006_ASN_LX_REUSE_FACILITY )
 COMMAND( "alrf",                    alrf_cmd,               SYSCMDNOPER,        alrf_cmd_desc,          NULL                )
 COMMAND( "asn_and_lx_reuse",        alrf_cmd,               SYSCMDNOPER,        asnlx_cmd_desc,         NULL                )
 #endif

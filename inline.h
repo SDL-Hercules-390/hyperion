@@ -81,11 +81,11 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         int len, int acctype, REGS *regs);
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec);
 
-#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+#if defined(FEATURE_027_MVCOS_FACILITY)
 _VSTORE_C_STATIC void ARCH_DEP(move_charx) (VADR addr1, int space1,
        BYTE key1, VADR addr2, int space2, BYTE key2,
        int len, REGS *regs);
-#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
+#endif /*defined(FEATURE_027_MVCOS_FACILITY)*/
 
 #if defined(_FEATURE_SIE) && defined(_370) && !defined(_IEEE_C_)
 _VFETCH_C_STATIC BYTE * s370_instfetch (REGS *regs, int exec);
@@ -378,15 +378,15 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
                                               REGS *regs)
 {
-#if defined (FEATURE_ESAME)
+#if defined (FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For ESAME, low-address protection applies to locations
        0-511 (0000-01FF) and 4096-4607 (1000-11FF) */
     if (addr & 0xFFFFFFFFFFFFEE00ULL)
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     /* For S/370 and ESA/390, low-address protection applies
        to locations 0-511 only */
     if (addr > 511)
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         return 0;
 
     /* Low-address protection applies only if the low-address
@@ -697,9 +697,9 @@ BYTE    *p;                             /* Mainstor pointer          */
     p = FETCH_MAIN_ABSOLUTE(ssasteo, regs, 24);
     ssaste[0] = fetch_fw(p);
     ssaste[2] = fetch_fw(p+8);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     ssaste[3] = fetch_fw(p+12);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     ssaste[5] = fetch_fw(p+20);
 
     /* ASTE validity exception if subspace ASTE invalid bit is one */

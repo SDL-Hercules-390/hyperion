@@ -2957,7 +2957,7 @@ BYTE    storkey;                        /* Storage key               */
         /* Fetch format-2 IDAW */                              /*@IWZ*/
         FETCH_DW(idaw2, dev->mainstor + idawaddr);             /*@IWZ*/
 
-       #ifndef FEATURE_ESAME                                   /*@IWZ*/
+       #ifndef FEATURE_001_ZARCH_INSTALLED_FACILITY                                   /*@IWZ*/
         /* Channel program check in ESA/390 mode
            if the format-2 IDAW exceeds 2GB-1 */               /*@IWZ*/
         if (idaw2 > 0x7FFFFFFF)                                /*@IWZ*/
@@ -2965,7 +2965,7 @@ BYTE    storkey;                        /* Storage key               */
             *chanstat = CSW_PROGC;                             /*@IWZ*/
             return;                                            /*@IWZ*/
         }                                                      /*@IWZ*/
-       #endif /*!FEATURE_ESAME*/                               /*@IWZ*/
+       #endif /*!FEATURE_001_ZARCH_INSTALLED_FACILITY*/                               /*@IWZ*/
 
         /* Save contents of format-2 IDAW */                   /*@IWZ*/
         idaw = idaw2;                                          /*@IWZ*/
@@ -5847,7 +5847,7 @@ retry:
     /* Extract the I/O address and interrupt parameter */
     *ioid = (dev->ssid << 16) | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
-#if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
 #if defined(FEATURE_QDIO_THININT)
     if (unlikely(FACILITY_ENABLED(QDIO_THININT, regs)
         && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
@@ -5902,7 +5902,7 @@ retry:
                        | ((dev->pmcw.flag27 & PMCW27_I) << 8)
 #endif
                                                                   );
-#endif /*defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)*/
 
 #if defined(_FEATURE_IO_ASSIST)
     /* Do not drain pending interrupts on intercept due to zero ISC

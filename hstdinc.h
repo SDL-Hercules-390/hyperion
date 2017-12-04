@@ -248,7 +248,7 @@
 #include "htypes.h"             // Hercules-wide data types
 #include "dbgtrace.h"           // Hercules default debugging
 
-/* Defines CAN_IAF2 needed for FEATURE_INTERLOCKED_ACCESS_FACILITY_2 */
+/* Defines CAN_IAF2 needed for FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 */
 #include "hatomic.h"                  /* Interlocked update          */
 
 #endif // _HSTDINC_H

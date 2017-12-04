@@ -200,12 +200,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
-#if !defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)
+#if !defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
  UNDEF_INST(extract_primary_asn_and_instance)
  UNDEF_INST(extract_secondary_asn_and_instance)
  UNDEF_INST(program_transfer_with_instance)
  UNDEF_INST(set_secondary_asn_with_instance)
-#endif /*!defined(FEATURE_ASN_AND_LX_REUSE_FACILITY)*/
+#endif /*!defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
 
 
 #if !defined(FEATURE_ACCESS_REGISTERS)
@@ -226,7 +226,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
-#if !defined(FEATURE_TOD_CLOCK_STEERING_FACILITY)
+#if !defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)
  UNDEF_INST(perform_timing_facility_function)
 #endif
 
@@ -237,19 +237,19 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
 
-#if !defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+#if !defined(FEATURE_027_MVCOS_FACILITY)
  UNDEF_INST(move_with_optional_specifications)
-#endif /*!defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
+#endif /*!defined(FEATURE_027_MVCOS_FACILITY)*/
 
 
-#if !defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)
+#if !defined(FEATURE_031_EXTRACT_CPU_TIME_FACILITY)
  UNDEF_INST(extract_cpu_time)
-#endif /*!defined(FEATURE_EXTRACT_CPU_TIME_FACILITY)*/
+#endif /*!defined(FEATURE_031_EXTRACT_CPU_TIME_FACILITY)*/
 
 
-#if !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)
+#if !defined(FEATURE_032_CSS_FACILITY)
  UNDEF_INST(compare_and_swap_and_store)
-#endif /*!defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY)*/
+#endif /*!defined(FEATURE_032_CSS_FACILITY)*/
 
 
 #if !defined(FEATURE_STORE_SYSTEM_INFORMATION)
@@ -257,22 +257,22 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_STORE_SYSTEM_INFORMATION)*/
 
 
-#if !defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)           /*208*/
+#if !defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)           /*208*/
  UNDEF_INST(perform_topology_function)                          /*208*/
-#endif /*!defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/    /*208*/
+#endif /*!defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/    /*208*/
 
 
-#if !defined(FEATURE_ENHANCED_DAT_FACILITY_1)                   /*208*/
+#if !defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)                   /*208*/
  UNDEF_INST(perform_frame_management_function)                  /*208*/
-#endif /*!defined(FEATURE_ENHANCED_DAT_FACILITY_1)*/            /*208*/
+#endif /*!defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/            /*208*/
 
 
-#if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)               /*208*/
+#if !defined(FEATURE_035_EXECUTE_EXTN_FACILITY)               /*208*/
  UNDEF_INST(execute_relative_long)                              /*208*/
-#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/        /*208*/
+#endif /*!defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/        /*208*/
 
 
-#if !defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)   /*208*/
+#if !defined(FEATURE_034_GEN_INST_EXTN_FACILITY)   /*208*/
  UNDEF_INST(add_immediate_long_storage)
  UNDEF_INST(add_immediate_storage)
  UNDEF_INST(add_logical_with_signed_immediate)
@@ -345,13 +345,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(store_halfword_relative_long)
  UNDEF_INST(store_relative_long)
  UNDEF_INST(store_relative_long_long)
-#endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/ /*208*/
+#endif /*!defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/ /*208*/
 
 
-#if !defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)              /*208*/
+#if !defined(FEATURE_026_PARSING_ENHANCE_FACILITY)              /*208*/
  UNDEF_INST(translate_and_test_extended)                        /*208*/
  UNDEF_INST(translate_and_test_reverse_extended)                /*208*/
-#endif /*!defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)*/       /*208*/
+#endif /*!defined(FEATURE_026_PARSING_ENHANCE_FACILITY)*/       /*208*/
 
 
 #if !defined(FEATURE_HIGH_WORD_FACILITY)                        /*810*/
@@ -388,14 +388,14 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_HIGH_WORD_FACILITY)*/                 /*810*/
 
 
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
+#if !defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)             /*810*/
  UNDEF_INST(load_and_add)                                       /*810*/
  UNDEF_INST(load_and_add_logical)                               /*810*/
  UNDEF_INST(load_and_and)                                       /*810*/
  UNDEF_INST(load_and_exclusive_or)                              /*810*/
  UNDEF_INST(load_and_or)                                        /*810*/
  UNDEF_INST(load_pair_disjoint)                                 /*810*/
-#if !defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1) || !defined(FEATURE_ESAME)
+#if !defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1) || !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
  UNDEF_INST(load_and_add_logical_long)                          /*810*/
  UNDEF_INST(load_and_add_long)                                  /*810*/
  UNDEF_INST(load_and_and_long)                                  /*810*/
@@ -403,7 +403,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_and_or_long)                                   /*810*/
  UNDEF_INST(load_pair_disjoint_long)                            /*810*/
 #endif
-#endif /*!defined(FEATURE_INTERLOCKED_ACCESS_FACILITY_1)*/      /*810*/
+#endif /*!defined(FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1)*/      /*810*/
 
 
 #if !defined(FEATURE_LOAD_STORE_ON_CONDITION_FACILITY_1)        /*810*/
@@ -447,9 +447,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_POPULATION_COUNT_FACILITY)*/          /*810*/
 
 
-#if !defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)    /*810*/
+#if !defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)    /*810*/
  UNDEF_INST(reset_reference_bits_multiple)                      /*810*/
-#endif /*!defined(FEATURE_RESET_REFERENCE_BITS_MULTIPLE_FACILITY)*/
+#endif /*!defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)*/
 
 
 #if !defined(FEATURE_VECTOR_FACILITY)
@@ -568,7 +568,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_HFP_EXTENSIONS)*/
 
 
-#if !defined(FEATURE_FPS_EXTENSIONS)
+#if !defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
  UNDEF_INST(convert_bfp_long_to_float_long_reg)
  UNDEF_INST(convert_bfp_short_to_float_long_reg)
  UNDEF_INST(convert_float_long_to_bfp_long_reg)
@@ -577,10 +577,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_zero_float_ext_reg)
  UNDEF_INST(load_zero_float_long_reg)
  UNDEF_INST(load_zero_float_short_reg)
-#endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
+#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 
 
-#if !defined(FEATURE_FPS_ENHANCEMENT)
+#if !defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
  UNDEF_INST(copy_sign_fpr_long_reg)
  UNDEF_INST(load_complement_fpr_long_reg)
  UNDEF_INST(load_fpr_from_gr_long_reg)
@@ -588,7 +588,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_negative_fpr_long_reg)
  UNDEF_INST(load_positive_fpr_long_reg)
  UNDEF_INST(set_dfp_rounding_mode)
-#endif /*!defined(FEATURE_FPS_ENHANCEMENT)*/
+#endif /*!defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
 
 #if !defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
@@ -609,7 +609,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
 
 
-#if !defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)                /*@Z9*/
+#if !defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)                /*@Z9*/
  UNDEF_INST(multiply_unnormal_float_long_to_ext_reg)            /*@Z9*/
  UNDEF_INST(multiply_unnormal_float_long_to_ext_low_reg)        /*@Z9*/
  UNDEF_INST(multiply_unnormal_float_long_to_ext_high_reg)       /*@Z9*/
@@ -622,7 +622,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(multiply_add_unnormal_float_long_to_ext)            /*@Z9*/
  UNDEF_INST(multiply_add_unnormal_float_long_to_ext_low)        /*@Z9*/
  UNDEF_INST(multiply_add_unnormal_float_long_to_ext_high)       /*@Z9*/
-#endif /*!defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/         /*@Z9*/
+#endif /*!defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)*/         /*@Z9*/
 
 
 #if !defined(FEATURE_BINARY_FLOATING_POINT)
@@ -726,7 +726,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
-#if !defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
+#if !defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
  UNDEF_INST(add_dfp_ext_reg)
  UNDEF_INST(add_dfp_long_reg)
  UNDEF_INST(compare_dfp_ext_reg)
@@ -781,7 +781,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(test_data_group_dfp_ext)
  UNDEF_INST(test_data_group_dfp_long)
  UNDEF_INST(test_data_group_dfp_short)
-#endif /*!defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)*/
+#endif /*!defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
 
 #if !defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)         /*810*/
@@ -813,9 +813,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
 
 
-#if !defined(FEATURE_PFPO)
+#if !defined(FEATURE_044_PFPO_FACILITY)
  UNDEF_INST(perform_floating_point_operation)
-#endif /*!defined(FEATURE_PFPO)*/
+#endif /*!defined(FEATURE_044_PFPO_FACILITY)*/
 
 
 #if !defined(FEATURE_EMULATE_VM)
@@ -882,12 +882,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_CHANNEL_SWITCHING)*/
 
 
-#if !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY)
+#if !defined(FEATURE_040_LOAD_PROG_PARAM_FACILITY)
  UNDEF_INST(load_program_parameter)
-#endif /* !defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */
+#endif /* !defined(FEATURE_040_LOAD_PROG_PARAM_FACILITY) */
 
 
-#if !defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)
+#if !defined(FEATURE_067_CPU_MEAS_COUNTER_FACILITY)
  UNDEF_INST(extract_coprocessor_group_address)
  UNDEF_INST(extract_cpu_counter)
  UNDEF_INST(extract_peripheral_counter)
@@ -896,13 +896,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(query_counter_information)
  UNDEF_INST(set_cpu_counter)
  UNDEF_INST(set_peripheral_counter)
-#endif /*!defined(FEATURE_CPU_MEASUREMENT_COUNTER_FACILITY)*/
+#endif /*!defined(FEATURE_067_CPU_MEAS_COUNTER_FACILITY)*/
 
 
-#if !defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)
+#if !defined(FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY)
  UNDEF_INST(load_sampling_controls)
  UNDEF_INST(query_sampling_information)
-#endif /*!defined(FEATURE_CPU_MEASUREMENT_SAMPLING_FACILITY)*/
+#endif /*!defined(FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY)*/
 
 #if !defined(FEATURE_STORE_CPU_MULTIPLE_COUNTER_FACILITY)
  UNDEF_INST(store_cpu_counter_multiple)
@@ -916,7 +916,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_1)*/
 
 
-#if !defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+#if !defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
  UNDEF_INST(compare_logical_long_unicode)
  UNDEF_INST(move_long_unicode)
  UNDEF_INST(pack_ascii)
@@ -928,30 +928,30 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(translate_two_to_two)
  UNDEF_INST(unpack_ascii)
  UNDEF_INST(unpack_unicode)
-#endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#endif /*!defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
 
 
-#if !defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+#if !defined(FEATURE_022_EXT_TRANSL_FACILITY_3)
  UNDEF_INST(convert_utf16_to_utf32)
  UNDEF_INST(convert_utf32_to_utf16)
  UNDEF_INST(convert_utf32_to_utf8)
  UNDEF_INST(convert_utf8_to_utf32)
  UNDEF_INST(search_string_unicode)
  UNDEF_INST(translate_and_test_reverse)
-#endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
+#endif /*!defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
 
 
-#if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_ESAME_N3_ESA390)
+#if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_ESA390_FACILITY)
  UNDEF_INST(load_reversed_register)
  UNDEF_INST(load_reversed)
  UNDEF_INST(load_reversed_half)
  UNDEF_INST(store_reversed)
  UNDEF_INST(store_reversed_half)
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
  UNDEF_INST(load_reversed_long_register)
  UNDEF_INST(store_reversed_long)
-#endif /*!defined(FEATURE_ESAME)*/
-#endif /*!defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_ESAME_N3_ESA390)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_000_N3_ESA390_FACILITY)*/
 
 
 #if !defined(FEATURE_SERVICE_PROCESSOR)
@@ -964,7 +964,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_CHSC)*/
 
 
-#if !defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)
+#if !defined(FEATURE_000_N3_ESA390_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
  UNDEF_INST(add_logical_carry)
  UNDEF_INST(add_logical_carry_register)
  UNDEF_INST(branch_relative_and_save_long)
@@ -981,7 +981,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_logical_borrow)
  UNDEF_INST(subtract_logical_borrow_register)
  UNDEF_INST(test_addressing_mode)
-#endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_000_N3_ESA390_FACILITY) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #if !defined(FEATURE_STORE_FACILITY_LIST)
@@ -1021,7 +1021,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_ECPSVM)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
+#if !defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
  UNDEF_INST(add_y)
  UNDEF_INST(add_halfword_y)
  UNDEF_INST(add_logical_y)
@@ -1060,56 +1060,56 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(subtract_halfword_y)
  UNDEF_INST(subtract_logical_y)
  UNDEF_INST(test_under_mask_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)*/
+#endif /*!defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY) \
+#if !defined(FEATURE_018_LONG_DISPL_INST_FACILITY) \
  || !defined(FEATURE_ACCESS_REGISTERS)
  UNDEF_INST(load_access_multiple_y)
  UNDEF_INST(store_access_multiple_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
+#endif /*!defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
  || !defined(FEATURE_ACCESS_REGISTERS)*/
 
 
-#if !defined(FEATURE_LONG_DISPLACEMENT_FACILITY) \
+#if !defined(FEATURE_018_LONG_DISPL_INST_FACILITY) \
  || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  UNDEF_INST(load_float_long_y)
  UNDEF_INST(load_float_short_y)
  UNDEF_INST(store_float_long_y)
  UNDEF_INST(store_float_short_y)
-#endif /*!defined(FEATURE_LONG_DISPLACEMENT_FACILITY)
+#endif /*!defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
  || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST) || !defined(OPTION_STATIC_CRYPTO)
+#if !defined(FEATURE_017_MSA_FACILITY) || !defined(OPTION_STATIC_CRYPTO)
  UNDEF_INST(cipher_message)
  UNDEF_INST(cipher_message_with_chaining)
  UNDEF_INST(compute_intermediate_message_digest)
  UNDEF_INST(compute_last_message_digest)
  UNDEF_INST(compute_message_authentication_code)
-#endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#endif /*!defined(FEATURE_017_MSA_FACILITY)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3) || !defined(OPTION_STATIC_CRYPTO)      /*810*/
+#if !defined(FEATURE_076_MSA_EXTENSION_FACILITY_3) || !defined(OPTION_STATIC_CRYPTO)      /*810*/
  UNDEF_INST(perform_cryptographic_key_management_operation)     /*810*/
-#endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)*/
+#endif /*!defined(FEATURE_076_MSA_EXTENSION_FACILITY_3)*/
 
 
-#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4) || !defined(OPTION_STATIC_CRYPTO)      /*810*/
+#if !defined(FEATURE_077_MSA_EXTENSION_FACILITY_4) || !defined(OPTION_STATIC_CRYPTO)      /*810*/
  UNDEF_INST(perform_cryptographic_computation)                  /*810*/
  UNDEF_INST(cipher_message_with_cipher_feedback)                /*810*/
  UNDEF_INST(cipher_message_with_output_feedback)                /*810*/
  UNDEF_INST(cipher_message_with_counter)                        /*810*/
-#endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)*/
+#endif /*!defined(FEATURE_077_MSA_EXTENSION_FACILITY_4)*/
 
 
-#if !defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)
+#if !defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
  UNDEF_INST(compare_and_swap_and_purge_long)
  UNDEF_INST(invalidate_dat_table_entry)
-#endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_1)*/
+#endif /*!defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)*/
 
 
-#if !defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)               /*@Z9*/
+#if !defined(FEATURE_021_EXTENDED_IMMED_FACILITY)               /*@Z9*/
  UNDEF_INST(add_fullword_immediate)                             /*@Z9*/
  UNDEF_INST(add_long_fullword_immediate)                        /*@Z9*/
  UNDEF_INST(add_logical_fullword_immediate)                     /*@Z9*/
@@ -1131,10 +1131,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(or_immediate_low_fullword)                          /*@Z9*/
  UNDEF_INST(subtract_logical_fullword_immediate)                /*@Z9*/
  UNDEF_INST(subtract_logical_long_fullword_immediate)           /*@Z9*/
-#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/        /*@Z9*/
+#endif /*!defined(FEATURE_021_EXTENDED_IMMED_FACILITY)*/        /*@Z9*/
 
 
-#if !defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)               /*@Z9*/
+#if !defined(FEATURE_021_EXTENDED_IMMED_FACILITY)               /*@Z9*/
  UNDEF_INST(load_and_test)                                      /*@Z9*/
  UNDEF_INST(load_and_test_long)                                 /*@Z9*/
  UNDEF_INST(load_byte_register)                                 /*@Z9*/
@@ -1148,7 +1148,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_logical_halfword_register)                     /*@Z9*/
  UNDEF_INST(load_logical_long_halfword_register)                /*@Z9*/
  UNDEF_INST(find_leftmost_one_long_register)                    /*@Z9*/
-#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE_FACILITY)*/        /*@Z9*/
+#endif /*!defined(FEATURE_021_EXTENDED_IMMED_FACILITY)*/        /*@Z9*/
 
 
 #if !defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)                /*@Z9*/
@@ -1156,16 +1156,16 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/         /*@Z9*/
 
 
-#if !defined(FEATURE_STORE_CLOCK_FAST_FACILITY)
+#if !defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
  UNDEF_INST(store_clock_fast)
-#else /*!defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
+#else /*!defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
  #define z900_store_clock_fast z900_store_clock
-#endif /*!defined(FEATURE_STORE_CLOCK_FAST_FACILITY)*/
+#endif /*!defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
 
 
-#if !defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)     /*@Z9*/
+#if !defined(FEATURE_007_STFL_EXTENDED_FACILITY)     /*@Z9*/
  UNDEF_INST(store_facility_list_extended)                       /*@Z9*/
-#endif /*!defined(FEATURE_STORE_FACILITY_LIST_EXTENDED_FACILITY)*//*@Z9*/
+#endif /*!defined(FEATURE_007_STFL_EXTENDED_FACILITY)*//*@Z9*/
 
 
 /* The following execute_xxxx routines can be optimized by the

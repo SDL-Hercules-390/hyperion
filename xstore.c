@@ -327,14 +327,14 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 rc = 0;
                 xpvalid2 = 1;
                 xpkeya = raddr2 +
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                                    2048;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 /* For ESA/390 mode, the XPTE lies directly beyond
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
                                  1024 + ((vaddr2 & 0x000FF000) >> 9);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 if (xpkeya > regs->mainlim)
                     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey2 = regs->mainstor[xpkeya];
@@ -423,14 +423,14 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 rc = 0;
                 xpvalid1 = 1;
                 xpkeya = raddr1 +
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                                   2048;
-#else /*!defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 /* For ESA/390 mode, the XPTE lies directly beyond
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
                               1024 + ((vaddr1 & 0x000FF000) >> 9);
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 if (xpkeya > regs->mainlim)
                     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey1 = regs->mainstor[xpkeya];

@@ -2044,11 +2044,11 @@ char    buf[512];                       /* MSGBUF work buffer        */
         type = REAL_MODE( &regs->psw ) ? 'R' : 'V';
 
     /* Set limit for address range */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     maxadr = 0xFFFFFFFFFFFFFFFFULL;
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     maxadr = 0x7FFFFFFF;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, NULL);
@@ -2165,11 +2165,11 @@ char    absorr[8];                      /* Uppercase command         */
     opnd = argv[1];
 
     /* Set limit for address range */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     maxadr = 0xFFFFFFFFFFFFFFFFULL;
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     maxadr = 0x7FFFFFFF;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, newval);
@@ -2343,11 +2343,11 @@ size_t  totamt;                         /* Total amount to be dumped */
     }
 
     /* Set limit for address range */
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     maxadr = 0xFFFFFFFFFFFFFFFFULL;
-  #else /*!defined(FEATURE_ESAME)*/
+  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     maxadr = 0x7FFFFFFF;
-  #endif /*!defined(FEATURE_ESAME)*/
+  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, newval);
@@ -2523,12 +2523,12 @@ char    regs_msg_buf[4*512] = {0};
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
 
-  #if defined(FEATURE_ESAME)
+  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     n += snprintf (buf + n, sizeof(buf)-n,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
-  #endif /*defined(FEATURE_ESAME)*/
+  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
     /* Exit if instruction is not valid */
     if (inst == NULL)
@@ -2673,9 +2673,9 @@ char    regs_msg_buf[4*512] = {0};
         else
             ARCH_DEP(display_virt) (regs, addr1, buf2+n, sizeof(buf2)-n-1, b1,
                                 (opcode == 0x44
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f))
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+#endif /*defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ),"", &xcode);

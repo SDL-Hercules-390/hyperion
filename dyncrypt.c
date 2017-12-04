@@ -38,20 +38,20 @@
 /*----------------------------------------------------------------------------*/
 /* Sanity compile check                                                       */
 /*----------------------------------------------------------------------------*/
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+#if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1) && !defined(FEATURE_017_MSA_FACILITY)
   #error You cannot have "Message Security Assist extension 1" without having "Message Security Assist"
 #endif /* #if ... */
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1)
   #error You cannot have "Message Security Assist extension 2" without having "Message Security Assist extension 1"
 #endif /* #if ... */
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2)
+#if defined(FEATURE_076_MSA_EXTENSION_FACILITY_3) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2)
   #error You cannot have "Message Security Assist extension 3" without having "Message Security Assist extension 2"
 #endif /* #if ... */
-#if defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4) && !defined(FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3)
+#if defined(FEATURE_077_MSA_EXTENSION_FACILITY_4) && !defined(FEATURE_076_MSA_EXTENSION_FACILITY_3)
   #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
 #endif /* #if ... */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST
+#ifdef FEATURE_017_MSA_FACILITY
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
@@ -205,7 +205,7 @@ void crypto_secure0( void* p, size_t n )
     while( n-- ) *v++ = 0;
 #endif
 }
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* GCM multiplication over GF(2^128)                                          */
 /*----------------------------------------------------------------------------*/
@@ -300,7 +300,7 @@ void xts_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
   for (i=0; i <= 15; i++)
       c[i] = reverse_bits( c_r[i] );
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
 /*----------------------------------------------------------------------------*/
 /* Message Security Assist Extension query                                    */
@@ -315,7 +315,7 @@ static int get_msa(REGS *regs)
     return(2);
   if(FACILITY_ENABLED(MSA_EXTENSION_1, regs))
     return(1);
-  if(FACILITY_ENABLED(MSG_SECURITY, regs))
+  if(FACILITY_ENABLED(MSA, regs))
     return(0);
   return(-1);
 }
@@ -428,7 +428,7 @@ static void sha512_seticv(SHA2_CTX *ctx, BYTE icv[64])
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* Shif left                                                                  */
 /*----------------------------------------------------------------------------*/
@@ -453,9 +453,9 @@ void shift_left(BYTE *dst, BYTE* src, int len)
     }
   }
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
 /*----------------------------------------------------------------------------*/
 /* Unwrap key using aes                                                       */
 /*----------------------------------------------------------------------------*/
@@ -717,9 +717,9 @@ static void wrap_dea(BYTE *key, int keylen)
     des3_encrypt(&context, &key[i], &key[i]);
   }
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* 2^m table with GF multiplication entries 127, 126, 125, ...                */
 /* 2                  2^b1                                                    */
@@ -859,7 +859,7 @@ static BYTE exp_table[128][16] =
   { 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/
@@ -1047,7 +1047,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
   regs->psw.cc = 3;
 }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* Compute intermediate message digest (KIMD) FC 65                           */
 /*----------------------------------------------------------------------------*/
@@ -1124,7 +1124,7 @@ static void ARCH_DEP(kimd_ghash)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
 /*----------------------------------------------------------------------------*/
 /* Compute last message digest (KLMD) FC 1-3                                  */
@@ -1419,7 +1419,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 24);
 #endif /* #ifdef OPTION_KM_DEBUG */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
   /* Verify and unwrap */
   if(wrap && unwrap_dea(parameter_block, keylen))
   {
@@ -1431,7 +1431,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
   /* Set the cryptographic key */
   switch(tfc)
@@ -1563,7 +1563,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
     LOGBYTE("wkvp  :", &parameter_block[keylen], 32);
 #endif /* #ifdef OPTION_KM_DEBUG */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
   /* Verify and unwrap */
   if(wrap && unwrap_aes(parameter_block, keylen))
   {
@@ -1575,7 +1575,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
   /* Set the cryptographic keys */
   rijndael_set_key(&context, parameter_block, keylen * 8);
@@ -1630,7 +1630,7 @@ static void ARCH_DEP(km_aes)(int r1, int r2, REGS *regs)
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* Cipher message (KM) FC 50, 52, 58 and 60                                   */
 /*----------------------------------------------------------------------------*/
@@ -1754,7 +1754,7 @@ static void ARCH_DEP(km_xts_aes)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
 /*----------------------------------------------------------------------------*/
 /* Compute message authentication code (KMAC) FC 1-3 and 9-11                 */
@@ -1827,7 +1827,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif /* #ifdef OPTION_KMAC_DEBUG */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
   /* Verify and unwrap */
   if(wrap && unwrap_dea(&parameter_block[8], keylen))
   {
@@ -1839,7 +1839,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-#endif /* #ifdef #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
   /* Set the cryptographic key */
   switch(tfc)
@@ -1930,7 +1930,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   regs->psw.cc = 3;
 }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* Compute message authentication code (KMAC) FC 18-20 and 26-28              */
 /*----------------------------------------------------------------------------*/
@@ -2039,7 +2039,7 @@ static void ARCH_DEP(kmac_aes)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
 /*----------------------------------------------------------------------------*/
 /* Cipher message with chaining (KMC) FC 1-3 and 9-11                         */
@@ -2113,7 +2113,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 8], 24);
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
   /* Verify and unwrap */
   if(wrap && unwrap_dea(&parameter_block[8], keylen))
   {
@@ -2125,7 +2125,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
   /* Set the cryptographic key */
   switch(tfc)
@@ -2327,7 +2327,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
     LOGBYTE("wkvp  :", &parameter_block[keylen + 16], 32);
 #endif /* #ifdef OPTION_KMC_DEBUG */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
   /* Verify and unwrap */
   if(wrap && unwrap_aes(&parameter_block[16], keylen))
   {
@@ -2339,7 +2339,7 @@ static void ARCH_DEP(kmc_aes)(int r1, int r2, REGS *regs)
     regs->psw.cc = 1;
     return;
   }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
   /* Set the cryptographic key */
   rijndael_set_key(&context, &parameter_block[16], keylen * 8);
@@ -2543,7 +2543,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* Cipher message with counter (KMCTR) FC 1-3 and 9-11                        */
 /*----------------------------------------------------------------------------*/
@@ -3929,9 +3929,9 @@ static void ARCH_DEP(pcc_xts_aes)(REGS *regs)
   /* Normal completion */
   regs->psw.cc = 0;
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
 /*----------------------------------------------------------------------------*/
 /* Perform cryptographic key management operation (PCKMO) FC 1-3        [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4007,7 +4007,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
   LOGBYTE("wkvp   : ", &parameter_block[keylen], parameter_blocklen - keylen);
 #endif /* #ifdef OPTION_PCKMO_DEBUG */
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
@@ -4092,7 +4092,7 @@ DEF_INST(compute_intermediate_message_digest)
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
     case 65: /* ghash */
     {
       if(msa >= 4)
@@ -4101,7 +4101,7 @@ DEF_INST(compute_intermediate_message_digest)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
     default:
     {
@@ -4264,7 +4264,7 @@ DEF_INST(cipher_message)
       break;
     }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
@@ -4275,7 +4275,7 @@ DEF_INST(cipher_message)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
@@ -4300,7 +4300,7 @@ DEF_INST(cipher_message)
     }
 #endif /* #ifdef #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     case 26: /* encrypted aes-128 */
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
@@ -4311,9 +4311,9 @@ DEF_INST(cipher_message)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
     case 50: /* xts aes-128 */
     case 52: /* xts aes-256 */
     case 58: /* encrypted xts aes-128 */
@@ -4325,7 +4325,7 @@ DEF_INST(cipher_message)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
     default:
     {
@@ -4396,7 +4396,7 @@ DEF_INST(compute_message_authentication_code)
       break;
     }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
@@ -4407,9 +4407,9 @@ DEF_INST(compute_message_authentication_code)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
     case 18: /* aes */
     case 19: /* aes-192 */
     case 20: /* aes-256 */
@@ -4423,7 +4423,7 @@ DEF_INST(compute_message_authentication_code)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
     default:
     {
@@ -4496,7 +4496,7 @@ DEF_INST(cipher_message_with_chaining)
       break;
     }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     case 9: /* encrypted dea */
     case 10: /* encrypted tdea-128 */
     case 11: /* encrypted tdea-192 */
@@ -4507,7 +4507,7 @@ DEF_INST(cipher_message_with_chaining)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18: /* aes-128 */
@@ -4532,7 +4532,7 @@ DEF_INST(cipher_message_with_chaining)
     }
 #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     case 26: /* encrypted aes-128 */
     case 27: /* encrypted aes-192 */
     case 28: /* encrypted aes-256 */
@@ -4543,7 +4543,7 @@ DEF_INST(cipher_message_with_chaining)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
       break;
     }
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 67: /* prng */
@@ -4564,7 +4564,7 @@ DEF_INST(cipher_message_with_chaining)
   }
 }
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
 /*----------------------------------------------------------------------------*/
 /* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
@@ -4901,9 +4901,9 @@ DEF_INST(perform_cryptographic_computation)
       break;
   }
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
@@ -4985,9 +4985,9 @@ DEF_INST(perform_cryptographic_key_management_operation)
     }
   }
 }
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
+#endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
 
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST */
+#endif /* #ifdef FEATURE_017_MSA_FACILITY */
 
 #ifndef _GEN_ARCH
 
@@ -5040,10 +5040,10 @@ HDL_REGISTER_SECTION;
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist"); // Feature notice
 
-#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
+#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
   WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice
 #else
-  #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3
+  #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
     WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2 and 3"); // Feature notice
   #else
     #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
@@ -5053,8 +5053,8 @@ HDL_REGISTER_SECTION;
         WRMSG( HHC00151, "I", "Message Security Assist Extension 1"); // Feature notice
       #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
     #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
-  #endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3 */
-#endif /* #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4 */
+  #endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
+#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
 }
 END_REGISTER_SECTION;
 

@@ -20,14 +20,14 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
+#if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
 #include "decNumber/include/decimal128.h"
 #include "decNumber/include/decimal64.h"
 #include "decNumber/include/decimal32.h"
 #include "decNumber/include/decPacked.h"
-#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)*/
+#endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
-#if defined(FEATURE_FPS_ENHANCEMENT)
+#if defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
 /*===================================================================*/
 /* FLOATING POINT SUPPORT INSTRUCTIONS                               */
 /*===================================================================*/
@@ -183,7 +183,7 @@ VADR            effective_addr2;        /* Effective address         */
 } /* end DEF_INST(set_dfp_rounding_mode) */
 
 
-#endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
+#endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
 
 #if defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
@@ -333,7 +333,7 @@ BYTE            dxc;                    /* Data exception code       */
 #endif /*defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
 
 
-#if defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)
+#if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
 /*===================================================================*/
 /* DECIMAL FLOATING POINT INSTRUCTIONS                               */
 /*===================================================================*/
@@ -4694,7 +4694,7 @@ int             lmd;                    /* Leftmost digit            */
 
 } /* end DEF_INST(test_data_group_dfp_short) */
 
-#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT_FACILITY)*/
+#endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
 #if !defined(_GEN_ARCH)
 

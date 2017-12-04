@@ -100,25 +100,25 @@ typedef struct EXPBLK EXPBLK;
 ///////////////////////////////////////////////////////////////////////////////
 // ZeroPadOp1 only if facility was enabled for this build architecture...
 
-#if defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+#if defined( FEATURE_047_CMPSC_ENH_FACILITY )
 
   #undef  ZERO_PAD_OP1
   #define ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk )   \
     if (pCMPSCBLK->zp)  /* (do zero padding?) */  \
         ARCH_DEP( ZeroPadOp1 )( pCMPSCBLK, pOp1MemBlk );
 
-#else // !defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+#else // !defined( FEATURE_047_CMPSC_ENH_FACILITY )
 
   #undef  ZERO_PAD_OP1
   #define ZERO_PAD_OP1( pCMPSCBLK, pOp1MemBlk )   \
         UNREFERENCED( pOp1MemBlk );
 
-#endif // defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+#endif // defined( FEATURE_047_CMPSC_ENH_FACILITY )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Zero-padding
 
-#if defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+#if defined( FEATURE_047_CMPSC_ENH_FACILITY )
 
 static CMPSC_INLINE void (CMPSC_FASTCALL ARCH_DEP( ZeroPadOp1 ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
 {
@@ -149,7 +149,7 @@ static CMPSC_INLINE void (CMPSC_FASTCALL ARCH_DEP( ZeroPadOp1 ))( CMPSCBLK* pCMP
         }
     }
 }
-#endif // defined( FEATURE_CMPSC_ENHANCEMENT_FACILITY )
+#endif // defined( FEATURE_047_CMPSC_ENH_FACILITY )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Separate return functions for easier debugging... (it's much easier to

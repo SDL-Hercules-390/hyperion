@@ -86,7 +86,7 @@ VADR op4addr;
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -112,7 +112,7 @@ VADR op4addr;
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -141,10 +141,10 @@ U64 op2,
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -199,7 +199,7 @@ VADR op4addr;
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2,
@@ -275,7 +275,7 @@ U64 op1c,
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -308,10 +308,10 @@ U64 op2;
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -349,7 +349,7 @@ BYTE op1c[16],
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2,
@@ -447,7 +447,7 @@ VADR op4addr;
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -487,7 +487,7 @@ VADR op4addr;
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -534,10 +534,10 @@ U64 op2,
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -619,7 +619,7 @@ VADR op4addr;
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2,
@@ -696,7 +696,7 @@ VADR op4addr;
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -720,7 +720,7 @@ VADR op4addr;
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -754,10 +754,10 @@ U64 op2;
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -815,7 +815,7 @@ VADR op4addr;
     }
 
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2,
@@ -857,7 +857,7 @@ VADR op4addr,
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -866,7 +866,7 @@ VADR op4addr,
         FW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
         op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
@@ -951,7 +951,7 @@ VADR op4addr,
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -960,7 +960,7 @@ VADR op4addr,
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
         op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
@@ -1001,7 +1001,7 @@ VADR op4addr,
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -1081,10 +1081,10 @@ VADR op4addr,
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -1169,7 +1169,7 @@ VADR op4addr,
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2,
@@ -1215,7 +1215,7 @@ VADR op4addr,
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -1224,7 +1224,7 @@ VADR op4addr,
         FW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
         op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
@@ -1233,7 +1233,7 @@ VADR op4addr,
         FW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
 #else
         op8addr = ARCH_DEP(wfetch4)(effective_addr4 + 140, b4, regs);
@@ -1339,7 +1339,7 @@ VADR op4addr,
         }
 
         /* Load address of operand 4 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
         op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
@@ -1348,7 +1348,7 @@ VADR op4addr,
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
         op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
@@ -1357,7 +1357,7 @@ VADR op4addr,
         DW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
 #else
         op8addr = ARCH_DEP(wfetch4)(effective_addr4 + 140, b4, regs);
@@ -1414,7 +1414,7 @@ VADR op4addr,
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -1520,10 +1520,10 @@ VADR op4addr,
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2,
                               VADR effective_addr4, int b4, REGS *regs)
 {
@@ -1634,7 +1634,7 @@ VADR op4addr,
         return 1;
     }
 }
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
 #endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
