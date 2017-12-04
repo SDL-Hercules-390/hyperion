@@ -452,7 +452,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_066_RES_REF_BITS_MUL_FACILITY)*/
 
 
-#if !defined(FEATURE_VECTOR_FACILITY)
+#if !defined( FEATURE_S370_S390_VECTOR_FACILITY )
  UNDEF_INST(v_test_vmr)
  UNDEF_INST(v_complement_vmr)
  UNDEF_INST(v_count_left_zeros_in_vmr)
@@ -479,7 +479,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(v_store_vector_parameters)
  UNDEF_INST(v_save_vac)
  UNDEF_INST(v_restore_vac)
-#endif /*!defined(FEATURE_VECTOR_FACILITY)*/
+#endif /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 
 #if !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
@@ -568,7 +568,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_HFP_EXTENSIONS)*/
 
 
-#if !defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if !defined(FEATURE_FPS_EXTENSIONS)
  UNDEF_INST(convert_bfp_long_to_float_long_reg)
  UNDEF_INST(convert_bfp_short_to_float_long_reg)
  UNDEF_INST(convert_float_long_to_bfp_long_reg)
@@ -577,7 +577,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(load_zero_float_ext_reg)
  UNDEF_INST(load_zero_float_long_reg)
  UNDEF_INST(load_zero_float_short_reg)
-#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
+#endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
 #if !defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
@@ -597,7 +597,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
 
 
-#if !defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+#if !defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
  UNDEF_INST(multiply_add_float_short_reg)
  UNDEF_INST(multiply_add_float_long_reg)
  UNDEF_INST(multiply_add_float_short)
@@ -606,7 +606,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(multiply_subtract_float_long_reg)
  UNDEF_INST(multiply_subtract_float_short)
  UNDEF_INST(multiply_subtract_float_long)
-#endif /*!defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+#endif /*!defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)*/
 
 
 #if !defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)                /*@Z9*/
@@ -784,7 +784,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
 
-#if !defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)         /*810*/
+#if !defined(FEATURE_037_FP_EXTENSIONS_FACILITY)         /*810*/
  UNDEF_INST(convert_bfp_short_to_u32_reg)                       /*810*/
  UNDEF_INST(convert_bfp_long_to_u32_reg)                        /*810*/
  UNDEF_INST(convert_bfp_ext_to_u32_reg)                         /*810*/
@@ -810,7 +810,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(convert_u64_to_dfp_long_reg)                        /*810*/
  UNDEF_INST(convert_u64_to_dfp_ext_reg)                         /*810*/
  UNDEF_INST(set_bfp_rounding_mode_3bit)                         /*810*/
-#endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
+#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
 
 
 #if !defined(FEATURE_044_PFPO_FACILITY)
@@ -1103,10 +1103,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_077_MSA_EXTENSION_FACILITY_4)*/
 
 
-#if !defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
+#if !defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
  UNDEF_INST(compare_and_swap_and_purge_long)
  UNDEF_INST(invalidate_dat_table_entry)
-#endif /*!defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)*/
+#endif /*!defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)*/
 
 
 #if !defined(FEATURE_021_EXTENDED_IMMED_FACILITY)               /*@Z9*/
@@ -1307,21 +1307,25 @@ DISASM_ROUTE(ecxx,[5])
 DISASM_ROUTE(edxx,[5])
 
 
-#if defined(FEATURE_VECTOR_FACILITY)
- #define opcode_a4xx v_opcode_a4xx
- DISASM_ROUTE(a4xx,[1])
- #undef opcode_a4xx
- #define opcode_a6xx v_opcode_a6xx
- DISASM_ROUTE(a6xx,[1])
- #undef opcode_a6xx
- #define opcode_e4xx v_opcode_e4xx
- DISASM_ROUTE(e4xx,[1])
- #undef opcode_e4xx
-#else /*defined(FEATURE_VECTOR_FACILITY)*/
- #define disasm_a4xx disasm_none
- #define disasm_a6xx disasm_none
- #define disasm_e4xx disasm_none
-#endif /*defined(FEATURE_VECTOR_FACILITY)*/
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
+
+ #define opcode_a4xx    v_opcode_a4xx
+ DISASM_ROUTE(  a4xx,[1])
+ #undef  opcode_a4xx
+
+ #define opcode_a6xx    v_opcode_a6xx
+ DISASM_ROUTE(  a6xx,[1])
+ #undef  opcode_a6xx
+
+ #define opcode_e4xx    v_opcode_e4xx
+ DISASM_ROUTE(  e4xx,[1])
+ #undef  opcode_e4xx
+
+#else /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+ #define disasm_a4xx    disasm_none
+ #define disasm_a6xx    disasm_none
+ #define disasm_e4xx    disasm_none
+#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 
 #define DISASM_TYPE(_type)  \

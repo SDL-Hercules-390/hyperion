@@ -886,9 +886,9 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] = {
 //                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_RECONFIG
                         ,
                         0
-#if defined(FEATURE_VECTOR_FACILITY) && defined(FEATURE_CPU_RECONFIG)
+#if defined(FEATURE_S370_S390_VECTOR_FACILITY) && defined(FEATURE_CPU_RECONFIG)
                         | SCCB_IFM3_VECTOR_FEATURE_RECONFIG
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif
 #ifdef FEATURE_SYSTEM_CONSOLE
                         | SCCB_IFM3_READ_WRITE_EVENT_FEATURE
 #endif /*FEATURE_SYSTEM_CONSOLE*/
@@ -1307,13 +1307,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         STORE_FW(sccbscp->xpndsz4K, xstblkinc);
 #endif /*FEATURE_EXPANDED_STORAGE*/
 
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
         /* Set the Vector section size in the SCCB */
         STORE_HW(sccbscp->vectssiz, VECTOR_SECTION_SIZE);
         /* Set the Vector partial sum number in the SCCB */
         STORE_HW(sccbscp->vectpsum, VECTOR_PARTIAL_SUM_NUMBER);
-#endif /*FEATURE_VECTOR_FACILITY*/
-
+#endif
         /* Set CPU array count and offset in SCCB */
         STORE_HW(sccbscp->numcpu, sysblk.maxcpu);
         offset = sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO);
@@ -1373,14 +1372,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 //          sccbcpu->ksid = SCCB_KSID_CRYPTO_UNIT_ID;
 #endif /*defined(FEATURE_CRYPTO)*/
 
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
             if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
             if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_CONNECTED;
             if(!IS_CPU_ONLINE(i))
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_STANDBY_STATE;
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif
 
         }
 
@@ -1910,7 +1909,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_COMPLETE;
         break;
 
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
 
     case SCLP_DISCONNECT_VF:
 
@@ -1966,7 +1965,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_COMPLETE;
         break;
 
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif /* FEATURE_S370_S390_VECTOR_FACILITY */
 
 #endif /*FEATURE_CPU_RECONFIG*/
 

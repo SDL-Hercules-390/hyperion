@@ -90,11 +90,11 @@ int     devtmax;                        /* Max number device threads */
     sysblk.maxcpu = MAX_CPU_ENGINES;
 #endif
 
-#ifdef    _FEATURE_VECTOR_FACILITY
+#ifdef    _FEATURE_S370_S390_VECTOR_FACILITY
     sysblk.numvec = sysblk.maxcpu;
-#else  //!_FEATURE_VECTOR_FACILITY
+#else
     sysblk.numvec = 0;
-#endif // _FEATURE_VECTOR_FACILITY
+#endif
 
 #if defined(_900)
     set_archlvl(_ARCH_900_NAME);

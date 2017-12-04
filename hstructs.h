@@ -312,10 +312,10 @@ struct REGS {                           /* Processor registers       */
         BYTE    *invalidate_main;       /* Mainstor addr to invalidat*/
         CACHE_ALIGN                     /* --- 64-byte cache line -- */
         PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
-#if defined(_FEATURE_VECTOR_FACILITY)
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
         CACHE_ALIGN
         VFREGS *vf;                     /* Vector Facility           */
-#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+#endif
 
         CACHE_ALIGN
         jmp_buf progjmp;                /* longjmp destination for
@@ -396,7 +396,7 @@ struct REGS {                           /* Processor registers       */
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
 /*-------------------------------------------------------------------*/
-#if defined(_FEATURE_VECTOR_FACILITY)
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 struct VFREGS {                          /* Vector Facility Registers*/
         unsigned int
                 online:1;               /* 1=VF is online            */
@@ -405,7 +405,7 @@ struct VFREGS {                          /* Vector Facility Registers*/
         BYTE    vmr[VECTOR_SECTION_SIZE/8];  /* Vector Mask Register */
         U32     vr[16][VECTOR_SECTION_SIZE]; /* Vector Registers     */
 };
-#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 // #if defined(FEATURE_REGION_RELOCATE)
 /*-------------------------------------------------------------------*/
@@ -560,9 +560,9 @@ struct SYSBLK {
 #define CMPSC_ZP_MASK       (((U64)-1) >> (64 - CMPSC_ZP_BITS))
 #endif /* defined(_FEATURE_047_CMPSC_ENH_FACILITY) */
 
-#if defined(_FEATURE_VECTOR_FACILITY)
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
-#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+#endif
 #if defined(_FEATURE_SIE)
         ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
 #endif /*defined(_FEATURE_SIE)*/

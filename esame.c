@@ -142,16 +142,16 @@ VADR    effective_addr2;                /* Effective address         */
     regs->fpc &= ~(FPC_BRM_2BIT);
     regs->fpc |= (effective_addr2 & FPC_BRM_2BIT);
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
     /* Zeroize FPC bit 29 if FP Extension Facility is installed */
     regs->fpc &= ~(FPC_BIT29);
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 } /* end DEF_INST(set_bfp_rounding_mode_2bit) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 /*-------------------------------------------------------------------*/
 /* B2B8 SRNMB - Set BFP Rounding Mode (3-bit)                    [S] */
 /*-------------------------------------------------------------------*/
@@ -179,7 +179,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->fpc |= (effective_addr2 & FPC_BRM_3BIT);
 
 } /* end DEF_INST(set_bfp_rounding_mode_3bit) */
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)
@@ -929,7 +929,7 @@ U64     n;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
+#if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98A CSPG  - Compare and Swap and Purge Long                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1006,10 +1006,10 @@ U64     old;                            /* Old value                 */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_purge_long) */
-#endif /*defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)*/
+#endif /*defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)*/
 
 
-#if defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
+#if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
 /*-------------------------------------------------------------------*/
 /* B98E IDTE  - Invalidate DAT Table Entry                     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -1132,7 +1132,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(invalidate_dat_table_entry) */
-#endif /*defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)*/
+#endif /*defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)*/
 
 
 #if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)

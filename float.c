@@ -2011,7 +2011,7 @@ U64     wk;
 
 
 #if defined(FEATURE_HFP_EXTENSIONS) \
- || defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+ || defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
 /*-------------------------------------------------------------------*/
 /* Multiply short float                                              */
 /*                                                                   */
@@ -2065,7 +2065,7 @@ U64     wk;
     }
 
 } /* end function mul_sf */
-#endif /*FEATURE_HFP_EXTENSIONS || FEATURE_HFP_MULTIPLY_ADD_SUBTRACT*/
+#endif /*FEATURE_HFP_EXTENSIONS || FEATURE_020_HFP_MULT_ADD_SUB_FACILITY*/
 
 
 /*-------------------------------------------------------------------*/
@@ -6974,7 +6974,7 @@ int     pgm_check;
 #endif /* FEATURE_HFP_EXTENSIONS */
 
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined(FEATURE_FPS_EXTENSIONS)
 /*-------------------------------------------------------------------*/
 /* B365 LXR   - Load Floating Point Extended Register          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -7055,10 +7055,10 @@ int     i1;                             /* Index of R1 in fpr array  */
     regs->fpr[i1+FPREX+1] = 0;
 
 } /* end DEF_INST(load_zero_float_ext_reg) */
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+#if defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B32E MAER  - Multiply and Add Floating Point Short Register [RRF] */
 /*-------------------------------------------------------------------*/
@@ -7370,7 +7370,7 @@ int     pgm_check;
 
 } /* end DEF_INST(multiply_subtract_float_long) */
 
-#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+#endif /*defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)*/
 
 
 #if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)

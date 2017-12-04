@@ -801,7 +801,7 @@ int             exp;                    /* Adjusted exponent         */
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 #if !defined(_DFP_FPE_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
 /* Convert 32-bit signed binary integer to decimal number            */
@@ -1230,7 +1230,7 @@ decContext      setmax;                 /* Working context           */
 
 #define _DFP_FPE_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_FPE_ARCH_INDEPENDENT_)*/
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 /*-------------------------------------------------------------------*/
 /* Set rounding mode in decimal context structure                    */
@@ -1896,7 +1896,7 @@ decContext      set;                    /* Working context           */
 } /* end DEF_INST(compare_exponent_dfp_long_reg) */
 
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 /*-------------------------------------------------------------------*/
 /* B959 CXFTR - Convert from fixed 32 to DFP Extended Register [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2033,7 +2033,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_u32_to_dfp_long_reg) */
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2110,7 +2110,7 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(convert_fix64_to_dfp_long_reg) */
 
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 /*-------------------------------------------------------------------*/
 /* B95A CXLGTR - Convert from unsigned 64 to DFP Ext Register [RRF]  */
 /*-------------------------------------------------------------------*/
@@ -2178,7 +2178,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_u64_to_dfp_long_reg) */
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2361,7 +2361,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 } /* end DEF_INST(convert_ubcd64_to_dfp_long_reg) */
 
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 /*-------------------------------------------------------------------*/
 /* B949 CFXTR - Convert from DFP Extended Register to fixed 32 [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2554,7 +2554,7 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_u32_reg) */
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2654,7 +2654,7 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(convert_dfp_long_to_fix64_reg) */
 
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
 /*-------------------------------------------------------------------*/
 /* B94A CLGXTR - Convert from DFP Ext Register to unsigned 64 [RRF]  */
 /*-------------------------------------------------------------------*/
@@ -2750,7 +2750,7 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_u64_reg) */
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
 
 
 /*-------------------------------------------------------------------*/

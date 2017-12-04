@@ -50,8 +50,8 @@
  #define _FEATURE_ECPSVM
 #endif
 
-#if defined(FEATURE_VECTOR_FACILITY)
- #define _FEATURE_VECTOR_FACILITY
+#if defined(FEATURE_S370_S390_VECTOR_FACILITY)
+ #define   _FEATURE_S370_S390_VECTOR_FACILITY
 #endif
 
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
@@ -130,8 +130,8 @@
  #define _FEATURE_000_N3_ESA390_FACILITY
 #endif
 
-#if defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
- #define _FEATURE_003_DAT_ENHANCEMENT_FACILITY_1
+#if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
+ #define _FEATURE_003_DAT_ENHANCE_FACILITY_1
 #endif
 
 #if defined(FEATURE_007_STFL_EXTENDED_FACILITY)
@@ -174,7 +174,7 @@
  #define _FEATURE_018_LONG_DISPL_INST_FACILITY
 #endif
 
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+#if defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
  #define FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
 #endif
 
@@ -484,7 +484,7 @@
  #error Expanded storage cannot be defined with 2K storage keys
 #endif
 
-#if defined(_900) && defined(FEATURE_VECTOR_FACILITY)
+#if defined(_900) && defined(FEATURE_S370_S390_VECTOR_FACILITY)
  #error Vector Facility not supported on ESAME capable processors
 #endif
 
@@ -577,15 +577,15 @@
 #endif
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) \
- && defined(FEATURE_VECTOR_FACILITY)
+ && defined(FEATURE_S370_S390_VECTOR_FACILITY)
  #error Vector Facility not supported in ESAME mode
 #endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT) \
  && defined(NO_IEEE_SUPPORT)
- #undef FEATURE_FLOATING_POINT_EXTENSION_FACILITY
- #undef FEATURE_BINARY_FLOATING_POINT
  #undef FEATURE_037_FP_EXTENSIONS_FACILITY
+ #undef FEATURE_BINARY_FLOATING_POINT
+ #undef FEATURE_FPS_EXTENSIONS
 #endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT) \
@@ -605,17 +605,17 @@
 
 #if !defined(FEATURE_BASIC_FP_EXTENSIONS)
  #if defined(FEATURE_HFP_EXTENSIONS) \
-  || defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+  || defined(FEATURE_FPS_EXTENSIONS)
   #error Floating point extensions require basic FP extensions
  #endif
 #endif
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY) \
+#if defined(FEATURE_FPS_EXTENSIONS) \
  && !defined(FEATURE_BINARY_FLOATING_POINT)
  #error FP support extensions requires binary floating point
 #endif
 
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT) \
+#if defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY) \
  && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  #error HFP multiply add/subtract requires hexadecimal floating point
 #endif
@@ -625,7 +625,7 @@
  #error HFP unnormalized extension requires hexadecimal floating point
 #endif
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY) \
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY) \
  && !defined(FEATURE_BINARY_FLOATING_POINT)
  #error Floating point extension facility requires binary floating point
 #endif

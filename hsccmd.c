@@ -8312,7 +8312,7 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
 
     /* Visual Studio doesn't support macros split with #ifdefs */
     {
-#ifdef _FEATURE_VECTOR_FACILITY
+#ifdef _FEATURE_S370_S390_VECTOR_FACILITY
 
         u_int  nv  = sysblk.numvec;
 #else

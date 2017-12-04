@@ -1622,14 +1622,21 @@ typedef struct MBK  MBK;
                                            available in ESA/390 mode */
 #define STFL_ZARCH_INSTALLED       1    /* ESAME mode is available on
                                            this processor            */
-#define STFL_ZARCH_ACTIVE          2    /* ESAME mode is active on
-                                           this processor            */
-#define STFL_DAT_ENHANCEMENT_1     3    /* DAT-enhancement facility 1
-                                           installed in ESAME modes  */
+#define STFL_ZARCH_ACTIVE          2    /* z/Architecture architecural
+                                           mode active. When bit 2 and
+                                           168 are both zero, ESA/390
+                                           mode is active. When bit 2
+                                           is zero and bit 168 is one,
+                                           ESA/390-compatability mode
+                                           is active.                */
+#define STFL_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
+                                           is installed.             */
 #define STFL_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
-                                           when segtab invalidated   */
+                                           when segtab invalidated. Bit
+                                           3 is one if bit 4 is one. */
 #define STFL_IDTE_SC_REGTAB        5    /* IDTE selective clearing
-                                           when regtab invalidated   */
+                                           when regtab invalidated. Bit
+                                           3 and 4 one when bit 5 is */
 #define STFL_ASN_LX_REUSE          6    /* ASN-and-LX-reuse facility
                                            is installed              */
 #define STFL_STFL_EXTENDED         7    /* Store facility list    @Z9
@@ -1693,8 +1700,9 @@ typedef struct MBK  MBK;
 #define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                            facility installed     810*/
 #define STFL_FP_EXTENSIONS        37    /* Floating-point extension
-                                           facility installed     810*/
-#define STFL_ORDER_PRESERVE_CMPSC 38    /* Order-preserving-compression
+                                           facility installed. When bit
+                                           37 is one, so is bit 42.  */
+#define STFL_OP_CMPSC             38    /* Order-preserving-compression
                                            facility is installed     */
 #define STFL_IBM_INTERNAL_39      39    /* IBM internal use          */
 
@@ -1707,8 +1715,8 @@ typedef struct MBK  MBK;
                                            simulator) installed      */
 #define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
                                            (DFP) facility            */
-#define STFL_DFP_HPERF            43    /* DFP has high performance  */
-
+#define STFL_DFP_HPERF            43    /* DFP has high performance.
+                                           Bit 42 is one if bit 43 is*/
 #define STFL_PFPO                 44    /* PFPO instruction installed*/
 
 #define STFL_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
@@ -1717,21 +1725,22 @@ typedef struct MBK  MBK;
 
 #define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
                                            Facility installed     810*/
-#define STFL_DEC_FP_ZONE_CONV     48    /* Decimal-floating-point-
+#define STFL_DFP_ZONE_CONV        48    /* Decimal-floating-point-
                                            zoned-conversion facility */
 #define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
                                            trap, processor-assist and
                                            miscellaneous-instruction-
                                            extension-1 installed     */
 #define STFL_CONSTR_TRANSACT      50    /* Constrained-transactional-
-                                           execution facility        */
+                                           execution facility. Bit only
+                                           meaningful if bit 73 one. */
 #define STFL_LOCAL_TLB_CLEARING   51    /* Local-TLB-clearing        */
 
 #define STFL_INTERLOCKED_ACCESS_2 52    /* Interlocked-access-2      */
 
 #define STFL_LOAD_ON_CONDITION_2  53    /* Load/store-on-condition-2,
                                            load-and-zero-rightmost-byte */
-#define STFL_ENTROPY_ENC_CMPSC    54    /* Entropy-encoding compress */
+#define STFL_EE_CMPSC             54    /* Entropy-encoding compress */
 
 #define STFL_IBM_INTERNAL_55      55    /* IBM internal use          */
 
@@ -1769,8 +1778,8 @@ typedef struct MBK  MBK;
 
 #define STFL_IBM_INTERNAL_72      72    /* IBM internal use          */
 
-#define STFL_TRANSACT_EXEC        73    /* Transactional-execution   */
-
+#define STFL_TRANSACT_EXEC        73    /* Transactional-execution. Bit
+                                           49 is one when bit 73 one */
 #define STFL_STORE_HYPER_INFO     74    /* Store-hypervisor-info     */
 
 #define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
@@ -1783,13 +1792,13 @@ typedef struct MBK  MBK;
 
 #define STFL_UNASSIGNED_79        79    /* Unassigned                */
 
-#define STFL_DEC_FP_PACK_CONV     80    /* Deciaml-floating-point
+#define STFL_DFP_PACK_CONV        80    /* Deciaml-floating-point
                                            packed-conversion         */
 //efine STFL_UNASSIGNED_nn    81-127    /* Unassigned                */
 
 #define STFL_IBM_INTERNAL_128    128    /* IBM internal use          */
 
-#define STFL_VECTOR              129    /* Vector facility           */
+#define STFL_ZVECTOR             129    /* z/Arch Vector facility    */
 
 #define STFL_INSTR_EXEC_PROT     130    /* Instruction-execution-
                                            protection facility       */
@@ -1799,18 +1808,21 @@ typedef struct MBK  MBK;
 
 #define STFL_GUARDED_STORAGE     133    /* Guarded-storage facility  */
 
-#define STFL_VECTOR_PACK_DEC     134    /* Vector-packed-decimal     */
-
-#define STFL_VECTOR_ENH_1        135    /* Vector-enhancements-1     */
-
+#define STFL_ZVECTOR_PACK_DEC    134    /* Vector-packed-decimal. When
+                                           bit 134 is one, bit 129 is
+                                           also one.                 */
+#define STFL_ZVECTOR_ENH_1       135    /* Vector-enhancements-1. When
+                                           bit 135 is one, bit 129 is
+                                           also one.                 */
 #define STFL_UNASSIGNED_136      136    /* Unassigned                */
 
 #define STFL_UNASSIGNED_137      137    /* Unassigned                */
 
 #define STFL_CONFIG_ZARCH_MODE   138    /* Configuration-z/Architecture-
                                            architectural-mode        */
-#define STFL_MULTIPLE_EPOCH      139    /* Multiple-epoch facility   */
-
+#define STFL_MULTIPLE_EPOCH      139    /* Multiple-epoch facility. If
+                                           bit 139 is one, bits 25 and
+                                           28 are also one.          */
 #define STFL_IBM_INTERNAL_140    140    /* IBM internal use          */
 
 #define STFL_IBM_INTERNAL_141    141    /* IBM internal use          */
@@ -1824,7 +1836,8 @@ typedef struct MBK  MBK;
 #define STFL_INS_REF_BITS_MULT   145    /* Insert-reference-bits-
                                            multiple facility         */
 #define STFL_MSA_EXTENSION_8     146    /* Message-security-assist-
-                                           extension-8               */
+                                           extension-8. Bit 76 is one
+                                            when bit 146 is one.      */
 #define STFL_IBM_INTERNAL_147    147    /* IBM internal use          */
 
 //efine STFL_UNASSIGNED_nn   148-167    /* Unassigned                */

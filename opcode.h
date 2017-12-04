@@ -604,22 +604,20 @@ do { \
 /* Program check if fpc is not valid contents for FPC register */
 #undef FPC_BRM
 #undef FPC_CHECK
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)          /*810*/
-#define FPC_BRM FPC_BRM_3BIT
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
+#define FPC_BRM     FPC_BRM_3BIT
 #define FPC_CHECK(_fpc, _regs) \
     if(((_fpc) & FPC_RESV_FPX) \
      || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4 \
      || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5 \
      || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#else /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/   /*810*/
-#define FPC_BRM FPC_BRM_2BIT
+#else /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
+#define FPC_BRM     FPC_BRM_2BIT
 #define FPC_CHECK(_fpc, _regs) \
     if((_fpc) & FPC_RESERVED) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#endif /*!defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/  /*810*/
-
-
+#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
 
 #undef SIE_ACTIVE
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -2733,7 +2731,7 @@ do { \
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
 
-#if defined(FEATURE_VECTOR_FACILITY)
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
 #if !defined(_VFDEFS)
 
@@ -2834,7 +2832,7 @@ do { \
         INST_UPDATE_PSW((_regs), 4, 4); \
     }
 
-#endif /*defined(FEATURE_VECTOR_FACILITY)*/
+#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 #define PERFORM_SERIALIZATION(_regs) do { } while (0)
 #define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
@@ -3406,13 +3404,13 @@ DEF_INST(convert_float_short_to_fix64_reg); /* under construction! Bernard van d
 DEF_INST(convert_float_long_to_fix64_reg); /* under construction! Bernard van der Helm */
 DEF_INST(convert_float_ext_to_fix64_reg); /* under construction! Bernard van der Helm */
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined(FEATURE_FPS_EXTENSIONS)
 DEF_INST(load_float_ext_reg);
 DEF_INST(load_zero_float_short_reg);
 DEF_INST(load_zero_float_long_reg);
 DEF_INST(load_zero_float_ext_reg);
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+#if defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
 DEF_INST(multiply_add_float_short_reg);
 DEF_INST(multiply_add_float_long_reg);
 DEF_INST(multiply_add_float_short);
@@ -3421,7 +3419,7 @@ DEF_INST(multiply_subtract_float_short_reg);
 DEF_INST(multiply_subtract_float_long_reg);
 DEF_INST(multiply_subtract_float_short);
 DEF_INST(multiply_subtract_float_long);
-#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+#endif /*defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)*/
 
 #if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)
 DEF_INST(multiply_unnormal_float_long_to_ext_reg);              /*@Z9*/
@@ -4109,7 +4107,7 @@ DEF_INST(invalidate_expanded_storage_block_entry);
 
 
 /* Instructions in vector.c */
-#if defined(FEATURE_VECTOR_FACILITY)
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 DEF_INST(v_test_vmr);
 DEF_INST(v_complement_vmr);
 DEF_INST(v_count_left_zeros_in_vmr);
@@ -4136,7 +4134,7 @@ DEF_INST(v_load_vix_from_address);
 DEF_INST(v_store_vector_parameters);
 DEF_INST(v_save_vac);
 DEF_INST(v_restore_vac);
-#endif /*defined(FEATURE_VECTOR_FACILITY)*/
+#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 
 /* Instructions in esame.c */
@@ -4148,9 +4146,9 @@ DEF_INST(extract_fpc);
 DEF_INST(set_bfp_rounding_mode_2bit);
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
 DEF_INST(set_bfp_rounding_mode_3bit);                           /*810*/
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 #if defined(FEATURE_LINKAGE_STACK)
 DEF_INST(trap2);
 DEF_INST(trap4);
@@ -4392,10 +4390,10 @@ DEF_INST(subtract_logical_y);
 DEF_INST(test_under_mask_y);
 #endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
 
-#if defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)
+#if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
 DEF_INST(compare_and_swap_and_purge_long);
 DEF_INST(invalidate_dat_table_entry);
-#endif /*defined(FEATURE_003_DAT_ENHANCEMENT_FACILITY_1)*/
+#endif /*defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)*/
 #if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)
 DEF_INST(load_page_table_entry_address);                        /*@Z9*/
 #endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/
@@ -4476,12 +4474,12 @@ DEF_INST(ecpsvm_prefmach_assist);
 
 
 /* Instructions in ieee.c */
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined(FEATURE_FPS_EXTENSIONS)
 DEF_INST(convert_bfp_long_to_float_long_reg);
 DEF_INST(convert_bfp_short_to_float_long_reg);
 DEF_INST(convert_float_long_to_bfp_long_reg);
 DEF_INST(convert_float_long_to_bfp_short_reg);
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 DEF_INST(add_bfp_ext_reg);
@@ -4574,7 +4572,7 @@ DEF_INST(test_data_class_bfp_long);
 DEF_INST(test_data_class_bfp_ext);
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
-#if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
+#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
 DEF_INST(convert_fix32_to_dfp_ext_reg);                         /*810*/
 DEF_INST(convert_fix32_to_dfp_long_reg);                        /*810*/
 DEF_INST(convert_u32_to_dfp_ext_reg);                           /*810*/
@@ -4599,7 +4597,7 @@ DEF_INST(convert_bfp_short_to_u32_reg);                         /*810*/
 DEF_INST(convert_bfp_ext_to_u64_reg);                           /*810*/
 DEF_INST(convert_bfp_long_to_u64_reg);                          /*810*/
 DEF_INST(convert_bfp_short_to_u64_reg);                         /*810*/
-#endif /*defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)*/
+#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 
 /* Instructions in dfp.c */
 #if defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)

@@ -663,9 +663,9 @@ static char *pgmintname[] = {
       && code != PGM_ADDRESSING_EXCEPTION
       && code != PGM_SPECIFICATION_EXCEPTION
       && code != PGM_SPECIAL_OPERATION_EXCEPTION
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
       && code != PGM_VECTOR_OPERATION_EXCEPTION
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
         && SIE_FEATB(regs, MX, XC))
@@ -1366,10 +1366,10 @@ int i;
     initialize_condition (&regs->intcond);
     regs->cpulock = &sysblk.cpulock[cpu];
 
-#if defined(_FEATURE_VECTOR_FACILITY)
+#if defined(_FEATURE_S370_S390_VECTOR_FACILITY)
     regs->vf = &sysblk.vf[cpu];
     regs->vf->online = (cpu < sysblk.numvec);
-#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+#endif
     initial_cpu_reset(regs);
 
     if (hostregs == NULL)
@@ -1440,10 +1440,10 @@ void *cpu_uninit (int cpu, REGS *regs)
 
     if (processHostRegs)
     {
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
         /* Mark Vector Facility offline */
         regs->vf->online = 0;
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif
 
         /* Remove CPU from all CPU bit masks */
         sysblk.config_mask &= ~CPU_BIT(cpu);
@@ -1749,10 +1749,10 @@ int     aswitch;
         // "Processor %s%02X: architecture mode %s"
         WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
 
-#ifdef FEATURE_VECTOR_FACILITY
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
         if (regs->vf->online)
             WRMSG (HHC00812, "I", PTYPSTR(cpu), cpu);
-#endif /*FEATURE_VECTOR_FACILITY*/
+#endif
     }
 
     regs->program_interrupt = &ARCH_DEP(program_interrupt);

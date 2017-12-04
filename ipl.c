@@ -253,9 +253,9 @@ int ARCH_DEP(system_reset)
                 memset (regs->ar, 0, sizeof(regs->ar));
                 memset (regs->gr, 0, sizeof(regs->gr));
                 memset (regs->fpr, 0, sizeof(regs->fpr));
-                #if defined(_FEATURE_VECTOR_FACILITY)
+                #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
                     memset (regs->vf->vr, 0, sizeof(regs->vf->vr));
-                #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+                #endif
 
                 /* Clear the instruction counter and CPU time used */
                 cpu_reset_instcount_and_cputime(regs);

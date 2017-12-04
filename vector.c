@@ -27,7 +27,7 @@
 
 #include "inline.h"
 
-#if defined(FEATURE_VECTOR_FACILITY)
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
 /* The vector save area must be aligned on a boundary 8 times the
    section size, however VM stores at 4 times the section size.
@@ -922,7 +922,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#endif /*defined(FEATURE_VECTOR_FACILITY)*/
+#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 
 #if !defined(_GEN_ARCH)
