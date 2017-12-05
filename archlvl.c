@@ -346,11 +346,11 @@ FACILITY( MSA_EXTENSION_4,  Z390,         NONE,      Z390,                    AL
 //------------------------------------------------------------------------------------
 
 FACILITY( MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3 )
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1)
+#if defined(_FEATURE_MSA_EXTENSION_FACILITY_1)
 FACILITY( MSA_EXTENSION_1,  Z390,         NONE,      Z390,                    ALS3 )
 #endif
 
-#if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2)
+#if defined(_FEATURE_MSA_EXTENSION_FACILITY_2)
 FACILITY( MSA_EXTENSION_2,  Z390,         NONE,      Z390,                    ALS3 )
 #endif
 
