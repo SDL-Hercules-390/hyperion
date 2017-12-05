@@ -5,11 +5,14 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-//    This header file #included by 'featall.h' and 'hercules.h'
+//   This header file is #included by 'featall.h' and 'hercules.h'
 
-/*
-   All HOST-operating-specific (Win32, Apple. Linux, etc) FEATures
-   and OPTIONs that cannot be otherwise determined via configure.ac
+/*---------------------------------------------------------------------
+
+                        PROGRAMMING NOTE
+
+   All HOST-operating-specific (Win32, Apple. Linux, etc) features
+   and options that cannot otherwise be determined via configure.ac
    tests should be #defined here, and ONLY here!
 
    -----------------------------------------------------------------
@@ -35,8 +38,9 @@
 
    Feel free to design one.
 
-   Please. :)
-*/
+   Please.
+
+---------------------------------------------------------------------*/
 
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H
@@ -217,16 +221,19 @@
 
 #define IsEventSet(h)   (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
 
+/*-------------------------------------------------------------------*/
 /* Because Fish's TUNTAP emulation isn't seen as a network interface */
 /* by the host operating system, there is only one MAC address.      */
 /* (The Windows "tap" is a capture and re-inject mechanism)          */
+/*                                                                   */
 /* For other tuntap implementation, the host and guest have          */
 /* separate abstracted NIC implementation - and therefore require    */
 /* a separate MAC address to address that (lest briding won't work)  */
-
+/*                                                                   */
 /* If at one point, a TUNTAP implementation comes up and is then     */
 /* seen as a proper network interface by Windows, then this option   */
 /* will have to go away - or anyway "undefined" for windows          */
+/*-------------------------------------------------------------------*/
 #define   OPTION_TUNTAP_LCS_SAME_ADDR   1
 
 

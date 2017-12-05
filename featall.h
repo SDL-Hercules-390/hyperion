@@ -2,8 +2,8 @@
 /*              Architecture-dependent macro definitions             */
 
 /*-------------------------------------------------------------------*/
-/* Default features                                                  */
-/*   All existing features MUST be #undef-ed here.                   */
+/*               Default OPTIONs and FEATUREs                        */
+/*    *ALL* existing FEATUREs *must* be #undef-ed further below.     */
 /*-------------------------------------------------------------------*/
 
 #if !defined(OPTION_370_MODE) && !defined(NO_370_MODE)
@@ -55,11 +55,12 @@
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 
-/*-------------------------------------------------------------------*\
- *   The following set of default "OPTION_INLINE" settings were      *
- *   determined based on testing performed in late May of 2013:      *
- *      vstore/ifetch: inline,  logical/dat: DON'T inline.           *
-\*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*   The following set of default "OPTION_INLINE" settings were      */
+/*   determined based on testing performed in late May of 2013:      */
+/*      vstore/ifetch: inline,  logical/dat: DON'T inline.           */
+/*-------------------------------------------------------------------*/
+
 #if defined(    OPTION_INLINE_VSTORE ) && defined(  NO_OPTION_INLINE_VSTORE )
   #error Either OPTION_INLINE_VSTORE or NO_OPTION_INLINE_VSTORE must be specified, not both
 #elif !defined( OPTION_INLINE_VSTORE ) && !defined( NO_OPTION_INLINE_VSTORE )
@@ -85,7 +86,7 @@
 #define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
-//#define OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
+//efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
 
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
@@ -95,7 +96,7 @@
 #define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
-// #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
+//efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
 #if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
@@ -157,9 +158,9 @@
 // Leave FBA_SHARED alone, either #defined or #undefined, as desired.
 #endif // OPTION_SHARED_DEVICES
 
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 /*                  Hercules Mutex Locks Model                       */
-/*********************************************************************/
+/*-------------------------------------------------------------------*/
 
 #define  OPTION_MUTEX_NORMAL       1    /* re-obtain == deadlock     */
 #define  OPTION_MUTEX_ERRORCHECK   2    /* re-obtain == error        */
@@ -171,17 +172,15 @@
 #define  OPTION_MUTEX_DEFAULT      OPTION_MUTEX_ERRORCHECK
 #define  OPTION_RWLOCK_DEFAULT     OPTION_RWLOCK_PRIVATE
 
-/*********************************************************************\
- *********************************************************************
- **                                                                 **
- **                    ***   NOTE!   ***                            **
- **                                                                 **
- **    All HOST-operating-system-specific FEATUREs and OPTIONs      **
- **    should be #defined in the below header (and ONLY in the      **
- **    below header!) Please read the comments there!               **
- **                                                                 **
- *********************************************************************
-\*********************************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*                            NOTE!                                  */
+/*                                                                   */
+/*     All HOST-operating-system-specific features and options       */
+/*     should be #defined in the below header (and ONLY in the       */
+/*     below header!) Please read the comments there!                */
+/*                                                                   */
+/*********************************************************************/
 
 #include "hostopts.h"     // (HOST-specific options/feature settings)
 
@@ -195,6 +194,18 @@
 #if defined(OPTION_900_MODE) && defined(NO_900_MODE)
   #undef    OPTION_900_MODE
 #endif
+
+/*********************************************************************/
+/*                                                                   */
+/*                            NOTE!                                  */
+/*                                                                   */
+/*       *ALL* 'FEATURE' constants *MUST* be #undef-ed below!        */
+/*                                                                   */
+/*********************************************************************/
+
+/*-------------------------------------------------------------------*/
+/*      FEATUREs with STFL/STFLE facility bits defined               */
+/*-------------------------------------------------------------------*/
 
 #undef  FEATURE_000_N3_INSTR_FACILITY
 #undef  FEATURE_001_ZARCH_INSTALLED_FACILITY
@@ -284,6 +295,10 @@
 #undef  FEATURE_145_INS_REF_BITS_MULT_FACILITY
 #undef  FEATURE_146_MSA_EXTENSION_FACILITY_8
 #undef  FEATURE_168_ESA390_COMPAT_MODE_FACILITY
+
+/*-------------------------------------------------------------------*/
+/*      FEATUREs that DON'T have any facility bits defined           */
+/*-------------------------------------------------------------------*/
 
 #undef  FEATURE_2K_STORAGE_KEYS
 #undef  FEATURE_4K_STORAGE_KEYS
