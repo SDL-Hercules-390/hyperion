@@ -19,7 +19,7 @@
 #endif
 
 #if !defined(OPTION_900_MODE) && !defined(NO_900_MODE)
-#define OPTION_900_MODE                 /* Generate ESAME support    */
+#define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
 #if !defined(OPTION_LPP_RESTRICT) && !defined(NO_LPP_RESTRICT)

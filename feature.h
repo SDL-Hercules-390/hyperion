@@ -8,44 +8,73 @@
   #endif /*  _CONFIG_H*/
 #endif
 
-#if !defined(FEATCHK_CHECK_DONE)
-  #include  "featall.h"
-  #include  "feat370.h"
-  #include  "feat390.h"
-  #include  "feat900.h"
-  #define   FEATCHK_CHECK_ALL
-  #include  "featchk.h"
-  #undef    FEATCHK_CHECK_ALL
-  #define   FEATCHK_CHECK_DONE
+/*-------------------------------------------------------------------*/
+/*  The below section of code causes the 'featchk.h' header file     */
+/*  to be #included multiple times, each time accomplishing some-    */
+/*  thing different.  The first time it simply #defines _FEATUREs    */
+/*  (with a leading underscore) depending on whether ANY of the      */
+/*  build architectures #define that feature.  The second time it    */
+/*  checks the sanity of FEATURE combinations, i.e. if feature X     */
+/*  is defined then feature Y must also be defined, etc.  Refer to   */
+/*  the actual 'featchk.h' header file itself for details.           */
+/*-------------------------------------------------------------------*/
 
-  #if defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined( DID_FEATCHK_PASS_1 )      // (did we do pass 1 yet?)
+
+  #define     FEATCHK_DO_DEFINES        // (if not then do it now)
+
+  #include  "featall.h"                 // (#undef *ALL* FEATUREs)
+  #include  "feat370.h"                 // (#define 370 FEATUREs)
+  #include  "feat390.h"                 // (#define 390 FEATUREs)
+  #include  "feat900.h"                 // (#define 900 FEATUREs)
+  #include  "featchk.h"                 // (featchk pass 1: defines)
+
+  #undef  FEATCHK_DO_DEFINES            // (enable featchk pass 2)
+  #define DID_FEATCHK_PASS_1            // (don't do pass 1 twice)
+
+  #if defined( _FEATURE_2K_STORAGE_KEYS )
     #define _STORKEY_ARRAY_UNITSIZE   2048
   #else
     #define _STORKEY_ARRAY_UNITSIZE   4096
   #endif
 
-#endif /*!defined(FEATCHK_CHECK_DONE)*/
+#endif /* !defined( DID_FEATCHK_PASS_1 ) */
 
-#undef __GEN_ARCH
-#if defined(_GEN_ARCH)
- #define __GEN_ARCH _GEN_ARCH
+/*-------------------------------------------------------------------*/
+/*  Now #define the FEATUREs for the current build architecture(s)   */
+/*-------------------------------------------------------------------*/
+
+#undef       __GEN_ARCH                 // (TWO underscores!)
+#if !defined( _GEN_ARCH )               // (ONE underscore!)
+ #define __GEN_ARCH   _ARCHMODE1        // (first build architecture)
 #else
- #define __GEN_ARCH _ARCHMODE1
+ #define __GEN_ARCH   _GEN_ARCH         // (next build architecture)
 #endif
 
-#include  "featall.h"
+#include  "featall.h"                   // (all FEATUREs #undef'ed here)
 
-#if   __GEN_ARCH == 370
- #include "feat370.h"
-#elif     __GEN_ARCH == 390
- #include "feat390.h"
-#elif     __GEN_ARCH == 900
- #include "feat900.h"
+#if   __GEN_ARCH == 370                 // (building for S/370?)
+ #include      "feat370.h"              // (#define S/370 FEATUREs)
+
+#elif __GEN_ARCH == 390                 // (building for S/390?)
+ #include      "feat390.h"              // (#define S/390 FEATUREs)
+
+#elif __GEN_ARCH == 900                 // (building for z/Arch?)
+ #include      "feat900.h"              // (#define z/Arch FEATUREs)
+
 #else
  #error Unable to determine Architecture Mode
 #endif
 
-#include  "featchk.h"
+#include  "featchk.h"                   // (featchk pass 2: sanity checks)
+
+/*-------------------------------------------------------------------*/
+/*  The following are the various constants and macros which vary    */
+/*  by build architecture.  When __GEN_ARCH == 370, #defines for     */
+/*  the S/370 architecture are made, etc.  Constants and macros      */
+/*  common for all build architectures follow much further below,    */
+/*  past this section of code.                                       */
+/*-------------------------------------------------------------------*/
 
 #undef ARCH_MODE
 #undef APPLY_PREFIXING
@@ -116,7 +145,9 @@
 #undef PER_SB
 #undef CHANNEL_MASKS
 
+/*----------------------------------------------------------------------------*/
 #if __GEN_ARCH == 370
+/*----------------------------------------------------------------------------*/
 
 #define ARCH_MODE   ARCH_370
 
@@ -242,7 +273,9 @@ s370_ ## _name
 #define STORAGE_KEY(_addr, _pointer) \
    (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
+/*----------------------------------------------------------------------------*/
 #elif __GEN_ARCH == 390
+/*----------------------------------------------------------------------------*/
 
 #define ARCH_MODE   ARCH_390
 
@@ -380,7 +413,9 @@ s390_ ## _name
 #define STORAGE_KEY(_addr, _pointer) \
    (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
+/*----------------------------------------------------------------------------*/
 #elif __GEN_ARCH == 900
+/*----------------------------------------------------------------------------*/
 
 #define ARCH_MODE   ARCH_900
 
@@ -532,11 +567,20 @@ z900_ ## _name
 #define STORAGE_KEY(_addr, _pointer) \
    (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
-#else
+/*----------------------------------------------------------------------------*/
+#else // __GEN_ARCH != 370 or 390 or 900...
+/*----------------------------------------------------------------------------*/
 
   WARNING( "__GEN_ARCH must be 370, 390, 900 or undefined" )
 
 #endif
+
+/*-------------------------------------------------------------------*/
+/*  The following section of code defines constants and macros that  */
+/*  are not generally architecture dependent.  That is, the below    */
+/*  are #defines common for all build architectures (or independent  */
+/*  of a given build architecture).                                  */
+/*-------------------------------------------------------------------*/
 
 #undef STORAGE_KEY1
 #undef STORAGE_KEY2
