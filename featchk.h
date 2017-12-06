@@ -29,125 +29,20 @@
 /*  done during pass 2.  You should only be doing #defines here.     */
 /*-------------------------------------------------------------------*/
 
-/* FEATURE_INTERPRETIVE_EXECUTION is related to host related issues
-   _FEATURE_SIE is related to guest (emulation) related issues.  This
-   is because if FEATURE_INTERPRETIVE_EXECUTION is defined for say 390
-   mode, then _FEATURE_SIE will also need to be in 370 too in order to
-   support 370 mode SIE emulation.
-*/
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
- #define  _FEATURE_SIE    // (370/390 SIE)
- #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-  #define _FEATURE_ZSIE   // (z/Arch SIE)
- #endif
- #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL )
-  #define    _FEATURE_PROTECTION_INTERCEPTION_CONTROL
- #endif
-#endif
-
-/* _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE is used for host
-   related processing issues, FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
-   is defined only in ESA/390 mode. MCDS is an ESA/390
-   feature that is supported under z/Architecture SIE
-*/
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
- #define    _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
-#endif
-
-#if defined( FEATURE_2K_STORAGE_KEYS )
- #define    _FEATURE_2K_STORAGE_KEYS
-#endif
-
-#if defined( FEATURE_INTERVAL_TIMER )
- #define    _FEATURE_INTERVAL_TIMER
-#endif
-
-#if defined( FEATURE_ECPSVM )
- #define    _FEATURE_ECPSVM
-#endif
-
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
- #define    _FEATURE_S370_S390_VECTOR_FACILITY
-#endif
-
-#if defined( FEATURE_CHANNEL_SUBSYSTEM )
- #define    _FEATURE_CHANNEL_SUBSYSTEM
-#endif
-
-#if defined( FEATURE_SYSTEM_CONSOLE )
- #define    _FEATURE_SYSTEM_CONSOLE
-#endif
-
-#if defined( FEATURE_EXPANDED_STORAGE )
- #define    _FEATURE_EXPANDED_STORAGE
-#endif
-
-#if defined( FEATURE_ECPSVM )
- #define    _FEATURE_ECPSVM
-#endif
-
-#if defined( _FEATURE_SIE ) && defined( FEATURE_STORAGE_KEY_ASSIST )
- #define _FEATURE_STORAGE_KEY_ASSIST
-#endif
-
-#if defined( FEATURE_CPU_RECONFIG )
- #define    _FEATURE_CPU_RECONFIG
-#endif
-
-#if defined( FEATURE_PER )
- #define    _FEATURE_PER
-#endif
-
-#if defined( FEATURE_PER2 )
- #define    _FEATURE_PER2
-#endif
-
-#if defined( FEATURE_EXPEDITED_SIE_SUBSET )
- #define    _FEATURE_EXPEDITED_SIE_SUBSET
-#endif
-
-#if defined( FEATURE_REGION_RELOCATE )
- #define    _FEATURE_REGION_RELOCATE
-#endif
-
-#if defined( FEATURE_IO_ASSIST )
- #define    _FEATURE_IO_ASSIST
-#endif
-
-#if defined( FEATURE_WAITSTATE_ASSIST )
- #define    _FEATURE_WAITSTATE_ASSIST
-#endif
-
-#if defined( FEATURE_EXTERNAL_INTERRUPT_ASSIST )
- #define    _FEATURE_EXTERNAL_INTERRUPT_ASSIST
-#endif
-
-#if defined( FEATURE_017_MSA_FACILITY )
- #define    _FEATURE_017_MSA_FACILITY
-#endif
-
-#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
- #define    _FEATURE_006_ASN_LX_REUSE_FACILITY
-#endif
-
-#if defined( FEATURE_INTEGRATED_3270_CONSOLE )
- #define    _FEATURE_INTEGRATED_3270_CONSOLE
-#endif
-
-#if defined( FEATURE_INTEGRATED_ASCII_CONSOLE )
- #define    _FEATURE_INTEGRATED_ASCII_CONSOLE
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
+ #define    _FEATURE_000_N3_INSTR_FACILITY
 #endif
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
  #define    _FEATURE_001_ZARCH_INSTALLED_FACILITY
 #endif
 
-#if defined( FEATURE_000_N3_INSTR_FACILITY )
- #define    _FEATURE_000_N3_INSTR_FACILITY
-#endif
-
 #if defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  #define    _FEATURE_003_DAT_ENHANCE_FACILITY_1
+#endif
+
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
+ #define    _FEATURE_006_ASN_LX_REUSE_FACILITY
 #endif
 
 #if defined( FEATURE_007_STFL_EXTENDED_FACILITY )
@@ -270,6 +165,10 @@
  #define    _FEATURE_045_FAST_BCR_SERIAL_FACILITY
 #endif
 
+#if defined( FEATURE_047_CMPSC_ENH_FACILITY )
+ #define    _FEATURE_047_CMPSC_ENH_FACILITY
+#endif
+
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
  #define    _FEATURE_066_RES_REF_BITS_MULT_FACILITY
 #endif
@@ -286,14 +185,6 @@
  #define    _FEATURE_075_ACC_EX_FS_INDIC_FACILITY
 #endif
 
-#if defined( FEATURE_MSA_EXTENSION_FACILITY_1 )
- #define    _FEATURE_MSA_EXTENSION_FACILITY_1
-#endif
-
-#if defined( FEATURE_MSA_EXTENSION_FACILITY_2 )
- #define    _FEATURE_MSA_EXTENSION_FACILITY_2
-#endif
-
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
  #define    _FEATURE_076_MSA_EXTENSION_FACILITY_3
 #endif
@@ -302,32 +193,38 @@
  #define    _FEATURE_077_MSA_EXTENSION_FACILITY_4
 #endif
 
-#if defined( FEATURE_VM_BLOCKIO )
- #define    _FEATURE_VM_BLOCKIO
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_2K_STORAGE_KEYS )
+ #define    _FEATURE_2K_STORAGE_KEYS
 #endif
 
-#if defined( FEATURE_QEBSM )
- #define    _FEATURE_QEBSM
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+ #define    _FEATURE_CHANNEL_SUBSYSTEM
 #endif
 
-#if defined( FEATURE_QDIO_THININT )
- #define    _FEATURE_QDIO_THININT
+#if defined( FEATURE_CPU_RECONFIG )
+ #define    _FEATURE_CPU_RECONFIG
 #endif
 
-#if defined( FEATURE_SVS )
- #define    _FEATURE_SVS
+#if defined( FEATURE_ECPSVM )
+ #define    _FEATURE_ECPSVM
 #endif
 
-#if defined( FEATURE_QDIO_TDD )
- #define    _FEATURE_QDIO_TDD
+#if defined( FEATURE_EMULATE_VM )
+ #define    _FEATURE_EMULATE_VM
 #endif
 
-#if defined( FEATURE_HYPERVISOR )
- #define    _FEATURE_HYPERVISOR
+#if defined( FEATURE_EXPANDED_STORAGE )
+ #define    _FEATURE_EXPANDED_STORAGE
 #endif
 
-#if defined( FEATURE_SCSI_IPL )
- #define    _FEATURE_SCSI_IPL
+#if defined( FEATURE_EXPEDITED_SIE_SUBSET )
+ #define    _FEATURE_EXPEDITED_SIE_SUBSET
+#endif
+
+#if defined( FEATURE_EXTERNAL_INTERRUPT_ASSIST )
+ #define    _FEATURE_EXTERNAL_INTERRUPT_ASSIST
 #endif
 
 #if defined( FEATURE_HARDWARE_LOADER )
@@ -336,17 +233,118 @@
 
 #if defined(  FEATURE_HERCULES_DIAGCALLS )
  #define     _FEATURE_HERCULES_DIAGCALLS
- #if defined( FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
-  #define    _FEATURE_HOST_RESOURCE_ACCESS_FACILITY
- #endif
 #endif
 
-#if defined( FEATURE_EMULATE_VM )
- #define    _FEATURE_EMULATE_VM
+#if defined( FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
+ #define    _FEATURE_HOST_RESOURCE_ACCESS_FACILITY
 #endif
 
-#if defined( FEATURE_047_CMPSC_ENH_FACILITY )
- #define    _FEATURE_047_CMPSC_ENH_FACILITY
+#if defined( FEATURE_HYPERVISOR )
+ #define    _FEATURE_HYPERVISOR
+#endif
+
+#if defined( FEATURE_INTEGRATED_3270_CONSOLE )
+ #define    _FEATURE_INTEGRATED_3270_CONSOLE
+#endif
+
+#if defined( FEATURE_INTEGRATED_ASCII_CONSOLE )
+ #define    _FEATURE_INTEGRATED_ASCII_CONSOLE
+#endif
+
+#if defined( FEATURE_INTERVAL_TIMER )
+ #define    _FEATURE_INTERVAL_TIMER
+#endif
+
+#if defined( FEATURE_IO_ASSIST )
+ #define    _FEATURE_IO_ASSIST
+#endif
+
+#if defined( FEATURE_MSA_EXTENSION_FACILITY_1 )
+ #define    _FEATURE_MSA_EXTENSION_FACILITY_1
+#endif
+
+#if defined( FEATURE_MSA_EXTENSION_FACILITY_2 )
+ #define    _FEATURE_MSA_EXTENSION_FACILITY_2
+#endif
+
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
+ #define    _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
+#endif
+
+#if defined( FEATURE_PER )
+ #define    _FEATURE_PER
+#endif
+
+#if defined( FEATURE_PER2 )
+ #define    _FEATURE_PER2
+#endif
+
+#if defined( FEATURE_QDIO_TDD )
+ #define    _FEATURE_QDIO_TDD
+#endif
+
+#if defined( FEATURE_QDIO_THININT )
+ #define    _FEATURE_QDIO_THININT
+#endif
+
+#if defined( FEATURE_QEBSM )
+ #define    _FEATURE_QEBSM
+#endif
+
+#if defined( FEATURE_REGION_RELOCATE )
+ #define    _FEATURE_REGION_RELOCATE
+#endif
+
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
+ #define    _FEATURE_S370_S390_VECTOR_FACILITY
+#endif
+
+#if defined( FEATURE_SCSI_IPL )
+ #define    _FEATURE_SCSI_IPL
+#endif
+
+#if defined( FEATURE_SVS )
+ #define    _FEATURE_SVS
+#endif
+
+#if defined( FEATURE_SYSTEM_CONSOLE )
+ #define    _FEATURE_SYSTEM_CONSOLE
+#endif
+
+#if defined( FEATURE_VM_BLOCKIO )
+ #define    _FEATURE_VM_BLOCKIO
+#endif
+
+#if defined( FEATURE_WAITSTATE_ASSIST )
+ #define    _FEATURE_WAITSTATE_ASSIST
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                     PROGRAMMING NOTE                              */
+/*-------------------------------------------------------------------*/
+/* Ideally, none of the #defines made in pass 1 should be dependent  */
+/* on any other #define (i.e. your #if statements should not have    */
+/* multiple conditions ('&&' or '||') or be dependent on the order   */
+/* (sequence) that #defines are being made). The below tiny section  */
+/* of code pertaining to SIE appears to be an exception to the rule. */
+/*-------------------------------------------------------------------*/
+
+#if defined(   FEATURE_INTERPRETIVE_EXECUTION )
+
+  #define     _FEATURE_SIE    // (370/390 SIE)
+
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+    #define   _FEATURE_ZSIE   // (z/Arch SIE)
+  #endif
+
+  #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL )
+    #define   _FEATURE_PROTECTION_INTERCEPTION_CONTROL
+  #endif
+
+  #if defined( FEATURE_STORAGE_KEY_ASSIST )
+    #define   _FEATURE_STORAGE_KEY_ASSIST
+  #endif
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -512,7 +510,7 @@
  #error Expanded storage cannot be defined with 2K storage keys
 #endif
 
-#if defined(_900) && defined( FEATURE_S370_S390_VECTOR_FACILITY )
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
  #error Vector Facility not supported on z/Arch capable processors
 #endif
 
@@ -553,7 +551,7 @@
  #error MCDS requires storage key assist
 #endif
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined( FEATURE_SIE ) \
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_SIE ) \
     && !defined( FEATURE_STORAGE_KEY_ASSIST )
  #error z/Arch SIE requires storage key assist
 #endif
