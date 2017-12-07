@@ -716,19 +716,16 @@
  #error z/Arch SIE requires storage key assist
 #endif
 
-#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
- #if !defined( FEATURE_DUAL_ADDRESS_SPACE )
-  #error ASN-and-LX-Reuse facility requires Dual Address-Space feature
- #endif
- #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-  #error ASN-and-LX-Reuse facility is only supported with z/Arch
- #endif
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+ #error ASN-and-LX-Reuse facility is only supported with z/Arch
 #endif
 
-#if defined( FEATURE_007_STFL_EXTENDED_FACILITY )
-  #if !defined( FEATURE_STORE_FACILITY_LIST )
-    #error FEATURE_007_STFL_EXTENDED_FACILITY requires FEATURE_STORE_FACILITY_LIST
-  #endif
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) && !defined( FEATURE_DUAL_ADDRESS_SPACE )
+ #error ASN-and-LX-Reuse facility requires Dual Address-Space feature
+#endif
+
+#if defined( FEATURE_007_STFL_EXTENDED_FACILITY ) && !defined( FEATURE_STORE_FACILITY_LIST )
+ #error Store Facility List Extended Facility requires FEATURE_STORE_FACILITY_LIST
 #endif
 
 #if defined( FEATURE_020_HFP_MULT_ADD_SUB_FACILITY ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
@@ -751,16 +748,13 @@
  #error Decimal floating point facility requires basic FP extensions
 #endif
 
-#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
-  #if !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
-    #error CPU Measurement/Sampling facilities requires Load Program Parameter facility
-  #endif
+#if (defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )) \
+ && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
+ #error CPU Measurement/Sampling facilities requires Load Program Parameter facility
 #endif
 
-#if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
-  #if !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
-    #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
-  #endif
+#if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY ) && !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
+ #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -784,10 +778,8 @@
  #error Cancel I/O facility requires Channel Subsystem
 #endif
 
-#if defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
-  #if !defined( FEATURE_SUPPRESSION_ON_PROTECTION )
-    #error Enhanced Suppression on Protection facility requires Suppression on Protection feature
-  #endif
+#if defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION ) && !defined( FEATURE_SUPPRESSION_ON_PROTECTION )
+ #error Enhanced Suppression on Protection facility requires Suppression on Protection feature
 #endif
 
 #if defined( FEATURE_EXPANDED_STORAGE ) && !defined( FEATURE_4K_STORAGE_KEYS )
@@ -810,10 +802,9 @@
  #error FP support extensions requires binary floating point
 #endif
 
-#if defined( FEATURE_HFP_EXTENSIONS ) || defined( FEATURE_FPS_EXTENSIONS )
- #if !defined( FEATURE_BASIC_FP_EXTENSIONS )
-  #error Floating point extensions requires basic FP extensions
- #endif
+#if (defined( FEATURE_FPS_EXTENSIONS )|| defined( FEATURE_HFP_EXTENSIONS )) \
+ && !defined( FEATURE_BASIC_FP_EXTENSIONS )
+ #error Floating point extensions requires basic FP extensions
 #endif
 
 #if defined( FEATURE_HOST_RESOURCE_FACILITY ) && !defined( _FEATURE_HERCULES_DIAGCALLS )
