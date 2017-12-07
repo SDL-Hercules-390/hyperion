@@ -1620,7 +1620,7 @@ typedef struct MBK  MBK;
 #define STFL_N3_ESA390             0    /* Instructions marked N3 in
                                            the reference summary are
                                            available in ESA/390 mode */
-#define STFL_ZARCH_INSTALLED       1    /* ESAME mode is available on
+#define STFL_ZARCH_INSTALLED       1    /* z/Arch mode is available on
                                            this processor            */
 #define STFL_ZARCH_ACTIVE          2    /* z/Architecture architecural
                                            mode active. When bit 2 and
@@ -1664,7 +1664,8 @@ typedef struct MBK  MBK;
 #define STFL_LONG_DISPL_INST      18    /* Long displacement facility
                                            is installed              */
 #define STFL_LONG_DISPL_HPERF     19    /* Long displacement facility
-                                           has high performance      */
+                                           has high performance. Bit 18
+                                           is one if bit 19 is one.  */
 #define STFL_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
                                            facility is installed     */
 #define STFL_EXTENDED_IMMED       21    /* Extended immediate     @Z9
@@ -1707,14 +1708,14 @@ typedef struct MBK  MBK;
 #define STFL_IBM_INTERNAL_39      39    /* IBM internal use          */
 
 #define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
-                                           facility installed (ESAME)*/
+                                           facility installed z/Arch */
 #define STFL_FPS_ENHANCEMENTS     41    /* Floating point support
                                            enhancements (DFP-rounding,
                                            FPR-GR-transfer, FPS-sign-
                                            handling and IEEE-exception-
                                            simulator) installed      */
 #define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
-                                           (DFP) facility            */
+                                           (DFP) facility installed. */
 #define STFL_DFP_HPERF            43    /* DFP has high performance.
                                            Bit 42 is one if bit 43 is*/
 #define STFL_PFPO                 44    /* PFPO instruction installed*/
@@ -1726,7 +1727,9 @@ typedef struct MBK  MBK;
 #define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
                                            Facility installed     810*/
 #define STFL_DFP_ZONE_CONV        48    /* Decimal-floating-point-
-                                           zoned-conversion facility */
+                                           zoned-conversion facility
+                                           installed. Bit 42 is also
+                                           one when bit 48 is one.   */
 #define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
                                            trap, processor-assist and
                                            miscellaneous-instruction-
@@ -1767,9 +1770,9 @@ typedef struct MBK  MBK;
 #define STFL_RES_REF_BITS_MUL     66    /* Reset-Reference-Bits-    810
                                            Multiple Fac installed 810*/
 #define STFL_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
-                                           facility installed (ESAME)*/
+                                           facility installed z/Arch */
 #define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
-                                           facility installed (ESAME)*/
+                                           facility installed z/Arch */
 #define STFL_IBM_INTERNAL_69      69    /* IBM internal use          */
 
 #define STFL_IBM_INTERNAL_70      70    /* IBM internal use          */
@@ -1792,8 +1795,10 @@ typedef struct MBK  MBK;
 
 #define STFL_UNASSIGNED_79        79    /* Unassigned                */
 
-#define STFL_DFP_PACK_CONV        80    /* Deciaml-floating-point
-                                           packed-conversion         */
+#define STFL_DFP_PACK_CONV        80    /* Decimal-floating-point
+                                           packed-conversion facility
+                                           installed. Bit 42 is also
+                                           one when bit 80 is one.   */
 //efine STFL_UNASSIGNED_nn    81-127    /* Unassigned                */
 
 #define STFL_IBM_INTERNAL_128    128    /* IBM internal use          */
@@ -1842,7 +1847,9 @@ typedef struct MBK  MBK;
 
 //efine STFL_UNASSIGNED_nn   148-167    /* Unassigned                */
 
-#define STFL_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode*/
+#define STFL_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode.
+                                           Bit 168 can only be 1 when
+                                           bit 2 is zero.            */
 
 //efine STFL_UNASSIGNED_nn   169-255    /* Unassigned                */
 
