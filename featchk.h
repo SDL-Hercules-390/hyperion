@@ -29,6 +29,28 @@
 /*  done during pass 2.  You should only be doing #defines here.     */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------*/
+/*              Some FEATUREs force other FEATUREs                   */
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
+  #define    FEATURE_S370E_EXTENDED_ADDRESSING
+#endif
+
+/*-------------------------------------------------------------------*/
+/*      Some build options override/disable certain FEATUREs         */
+/*-------------------------------------------------------------------*/
+
+#if defined( NO_IEEE_SUPPORT )
+ #undef FEATURE_037_FP_EXTENSIONS_FACILITY
+ #undef FEATURE_BINARY_FLOATING_POINT
+ #undef FEATURE_FPS_EXTENSIONS
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                   Facility-bit FEATUREs                           */
+/*-------------------------------------------------------------------*/
+
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
  #define    _FEATURE_000_N3_INSTR_FACILITY
 #endif
@@ -194,6 +216,8 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                  Non-facility-bit FEATUREs                        */
+/*-------------------------------------------------------------------*/
 
 #if defined( FEATURE_2K_STORAGE_KEYS )
  #define    _FEATURE_2K_STORAGE_KEYS
@@ -348,7 +372,18 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Set constants related to memory accessing and dynamic translation */
+/*        Memory accessing and dynamic translation #defines          */
+/*-------------------------------------------------------------------*/
+/* Ordinarily #defines related to DLL_IMPORT, DLL_EXPORT and extern  */
+/* are performed within the 'hexterns.h' header in coordination with */
+/* the source member and loadable module itself (see e.g. hsccmd.c   */
+/* _HSCCMD_C_ and _HENGINE_DLL_ handshaking with hexterns.h header). */
+/* Since guest memory accessing and dynamic address translation are  */
+/* common to across ALL build architectures however (and we wish to  */
+/* declare such functions 'static inline' for speed, which requires  */
+/* that they all be declared identically across all architectures),  */
+/* it's easier and more reliable to do the #defines here instead.    */
+/* (see for example source files dat.h/dat.c and vstore.h/vstore.c)  */
 /*-------------------------------------------------------------------*/
 
 #undef      _VSTORE_C_STATIC
@@ -406,9 +441,11 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                 Build architecture #defines                       */
+/*-------------------------------------------------------------------*/
 /* _nnn (_370, _390, _900) are architectures present in the build.   */
-/* _ARCH_nnn are the index for each arch within the decode table.    */
 /* _ARCHMODEn controls self including for arch-dependent compiles.   */
+/* _ARCH_nnn is the index for each arch within various tables.       */
 /*-------------------------------------------------------------------*/
 
 #if  !defined( OPTION_370_MODE ) \
@@ -492,92 +529,27 @@
 /*  IDEALLY, you should not be doing any #defines here.  You should  */
 /*  only be doing #if and #error.  All of the #defines should have   */
 /*  ideally already been done in the previous section above during   */
-/*  the first pass of this header.                                   */
+/*  the first pass of this header.  This is to prevent any type of   */
+/*  dependency on the order/sequence of checking.  *NONE* of the     */
+/*  below sanity checks should depend on any prior/previous check.   */
 /*-------------------------------------------------------------------*/
 
-#if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
- || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
- #error Storage keys must be 2K or 4K
-#endif
-
-#if defined(   FEATURE_EXTENDED_STORAGE_KEYS )
- #if !defined( FEATURE_S370E_EXTENDED_ADDRESSING )
-  #define      FEATURE_S370E_EXTENDED_ADDRESSING
- #endif
-#endif
-
-#if defined( FEATURE_EXPANDED_STORAGE ) && !defined( FEATURE_4K_STORAGE_KEYS )
- #error Expanded storage cannot be defined with 2K storage keys
-#endif
-
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
- #error Vector Facility not supported on z/Arch capable processors
-#endif
-
-#if !defined( FEATURE_S370_CHANNEL ) && !defined( FEATURE_CHANNEL_SUBSYSTEM )
- #error Either S/370 Channel or Channel Subsystem must be defined
-#endif
-
-#if defined( FEATURE_S370_CHANNEL ) && defined( FEATURE_CHANNEL_SUBSYSTEM )
- #error S/370 Channel and Channel Subsystem cannot both be defined
-#endif
-
-#if defined( FEATURE_CANCEL_IO_FACILITY ) && !defined( FEATURE_CHANNEL_SUBSYSTEM )
- #error Cancel I/O facility requires Channel Subsystem
-#endif
-
-#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && !defined( FEATURE_4K_STORAGE_KEYS )
- #error Move page facility cannot be defined with 2K storage keys
-#endif
-
-#if defined( FEATURE_FAST_SYNC_DATA_MOVER ) && !defined( FEATURE_MOVE_PAGE_FACILITY_2 )
- #error Fast sync data mover facility requires Move page facility
-#endif
+/*-------------------------------------------------------------------*/
+/*                   Facility-bit FEATUREs                           */
+/*-------------------------------------------------------------------*/
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && \
     defined( FEATURE_INTERPRETIVE_EXECUTION ) && !defined( _FEATURE_SIE )
  #error ESA/390 SIE must also be defined when defining z/Arch SIE
 #endif
 
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
- #error MCDS is only supported with SIE
-#endif
-
-#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
- #error Protection Interception Control is only supported with SIE
-#endif
-
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_STORAGE_KEY_ASSIST )
- #error MCDS requires storage key assist
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_S370_S390_VECTOR_FACILITY )
+ #error non-z/Arch Vector Facility (S/370 or S/390) not supported in z/Arch mode
 #endif
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_SIE ) \
     && !defined( FEATURE_STORAGE_KEY_ASSIST )
  #error z/Arch SIE requires storage key assist
-#endif
-
-#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
- #error Storage Key assist only supported with SIE
-#endif
-
-#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
- #error Region Relocate Facility only supported with SIE
-#endif
-
-#if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_SIE )
- #error I/O Assist Feature only supported with SIE
-#endif
-
-#if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_REGION_RELOCATE )
- #error Region Relocate Facility required for IO Assist
-#endif
-
-#if defined( FEATURE_EXTERNAL_INTERRUPT_ASSIST ) && !defined( _FEATURE_SIE )
- #error External Interruption assist only supported with SIE
-#endif
-
-#if defined( FEATURE_EXPEDITED_SIE_SUBSET ) && !defined( _FEATURE_SIE )
- #error Expedited SIE Subset only supported with SIE
 #endif
 
 #if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
@@ -589,36 +561,10 @@
  #endif
 #endif
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_S370_S390_VECTOR_FACILITY )
- #error non-z/Arch Vector Facility (S/370 or S/390) not supported in z/Arch mode
-#endif
-
-#if defined( FEATURE_BINARY_FLOATING_POINT ) && defined( NO_IEEE_SUPPORT )
- #undef FEATURE_037_FP_EXTENSIONS_FACILITY
- #undef FEATURE_BINARY_FLOATING_POINT
- #undef FEATURE_FPS_EXTENSIONS
-#endif
-
-#if defined( FEATURE_BINARY_FLOATING_POINT ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
- #error Binary floating point requires basic FP extensions
-#endif
-
-#if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
- #error Decimal floating point facility requires basic FP extensions
-#endif
-
-#if defined( FEATURE_BASIC_FP_EXTENSIONS ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
- #error Basic FP extensions requires hexadecimal floating point
-#endif
-
-#if defined( FEATURE_HFP_EXTENSIONS ) || defined( FEATURE_FPS_EXTENSIONS )
- #if !defined( FEATURE_BASIC_FP_EXTENSIONS )
-  #error Floating point extensions requires basic FP extensions
- #endif
-#endif
-
-#if defined( FEATURE_FPS_EXTENSIONS ) && !defined( FEATURE_BINARY_FLOATING_POINT )
- #error FP support extensions requires binary floating point
+#if defined( FEATURE_007_STFL_EXTENDED_FACILITY )
+  #if !defined( FEATURE_STORE_FACILITY_LIST )
+    #error FEATURE_007_STFL_EXTENDED_FACILITY requires FEATURE_STORE_FACILITY_LIST
+  #endif
 #endif
 
 #if defined( FEATURE_020_HFP_MULT_ADD_SUB_FACILITY ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
@@ -629,24 +575,85 @@
  #error HFP unnormalized extension facility requires hexadecimal floating point support
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
- #error Floating point extension facility requires binary floating point support
-#endif
-
-#if defined( FEATURE_PER2 ) && !defined( FEATURE_PER )
- #error FEATURE_PER must be defined when using FEATURE_PER2
-#endif
-
-#if defined( FEATURE_PER3 ) && !defined( FEATURE_PER )
- #error FEATURE_PER must be defined when using FEATURE_PER3
-#endif
-
 #if defined( FEATURE_033_CSS_FACILITY_2 ) && !defined( FEATURE_032_CSS_FACILITY )
  #error FEATURE_032_CSS_FACILITY must be defined when using FEATURE_033_CSS_FACILITY_2
 #endif
 
-#if defined( FEATURE_SCSI_IPL ) && !defined( FEATURE_HARDWARE_LOADER )
- #error SCSI IPL requires FEATURE_HARDWARE_LOADER
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
+ #error Floating point extension facility requires binary floating point support
+#endif
+
+#if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
+ #error Decimal floating point facility requires basic FP extensions
+#endif
+
+#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
+  #if !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
+    #error CPU Measurement/Sampling facilities requires Load Program Parameter facility
+  #endif
+#endif
+
+#if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
+  #if !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
+    #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
+  #endif
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                  Non-facility-bit FEATUREs                        */
+/*-------------------------------------------------------------------*/
+
+#if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
+ || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
+ #error Storage keys must be 2K or 4K
+#endif
+
+#if defined( FEATURE_BASIC_FP_EXTENSIONS ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
+ #error Basic FP extensions requires hexadecimal floating point
+#endif
+
+#if defined( FEATURE_BINARY_FLOATING_POINT ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
+ #error Binary floating point requires basic FP extensions
+#endif
+
+#if defined( FEATURE_CANCEL_IO_FACILITY ) && !defined( FEATURE_CHANNEL_SUBSYSTEM )
+ #error Cancel I/O facility requires Channel Subsystem
+#endif
+
+#if defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
+  #if !defined( FEATURE_SUPPRESSION_ON_PROTECTION )
+    #error Enhanced Suppression on Protection facility requires Suppression on Protection feature
+  #endif
+#endif
+
+#if defined( FEATURE_EXPANDED_STORAGE ) && !defined( FEATURE_4K_STORAGE_KEYS )
+ #error Expanded storage cannot be defined with 2K storage keys
+#endif
+
+#if defined( FEATURE_EXPEDITED_SIE_SUBSET ) && !defined( _FEATURE_SIE )
+ #error Expedited SIE Subset only supported with SIE
+#endif
+
+#if defined( FEATURE_EXTERNAL_INTERRUPT_ASSIST ) && !defined( _FEATURE_SIE )
+ #error External Interruption assist only supported with SIE
+#endif
+
+#if defined( FEATURE_FAST_SYNC_DATA_MOVER ) && !defined( FEATURE_MOVE_PAGE_FACILITY_2 )
+ #error Fast sync data mover facility requires Move page facility
+#endif
+
+#if defined( FEATURE_FPS_EXTENSIONS ) && !defined( FEATURE_BINARY_FLOATING_POINT )
+ #error FP support extensions requires binary floating point
+#endif
+
+#if defined( FEATURE_HFP_EXTENSIONS ) || defined( FEATURE_FPS_EXTENSIONS )
+ #if !defined( FEATURE_BASIC_FP_EXTENSIONS )
+  #error Floating point extensions requires basic FP extensions
+ #endif
+#endif
+
+#if defined( FEATURE_HOST_RESOURCE_FACILITY ) && !defined( _FEATURE_HERCULES_DIAGCALLS )
+ #error Hercules Host Resource Access DIAGNOSE 0xF18 requires FEATURE_HERCULES_DIAGCALLS
 #endif
 
 #if defined( FEATURE_INTEGRATED_3270_CONSOLE ) && !defined( FEATURE_SYSTEM_CONSOLE )
@@ -657,36 +664,64 @@
  #error Integrated ASCII console requires FEATURE_SYSTEM_CONSOLE
 #endif
 
+#if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_REGION_RELOCATE )
+ #error Region Relocate Facility required for IO Assist
+#endif
+
+#if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_SIE )
+ #error I/O Assist Feature only supported with SIE
+#endif
+
+#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && !defined( FEATURE_4K_STORAGE_KEYS )
+ #error Move page facility cannot be defined with 2K storage keys
+#endif
+
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+ #error MCDS is only supported with SIE
+#endif
+
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_STORAGE_KEY_ASSIST )
+ #error MCDS requires storage key assist
+#endif
+
+#if defined( FEATURE_PER2 ) && !defined( FEATURE_PER )
+ #error FEATURE_PER must be defined when using FEATURE_PER2
+#endif
+
+#if defined( FEATURE_PER3 ) && !defined( FEATURE_PER )
+ #error FEATURE_PER must be defined when using FEATURE_PER3
+#endif
+
+#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+ #error Protection Interception Control is only supported with SIE
+#endif
+
+#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+ #error Region Relocate Facility only supported with SIE
+#endif
+
+#if !defined( FEATURE_S370_CHANNEL ) && !defined( FEATURE_CHANNEL_SUBSYSTEM )
+ #error Either S/370 Channel or Channel Subsystem must be defined
+#endif
+
+#if defined( FEATURE_S370_CHANNEL ) && defined( FEATURE_CHANNEL_SUBSYSTEM )
+ #error S/370 Channel and Channel Subsystem cannot both be defined
+#endif
+
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
+ #error Vector Facility not supported on z/Arch capable processors
+#endif
+
+#if defined( FEATURE_SCSI_IPL ) && !defined( FEATURE_HARDWARE_LOADER )
+ #error SCSI IPL requires FEATURE_HARDWARE_LOADER
+#endif
+
+#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+ #error Storage Key assist only supported with SIE
+#endif
+
 #if defined( FEATURE_VM_BLOCKIO ) && !defined( FEATURE_EMULATE_VM )
  #error VM Standard Block I/O DIAGNOSE 0x250 requires FEATURE_EMULATE_VM
-#endif
-
-#if defined( FEATURE_HOST_RESOURCE_FACILITY ) && !defined( _FEATURE_HERCULES_DIAGCALLS )
- #error Hercules Host Resource Access DIAGNOSE 0xF18 requires FEATURE_HERCULES_DIAGCALLS
-#endif
-
-#if defined( FEATURE_007_STFL_EXTENDED_FACILITY )
-  #if !defined( FEATURE_STORE_FACILITY_LIST )
-    #error FEATURE_007_STFL_EXTENDED_FACILITY requires FEATURE_STORE_FACILITY_LIST
-  #endif
-#endif
-
-#if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
-  #if !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
-    #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
-  #endif
-#endif
-
-#if defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
-  #if !defined( FEATURE_SUPPRESSION_ON_PROTECTION )
-    #error Enhanced Suppression on Protection facility requires Suppression on Protection feature
-  #endif
-#endif
-
-#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
-  #if !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
-    #error CPU Measurement/Sampling facilities requires Load Program Parameter facility
-  #endif
 #endif
 
 #endif /* !defined( FEATALL_CHECKALL ) */

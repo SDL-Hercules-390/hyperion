@@ -124,7 +124,7 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(FEATURE_BINARY_FLOATING_POINT) && !defined(NO_IEEE_SUPPORT)
+#if defined(FEATURE_BINARY_FLOATING_POINT)
 
 #if !defined(_IEEE_NONARCHDEP_)
 /* Architecture independent code goes within this ifdef */
