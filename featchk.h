@@ -712,6 +712,16 @@
  #error SIE requires storage key assist
 #endif
 
+#if defined( FEATURE_004_IDTE_SC_SEGTAB_FACILITY ) \
+&& !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
+ #error FEATURE_004_IDTE_SC_SEGTAB_FACILITY requires FEATURE_003_DAT_ENHANCE_FACILITY_1
+#endif
+
+#if  defined( FEATURE_005_IDTE_SC_REGTAB_FACILITY ) \
+&& (!defined( FEATURE_004_IDTE_SC_SEGTAB_FACILITY ) || !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 ))
+ #error FEATURE_005_IDTE_SC_REGTAB_FACILITY requires both FEATURE_004_IDTE_SC_SEGTAB_FACILITY and FEATURE_003_DAT_ENHANCE_FACILITY_1
+#endif
+
 #if defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
  #error ASN-and-LX-Reuse facility is only supported with z/Arch
 #endif
@@ -722,6 +732,10 @@
 
 #if defined( FEATURE_007_STFL_EXTENDED_FACILITY ) && !defined( FEATURE_STORE_FACILITY_LIST )
  #error Store Facility List Extended Facility requires FEATURE_STORE_FACILITY_LIST
+#endif
+
+#if defined( FEATURE_019_LONG_DISPL_HPERF_FACILITY ) && !defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
+ #error FEATURE_019_LONG_DISPL_HPERF_FACILITY requires FEATURE_018_LONG_DISPL_INST_FACILITY
 #endif
 
 #if defined( FEATURE_020_HFP_MULT_ADD_SUB_FACILITY ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
@@ -736,12 +750,24 @@
  #error FEATURE_033_CSS_FACILITY_2 requires FEATURE_032_CSS_FACILITY
 #endif
 
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+ #error Floating point extensions facility requires Decimal floating point facility
+#endif
+
 #if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
  #error Floating point extensions facility requires Binary floating point support
 #endif
 
 #if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
  #error Decimal floating point facility requires Basic FP extensions
+#endif
+
+#if defined( FEATURE_043_DFP_HPERF_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+ #error DFP has high performance requires Decimal floating point facility
+#endif
+
+#if defined( FEATURE_050_CONSTR_TRANSACT_FACILITY ) && !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+ #error Constrained-transactional-execution facility requires Transactional-execution facility
 #endif
 
 #if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
@@ -752,8 +778,48 @@
  #error CPU Measurement Sampling facility requires Load Program Parameter facility
 #endif
 
+#if  defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && !defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
+ #error Transactional-execution facility requires Processor-assist facility
+#endif
+
 #if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY ) && !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
  #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
+#endif
+
+#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+ #error Decimal-floating-point Zoned-conversion facility requires Decimal floating point facility
+#endif
+
+#if defined( FEATURE_080_DFP_PACK_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+ #error Decimal-floating-point Packed-conversion facility requires Decimal floating point facility
+#endif
+
+#if defined( FEATURE_129_ZVECTOR_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+ #error z/Arch Vector facility only valid for z/Arch mode
+#endif
+
+#if defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ) && !defined( FEATURE_129_ZVECTOR_FACILITY )
+ #error z/Arch Vector Packed-decimal facility requires z/Arch Vector facility
+#endif
+
+#if defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ) && !defined( FEATURE_129_ZVECTOR_FACILITY )
+ #error z/Arch Vector Enhancements-1 facility requires z/Arch Vector facility
+#endif
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) && !defined( FEATURE_025_STORE_CLOCK_FAST_FACILITY )
+ #error Multiple-epoch facility requires Store clock fast facility
+#endif
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) && !defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY )
+ #error Multiple-epoch facility requires TOD clock steering facility
+#endif
+
+#if defined( FEATURE_142_ST_CPU_COUNTER_MULT_FACILITY ) && !defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY )
+ #error Store-CPU-counter-multiple facility requires CPU-measurement counter facility
+#endif
+
+#if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+ #error MSA Extension Facility 8 requires MSA Extension Facility 3
 #endif
 
 /*-------------------------------------------------------------------*/
