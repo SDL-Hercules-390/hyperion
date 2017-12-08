@@ -702,18 +702,18 @@
 /*                   Facility-bit FEATUREs                           */
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && \
-    defined( FEATURE_INTERPRETIVE_EXECUTION ) && !defined( _FEATURE_SIE )
- #error ESA/390 SIE must also be defined when defining z/Arch SIE
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_INTERPRETIVE_EXECUTION ) \
+&& !defined( _FEATURE_SIE )
+ #error z/Arch SIE requires ESA/390 SIE too
 #endif
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_S370_S390_VECTOR_FACILITY )
  #error non-z/Arch Vector Facility (S/370 or S/390) not supported in z/Arch mode
 #endif
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_SIE ) \
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( _FEATURE_SIE ) \
     && !defined( FEATURE_STORAGE_KEY_ASSIST )
- #error z/Arch SIE requires storage key assist
+ #error SIE requires storage key assist
 #endif
 
 #if defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -729,23 +729,23 @@
 #endif
 
 #if defined( FEATURE_020_HFP_MULT_ADD_SUB_FACILITY ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
- #error HFP multiply add/subtract facility requires hexadecimal floating point support
+ #error HFP multiply add/subtract facility requires Hexadecimal floating point support
 #endif
 
 #if defined( FEATURE_023_HFP_UNNORM_EXT_FACILITY ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
- #error HFP unnormalized extension facility requires hexadecimal floating point support
+ #error HFP unnormalized extensions facility requires Hexadecimal floating point support
 #endif
 
 #if defined( FEATURE_033_CSS_FACILITY_2 ) && !defined( FEATURE_032_CSS_FACILITY )
- #error FEATURE_032_CSS_FACILITY must be defined when using FEATURE_033_CSS_FACILITY_2
+ #error FEATURE_033_CSS_FACILITY_2 requires FEATURE_032_CSS_FACILITY
 #endif
 
 #if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
- #error Floating point extension facility requires binary floating point support
+ #error Floating point extensions facility requires Binary floating point support
 #endif
 
 #if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
- #error Decimal floating point facility requires basic FP extensions
+ #error Decimal floating point facility requires Basic FP extensions
 #endif
 
 #if (defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )) \
@@ -763,15 +763,15 @@
 
 #if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
  || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
- #error Storage keys must be 2K or 4K
+ #error Storage Keys must be either 2K or 4K
 #endif
 
 #if defined( FEATURE_BASIC_FP_EXTENSIONS ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
- #error Basic FP extensions requires hexadecimal floating point
+ #error Basic FP extensions requires Hexadecimal floating point
 #endif
 
 #if defined( FEATURE_BINARY_FLOATING_POINT ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
- #error Binary floating point requires basic FP extensions
+ #error Binary floating point requires Basic FP extensions
 #endif
 
 #if defined( FEATURE_CANCEL_IO_FACILITY ) && !defined( FEATURE_CHANNEL_SUBSYSTEM )
@@ -783,7 +783,7 @@
 #endif
 
 #if defined( FEATURE_EXPANDED_STORAGE ) && !defined( FEATURE_4K_STORAGE_KEYS )
- #error Expanded storage cannot be defined with 2K storage keys
+ #error Expanded storage cannot be defined with 2K Storage keys
 #endif
 
 #if defined( FEATURE_EXPEDITED_SIE_SUBSET ) && !defined( _FEATURE_SIE )
@@ -799,12 +799,12 @@
 #endif
 
 #if defined( FEATURE_FPS_EXTENSIONS ) && !defined( FEATURE_BINARY_FLOATING_POINT )
- #error FP support extensions requires binary floating point
+ #error FP support extensions requires Binary floating point
 #endif
 
 #if (defined( FEATURE_FPS_EXTENSIONS )|| defined( FEATURE_HFP_EXTENSIONS )) \
  && !defined( FEATURE_BASIC_FP_EXTENSIONS )
- #error Floating point extensions requires basic FP extensions
+ #error Floating point extensions requires Basic FP extensions
 #endif
 
 #if defined( FEATURE_HOST_RESOURCE_FACILITY ) && !defined( _FEATURE_HERCULES_DIAGCALLS )
@@ -820,7 +820,7 @@
 #endif
 
 #if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_REGION_RELOCATE )
- #error Region Relocate Facility required for IO Assist
+ #error IO Assist requires Region Relocate Facility
 #endif
 
 #if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_SIE )
@@ -828,7 +828,7 @@
 #endif
 
 #if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && !defined( FEATURE_4K_STORAGE_KEYS )
- #error Move page facility cannot be defined with 2K storage keys
+ #error Move page facility cannot be defined with 2K Storage keys
 #endif
 
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
@@ -836,7 +836,7 @@
 #endif
 
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_STORAGE_KEY_ASSIST )
- #error MCDS requires storage key assist
+ #error MCDS requires Storage key assist
 #endif
 
 #if defined( FEATURE_PER2 ) && !defined( FEATURE_PER )
@@ -864,7 +864,7 @@
 #endif
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
- #error Vector Facility not supported on z/Arch capable processors
+ #error S370/S390 Vector Facility not supported on z/Arch capable processors
 #endif
 
 #if defined( FEATURE_SCSI_IPL ) && !defined( FEATURE_HARDWARE_LOADER )
