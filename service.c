@@ -1344,16 +1344,16 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         if( 0
 #if defined(_FEATURE_HYPERVISOR)
-            || FACILITY_ENABLED(LOGICAL_PARTITION,regs)
+            || FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs )
 #endif /*defined(_FEATURE_HYPERVISOR)*/
 #if defined(_FEATURE_EMULATE_VM)
-            || FACILITY_ENABLED(VIRTUAL_MACHINE,regs)
+            || FACILITY_ENABLED( HERC_VIRTUAL_MACHINE, regs )
 #endif /*defined(_FEATURE_EMULATE_VM)*/
           )
             sccbscp->cfg[0] |= SCCB_CFG0_LOGICALLY_PARTITIONED;
 
 #if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        if(FACILITY_ENABLED(ZARCH_INSTALLED,regs))
+        if (FACILITY_ENABLED( 001_ZARCH_INSTALLED, regs ))
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
 #endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                         ;

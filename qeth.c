@@ -4127,7 +4127,7 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
         rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
 
 #if defined(_FEATURE_QEBSM)
-        if(FACILITY_ENABLED_DEV(QEBSM))
+        if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
         {
             STORE_DW(rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
             rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
@@ -4135,7 +4135,7 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
 #endif /*defined(_FEATURE_QEBSM)*/
 
 #if defined(_FEATURE_QDIO_THININT)
-        if(FACILITY_ENABLED_DEV(QDIO_THININT))
+        if (FACILITY_ENABLED_DEV( HERC_QDIO_THININT ))
             rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
@@ -4642,7 +4642,7 @@ U32 num;                                /* Number of bytes to move   */
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
 #if defined(_FEATURE_QEBSM)
-            if(FACILITY_ENABLED_DEV(QEBSM))
+            if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
                 qib->rflags |= QIB_RFLAGS_QEBSM;
 #endif /*defined(_FEATURE_QEBSM)*/
         }

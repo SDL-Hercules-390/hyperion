@@ -190,7 +190,7 @@ U16     options;                     /* supplied options             */
 
 
     /* Specification exception if Rx is not even/odd or facility not enabled */
-    if ( (!FACILITY_ENABLED(HOST_RESOURCE_ACCESS,regs)) ||
+    if ( (!FACILITY_ENABLED( HERC_HOST_RESOURCE_ACCESS, regs )) ||
          ((r1 & 0x1) != 0)
        )
     {

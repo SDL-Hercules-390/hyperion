@@ -78,15 +78,15 @@ Hercules: Release Notes
     For example: on certain IBM operating systems the z/Architecture "ASN
     and LX Reuse Facility" feature must be enabled or the system will not IPL.
     The facility is enabled in Hercules via the
-    <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL ENABLE ASN_LX_REUSE</a></code>
+    <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL ENABLE 006_ASN_LX_REUSE</a></code>
     configuration file statement, but since the facility is a z/Architecture-only
     feature, your initial architecture must either be set to "z/Arch" beforehand
     or else you need to specify the optional <code><em>[archmode]</em></code>
-    parameter on your <code>ARCHLVL ENABLE ASN_LX_REUSE</code> statement.
+    parameter on your <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement.
   </p>
   <p>
     This means the <code>ARCHLVL z/Arch</code> statement must usually come
-    <i>before</i> your <code>ARCHLVL ENABLE ASN_LX_REUSE</code> statement
+    <i>before</i> your <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement
     in your configuration file. Otherwise the ASN and LX Reuse Facility would
     not be enabled.
   </p>

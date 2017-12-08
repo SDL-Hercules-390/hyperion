@@ -322,17 +322,17 @@ U16 req_len, rsp_len;
     CHSC_SB(chsc_rsp10->chsc_char,3);            /* 0x0004 Supported */
     CHSC_SB(chsc_rsp10->chsc_char,8);            /* 0x0024 Supported */
 
-    if(FACILITY_ENABLED(QDIO_ASSIST, regs))
+    if (FACILITY_ENABLED( HERC_QDIO_ASSIST, regs ))
         CHSC_SB(chsc_rsp10->general_char,61);         /* QDIO Assist */
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
 
 #if defined(_FEATURE_QDIO_TDD)
-    if(FACILITY_ENABLED(QDIO_TDD, regs))
+    if (FACILITY_ENABLED( HERC_QDIO_TDD, regs ))
         CHSC_SB(chsc_rsp10->general_char,56);  /* AIF Time Delay Dis */
 #endif /*defined(_FEATURE_QDIO_TDD)*/
 
 #if defined(_FEATURE_QEBSM)
-    if(FACILITY_ENABLED(QEBSM, regs))
+    if (FACILITY_ENABLED( HERC_QEBSM, regs ))
     {
         CHSC_SB(chsc_rsp10->general_char,58); /* SQBS/EQBS Available */
         CHSC_SB(chsc_rsp10->general_char,66); /* SQBS/EQBS Interpret */
@@ -340,7 +340,7 @@ U16 req_len, rsp_len;
 #endif /*defined(_FEATURE_QEBSM)*/
 
 #if defined(_FEATURE_QDIO_THININT)
-    if(FACILITY_ENABLED(QDIO_THININT, regs))
+    if (FACILITY_ENABLED( HERC_QDIO_THININT, regs ))
     {
         CHSC_SB(chsc_rsp10->general_char,67);   /* OSA/FCP Thin Ints */
         CHSC_SB(chsc_rsp10->chsc_char,107);      /* 0x0021 Supported */
@@ -644,7 +644,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #if defined(_FEATURE_QDIO_THININT)
 
         case CHSC_REQ_SETSSSI: /* 0x0021  Set Subchannel Indicator */
-            if(FACILITY_ENABLED(QDIO_THININT, regs))
+            if (FACILITY_ENABLED( HERC_QDIO_THININT, regs ))
             {
                 regs->psw.cc = ARCH_DEP(chsc_set_sci) (chsc_req, chsc_rsp);
                 break;

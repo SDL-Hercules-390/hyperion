@@ -5028,7 +5028,7 @@ CREG    n;                              /* Work                      */
 
 #if defined(FEATURE_036_ENH_MONITOR_FACILITY)
     /* Perform Monitor Event Counting Operation if enabled */
-    if(FACILITY_ENABLED(ENH_MONITOR,regs)
+    if (FACILITY_ENABLED( 036_ENH_MONITOR, regs )
       && (( (regs->CR_H(8) & CR8_MCMASK) << i2) & 0x00008000))
     {
         PSA *psa;                       /* -> Prefixed storage area  */
@@ -5201,7 +5201,7 @@ int     i;                              /* Integer work areas        */
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
-    FACILITY_CHECK(MOVE_INVERSE,regs);
+    FACILITY_CHECK( HERC_MOVE_INVERSE, regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessable */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=

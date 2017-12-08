@@ -792,7 +792,7 @@ VADR    effective_addr2;                /* Effective address         */
 #if defined(_FEATURE_SIE)
         !SIE_MODE(regs) &&
 #endif /* defined(_FEATURE_SIE) */
-                      !(effective_addr2 == 0xF08 && FACILITY_ENABLED(PROBSTATE_DIAGF08,regs)) )
+                      !(effective_addr2 == 0xF08 && FACILITY_ENABLED( HERC_PROBSTATE_DIAGF08,regs )) )
 #endif
 
     PRIV_CHECK(regs);
@@ -856,7 +856,7 @@ DEF_INST(extract_primary_asn_and_instance)
 int r1, r2;                             /* Values of R fields        */
 
     /* Operation exception if ASN-and-LX-reuse is not enabled */
-    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
+    if (!FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -926,7 +926,7 @@ int r1, r2;                             /* Values of R fields        */
 
 
     /* Operation exception if ASN-and-LX-reuse is not enabled */
-    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
+    if (!FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -1007,7 +1007,7 @@ int     max_esta_code;
     code = regs->GR_LHLCL(r2);
 
 #if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
-    max_esta_code=FACILITY_ENABLED(ASN_LX_REUSE,regs)?5:4;
+    max_esta_code = FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ) ? 5 : 4;
 #elif defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     max_esta_code=4;
 #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -1522,7 +1522,7 @@ int     op3;
     op1 = regs->GR(r1);
     op2 = regs->GR_L(r2);
 #if defined(FEATURE_013_IPTE_RANGE_FACILITY)
-    if(FACILITY_ENABLED(IPTE_RANGE,regs) && r3)
+    if (FACILITY_ENABLED( 013_IPTE_RANGE, regs ) && r3)
     {
         op3 = regs->GR_LHLCL(r3);
 
@@ -3932,7 +3932,7 @@ DEF_INST(program_transfer_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
+    if (!FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -4898,7 +4898,7 @@ DEF_INST(set_secondary_asn_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    if(!FACILITY_ENABLED(ASN_LX_REUSE,regs))
+    if (!FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ))
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
@@ -5210,7 +5210,7 @@ BYTE    r1key;
     PERFORM_CHKPT_SYNC (regs);
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-    if(FACILITY_ENABLED(EDAT_1,regs)
+    if (FACILITY_ENABLED( 008_EDAT_1, regs )
      && (m3 & SSKE_MASK_MB))
         fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
     else
@@ -5219,7 +5219,7 @@ BYTE    r1key;
     for( ; fc--; )
     {
 
-        if(FACILITY_ENABLED(EDAT_1,regs)
+        if (FACILITY_ENABLED( 008_EDAT_1, regs )
          && (m3 & SSKE_MASK_MB))
             /* r2 contains an absolute address when
                       multiple block control is one */
@@ -5436,7 +5436,7 @@ BYTE    r1key;
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
         /* Update r2 in the case of a multiple page update */
-        if(FACILITY_ENABLED(EDAT_1,regs)
+        if (FACILITY_ENABLED( 008_EDAT_1, regs )
          && (m3 & SSKE_MASK_MB))
         {
             /* Advance r2 to the next page */
@@ -6061,7 +6061,7 @@ static char *ordername[] = {
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
-            if(!FACILITY_ENABLED(ZARCH_INSTALLED,regs))
+            if (!FACILITY_ENABLED( 001_ZARCH_INSTALLED, regs ))
                 status = SIGP_STATUS_INVALID_ORDER;
 
             PERFORM_SERIALIZATION (regs);
@@ -6166,7 +6166,7 @@ static char *ordername[] = {
 #if defined(FEATURE_HERCULES_DIAGCALLS)
 
                     case 37:
-                        if(FACILITY_ENABLED(SIGP_SETARCH_S370,regs))
+                        if (FACILITY_ENABLED( HERC_SIGP_SETARCH_S370, regs ))
                         {
                             if(sysblk.arch_mode == ARCH_370)
                                 status = SIGP_STATUS_INVALID_PARAMETER;
@@ -6695,12 +6695,12 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
      /* Determine current configuration level */
 #if defined(_FEATURE_EMULATE_VM)
-     if(FACILITY_ENABLED(VIRTUAL_MACHINE,regs))
+     if (FACILITY_ENABLED( HERC_VIRTUAL_MACHINE, regs ))
          curlvl = STSI_GPR0_FC_VM;
      else
 #endif /*defined(_FEATURE_EMULATE_VM)*/
 #if defined(_FEATURE_HYPERVISOR)
-         if(FACILITY_ENABLED(LOGICAL_PARTITION,regs))
+         if (FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs ))
              curlvl = STSI_GPR0_FC_LPAR;
          else
 #endif /*defined(_FEATURE_HYPERVISOR)*/
@@ -6771,7 +6771,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #if defined(_FEATURE_HYPERVISOR)
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_LPAR
             && (0
-                || !FACILITY_ENABLED(LOGICAL_PARTITION,regs)
+                || !FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs )
                 || !sysblk.lparmode
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
@@ -6917,7 +6917,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     case STSI_GPR0_FC_LPAR:
 
 #if defined(_FEATURE_HYPERVISOR)
-         if(!FACILITY_ENABLED(LOGICAL_PARTITION,regs))
+         if (!FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs ))
          {
              PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
              regs->psw.cc = 3;

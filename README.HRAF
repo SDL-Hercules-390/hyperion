@@ -42,7 +42,7 @@ extensions and compatibility mode limitations to be eliminated.
 By default, the Host Resource Access Facility is disabled.  Use the 'archlvl'
 command to enable the facility:
 
-    archlvl enable HOST_RESOURCE_ACCESS
+    archlvl enable HERC_HOST_RESOURCE_ACCESS
 
 
                      DIAGNOSE X'F18' Subcodes

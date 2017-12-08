@@ -533,11 +533,11 @@ U64     dreg;
         {
             facility_mask = &(regs->mainstor[fld]);
             GUESTREGS->facility_list[0] &= (facility_mask[0]
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Prevent current architecture mode being masked */ | 0x40
 #endif
                                                                    );
-            for(i = 1; i < STFL_HERC_BY_SIZE; i++)
+            for(i = 1; i < STFL_IBM_BY_SIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }

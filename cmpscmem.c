@@ -714,7 +714,7 @@ void (CMPSC_FASTCALL ARCH_DEP( cmpsc_SetCMPSC ))( CMPSCBLK* pCMPSCBLK, REGS* reg
     pCMPSCBLK->cdss     = (GR0 >> 12) & 0x0F;
     pCMPSCBLK->st       = (GR0 >> 16) & 0x01;
 #if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
-    if (FACILITY_ENABLED( CMPSC_ENH, regs ))
+    if (FACILITY_ENABLED( 047_CMPSC_ENH, regs ))
     pCMPSCBLK->zp       = (GR0 >> 17) & 0x01; else
 #endif
     pCMPSCBLK->zp       = FALSE;

@@ -52,7 +52,7 @@ NOECHO"maxcpu"       maxcpu
 NOECHO"numcpu"       maxcpu
 NOECHO"numvec"       0
 NOECHO"archlvl"      "z/Arch"
-NOECHO"archlvl"      "DISABLE ASN_LX_REUSE"
+NOECHO"archlvl"      "DISABLE 006_ASN_LX_REUSE"
 
 --  misc
 NOECHO"panrate"      "SLOW"

@@ -1621,240 +1621,240 @@ typedef struct MBK  MBK;
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define STFL_N3_ESA390             0    /* Instructions marked N3 in
-                                           the reference summary are
-                                           available in ESA/390 mode */
-#define STFL_ZARCH_INSTALLED       1    /* z/Arch mode is available on
-                                           this processor            */
-#define STFL_ZARCH_ACTIVE          2    /* z/Architecture architecural
-                                           mode active. When bit 2 and
-                                           168 are both zero, ESA/390
-                                           mode is active. When bit 2
-                                           is zero and bit 168 is one,
-                                           ESA/390-compatability mode
-                                           is active.                */
-#define STFL_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
-                                           is installed.             */
-#define STFL_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
-                                           when segtab invalidated. Bit
-                                           3 is one if bit 4 is one. */
-#define STFL_IDTE_SC_REGTAB        5    /* IDTE selective clearing
-                                           when regtab invalidated. Bit
-                                           3 and 4 one when bit 5 is */
-#define STFL_ASN_LX_REUSE          6    /* ASN-and-LX-reuse facility
-                                           is installed              */
-#define STFL_STFL_EXTENDED         7    /* Store facility list    @Z9
-                                           extended is installed  @Z9*/
-#define STFL_EDAT_1                8    /* Enhanced-DAT facility  208
-                                           is installed           208*/
-#define STFL_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
-                                           facility is installed  @Z9*/
-#define STFL_CONDITIONAL_SSKE     10    /* Conditional SSKE facility
-                                           is installed           407*/
-#define STFL_CONFIG_TOPOLOGY      11    /* STSI-enhancement for
-                                           configuration topology    */
-#define STFL_IBM_INTERNAL_12      12    /* IBM internal use          */
+#define STFL_000_N3_ESA390             0    /* Instructions marked N3 in
+                                               the reference summary are
+                                               available in ESA/390 mode */
+#define STFL_001_ZARCH_INSTALLED       1    /* z/Arch mode is available on
+                                               this processor            */
+#define STFL_002_ZARCH_ACTIVE          2    /* z/Architecture architecural
+                                               mode active. When bit 2 and
+                                               168 are both zero, ESA/390
+                                               mode is active. When bit 2
+                                               is zero and bit 168 is one,
+                                               ESA/390-compatability mode
+                                               is active.                */
+#define STFL_003_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
+                                               is installed.             */
+#define STFL_004_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
+                                               when segtab invalidated. Bit
+                                               3 is one if bit 4 is one. */
+#define STFL_005_IDTE_SC_REGTAB        5    /* IDTE selective clearing
+                                               when regtab invalidated. Bit
+                                               3 and 4 one when bit 5 is */
+#define STFL_006_ASN_LX_REUSE          6    /* ASN-and-LX-reuse facility
+                                               is installed              */
+#define STFL_007_STFL_EXTENDED         7    /* Store facility list    @Z9
+                                               extended is installed  @Z9*/
+#define STFL_008_EDAT_1                8    /* Enhanced-DAT facility  208
+                                               is installed           208*/
+#define STFL_009_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
+                                               facility is installed  @Z9*/
+#define STFL_010_CONDITIONAL_SSKE     10    /* Conditional SSKE facility
+                                               is installed           407*/
+#define STFL_011_CONFIG_TOPOLOGY      11    /* STSI-enhancement for
+                                               configuration topology    */
+#define STFL_012_IBM_INTERNAL         12    /* IBM internal use          */
 
-#define STFL_IPTE_RANGE           13    /* IPTE-Range facility      810
-                                           installed              810*/
-#define STFL_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting 810
-                                           Facility installed     810*/
-#define STFL_IBM_INTERNAL_15      15    /* IBM internal use          */
+#define STFL_013_IPTE_RANGE           13    /* IPTE-Range facility      810
+                                               installed              810*/
+#define STFL_014_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting 810
+                                               Facility installed     810*/
+#define STFL_015_IBM_INTERNAL         15    /* IBM internal use          */
 
-#define STFL_EXT_TRANSL_2         16    /* Extended translation
-                                           facility 2 is installed   */
-#define STFL_MSA                  17    /* Message security assist
-                                           feature is installed      */
-#define STFL_LONG_DISPL_INST      18    /* Long displacement facility
-                                           is installed              */
-#define STFL_LONG_DISPL_HPERF     19    /* Long displacement facility
-                                           has high performance. Bit 18
-                                           is one if bit 19 is one.  */
-#define STFL_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
-                                           facility is installed     */
-#define STFL_EXTENDED_IMMED       21    /* Extended immediate     @Z9
-                                           facility is installed  @Z9*/
-#define STFL_EXT_TRANSL_3         22    /* Extended translation
-                                           facility 3 is installed   */
-#define STFL_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
-                                           facility is installed  @Z9*/
-#define STFL_ETF2_ENHANCEMENT     24    /* Extended translation   @Z9
-                                           facility 2 enhancement @Z9*/
-#define STFL_STORE_CLOCK_FAST     25    /* Store clock fast       @Z9
-                                           enhancement installed  @Z9*/
-#define STFL_PARSING_ENHANCE      26    /* Parsing-Enhancement    208
-                                           facility is installed  208*/
-#define STFL_MVCOS                27    /* MVCOS instruction
-                                           is installed           407*/
-#define STFL_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
-                                           facility is installed  @Z9*/
-#define STFL_UNASSIGNED_29        29    /* Unassigned                */
+#define STFL_016_EXT_TRANSL_2         16    /* Extended translation
+                                               facility 2 is installed   */
+#define STFL_017_MSA                  17    /* Message security assist
+                                               feature is installed      */
+#define STFL_018_LONG_DISPL_INST      18    /* Long displacement facility
+                                               is installed              */
+#define STFL_019_LONG_DISPL_HPERF     19    /* Long displacement facility
+                                               has high performance. Bit 18
+                                               is one if bit 19 is one.  */
+#define STFL_020_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
+                                               facility is installed     */
+#define STFL_021_EXTENDED_IMMED       21    /* Extended immediate     @Z9
+                                               facility is installed  @Z9*/
+#define STFL_022_EXT_TRANSL_3         22    /* Extended translation
+                                               facility 3 is installed   */
+#define STFL_023_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
+                                               facility is installed  @Z9*/
+#define STFL_024_ETF2_ENHANCEMENT     24    /* Extended translation   @Z9
+                                               facility 2 enhancement @Z9*/
+#define STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast       @Z9
+                                               enhancement installed  @Z9*/
+#define STFL_026_PARSING_ENHANCE      26    /* Parsing-Enhancement    208
+                                               facility is installed  208*/
+#define STFL_027_MVCOS                27    /* MVCOS instruction
+                                               is installed           407*/
+#define STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
+                                               facility is installed  @Z9*/
+#define STFL_029_UNASSIGNED           29    /* Unassigned                */
 
-#define STFL_ETF3_ENHANCEMENT     30    /* Extended translation   @Z9
-                                           facility 3 enhancement @Z9*/
-#define STFL_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
-                                           is installed           407*/
-#define STFL_CSSF                 32    /* Compare-and-Swap-and-Store
-                                           facility is installed     */
-#define STFL_CSSF2                33    /* Compare-and-Swap-and-Store
-                                           facility 2 is installed   */
-#define STFL_GEN_INST_EXTN        34    /* General-Instr-Extn     208
-                                           facility is installed  208*/
-#define STFL_EXECUTE_EXTN         35    /* Execute-Extensions     208
-                                           facility is installed  208*/
-#define STFL_ENH_MONITOR          36    /* Enhanced-Monitor         810
-                                           facility installed     810*/
-#define STFL_FP_EXTENSIONS        37    /* Floating-point extension
-                                           facility installed. When bit
-                                           37 is one, so is bit 42.  */
-#define STFL_OP_CMPSC             38    /* Order-preserving-compression
-                                           facility is installed     */
-#define STFL_IBM_INTERNAL_39      39    /* IBM internal use          */
+#define STFL_030_ETF3_ENHANCEMENT     30    /* Extended translation   @Z9
+                                               facility 3 enhancement @Z9*/
+#define STFL_031_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
+                                               is installed           407*/
+#define STFL_032_CSSF                 32    /* Compare-and-Swap-and-Store
+                                               facility is installed     */
+#define STFL_033_CSSF2                33    /* Compare-and-Swap-and-Store
+                                               facility 2 is installed   */
+#define STFL_034_GEN_INST_EXTN        34    /* General-Instr-Extn     208
+                                               facility is installed  208*/
+#define STFL_035_EXECUTE_EXTN         35    /* Execute-Extensions     208
+                                               facility is installed  208*/
+#define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor         810
+                                               facility installed     810*/
+#define STFL_037_FP_EXTENSIONS        37    /* Floating-point extension
+                                               facility installed. When bit
+                                               37 is one, so is bit 42.  */
+#define STFL_038_OP_CMPSC             38    /* Order-preserving-compression
+                                               facility is installed     */
+#define STFL_039_IBM_INTERNAL         39    /* IBM internal use          */
 
-#define STFL_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
-                                           facility installed z/Arch */
-#define STFL_FPS_ENHANCEMENTS     41    /* Floating point support
-                                           enhancements (DFP-rounding,
-                                           FPR-GR-transfer, FPS-sign-
-                                           handling and IEEE-exception-
-                                           simulator) installed      */
-#define STFL_DECIMAL_FLOAT        42    /* Decimal floating point
-                                           (DFP) facility installed. */
-#define STFL_DFP_HPERF            43    /* DFP has high performance.
-                                           Bit 42 is one if bit 43 is*/
-#define STFL_PFPO                 44    /* PFPO instruction installed*/
+#define STFL_040_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
+                                               facility installed z/Arch */
+#define STFL_041_FPS_ENHANCEMENTS     41    /* Floating point support
+                                               enhancements (DFP-rounding,
+                                               FPR-GR-transfer, FPS-sign-
+                                               handling and IEEE-exception-
+                                               simulator) installed      */
+#define STFL_042_DECIMAL_FLOAT        42    /* Decimal floating point
+                                               (DFP) facility installed. */
+#define STFL_043_DFP_HPERF            43    /* DFP has high performance.
+                                               Bit 42 is one if bit 43 is*/
+#define STFL_044_PFPO                 44    /* PFPO instruction installed*/
 
-#define STFL_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
-                                           Facility installed     810*/
-#define STFL_IBM_INTERNAL_46      46    /* IBM internal use          */
+#define STFL_045_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
+                                               Facility installed     810*/
+#define STFL_046_IBM_INTERNAL         46    /* IBM internal use          */
 
-#define STFL_CMPSC_ENH            47    /* CMPSC-enhancement        810
-                                           Facility installed     810*/
-#define STFL_DFP_ZONE_CONV        48    /* Decimal-floating-point-
-                                           zoned-conversion facility
-                                           installed. Bit 42 is also
-                                           one when bit 48 is one.   */
-#define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
-                                           trap, processor-assist and
-                                           miscellaneous-instruction-
-                                           extensions-1 installed     */
-#define STFL_CONSTR_TRANSACT      50    /* Constrained-transactional-
-                                           execution facility. Bit only
-                                           meaningful if bit 73 one. */
-#define STFL_LOCAL_TLB_CLEARING   51    /* Local-TLB-clearing        */
+#define STFL_047_CMPSC_ENH            47    /* CMPSC-enhancement        810
+                                               Facility installed     810*/
+#define STFL_048_DFP_ZONE_CONV        48    /* Decimal-floating-point-
+                                               zoned-conversion facility
+                                               installed. Bit 42 is also
+                                               one when bit 48 is one.   */
+#define STFL_049_EXECUTION_HINT       49    /* Execution-hint, load-and-
+                                               trap, processor-assist and
+                                               miscellaneous-instruction-
+                                               extensions-1 installed    */
+#define STFL_050_CONSTR_TRANSACT      50    /* Constrained-transactional-
+                                               execution facility. Bit only
+                                               meaningful if bit 73 one. */
+#define STFL_051_LOCAL_TLB_CLEARING   51    /* Local-TLB-clearing        */
 
-#define STFL_INTERLOCKED_ACCESS_2 52    /* Interlocked-access-2      */
+#define STFL_052_INTERLOCKED_ACCESS_2 52    /* Interlocked-access-2      */
 
-#define STFL_LOAD_ON_CONDITION_2  53    /* Load/store-on-condition-2,
-                                           load-and-zero-rightmost-byte */
-#define STFL_EE_CMPSC             54    /* Entropy-encoding compress */
+#define STFL_053_LOAD_ON_CONDITION_2  53    /* Load/store-on-condition-2,
+                                               load-zero-rightmost-byte  */
+#define STFL_054_EE_CMPSC             54    /* Entropy-encoding compress */
 
-#define STFL_IBM_INTERNAL_55      55    /* IBM internal use          */
+#define STFL_055_IBM_INTERNAL         55    /* IBM internal use          */
 
-#define STFL_UNASSIGNED_56        56    /* Unassigned                */
+#define STFL_056_UNASSIGNED           56    /* Unassigned                */
 
-#define STFL_MSA_EXTENSION_5      57    /* Message-security-assist-
-                                           extension-5               */
-#define STFL_MISC_INSTR_EXT_2     58    /* Miscellaneous-instructions-
-                                           extension-2               */
-#define STFL_IBM_INTERNAL_59      59    /* IBM internal use          */
+#define STFL_057_MSA_EXTENSION_5      57    /* Message-security-assist-
+                                               extension-5               */
+#define STFL_058_MISC_INSTR_EXT_2     58    /* Miscellaneous-instructions-
+                                               extension-2               */
+#define STFL_059_IBM_INTERNAL         59    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_60      60    /* IBM internal use          */
+#define STFL_060_IBM_INTERNAL         60    /* IBM internal use          */
 
-#define STFL_UNASSIGNED_61        61    /* Unassigned                */
+#define STFL_061_UNASSIGNED           61    /* Unassigned                */
 
-#define STFL_IBM_INTERNAL_62      62    /* IBM internal use          */
+#define STFL_062_IBM_INTERNAL         62    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_63      63    /* IBM internal use          */
+#define STFL_063_IBM_INTERNAL         63    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_64      64    /* IBM internal use          */
+#define STFL_064_IBM_INTERNAL         64    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_65      65    /* IBM internal use          */
+#define STFL_065_IBM_INTERNAL         65    /* IBM internal use          */
 
-#define STFL_RES_REF_BITS_MUL     66    /* Reset-Reference-Bits-    810
-                                           Multiple Fac installed 810*/
-#define STFL_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
-                                           facility installed z/Arch */
-#define STFL_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
-                                           facility installed z/Arch */
-#define STFL_IBM_INTERNAL_69      69    /* IBM internal use          */
+#define STFL_066_RES_REF_BITS_MULT    66    /* Reset-Reference-Bits-    810
+                                               Multiple Fac installed 810*/
+#define STFL_067_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
+                                               facility installed z/Arch */
+#define STFL_068_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
+                                               facility installed z/Arch */
+#define STFL_069_IBM_INTERNAL         69    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_70      70    /* IBM internal use          */
+#define STFL_070_IBM_INTERNAL         70    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_71      71    /* IBM internal use          */
+#define STFL_071_IBM_INTERNAL         71    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_72      72    /* IBM internal use          */
+#define STFL_072_IBM_INTERNAL         72    /* IBM internal use          */
 
-#define STFL_TRANSACT_EXEC        73    /* Transactional-execution. Bit
-                                           49 is one when bit 73 one */
-#define STFL_STORE_HYPER_INFO     74    /* Store-hypervisor-info     */
+#define STFL_073_TRANSACT_EXEC        73    /* Transactional-execution. Bit
+                                               49 is one when bit 73 one */
+#define STFL_074_STORE_HYPER_INFO     74    /* Store-hypervisor-info     */
 
-#define STFL_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
-                                           indication facility    810*/
-#define STFL_MSA_EXTENSION_3      76    /* Message Security Assist  810
-                                           Extension 3 installed  810*/
-#define STFL_MSA_EXTENSION_4      77    /* Message Security Assist  810
-                                           Extension 4 installed  810*/
-#define STFL_EDAT_2               78    /* Enhanced-DAT-2            */
+#define STFL_075_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
+                                               indication facility    810*/
+#define STFL_076_MSA_EXTENSION_3      76    /* Message Security Assist  810
+                                               Extension 3 installed  810*/
+#define STFL_077_MSA_EXTENSION_4      77    /* Message Security Assist  810
+                                               Extension 4 installed  810*/
+#define STFL_078_EDAT_2               78    /* Enhanced-DAT-2            */
 
-#define STFL_UNASSIGNED_79        79    /* Unassigned                */
+#define STFL_079_UNASSIGNED           79    /* Unassigned                */
 
-#define STFL_DFP_PACK_CONV        80    /* Decimal-floating-point
-                                           packed-conversion facility
-                                           installed. Bit 42 is also
-                                           one when bit 80 is one.   */
-//efine STFL_UNASSIGNED_nn    81-127    /* Unassigned                */
+#define STFL_080_DFP_PACK_CONV        80    /* Decimal-floating-point
+                                               packed-conversion facility
+                                               installed. Bit 42 is also
+                                               one when bit 80 is one.   */
+//efine STFL_nnn_UNASSIGNED       81-127    /* Unassigned                */
 
-#define STFL_IBM_INTERNAL_128    128    /* IBM internal use          */
+#define STFL_128_IBM_INTERNAL        128    /* IBM internal use          */
 
-#define STFL_ZVECTOR             129    /* z/Arch Vector facility    */
+#define STFL_129_ZVECTOR             129    /* z/Arch Vector facility    */
 
-#define STFL_INSTR_EXEC_PROT     130    /* Instruction-execution-
-                                           protection facility       */
-#define STFL_SIDE_EFFECT_ACCESS  131    /* Side-effect-access        */
+#define STFL_130_INSTR_EXEC_PROT     130    /* Instruction-execution-
+                                               protection facility       */
+#define STFL_131_SIDE_EFFECT_ACCESS  131    /* Side-effect-access        */
 
-#define STFL_UNASSIGNED_132      132    /* Unassigned                */
+#define STFL_132_UNASSIGNED          132    /* Unassigned                */
 
-#define STFL_GUARDED_STORAGE     133    /* Guarded-storage facility  */
+#define STFL_133_GUARDED_STORAGE     133    /* Guarded-storage facility  */
 
-#define STFL_ZVECTOR_PACK_DEC    134    /* Vector-packed-decimal. When
-                                           bit 134 is one, bit 129 is
-                                           also one.                 */
-#define STFL_ZVECTOR_ENH_1       135    /* Vector-enhancements-1. When
-                                           bit 135 is one, bit 129 is
-                                           also one.                 */
-#define STFL_UNASSIGNED_136      136    /* Unassigned                */
+#define STFL_134_ZVECTOR_PACK_DEC    134    /* Vector-packed-decimal. When
+                                               bit 134 is one, bit 129 is
+                                               also one.                 */
+#define STFL_135_ZVECTOR_ENH_1       135    /* Vector-enhancements-1. When
+                                               bit 135 is one, bit 129 is
+                                               also one.                 */
+#define STFL_136_UNASSIGNED          136    /* Unassigned                */
 
-#define STFL_UNASSIGNED_137      137    /* Unassigned                */
+#define STFL_137_UNASSIGNED          137    /* Unassigned                */
 
-#define STFL_CONFIG_ZARCH_MODE   138    /* Configuration-z/Architecture-
-                                           architectural-mode        */
-#define STFL_MULTIPLE_EPOCH      139    /* Multiple-epoch facility. If
-                                           bit 139 is one, bits 25 and
-                                           28 are also one.          */
-#define STFL_IBM_INTERNAL_140    140    /* IBM internal use          */
+#define STFL_138_CONFIG_ZARCH_MODE   138    /* Configuration-z/Architecture-
+                                               architectural-mode        */
+#define STFL_139_MULTIPLE_EPOCH      139    /* Multiple-epoch facility. If
+                                               bit 139 is one, bits 25 and
+                                               28 are also one.          */
+#define STFL_140_IBM_INTERNAL        140    /* IBM internal use          */
 
-#define STFL_IBM_INTERNAL_141    141    /* IBM internal use          */
+#define STFL_141_IBM_INTERNAL        141    /* IBM internal use          */
 
-#define STFL_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple
-                                           facility is installed. Bit
-                                           67 is one when bit 142 is.*/
-#define STFL_UNASSIGNED_143      143    /* Unassigned                */
+#define STFL_142_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple
+                                               facility is installed. Bit
+                                               67 is one when bit 142 is.*/
+#define STFL_143_UNASSIGNED          143    /* Unassigned                */
 
-#define STFL_TEST_PEND_EXTERNAL  144    /* Test-pending-external-
-                                           interruption facility     */
-#define STFL_INS_REF_BITS_MULT   145    /* Insert-reference-bits-
-                                           multiple facility         */
-#define STFL_MSA_EXTENSION_8     146    /* Message-security-assist-
-                                           extension-8. Bit 76 is one
-                                            when bit 146 is one.      */
-#define STFL_IBM_INTERNAL_147    147    /* IBM internal use          */
+#define STFL_144_TEST_PEND_EXTERNAL  144    /* Test-pending-external-
+                                               interruption facility     */
+#define STFL_145_INS_REF_BITS_MULT   145    /* Insert-reference-bits-
+                                               multiple facility         */
+#define STFL_146_MSA_EXTENSION_8     146    /* Message-security-assist-
+                                               extension-8. Bit 76 is one
+                                               when bit 146 is one.      */
+#define STFL_147_IBM_INTERNAL        147    /* IBM internal use          */
 
-//efine STFL_UNASSIGNED_nn   148-167    /* Unassigned                */
+//efine STFL_nnn_UNASSIGNED      148-167    /* Unassigned                */
 
-#define STFL_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode.
-                                           Bit 168 can only be 1 when
-                                           bit 2 is zero.            */
+#define STFL_168_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode.
+                                               Bit 168 can only be 1 when
+                                               bit 2 is zero.            */
 
 /*-------------------------------------------------------------------*/
 /*                      Hercules Facility bits                       */
@@ -1898,21 +1898,21 @@ typedef struct MBK  MBK;
 /*                      Hercules Facility bits                       */
 /*-------------------------------------------------------------------*/
 
-#define STFL_MOVE_INVERSE           ( STFL_HERC_FIRST_BIT  +   0 )
-#define STFL_MSA_EXTENSION_1        ( STFL_HERC_FIRST_BIT  +   1 )
-#define STFL_MSA_EXTENSION_2        ( STFL_HERC_FIRST_BIT  +   2 )
-#define STFL_PROBSTATE_DIAGF08      ( STFL_HERC_FIRST_BIT  +   3 )
-#define STFL_SIGP_SETARCH_S370      ( STFL_HERC_FIRST_BIT  +   4 )
-#define STFL_HOST_RESOURCE_ACCESS   ( STFL_HERC_FIRST_BIT  +   5 )
-#define STFL_QEBSM                  ( STFL_HERC_FIRST_BIT  +   6 )
-#define STFL_QDIO_TDD               ( STFL_HERC_FIRST_BIT  +   7 )
-#define STFL_QDIO_THININT           ( STFL_HERC_FIRST_BIT  +   8 )
-#define STFL_SVS                    ( STFL_HERC_FIRST_BIT  +   9 )
-#define STFL_LOGICAL_PARTITION      ( STFL_HERC_FIRST_BIT  +  10 )
-#define STFL_VIRTUAL_MACHINE        ( STFL_HERC_FIRST_BIT  +  11 )
-#define STFL_QDIO_ASSIST            ( STFL_HERC_FIRST_BIT  +  12 )
-#define STFL_INTERVAL_TIMER         ( STFL_HERC_FIRST_BIT  +  13 )
-#define STFL_DETECT_PGMINTLOOP      ( STFL_HERC_FIRST_BIT  +  14 )
+#define STFL_HERC_MOVE_INVERSE           ( STFL_HERC_FIRST_BIT  +   0 )
+#define STFL_HERC_MSA_EXTENSION_1        ( STFL_HERC_FIRST_BIT  +   1 )
+#define STFL_HERC_MSA_EXTENSION_2        ( STFL_HERC_FIRST_BIT  +   2 )
+#define STFL_HERC_PROBSTATE_DIAGF08      ( STFL_HERC_FIRST_BIT  +   3 )
+#define STFL_HERC_SIGP_SETARCH_S370      ( STFL_HERC_FIRST_BIT  +   4 )
+#define STFL_HERC_HOST_RESOURCE_ACCESS   ( STFL_HERC_FIRST_BIT  +   5 )
+#define STFL_HERC_QEBSM                  ( STFL_HERC_FIRST_BIT  +   6 )
+#define STFL_HERC_QDIO_TDD               ( STFL_HERC_FIRST_BIT  +   7 )
+#define STFL_HERC_QDIO_THININT           ( STFL_HERC_FIRST_BIT  +   8 )
+#define STFL_HERC_SVS                    ( STFL_HERC_FIRST_BIT  +   9 )
+#define STFL_HERC_LOGICAL_PARTITION      ( STFL_HERC_FIRST_BIT  +  10 )
+#define STFL_HERC_VIRTUAL_MACHINE        ( STFL_HERC_FIRST_BIT  +  11 )
+#define STFL_HERC_QDIO_ASSIST            ( STFL_HERC_FIRST_BIT  +  12 )
+#define STFL_HERC_INTERVAL_TIMER         ( STFL_HERC_FIRST_BIT  +  13 )
+#define STFL_HERC_DETECT_PGMINTLOOP      ( STFL_HERC_FIRST_BIT  +  14 )
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */

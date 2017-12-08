@@ -5849,7 +5849,7 @@ retry:
     FETCH_FW(*ioparm,dev->pmcw.intparm);
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
 #if defined(FEATURE_QDIO_THININT)
-    if (unlikely(FACILITY_ENABLED(QDIO_THININT, regs)
+    if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
         && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
     {
         dotsch = 0;     /* Do not require TSCH after INT */

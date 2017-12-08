@@ -1235,7 +1235,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(EDAT_1,regs)
+                if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1289,7 +1289,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(EDAT_1,regs)
+                if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1343,7 +1343,7 @@ U16     sx, px;                         /* Segment and page index,
                     goto tran_spec_excp;
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(EDAT_1,regs)
+                if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
@@ -1400,7 +1400,7 @@ U16     sx, px;                         /* Segment and page index,
                 goto tran_spec_excp;
 
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-            if(FACILITY_ENABLED(EDAT_1,regs)
+            if (FACILITY_ENABLED( 008_EDAT_1, regs )
               && (regs->CR_L(0) & CR0_ED)
               && (ste & ZSEGTAB_FC))
             {
@@ -1462,7 +1462,7 @@ U16     sx, px;                         /* Segment and page index,
                 regs->dat.xcode = 0;
                 cc = (ste & ZSEGTAB_P) ? 1 : 0;
 #if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
-                if(FACILITY_ENABLED(EDAT_1,regs)
+                if (FACILITY_ENABLED( 008_EDAT_1, regs )
                   && (regs->CR_L(0) & CR0_ED)
                   && regs->dat.protect)
                     cc = 1;

@@ -4886,7 +4886,7 @@ DEF_INST(perform_timing_facility_function)
 
     UNREFERENCED(inst);
 
-    FACILITY_CHECK(TOD_CLOCK_STEER,regs);
+    FACILITY_CHECK( 028_TOD_CLOCK_STEER, regs );
 
     SIE_INTERCEPT(regs);
 
@@ -5032,7 +5032,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 
     RRE(inst, regs, r1, r2);
 
-    FACILITY_CHECK(RES_REF_BITS_MUL,regs);
+    FACILITY_CHECK( 066_RES_REF_BITS_MULT, regs );
 
     PRIV_CHECK(regs);
 
@@ -5244,12 +5244,12 @@ int     page_offset;                    /* Low order bits of R2      */
 
     RRE(inst, regs, r1, r2);
 
-    FACILITY_CHECK(EDAT_1,regs);
+    FACILITY_CHECK( 008_EDAT_1, regs );
 
     PRIV_CHECK(regs);
 
     if((regs->GR_L(r1) & (PFMF_RESERVED|PFMF_FMFI_RESV|PFMF_FMFI_FSC_RESV))
-      || (!FACILITY_ENABLED(NONQ_KEY_SET,regs) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
+      || (!FACILITY_ENABLED( 014_NONQ_KEY_SET, regs ) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Wrap address according to addressing mode */
@@ -5588,7 +5588,7 @@ int     cc;                             /* Condition code            */
     ndbl = regs->GR_LHLCL(0) + 1;
 
     /* Determine the STFLE array size from the available facilities */
-    sdbl = STFL_HERC_BY_SIZE;
+    sdbl = STFL_IBM_BY_SIZE;
     while(--sdbl && !regs->facility_list[sdbl]);
     sdbl = (sdbl>>3)+1;
 
@@ -8443,13 +8443,13 @@ U64     effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    FACILITY_CHECK(LOAD_PROG_PARAM,regs);
+    FACILITY_CHECK( 040_LOAD_PROG_PARAM, regs );
 
     PRIV_CHECK(regs);
 
     /* At least one of these is installed */
-    if (FACILITY_ENABLED(CPU_MEAS_COUNTER,regs) ||
-        FACILITY_ENABLED(CPU_MEAS_SAMPLNG,regs) )
+    if (FACILITY_ENABLED( 067_CPU_MEAS_COUNTER, regs ) ||
+        FACILITY_ENABLED( 068_CPU_MEAS_SAMPLNG, regs ) )
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
 } /* end DEF_INST(load_program_parameter) */

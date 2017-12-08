@@ -2618,8 +2618,8 @@ BYTE resetAllCpuIds()
 /*-------------------------------------------------------------------*/
 void enable_lparmode( const int enable )
 {
-    static const int  fbyte  =          (STFL_LOGICAL_PARTITION / 8);
-    static const int  fbit   =  0x80 >> (STFL_LOGICAL_PARTITION % 8);
+    static const int  fbyte  =          (STFL_HERC_LOGICAL_PARTITION / 8);
+    static const int  fbit   =  0x80 >> (STFL_HERC_LOGICAL_PARTITION % 8);
 
     if (enable)
     {

@@ -660,7 +660,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 
     /* Initialize external interrupt masks in control register 0 */
     regs->CR(0) = CR0_XM_INTKEY | CR0_XM_EXTSIG |
-      (FACILITY_ENABLED(INTERVAL_TIMER, regs) ? CR0_XM_ITIMER : 0);
+      (FACILITY_ENABLED( HERC_INTERVAL_TIMER, regs ) ? CR0_XM_ITIMER : 0);
 
 #if defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS)
     /* For S/370 initialize the channel masks in CR2 */

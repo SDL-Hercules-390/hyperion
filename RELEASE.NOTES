@@ -54,14 +54,14 @@
 
   For example: on certain IBM operating systems the z/Architecture "ASN
   and LX Reuse Facility" feature must be enabled or the system will not IPL.
-  The facility is enabled in Hercules via the ARCHLVL ENABLE ASN_LX_REUSE
+  The facility is enabled in Hercules via the ARCHLVL ENABLE 006_ASN_LX_REUSE
   configuration file statement, but since the facility is a z/Architecture-
   only feature, your initial architecture must either be set to "z/Arch"
   beforehand or else you need to specify the optional [archmode] parameter
-  on your ARCHLVL ENABLE ASN_LX_REUSE statement.
+  on your ARCHLVL ENABLE 006_ASN_LX_REUSE statement.
 
   This means the ARCHLVL z/Arch< statement must usually come before your
-  ARCHLVL ENABLE ASN_LX_REUSE statement in your configuration file.
+  ARCHLVL ENABLE 006_ASN_LX_REUSE statement in your configuration file.
   Otherwise the ASN and LX Reuse Facility would not be enabled.
 
   With the introduction of limited automatic LPAR-mode/BASIC-mode switching

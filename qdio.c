@@ -50,14 +50,14 @@ DEVBLK *dev;                            /* -> device block           */
     /* Specification exception if invalid function code */
     if((regs->GR_L(0)
 #if defined(FEATURE_QEBSM)
-                      & ~(FACILITY_ENABLED(QEBSM,regs) ? SIGA_TOKEN : 0)
+                      & ~(FACILITY_ENABLED( HERC_QEBSM, regs ) ? SIGA_TOKEN : 0)
 #endif /*defined(FEATURE_QEBSM)*/
                       ) > SIGA_FC_MAX)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Locate the device block for this subchannel */
 #if defined(FEATURE_QEBSM)
-    if(FACILITY_ENABLED(QEBSM, regs)
+    if (FACILITY_ENABLED( HERC_QEBSM, regs )
       && (regs->GR_L(0) & SIGA_TOKEN))
         dev = find_device_by_subchan (TKN2IOID(regs->GR_G(1)));
     else
@@ -98,7 +98,7 @@ DEVBLK *dev;                            /* -> device block           */
     switch(
            regs->GR_L(0)
 #if defined(FEATURE_QEBSM)
-                         & ~(FACILITY_ENABLED(QEBSM,regs) ? SIGA_TOKEN : 0)
+                         & ~(FACILITY_ENABLED( HERC_QEBSM, regs ) ? SIGA_TOKEN : 0)
 #endif /*defined(FEATURE_QEBSM)*/
                          ) {
     case SIGA_FC_R:
@@ -182,7 +182,7 @@ U64     slsba;                 /* Storage list state block address   */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
 //  ARCH_DEP(display_inst) (regs, inst);
-    FACILITY_CHECK(QEBSM, regs);
+    FACILITY_CHECK( HERC_QEBSM, regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -275,7 +275,7 @@ U64     slsba;                /* Storage list state block address    */
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
 //  ARCH_DEP(display_inst) (regs, inst);
-    FACILITY_CHECK(QEBSM, regs);
+    FACILITY_CHECK( HERC_QEBSM, regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -371,7 +371,7 @@ int     r1, unused;            /* Register numbers                   */
     RRE0(inst, regs, r1, unused);
 
 //  ARCH_DEP(display_inst) (regs, inst);
-    FACILITY_CHECK(SVS, regs);
+    FACILITY_CHECK( HERC_SVS, regs );
     PRIV_CHECK(regs);
     SIE_INTERCEPT(regs);
     ODD_CHECK(r1, regs);

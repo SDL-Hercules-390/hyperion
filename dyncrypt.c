@@ -307,15 +307,15 @@ void xts_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 /*----------------------------------------------------------------------------*/
 static int get_msa(REGS *regs)
 {
-  if(FACILITY_ENABLED(MSA_EXTENSION_4, regs))
+  if (FACILITY_ENABLED( 077_MSA_EXTENSION_4,  regs ))
     return(4);
-  if(FACILITY_ENABLED(MSA_EXTENSION_3, regs))
+  if (FACILITY_ENABLED( 076_MSA_EXTENSION_3,  regs ))
     return(3);
-  if(FACILITY_ENABLED(MSA_EXTENSION_2, regs))
+  if (FACILITY_ENABLED( HERC_MSA_EXTENSION_2, regs ))
     return(2);
-  if(FACILITY_ENABLED(MSA_EXTENSION_1, regs))
+  if (FACILITY_ENABLED( HERC_MSA_EXTENSION_1, regs ))
     return(1);
-  if(FACILITY_ENABLED(MSA, regs))
+  if (FACILITY_ENABLED( 017_MSA,              regs ))
     return(0);
   return(-1);
 }

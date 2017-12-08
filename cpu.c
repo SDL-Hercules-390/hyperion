@@ -933,7 +933,7 @@ static char *pgmintname[] = {
     {
         PSW pgmold, pgmnew;
         int pgmintloop = 0;
-        int detect_pgmintloop = FACILITY_ENABLED( DETECT_PGMINTLOOP, realregs );
+        int detect_pgmintloop = FACILITY_ENABLED( HERC_DETECT_PGMINTLOOP, realregs );
 
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
