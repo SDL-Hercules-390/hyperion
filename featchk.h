@@ -748,9 +748,12 @@
  #error Decimal floating point facility requires Basic FP extensions
 #endif
 
-#if (defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) || defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )) \
- && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
- #error CPU Measurement/Sampling facilities requires Load Program Parameter facility
+#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
+ #error CPU Measurement Counter facility requires Load Program Parameter facility
+#endif
+
+#if defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
+ #error CPU Measurement Sampling facility requires Load Program Parameter facility
 #endif
 
 #if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY ) && !defined( FEATURE_ENHANCED_SUPPRESSION_ON_PROTECTION )
