@@ -1733,7 +1733,7 @@ typedef struct MBK  MBK;
 #define STFL_EXECUTION_HINT       49    /* Execution-hint, load-and-
                                            trap, processor-assist and
                                            miscellaneous-instruction-
-                                           extension-1 installed     */
+                                           extensions-1 installed     */
 #define STFL_CONSTR_TRANSACT      50    /* Constrained-transactional-
                                            execution facility. Bit only
                                            meaningful if bit 73 one. */
@@ -1832,8 +1832,9 @@ typedef struct MBK  MBK;
 
 #define STFL_IBM_INTERNAL_141    141    /* IBM internal use          */
 
-#define STFL_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple*/
-
+#define STFL_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple
+                                           facility is installed. Bit
+                                           67 is one when bit 142 is.*/
 #define STFL_UNASSIGNED_143      143    /* Unassigned                */
 
 #define STFL_TEST_PEND_EXTERNAL  144    /* Test-pending-external-
