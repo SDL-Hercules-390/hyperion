@@ -1606,14 +1606,18 @@ typedef struct MBK  MBK;
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* The below are all known facility bits defined by IBM as of the    */
-/* latest z/Architecture Pinciples of Operation and correspond to    */
-/* associated "FEATURE_XXX" names which should also be isted in      */
-/* the featall.h header, regardless of whether Hercules supports     */
-/* the defined feature/facility or not.                              */
+/* latest z/Architecture Pinciples of Operation.  They correspond    */
+/* to similarly named 'FEATURE_XXX" #defines listed in featall.h.    */
 /*                                                                   */
 /* Their names (minus the 'STFL_' prefix) are used by the FACILITY   */
-/* macro that defines the actual FACTAB facilities table entries     */
-/* defined in source file archlvl.c                                  */
+/* macro and FACILITY_ENABLED macro.  The FACILITY macro is used in  */
+/* archlvl.c to define the entries in the FACTAB facilities table    */
+/* that indicates which individual facilities are available in each  */
+/* architecture.                                                     */
+/*                                                                   */
+/* Always #define a STFL_xxxx and corresponding FEATURE_xxxx define  */
+/* for every known/documented facility regardless of whether or not  */
+/* the facility is currently supported/enabled or not.               */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -1852,45 +1856,63 @@ typedef struct MBK  MBK;
                                            Bit 168 can only be 1 when
                                            bit 2 is zero.            */
 
-//efine STFL_UNASSIGNED_nn   169-255    /* Unassigned                */
-
-#define STFL_IBMMAX              255    /* Maximum IBM facility bit  */
-
-#define STFL_IBMBYSIZE              ((STFL_IBMMAX+7)/8)
-#define STFL_IBMDWSIZE              ((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))
-
 /*-------------------------------------------------------------------*/
 /*                      Hercules Facility bits                       */
 /*-------------------------------------------------------------------*/
 /* The below facility definitions are HERCULES SPECIFIC and not part */
 /* of the architecture.  They are placed here for the convenience    */
 /* of being able to use the Virtual Architecture Level facility.     */
-/* Note that Hercules's facility bits always start on the first bit  */
-/* of the first byte of the NEXT doubleword beyond the last defined  */
-/* (or reserved) IBM facilities list doubleword.                     */
+/*                                                                   */
+/* Note that Hercules's facility bits are placed at the VERY END of  */
+/* the facility bits array in order to cause the least interference  */
+/* with IBM.  We do this because once a facily bit is assigned then  */
+/* it becomes "set in stone" and can NEVER from that point onward be */
+/* changed.  Facility bit assignments are thus PERMANENT, *forever*. */
 /*-------------------------------------------------------------------*/
 
-#define STFL_HERCBITS               ((((STFL_IBMBYSIZE+sizeof(DW)-1)/sizeof(DW))*sizeof(DW))*8)
+// Maximum architected value... (see STFLE instruction)
 
-#define STFL_MOVE_INVERSE           (STFL_HERCBITS+0)
-#define STFL_MSA_EXTENSION_1        (STFL_HERCBITS+1)
-#define STFL_MSA_EXTENSION_2        (STFL_HERCBITS+2)
-#define STFL_PROBSTATE_DIAGF08      (STFL_HERCBITS+3)
-#define STFL_SIGP_SETARCH_S370      (STFL_HERCBITS+4)
-#define STFL_HOST_RESOURCE_ACCESS   (STFL_HERCBITS+5)
-#define STFL_QEBSM                  (STFL_HERCBITS+6)
-#define STFL_QDIO_TDD               (STFL_HERCBITS+7)
-#define STFL_QDIO_THININT           (STFL_HERCBITS+8)
-#define STFL_SVS                    (STFL_HERCBITS+9)
-#define STFL_LOGICAL_PARTITION      (STFL_HERCBITS+10)
-#define STFL_VIRTUAL_MACHINE        (STFL_HERCBITS+11)
-#define STFL_QDIO_ASSIST            (STFL_HERCBITS+12)
-#define STFL_INTERVAL_TIMER         (STFL_HERCBITS+13)
-#define STFL_DETECT_PGMINTLOOP      (STFL_HERCBITS+14)
-#define STFL_HERCMAX                (STFL_HERCBITS+14)   /* Max Herc */
+#define STFL_MAX_DW             256
+#define STFL_MAX_BYTES          (STFL_MAX_DW * sizeof(DW))
+#define STFL_MAX_BITS           (STFL_MAX_BYTES * 8)
 
-#define STFL_HERCBYSIZE             ((STFL_HERCMAX+7)/8)
-#define STFL_HERCDWSIZE             ((STFL_HERCBYSIZE+sizeof(DW)-1)/sizeof(DW))
+// Reserve a number of bits for Hercules...
+
+#define STFL_NUM_HERC_DW        2
+#define STFL_NUM_HERC_BYTES     (STFL_NUM_HERC_DW * sizeof(DW))
+#define STFL_NUM_HERC_BITS      (STFL_NUM_HERC_BYTES * 8)
+
+// Determine where IBM's bits end and where Herc's will start,
+// and calculate the byte size and doubleword size for both.
+
+#define STFL_IBM_LAST_BIT       (STFL_MAX_BITS - STFL_NUM_HERC_BITS - 1)
+#define STFL_IBM_BY_SIZE        ((STFL_IBM_LAST_BIT+8-1)/8)
+#define STFL_IBM_DW_SIZE        ((STFL_IBM_BY_SIZE+sizeof(DW)-1)/sizeof(DW))
+
+#define STFL_HERC_FIRST_BIT     (STFL_IBM_LAST_BIT + 1)
+#define STFL_HERC_LAST_BIT      (STFL_HERC_FIRST_BIT + STFL_NUM_HERC_BITS - 1)
+#define STFL_HERC_BY_SIZE       ((STFL_HERC_LAST_BIT+8-1)/8)
+#define STFL_HERC_DW_SIZE       ((STFL_HERC_BY_SIZE+sizeof(DW)-1)/sizeof(DW))
+
+/*-------------------------------------------------------------------*/
+/*                      Hercules Facility bits                       */
+/*-------------------------------------------------------------------*/
+
+#define STFL_MOVE_INVERSE           ( STFL_HERC_FIRST_BIT  +   0 )
+#define STFL_MSA_EXTENSION_1        ( STFL_HERC_FIRST_BIT  +   1 )
+#define STFL_MSA_EXTENSION_2        ( STFL_HERC_FIRST_BIT  +   2 )
+#define STFL_PROBSTATE_DIAGF08      ( STFL_HERC_FIRST_BIT  +   3 )
+#define STFL_SIGP_SETARCH_S370      ( STFL_HERC_FIRST_BIT  +   4 )
+#define STFL_HOST_RESOURCE_ACCESS   ( STFL_HERC_FIRST_BIT  +   5 )
+#define STFL_QEBSM                  ( STFL_HERC_FIRST_BIT  +   6 )
+#define STFL_QDIO_TDD               ( STFL_HERC_FIRST_BIT  +   7 )
+#define STFL_QDIO_THININT           ( STFL_HERC_FIRST_BIT  +   8 )
+#define STFL_SVS                    ( STFL_HERC_FIRST_BIT  +   9 )
+#define STFL_LOGICAL_PARTITION      ( STFL_HERC_FIRST_BIT  +  10 )
+#define STFL_VIRTUAL_MACHINE        ( STFL_HERC_FIRST_BIT  +  11 )
+#define STFL_QDIO_ASSIST            ( STFL_HERC_FIRST_BIT  +  12 )
+#define STFL_INTERVAL_TIMER         ( STFL_HERC_FIRST_BIT  +  13 )
+#define STFL_DETECT_PGMINTLOOP      ( STFL_HERC_FIRST_BIT  +  14 )
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */

@@ -5588,7 +5588,7 @@ int     cc;                             /* Condition code            */
     ndbl = regs->GR_LHLCL(0) + 1;
 
     /* Determine the STFLE array size from the available facilities */
-    sdbl = STFL_IBMBYSIZE;
+    sdbl = STFL_HERC_BY_SIZE;
     while(--sdbl && !regs->facility_list[sdbl]);
     sdbl = (sdbl>>3)+1;
 
