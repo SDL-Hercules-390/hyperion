@@ -707,10 +707,6 @@
  #error z/Arch SIE requires ESA/390 SIE too
 #endif
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_S370_S390_VECTOR_FACILITY )
- #error non-z/Arch Vector Facility (S/370 or S/390) not supported in z/Arch mode
-#endif
-
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( _FEATURE_SIE ) \
     && !defined( FEATURE_STORAGE_KEY_ASSIST )
  #error SIE requires storage key assist
@@ -868,6 +864,10 @@
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
  #error S370/S390 Vector Facility not supported on z/Arch capable processors
+#endif
+
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+ #error S370/S390 Vector Facility not supported in z/Arch mode
 #endif
 
 #if defined( FEATURE_SCSI_IPL ) && !defined( FEATURE_HARDWARE_LOADER )
