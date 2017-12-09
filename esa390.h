@@ -1745,7 +1745,7 @@ typedef struct MBK  MBK;
 
 #define STFL_052_INTERLOCKED_ACCESS_2 52    /* Interlocked-access-2      */
 
-#define STFL_053_LOAD_ON_CONDITION_2  53    /* Load/store-on-condition-2,
+#define STFL_053_LOAD_STORE_ON_COND_2 53    /* Load/store-on-condition-2,
                                                load-zero-rightmost-byte  */
 #define STFL_054_EE_CMPSC             54    /* Entropy-encoding compress */
 
