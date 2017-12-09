@@ -3585,6 +3585,9 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
@@ -3609,6 +3612,9 @@ DEF_INST(load_long_and_trap)                                    /*912*/
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -3636,6 +3642,9 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register bits 0-31 from second operand */
@@ -3662,6 +3671,9 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
@@ -3687,6 +3699,9 @@ DEF_INST(load_logical_long_thirtyone_and_trap)                  /*912*/
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -3721,6 +3736,9 @@ U32     n;                              /* 32-bit operand value      */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
+
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
     /* Load second operand from operand address */
@@ -3753,6 +3771,9 @@ U64     n;                              /* 64-bit operand value      */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
+
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
     /* Load second operand from operand address */
@@ -3779,6 +3800,9 @@ int     cc;                             /* Comparison result         */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_insert_selected_bits_long_reg_n)
 {
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
+
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_long_reg_n) */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -3796,6 +3820,9 @@ DEF_INST(branch_prediction_preload)                             /*912*/
 VADR    addr2, addr3;                   /* Effective addresses       */
 int     b3;                             /* Base of effective address */
 int     m1;                             /* Mask value                */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_EXECUTION_HINT, regs );
 
     SMI_A0(inst, regs, m1, addr2, b3, addr3);
 
@@ -3815,6 +3842,9 @@ DEF_INST(branch_prediction_relative_preload)                    /*912*/
 VADR    addr2, addr3;                   /* Effective addresses       */
 int     m1;                             /* Mask value                */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_EXECUTION_HINT, regs );
+
     MII_A0(inst, regs, m1, addr2, addr3);
 
     /* Depending on the model, the CPU may not implement
@@ -3831,6 +3861,9 @@ int     m1;                             /* Mask value                */
 DEF_INST(next_instruction_access_intent)                        /*912*/
 {
 BYTE    i1, i2;                         /* Immediate fields          */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 049_EXECUTION_HINT, regs );
 
     IE0(inst, regs, i1, i2);
 

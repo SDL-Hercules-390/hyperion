@@ -136,6 +136,7 @@ hengine_OBJ = \
     $(O)stack.obj    \
     $(O)timer.obj    \
     $(O)trace.obj    \
+    $(O)transact.obj \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \

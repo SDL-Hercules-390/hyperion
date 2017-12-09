@@ -708,6 +708,9 @@
     <ClCompile Include="trace.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="transact.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="vector.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

@@ -1084,6 +1084,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\transact.c"
+							>
+						</File>
+						<File
 							RelativePath=".\vector.c"
 							>
 						</File>

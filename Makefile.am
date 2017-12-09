@@ -507,6 +507,7 @@ libherc_la_SOURCES = \
   strsignal.c        \
   timer.c            \
   trace.c            \
+  transact.c         \
   vector.c           \
   vm.c               \
   vmd250.c           \

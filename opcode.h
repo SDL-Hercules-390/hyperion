@@ -4146,25 +4146,29 @@ DEF_INST(subtract_logical_distinct_long_register);              /*810*/
 DEF_INST(population_count);                                     /*810*/
 #endif /*defined(FEATURE_045_POPULATION_COUNT_FACILITY)*/
 
-#if defined(FEATURE_049_LOAD_AND_TRAP_FACILITY)
+#if defined( FEATURE_049_EXECUTION_HINT_FACILITY )
+DEF_INST(branch_prediction_preload);                            /*912*/
+DEF_INST(branch_prediction_relative_preload);                   /*912*/
+DEF_INST(next_instruction_access_intent);                       /*912*/
+#endif
+
+#if defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )
 DEF_INST(load_and_trap);                                        /*912*/
 DEF_INST(load_long_and_trap);                                   /*912*/
 DEF_INST(load_fullword_high_and_trap);                          /*912*/
 DEF_INST(load_logical_long_fullword_and_trap);                  /*912*/
 DEF_INST(load_logical_long_thirtyone_and_trap);                 /*912*/
-#endif /*defined(FEATURE_049_LOAD_AND_TRAP_FACILITY)*/
+#endif
 
-#if defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)
+#if defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
+DEF_INST(perform_processor_assist);
+#endif
+
+#if defined (FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
 DEF_INST(compare_logical_and_trap);                             /*912*/
 DEF_INST(compare_logical_and_trap_long);                        /*912*/
 DEF_INST(rotate_then_insert_selected_bits_long_reg_n);          /*912*/
-#endif /*defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)*/
-
-#if defined(FEATURE_049_EXECUTION_HINT_FACILITY)
-DEF_INST(branch_prediction_preload);                            /*912*/
-DEF_INST(branch_prediction_relative_preload);                   /*912*/
-DEF_INST(next_instruction_access_intent);                       /*912*/
-#endif /*defined(FEATURE_049_EXECUTION_HINT_FACILITY)*/
+#endif
 
 /* Instructions in io.c */
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)

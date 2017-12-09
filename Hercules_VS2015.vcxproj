@@ -434,6 +434,7 @@
     <ClCompile Include="tapesplt.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
+    <ClCompile Include="transact.c" />
     <ClCompile Include="tuntap.c" />
     <ClCompile Include="vector.c" />
     <ClCompile Include="version.c" />

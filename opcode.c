@@ -271,12 +271,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(execute_relative_long)                              /*208*/
 #endif /*!defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/        /*208*/
 
-#if !defined(FEATURE_049_EXECUTION_HINT_FACILITY)               /*912*/
- UNDEF_INST(branch_prediction_preload)                          /*912*/
- UNDEF_INST(branch_prediction_relative_preload)                 /*912*/
- UNDEF_INST(next_instruction_access_intent)                     /*912*/
-#endif /*!defined(FEATURE_049_EXECUTION_HINT_FACILITY)*/        /*912*/
-
 #if !defined(FEATURE_034_GEN_INST_EXTN_FACILITY)   /*208*/
  UNDEF_INST(add_immediate_long_storage)
  UNDEF_INST(add_immediate_storage)
@@ -456,19 +450,29 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(reset_reference_bits_multiple)                      /*810*/
 #endif /*!defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)*/
 
-#if !defined(FEATURE_049_LOAD_AND_TRAP_FACILITY)                /*912*/
+#if !defined( FEATURE_049_EXECUTION_HINT_FACILITY )
+ UNDEF_INST(branch_prediction_preload)                          /*912*/
+ UNDEF_INST(branch_prediction_relative_preload)                 /*912*/
+ UNDEF_INST(next_instruction_access_intent)                     /*912*/
+#endif
+
+#if !defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )
  UNDEF_INST(load_and_trap)                                      /*912*/
  UNDEF_INST(load_long_and_trap)                                 /*912*/
  UNDEF_INST(load_fullword_high_and_trap)                        /*912*/
  UNDEF_INST(load_logical_long_fullword_and_trap)                /*912*/
  UNDEF_INST(load_logical_long_thirtyone_and_trap)               /*912*/
-#endif /*!defined(FEATURE_049_LOAD_AND_TRAP_FACILITY)*/         /*912*/
+#endif
 
-#if !defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)             /*912*/
+#if !defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
+ UNDEF_INST(perform_processor_assist);
+#endif
+
+#if !defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
  UNDEF_INST(compare_logical_and_trap)                           /*912*/
  UNDEF_INST(compare_logical_and_trap_long)                      /*912*/
  UNDEF_INST(rotate_then_insert_selected_bits_long_reg_n)        /*912*/
-#endif /*!defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)*/
+#endif
 
 #if !defined( FEATURE_S370_S390_VECTOR_FACILITY )
  UNDEF_INST(v_test_vmr)
@@ -2948,7 +2952,7 @@ static zz_func opcode_b2xx[0x100][GEN_MAXARCH] = {
  /*B2E5*/ GENx___x___x900 (extract_peripheral_counter,RRE,"EPCTR"),     /*  CMCF */
  /*B2E6*/ GENx___x___x___ ,
  /*B2E7*/ GENx___x___x___ ,
- /*B2E8*/ GENx___x___x___ ,
+ /*B2E8*/ GENx___x___x900 (perform_processor_assist,RRF_M,"PPA"),
  /*B2E9*/ GENx___x___x___ ,
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,
