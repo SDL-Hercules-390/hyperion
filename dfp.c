@@ -36,6 +36,7 @@
    if an FPS instruction attempts to use one of the 12 additional FPR
    registers when the AFP-register-control bit in CR0 is zero. */
 
+#if defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B370 LPDFR - Load Positive FPR Long Register                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -43,6 +44,9 @@ DEF_INST(load_positive_fpr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
@@ -64,6 +68,9 @@ DEF_INST(load_negative_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
+
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -84,6 +91,9 @@ DEF_INST(copy_sign_fpr_long_reg)
 int     r1, r2, r3;                     /* Values of R fields        */
 int     i1, i2, i3;                     /* FP register subscripts    */
 U32     sign;                           /* Work area for sign bit    */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRF_M(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
@@ -114,6 +124,9 @@ DEF_INST(load_complement_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
+
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -124,8 +137,10 @@ int     i1, i2;                         /* FP register subscripts    */
     regs->fpr[i1+1] = regs->fpr[i2+1];
 
 } /* end DEF_INST(load_complement_fpr_long_reg) */
+#endif /* defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY ) */
 
 
+#if defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B3C1 LDGR  - Load FPR from GR Long Register                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -133,6 +148,9 @@ DEF_INST(load_fpr_from_gr_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;                             /* FP register subscript     */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPR_GR_TRANSFER, regs );
 
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
@@ -153,6 +171,9 @@ DEF_INST(load_gr_from_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i2;                             /* FP register subscript     */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_FPR_GR_TRANSFER, regs );
+
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r2, regs);
     i2 = FPR2I(r2);
@@ -162,8 +183,10 @@ int     i2;                             /* FP register subscript     */
     regs->GR_L(r1) = regs->fpr[i2+1];
 
 } /* end DEF_INST(load_gr_from_fpr_long_reg) */
+#endif /* defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY ) */
 
 
+#if defined( FEATURE_041_DFP_ROUNDING_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
 /*-------------------------------------------------------------------*/
@@ -171,6 +194,9 @@ DEF_INST(set_dfp_rounding_mode)
 {
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_DFP_ROUNDING, regs );
 
     S(inst, regs, b2, effective_addr2);
 
@@ -181,9 +207,7 @@ VADR            effective_addr2;        /* Effective address         */
     regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
 
 } /* end DEF_INST(set_dfp_rounding_mode) */
-
-
-#endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
+#endif /* defined( FEATURE_041_DFP_ROUNDING_FACILITY ) */
 
 
 #if defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
@@ -265,6 +289,9 @@ VADR            effective_addr2;        /* Effective address         */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_IEEE_EXCEPT_SIM, regs );
+
     S(inst, regs, b2, effective_addr2);
 
     DFPINST_CHECK(regs);
@@ -303,6 +330,9 @@ int             r1, unused;             /* Values of R fields        */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 041_IEEE_EXCEPT_SIM, regs );
+
     RRE(inst, regs, r1, unused);
 
     DFPINST_CHECK(regs);
@@ -331,6 +361,7 @@ BYTE            dxc;                    /* Data exception code       */
 
 } /* end DEF_INST(set_fpc_and_signal) */
 #endif /*defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
+#endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
 
 
 #if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)

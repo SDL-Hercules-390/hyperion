@@ -4719,20 +4719,30 @@ DEF_INST(convert_bfp_short_to_u64_reg);                         /*810*/
 #endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
 
 /* Instructions in dfp.c */
-#if defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
-DEF_INST(copy_sign_fpr_long_reg);
-DEF_INST(load_complement_fpr_long_reg);
+#if defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
+
+#if defined( FEATURE_041_DFP_ROUNDING_FACILITY )
+DEF_INST(set_dfp_rounding_mode);
+#endif
+
+#if defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY )
 DEF_INST(load_fpr_from_gr_long_reg);
 DEF_INST(load_gr_from_fpr_long_reg);
+#endif
+
+#if defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
+DEF_INST(copy_sign_fpr_long_reg);
+DEF_INST(load_complement_fpr_long_reg);
 DEF_INST(load_negative_fpr_long_reg);
 DEF_INST(load_positive_fpr_long_reg);
-DEF_INST(set_dfp_rounding_mode);
-#endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
+#endif
 
-#if defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
+#if defined( FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
 DEF_INST(load_fpc_and_signal);
 DEF_INST(set_fpc_and_signal);
-#endif /*defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
+#endif
+
+#endif /* defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
 
 #if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
 DEF_INST(add_dfp_ext_reg);

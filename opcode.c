@@ -602,21 +602,28 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
-#if !defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
- UNDEF_INST(copy_sign_fpr_long_reg)
- UNDEF_INST(load_complement_fpr_long_reg)
+#if !defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
+#if !defined( FEATURE_041_DFP_ROUNDING_FACILITY )
+ UNDEF_INST(set_dfp_rounding_mode)
+#endif
+
+#if !defined( FEATURE_041_FPR_GR_TRANSFER_FACILITY )
  UNDEF_INST(load_fpr_from_gr_long_reg)
  UNDEF_INST(load_gr_from_fpr_long_reg)
+#endif
+
+#if !defined( FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
+ UNDEF_INST(copy_sign_fpr_long_reg)
+ UNDEF_INST(load_complement_fpr_long_reg)
  UNDEF_INST(load_negative_fpr_long_reg)
  UNDEF_INST(load_positive_fpr_long_reg)
- UNDEF_INST(set_dfp_rounding_mode)
-#endif /*!defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
+#endif
 
-
-#if !defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)
+#if !defined( FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
  UNDEF_INST(load_fpc_and_signal)
  UNDEF_INST(set_fpc_and_signal)
-#endif /*!defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
+#endif
+#endif /* !defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
 
 
 #if !defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
