@@ -5201,8 +5201,6 @@ int     i;                              /* Integer work areas        */
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
-    FACILITY_CHECK( HERC_MOVE_INVERSE, regs );
-
     /* If operand 1 crosses a page, make sure both pages are accessable */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l) & PAGEFRAME_PAGEMASK))

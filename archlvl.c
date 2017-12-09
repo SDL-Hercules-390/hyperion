@@ -514,8 +514,6 @@ FACILITY( 077_MSA_EXTENSION_4,      Z390,       NONE,       Z390,       ALS3 )
 
 //        Facility                      Default     Mandatory   Supported   Group
 
-FACILITY( HERC_MOVE_INVERSE,            ALLM,       ZARCH,      ALLM,       ALSALL )
-
 #if defined( _FEATURE_MSA_EXTENSION_FACILITY_1 )
 FACILITY( HERC_MSA_EXTENSION_1,         Z390,       NONE,       Z390,       ALS3 )
 #endif
