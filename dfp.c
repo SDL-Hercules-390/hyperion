@@ -2542,6 +2542,9 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
+
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2591,6 +2594,9 @@ decimal64       x1;                     /* Long DFP value            */
 decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     DFPINST_CHECK(regs);
@@ -3217,6 +3223,9 @@ decContext      set;                    /* Working context           */
 int             cc;                     /* Condition code            */
 char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
+
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -3267,6 +3276,9 @@ decNumber       dwork, dcoeff;          /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             cc;                     /* Condition code            */
 char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     DFPINST_CHECK(regs);

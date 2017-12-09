@@ -359,7 +359,7 @@ FACILITY( 047_CMPSC_ENH,            ZARCH,      NONE,       ZARCH,      ALS3 )
 #endif
 
 #if defined( _FEATURE_048_DFP_ZONE_CONV_FACILITY )
-//CILITY( 048_DFP_ZONE_CONV,        ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 048_DFP_ZONE_CONV,        ZARCH,      NONE,       ZARCH,      ALS3 )
 #endif
 
 #if defined( _FEATURE_049_EXECUTION_HINT_FACILITY )

@@ -806,12 +806,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif /*!defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
 
-#if !defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)                /*912*/
+#if !defined( FEATURE_048_DFP_ZONE_CONV_FACILITY )
  UNDEF_INST(convert_zoned_to_dfp_long)                          /*912*/
  UNDEF_INST(convert_zoned_to_dfp_ext)                           /*912*/
  UNDEF_INST(convert_dfp_long_to_zoned)                          /*912*/
  UNDEF_INST(convert_dfp_ext_to_zoned)                           /*912*/
-#endif /*!defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/         /*912*/
+#endif
 
 
 #if !defined(FEATURE_037_FP_EXTENSIONS_FACILITY)         /*810*/

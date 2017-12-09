@@ -4791,12 +4791,12 @@ DEF_INST(test_data_group_dfp_long);
 DEF_INST(test_data_group_dfp_short);
 #endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
-#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)
+#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY )
 DEF_INST(convert_zoned_to_dfp_ext);                             /*912*/
 DEF_INST(convert_zoned_to_dfp_long);                            /*912*/
 DEF_INST(convert_dfp_ext_to_zoned);                             /*912*/
 DEF_INST(convert_dfp_long_to_zoned);                            /*912*/
-#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/
+#endif
 
 /* Instructions in pfpo.c */
 #if defined(FEATURE_044_PFPO_FACILITY)
