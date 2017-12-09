@@ -1617,7 +1617,13 @@ typedef struct MBK  MBK;
 /*                                                                   */
 /* Always #define a STFL_xxxx and corresponding FEATURE_xxxx define  */
 /* for every known/documented facility regardless of whether or not  */
-/* the facility is currently supported/enabled or not.               */
+/* the facility is currently supported/enabled or not.  Also define  */
+/* multiple names for a given facility bit if the bit is documented  */
+/* as pertaining to more than one facility.  This make maintaining   */
+/* the archlvl.c FACTAB facility table easier and allows using the   */
+/* actual facility name in your FACILITY_ENABLED macros throughout   */
+/* Hercules code making the code easier to understand and maintain   */
+/* (see e.g. bits 41, 45, 49 and 53).                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -1718,14 +1724,29 @@ typedef struct MBK  MBK;
                                                FPR-GR-transfer, FPS-sign-
                                                handling and IEEE-exception-
                                                simulator) installed      */
+#define STFL_041_DFP_ROUNDING         41    /* Ibid.                     */
+#define STFL_041_FPR_GR_TRANSFER      41    /* Ibid.                     */
+#define STFL_041_FPS_SIGN_HANDLING    41    /* Ibid.                     */
+#define STFL_041_IEEE_EXCEPT_SIM      41    /* Ibid.                     */
+
 #define STFL_042_DECIMAL_FLOAT        42    /* Decimal floating point
                                                (DFP) facility installed. */
 #define STFL_043_DFP_HPERF            43    /* DFP has high performance.
                                                Bit 42 is one if bit 43 is*/
 #define STFL_044_PFPO                 44    /* PFPO instruction installed*/
 
-#define STFL_045_FAST_BCR_SERIAL      45    /* Fast-BCR-serialization   810
-                                               Facility installed     810*/
+#define STFL_045_DISTINCT_OPERANDS    45    /* Distinct-operands, fast-BCR-
+                                               serialization, high-word,
+                                               interlocked-access1, load-
+                                               or-store-on-condition and
+                                               population-count facilities
+                                               are installed in z/Arch.  */
+#define STFL_045_FAST_BCR_SERIAL      45    /* Ibid.                     */
+#define STFL_045_HIGH_WORD            45    /* Ibid.                     */
+#define STFL_045_INTERLOCKED_ACCESS_1 45    /* Ibid.                     */
+#define STFL_045_LOAD_STORE_ON_COND_1 45    /* Ibid.                     */
+#define STFL_045_POPULATION_COUNT     45    /* Ibid.                     */
+
 #define STFL_046_IBM_INTERNAL         46    /* IBM internal use          */
 
 #define STFL_047_CMPSC_ENH            47    /* CMPSC-enhancement        810
@@ -1738,6 +1759,10 @@ typedef struct MBK  MBK;
                                                trap, processor-assist and
                                                miscellaneous-instruction-
                                                extensions-1 installed    */
+#define STFL_049_LOAD_AND_TRAP        49    /* Ibid.                     */
+#define STFL_049_PROCESSOR_ASSIST     49    /* Ibid.                     */
+#define STFL_049_MISC_INSTR_EXT_1     49    /* Ibid.                     */
+
 #define STFL_050_CONSTR_TRANSACT      50    /* Constrained-transactional-
                                                execution facility. Bit only
                                                meaningful if bit 73 one. */
@@ -1747,6 +1772,8 @@ typedef struct MBK  MBK;
 
 #define STFL_053_LOAD_STORE_ON_COND_2 53    /* Load/store-on-condition-2,
                                                load-zero-rightmost-byte  */
+#define STFL_053_LOAD_ZERO_RIGHTMOST  53    /* Ibid.                     */
+
 #define STFL_054_EE_CMPSC             54    /* Entropy-encoding compress */
 
 #define STFL_055_IBM_INTERNAL         55    /* IBM internal use          */
