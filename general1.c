@@ -5198,6 +5198,9 @@ VADR    n;                              /* 32-bit operand values     */
 BYTE    tbyte;                          /* Byte work areas           */
 int     i;                              /* Integer work areas        */
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( HERC_MOVE_INVERSE, regs );
+
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
