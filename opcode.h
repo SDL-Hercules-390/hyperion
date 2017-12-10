@@ -602,22 +602,34 @@ do { \
 #endif /*!defined(_OPCODE_H)*/
 
 /* Program check if fpc is not valid contents for FPC register */
+
 #undef FPC_BRM
 #undef FPC_CHECK
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)          /*810*/
-#define FPC_BRM     FPC_BRM_3BIT
-#define FPC_CHECK(_fpc, _regs) \
-    if(((_fpc) & FPC_RESV_FPX) \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4 \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5 \
-     || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#else /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/   /*810*/
-#define FPC_BRM     FPC_BRM_2BIT
-#define FPC_CHECK(_fpc, _regs) \
-    if((_fpc) & FPC_RESERVED) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
+
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+
+  #define FPC_BRM     FPC_BRM_3BIT
+
+  #define FPC_CHECK( _fpc, _regs )                  \
+                                                    \
+    if (0                                           \
+        || ((_fpc) & FPC_RESV_FPX)                  \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4     \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5     \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6     \
+    )                                               \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+#else /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+
+  #define FPC_BRM     FPC_BRM_2BIT
+
+  #define FPC_CHECK( _fpc, _regs )                  \
+                                                    \
+    if ((_fpc) & FPC_RESERVED)                      \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
+
+#endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
 #undef SIE_ACTIVE
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -4265,9 +4277,10 @@ DEF_INST(extract_fpc);
 DEF_INST(set_bfp_rounding_mode_2bit);
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 DEF_INST(set_bfp_rounding_mode_3bit);                           /*810*/
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
+#endif
+
 #if defined(FEATURE_LINKAGE_STACK)
 DEF_INST(trap2);
 DEF_INST(trap4);
@@ -4691,7 +4704,7 @@ DEF_INST(test_data_class_bfp_long);
 DEF_INST(test_data_class_bfp_ext);
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 DEF_INST(convert_fix32_to_dfp_ext_reg);                         /*810*/
 DEF_INST(convert_fix32_to_dfp_long_reg);                        /*810*/
 DEF_INST(convert_u32_to_dfp_ext_reg);                           /*810*/
@@ -4716,7 +4729,7 @@ DEF_INST(convert_bfp_short_to_u32_reg);                         /*810*/
 DEF_INST(convert_bfp_ext_to_u64_reg);                           /*810*/
 DEF_INST(convert_bfp_long_to_u64_reg);                          /*810*/
 DEF_INST(convert_bfp_short_to_u64_reg);                         /*810*/
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/
+#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
 /* Instructions in dfp.c */
 #if defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY )

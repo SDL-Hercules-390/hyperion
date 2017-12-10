@@ -146,9 +146,11 @@ INST37X_TABLE_START(b2)
  /*B2A5*/ INST37X (translate_extended,0xa5)
  /*B2A6*/ INST37X (convert_utf16_to_utf8,0xa6)
  /*B2A7*/ INST37X (convert_utf8_to_utf16,0xa7)
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)         /*810*/
+
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 // /*B2B8*/ INST37X (set_bfp_rounding_mode_3bit,0xb8)             /*810*/
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
+#endif
+
 // /*B2BD*/ INST37X (load_fpc_and_signal,0xbd)
 INST37X_TABLE_END(b2)
 
@@ -252,14 +254,16 @@ INST37X_TABLE_START(b3)
  /*B38C*/ INST37X (extract_fpc,0x8c)
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 // /*B385*/ INST37X (set_fpc_and_signal,0x85)
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)         /*810*/
+
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 // /*B390*/ INST37X (convert_u32_to_bfp_short_reg,0x90)           /*810*/
 // /*B391*/ INST37X (convert_u32_to_bfp_long_reg,0x91)            /*810*/
 // /*B392*/ INST37X (convert_u32_to_bfp_ext_reg,0x92)             /*810*/
 // /*B39C*/ INST37X (convert_bfp_short_to_u32_reg,0x9c)           /*810*/
 // /*B39D*/ INST37X (convert_bfp_long_to_u32_reg,0x9d)            /*810*/
 // /*B39E*/ INST37X (convert_bfp_ext_to_u32_reg,0x9e)             /*810*/
-#endif /*defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
+#endif
+
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*B394*/ INST37X (convert_fix32_to_bfp_short_reg,0x94)
  /*B395*/ INST37X (convert_fix32_to_bfp_long_reg,0x95)

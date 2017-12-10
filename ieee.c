@@ -1,13 +1,9 @@
 
-/* IEEE.C       (c) Copyright Roger Bowler and others, 2003-2012     */
-/*              (c) Copyright Willem Konynenberg, 2001-2003          */
-/*              (c) Copyright "Fish" (David B. Trout), 2011          */
+/* IEEE.C       (C) Copyright Roger Bowler and others, 2003-2012     */
+/*              (C) Copyright Willem Konynenberg, 2001-2003          */
+/*              (C) Copyright "Fish" (David B. Trout), 2011          */
+/*              (C) Copyright Stephen R. Orso, 2016                  */
 /*              Hercules Binary (IEEE) Floating Point Instructions   */
-/*              (c) Copyright Stephen R. Orso, 2016                  */
-/*              Updated to use version 3a of the Softfloat library   */
-/*                and implement instructions and instruction         */
-/*                operands enabled by the Floating Point Extension   */
-/*                Facility                                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -16,12 +12,10 @@
 /*-------------------------------------------------------------------*/
 /* This module implements ESA/390 Binary Floating-Point (IEEE 754)   */
 /* instructions as described in SA22-7201-05 ESA/390 Principles of   */
-/* Operation and SA22-7832-08 z/Architecture Principles of Operation.*/
+/* Operation and SA22-7832-10 z/Architecture Principles of Operation.*/
 /*-------------------------------------------------------------------*/
-
 /*
- * Hercules System/370, ESA/390, z/Architecture emulator
- * ieee.c
+ * Hercules System/370, ESA/390, z/Architecture emulator ieee.c
  * Binary (IEEE) Floating Point Instructions
  * Copyright (c) 2001-2009 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
@@ -44,11 +38,10 @@
  *  on the -10 edition of the z/Architecture Principles of Operation,
  *  SA22-7832.
  */
-
-
+/*--------------------------------------------------------------------------*/
 /* Modifications to the Softfloat interface enable use of a separately-     */
 /* packaged Softfloat Library with minimal modifications.                   */
-
+/*                                                                          */
 /* Modifications required to Softfloat:  (so far)                           */
 /* - Change NaN propagation in the following routines to conform to IBM     */
 /*   NaN propagation rules:                                                 */
@@ -103,8 +96,7 @@
 /*                                                                          */
 /*   These modifications, and the unmodified Softfloat 3a source, are       */
 /*   maintained in a separate public repository                             */
-
-
+/*--------------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -466,7 +458,7 @@ struct sbfp {
 /* Macro to validate rounding mode specified on M3 or M4 field of selected instructions        */
 /* Note that this table is architecture dependent                                              */
 #undef BFPRM_CHECK
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 #define BFPRM_CHECK(_x,_regs)                                                  \
         {if (_x > 7 || !map_valid_m3_values_fpef[(_x & 0x7)])                       \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
@@ -476,7 +468,7 @@ struct sbfp {
         {if (_x > 7 || !map_valid_m3_values_nofpef[(_x & 0x7)])                       \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
 
-#endif  /* if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)  */
+#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
 
 static INLINE void ARCH_DEP(get_float128)( float128_t *op, U32 *fpr )
@@ -1508,7 +1500,7 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
 #else
@@ -1542,7 +1534,7 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
 #else
@@ -1579,7 +1571,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
 #else
@@ -1619,7 +1611,7 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
 #else
@@ -1658,7 +1650,7 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 #else
     if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
@@ -1701,7 +1693,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 #else
     if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
@@ -1765,7 +1757,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -1832,7 +1824,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -1898,7 +1890,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -1965,7 +1957,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -2034,7 +2026,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -2102,7 +2094,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     U32 ieee_trap_conds = 0;
     U32 op2_dataclass;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -2158,7 +2150,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
 
 /*--------------------------------------------------------------------------*/
 /* CONVERT FROM LOGICAL                                                     */
@@ -2184,6 +2176,9 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
     BYTE m3, m4;
     U32 op2;
     float128_t op1;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
@@ -2214,6 +2209,9 @@ DEF_INST(convert_u32_to_bfp_long_reg)
     BYTE m3, m4;
     U32 op2;
     float64_t op1;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
@@ -2246,6 +2244,9 @@ DEF_INST(convert_u32_to_bfp_short_reg)
     float32_t op1;
     U32 ieee_trap_conds = 0;
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
@@ -2275,6 +2276,9 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
     BYTE m3, m4;
     U64 op2;
     float128_t op1;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
@@ -2307,6 +2311,9 @@ DEF_INST(convert_u64_to_bfp_long_reg)
     U64 op2;
     float64_t op1;
     U32 ieee_trap_conds = 0;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
@@ -2342,6 +2349,9 @@ DEF_INST(convert_u64_to_bfp_short_reg)
     U64 op2;
     float32_t op1;
     U32 ieee_trap_conds = 0;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
@@ -2398,6 +2408,9 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
     float128_t op2;
     U32 ieee_trap_conds = 0;
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
@@ -2447,6 +2460,9 @@ DEF_INST(convert_bfp_long_to_u32_reg)
     U32 op1;
     float64_t op2;
     U32 ieee_trap_conds = 0;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
@@ -2498,6 +2514,9 @@ DEF_INST(convert_bfp_short_to_u32_reg)
     float32_t op2;
     U32 ieee_trap_conds = 0;
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -2546,6 +2565,9 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
     U64 op1;
     float128_t op2;
     U32 ieee_trap_conds = 0;
+
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
@@ -2597,6 +2619,9 @@ DEF_INST(convert_bfp_long_to_u64_reg)
     float64_t op2;
     U32 ieee_trap_conds = 0;
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -2645,6 +2670,9 @@ DEF_INST(convert_bfp_short_to_u64_reg)
     float32_t op2;
     U32 ieee_trap_conds = 0;
 
+    /* Operation Exception if facility is not installed */
+    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -2680,9 +2708,7 @@ DEF_INST(convert_bfp_short_to_u64_reg)
     IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
 
 }
-
-
-#endif /*  defined FEATURE_037_FP_EXTENSIONS_FACILITY   */
+#endif /* defined FEATURE_037_FP_EXTENSIONS_FACILITY */
 
 /*-------------------------------------------------------------------*/
 /* B34D DXBR  - DIVIDE (extended BFP)                          [RRE] */
@@ -2951,7 +2977,7 @@ DEF_INST(load_fp_int_bfp_short_reg)
     float32_t op;
     U32 ieee_trap_conds = 0;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -2987,7 +3013,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
     float64_t op;
     U32 ieee_trap_conds = 0;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -3023,7 +3049,7 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     float128_t op;
     U32 ieee_trap_conds = 0;
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     RRF_MM(inst, regs, r1, r2, m3, m4);
 #else
     RRF_M(inst, regs, r1, r2, m3);
@@ -3405,7 +3431,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     SET_SF_RM_FROM_M3(m3);
 #else
     if (m3 || m4)
@@ -3416,7 +3442,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
     softfloat_exceptionFlags = 0;
     op1 = f64_to_f32( op2 );
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     if (SUPPRESS_INEXACT(m4))
         softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
 #endif
@@ -3457,7 +3483,7 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP( op2, r2, regs );
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     SET_SF_RM_FROM_M3(m3);
 #else
     if (m3 || m4)
@@ -3468,7 +3494,7 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
     softfloat_exceptionFlags = 0;
     op1 = f128_to_f64( op2 );
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     if (SUPPRESS_INEXACT(m4))
         softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
 #endif
@@ -3509,7 +3535,7 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP(op2, r2, regs);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     SET_SF_RM_FROM_M3(m3);
 #else
     if (m3 || m4)
@@ -3520,7 +3546,7 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
     softfloat_exceptionFlags = 0;
     op1 = f128_to_f32(op2);
 
-#if defined(FEATURE_037_FP_EXTENSIONS_FACILITY)
+#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
     if (SUPPRESS_INEXACT(m4))
         softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
 #endif

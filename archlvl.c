@@ -39,13 +39,13 @@ struct ARCHTAB
     const int    archmode;          /* Architecture Mode             */
     const int    alslevel;          /* Architecture Level            */
 
-#define ALS0     0x01               /* S/370                         */
-#define ALS1     0x02               /* ESA/390                       */
-#define ALS2     0x04               /* Z/ARCH                        */
-#define ALS3     0x08               /* ARCHLVL 3                     */
+#define ALS0     0x01               /* 0 = S/370                     */
+#define ALS1     0x02               /* 1 = ESA/390                   */
+#define ALS2     0x04               /* 2 = ESAME                     */
+#define ALS3     0x08               /* 3 = z/Arch                    */
 
-#define ALS23    (ALS2|ALS3)        /* ESA/390 + z/Arch              */
-#define ALS123   (ALS1|ALS23)       /* S/370 + ESA/390 + z/Arch      */
+#define ALS23    (ALS2|ALS3)        /* ESAME + z/Arch                */
+#define ALS123   (ALS1|ALS23)       /* ESA/390 + ESAME + z/Arch      */
 #define ALSALL   (ALS0|ALS123)      /* ALL Architecture Levels       */
 
 };
@@ -65,7 +65,7 @@ static ARCHTAB archtab[] =
 {
 #if defined( _370 )
 
-    /* S/370 - ALS0 */
+    /* S/370 = ALS0 */
     ARCHLVL( _ARCH_370_NAME,  ARCH_370, ALS0 )
     ARCHLVL( "370",           ARCH_370, ALS0 )
     ARCHLVL( "S370",          ARCH_370, ALS0 )
@@ -79,7 +79,7 @@ static ARCHTAB archtab[] =
 */
 #if defined( _390 )
 
-    /* ESA/390 - ALS1 */
+    /* ESA/390 = ALS1 */
     ARCHLVL( _ARCH_390_NAME,  ARCH_390, ALS1 )
     ARCHLVL( "ESA",           ARCH_390, ALS1 )
     ARCHLVL( "ESA390",        ARCH_390, ALS1 )
@@ -91,12 +91,12 @@ static ARCHTAB archtab[] =
 
 #if defined( _900 )
 
-    /* z/Arch - ALS2 */
+    /* ESAME = ALS2 */
     ARCHLVL( "ESA/ME",        ARCH_900, ALS2 )
     ARCHLVL( "ESAME",         ARCH_900, ALS2 )
     ARCHLVL( "ALS2",          ARCH_900, ALS2 )
 
-    /* z/Arch - ALS3 */
+    /* z/Arch = ALS3 */
     ARCHLVL( _ARCH_900_NAME,  ARCH_900, ALS3 )
     ARCHLVL( "zArch",         ARCH_900, ALS3 )
     ARCHLVL( "z",             ARCH_900, ALS3 )
@@ -153,8 +153,9 @@ typedef struct FACTAB   FACTAB;
 /* in any facility bit sequence as it is always seached serially.    */
 /* However, it is greatly preferred that it be kept in sequence.     */
 /*                                                                   */
-/* As a convention, all Hercules-specific facilities that are not    */
-/* part of the architecture are defined at the end of the table.     */
+/* Hercules-specific facilities that are not part of z/Architecture  */
+/* are defined at the end of the facilities list and consume bit     */
+/* positions 16256 to 16383 (the last 128 possible facility bits).   */
 /*                                                                   */
 /* PROGRAMMING NOTE: All facilities, regardless of whether they are  */
 /* currently supported or not, should be defined in the below table  */
@@ -164,8 +165,8 @@ typedef struct FACTAB   FACTAB;
 /* support for the facility is eventually implemented, then simply   */
 /* update the previously mentioned columns as appropriate, thereby   */
 /* allowing the facility to be enabled whenever desired (either at   */
-/* startup by default according to architecture, or on demand via    */
-/* the 'archlvl' command).                                           */
+/* startup by default according to architecture, or dynamically on   */
+/* demand via the "ARCHLVL ENABLE FACILITY" command).                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -187,15 +188,15 @@ FACILITY( 003_DAT_ENHANCE_1,        Z390,       NONE,       Z390,       ALS23 )
 #endif
 
 #if defined( _FEATURE_004_IDTE_SC_SEGTAB_FACILITY )
-//CILITY( 004_IDTE_SC_SEGTAB,       ZARCH,      NONE,       ZARCH,      ALS23 )
+FACILITY( 004_IDTE_SC_SEGTAB,       NONE,       NONE,       NONE,       ALS23 )
 #endif
 
 #if defined( _FEATURE_005_IDTE_SC_REGTAB_FACILITY )
-//CILITY( 005_IDTE_SC_REGTAB,       ZARCH,      NONE,       ZARCH,      ALS23 )
+FACILITY( 005_IDTE_SC_REGTAB,       NONE,       NONE,       NONE,       ALS23 )
 #endif
 
 #if defined( _FEATURE_006_ASN_LX_REUSE_FACILITY )
-//CILITY( 006_ASN_LX_REUSE,         Z390,       NONE,       Z390,       ALS23 )
+FACILITY( 006_ASN_LX_REUSE,         NONE,       NONE,       ZARCH,      ALS23 )
 #endif
 
 #if defined( _FEATURE_007_STFL_EXTENDED_FACILITY )
@@ -307,16 +308,18 @@ FACILITY( 036_ENH_MONITOR,          Z390,       NONE,       Z390,       ALS3 )
 #endif
 
 #if defined( _FEATURE_037_FP_EXTENSIONS_FACILITY )
-//CILITY( 037_FP_EXTENSIONS,        ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 037_FP_EXTENSIONS,        ZARCH,      NONE,       ZARCH,      ALS3 )
 #endif
 
 #if defined( _FEATURE_038_OP_CMPSC_FACILITY )
-//CILITY( 038_OP_CMPSC,             ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 038_OP_CMPSC,             NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_040_LOAD_PROG_PARAM_FACILITY )
 FACILITY( 040_LOAD_PROG_PARAM,      Z390,       NONE,       Z390,       ALS3 )
 #endif
+
+//------------------------------------------------------------------------------
 
 #if defined( _FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
 
@@ -337,7 +340,10 @@ FACILITY( 041_FPS_SIGN_HANDLING,    ZARCH,      NONE,       ZARCH,      ALS23 )
 #if defined( _FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
 FACILITY( 041_IEEE_EXCEPT_SIM,      ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
+
 #endif /* defined( _FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
+
+//------------------------------------------------------------------------------
 
 #if defined( _FEATURE_042_DECIMAL_FLOAT_FACILITY )
 FACILITY( 042_DECIMAL_FLOAT,        Z390,       NONE,       Z390,       ALS23 )
@@ -348,7 +354,7 @@ FACILITY( 043_DFP_HPERF,            Z390,       NONE,       Z390,       ALS23 )
 #endif
 
 #if defined( _FEATURE_044_PFPO_FACILITY )
-FACILITY( 044_PFPO,                 Z390,       NONE,       Z390,       ALS23 )
+FACILITY( 044_PFPO,                 NONE,       NONE,       ZARCH,      ALS23 )
 #endif
 
 #if defined( _FEATURE_045_FAST_BCR_SERIAL_FACILITY )
@@ -380,37 +386,43 @@ FACILITY( 049_MISC_INSTR_EXT_1,     ZARCH,      NONE,       ZARCH,      ALS3 )
 #endif
 
 #if defined( _FEATURE_050_CONSTR_TRANSACT_FACILITY )
-//CILITY( 050_CONSTR_TRANSACT,      ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 050_CONSTR_TRANSACT,      NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
-//CILITY( 051_LOCAL_TLB_CLEARING,   ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 051_LOCAL_TLB_CLEARING,   NONE,       NONE,       NONE,       ALS3 )
 #endif
 
+//------------------------------------------------------------------------------
+
 #if defined( _FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 )
+
 #if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
 FACILITY( 052_INTERLOCKED_ACCESS_2, Z390,       NONE,       Z390,       ALS123 )
 #endif
-#endif
+
+#endif /* defined( _FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 ) */
+
+//------------------------------------------------------------------------------
 
 #if defined( _FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
-//CILITY( 053_LOAD_STORE_ON_COND_2, ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 053_LOAD_STORE_ON_COND_2, NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
-//CILITY( 053_LOAD_ZERO_RIGHTMOST,  ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 053_LOAD_ZERO_RIGHTMOST,  NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_054_EE_CMPSC_FACILITY )
-//CILITY( 054_EE_CMPSC,             ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 054_EE_CMPSC,             NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-//CILITY( 057_MSA_EXTENSION_5,      ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 057_MSA_EXTENSION_5,      NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
-//CILITY( 058_MISC_INSTR_EXT_2,     ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 058_MISC_INSTR_EXT_2,     NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_066_RES_REF_BITS_MULT_FACILITY )
@@ -426,11 +438,11 @@ FACILITY( 068_CPU_MEAS_SAMPLNG,     Z390,       NONE,       Z390,       ALS3 )
 #endif
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-//CILITY( 073_TRANSACT_EXEC,        ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 073_TRANSACT_EXEC,        NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_074_STORE_HYPER_INFO_FACILITY )
-//CILITY( 074_STORE_HYPER_INFO,     ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 074_STORE_HYPER_INFO,     NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
@@ -446,63 +458,63 @@ FACILITY( 077_MSA_EXTENSION_4,      Z390,       NONE,       Z390,       ALS3 )
 #endif
 
 #if defined( _FEATURE_078_ENHANCED_DAT_FACILITY_2 )
-//CILITY( 078_EDAT_2,               ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 078_EDAT_2,               NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_080_DFP_PACK_CONV_FACILITY )
-//CILITY( 080_DFP_PACK_CONV,        ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 080_DFP_PACK_CONV,        NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_129_ZVECTOR_FACILITY )
-//CILITY( 129_ZVECTOR,              ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 129_ZVECTOR,              NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_130_INSTR_EXEC_PROT_FACILITY )
-//CILITY( 130_INSTR_EXEC_PROT,      ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 130_INSTR_EXEC_PROT,      NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY )
-//CILITY( 131_SIDE_EFFECT_ACCESS,   ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 131_SIDE_EFFECT_ACCESS,   NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_133_GUARDED_STORAGE_FACILITY )
-//CILITY( 133_GUARDED_STORAGE,      ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 133_GUARDED_STORAGE,      NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
-//CILITY( 134_ZVECTOR_PACK_DEC,     ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 134_ZVECTOR_PACK_DEC,     NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
-//CILITY( 135_ZVECTOR_ENH_1,        ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 135_ZVECTOR_ENH_1,        NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_138_CONFIG_ZARCH_MODE_FACILITY )
-//CILITY( 138_CONFIG_ZARCH_MODE,    ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 138_CONFIG_ZARCH_MODE,    NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_139_MULTIPLE_EPOCH_FACILITY )
-//CILITY( 139_MULTIPLE_EPOCH,       ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 139_MULTIPLE_EPOCH,       NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_142_ST_CPU_COUNTER_MULT_FACILITY )
-//CILITY( 142_ST_CPU_COUNTER_MULT,  ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 142_ST_CPU_COUNTER_MULT,  NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_144_TEST_PEND_EXTERNAL_FACILITY )
-//CILITY( 144_TEST_PEND_EXTERNAL,   ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 144_TEST_PEND_EXTERNAL,   NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_145_INS_REF_BITS_MULT_FACILITY )
-//CILITY( 145_INS_REF_BITS_MULT,    ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 145_INS_REF_BITS_MULT,    NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 )
-//CILITY( 146_MSA_EXTENSION_8,      ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 146_MSA_EXTENSION_8,      NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 #if defined( _FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
-//CILITY( 168_ESA390_COMPAT_MODE,   ZARCH,      NONE,       ZARCH,      ALS3 )
+FACILITY( 168_ESA390_COMPAT_MODE,   NONE,       NONE,       NONE,       ALS3 )
 #endif
 
 //------------------------------------------------------------------------------------

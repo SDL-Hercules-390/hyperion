@@ -821,7 +821,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 #endif
 
 
-#if !defined(FEATURE_037_FP_EXTENSIONS_FACILITY)         /*810*/
+#if !defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
  UNDEF_INST(convert_bfp_short_to_u32_reg)                       /*810*/
  UNDEF_INST(convert_bfp_long_to_u32_reg)                        /*810*/
  UNDEF_INST(convert_bfp_ext_to_u32_reg)                         /*810*/
@@ -847,7 +847,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(convert_u64_to_dfp_long_reg)                        /*810*/
  UNDEF_INST(convert_u64_to_dfp_ext_reg)                         /*810*/
  UNDEF_INST(set_bfp_rounding_mode_3bit)                         /*810*/
-#endif /*!defined(FEATURE_037_FP_EXTENSIONS_FACILITY)*/  /*810*/
+#endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
 
 #if !defined(FEATURE_044_PFPO_FACILITY)
