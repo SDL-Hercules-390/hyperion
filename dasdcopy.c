@@ -361,8 +361,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if (i < max)
                 rc = (idev->hnd->read)(idev, i, &unitstat);
             else
+            {
                 memset (idev->buf, 0, FBA_BLKGRP_SIZE);
                 rc = 0;
+            }
         }
         if (rc < 0)
         {
