@@ -3617,9 +3617,9 @@ DEF_INST(convert_utf16_to_utf32);
 DEF_INST(convert_utf32_to_utf16);
 DEF_INST(convert_utf32_to_utf8);
 DEF_INST(convert_utf8_to_utf32);
+#endif /*defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
 DEF_INST(convert_to_binary);
 DEF_INST(convert_to_decimal);
-#endif /*defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
 #if defined(FEATURE_ACCESS_REGISTERS)
 DEF_INST(copy_access);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
