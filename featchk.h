@@ -786,6 +786,10 @@
  #error DFP has high performance requires Decimal floating point facility
 #endif
 
+#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+ #error Decimal-floating-point Zoned-conversion facility requires Decimal floating point facility
+#endif
+
 #if defined( FEATURE_050_CONSTR_TRANSACT_FACILITY ) && !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
  #error Constrained-transactional-execution facility requires Transactional-execution facility
 #endif
@@ -806,8 +810,12 @@
  #error Access-Exception Fetch/Store Indication facility requires Enhanced Suppression on Protection feature
 #endif
 
-#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
- #error Decimal-floating-point Zoned-conversion facility requires Decimal floating point facility
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) && !defined( FEATURE_MSA_EXTENSION_FACILITY_2 )
+ #error You cannot have "Message Security Assist extension 3" without having "Message Security Assist extension 2"
+#endif
+
+#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) && !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+ #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
 #endif
 
 #if defined( FEATURE_080_DFP_PACK_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
@@ -839,7 +847,7 @@
 #endif
 
 #if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
- #error MSA Extension Facility 8 requires MSA Extension Facility 3
+ #error You cannot have "Message Security Assist extension 8" without having "Message Security Assist extension 3"
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -910,6 +918,14 @@
 
 #if defined( FEATURE_IO_ASSIST ) && !defined( _FEATURE_SIE )
  #error I/O Assist Feature only supported with SIE
+#endif
+
+#if defined( FEATURE_MSA_EXTENSION_FACILITY_1 ) && !defined( FEATURE_017_MSA_FACILITY )
+ #error You cannot have "Message Security Assist extension 1" without having "Message Security Assist"
+#endif
+
+#if defined( FEATURE_MSA_EXTENSION_FACILITY_2 ) && !defined( FEATURE_MSA_EXTENSION_FACILITY_1 )
+ #error You cannot have "Message Security Assist extension 2" without having "Message Security Assist extension 1"
 #endif
 
 #if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && !defined( FEATURE_4K_STORAGE_KEYS )

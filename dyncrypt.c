@@ -28,28 +28,14 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#define CRYPTO_EXTPKG_MOD
+
+#define CRYPTO_EXTPKG_MOD       // (exposes sha2.h internal functions)
+
 #include "crypto/include/crypto_version.h"
 #include "crypto/include/rijndael.h"
 #include "crypto/include/sha1.h"
 #include "crypto/include/sha2.h"
 #include "crypto/include/sshdes.h"
-
-/*----------------------------------------------------------------------------*/
-/* Sanity compile check                                                       */
-/*----------------------------------------------------------------------------*/
-#if defined(FEATURE_MSA_EXTENSION_FACILITY_1) && !defined(FEATURE_017_MSA_FACILITY)
-  #error You cannot have "Message Security Assist extension 1" without having "Message Security Assist"
-#endif /* #if ... */
-#if defined(FEATURE_MSA_EXTENSION_FACILITY_2) && !defined(FEATURE_MSA_EXTENSION_FACILITY_1)
-  #error You cannot have "Message Security Assist extension 2" without having "Message Security Assist extension 1"
-#endif /* #if ... */
-#if defined(FEATURE_076_MSA_EXTENSION_FACILITY_3) && !defined(FEATURE_MSA_EXTENSION_FACILITY_2)
-  #error You cannot have "Message Security Assist extension 3" without having "Message Security Assist extension 2"
-#endif /* #if ... */
-#if defined(FEATURE_077_MSA_EXTENSION_FACILITY_4) && !defined(FEATURE_076_MSA_EXTENSION_FACILITY_3)
-  #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
-#endif /* #if ... */
 
 #ifdef FEATURE_017_MSA_FACILITY
 /*----------------------------------------------------------------------------*/
