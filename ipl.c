@@ -685,9 +685,10 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
       if( (rc = ARCH_DEP(initial_cpu_reset)(regs->guestregs)) )
         rc1 = rc;
 
-#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
-    renew_wrapping_keys();
-#endif /* FEATURE_076_MSA_EXTENSION_FACILITY_3 */
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+    if (FACILITY_ENABLED( 076_MSA_EXTENSION_3, regs ))
+        renew_wrapping_keys();
+#endif
 
     return rc1;
 } /* end function initial_cpu_reset */
