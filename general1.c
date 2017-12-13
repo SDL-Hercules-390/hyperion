@@ -46,9 +46,6 @@
 #include "inline.h"
 #include "clock.h"
 
-#undef DEF_INST_EXPORT
-#define DEF_INST_EXPORT DLL_EXPORT
-
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
 /* macros to support e.g., RS_NOOPS is not productive, so:           */

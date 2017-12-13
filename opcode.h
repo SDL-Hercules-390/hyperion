@@ -29,12 +29,6 @@
  #define OPC_DLL_IMPORT DLL_EXPORT
 #endif /* _OPCODE_C_ */
 
-/* Define the following as DLL_EXPORT from */
-/* within files inside the engine which    */
-/* define instruction functions            */
-#undef  DEF_INST_EXPORT
-#define DEF_INST_EXPORT
-
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
 #else
@@ -2980,7 +2974,7 @@ void s370_process_trace (REGS *regs);
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
 void s390_process_trace (REGS *regs);
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif
 #if defined(_900)
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);

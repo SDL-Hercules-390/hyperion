@@ -271,40 +271,40 @@ DLL_EXPORT void HDL_DINS(int (*hdl_init_dins)(int, int, void *, void *) _HDL_UNU
 {
 
 #if defined(_370)
- #define HDL_370_DEFINST( _arch, _opcode, _instruction)                               \
+ #define HDL_370_DEF_INST( _arch, _opcode, _instruction)                               \
 do {                                                                                  \
   if( (_arch) & HDL_INSTARCH_370 )                                                    \
     (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(s370_ ## _instruction) );  \
 } while(0);
 #else
- #define HDL_370_DEFINST( _arch, _opcode, _instruction)
+ #define HDL_370_DEF_INST( _arch, _opcode, _instruction)
 #endif
 
 #if defined(_390)
- #define HDL_390_DEFINST( _arch, _opcode, _instruction)                               \
+ #define HDL_390_DEF_INST( _arch, _opcode, _instruction)                               \
 do {                                                                                  \
   if( (_arch) & HDL_INSTARCH_390 )                                                    \
     (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(s390_ ## _instruction) );  \
 } while(0);
 #else
- #define HDL_390_DEFINST( _arch, _opcode, _instruction)
+ #define HDL_390_DEF_INST( _arch, _opcode, _instruction)
 #endif
 
 #if defined(_900)
- #define HDL_900_DEFINST( _arch, _opcode, _instruction)                               \
+ #define HDL_900_DEF_INST( _arch, _opcode, _instruction)                               \
 do {                                                                                  \
   if( (_arch) & HDL_INSTARCH_900 )                                                    \
     (hdl_init_dins)( _arch, _opcode, QSTR(_instruction), &(z900_ ## _instruction) );  \
 } while(0);
 #else
- #define HDL_900_DEFINST( _arch, _opcode, _instruction)
+ #define HDL_900_DEF_INST( _arch, _opcode, _instruction)
 #endif
 
-#define HDL_DEFINST( _arch, _opcode, _instruction )                        \
+#define HDL_DEF_INST( _arch, _opcode, _instruction )                        \
 do {                                                                       \
-    HDL_370_DEFINST(( (_arch) & HDL_INSTARCH_370), _opcode, _instruction); \
-    HDL_390_DEFINST(( (_arch) & HDL_INSTARCH_390), _opcode, _instruction); \
-    HDL_900_DEFINST(( (_arch) & HDL_INSTARCH_900), _opcode, _instruction); \
+    HDL_370_DEF_INST(( (_arch) & HDL_INSTARCH_370), _opcode, _instruction); \
+    HDL_390_DEF_INST(( (_arch) & HDL_INSTARCH_390), _opcode, _instruction); \
+    HDL_900_DEF_INST(( (_arch) & HDL_INSTARCH_900), _opcode, _instruction); \
 } while(0);
 
 #define END_INSTRUCTION_SECTION                         \

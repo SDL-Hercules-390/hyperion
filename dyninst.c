@@ -59,8 +59,8 @@ static void init_dyninst()
 {
   int i;
 
-  logmsg("\ndyninst is deprecated, use HDL_DEFINST to replace instructions\n");
-  logmsg("Please refer to README.HDL for details on the use of HDL_DEFINST\n\n");
+  logmsg("\ndyninst is deprecated, use HDL_DEF_INST to replace instructions\n");
+  logmsg("Please refer to README.HDL for details on the use of HDL_DEF_INST\n\n");
 
   for(i = 0; i < MAXDYNINST; i++)
   {

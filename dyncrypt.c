@@ -4999,16 +4999,16 @@ END_DEPENDENCY_SECTION;
 
 HDL_INSTRUCTION_SECTION;
 {
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb93e, compute_intermediate_message_digest);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb93f, compute_last_message_digest);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92e, cipher_message);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb91e, compute_message_authentication_code);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92f, cipher_message_with_chaining);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92d, cipher_message_with_counter);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92a, cipher_message_with_cipher_feedback);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92b, cipher_message_with_output_feedback);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92c, perform_cryptographic_computation);
-  HDL_DEFINST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb928, perform_cryptographic_key_management_operation);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb93e, compute_intermediate_message_digest);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb93f, compute_last_message_digest);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92e, cipher_message);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb91e, compute_message_authentication_code);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92f, cipher_message_with_chaining);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92d, cipher_message_with_counter);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92a, cipher_message_with_cipher_feedback);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92b, cipher_message_with_output_feedback);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb92c, perform_cryptographic_computation);
+  HDL_DEF_INST(HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xb928, perform_cryptographic_key_management_operation);
 }
 END_INSTRUCTION_SECTION;
 
@@ -5018,7 +5018,6 @@ HDL_REGISTER_SECTION;
 
   // "%s module loaded%s"
   WRMSG( HHC00150, "I", "Crypto", " (c) Copyright 2003-2016 by Bernard van der Helm"); // Copyright notice
-
   MSGBUF( pkgvers, "Built with crypto external package version %s", crypto_version() );
   // "%s"
   WRMSG( HHC01417, "I", pkgvers );
@@ -5026,21 +5025,21 @@ HDL_REGISTER_SECTION;
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist"); // Feature notice
 
-#ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4
+#if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
   WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice
 #else
-  #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
+  #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
     WRMSG( HHC00151, "I", "Message Security Assist Extension 1, 2 and 3"); // Feature notice
   #else
-    #ifdef FEATURE_MSA_EXTENSION_FACILITY_2
+    #if defined( _FEATURE_MSA_EXTENSION_FACILITY_2 )
       WRMSG( HHC00151, "I", "Message Security Assist Extension 1 and 2"); // Feature notice
     #else
-      #ifdef FEATURE_MSA_EXTENSION_FACILITY_1
+      #if defined( _FEATURE_MSA_EXTENSION_FACILITY_1 )
         WRMSG( HHC00151, "I", "Message Security Assist Extension 1"); // Feature notice
-      #endif /* #ifdef FEATURE_MSA_EXTENSION_FACILITY_1 */
-    #endif /* #ifdef FEATURE_MSA_EXTENSION_FACILITY_2 */
-  #endif /* #ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3 */
-#endif /* #ifdef FEATURE_077_MSA_EXTENSION_FACILITY_4 */
+      #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_1 ) */
+    #endif /* defined( _FEATURE_MSA_EXTENSION_FACILITY_2 ) */
+  #endif /* defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
+#endif /* defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
 }
 END_REGISTER_SECTION;
 

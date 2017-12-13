@@ -53,12 +53,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 #endif /*!defined(_GEN_ARCH)*/
 
 #include "hercules.h"
-
 #include "opcode.h"
 
 #define UNDEF_INST(_x) \
- static DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,regs); }
+  static  DEF_INST(_x) { ARCH_DEP( operation_exception )( inst, regs ); }
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs with STFL/STFLE facility bits defined               */
