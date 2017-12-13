@@ -149,13 +149,8 @@
 #if __GEN_ARCH == 370
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE   ARCH_370
-
-#define DEF_INST(_name) \
-void (ATTR_REGPARM(2) s370_ ## _name) (BYTE inst[], REGS *regs)
-
-#define ARCH_DEP(_name) \
-s370_ ## _name
+#define ARCH_MODE           ARCH_370
+#define ARCH_DEP(_name)     s370_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
     ( ((U32)(addr) & 0x7FFFF000) == 0 || ((U32)(addr) & 0x7FFFF000) == (pfx) \
@@ -277,13 +272,8 @@ s370_ ## _name
 #elif __GEN_ARCH == 390
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE   ARCH_390
-
-#define DEF_INST(_name) \
-void (ATTR_REGPARM(2) s390_ ## _name) (BYTE inst[], REGS *regs)
-
-#define ARCH_DEP(_name) \
-s390_ ## _name
+#define ARCH_MODE           ARCH_390
+#define ARCH_DEP(_name)     s390_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
     ( ((U32)(addr) & 0x7FFFF000) == 0 || ((U32)(addr) & 0x7FFFF000) == (pfx) \
@@ -417,7 +407,8 @@ s390_ ## _name
 #elif __GEN_ARCH == 900
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE   ARCH_900
+#define ARCH_MODE           ARCH_900
+#define ARCH_DEP(_name)     z900_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
     ( (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (U64)0 || (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (pfx) \
@@ -474,12 +465,6 @@ s390_ ## _name
 #define CR12_TRACEEA    Z_CR12_TRACEEA
 
 #define CHM_GPR2_RESV   Z_CHM_GPR2_RESV
-
-#define DEF_INST(_name) \
-void (ATTR_REGPARM(2) z900_ ## _name) (BYTE inst[], REGS *regs)
-
-#define ARCH_DEP(_name) \
-z900_ ## _name
 
 #define PSA PSA_900
 #define PSA_SIZE 8192
@@ -574,6 +559,9 @@ z900_ ## _name
   WARNING( "__GEN_ARCH must be 370, 390, 900 or undefined" )
 
 #endif
+
+#define DEF_INST(_name)     \
+    void ( ATTR_REGPARM(2) ARCH_DEP( _name ) )( BYTE inst[], REGS* regs )
 
 /*-------------------------------------------------------------------*/
 /*  The following section of code defines constants and macros that  */
