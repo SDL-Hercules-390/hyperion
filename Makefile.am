@@ -133,8 +133,6 @@ dyndev_SRC =  \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
-  w32ctca.c   \
-  w32stape.c  \
   zfcp.c
 
 #-----------------------------------------------------------------
@@ -319,7 +317,7 @@ hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
-hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c netsupp.c
+hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
@@ -327,7 +325,7 @@ hdt3270_la_SOURCES  = console.c
 hdt3270_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3270_la_LIBADD   = $(DYNMOD_LD_ADD)
                   
-hdt3420_la_SOURCES  = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c w32stape.c
+hdt3420_la_SOURCES  = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c
 hdt3420_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3420_la_LIBADD   = $(DYNMOD_LD_ADD) libherct.la
                   
@@ -351,7 +349,7 @@ hdt1052c_la_SOURCES = con1052c.c
 hdt1052c_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c w32ctca.c tuntap.c
+hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
 
@@ -511,7 +509,6 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   vstore.c           \
-  w32util.c          \
   xstore.c           \
   $(DYNSRC)
 
