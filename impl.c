@@ -752,7 +752,7 @@ int     rc;
     }
 #endif
 
-#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
+#if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
 #endif
 
@@ -772,9 +772,9 @@ int     rc;
     initialize_condition (&sysblk.ioqcond);
     initialize_lock( &sysblk.dasdcache_lock );
 
-#ifdef FEATURE_076_MSA_EXTENSION_FACILITY_3
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
     /* Initialize the wrapping key registers lock */
-    initialize_rwlock(&sysblk.wklock);
+    initialize_rwlock( &sysblk.wklock );
 #endif
 
     /* Initialize thread creation attributes so all of hercules
