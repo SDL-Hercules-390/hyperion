@@ -137,7 +137,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 #endif
 
 
-#if !defined(FEATURE_017_MSA_FACILITY)
+#if !defined( FEATURE_017_MSA_FACILITY )
  UNDEF_INST(cipher_message)
  UNDEF_INST(cipher_message_with_chaining)
  UNDEF_INST(compute_intermediate_message_digest)
@@ -662,12 +662,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 #endif
 
 
-#if !defined(FEATURE_076_MSA_EXTENSION_FACILITY_3)
+#if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
  UNDEF_INST(perform_cryptographic_key_management_operation)     /*810*/
 #endif
 
 
-#if !defined(FEATURE_077_MSA_EXTENSION_FACILITY_4)
+#if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
  UNDEF_INST(perform_cryptographic_computation)                  /*810*/
  UNDEF_INST(cipher_message_with_cipher_feedback)                /*810*/
  UNDEF_INST(cipher_message_with_output_feedback)                /*810*/

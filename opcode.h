@@ -558,7 +558,6 @@ do { \
           (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
     } while (0)
 
-
 #define PER_RANGE_CHECK(_addr, _low, _high) \
   ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
   (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \
@@ -4819,5 +4818,25 @@ DEF_INST(convert_dfp_long_to_zoned);                            /*912*/
 #if defined(FEATURE_044_PFPO_FACILITY)
 DEF_INST(perform_floating_point_operation);
 #endif /*defined(FEATURE_044_PFPO_FACILITY)*/
+
+#if defined( FEATURE_017_MSA_FACILITY )
+ DEF_INST(cipher_message);
+ DEF_INST(cipher_message_with_chaining);
+ DEF_INST(compute_intermediate_message_digest);
+ DEF_INST(compute_last_message_digest);
+ DEF_INST(compute_message_authentication_code);
+#endif
+
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+ DEF_INST(perform_cryptographic_key_management_operation);      /*810*/
+#endif
+
+#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+ DEF_INST(perform_cryptographic_computation);                   /*810*/
+ DEF_INST(cipher_message_with_cipher_feedback);                 /*810*/
+ DEF_INST(cipher_message_with_output_feedback);                 /*810*/
+ DEF_INST(cipher_message_with_counter);                         /*810*/
+#endif
+
 
 /* end of OPCODE.H */

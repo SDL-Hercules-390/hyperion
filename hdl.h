@@ -301,11 +301,18 @@ do {                                                                            
 #endif
 
 #define HDL_DEF_INST( _arch, _opcode, _instruction )                        \
-do {                                                                       \
+do {                                                                        \
     HDL_370_DEF_INST(( (_arch) & HDL_INSTARCH_370), _opcode, _instruction); \
     HDL_390_DEF_INST(( (_arch) & HDL_INSTARCH_390), _opcode, _instruction); \
     HDL_900_DEF_INST(( (_arch) & HDL_INSTARCH_900), _opcode, _instruction); \
 } while(0);
+
+#define HDL_UNDEF_INST( _instruction )                          \
+DEF_INST(_instruction)                                          \
+{                                                               \
+    INST_UPDATE_PSW( regs, ILC( inst[0] ), ILC( inst[0] ));     \
+    regs->program_interrupt( regs, PGM_OPERATION_EXCEPTION );   \
+}
 
 #define END_INSTRUCTION_SECTION                         \
 }
@@ -335,11 +342,6 @@ DLL_EXPORT int HDL_FINI()                               \
 }
 
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-
-
-#define PROGRAM_INTERRUPT(_regs, _interruption_code) \
-        ((_regs)->program_interrupt) ((_regs),(_interruption_code))
-
 
 /*********************************************************************/
 

@@ -17,17 +17,22 @@
 #define _ARCH_390_NAME "ESA/390"
 
 /*-------------------------------------------------------------------*/
-/*      FEATUREs with STFL/STFLE facility bits defined               */
+/*          FEATUREs with STFL facility bits defined                 */
 /*-------------------------------------------------------------------*/
+
+// Note that ESA/390 only supports STFL, not STFLE. Thus there are
+// only 32 facility bits that pertain to ESA/390 (bits 0-31). Also
+// not that only bits 0-5, 16-20 are currently defined for ESA/390.
+// Bits 6-15, 21-31 are reserved and currently stored as zeros.
 
 #define FEATURE_000_N3_INSTR_FACILITY
 //efine FEATURE_001_ZARCH_INSTALLED_FACILITY
 //efine FEATURE_002_ZARCH_ACTIVE_FACILITY       /* NOT A COMPILE-TIME CONSTANT! */
-//efine FEATURE_003_DAT_ENHANCE_FACILITY_1
+#define FEATURE_003_DAT_ENHANCE_FACILITY_1
 //efine FEATURE_004_IDTE_SC_SEGTAB_FACILITY
 //efine FEATURE_005_IDTE_SC_REGTAB_FACILITY
 //efine FEATURE_006_ASN_LX_REUSE_FACILITY
-#define FEATURE_007_STFL_EXTENDED_FACILITY
+//efine FEATURE_007_STFL_EXTENDED_FACILITY
 //efine FEATURE_008_ENHANCED_DAT_FACILITY_1                     /*208*/
 //efine FEATURE_009_SENSE_RUN_STATUS_FACILITY                   /*@Z9*/
 //efine FEATURE_010_CONDITIONAL_SSKE_FACILITY                   /*407*/
@@ -36,18 +41,18 @@
 //efine FEATURE_014_NONQ_KEY_SET_FACILITY                       /*810*/
 #define FEATURE_016_EXT_TRANSL_FACILITY_2
 #define FEATURE_017_MSA_FACILITY
-//efine FEATURE_018_LONG_DISPL_INST_FACILITY
-//efine FEATURE_019_LONG_DISPL_HPERF_FACILITY
+#define FEATURE_018_LONG_DISPL_INST_FACILITY
+#define FEATURE_019_LONG_DISPL_HPERF_FACILITY
 #define FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
 //efine FEATURE_021_EXTENDED_IMMED_FACILITY                     /*@Z9*/
-#define FEATURE_022_EXT_TRANSL_FACILITY_3                       /*@ZA*/
+//efine FEATURE_022_EXT_TRANSL_FACILITY_3                       /*@ZA*/
 //efine FEATURE_023_HFP_UNNORM_EXT_FACILITY                     /*@Z9*/
-#define FEATURE_024_ETF2_ENHANCEMENT_FACILITY                   /*@ZA*/
+//efine FEATURE_024_ETF2_ENHANCEMENT_FACILITY                   /*@ZA*/
 //efine FEATURE_025_STORE_CLOCK_FAST_FACILITY                   /*@Z9*/
 //efine FEATURE_026_PARSING_ENHANCE_FACILITY                    /*208*/
 //efine FEATURE_027_MVCOS_FACILITY                              /*208*/
 //efine FEATURE_028_TOD_CLOCK_STEER_FACILITY                    /*@Z9*/
-#define FEATURE_030_ETF3_ENHANCEMENT_FACILITY                   /*@ZA*/
+//efine FEATURE_030_ETF3_ENHANCEMENT_FACILITY                   /*@ZA*/
 //efine FEATURE_031_EXTRACT_CPU_TIME_FACILITY                   /*407*/
 
 /*-------------------------------------------------------------------*/

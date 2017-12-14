@@ -1,30 +1,129 @@
 /* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2012                  */
-/*              Cryptographic instructions                           */
-
-
-
-//   ZZ FIXME:  this logic needs moved to dyncrypt where it belongs!
-//   ZZ FIXME:  this logic needs moved to dyncrypt where it belongs!
-//   ZZ FIXME:  this logic needs moved to dyncrypt where it belongs!
-
+/*              Dummy Cryptographic Instructions                     */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 #include "hstdinc.h"
-#include "hercules.h"
-
-//efine    WRAPPINGKEYS_DEBUG       // (#define for debugging)
 
 #define _CRYPTO_C_
 
+#include "hercules.h"
+
+#ifndef _HENGINE_DLL_
+#define _HENGINE_DLL_
+#endif
+
+#ifndef _CRYPTO_C_
+#define _CRYPTO_C_
+#endif
+
+#include "opcode.h"
+
+//efine    WRAPPINGKEYS_DEBUG       // (#define for debugging)
+
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+/*  The dyncrypt.dll (dyncrypt.c) HDL module is automatically        */
+/*  pre-loaded by 'hdl_main' during impl/startup and redirects       */
+/*  all crypto instructions in the opcode table to itself rather     */
+/*  than here. The below dummy instructions are simply to prevent    */
+/*  unresolved externs from occuring when 'hengine.dll' is linked.   */
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_017_MSA_FACILITY )
+
+  HDL_UNDEF_INST( cipher_message                      )
+  HDL_UNDEF_INST( cipher_message_with_chaining        )
+  HDL_UNDEF_INST( compute_intermediate_message_digest )
+  HDL_UNDEF_INST( compute_last_message_digest         )
+  HDL_UNDEF_INST( compute_message_authentication_code )
+
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+
+  HDL_UNDEF_INST( perform_cryptographic_key_management_operation )
+
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+
+  HDL_UNDEF_INST( perform_cryptographic_computation   )
+  HDL_UNDEF_INST( cipher_message_with_cipher_feedback )
+  HDL_UNDEF_INST( cipher_message_with_output_feedback )
+  HDL_UNDEF_INST( cipher_message_with_counter         )
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCHMODE2 )
+    #define   _GEN_ARCH     _ARCHMODE2
+    #include "crypto.c"
+  #endif
+
+  #if defined(              _ARCHMODE3 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCHMODE3
+    #include "crypto.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*            (delineates ARCH_DEP from non-arch_dep)                */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     *
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+/*********************************************************************/
+/*                  IMPORTANT PROGRAMMING NOTE!                      */
+/*********************************************************************/
+/*                                                                   */
+/* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
+/* macros anywhere in any of your non-arch_dep functions! This means */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function!  */
+/*                                                                   */
+/* Basically you MUST NOT use any architecture dependent macro that  */
+/* is #defined in the "feature.h" header.  If you you need to use    */
+/* any of them, then your function MUST be an "ARCH_DEP" function    */
+/* that is placed within the ARCH_DEP section at the beginning of    */
+/* this module where it can be compiled multiple times, once for     */
+/* each of the supported architectures so the macro gets #defined    */
+/* to its proper value for the architecture! YOU HAVE BEEN WARNED!   */
+/*                                                                   */
+/*********************************************************************/
+
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 
-/*----------------------------------------------------------------------------*/
-/* Function: renew_wrapping_keys                                              */
-/*                                                                            */
-/* Each time a clear reset is performed, a new set of wrapping keys and their */
-/* associated verification patterns are generated. The contents of the two    */
-/* wrapping-key registers are kept internal to the model so that no program,  */
-/* including the operating system, can directly observe their clear value.    */
-/*----------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*               Function: renew_wrapping_keys                       */
+/*                                                                   */
+/* Each time a clear reset is performed a new set of wrapping keys   */
+/* and their associated verification patterns are generated. The     */
+/* contents of the two wrapping-key registers are kept internal to   */
+/* the model so that no program, including the operating system,     */
+/* can directly observe their clear value.                           */
+/*-------------------------------------------------------------------*/
+
 void renew_wrapping_keys()
 {
     U64   cpuid;
@@ -125,6 +224,7 @@ void renew_wrapping_keys()
     WRMSG( HHC90190, "D", buf );
 
 #endif // defined( WRAPPINGKEYS_DEBUG )
-
 }
 #endif /* defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
+
+#endif /* !defined( _GEN_ARCH ) */
