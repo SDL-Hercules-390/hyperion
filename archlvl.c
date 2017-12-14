@@ -363,9 +363,15 @@ FACILITY( 042_DECIMAL_FLOAT,        ZARCH,      NONE,       ZARCH,      ALS23 )
 FACILITY( 043_DFP_HPERF,            ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
 
-#if defined( _FEATURE_044_PFPO_FACILITY )
+//------------------------------------------------------------------------------
+// Allow PFPO facility to be enabled Until proper support can be coded
+// since some modern operating systems require it (e.g. z/OS and z/VM)
+
+//#if defined( _FEATURE_044_PFPO_FACILITY )
 FACILITY( 044_PFPO,                 NONE,       NONE,       ZARCH,      ALS23 )
-#endif
+//#endif
+
+//------------------------------------------------------------------------------
 
 #if defined( _FEATURE_045_FAST_BCR_SERIAL_FACILITY )
 FACILITY( 045_FAST_BCR_SERIAL,      ZARCH,      NONE,       ZARCH,      ALS23 )
