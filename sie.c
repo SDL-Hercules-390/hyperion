@@ -516,7 +516,7 @@ U64     dreg;
     int i;
     BYTE *facility_mask;
 
-        for(i = 0; i < STFL_HERC_BY_SIZE; i++)
+        for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
             GUESTREGS->facility_list[i] = regs->facility_list[i];
 
         FETCH_FW(fld,STATEBK->fld);
@@ -537,7 +537,7 @@ U64     dreg;
         /* Prevent current architecture mode being masked */ | 0x40
 #endif
                                                                    );
-            for(i = 1; i < STFL_IBM_BY_SIZE; i++)
+            for (i=1; i < (int) STFL_IBM_BY_SIZE; i++)
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }

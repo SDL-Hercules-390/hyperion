@@ -602,7 +602,7 @@ FACILITY( HERC_DETECT_PGMINTLOOP,       ALLM,       NONE,       ALLM,       ALSA
 void init_als( REGS* regs )
 {
     int  i;
-    for (i=0; i < STFL_HERC_BY_SIZE; i++)
+    for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
         regs->facility_list[i] =
             sysblk.facility_list[ regs->arch_mode ][i];
 }
@@ -615,7 +615,7 @@ static void set_alslevel( int alslevel )
     FACTAB*  ft;
     int      i, j;
 
-    for(i = 0; i < STFL_HERC_BY_SIZE; i++)
+    for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
         for(j = 0; j < GEN_MAXARCH; j++)
             sysblk.facility_list[j][i] = 0;
 
@@ -934,7 +934,7 @@ static BYTE update_facility( int argc, char* argv[] )
         && isdigit( *( argv[2] + 3))
         && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
         && bitno >= 0
-        && bitno <= STFL_HERC_LAST_BIT
+        && bitno <= (int) STFL_HERC_LAST_BIT
     )
     {
         force_facbit( bitno, enable, als );
@@ -1035,7 +1035,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
                 && isdigit( *( argv[2] + 3 ))
                 && sscanf(     argv[2] + 3, "%d%c", &bitno, &c ) == 1
                 && bitno >= 0
-                && bitno <= STFL_HERC_LAST_BIT
+                && bitno <= (int) STFL_HERC_LAST_BIT
             )
             {
                 const char* name = NULL;
