@@ -30,7 +30,7 @@ VERS_INT=0                    # second digit of version
 VERS_MIN=0                    # third  digit of version
 
 AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([no])])
 
 # -----------------------------------------------------------------------------
 
