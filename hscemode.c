@@ -978,6 +978,27 @@ char range[256];
 }
 
 
+/*-------------------------------------------------------------------*/
+/*                 (ipending command helper)                         */
+/*-------------------------------------------------------------------*/
+
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_WARNING( "-Wformat" )
+
+static void display_config_and_syncbc_masks()
+{
+    // ZZ FIXME: No printf format support for __uint128_t yet,
+    // so the below messages will be incorrectly displayed...
+
+    // "config mask "F_CPU_BITMAP" started mask "F_CPU_BITMAP" waiting mask "F_CPU_BITMAP
+    WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
+
+    // "syncbc mask "F_CPU_BITMAP" %s"
+    WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
+}
+
+POP_GCC_WARNINGS()
+
 
 /*-------------------------------------------------------------------*/
 /* ipending command - display pending interrupts                     */
@@ -1167,16 +1188,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC00815, "I", PTYPSTR(first), first, PTYPSTR(last), last );
     }
 
-    PUSH_GCC_WARNINGS()
-    DISABLE_GCC_WARNING( "-Wformat" )
-
-    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
-    WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
-
-    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
-    WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
-
-    POP_GCC_WARNINGS()
+    display_config_and_syncbc_masks();
 
 
 

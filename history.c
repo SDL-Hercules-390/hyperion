@@ -29,7 +29,7 @@ HISTORY*  history_lines     = NULL; /* list begin (oldest cmd)       */
 HISTORY*  history_lines_end = NULL; /* list end (most recent cmd)    */
 HISTORY*  history_ptr       = NULL; /* last key press retrieved cmd  */
 HISTORY*  backup            = NULL; /* saved last removed cmd        */
-BYTE      history_count     = 0;    /* for line numbering            */
+int       history_count     = 0;    /* for line numbering            */
 
 /*-------------------------------------------------------------------*/
 /*                     Public variables                              */
