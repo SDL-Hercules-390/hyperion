@@ -70,25 +70,24 @@ Hercules: Release Notes
     may be important. Specifically, the
     <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
     statement (previously called <code>ARCHMODE</code> and defines the
-    initial architectural mode of the system) should generally precede
+    initial architectural mode of the system) should generally <i>precede</i>
     (come before) any other <code>ARCHLVL</code> statement that enables
     or disables a given architectural feature.
   </p>
   <p>
-    For example: on certain IBM operating systems the z/Architecture "ASN
-    and LX Reuse Facility" feature must be enabled or the system will not IPL.
-    The facility is enabled in Hercules via the
-    <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL ENABLE 006_ASN_LX_REUSE</a></code>
-    configuration file statement, but since the facility is a z/Architecture-only
-    feature, your initial architecture must either be set to "z/Arch" beforehand
-    or else you need to specify the optional <code><em>[archmode]</em></code>
-    parameter on your <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement.
-  </p>
-  <p>
-    This means the <code>ARCHLVL z/Arch</code> statement must usually come
-    <i>before</i> your <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement
-    in your configuration file. Otherwise the ASN and LX Reuse Facility would
-    not be enabled.
+    For example: on certain IBM operating systems the z/Architecture "PFPO
+    Facility" must be enabled or the system will not IPL. While at the time
+    of this writing Hercules does not currently support the Perform Floating-Point
+    Operation (PFPO) Facility, the STFLE facility bit can nonetheless be
+    forcibly enabled anyway via the
+    <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL ENABLE BIT44</a></code>
+    configuration file statement. Since the facility is a z/Architecture-only
+    feature however, your initial architecture must either be set to "z/Arch"
+    beforehand, or else you need to specify the optional
+    <code><em>[archlvl]</em></code> parameter on your ARCHLVL ENABLE BIT44 statement.
+    This usually means your "<code>ARCHLVL z/Arch</code>" statement must come
+    <i>before</i> your "<code>ARCHLVL ENABLE BIT44</code>" statement in your
+    configuration file. Otherwise the PFPO Facility would not get enabled.
   </p>
   <p>
     With the introduction of limited automatic LPAR-mode/BASIC-mode switching
@@ -99,10 +98,11 @@ Hercules: Release Notes
   </p>
   <p>
     The <code>ARCHLVL</code> and <code>LPARNUM</code> statements are currently
-    the only system parameters whose sequence may matter. The order of all other
-    system parameters should not currently matter. This may change in the future
-    however, so be sure to always carefully read through the RELEASE NOTES (this
-    document) with each new update to Hercules.
+    the only two system parameter configuration file statements whose sequence
+    matters. The order of all other configuration file system parameter statements
+    should not currently matter. This may change in the future however, so be
+    sure to always carefully read through the RELEASE NOTES (this document) with
+    each new update to Hercules.
   </p>
 
 

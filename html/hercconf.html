@@ -231,45 +231,51 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ARCHLVL_FACILITY"></a>
-<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archmode]</em></code>
+<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archlvl]</em></code>
 <dd><p>
-    Specifies a particular STFLE facility to be enabled or disabled, or a query of the current settings.
-    Use <code>QUERY ALL</code> to obtain a list of valid <code><em>facility</em></code> &nbsp;names
-    that may be used for the given archmode.
+    Specifies a particular STFL/STFLE facility to be enabled or disabled,
+    or a request to query of the current settings. Use <code>QUERY ALL</code>
+    to obtain a list of valid <code><em>facility</em></code> &nbsp;names
+    that may be used for the given archlvl.
    <p>
-    Alternatively, you can also specify the actual STFLE bit number to be turned off or on
-    (disabled or enabled) using the format <code><em>BITnn</em></code> &nbsp;where 'nn'
-    corresponds to the exact STFLE facility bit you wish to be forced on or off. A popular
-    one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO Facility bit on.
+    Alternatively, you can also specify the actual STFL/STFLE bit number
+    to be turned off or on (disabled or enabled) using the format
+    <code><em>BITnn</em></code> &nbsp;where 'nn' corresponds to the exact
+    STFL/STFLE facility bit you wish to be forced on or off. A popular
+    one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO
+    (Perform Floating-Point Operation Facility) bit on, since, at the time
+    of this writing, it is not currently supported or implemented by Hercules
+    and is thus disabled by default. Specifying <code>ENABLE BIT44</code>
+    turns the bit on anyway allowing your VM system to IPL.
    <p>
-    The optional <code><em>archmode</em></code> &nbsp;argument limits the enable,
+    The optional <code><em>archlvl</em></code> &nbsp;argument limits the enable,
     disable or query function to a specific <a href="#ARCHLVL">architecture</a>.
     It should be noted that attempts to enable or disable a facility that a given
     architecture does not support are ignored without error. The default value is
-    whatever architecture mode was previously established by a preceding
-    <a href="#ARCHLVL">ARCHLVL</a> statement or the default mode if there was no
-    preceding ARCHLVL statement.
+    the value that was set by a preceding <a href="#ARCHLVL">ARCHLVL</a> statement
+    or the default mode if there was no preceding ARCHLVL statement.
    <p>
 
 
 <a name="ASN_AND_LX_REUSE"></a>
-<dt><code>ASN_AND_LX_REUSE &nbsp; <u>DISABLE</u> &#124; ENABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
 <dd><p>
-    Specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
-    or enabled. The default is disabled. This is a z/Architecture-only
-    feature (it is always disabled for S/390 or ESA/390). Set this
-    to <code>ENABLE</code> &nbsp;if the operating system supports
-    this z/Architecture feature and the use of this feature is desired.
-    Set it to <code>DISABLE</code> &nbsp;or do not specify anything
-    if the operating system doesn't support this feature, and it
-    inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
-    program interrupt when instructions such as LASP are issued.
+    Specifies whether the ASN-and-LX-Reuse Facility (ALRF) should be enabled
+    or disabled. The default is enabled. This is a z/Architecture-only feature
+    which is always disabled by default for S/390 or ESA/390.
+    <p>
+    Set this value to <code>ENABLE</code> &nbsp;(or do not specify anything
+    at all) if your guest operating system supports or expects this feature.
+    Set it to <code>DISABLE</code> &nbsp;if your guest operating system does
+    <i>not</i> support this z/Architecture feature, and it inadvertently
+    sets CR0 bit 44 to 1, usually leading to unexpected program interrupt
+    when instructions such as LASP are issued.
     <p>
     <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>.
     <p>
     <b>Note:</b> The <code>ASN_AND_LX_REUSE</code> statement has been superseded
     by "<code>ARCHLVL ENABLE/DISABLE 006_ASN_LX_REUSE</code>" and is thus deprecated.
-    Existing <code>ALRF</code> or <code>ASN_AND_LX_REUSE</code> statements
+    Existing <code>ASN_AND_LX_REUSE</code> or <code>ALRF</code> statements
     should be changed to use the new <a href="#ARCHLVL_FACILITY">ARCHLVL
     facility</a> statement format instead.
     <p>

@@ -108,7 +108,7 @@
   "                query [<facility> | all]\n"                                  \
   "command without any argument simply displays the current architecture\n"     \
   "mode. Entering the command with an argument sets the architecture mode\n"    \
-  "to the specified value or enables or disables the given facility.\n"
+  "to the given value or enables, disables or queries the given facility.\n"
 
 #define archmode_cmd_desc       "Alias for archlvl"
 #define asnlx_cmd_desc          "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
