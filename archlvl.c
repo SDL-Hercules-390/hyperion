@@ -1018,7 +1018,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
             {
                 fcnt++;
 
-                // "Facility( %-20s ) %sabled"
+                // "Facility( %-27s ) %sabled"
                 WRMSG( HHC00890, "I", tb->name,
                     sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
                     "En" : "Dis" );
@@ -1045,7 +1045,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
                 name = get_facname( bitno, &name );
 
-                // "Facility( %-20s ) %sabled"
+                // "Facility( %-27s ) %sabled"
                 WRMSG( HHC00890, "I", name,
                     sysblk.facility_list[ sysblk.arch_mode ][ fbyte ] & fbit ?
                     "En" : "Dis" );

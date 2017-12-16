@@ -702,7 +702,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00886 "CRW 0x%8.8X: %s"
 //efine HHC00887 - HHC00889 (available)
 
-#define HHC00890 "Facility( %-20s ) %sabled"
+#define HHC00890 "Facility( %-27s ) %sabled"
 //efine HHC00891 (available)
 #define HHC00892 "Facility name not specified"
 #define HHC00893 "Facility(%s) does not exist"
