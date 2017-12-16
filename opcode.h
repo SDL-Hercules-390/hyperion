@@ -9,25 +9,32 @@
 
 #include "hercules.h"
 
+/*-------------------------------------------------------------------*/
+/*               Architecture INdependent macros                     */
+/*-------------------------------------------------------------------*/
+/* The following macros are defined one time and thus are the same   */
+/* for all build architectures.                                      */
+/*-------------------------------------------------------------------*/
+
 #ifndef _CPU_C_
  #ifndef _HENGINE_DLL_
   #define CPU_DLL_IMPORT DLL_IMPORT
- #else   /* _HENGINE_DLL_ */
+ #else
   #define CPU_DLL_IMPORT extern
- #endif  /* _HENGINE_DLL_ */
-#else   /* _CPU_C_ */
+ #endif
+#else
  #define CPU_DLL_IMPORT DLL_EXPORT
-#endif /* _CPU_C_ */
+#endif
 
 #ifndef _OPCODE_C_
  #ifndef _HENGINE_DLL_
   #define OPC_DLL_IMPORT DLL_IMPORT
- #else   /* _HENGINE_DLL_ */
+ #else
   #define OPC_DLL_IMPORT extern
- #endif  /* _HENGINE_DLL_ */
-#else   /* _OPCODE_C_ */
+ #endif
+#else
  #define OPC_DLL_IMPORT DLL_EXPORT
-#endif /* _OPCODE_C_ */
+#endif
 
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
@@ -120,9 +127,9 @@
         (void*)& _mnemonic "\0" #_name \
     }
 
-#define GENx37Xx390x___ GENx___x390x___
-#define GENx37Xx___x900 GENx___x___x900
-#define GENx37Xx390x900 GENx___x390x900
+#define GENx37Xx390x___   GENx___x390x___
+#define GENx37Xx___x900   GENx___x___x900
+#define GENx37Xx390x900   GENx___x390x900
 
 typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
 
@@ -217,22 +224,24 @@ int used; \
 
 #endif
 
-#if defined(_FEATURE_SIE)
-  #define SIE_MODE(_register_context) \
-          unlikely((_register_context)->sie_mode)
-  #define SIE_STATE(_register_context) \
-          ((_register_context)->sie_state)
-  #define SIE_FEATB(_regs, _feat_byte, _feat_name) \
+#if defined( _FEATURE_SIE )
+
+  #define SIE_MODE( _register_context ) unlikely((_register_context)->sie_mode)
+  #define SIE_STATE(_register_context ) ((_register_context)->sie_state)
+
+  #define SIE_FEATB( _regs, _feat_byte, _feat_name ) \
           (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name))
-  #define SIE_STATB(_regs, _feat_byte, _feat_name) \
-          (SIE_MODE((_regs)) && SIE_FEATB((_regs), _feat_byte, _feat_name) )
-  #define SIE_STATNB(_regs, _feat_byte, _feat_name) \
-          (SIE_MODE((_regs)) && !SIE_FEATB((_regs), _feat_byte, _feat_name) )
+
+  #define SIE_STATB( _regs, _feat_byte, _feat_name ) \
+          (SIE_MODE((_regs)) && SIE_FEATB( (_regs), _feat_byte, _feat_name ))
+
+  #define SIE_STATNB( _regs, _feat_byte, _feat_name ) \
+          (SIE_MODE((_regs)) && !SIE_FEATB( (_regs), _feat_byte, _feat_name ))
 #else
-  #define SIE_MODE(_register_context) (0)
-  #define SIE_STATE(_register_context) (0)
-  #define SIE_FEATB(_register_context, _feat_byte, _feat_name) (0)
-  #define SIE_STATB(_register_context, _feat_byte, _feat_name) (0)
+  #define SIE_MODE(  _register_context )                          (0)
+  #define SIE_STATE( _register_context )                          (0)
+  #define SIE_FEATB( _register_context, _feat_byte, _feat_name )  (0)
+  #define SIE_STATB( _register_context, _feat_byte, _feat_name )  (0)
 #endif
 
 
@@ -240,7 +249,7 @@ int used; \
    every time an instruction is executed.  This is for problem
    determination only, as it severely impacts performance.       *JJ */
 
-#if defined(OPTION_FOOTPRINT_BUFFER)
+#if defined( OPTION_FOOTPRINT_BUFFER )
 #define FOOTPRINT(_ip, _regs) \
 do { \
     sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
@@ -287,9 +296,11 @@ do { \
 #define PSW_IA64(_regs, _n) \
   ((_regs)->AIV \
    + (((uintptr_t)(_regs)->ip + (unsigned int)(_n)) - (uintptr_t)(_regs)->aip))
+
 #define PSW_IA31(_regs, _n) \
   ((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
    - (uintptr_t)(_regs)->aip)
+
 #define PSW_IA24(_regs, _n) \
  (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
    - (uintptr_t)(_regs)->aip) & AMASK24)
@@ -312,13 +323,8 @@ do { \
   } \
 } while (0)
 
-#if 1
 #define _PSW_IA_MAIN(_regs, _addr) \
  ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
-#else
-#define _PSW_IA_MAIN(_regs, _addr) \
- ((BYTE *)((_regs)->aim ^ (uintptr_t)(_addr)))
-#endif
 
 #define _VALID_IP(_regs, _exec) \
 ( \
@@ -580,19 +586,26 @@ do { \
  #define CSWAP64(_x) bswap_64(_x)
 #endif
 
-#define FETCH_HW(_value, _storage) (_value) = fetch_hw(_storage)
-#define FETCH_FW(_value, _storage) (_value) = fetch_fw(_storage)
-#define FETCH_F3(_value, _storage) (_value) = fetch_f3(_storage)
-#define FETCH_DW(_value, _storage) (_value) = fetch_dw(_storage)
+#define FETCH_HW(_value, _storage)   (_value) = fetch_hw(_storage)
+#define FETCH_FW(_value, _storage)   (_value) = fetch_fw(_storage)
+#define FETCH_F3(_value, _storage)   (_value) = fetch_f3(_storage)
+#define FETCH_DW(_value, _storage)   (_value) = fetch_dw(_storage)
 
-#define STORE_HW(_storage, _value) store_hw(_storage, _value)
-#define STORE_FW(_storage, _value) store_fw(_storage, _value)
-#define STORE_F3(_storage, _value) store_f3(_storage, _value)
-#define STORE_DW(_storage, _value) store_dw(_storage, _value)
+#define STORE_HW(_storage, _value)   store_hw(_storage, _value)
+#define STORE_FW(_storage, _value)   store_fw(_storage, _value)
+#define STORE_F3(_storage, _value)   store_f3(_storage, _value)
+#define STORE_DW(_storage, _value)   store_dw(_storage, _value)
 
 #include "machdep.h"
 
 #endif /*!defined(_OPCODE_H)*/
+
+/*-------------------------------------------------------------------*/
+/*               Architecture DEPENDENT macros                       */
+/*-------------------------------------------------------------------*/
+/* The following macros are undef'ed and then re-defined differently */
+/* for each subsequent new build architecture.                       */
+/*-------------------------------------------------------------------*/
 
 /* Program check if fpc is not valid contents for FPC register */
 
@@ -624,15 +637,15 @@ do { \
 
 #endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
-#undef SIE_ACTIVE
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
- #define SIE_ACTIVE(_regs) ((_regs)->sie_active)
+#undef   SIE_ACTIVE
+#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+ #define SIE_ACTIVE(_regs)  ((_regs)->sie_active)
 #else
- #define SIE_ACTIVE(_regs) (0)
+ #define SIE_ACTIVE(_regs)  (0)
 #endif
 
-#undef MULTIPLE_CONTROLLED_DATA_SPACE
-#if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#undef   MULTIPLE_CONTROLLED_DATA_SPACE
+#if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
  #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) \
       ( SIE_FEATB((_regs), MX, XC) && AR_BIT(&(_regs)->psw) )
 #else
@@ -644,8 +657,8 @@ do { \
 #undef UPDATE_BEAR
 #undef SET_BEAR_REG
 
-#if defined(FEATURE_PER3)
- #define UPDATE_BEAR(_regs, _n) (_regs)->bear_ip = (_regs)->ip + (_n)
+#if defined( FEATURE_PER3 )
+ #define UPDATE_BEAR(_regs, _n)     (_regs)->bear_ip = (_regs)->ip + (_n)
  #define SET_BEAR_REG(_regs, _ip) \
   do { \
     if ((_ip)) { \
@@ -656,14 +669,14 @@ do { \
     } \
   } while (0)
 #else
- #define UPDATE_BEAR(_regs, _n)   while (0)
- #define SET_BEAR_REG(_regs, _ip) while (0)
+#define UPDATE_BEAR(_regs, _n)     do{}while(0)
+#define SET_BEAR_REG(_regs, _ip)   do{}while(0)
 #endif
 
 /* Set addressing mode (BASSM, BSM) */
 
 #undef SET_ADDRESSING_MODE
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
  #define SET_ADDRESSING_MODE(_regs, _addr) \
  do { \
   if ((_addr) & 1) { \
@@ -699,8 +712,8 @@ do { \
 #undef FPR2I
 #undef FPREX
 
-#if defined(FEATURE_BASIC_FP_EXTENSIONS)
-#if defined(_FEATURE_SIE)
+#if defined( FEATURE_BASIC_FP_EXTENSIONS )
+#if defined( _FEATURE_SIE )
 
     /* Program check if BFP instruction is executed when AFP control is zero */
 #define BFPINST_CHECK(_regs) \
@@ -1528,7 +1541,7 @@ do { \
 #undef RXY0
 #undef RXY_B
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXY)
   #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
@@ -1802,7 +1815,7 @@ do { \
 #undef RSY0
 #undef RSY_B
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSY)
   #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER_LD(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6)
@@ -2348,7 +2361,7 @@ do { \
 /* SIY storage and immediate with long displacement */
 #undef SIY
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
  #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SIY)
   #define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
           SIY_DECODER_LD(_inst, _regs, _i2, _b1, _effective_addr1, 6, 6)
@@ -2745,7 +2758,7 @@ do { \
 #undef SIE_TRANSLATE
 
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
 
 #define SIE_SET_VI(_who, _when, _why, _regs) \
     { \
@@ -2819,7 +2832,7 @@ do { \
 
 #undef SIE_XC_INTERCEPT
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
 
 #define SIE_XC_INTERCEPT(_regs) \
     if(SIE_STATB((_regs), MX, XC)) \
@@ -2983,12 +2996,15 @@ void z900_process_trace (REGS *regs);
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 void ARCH_DEP(checkstop_config)(void);
-#if defined(_FEATURE_SIE)
+
+#if defined( _FEATURE_SIE )
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
-#endif /*!defined(_FEATURE_SIE)*/
-#if defined(_FEATURE_ZSIE)
+#endif
+
+#if defined( _FEATURE_ZSIE )
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
-#endif /*!defined(_FEATURE_ZSIE)*/
+#endif
+
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
 void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
@@ -3126,9 +3142,11 @@ int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc);
 
 /* Functions in module trace.c */
 CREG  ARCH_DEP(trace_br) (int amode, VADR ia, REGS *regs);
-#if defined(_FEATURE_ZSIE)
+
+#if defined( _FEATURE_ZSIE )
 U32  s390_trace_br (int amode, U32 ia, REGS *regs);
-#endif /*!defined(_FEATURE_ZSIE)*/
+#endif
+
 CREG  ARCH_DEP(trace_bsg) (U32 alet, VADR ia, REGS *regs);
 CREG  ARCH_DEP(trace_ssar) (int ssair, U16 sasn, REGS *regs);
 CREG  ARCH_DEP(trace_pc) (U32 pcea, REGS *regs);
@@ -3216,9 +3234,9 @@ DEF_INST(trace_svc_return);
 
 
 /* Instructions in cmpsc.c */
-#if defined(FEATURE_COMPRESSION)
+#if defined( FEATURE_COMPRESSION )
 DEF_INST(cmpsc_2012);
-#endif /*defined(FEATURE_COMPRESSION)*/
+#endif
 
 
 /* Instructions in control.c */
