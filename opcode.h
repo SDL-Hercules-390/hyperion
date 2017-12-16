@@ -10,10 +10,10 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/*               Architecture INdependent macros                     */
+/*               Architecture INDEPENDENT macros                     */
 /*-------------------------------------------------------------------*/
-/* The following macros are defined one time and thus are the same   */
-/* for all build architectures.                                      */
+/*  The following macros are defined ONE TIME                        */
+/*  and thus are the same for all build architectures.               */
 /*-------------------------------------------------------------------*/
 
 #ifndef _CPU_C_
@@ -677,7 +677,9 @@ do { \
 /* Set addressing mode (BASSM, BSM) */
 
 #undef SET_ADDRESSING_MODE
+
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
  #define SET_ADDRESSING_MODE(_regs, _addr) \
  do { \
   if ((_addr) & 1) { \
@@ -693,7 +695,9 @@ do { \
     (_regs)->psw.AMASK = AMASK24; \
   } \
  } while (0)
+
 #else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+
   #define SET_ADDRESSING_MODE(_regs, _addr) \
  do { \
   if ((_addr) & 0x80000000) { \
@@ -704,7 +708,8 @@ do { \
     (_regs)->psw.AMASK = AMASK24; \
   } \
  } while (0)
-#endif
+
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #undef HFPREG_CHECK
 #undef HFPREG2_CHECK
@@ -1540,6 +1545,7 @@ do { \
 #undef RXY_B
 
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
+
  #if !defined( DECODER_TEST ) && !defined( DECODER_TEST_RXY )
   #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
@@ -1555,7 +1561,9 @@ do { \
   #define RXY_B(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_LD_TEST(_inst, _regs, _r1, _b2, _effective_addr2, 0, 0)
  #endif
+
 #else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
+
  #if !defined( DECODER_TEST ) && !defined( DECODER_TEST_RXY )
   #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER(_inst, _regs, _r1, _b2, _effective_addr2, 6, 6)
@@ -1571,7 +1579,8 @@ do { \
   #define RXY_B(_inst, _regs, _r1, _b2, _effective_addr2) \
           RXY_DECODER_TEST(_inst, _regs, _r1, _b2, _effective_addr2, 0, 0)
  #endif
-#endif
+
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 #define RXY_DECODER_LD(_inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc) \
     {   U32 temp; S32 temp2; int tempx; \
@@ -1814,6 +1823,7 @@ do { \
 #undef RSY_B
 
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
+
  #if !defined( DECODER_TEST ) && !defined( DECODER_TEST_RSY )
   #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER_LD(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6)
@@ -1829,7 +1839,9 @@ do { \
   #define RSY_B(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER_LD_TEST(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 0)
  #endif
-#else
+
+#else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
+
  #if !defined( DECODER_TEST ) && !defined( DECODER_TEST_RSY )
   #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6)
@@ -1845,7 +1857,8 @@ do { \
   #define RSY_B(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
           RSY_DECODER_TEST(_inst, _regs, _r1, _r3, _b2, _effective_addr2, 0, 0)
  #endif
-#endif
+
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 #define RSY_DECODER_LD(_inst, _regs, _r1, _r3, _b2, _effective_addr2, _len, _ilc) \
     {   U32 temp; S32 temp2; \
@@ -3209,7 +3222,7 @@ int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
 
 
 /*-------------------------------------------------------------------*/
-/*                          DEF_INST                                 */
+/*               DEF_INST  --  Define Instructions                   */
 /*-------------------------------------------------------------------*/
 /* From this point onward to the end of file are all of the DEF_INST */
 /* statements (possibly guarded with #if defined feature tests) that */
@@ -3220,7 +3233,11 @@ int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
 /* can determine that quite easily without cluttering this header.   */
 /*-------------------------------------------------------------------*/
 
-//            PLEASE KEEP THESE IN FEATURE SEQUENCE
+/*-------------------------------------------------------------------*/
+/*        FEATUREs with STFL/STFLE facility bits defined             */
+/*-------------------------------------------------------------------*/
+
+// (TODO)
 
 #if defined( FEATURE_CMPSC )
 DEF_INST( cmpsc_2012 );
@@ -4371,6 +4388,307 @@ DEF_INST( perform_floating_point_operation );
 #endif
 
 /*-------------------------------------------------------------------*/
+/*      FEATUREs that DON'T have any facility bits defined           */
+/*-------------------------------------------------------------------*/
+
+// (TODO)
+
+/*-------------------------------------------------------------------*/
+/*     Instructions NOT associated with a facility or FEATURE        */
+/*-------------------------------------------------------------------*/
+
+DEF_INST( execute_e3________xx );
+DEF_INST( execute_eb________xx );
+DEF_INST( execute_ec________xx );
+DEF_INST( execute_ed________xx );
+
+DEF_INST( add );
+DEF_INST( add_decimal );
+DEF_INST( add_halfword );
+DEF_INST( add_logical );
+DEF_INST( add_logical_carry_long );
+DEF_INST( add_logical_carry_long_register );
+DEF_INST( add_logical_long );
+DEF_INST( add_logical_long_fullword );
+DEF_INST( add_logical_long_fullword_register );
+DEF_INST( add_logical_long_register );
+DEF_INST( add_logical_register );
+DEF_INST( add_long );
+DEF_INST( add_long_fullword );
+DEF_INST( add_long_fullword_register );
+DEF_INST( add_long_halfword_immediate );
+DEF_INST( add_long_register );
+DEF_INST( add_register );
+DEF_INST( and );
+DEF_INST( and_character );
+DEF_INST( and_immediate );
+DEF_INST( and_immediate_high_high );
+DEF_INST( and_immediate_high_low );
+DEF_INST( and_immediate_low_high );
+DEF_INST( and_immediate_low_low );
+DEF_INST( and_long );
+DEF_INST( and_long_register );
+DEF_INST( and_register );
+DEF_INST( branch_and_link );
+DEF_INST( branch_and_link_register );
+DEF_INST( branch_and_save );
+DEF_INST( branch_and_save_register );
+DEF_INST( branch_on_condition );
+DEF_INST( branch_on_condition_register );
+DEF_INST( branch_on_count );
+DEF_INST( branch_on_count_long );
+DEF_INST( branch_on_count_long_register );
+DEF_INST( branch_on_count_register );
+DEF_INST( branch_on_index_high );
+DEF_INST( branch_on_index_high_long );
+DEF_INST( branch_on_index_low_or_equal );
+DEF_INST( branch_on_index_low_or_equal_long );
+DEF_INST( branch_relative_and_save_long );
+DEF_INST( branch_relative_on_condition_long );
+DEF_INST( branch_relative_on_count_long );
+DEF_INST( branch_relative_on_index_high_long );
+DEF_INST( branch_relative_on_index_low_or_equal_long );
+DEF_INST( compare );
+DEF_INST( compare_and_form_codeword );
+DEF_INST( compare_and_swap );
+DEF_INST( compare_and_swap_long );
+DEF_INST( compare_decimal );
+DEF_INST( compare_double_and_swap );
+DEF_INST( compare_double_and_swap_long );
+DEF_INST( compare_halfword );
+DEF_INST( compare_logical );
+DEF_INST( compare_logical_character );
+DEF_INST( compare_logical_character_long );
+DEF_INST( compare_logical_characters_under_mask );
+DEF_INST( compare_logical_characters_under_mask_high );
+DEF_INST( compare_logical_immediate );
+DEF_INST( compare_logical_long );
+DEF_INST( compare_logical_long_fullword );
+DEF_INST( compare_logical_long_fullword_register );
+DEF_INST( compare_logical_long_register );
+DEF_INST( compare_logical_register );
+DEF_INST( compare_long );
+DEF_INST( compare_long_fullword );
+DEF_INST( compare_long_fullword_register );
+DEF_INST( compare_long_halfword_immediate );
+DEF_INST( compare_long_register );
+DEF_INST( compare_register );
+DEF_INST( convert_fix64_to_float_ext_reg );
+DEF_INST( convert_fix64_to_float_long_reg );
+DEF_INST( convert_fix64_to_float_short_reg );
+DEF_INST( convert_float_ext_to_fix64_reg );
+DEF_INST( convert_float_long_to_fix64_reg );
+DEF_INST( convert_float_short_to_fix64_reg );
+DEF_INST( convert_to_binary );
+DEF_INST( convert_to_binary_long );
+DEF_INST( convert_to_decimal );
+DEF_INST( convert_to_decimal_long );
+DEF_INST( diagnose );
+DEF_INST( divide );
+DEF_INST( divide_decimal );
+DEF_INST( divide_logical_long );
+DEF_INST( divide_logical_long_register );
+DEF_INST( divide_register );
+DEF_INST( divide_single_long );
+DEF_INST( divide_single_long_fullword );
+DEF_INST( divide_single_long_fullword_register );
+DEF_INST( divide_single_long_register );
+DEF_INST( dummy_instruction    );
+DEF_INST( edit_x_edit_and_mark );
+DEF_INST( exclusive_or );
+DEF_INST( exclusive_or_character );
+DEF_INST( exclusive_or_immediate );
+DEF_INST( exclusive_or_long );
+DEF_INST( exclusive_or_long_register );
+DEF_INST( exclusive_or_register );
+DEF_INST( execute );
+DEF_INST( extract_and_set_extended_authority );
+DEF_INST( extract_stacked_registers_long );
+DEF_INST( fix_page );
+DEF_INST( insert_character );
+DEF_INST( insert_characters_under_mask );
+DEF_INST( insert_characters_under_mask_high );
+DEF_INST( insert_immediate_high_high );
+DEF_INST( insert_immediate_high_low );
+DEF_INST( insert_immediate_low_high );
+DEF_INST( insert_immediate_low_low );
+DEF_INST( insert_program_mask );
+DEF_INST( insert_psw_key );
+DEF_INST( invalidate_page_table_entry );
+DEF_INST( load );
+DEF_INST( load_address );
+DEF_INST( load_address_extended );
+DEF_INST( load_and_test_long_fullword_register );
+DEF_INST( load_and_test_long_register );
+DEF_INST( load_and_test_register );
+DEF_INST( load_complement_long_fullword_register );
+DEF_INST( load_complement_long_register );
+DEF_INST( load_complement_register );
+DEF_INST( load_control );
+DEF_INST( load_control_long );
+DEF_INST( load_halfword );
+DEF_INST( load_logical_immediate_high_high );
+DEF_INST( load_logical_immediate_high_low );
+DEF_INST( load_logical_immediate_low_high );
+DEF_INST( load_logical_immediate_low_low );
+DEF_INST( load_logical_long_character );
+DEF_INST( load_logical_long_fullword );
+DEF_INST( load_logical_long_fullword_register );
+DEF_INST( load_logical_long_halfword );
+DEF_INST( load_logical_long_thirtyone );
+DEF_INST( load_logical_long_thirtyone_register );
+DEF_INST( load_long );
+DEF_INST( load_long_fullword );
+DEF_INST( load_long_fullword_register );
+DEF_INST( load_long_halfword );
+DEF_INST( load_long_halfword_immediate );
+DEF_INST( load_long_register );
+DEF_INST( load_multiple );
+DEF_INST( load_multiple_disjoint );
+DEF_INST( load_multiple_high );
+DEF_INST( load_multiple_long );
+DEF_INST( load_negative_long_fullword_register );
+DEF_INST( load_negative_long_register );
+DEF_INST( load_negative_register );
+DEF_INST( load_pair_from_quadword );
+DEF_INST( load_positive_long_fullword_register );
+DEF_INST( load_positive_long_register );
+DEF_INST( load_positive_register );
+DEF_INST( load_program_status_word );
+DEF_INST( load_program_status_word_extended );
+DEF_INST( load_real_address );
+DEF_INST( load_real_address_long );
+DEF_INST( load_register );
+DEF_INST( load_using_real_address );
+DEF_INST( load_using_real_address_long );
+DEF_INST( monitor_call );
+DEF_INST( move_character );
+DEF_INST( move_immediate );
+DEF_INST( move_inverse );
+DEF_INST( move_long );
+DEF_INST( move_numerics );
+DEF_INST( move_with_destination_key );
+DEF_INST( move_with_offset );
+DEF_INST( move_with_source_key );
+DEF_INST( move_zones );
+DEF_INST( multiply );
+DEF_INST( multiply_decimal );
+DEF_INST( multiply_halfword );
+DEF_INST( multiply_logical_long );
+DEF_INST( multiply_logical_long_register );
+DEF_INST( multiply_long_halfword_immediate );
+DEF_INST( multiply_register );
+DEF_INST( multiply_single_long );
+DEF_INST( multiply_single_long_fullword );
+DEF_INST( multiply_single_long_fullword_register );
+DEF_INST( multiply_single_long_register );
+DEF_INST( obtain_cms_lock );
+DEF_INST( obtain_local_lock );
+DEF_INST( operation_exception  );
+DEF_INST( or );
+DEF_INST( or_character );
+DEF_INST( or_immediate );
+DEF_INST( or_immediate_high_high );
+DEF_INST( or_immediate_high_low );
+DEF_INST( or_immediate_low_high );
+DEF_INST( or_immediate_low_low );
+DEF_INST( or_long );
+DEF_INST( or_long_register );
+DEF_INST( or_register );
+DEF_INST( pack );
+DEF_INST( release_cms_lock );
+DEF_INST( release_local_lock );
+DEF_INST( rotate_left_single_logical_long );
+DEF_INST( search_string_unicode );
+DEF_INST( set_addressing_mode_24 );
+DEF_INST( set_addressing_mode_31 );
+DEF_INST( set_addressing_mode_64 );
+DEF_INST( set_clock );
+DEF_INST( set_clock_comparator );
+DEF_INST( set_cpu_timer );
+DEF_INST( set_prefix );
+DEF_INST( set_program_mask );
+DEF_INST( set_psw_key_from_address );
+DEF_INST( set_system_mask );
+DEF_INST( shift_and_round_decimal );
+DEF_INST( shift_left_double );
+DEF_INST( shift_left_double_logical );
+DEF_INST( shift_left_single );
+DEF_INST( shift_left_single_logical );
+DEF_INST( shift_left_single_logical_long );
+DEF_INST( shift_left_single_long );
+DEF_INST( shift_right_double );
+DEF_INST( shift_right_double_logical );
+DEF_INST( shift_right_single );
+DEF_INST( shift_right_single_logical );
+DEF_INST( shift_right_single_logical_long );
+DEF_INST( shift_right_single_long );
+DEF_INST( signal_processor );
+DEF_INST( store );
+DEF_INST( store_character );
+DEF_INST( store_characters_under_mask );
+DEF_INST( store_characters_under_mask_high );
+DEF_INST( store_clock );
+DEF_INST( store_clock_comparator );
+DEF_INST( store_control );
+DEF_INST( store_control_long );
+DEF_INST( store_cpu_address );
+DEF_INST( store_cpu_id );
+DEF_INST( store_cpu_timer );
+DEF_INST( store_halfword );
+DEF_INST( store_long );
+DEF_INST( store_multiple );
+DEF_INST( store_multiple_high );
+DEF_INST( store_multiple_long );
+DEF_INST( store_pair_to_quadword );
+DEF_INST( store_prefix );
+DEF_INST( store_real_address );
+DEF_INST( store_then_and_system_mask );
+DEF_INST( store_then_or_system_mask );
+DEF_INST( store_using_real_address );
+DEF_INST( store_using_real_address_long );
+DEF_INST( subtract );
+DEF_INST( subtract_decimal );
+DEF_INST( subtract_halfword );
+DEF_INST( subtract_logical );
+DEF_INST( subtract_logical_borrow_long );
+DEF_INST( subtract_logical_borrow_long_register );
+DEF_INST( subtract_logical_long );
+DEF_INST( subtract_logical_long_fullword );
+DEF_INST( subtract_logical_long_fullword_register );
+DEF_INST( subtract_logical_long_register );
+DEF_INST( subtract_logical_register );
+DEF_INST( subtract_long );
+DEF_INST( subtract_long_fullword );
+DEF_INST( subtract_long_fullword_register );
+DEF_INST( subtract_long_register );
+DEF_INST( subtract_register );
+DEF_INST( supervisor_call );
+DEF_INST( svc_assist );
+DEF_INST( test_addressing_mode );
+DEF_INST( test_and_set );
+DEF_INST( test_block );
+DEF_INST( test_decimal );
+DEF_INST( test_protection );
+DEF_INST( test_under_mask );
+DEF_INST( test_under_mask_high_high );
+DEF_INST( test_under_mask_high_low );
+DEF_INST( trace );
+DEF_INST( trace_initial_srb_dispatch );
+DEF_INST( trace_io_interruption );
+DEF_INST( trace_long );
+DEF_INST( trace_program_interruption );
+DEF_INST( trace_svc_interruption );
+DEF_INST( trace_svc_return );
+DEF_INST( trace_task_dispatch );
+DEF_INST( translate );
+DEF_INST( translate_and_test );
+DEF_INST( translate_and_test_reverse );
+DEF_INST( unpack );
+DEF_INST( update_tree );
+DEF_INST( zero_and_add );
+
+/*-------------------------------------------------------------------*/
 /*                    Optimized Instructions                         */
 /*-------------------------------------------------------------------*/
 /* The following instructions have separate instruction functions    */
@@ -4684,295 +5002,5 @@ DEF_INST( E3_0______04 );
 DEF_INST( E3_0______24 );
 
 #endif /* OPTION_OPTINST */
-
-DEF_INST( execute_e3________xx );
-DEF_INST( execute_eb________xx );
-DEF_INST( execute_ec________xx );
-DEF_INST( execute_ed________xx );
-DEF_INST( operation_exception  );
-DEF_INST( dummy_instruction    );
-DEF_INST( fix_page );
-DEF_INST( svc_assist );
-DEF_INST( obtain_local_lock );
-DEF_INST( release_local_lock );
-DEF_INST( obtain_cms_lock );
-DEF_INST( release_cms_lock );
-DEF_INST( trace_svc_interruption );
-DEF_INST( trace_program_interruption );
-DEF_INST( trace_initial_srb_dispatch );
-DEF_INST( trace_io_interruption );
-DEF_INST( trace_task_dispatch );
-DEF_INST( trace_svc_return );
-DEF_INST( diagnose );
-DEF_INST( insert_psw_key );
-DEF_INST( load_control );
-DEF_INST( load_program_status_word );
-DEF_INST( load_real_address );
-DEF_INST( load_using_real_address );
-DEF_INST( move_with_destination_key );
-DEF_INST( invalidate_page_table_entry );
-DEF_INST( move_with_source_key );
-DEF_INST( set_clock );
-DEF_INST( set_clock_comparator );
-DEF_INST( set_cpu_timer );
-DEF_INST( set_prefix );
-DEF_INST( set_psw_key_from_address );
-DEF_INST( set_system_mask );
-DEF_INST( signal_processor );
-DEF_INST( store_clock_comparator );
-DEF_INST( store_control );
-DEF_INST( store_cpu_address );
-DEF_INST( store_cpu_id );
-DEF_INST( store_cpu_timer );
-DEF_INST( store_prefix );
-DEF_INST( store_then_and_system_mask );
-DEF_INST( store_then_or_system_mask );
-DEF_INST( store_using_real_address );
-DEF_INST( test_block );
-DEF_INST( test_protection );
-DEF_INST( trace );
-DEF_INST( add_decimal );
-DEF_INST( compare_decimal );
-DEF_INST( divide_decimal );
-DEF_INST( edit_x_edit_and_mark );
-DEF_INST( multiply_decimal );
-DEF_INST( shift_and_round_decimal );
-DEF_INST( subtract_decimal );
-DEF_INST( zero_and_add );
-DEF_INST( test_decimal );
-DEF_INST( convert_fix64_to_float_short_reg );
-DEF_INST( convert_fix64_to_float_long_reg );
-DEF_INST( convert_fix64_to_float_ext_reg );
-DEF_INST( convert_float_short_to_fix64_reg );
-DEF_INST( convert_float_long_to_fix64_reg );
-DEF_INST( convert_float_ext_to_fix64_reg );
-DEF_INST( add_register );
-DEF_INST( add );
-DEF_INST( add_halfword );
-DEF_INST( add_logical_register );
-DEF_INST( add_logical );
-DEF_INST( and_register );
-DEF_INST( and );
-DEF_INST( and_immediate );
-DEF_INST( and_character );
-DEF_INST( branch_and_link_register );
-DEF_INST( branch_and_link );
-DEF_INST( branch_and_save_register );
-DEF_INST( branch_and_save );
-DEF_INST( branch_on_condition_register );
-DEF_INST( branch_on_condition );
-DEF_INST( branch_on_count_register );
-DEF_INST( branch_on_count );
-DEF_INST( branch_on_index_high );
-DEF_INST( branch_on_index_low_or_equal );
-DEF_INST( compare_register );
-DEF_INST( compare );
-DEF_INST( compare_and_form_codeword );
-DEF_INST( compare_and_swap );
-DEF_INST( compare_double_and_swap );
-DEF_INST( compare_halfword );
-DEF_INST( compare_logical_register );
-DEF_INST( compare_logical );
-DEF_INST( compare_logical_immediate );
-DEF_INST( compare_logical_character );
-DEF_INST( compare_logical_characters_under_mask );
-DEF_INST( compare_logical_character_long );
-DEF_INST( convert_to_binary );
-DEF_INST( convert_to_decimal );
-DEF_INST( divide_register );
-DEF_INST( divide );
-DEF_INST( exclusive_or_register );
-DEF_INST( exclusive_or );
-DEF_INST( exclusive_or_immediate );
-DEF_INST( exclusive_or_character );
-DEF_INST( execute );
-DEF_INST( insert_character );
-DEF_INST( insert_characters_under_mask );
-DEF_INST( insert_program_mask );
-DEF_INST( load );
-DEF_INST( load_register );
-DEF_INST( load_address );
-DEF_INST( load_address_extended );
-DEF_INST( load_and_test_register );
-DEF_INST( load_complement_register );
-DEF_INST( load_halfword );
-DEF_INST( load_multiple );
-DEF_INST( load_negative_register );
-DEF_INST( load_positive_register );
-DEF_INST( monitor_call );
-DEF_INST( move_immediate );
-DEF_INST( move_character );
-DEF_INST( move_inverse );
-DEF_INST( move_long );
-DEF_INST( move_numerics );
-DEF_INST( move_with_offset );
-DEF_INST( move_zones );
-DEF_INST( multiply_register );
-DEF_INST( multiply );
-DEF_INST( multiply_halfword );
-DEF_INST( store );
-DEF_INST( store_character );
-DEF_INST( or_register );
-DEF_INST( or );
-DEF_INST( or_immediate );
-DEF_INST( or_character );
-DEF_INST( pack );
-DEF_INST( search_string_unicode );
-DEF_INST( set_program_mask );
-DEF_INST( shift_left_double );
-DEF_INST( shift_left_double_logical );
-DEF_INST( shift_left_single );
-DEF_INST( shift_left_single_logical );
-DEF_INST( shift_right_double );
-DEF_INST( shift_right_double_logical );
-DEF_INST( shift_right_single );
-DEF_INST( shift_right_single_logical );
-DEF_INST( store_characters_under_mask );
-DEF_INST( store_clock );
-DEF_INST( store_halfword );
-DEF_INST( store_multiple );
-DEF_INST( subtract_register );
-DEF_INST( subtract );
-DEF_INST( subtract_halfword );
-DEF_INST( subtract_logical_register );
-DEF_INST( subtract_logical );
-DEF_INST( supervisor_call );
-DEF_INST( test_and_set );
-DEF_INST( test_under_mask );
-DEF_INST( translate );
-DEF_INST( translate_and_test );
-DEF_INST( translate_and_test_reverse );
-DEF_INST( unpack );
-DEF_INST( update_tree );
-DEF_INST( trace_long );
-DEF_INST( convert_to_binary_long );
-DEF_INST( convert_to_decimal_long );
-DEF_INST( multiply_logical_long );
-DEF_INST( multiply_logical_long_register );
-DEF_INST( divide_logical_long );
-DEF_INST( divide_logical_long_register );
-DEF_INST( add_logical_carry_long_register );
-DEF_INST( subtract_logical_borrow_long_register );
-DEF_INST( add_logical_carry_long );
-DEF_INST( subtract_logical_borrow_long );
-DEF_INST( divide_single_long );
-DEF_INST( divide_single_long_fullword );
-DEF_INST( divide_single_long_register );
-DEF_INST( divide_single_long_fullword_register );
-DEF_INST( load_logical_long_character );
-DEF_INST( load_logical_long_halfword );
-DEF_INST( store_pair_to_quadword );
-DEF_INST( load_pair_from_quadword );
-DEF_INST( extract_stacked_registers_long );
-DEF_INST( extract_and_set_extended_authority );
-DEF_INST( test_addressing_mode );
-DEF_INST( load_long_halfword_immediate );
-DEF_INST( add_long_halfword_immediate );
-DEF_INST( multiply_long_halfword_immediate );
-DEF_INST( compare_long_halfword_immediate );
-DEF_INST( and_long );
-DEF_INST( or_long );
-DEF_INST( exclusive_or_long );
-DEF_INST( and_long_register );
-DEF_INST( or_long_register );
-DEF_INST( exclusive_or_long_register );
-DEF_INST( load_long_register );
-DEF_INST( add_logical_long_register );
-DEF_INST( add_logical_long_fullword_register );
-DEF_INST( subtract_logical_long_register );
-DEF_INST( subtract_logical_long_fullword_register );
-DEF_INST( load_control_long );
-DEF_INST( store_control_long );
-DEF_INST( load_multiple_disjoint );
-DEF_INST( load_multiple_high );
-DEF_INST( load_multiple_long );
-DEF_INST( store_multiple_high );
-DEF_INST( store_multiple_long );
-DEF_INST( load_using_real_address_long );
-DEF_INST( store_using_real_address_long );
-DEF_INST( set_addressing_mode_24 );
-DEF_INST( set_addressing_mode_31 );
-DEF_INST( set_addressing_mode_64 );
-DEF_INST( load_program_status_word_extended );
-DEF_INST( store_long );
-DEF_INST( store_real_address );
-DEF_INST( load_long );
-DEF_INST( multiply_single_long_register );
-DEF_INST( multiply_single_long_fullword_register );
-DEF_INST( multiply_single_long );
-DEF_INST( multiply_single_long_fullword );
-DEF_INST( rotate_left_single_logical_long );
-DEF_INST( shift_right_single_long );
-DEF_INST( shift_left_single_long );
-DEF_INST( shift_right_single_logical_long );
-DEF_INST( shift_left_single_logical_long );
-DEF_INST( compare_logical_long );
-DEF_INST( compare_logical_long_fullword );
-DEF_INST( compare_logical_long_fullword_register );
-DEF_INST( load_logical_long_thirtyone_register );
-DEF_INST( compare_logical_long_register );
-DEF_INST( test_under_mask_high_high );
-DEF_INST( test_under_mask_high_low );
-DEF_INST( branch_relative_on_count_long );
-DEF_INST( load_positive_long_register );
-DEF_INST( load_negative_long_register );
-DEF_INST( load_and_test_long_register );
-DEF_INST( load_complement_long_register );
-DEF_INST( load_real_address_long );
-DEF_INST( load_long_fullword_register );
-DEF_INST( add_long_register );
-DEF_INST( add_long_fullword_register );
-DEF_INST( subtract_long_register );
-DEF_INST( subtract_long_fullword_register );
-DEF_INST( add_logical_long );
-DEF_INST( add_logical_long_fullword );
-DEF_INST( add_long );
-DEF_INST( add_long_fullword );
-DEF_INST( subtract_logical_long );
-DEF_INST( subtract_logical_long_fullword );
-DEF_INST( subtract_long );
-DEF_INST( subtract_long_fullword );
-DEF_INST( compare_long_register );
-DEF_INST( compare_long );
-DEF_INST( branch_on_count_long_register );
-DEF_INST( branch_on_count_long );
-DEF_INST( compare_and_swap_long );
-DEF_INST( compare_double_and_swap_long );
-DEF_INST( branch_on_index_high_long );
-DEF_INST( branch_on_index_low_or_equal_long );
-DEF_INST( branch_relative_on_index_high_long );
-DEF_INST( branch_relative_on_index_low_or_equal_long );
-DEF_INST( compare_logical_characters_under_mask_high );
-DEF_INST( store_characters_under_mask_high );
-DEF_INST( insert_characters_under_mask_high );
-DEF_INST( branch_relative_on_condition_long );
-DEF_INST( branch_relative_and_save_long );
-DEF_INST( compare_long_fullword_register );
-DEF_INST( load_positive_long_fullword_register );
-DEF_INST( load_negative_long_fullword_register );
-DEF_INST( load_and_test_long_fullword_register );
-DEF_INST( load_complement_long_fullword_register );
-DEF_INST( load_long_fullword );
-DEF_INST( load_long_halfword );
-DEF_INST( compare_long_fullword );
-DEF_INST( load_logical_long_fullword_register );
-DEF_INST( load_logical_long_fullword );
-DEF_INST( load_logical_long_thirtyone );
-DEF_INST( insert_immediate_high_high );
-DEF_INST( insert_immediate_high_low );
-DEF_INST( insert_immediate_low_high );
-DEF_INST( insert_immediate_low_low );
-DEF_INST( and_immediate_high_high );
-DEF_INST( and_immediate_high_low );
-DEF_INST( and_immediate_low_high );
-DEF_INST( and_immediate_low_low );
-DEF_INST( or_immediate_high_high );
-DEF_INST( or_immediate_high_low );
-DEF_INST( or_immediate_low_high );
-DEF_INST( or_immediate_low_low );
-DEF_INST( load_logical_immediate_high_high );
-DEF_INST( load_logical_immediate_high_low );
-DEF_INST( load_logical_immediate_low_high );
-DEF_INST( load_logical_immediate_low_low );
 
 /* end of OPCODE.H */
