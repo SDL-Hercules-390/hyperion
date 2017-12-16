@@ -22,7 +22,7 @@
 #endif
 #include "cmpsc.h"              // (Master header)
 
-#ifdef FEATURE_COMPRESSION
+#ifdef FEATURE_CMPSC
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -143,7 +143,7 @@ int (CMPSC_FASTCALL ARCH_DEP( cmpsc_Report ))( void* dbg )
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* FEATURE_COMPRESSION */
+#endif /* FEATURE_CMPSC */
 
 #ifndef _GEN_ARCH
   #ifdef _ARCHMODE2

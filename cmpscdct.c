@@ -22,7 +22,7 @@
 #endif
 #include "cmpsc.h"              // (Master header)
 
-#ifdef FEATURE_COMPRESSION
+#ifdef FEATURE_CMPSC
 ///////////////////////////////////////////////////////////////////////////////
 // GetDCT: fetch 8-byte dictionary entry as a 64-bit unsigned integer
 
@@ -297,7 +297,7 @@ U8 (CMPSC_FASTCALL ARCH_DEP( GetSD1 ))( U16 index, SDEBLK* pSDEBLK )
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* FEATURE_COMPRESSION */
+#endif /* FEATURE_CMPSC */
 
 #ifndef _GEN_ARCH
   #ifdef _ARCHMODE2

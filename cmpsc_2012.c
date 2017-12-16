@@ -55,7 +55,7 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 #endif
 #include "cmpsc.h"                                // (Master header for both)
 
-#ifdef FEATURE_COMPRESSION
+#ifdef FEATURE_CMPSC
 ///////////////////////////////////////////////////////////////////////////////
 // Symbols Cache Control Entry
 
@@ -1257,7 +1257,7 @@ static const U32 g_nDictSize[ MAX_CDSS ] =
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif /* FEATURE_COMPRESSION */
+#endif /* FEATURE_CMPSC */
 
 #ifndef _GEN_ARCH
   #ifdef _ARCHMODE2

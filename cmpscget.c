@@ -22,7 +22,7 @@
 #endif
 #include "cmpsc.h"              // (Master header)
 
-#ifdef FEATURE_COMPRESSION
+#ifdef FEATURE_CMPSC
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXPANSION: Get Next input SRC Index.
@@ -595,7 +595,7 @@ GetIndex** ARCH_DEP( Get8IndexCDSSTab )[5] = { ARCH_DEP( Get8IndexTab09 ),
                                                ARCH_DEP( Get8IndexTab13 ) };
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* FEATURE_COMPRESSION */
+#endif /* FEATURE_CMPSC */
 
 #ifndef _GEN_ARCH
   #ifdef _ARCHMODE2

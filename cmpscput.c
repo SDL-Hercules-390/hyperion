@@ -22,7 +22,7 @@
 #endif
 #include "cmpsc.h"              // (Master header)
 
-#ifdef FEATURE_COMPRESSION
+#ifdef FEATURE_CMPSC
 
 ///////////////////////////////////////////////////////////////////////////////
 // COMPRESSION: Put Next output DST Index
@@ -525,7 +525,7 @@ PutGetCBN* ARCH_DEP( PutGetCBNTab )[5] = { ARCH_DEP( PutGetCBN09 ),
                                            ARCH_DEP( PutGetCBN13 ) };
 
 ///////////////////////////////////////////////////////////////////////////////
-#endif /* FEATURE_COMPRESSION */
+#endif /* FEATURE_CMPSC */
 
 #ifndef _GEN_ARCH
   #ifdef _ARCHMODE2
