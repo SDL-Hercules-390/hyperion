@@ -1215,44 +1215,44 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 DEF_INST(execute_opcode_e3________xx)
 {
-  regs->ARCH_DEP(runtime_opcode_e3________xx)[inst[5]](inst, regs);
+  regs->ARCH_DEP( runtime_opcode_e3________xx )[inst[5]](inst, regs);
 }
 
 #ifdef OPTION_OPTINST
 DEF_INST(E3_0)
 {
-  regs->ARCH_DEP(runtime_opcode_e3_0______xx)[inst[5]](inst, regs);
+  regs->ARCH_DEP( runtime_opcode_e3_0______xx )[inst[5]](inst, regs);
 }
 #endif
 
 DEF_INST(execute_opcode_eb________xx)
 {
-  regs->ARCH_DEP(runtime_opcode_eb________xx)[inst[5]](inst, regs);
+  regs->ARCH_DEP( runtime_opcode_eb________xx )[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_opcode_ec________xx)
 {
-  regs->ARCH_DEP(runtime_opcode_ec________xx)[inst[5]](inst, regs);
+  regs->ARCH_DEP( runtime_opcode_ec________xx )[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_opcode_ed________xx)
 {
-  regs->ARCH_DEP(runtime_opcode_ed________xx)[inst[5]](inst, regs);
+  regs->ARCH_DEP( runtime_opcode_ed________xx )[inst[5]](inst, regs);
 }
 
 
 DEF_INST(operation_exception)
 {
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
-    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
+    ARCH_DEP( program_interrupt )(regs, PGM_OPERATION_EXCEPTION);
 }
 
 
 DEF_INST(dummy_instruction)
 {
-//  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
+//  logmsg(_("Dummy instruction: ")); ARCH_DEP( display_inst ) (regs, inst);
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
 

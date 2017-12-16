@@ -214,7 +214,7 @@ int used; \
     if(!used) \
     { \
     WRMSG(HHC02292, "I", "First use"); \
-    ARCH_DEP(display_inst) ((_regs), (_inst)); \
+    ARCH_DEP( display_inst ) ((_regs), (_inst)); \
     } \
 } while(0)
 
@@ -340,7 +340,7 @@ do { \
 #define INSTRUCTION_FETCH(_regs, _exec) \
   likely(_VALID_IP((_regs),(_exec))) \
   ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
-  : ARCH_DEP(instfetch) ((_regs), (_exec))
+  : ARCH_DEP( instfetch ) ((_regs), (_exec))
 
 /* Instruction execution */
 
@@ -555,6 +555,7 @@ do { \
 /* Virtual Architecture Level Set Facility */
 #define FACILITY_ENABLED(_faci, _regs) \
         (((_regs)->facility_list[((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+
 #define FACILITY_ENABLED_DEV(_faci) \
         ((sysblk.facility_list[sysblk.arch_mode][((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
@@ -577,13 +578,13 @@ do { \
   (((_addr2) >= ((_low) & MAXADDRESS)) || (_addr1) <= ((_high) & MAXADDRESS)) )
 
 #ifdef WORDS_BIGENDIAN
- #define CSWAP16(_x) (_x)
- #define CSWAP32(_x) (_x)
- #define CSWAP64(_x) (_x)
+ #define CSWAP16(_x)    (_x)
+ #define CSWAP32(_x)    (_x)
+ #define CSWAP64(_x)    (_x)
 #else
- #define CSWAP16(_x) bswap_16(_x)
- #define CSWAP32(_x) bswap_32(_x)
- #define CSWAP64(_x) bswap_64(_x)
+ #define CSWAP16(_x)    bswap_16(_x)
+ #define CSWAP32(_x)    bswap_32(_x)
+ #define CSWAP64(_x)    bswap_64(_x)
 #endif
 
 #define FETCH_HW(_value, _storage)   (_value) = fetch_hw(_storage)
@@ -889,19 +890,18 @@ do { \
  * FIXME: Synchronization, esp for the CHANGE bit, should
  * be tighter than what is provided here.
  */
-
 #define STORKEY_INVALIDATE(_regs, _n) \
  do { \
    BYTE *mn; \
    mn = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK); \
-   ARCH_DEP(invalidate_tlbe)((_regs), mn); \
+   ARCH_DEP( invalidate_tlbe )((_regs), mn); \
    if (sysblk.cpus > 1) { \
      int i; \
      OBTAIN_INTLOCK ((_regs)); \
      for (i = 0; i < sysblk.hicpu; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
          if ( sysblk.waiting_mask & CPU_BIT(i) ) \
-           ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], mn); \
+           ARCH_DEP( invalidate_tlbe )(sysblk.regs[i], mn); \
          else { \
            ON_IC_INTERRUPT(sysblk.regs[i]); \
            if (!sysblk.regs[i]->invalidate) { \
@@ -918,10 +918,10 @@ do { \
 
 #if defined( INLINE_STORE_FETCH_ADDR_CHECK )
  #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \
-  ARCH_DEP(fetch_main_absolute)((_addr), (_regs), (_len))
+  ARCH_DEP( fetch_main_absolute )((_addr), (_regs), (_len))
 #else
  #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \
-  ARCH_DEP(fetch_main_absolute)((_addr), (_regs))
+  ARCH_DEP( fetch_main_absolute )((_addr), (_regs))
 #endif
 
 #define INST_UPDATE_PSW(_regs, _len, _ilc) \
@@ -930,9 +930,8 @@ do { \
             if (_ilc) (_regs)->psw.ilc = (_ilc); \
         } while(0)
 
-/* Instruction decoders */
-
-/*
+/*                    Instruction decoders
+ *
  * A decoder is placed at the start of each instruction. The purpose
  * of a decoder is to extract the operand fields according to the
  * instruction format; to increment the instruction address (IA) field
@@ -951,7 +950,6 @@ do { \
  * "branch" type operations where updating the PSW IA to IA+ILC
  * should only be done after the branch is deemed impossible.
  */
-
 #undef DECODER_TEST_RRE
 #define DECODER_TEST_RRF_R
 #define DECODER_TEST_RRF_M
@@ -2771,11 +2769,11 @@ do { \
 #if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
 
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
-    ARCH_DEP(translate_addr)((_addr), (_arn), (_regs), (_acctype))
+    ARCH_DEP( translate_addr )((_addr), (_arn), (_regs), (_acctype))
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    ARCH_DEP(logical_to_main)((_addr), (_arn), (_regs), (_acctype), (_akey)), \
+    ARCH_DEP( logical_to_main )((_addr), (_arn), (_regs), (_acctype), (_akey)), \
     (_regs)->dat.aaddr \
   )
 
@@ -2831,18 +2829,13 @@ do { \
 
 
 #undef SIE_XC_INTERCEPT
-
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
-
-#define SIE_XC_INTERCEPT(_regs) \
+  #define SIE_XC_INTERCEPT(_regs) \
     if(SIE_STATB((_regs), MX, XC)) \
-        SIE_INTERCEPT((_regs))
-
-#else /*!defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )*/
-
-#define SIE_XC_INTERCEPT(_regs)
-
-#endif /*!defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )*/
+       SIE_INTERCEPT((_regs))
+#else
+  #define SIE_XC_INTERCEPT(_regs)
+#endif
 
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
@@ -2948,14 +2941,16 @@ do { \
 
 #endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
-#define PERFORM_SERIALIZATION(_regs) do { } while (0)
-#define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
+#define PERFORM_SERIALIZATION(_regs)    do{}while(0)
+#define PERFORM_CHKPT_SYNC(_regs)       do{}while(0)
 
 /* Functions in module channel.c */
-int  ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb);
+int  ARCH_DEP( startio ) (REGS *regs, DEVBLK *dev, ORB *orb);
+
 void *s370_execute_ccw_chain (void *dev);
 void *s390_execute_ccw_chain (void *dev);
 void *z900_execute_ccw_chain (void *dev);
+
 int  stchan_id (REGS *regs, U16 chan);
 int  testch (REGS *regs, U16 chan);
 int  testio (REGS *regs, DEVBLK *dev, BYTE ibyte);
@@ -2965,10 +2960,10 @@ void clear_subchan (REGS *regs, DEVBLK *dev);
 int  halt_subchan (REGS *regs, DEVBLK *dev);
 int  haltio (REGS *regs, DEVBLK *dev, BYTE ibyte);
 int  resume_subchan (REGS *regs, DEVBLK *dev);
-int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
-        U32 *ioparm, U32 *iointid, BYTE *csw);
-int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
-                                              U32 *iointid, BYTE zone);
+
+int  ARCH_DEP( present_io_interrupt ) (REGS *regs, U32 *ioid, U32 *ioparm, U32 *iointid, BYTE *csw);
+int  ARCH_DEP( present_zone_io_interrupt ) (U32 *ioid, U32 *ioparm, U32 *iointid, BYTE zone);
+
 void io_reset (void);
 int  chp_reset(BYTE chpid, int solicited);
 void channelset_reset(REGS *regs);
@@ -2976,17 +2971,20 @@ void channelset_reset(REGS *regs);
 
 /* Functions in module cpu.c */
 /* define all arch_load|store_psw */
-/* regardless of current architecture (if any) */
+/* regardless of current architecture (if any)
+*/
 #if defined( _370 )
 void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
 void s370_process_trace (REGS *regs);
 #endif
+
 #if defined( _390 )
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
 void s390_process_trace (REGS *regs);
 #endif
+
 #if defined( _900 )
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
@@ -2994,8 +2992,8 @@ void z900_process_trace (REGS *regs);
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
-void ARCH_DEP(perform_io_interrupt) (REGS *regs);
-void ARCH_DEP(checkstop_config)(void);
+void ARCH_DEP( perform_io_interrupt ) (REGS *regs);
+void ARCH_DEP( checkstop_config )(void);
 
 #if defined( _FEATURE_SIE )
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
@@ -3005,7 +3003,7 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int co
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
 #endif
 
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt )) (REGS *regs, int code);
 void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 int display_psw (REGS *regs, char *buf, int buflen);
@@ -3013,24 +3011,24 @@ char *str_psw (REGS *regs, char *buf);
 
 
 /* Functions in module vm.c */
-int  ARCH_DEP(diag_devtype) (int r1, int r2, REGS *regs);
-int  ARCH_DEP(syncblk_io) (int r1, int r2, REGS *regs);
-int  ARCH_DEP(syncgen_io) (int r1, int r2, REGS *regs);
-void ARCH_DEP(extid_call) (int r1, int r2, REGS *regs);
-int  ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs);
-void ARCH_DEP(pseudo_timer) (U32 code, int r1, int r2, REGS *regs);
-void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs);
-int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
-void ARCH_DEP(vm_info) (int r1, int r2, REGS *regs);
-int  ARCH_DEP(device_info) (int r1, int r2, REGS *regs);
+int  ARCH_DEP( diag_devtype )      (     int r1, int r2, REGS *regs);
+int  ARCH_DEP( syncblk_io )        (     int r1, int r2, REGS *regs);
+int  ARCH_DEP( syncgen_io )        (     int r1, int r2, REGS *regs);
+void ARCH_DEP( extid_call )        (     int r1, int r2, REGS *regs);
+int  ARCH_DEP( cpcmd_call )        (     int r1, int r2, REGS *regs);
+int  ARCH_DEP( diag_ppagerel )     (     int r1, int r2, REGS *regs);
+void ARCH_DEP( vm_info )           (     int r1, int r2, REGS *regs);
+int  ARCH_DEP( device_info )       (     int r1, int r2, REGS *regs);
+void ARCH_DEP( access_reipl_data ) (     int r1, int r2, REGS *regs);
+void ARCH_DEP( pseudo_timer ) (U32 code, int r1, int r2, REGS *regs);
 
 
 /* Functions in module vmd250.c */
-int  ARCH_DEP(vm_blockio) (int r1, int r2, REGS *regs);
+int  ARCH_DEP( vm_blockio ) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module control.c */
-void ARCH_DEP(load_real_address_proc) (REGS *regs,
+void ARCH_DEP( load_real_address_proc ) (REGS *regs,
     int r1, int b2, VADR effective_addr2);
 
 
@@ -3041,75 +3039,77 @@ void binary_to_packed (S64 bin, BYTE *result);
 
 
 /* Functions in module diagnose.c */
-void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2, int r1, int r3,
-    REGS *regs);
+void ARCH_DEP( diagnose_call ) (VADR effective_addr2, int b2, int r1, int r3, REGS *regs);
 
 
 /* Functions in module diagmssf.c */
-void ARCH_DEP(scpend_call) (void);
-int  ARCH_DEP(mssf_call) (int r1, int r2, REGS *regs);
-void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
-void ARCH_DEP(diag224_call) (int r1, int r2, REGS *regs);
+void ARCH_DEP( scpend_call ) (void);
+int  ARCH_DEP( mssf_call )    (int r1, int r2, REGS *regs);
+void ARCH_DEP( diag204_call ) (int r1, int r2, REGS *regs);
+void ARCH_DEP( diag224_call ) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
-void ARCH_DEP(perform_external_interrupt) (REGS *regs);
-void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
+void ARCH_DEP( perform_external_interrupt ) (REGS *regs);
+void ARCH_DEP( store_status ) (REGS *ssreg, RADR aaddr);
 void store_status (REGS *ssreg, U64 aaddr);
 
+
 /* Function in module hdiagf18.c */
-void ARCH_DEP(diagf18_call) (int r1, int r2, REGS *regs);
+void ARCH_DEP( diagf18_call ) (int r1, int r2, REGS *regs);
 
 /* Functions in module ipl.c */
-int          load_ipl           (U16 lcss, U16  devnum, int cpu, int clear);
-int ARCH_DEP(load_ipl)          (U16 lcss, U16  devnum, int cpu, int clear);
-int          system_reset       (const int cpu, const int flags, const int target_mode);
-int ARCH_DEP(system_reset)      (const int cpu, const int flags, const int target_mode);
-int          cpu_reset          (REGS *regs);
-int ARCH_DEP(cpu_reset)         (REGS *regs);
-int          initial_cpu_reset  (REGS *regs);
-int ARCH_DEP(initial_cpu_reset) (REGS *regs);
-int ARCH_DEP(common_load_begin)  (int cpu, int clear);
-int ARCH_DEP(common_load_finish) (REGS *regs);
+int           load_ipl             (U16 lcss, U16  devnum, int cpu, int clear);
+int ARCH_DEP( load_ipl )           (U16 lcss, U16  devnum, int cpu, int clear);
+int           system_reset         (const int cpu, const int flags, const int target_mode);
+int ARCH_DEP( system_reset )       (const int cpu, const int flags, const int target_mode);
+int           cpu_reset            (REGS *regs);
+int ARCH_DEP( cpu_reset )          (REGS *regs);
+int           initial_cpu_reset    (REGS *regs);
+int ARCH_DEP( initial_cpu_reset )  (REGS *regs);
+int ARCH_DEP( common_load_begin )  (int cpu, int clear);
+int ARCH_DEP( common_load_finish ) (REGS *regs);
+
 void storage_clear(void);
 void xstorage_clear(void);
 
 
 /* Functions in module scedasd.c */
-void         set_sce_dir        (char *path);
-char        *get_sce_dir        ();
-int          load_main          (char *fname, RADR startloc, int noisy );
-int ARCH_DEP(load_main)         (char *fname, RADR startloc, int noisy );
-int          load_hmc           (char *fname, int cpu, int clear);
-int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
-void ARCH_DEP(sclp_scedio_request) (SCCB_HEADER *);
-void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *);
+void          set_sce_dir            (char *path);
+char         *get_sce_dir            ();
+int           load_main              (char *fname, RADR startloc, int noisy );
+int ARCH_DEP( load_main )            (char *fname, RADR startloc, int noisy );
+int           load_hmc               (char *fname, int cpu, int clear);
+int ARCH_DEP( load_hmc )             (char *fname, int cpu, int clear);
+void ARCH_DEP( sclp_scedio_request ) (SCCB_HEADER *);
+void ARCH_DEP( sclp_scedio_event )   (SCCB_HEADER *);
 
 
 /* Functions in module scescsi.c */
-void ARCH_DEP(sclp_hwl_request) (SCCB_HEADER *);
-void ARCH_DEP(sclp_hwl_event) (SCCB_HEADER *);
-void ARCH_DEP(sclp_sdias_request) (SCCB_HEADER *);
-void ARCH_DEP(sclp_sdias_event) (SCCB_HEADER *);
-void ARCH_DEP(sdias_store_status_clear) (REGS *);
-void ARCH_DEP(sdias_store_status) (REGS *);
+void ARCH_DEP( sclp_hwl_request         ) (SCCB_HEADER *);
+void ARCH_DEP( sclp_hwl_event           ) (SCCB_HEADER *);
+void ARCH_DEP( sclp_sdias_request       ) (SCCB_HEADER *);
+void ARCH_DEP( sclp_sdias_event         ) (SCCB_HEADER *);
+void ARCH_DEP( sdias_store_status_clear ) (REGS *);
+void ARCH_DEP( sdias_store_status       ) (REGS *);
+
 int support_boot (DEVBLK *);
 int load_boot (DEVBLK *, int, int, int);
+
 int hwldr_cmd (int, char **, char *);
 int lddev_cmd (int, char **, char *);
 
 
 /* Functions in module machchk.c */
-int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
-    RADR *fsta);
-U32  get_next_channel_report_word( REGS * );
+int  ARCH_DEP( present_mck_interrupt ) (REGS *regs, U64 *mcic, U32 *xdmg, RADR *fsta);
+void ARCH_DEP( sync_mck_interrupt ) (REGS *regs);
 void machine_check_crwpend (void);
-void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
-void sigabend_handler (int signo);
 void build_attach_chrpt( DEVBLK *dev );
 void build_detach_chrpt( DEVBLK *dev );
 void build_chp_reset_chrpt( BYTE chpid, int solicited, int found );
 int  queue_channel_report( U32* crwarray, U32 crwcount );
+U32  get_next_channel_report_word( REGS * );
+void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
@@ -3118,93 +3118,93 @@ void init_opcode_pointers(REGS *regs);
 
 
 /* Functions in module panel.c */
-void ARCH_DEP(display_inst) (REGS *regs, BYTE *inst);
+void ARCH_DEP( display_inst ) (REGS *regs, BYTE *inst);
 void display_inst (REGS *regs, BYTE *inst);
 
 
 /* Functions in module sie.c */
-void ARCH_DEP(sie_exit) (REGS *regs, int code);
-void ARCH_DEP(diagnose_002) (REGS *regs, int r1, int r3);
+void ARCH_DEP( sie_exit ) (REGS *regs, int code);
+void ARCH_DEP( diagnose_002 ) (REGS *regs, int r1, int r3);
 
 
 /* Functions in module stack.c */
-void ARCH_DEP(trap_x) (int trap_is_trap4, REGS *regs, U32 trap_operand);
-void ARCH_DEP(form_stack_entry) (BYTE etype, VADR retna, VADR calla,
+void ARCH_DEP( trap_x ) (int trap_is_trap4, REGS *regs, U32 trap_operand);
+void ARCH_DEP( form_stack_entry ) (BYTE etype, VADR retna, VADR calla,
     U32 csi, U32 pcnum, REGS *regs);
-VADR ARCH_DEP(locate_stack_entry) (int prinst, LSED *lsedptr,
+VADR ARCH_DEP( locate_stack_entry ) (int prinst, LSED *lsedptr,
     REGS *regs);
-void ARCH_DEP(stack_modify) (VADR lsea, U32 m1, U32 m2, REGS *regs);
-void ARCH_DEP(stack_extract) (VADR lsea, int r1, int code, REGS *regs);
-void ARCH_DEP(unstack_registers) (int gtype, VADR lsea, int r1,
+void ARCH_DEP( stack_modify ) (VADR lsea, U32 m1, U32 m2, REGS *regs);
+void ARCH_DEP( stack_extract ) (VADR lsea, int r1, int code, REGS *regs);
+void ARCH_DEP( unstack_registers ) (int gtype, VADR lsea, int r1,
     int r2, REGS *regs);
-int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc);
+int  ARCH_DEP( program_return_unstack ) (REGS *regs, RADR *lsedap, int *rc);
 
 
 /* Functions in module trace.c */
-CREG  ARCH_DEP(trace_br) (int amode, VADR ia, REGS *regs);
+CREG  ARCH_DEP( trace_br ) (int amode, VADR ia, REGS *regs);
 
 #if defined( _FEATURE_ZSIE )
 U32  s390_trace_br (int amode, U32 ia, REGS *regs);
 #endif
 
-CREG  ARCH_DEP(trace_bsg) (U32 alet, VADR ia, REGS *regs);
-CREG  ARCH_DEP(trace_ssar) (int ssair, U16 sasn, REGS *regs);
-CREG  ARCH_DEP(trace_pc) (U32 pcea, REGS *regs);
-CREG  ARCH_DEP(trace_pr) (REGS *newregs, REGS *regs);
-CREG  ARCH_DEP(trace_pt) (int pti, U16 pasn, GREG gpr2, REGS *regs);
-CREG  ARCH_DEP(trace_tr) (int r1, int r3, U32 op, REGS *regs);
-CREG  ARCH_DEP(trace_tg) (int r1, int r3, U32 op, REGS *regs);
-CREG  ARCH_DEP(trace_ms) (int br_ind, VADR ia, REGS *regs);
+CREG  ARCH_DEP( trace_bsg  ) (U32 alet, VADR ia, REGS *regs);
+CREG  ARCH_DEP( trace_ssar ) (int ssair, U16 sasn, REGS *regs);
+CREG  ARCH_DEP( trace_pc   ) (U32 pcea, REGS *regs);
+CREG  ARCH_DEP( trace_pr   ) (REGS *newregs, REGS *regs);
+CREG  ARCH_DEP( trace_pt   ) (int pti, U16 pasn, GREG gpr2, REGS *regs);
+CREG  ARCH_DEP( trace_tr   ) (int r1, int r3, U32 op, REGS *regs);
+CREG  ARCH_DEP( trace_tg   ) (int r1, int r3, U32 op, REGS *regs);
+CREG  ARCH_DEP( trace_ms   ) (int br_ind, VADR ia, REGS *regs);
 
 
 /* Functions in module plo.c */
-int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cl ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_clg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_clgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_clx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cs ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_dcs ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_dcsg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_dcsgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_dcsx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csst ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csstg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csstgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csstx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csdst ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csdstg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csdstgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_csdstx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cstst ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststg) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cststg ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cststgr ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2,
+int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
                             VADR effective_addr4, int b4,  REGS *regs);
 
 
