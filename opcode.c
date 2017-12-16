@@ -83,12 +83,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_000_N3_INSTR_FACILITY ) && !defined( FEATURE_LOAD_REVERSED )
- UNDEF_INST( load_reversed_register )
  UNDEF_INST( load_reversed )
  UNDEF_INST( load_reversed_half )
+ UNDEF_INST( load_reversed_long_register )
+ UNDEF_INST( load_reversed_register )
  UNDEF_INST( store_reversed )
  UNDEF_INST( store_reversed_half )
- UNDEF_INST( load_reversed_long_register )
  UNDEF_INST( store_reversed_long )
 #endif
 
@@ -216,39 +216,39 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 #if !defined( FEATURE_021_EXTENDED_IMMED_FACILITY )               /*@Z9*/
  UNDEF_INST( add_fullword_immediate )                             /*@Z9*/
- UNDEF_INST( add_long_fullword_immediate )                        /*@Z9*/
  UNDEF_INST( add_logical_fullword_immediate )                     /*@Z9*/
  UNDEF_INST( add_logical_long_fullword_immediate )                /*@Z9*/
+ UNDEF_INST( add_long_fullword_immediate )                        /*@Z9*/
  UNDEF_INST( and_immediate_high_fullword )                        /*@Z9*/
  UNDEF_INST( and_immediate_low_fullword )                         /*@Z9*/
  UNDEF_INST( compare_fullword_immediate )                         /*@Z9*/
- UNDEF_INST( compare_long_fullword_immediate )                    /*@Z9*/
  UNDEF_INST( compare_logical_fullword_immediate )                 /*@Z9*/
  UNDEF_INST( compare_logical_long_fullword_immediate )            /*@Z9*/
+ UNDEF_INST( compare_long_fullword_immediate )                    /*@Z9*/
  UNDEF_INST( exclusive_or_immediate_high_fullword )               /*@Z9*/
  UNDEF_INST( exclusive_or_immediate_low_fullword )                /*@Z9*/
+ UNDEF_INST( find_leftmost_one_long_register )                    /*@Z9*/
  UNDEF_INST( insert_immediate_high_fullword )                     /*@Z9*/
  UNDEF_INST( insert_immediate_low_fullword )                      /*@Z9*/
- UNDEF_INST( load_long_fullword_immediate )                       /*@Z9*/
+ UNDEF_INST( load_and_test )                                      /*@Z9*/
+ UNDEF_INST( load_and_test_long )                                 /*@Z9*/
+ UNDEF_INST( load_byte_register )                                 /*@Z9*/
+ UNDEF_INST( load_halfword_register )                             /*@Z9*/
+ UNDEF_INST( load_logical_character )                             /*@Z9*/
+ UNDEF_INST( load_logical_character_register )                    /*@Z9*/
+ UNDEF_INST( load_logical_halfword )                              /*@Z9*/
+ UNDEF_INST( load_logical_halfword_register )                     /*@Z9*/
  UNDEF_INST( load_logical_immediate_high_fullword )               /*@Z9*/
  UNDEF_INST( load_logical_immediate_low_fullword )                /*@Z9*/
+ UNDEF_INST( load_logical_long_character_register )               /*@Z9*/
+ UNDEF_INST( load_logical_long_halfword_register )                /*@Z9*/
+ UNDEF_INST( load_long_byte_register )                            /*@Z9*/
+ UNDEF_INST( load_long_fullword_immediate )                       /*@Z9*/
+ UNDEF_INST( load_long_halfword_register )                        /*@Z9*/
  UNDEF_INST( or_immediate_high_fullword )                         /*@Z9*/
  UNDEF_INST( or_immediate_low_fullword )                          /*@Z9*/
  UNDEF_INST( subtract_logical_fullword_immediate )                /*@Z9*/
  UNDEF_INST( subtract_logical_long_fullword_immediate )           /*@Z9*/
- UNDEF_INST( load_and_test )                                      /*@Z9*/
- UNDEF_INST( load_and_test_long )                                 /*@Z9*/
- UNDEF_INST( load_byte_register )                                 /*@Z9*/
- UNDEF_INST( load_long_byte_register )                            /*@Z9*/
- UNDEF_INST( load_halfword_register )                             /*@Z9*/
- UNDEF_INST( load_long_halfword_register )                        /*@Z9*/
- UNDEF_INST( load_logical_character )                             /*@Z9*/
- UNDEF_INST( load_logical_character_register )                    /*@Z9*/
- UNDEF_INST( load_logical_long_character_register )               /*@Z9*/
- UNDEF_INST( load_logical_halfword )                              /*@Z9*/
- UNDEF_INST( load_logical_halfword_register )                     /*@Z9*/
- UNDEF_INST( load_logical_long_halfword_register )                /*@Z9*/
- UNDEF_INST( find_leftmost_one_long_register )                    /*@Z9*/
 #endif /*!defined( FEATURE_021_EXTENDED_IMMED_FACILITY )*/        /*@Z9*/
 
 
@@ -263,18 +263,18 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_023_HFP_UNNORM_EXT_FACILITY )
- UNDEF_INST( multiply_unnormal_float_long_to_ext_reg )            /*@Z9*/
- UNDEF_INST( multiply_unnormal_float_long_to_ext_low_reg )        /*@Z9*/
- UNDEF_INST( multiply_unnormal_float_long_to_ext_high_reg )       /*@Z9*/
- UNDEF_INST( multiply_add_unnormal_float_long_to_ext_reg )        /*@Z9*/
- UNDEF_INST( multiply_add_unnormal_float_long_to_ext_low_reg )    /*@Z9*/
- UNDEF_INST( multiply_add_unnormal_float_long_to_ext_high_reg )   /*@Z9*/
- UNDEF_INST( multiply_unnormal_float_long_to_ext )                /*@Z9*/
- UNDEF_INST( multiply_unnormal_float_long_to_ext_low )            /*@Z9*/
- UNDEF_INST( multiply_unnormal_float_long_to_ext_high )           /*@Z9*/
  UNDEF_INST( multiply_add_unnormal_float_long_to_ext )            /*@Z9*/
- UNDEF_INST( multiply_add_unnormal_float_long_to_ext_low )        /*@Z9*/
  UNDEF_INST( multiply_add_unnormal_float_long_to_ext_high )       /*@Z9*/
+ UNDEF_INST( multiply_add_unnormal_float_long_to_ext_high_reg )   /*@Z9*/
+ UNDEF_INST( multiply_add_unnormal_float_long_to_ext_low )        /*@Z9*/
+ UNDEF_INST( multiply_add_unnormal_float_long_to_ext_low_reg )    /*@Z9*/
+ UNDEF_INST( multiply_add_unnormal_float_long_to_ext_reg )        /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext )                /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext_high )           /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext_high_reg )       /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext_low )            /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext_low_reg )        /*@Z9*/
+ UNDEF_INST( multiply_unnormal_float_long_to_ext_reg )            /*@Z9*/
 #endif
 
 
@@ -393,30 +393,30 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
- UNDEF_INST( convert_bfp_short_to_u32_reg )                       /*810*/
- UNDEF_INST( convert_bfp_long_to_u32_reg )                        /*810*/
  UNDEF_INST( convert_bfp_ext_to_u32_reg )                         /*810*/
- UNDEF_INST( convert_bfp_short_to_u64_reg )                       /*810*/
- UNDEF_INST( convert_bfp_long_to_u64_reg )                        /*810*/
  UNDEF_INST( convert_bfp_ext_to_u64_reg )                         /*810*/
- UNDEF_INST( convert_u32_to_bfp_short_reg )                       /*810*/
- UNDEF_INST( convert_u32_to_bfp_long_reg )                        /*810*/
- UNDEF_INST( convert_u32_to_bfp_ext_reg )                         /*810*/
- UNDEF_INST( convert_u64_to_bfp_short_reg )                       /*810*/
- UNDEF_INST( convert_u64_to_bfp_long_reg )                        /*810*/
- UNDEF_INST( convert_u64_to_bfp_ext_reg )                         /*810*/
- UNDEF_INST( convert_dfp_long_to_fix32_reg )                      /*810*/
- UNDEF_INST( convert_dfp_long_to_u32_reg )                        /*810*/
- UNDEF_INST( convert_dfp_long_to_u64_reg )                        /*810*/
+ UNDEF_INST( convert_bfp_long_to_u32_reg )                        /*810*/
+ UNDEF_INST( convert_bfp_long_to_u64_reg )                        /*810*/
+ UNDEF_INST( convert_bfp_short_to_u32_reg )                       /*810*/
+ UNDEF_INST( convert_bfp_short_to_u64_reg )                       /*810*/
  UNDEF_INST( convert_dfp_ext_to_fix32_reg )                       /*810*/
  UNDEF_INST( convert_dfp_ext_to_u32_reg )                         /*810*/
  UNDEF_INST( convert_dfp_ext_to_u64_reg )                         /*810*/
- UNDEF_INST( convert_fix32_to_dfp_long_reg )                      /*810*/
+ UNDEF_INST( convert_dfp_long_to_fix32_reg )                      /*810*/
+ UNDEF_INST( convert_dfp_long_to_u32_reg )                        /*810*/
+ UNDEF_INST( convert_dfp_long_to_u64_reg )                        /*810*/
  UNDEF_INST( convert_fix32_to_dfp_ext_reg )                       /*810*/
- UNDEF_INST( convert_u32_to_dfp_long_reg )                        /*810*/
+ UNDEF_INST( convert_fix32_to_dfp_long_reg )                      /*810*/
+ UNDEF_INST( convert_u32_to_bfp_ext_reg )                         /*810*/
+ UNDEF_INST( convert_u32_to_bfp_long_reg )                        /*810*/
+ UNDEF_INST( convert_u32_to_bfp_short_reg )                       /*810*/
  UNDEF_INST( convert_u32_to_dfp_ext_reg )                         /*810*/
- UNDEF_INST( convert_u64_to_dfp_long_reg )                        /*810*/
+ UNDEF_INST( convert_u32_to_dfp_long_reg )                        /*810*/
+ UNDEF_INST( convert_u64_to_bfp_ext_reg )                         /*810*/
+ UNDEF_INST( convert_u64_to_bfp_long_reg )                        /*810*/
+ UNDEF_INST( convert_u64_to_bfp_short_reg )                       /*810*/
  UNDEF_INST( convert_u64_to_dfp_ext_reg )                         /*810*/
+ UNDEF_INST( convert_u64_to_dfp_long_reg )                        /*810*/
  UNDEF_INST( set_bfp_rounding_mode_3bit )                         /*810*/
 #endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
 
@@ -668,10 +668,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
- UNDEF_INST( perform_cryptographic_computation )                  /*810*/
  UNDEF_INST( cipher_message_with_cipher_feedback )                /*810*/
  UNDEF_INST( cipher_message_with_output_feedback )                /*810*/
  UNDEF_INST( cipher_message_with_counter )                        /*810*/
+ UNDEF_INST( perform_cryptographic_computation )                  /*810*/
 #endif
 
 
@@ -680,20 +680,20 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 /*-------------------------------------------------------------------*/
 
 #if !defined( FEATURE_ACCESS_REGISTERS )
- UNDEF_INST( load_access_multiple )
- UNDEF_INST( store_access_multiple )
- UNDEF_INST( purge_accesslist_lookaside_buffer )
- UNDEF_INST( test_access )
  UNDEF_INST( copy_access )
- UNDEF_INST( set_access_register )
  UNDEF_INST( extract_access_register )
+ UNDEF_INST( load_access_multiple )
+ UNDEF_INST( purge_accesslist_lookaside_buffer )
+ UNDEF_INST( set_access_register )
+ UNDEF_INST( store_access_multiple )
+ UNDEF_INST( test_access )
 #endif
 
 
 #if !defined( FEATURE_BASIC_STORAGE_KEYS )
  UNDEF_INST( insert_storage_key )
- UNDEF_INST( set_storage_key )
  UNDEF_INST( reset_reference_bit )
+ UNDEF_INST( set_storage_key )
 #endif
 
 
@@ -704,11 +704,11 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_BINARY_FLOATING_POINT )
- UNDEF_INST( store_fpc )
- UNDEF_INST( load_fpc )
- UNDEF_INST( set_fpc )
  UNDEF_INST( extract_fpc )
+ UNDEF_INST( load_fpc )
  UNDEF_INST( set_bfp_rounding_mode_2bit )
+ UNDEF_INST( set_fpc )
+ UNDEF_INST( store_fpc )
 #endif
 
 
@@ -887,27 +887,27 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 #if !defined( FEATURE_ECPSVM )
  UNDEF_INST( ecpsvm_basic_freex )
  UNDEF_INST( ecpsvm_basic_fretx )
- UNDEF_INST( ecpsvm_lock_page )
- UNDEF_INST( ecpsvm_unlock_page )
- UNDEF_INST( ecpsvm_decode_next_ccw )
- UNDEF_INST( ecpsvm_free_ccwstor )
- UNDEF_INST( ecpsvm_locate_vblock )
- UNDEF_INST( ecpsvm_disp1 )
- UNDEF_INST( ecpsvm_tpage )
- UNDEF_INST( ecpsvm_tpage_lock )
- UNDEF_INST( ecpsvm_inval_segtab )
- UNDEF_INST( ecpsvm_inval_ptable )
- UNDEF_INST( ecpsvm_decode_first_ccw )
- UNDEF_INST( ecpsvm_dispatch_main )
- UNDEF_INST( ecpsvm_locate_rblock )
  UNDEF_INST( ecpsvm_comm_ccwproc )
- UNDEF_INST( ecpsvm_unxlate_ccw )
+ UNDEF_INST( ecpsvm_decode_first_ccw )
+ UNDEF_INST( ecpsvm_decode_next_ccw )
+ UNDEF_INST( ecpsvm_disp1 )
  UNDEF_INST( ecpsvm_disp2 )
- UNDEF_INST( ecpsvm_store_level )
- UNDEF_INST( ecpsvm_loc_chgshrpg )
+ UNDEF_INST( ecpsvm_dispatch_main )
  UNDEF_INST( ecpsvm_extended_freex )
  UNDEF_INST( ecpsvm_extended_fretx )
+ UNDEF_INST( ecpsvm_free_ccwstor )
+ UNDEF_INST( ecpsvm_inval_ptable )
+ UNDEF_INST( ecpsvm_inval_segtab )
+ UNDEF_INST( ecpsvm_loc_chgshrpg )
+ UNDEF_INST( ecpsvm_locate_rblock )
+ UNDEF_INST( ecpsvm_locate_vblock )
+ UNDEF_INST( ecpsvm_lock_page )
  UNDEF_INST( ecpsvm_prefmach_assist )
+ UNDEF_INST( ecpsvm_store_level )
+ UNDEF_INST( ecpsvm_tpage )
+ UNDEF_INST( ecpsvm_tpage_lock )
+ UNDEF_INST( ecpsvm_unlock_page )
+ UNDEF_INST( ecpsvm_unxlate_ccw )
 #endif /*!defined( FEATURE_ECPSVM )*/
 
 
@@ -936,9 +936,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_EXTENDED_TRANSLATION_FACILITY_1 )
- UNDEF_INST( translate_extended )
- UNDEF_INST( convert_utf16_to_utf8 )
  UNDEF_INST( convert_utf8_to_utf16 )
+ UNDEF_INST( convert_utf16_to_utf8 )
+ UNDEF_INST( translate_extended )
 #endif
 
 
@@ -955,105 +955,105 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
- UNDEF_INST( load_positive_float_long_reg )
- UNDEF_INST( load_negative_float_long_reg )
- UNDEF_INST( load_and_test_float_long_reg )
- UNDEF_INST( load_complement_float_long_reg )
- UNDEF_INST( halve_float_long_reg )
- UNDEF_INST( load_rounded_float_long_reg )
- UNDEF_INST( multiply_float_ext_reg )
- UNDEF_INST( multiply_float_long_to_ext_reg )
- UNDEF_INST( load_float_long_reg )
- UNDEF_INST( compare_float_long_reg )
- UNDEF_INST( add_float_long_reg )
- UNDEF_INST( subtract_float_long_reg )
- UNDEF_INST( multiply_float_long_reg )
- UNDEF_INST( divide_float_long_reg )
- UNDEF_INST( add_unnormal_float_long_reg )
- UNDEF_INST( subtract_unnormal_float_long_reg )
- UNDEF_INST( load_positive_float_short_reg )
- UNDEF_INST( load_negative_float_short_reg )
- UNDEF_INST( load_and_test_float_short_reg )
- UNDEF_INST( load_complement_float_short_reg )
- UNDEF_INST( halve_float_short_reg )
- UNDEF_INST( load_rounded_float_short_reg )
  UNDEF_INST( add_float_ext_reg )
- UNDEF_INST( subtract_float_ext_reg )
- UNDEF_INST( load_float_short_reg )
- UNDEF_INST( compare_float_short_reg )
- UNDEF_INST( add_float_short_reg )
- UNDEF_INST( subtract_float_short_reg )
- UNDEF_INST( multiply_float_short_to_long_reg )
- UNDEF_INST( divide_float_short_reg )
- UNDEF_INST( add_unnormal_float_short_reg )
- UNDEF_INST( subtract_unnormal_float_short_reg )
- UNDEF_INST( store_float_long )
- UNDEF_INST( multiply_float_long_to_ext )
- UNDEF_INST( load_float_long )
- UNDEF_INST( compare_float_long )
  UNDEF_INST( add_float_long )
- UNDEF_INST( subtract_float_long )
- UNDEF_INST( multiply_float_long )
- UNDEF_INST( divide_float_long )
- UNDEF_INST( add_unnormal_float_long )
- UNDEF_INST( subtract_unnormal_float_long )
- UNDEF_INST( store_float_short )
- UNDEF_INST( load_float_short )
- UNDEF_INST( compare_float_short )
+ UNDEF_INST( add_float_long_reg )
  UNDEF_INST( add_float_short )
- UNDEF_INST( subtract_float_short )
- UNDEF_INST( multiply_float_short_to_long )
- UNDEF_INST( divide_float_short )
+ UNDEF_INST( add_float_short_reg )
+ UNDEF_INST( add_unnormal_float_long )
+ UNDEF_INST( add_unnormal_float_long_reg )
  UNDEF_INST( add_unnormal_float_short )
- UNDEF_INST( subtract_unnormal_float_short )
+ UNDEF_INST( add_unnormal_float_short_reg )
+ UNDEF_INST( compare_float_long )
+ UNDEF_INST( compare_float_long_reg )
+ UNDEF_INST( compare_float_short )
+ UNDEF_INST( compare_float_short_reg )
  UNDEF_INST( divide_float_ext_reg )
+ UNDEF_INST( divide_float_long )
+ UNDEF_INST( divide_float_long_reg )
+ UNDEF_INST( divide_float_short )
+ UNDEF_INST( divide_float_short_reg )
+ UNDEF_INST( halve_float_long_reg )
+ UNDEF_INST( halve_float_short_reg )
+ UNDEF_INST( load_and_test_float_long_reg )
+ UNDEF_INST( load_and_test_float_short_reg )
+ UNDEF_INST( load_complement_float_long_reg )
+ UNDEF_INST( load_complement_float_short_reg )
+ UNDEF_INST( load_float_long )
+ UNDEF_INST( load_float_long_reg )
+ UNDEF_INST( load_float_short )
+ UNDEF_INST( load_float_short_reg )
+ UNDEF_INST( load_negative_float_long_reg )
+ UNDEF_INST( load_negative_float_short_reg )
+ UNDEF_INST( load_positive_float_long_reg )
+ UNDEF_INST( load_positive_float_short_reg )
+ UNDEF_INST( load_rounded_float_long_reg )
+ UNDEF_INST( load_rounded_float_short_reg )
+ UNDEF_INST( multiply_float_ext_reg )
+ UNDEF_INST( multiply_float_long )
+ UNDEF_INST( multiply_float_long_reg )
+ UNDEF_INST( multiply_float_long_to_ext )
+ UNDEF_INST( multiply_float_long_to_ext_reg )
+ UNDEF_INST( multiply_float_short_to_long )
+ UNDEF_INST( multiply_float_short_to_long_reg )
+ UNDEF_INST( store_float_long )
+ UNDEF_INST( store_float_short )
+ UNDEF_INST( subtract_float_ext_reg )
+ UNDEF_INST( subtract_float_long )
+ UNDEF_INST( subtract_float_long_reg )
+ UNDEF_INST( subtract_float_short )
+ UNDEF_INST( subtract_float_short_reg )
+ UNDEF_INST( subtract_unnormal_float_long )
+ UNDEF_INST( subtract_unnormal_float_long_reg )
+ UNDEF_INST( subtract_unnormal_float_short )
+ UNDEF_INST( subtract_unnormal_float_short_reg )
 #endif /*!defined( FEATURE_HEXADECIMAL_FLOATING_POINT )*/
 
 
 #if !defined( FEATURE_HFP_EXTENSIONS )
- UNDEF_INST( load_lengthened_float_short_to_long_reg )
- UNDEF_INST( load_lengthened_float_long_to_ext_reg )
- UNDEF_INST( load_lengthened_float_short_to_ext_reg )
- UNDEF_INST( squareroot_float_ext_reg )
- UNDEF_INST( multiply_float_short_reg )
- UNDEF_INST( load_positive_float_ext_reg )
- UNDEF_INST( load_negative_float_ext_reg )
+ UNDEF_INST( compare_float_ext_reg )
+ UNDEF_INST( convert_fixed_to_float_ext_reg )
+ UNDEF_INST( convert_fixed_to_float_long_reg )
+ UNDEF_INST( convert_fixed_to_float_short_reg )
+ UNDEF_INST( convert_float_ext_to_fixed_reg )
+ UNDEF_INST( convert_float_long_to_fixed_reg )
+ UNDEF_INST( convert_float_short_to_fixed_reg )
  UNDEF_INST( load_and_test_float_ext_reg )
  UNDEF_INST( load_complement_float_ext_reg )
- UNDEF_INST( load_rounded_float_ext_to_short_reg )
  UNDEF_INST( load_fp_int_float_ext_reg )
- UNDEF_INST( compare_float_ext_reg )
- UNDEF_INST( load_fp_int_float_short_reg )
  UNDEF_INST( load_fp_int_float_long_reg )
- UNDEF_INST( convert_fixed_to_float_short_reg )
- UNDEF_INST( convert_fixed_to_float_long_reg )
- UNDEF_INST( convert_fixed_to_float_ext_reg )
- UNDEF_INST( convert_float_short_to_fixed_reg )
- UNDEF_INST( convert_float_long_to_fixed_reg )
- UNDEF_INST( convert_float_ext_to_fixed_reg )
- UNDEF_INST( load_lengthened_float_short_to_long )
+ UNDEF_INST( load_fp_int_float_short_reg )
  UNDEF_INST( load_lengthened_float_long_to_ext )
+ UNDEF_INST( load_lengthened_float_long_to_ext_reg )
  UNDEF_INST( load_lengthened_float_short_to_ext )
- UNDEF_INST( squareroot_float_short )
- UNDEF_INST( squareroot_float_long )
+ UNDEF_INST( load_lengthened_float_short_to_ext_reg )
+ UNDEF_INST( load_lengthened_float_short_to_long )
+ UNDEF_INST( load_lengthened_float_short_to_long_reg )
+ UNDEF_INST( load_negative_float_ext_reg )
+ UNDEF_INST( load_positive_float_ext_reg )
+ UNDEF_INST( load_rounded_float_ext_to_short_reg )
  UNDEF_INST( multiply_float_short )
+ UNDEF_INST( multiply_float_short_reg )
+ UNDEF_INST( squareroot_float_ext_reg )
+ UNDEF_INST( squareroot_float_long )
+ UNDEF_INST( squareroot_float_short )
 #endif /*!defined( FEATURE_HFP_EXTENSIONS )*/
 
 
 #if !defined( FEATURE_IMMEDIATE_AND_RELATIVE )
- UNDEF_INST( test_under_mask_high )
- UNDEF_INST( test_under_mask_low )
- UNDEF_INST( branch_relative_on_condition )
- UNDEF_INST( branch_relative_and_save )
- UNDEF_INST( branch_relative_on_count )
- UNDEF_INST( load_halfword_immediate )
  UNDEF_INST( add_halfword_immediate )
- UNDEF_INST( multiply_halfword_immediate )
- UNDEF_INST( compare_halfword_immediate )
- UNDEF_INST( multiply_single_register )
- UNDEF_INST( multiply_single )
+ UNDEF_INST( branch_relative_and_save )
+ UNDEF_INST( branch_relative_on_condition )
+ UNDEF_INST( branch_relative_on_count )
  UNDEF_INST( branch_relative_on_index_high )
  UNDEF_INST( branch_relative_on_index_low_or_equal )
+ UNDEF_INST( compare_halfword_immediate )
+ UNDEF_INST( load_halfword_immediate )
+ UNDEF_INST( multiply_halfword_immediate )
+ UNDEF_INST( multiply_single )
+ UNDEF_INST( multiply_single_register )
+ UNDEF_INST( test_under_mask_high )
+ UNDEF_INST( test_under_mask_low )
 #endif /*!defined( FEATURE_IMMEDIATE_AND_RELATIVE )*/
 
 
@@ -1069,9 +1069,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 #if !defined( FEATURE_LINKAGE_STACK )
  UNDEF_INST( branch_and_stack )
- UNDEF_INST( modify_stacked_state )
  UNDEF_INST( extract_stacked_registers )
  UNDEF_INST( extract_stacked_state )
+ UNDEF_INST( modify_stacked_state )
  UNDEF_INST( program_return )
  UNDEF_INST( trap2 )
  UNDEF_INST( trap4 )
@@ -1126,32 +1126,32 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 
 
 #if !defined( FEATURE_S370_S390_VECTOR_FACILITY )
- UNDEF_INST( v_test_vmr )
+ UNDEF_INST( v_and_to_vmr )
+ UNDEF_INST( v_clear_vr )
  UNDEF_INST( v_complement_vmr )
  UNDEF_INST( v_count_left_zeros_in_vmr )
  UNDEF_INST( v_count_ones_in_vmr )
+ UNDEF_INST( v_exclusive_or_to_vmr )
  UNDEF_INST( v_extract_vct )
  UNDEF_INST( v_extract_vector_modes )
- UNDEF_INST( v_restore_vr )
- UNDEF_INST( v_save_changed_vr )
- UNDEF_INST( v_save_vr )
+ UNDEF_INST( v_load_vct_from_address )
+ UNDEF_INST( v_load_vix_from_address )
  UNDEF_INST( v_load_vmr )
  UNDEF_INST( v_load_vmr_complement )
- UNDEF_INST( v_store_vmr )
- UNDEF_INST( v_and_to_vmr )
  UNDEF_INST( v_or_to_vmr )
- UNDEF_INST( v_exclusive_or_to_vmr )
- UNDEF_INST( v_save_vsr )
- UNDEF_INST( v_save_vmr )
- UNDEF_INST( v_restore_vsr )
- UNDEF_INST( v_restore_vmr )
- UNDEF_INST( v_load_vct_from_address )
- UNDEF_INST( v_clear_vr )
- UNDEF_INST( v_set_vector_mask_mode )
- UNDEF_INST( v_load_vix_from_address )
- UNDEF_INST( v_store_vector_parameters )
- UNDEF_INST( v_save_vac )
  UNDEF_INST( v_restore_vac )
+ UNDEF_INST( v_restore_vmr )
+ UNDEF_INST( v_restore_vr )
+ UNDEF_INST( v_restore_vsr )
+ UNDEF_INST( v_save_changed_vr )
+ UNDEF_INST( v_save_vac )
+ UNDEF_INST( v_save_vmr )
+ UNDEF_INST( v_save_vr )
+ UNDEF_INST( v_save_vsr )
+ UNDEF_INST( v_set_vector_mask_mode )
+ UNDEF_INST( v_store_vector_parameters )
+ UNDEF_INST( v_store_vmr )
+ UNDEF_INST( v_test_vmr )
 #endif /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 
