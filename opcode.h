@@ -4803,6 +4803,8 @@ DEF_INST(58D0);
 DEF_INST(58E0);
 DEF_INST(58F0);
 
+// Branch Relative on Condition
+
 DEF_INST( A714 );
 DEF_INST( A724 );
 DEF_INST( A734 );
@@ -4816,6 +4818,8 @@ DEF_INST( A7C4 );
 DEF_INST( A7D4 );
 DEF_INST( A7E4 );
 DEF_INST( A7F4 );
+
+// Insert Characters Under Mask
 
 DEF_INST( BF_7 );
 DEF_INST( BF_F );
@@ -4882,6 +4886,8 @@ SLRdefgenr2(C);
 SLRdefgenr2(D);
 SLRdefgenr2(E);
 SLRdefgenr2(F);
+
+// Load/Store 64-bit
 
 DEF_INST( E3_0 );
 DEF_INST( E3_0______04 );
