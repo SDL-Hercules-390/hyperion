@@ -55,6 +55,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
 #include "hercules.h"
 #include "opcode.h"
 
+#undef  UNDEF_INST
 #define UNDEF_INST( _x ) \
   static  DEF_INST(_x) { ARCH_DEP( operation_exception )( inst, regs ); }
 
@@ -1164,6 +1165,20 @@ DEF_INST( dummy_instruction )
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
 
+/*-------------------------------------------------------------------*/
+/*             Static instruction disassembly functions              */
+/*              and instruction routing jump tables                  */
+/*-------------------------------------------------------------------*/
+/* Must be compiled *AFTER* all of the above UNDEF_INST an DEF_INST  */
+/* are compiled since each "GENx370x390x900" entry in the opcode     */
+/* routing tables much further below necessarily reference each      */
+/* build architecture's unique ARCH_DEP instruction function name    */
+/* (i.e. z900_add_register, s370_add_register, etc). Thus the below  */
+/* #ifdef test for _GEN_ARCH to prevent compiling this code block    */
+/* until AFTER the above code block is compiled FIRST, for each of   */
+/* the supported build architectures.                                */
+/*-------------------------------------------------------------------*/
+
 #if !defined( _GEN_ARCH )
 
 static zz_func opcode_table[256][GEN_MAXARCH];
@@ -1213,7 +1228,49 @@ static zz_func opcode_E3_0______24[1][GEN_MAXARCH];
 #endif /* OPTION_OPTINST */
 
 /*----------------------------------------------------------------------------*/
-/*    Instruction disassembly functions (used during instruction tracing)     */
+/* Two byte runtime opcode table + 4 6 byte opcode tables                     */
+/*----------------------------------------------------------------------------*/
+
+static zz_func runtime_opcode_xxxx[GEN_ARCHCOUNT][256 * 256];
+
+static zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][256];
+static zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][256];
+static zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][256];
+static zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][256];
+
+#ifdef OPTION_OPTINST
+static zz_func runtime_opcode_e3_0______xx[GEN_ARCHCOUNT][256];
+#endif
+
+/*---------------------------------------------------------------------------*/
+/* Following function will be resolved within the runtime opcode tables and  */
+/* set with function init_opcode_tables.                                     */
+/*---------------------------------------------------------------------------*/
+#define execute_opcode_01xx     operation_exception
+#define execute_opcode_a4xx     operation_exception
+#define execute_opcode_a5_x     operation_exception
+#define execute_opcode_a6xx     operation_exception
+#define execute_opcode_a7_x     operation_exception
+#define execute_opcode_b2xx     operation_exception
+#define execute_opcode_b3xx     operation_exception
+#define execute_opcode_b9xx     operation_exception
+#define execute_opcode_c0_x     operation_exception
+#define execute_opcode_c2_x     operation_exception
+#define execute_opcode_c4_x     operation_exception
+#define execute_opcode_c6_x     operation_exception
+#define execute_opcode_c8_x     operation_exception
+#define execute_opcode_cc_x     operation_exception
+#define execute_opcode_e4xx     operation_exception
+#define execute_opcode_e5xx     operation_exception
+#define execute_opcode_e6xx     operation_exception
+
+/*----------------------------------------------------------------------------*/
+/*                   Instruction Disassembly Functions                        */
+/*                   (used during instruction tracing)                        */
+/*----------------------------------------------------------------------------*/
+/*    Note that the GENx370x390x900 instruction routing table entries         */
+/*    much further below reference the below functions. Therefore all         */
+/*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
 #define DISASM_ROUTE(_table,_route) \
@@ -1249,15 +1306,15 @@ DISASM_ROUTE(edxx,[5])
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
- #define opcode_a4xx    v_opcode_a4xx
+ #define opcode_a4xx        v_opcode_a4xx
  DISASM_ROUTE(  a4xx,[1])
  #undef  opcode_a4xx
 
- #define opcode_a6xx    v_opcode_a6xx
+ #define opcode_a6xx        v_opcode_a6xx
  DISASM_ROUTE(  a6xx,[1])
  #undef  opcode_a6xx
 
- #define opcode_e4xx    v_opcode_e4xx
+ #define opcode_e4xx        v_opcode_e4xx
  DISASM_ROUTE(  e4xx,[1])
  #undef  opcode_e4xx
 
@@ -1736,342 +1793,6 @@ int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_PRINT("%d(%d)",d2,b2)
-
-
-/*----------------------------------------------------------------------------*/
-/* Two byte runtime opcode table + 4 6 byte opcode tables                     */
-/*----------------------------------------------------------------------------*/
-static zz_func runtime_opcode_xxxx[GEN_ARCHCOUNT][256 * 256];
-static zz_func runtime_opcode_e3________xx[GEN_ARCHCOUNT][256];
-static zz_func runtime_opcode_eb________xx[GEN_ARCHCOUNT][256];
-static zz_func runtime_opcode_ec________xx[GEN_ARCHCOUNT][256];
-static zz_func runtime_opcode_ed________xx[GEN_ARCHCOUNT][256];
-
-#ifdef OPTION_OPTINST
-static zz_func runtime_opcode_e3_0______xx[GEN_ARCHCOUNT][256];
-#endif /* #ifdef OPTION_OPTINST */
-
-
-/*----------------------------------------------------------------------------*/
-/* replace_opcode_xx                                                          */
-/*----------------------------------------------------------------------------*/
-static zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
-{
-  int i;
-  zz_func oldinst;
-
-//  logmsg("replace_opcode_xx(%d, %02x)\n", arch, opcode);
-  if(arch < 0 || arch > GEN_ARCHCOUNT)
-    return(NULL);
-  if(opcode < 0 || opcode > 0xff)
-    return(NULL);
-  if(!inst)
-    return(NULL);
-  oldinst = runtime_opcode_xxxx[arch][opcode * 256];
-  for(i = 0; i < 256; i++)
-    runtime_opcode_xxxx[arch][opcode * 256 + i] = inst;
-  return(oldinst);
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* replace_opcode_xxxx                                                       */
-/*---------------------------------------------------------------------------*/
-static zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
-{
-  zz_func oldinst;
-
-//  logmsg("replace_opcode_xxxx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
-  if(arch < 0 || arch >= GEN_ARCHCOUNT)
-    return(NULL);
-  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xff)
-    return(NULL);
-  if(!inst)
-    return(NULL);
-  oldinst = runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2];
-  runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2] = inst;
-  return(oldinst);
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* replace_opcode_xx_x                                                       */
-/*---------------------------------------------------------------------------*/
-static zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
-{
-  int i;
-  zz_func oldinst;
-
-//  logmsg("replace_opcode_xx_x(%d, %02x, %1x)\n", arch, opcode1, opcode2);
-  if(arch < 0 || arch >= GEN_ARCHCOUNT)
-    return(NULL);
-  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xf)
-    return(NULL);
-  if(!inst)
-    return(NULL);
-  oldinst = runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2];
-  for(i = 0; i < 16; i++)
-    runtime_opcode_xxxx[arch][opcode1 * 256 + i * 16 + opcode2] = inst;
-  return(oldinst);
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* replace_opcode_xx________xx                                               */
-/*---------------------------------------------------------------------------*/
-static zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2)
-{
-  zz_func oldinst;
-
-//  logmsg("replace_opcode_xx________xx(%d, %02x, %02x)\n", arch, opcode1, opcode2);
-  if(arch < 0 || arch >= GEN_ARCHCOUNT)
-    return(NULL);
-  if(opcode2 < 0 || opcode2 > 0xff)
-    return(NULL);
-  if(!inst)
-    return(NULL);
-  switch(opcode1)
-  {
-    case 0xe3:
-    {
-      oldinst = runtime_opcode_e3________xx[arch][opcode2];
-      runtime_opcode_e3________xx[arch][opcode2] = inst;
-    }
-    case 0xeb:
-    {
-      oldinst = runtime_opcode_eb________xx[arch][opcode2];
-      runtime_opcode_eb________xx[arch][opcode2] = inst;
-    }
-    case 0xec:
-    {
-      oldinst = runtime_opcode_ec________xx[arch][opcode2];
-      runtime_opcode_ec________xx[arch][opcode2] = inst;
-    }
-    case 0xed:
-    {
-      oldinst = runtime_opcode_ed________xx[arch][opcode2];
-      runtime_opcode_ed________xx[arch][opcode2] = inst;
-    }
-    default:
-    {
-      oldinst = NULL;
-    }
-  }
-  return(oldinst);
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* replace_opcode                                                            */
-/*---------------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
-DLL_EXPORT void *replace_opcode_r(int arch, zz_func inst, int opcode1, int opcode2)
-#else
-void *replace_opcode(int arch, zz_func inst, int opcode1, int opcode2)
-#endif
-{
-//  logmsg("replace_opcode(%d, %02x, %02x)\n", arch, opcode1, opcode2);
-  switch(opcode1)
-  {
-    case 0x01:
-    case 0xa4:
-    case 0xa6:
-    case 0xb2:
-    case 0xb3:
-    case 0xb9:
-    case 0xe4:
-    case 0xe5:
-    case 0xe6:
-    {
-      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
-    }
-    case 0xa5:
-    {
-      if(arch == ARCH_900)
-        return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
-      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
-    }
-    case 0xa7:
-    case 0xc0:
-    case 0xc2:
-    case 0xc4:
-    case 0xc6:
-    case 0xc8:
-    case 0xcc:
-    {
-      return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
-    }
-    case 0xe3:
-    case 0xeb:
-    case 0xec:
-    case 0xed:
-    {
-      return(replace_opcode_xx________xx(arch, inst, opcode1, opcode2));
-    }
-    default:
-    {
-      return(replace_opcode_xx(arch, inst, opcode1));
-    }
-  }
-}
-
-
-/*----------------------------------------------------------------------------*/
-/* init_opcode_tables                                                         */
-/*----------------------------------------------------------------------------*/
-void init_opcode_tables(void)
-{
-  int arch;
-  int bit;
-  int i;
-
-//  logmsg("init_opcode_tables()\n");
-  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
-  {
-    for(i = 0; i < 256; i++)
-      replace_opcode_xx(arch, opcode_table[i][arch], i);
-    for(i = 0; i < 256; i++)
-    {
-      replace_opcode_xxxx(arch, opcode_01xx[i][arch], 0x01, i);
-      if(arch != ARCH_900)
-      {
-        replace_opcode_xxxx(arch, v_opcode_a4xx[i][arch], 0xa4, i);
-        replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
-        replace_opcode_xxxx(arch, v_opcode_a6xx[i][arch], 0xa6, i);
-      }
-      replace_opcode_xxxx(arch, opcode_b2xx[i][arch], 0xb2, i);
-      replace_opcode_xxxx(arch, opcode_b3xx[i][arch], 0xb3, i);
-      replace_opcode_xxxx(arch, opcode_b9xx[i][arch], 0xb9, i);
-      replace_opcode_xx________xx(arch, opcode_e3xx[i][arch], 0xe3, i);
-      if(arch != ARCH_900)
-        replace_opcode_xxxx(arch, v_opcode_e4xx[i][arch], 0xe4, i);
-      replace_opcode_xxxx(arch, opcode_e5xx[i][arch], 0xe5, i);
-      replace_opcode_xxxx(arch, opcode_e6xx[i][arch], 0xe6, i);
-      replace_opcode_xx________xx(arch, opcode_ebxx[i][arch], 0xeb, i);
-      replace_opcode_xx________xx(arch, opcode_ecxx[i][arch], 0xec, i);
-      replace_opcode_xx________xx(arch, opcode_edxx[i][arch], 0xed, i);
-    }
-    for(i = 0; i < 16; i++)
-    {
-      if(arch == ARCH_900)
-        replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
-      replace_opcode_xx_x(arch, opcode_a7_x[i][arch], 0xa7, i);
-      replace_opcode_xx_x(arch, opcode_c0_x[i][arch], 0xc0, i);
-      replace_opcode_xx_x(arch, opcode_c2_x[i][arch], 0xc2, i);
-      replace_opcode_xx_x(arch, opcode_c4_x[i][arch], 0xc4, i);
-      replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
-      replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
-      replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
-    }
-
-#ifdef OPTION_OPTINST
-    for(i = 0; i < 256; i++)
-    {
-      replace_opcode_xxxx(arch, opcode_15__[i][arch], 0x15, i); /* Optimized CLR */
-      replace_opcode_xxxx(arch, opcode_18__[i][arch], 0x18, i); /* Optimized LR */
-      replace_opcode_xxxx(arch, opcode_1E__[i][arch], 0x1e, i); /* Optimized ALR */
-      replace_opcode_xxxx(arch, opcode_1F__[i][arch], 0x1f, i); /* Optimized SLR */
-      replace_opcode_xxxx(arch, opcode_BF_x[0][arch], 0xbf, i); /* Optimized ICM */
-    }
-    for(i = 0; i < 16; i++)
-    {
-      replace_opcode_xxxx(arch, opcode_41_0[i][arch], 0x41, i << 4); /* Optimized LA */
-      replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
-      replace_opcode_xxxx(arch, opcode_50_0[i][arch], 0x50, i << 4); /* Optimized ST */
-      replace_opcode_xxxx(arch, opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
-      replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
-      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xa7, (i << 4) + 0x4); /* Optimized BRC */
-      replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
-      replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
-      replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
-    }
-    replace_opcode_xxxx(arch, opcode_D20x[0][arch], 0xd2, 0x00); /* Optimized MVC */
-    replace_opcode_xxxx(arch, opcode_D50x[0][arch], 0xd5, 0x00); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[1][arch], 0xd5, 0x01); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[2][arch], 0xd5, 0x03); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[3][arch], 0xd5, 0x07); /* Optimized CLC */
-    bit = 0x80;
-    for(i = 0; i < 8; i++)
-    {
-      replace_opcode_xxxx(arch, opcode_91xx[i][arch], 0x91, bit); /* Single bit TM */
-      bit >>= 1;
-    }
-    for(i = 0; i < 256; i++)
-    {
-      switch(i)
-      {
-        case 0x04:
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch]; /* Optimized LG */
-          break;
-        case 0x24:
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch]; /* Optimized STG */
-          break;
-        default:
-          runtime_opcode_e3_0______xx[arch][i] = opcode_e3xx[i][arch];
-          break;
-      }
-    }
-#endif /* OPTION_OPTINST */
-  }
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* init_opcode_pointers                                                      */
-/*---------------------------------------------------------------------------*/
-void init_opcode_pointers(REGS *regs)
-{
-//  logmsg("init_opcode_pointers()\n");
-  if(!regs)
-    return;
-
-  regs->s370_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_370];
-  regs->s370_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_370];
-  regs->s370_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_370];
-  regs->s370_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_370];
-  regs->s370_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_370];
-
-  regs->s390_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_390];
-  regs->s390_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_390];
-  regs->s390_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_390];
-  regs->s390_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_390];
-  regs->s390_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_390];
-
-  regs->z900_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_900];
-  regs->z900_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_900];
-  regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900];
-  regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900];
-  regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900];
-
-#ifdef OPTION_OPTINST
-  regs->s370_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_370];
-  regs->s390_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_390];
-  regs->z900_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_900];
-#endif
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* Following function will be resolved within the runtime opcode tables and  */
-/* set with function init_opcode_tables.                                     */
-/*---------------------------------------------------------------------------*/
-#define execute_opcode_01xx     operation_exception
-#define execute_opcode_a4xx     operation_exception
-#define execute_opcode_a5_x     operation_exception
-#define execute_opcode_a6xx     operation_exception
-#define execute_opcode_a7_x     operation_exception
-#define execute_opcode_b2xx     operation_exception
-#define execute_opcode_b3xx     operation_exception
-#define execute_opcode_b9xx     operation_exception
-#define execute_opcode_c0_x     operation_exception
-#define execute_opcode_c2_x     operation_exception
-#define execute_opcode_c4_x     operation_exception
-#define execute_opcode_c6_x     operation_exception
-#define execute_opcode_c8_x     operation_exception
-#define execute_opcode_cc_x     operation_exception
-#define execute_opcode_e4xx     operation_exception
-#define execute_opcode_e5xx     operation_exception
-#define execute_opcode_e6xx     operation_exception
 
 /*----------------------------------------------------------------------------*/
 /*       'GENx___x___x900' instruction opcode jump tables                     */
@@ -6140,6 +5861,10 @@ static zz_func v_opcode_e4xx[256][GEN_MAXARCH] =
  /*E4FF*/ GENx___x___x___
 };
 
+/*-------------------------------------------------------------------*/
+/*                  "Optimized" Instructions                         */
+/*-------------------------------------------------------------------*/
+
 #ifdef OPTION_OPTINST
 
 // Compare Logical Register
@@ -6502,6 +6227,351 @@ static zz_func opcode_E3_0______24[1][GEN_MAXARCH] =
 };
 
 #endif /* OPTION_OPTINST */
+
+
+/*-------------------------------------------------------------------*/
+/*                Opcode Table Replacement Functions                 */
+/*-------------------------------------------------------------------*/
+/* The below series of functions are used to replace entries in the  */
+/* above opcode tables for a given instruction or all instructions.  */
+/* The first few functions are helper functions used by the primary  */
+/* functions which follow them.                                      */
+/*-------------------------------------------------------------------*/
+
+static zz_func replace_opcode_xx(int arch, zz_func inst, int opcode)
+{
+  int i;
+  zz_func oldinst;
+
+  if(arch < 0 || arch > GEN_ARCHCOUNT)
+    return(NULL);
+
+  if(opcode < 0 || opcode > 0xff)
+    return(NULL);
+
+  if(!inst)
+    return(NULL);
+
+  oldinst = runtime_opcode_xxxx[arch][opcode * 256];
+
+  for(i = 0; i < 256; i++)
+    runtime_opcode_xxxx[arch][opcode * 256 + i] = inst;
+
+  return(oldinst);
+}
+
+/*-------------------------------------------------------------------*/
+
+static zz_func replace_opcode_xxxx(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  zz_func oldinst;
+
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+
+  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xff)
+    return(NULL);
+
+  if(!inst)
+    return(NULL);
+
+  oldinst = runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2];
+  runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2] = inst;
+
+  return(oldinst);
+}
+
+/*-------------------------------------------------------------------*/
+
+static zz_func replace_opcode_xx_x(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  int i;
+  zz_func oldinst;
+
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+
+  if(opcode1 < 0 || opcode1 > 0xff || opcode2 < 0 || opcode2 > 0xf)
+    return(NULL);
+
+  if(!inst)
+    return(NULL);
+
+  oldinst = runtime_opcode_xxxx[arch][opcode1 * 256 + opcode2];
+
+  for(i = 0; i < 16; i++)
+    runtime_opcode_xxxx[arch][opcode1 * 256 + i * 16 + opcode2] = inst;
+
+  return(oldinst);
+}
+
+/*-------------------------------------------------------------------*/
+
+static zz_func replace_opcode_xx________xx(int arch, zz_func inst, int opcode1, int opcode2)
+{
+  zz_func oldinst;
+
+  if(arch < 0 || arch >= GEN_ARCHCOUNT)
+    return(NULL);
+
+  if(opcode2 < 0 || opcode2 > 0xff)
+    return(NULL);
+
+  if(!inst)
+    return(NULL);
+
+  switch(opcode1)
+  {
+    case 0xe3:
+    {
+      oldinst = runtime_opcode_e3________xx[arch][opcode2];
+      runtime_opcode_e3________xx[arch][opcode2] = inst;
+    }
+    case 0xeb:
+    {
+      oldinst = runtime_opcode_eb________xx[arch][opcode2];
+      runtime_opcode_eb________xx[arch][opcode2] = inst;
+    }
+    case 0xec:
+    {
+      oldinst = runtime_opcode_ec________xx[arch][opcode2];
+      runtime_opcode_ec________xx[arch][opcode2] = inst;
+    }
+    case 0xed:
+    {
+      oldinst = runtime_opcode_ed________xx[arch][opcode2];
+      runtime_opcode_ed________xx[arch][opcode2] = inst;
+    }
+    default:
+    {
+      oldinst = NULL;
+    }
+  }
+  return(oldinst);
+}
+
+/*-------------------------------------------------------------------*/
+/*                       replace_opcode                              */
+/*-------------------------------------------------------------------*/
+/* Called by hdl.c for dynamic instruction modules such as dyncrypt  */
+/*-------------------------------------------------------------------*/
+
+#if defined( OPTION_DYNAMIC_LOAD )
+DLL_EXPORT
+void *replace_opcode_r (int arch, zz_func inst, int opcode1, int opcode2)
+#else
+void *replace_opcode   (int arch, zz_func inst, int opcode1, int opcode2)
+#endif
+{
+  switch(opcode1)
+  {
+    case 0x01:
+    case 0xa4:
+    case 0xa6:
+    case 0xb2:
+    case 0xb3:
+    case 0xb9:
+    case 0xe4:
+    case 0xe5:
+    case 0xe6:
+
+    {
+      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
+    }
+
+    case 0xa5:
+    {
+      if(arch == ARCH_900)
+        return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
+
+      return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
+    }
+
+    case 0xa7:
+    case 0xc0:
+    case 0xc2:
+    case 0xc4:
+    case 0xc6:
+    case 0xc8:
+    case 0xcc:
+
+    {
+      return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
+    }
+
+    case 0xe3:
+    case 0xeb:
+    case 0xec:
+    case 0xed:
+
+    {
+      return(replace_opcode_xx________xx(arch, inst, opcode1, opcode2));
+    }
+
+    default:
+    {
+      return(replace_opcode_xx(arch, inst, opcode1));
+    }
+  }
+
+  UNREACHABLE_CODE( return NULL );
+}
+
+/*-------------------------------------------------------------------*/
+/*                     init_opcode_tables                            */
+/*-------------------------------------------------------------------*/
+/*               (called by impl.c function impl)                    */
+/*-------------------------------------------------------------------*/
+
+void init_opcode_tables()
+{
+  int arch;
+  int bit;
+  int i;
+
+  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  {
+    for(i = 0; i < 256; i++)
+      replace_opcode_xx(arch, opcode_table[i][arch], i);
+
+    for(i = 0; i < 256; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_01xx[i][arch], 0x01, i);
+
+      if(arch != ARCH_900)
+      {
+        replace_opcode_xxxx(arch, v_opcode_a4xx[i][arch], 0xa4, i);
+        replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+        replace_opcode_xxxx(arch, v_opcode_a6xx[i][arch], 0xa6, i);
+      }
+
+      replace_opcode_xxxx(arch, opcode_b2xx[i][arch], 0xb2, i);
+      replace_opcode_xxxx(arch, opcode_b3xx[i][arch], 0xb3, i);
+      replace_opcode_xxxx(arch, opcode_b9xx[i][arch], 0xb9, i);
+      replace_opcode_xx________xx(arch, opcode_e3xx[i][arch], 0xe3, i);
+
+      if(arch != ARCH_900)
+        replace_opcode_xxxx(arch, v_opcode_e4xx[i][arch], 0xe4, i);
+
+      replace_opcode_xxxx(arch, opcode_e5xx[i][arch], 0xe5, i);
+      replace_opcode_xxxx(arch, opcode_e6xx[i][arch], 0xe6, i);
+      replace_opcode_xx________xx(arch, opcode_ebxx[i][arch], 0xeb, i);
+      replace_opcode_xx________xx(arch, opcode_ecxx[i][arch], 0xec, i);
+      replace_opcode_xx________xx(arch, opcode_edxx[i][arch], 0xed, i);
+    }
+
+    for(i = 0; i < 16; i++)
+    {
+      if(arch == ARCH_900)
+        replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
+      replace_opcode_xx_x(arch, opcode_a7_x[i][arch], 0xa7, i);
+      replace_opcode_xx_x(arch, opcode_c0_x[i][arch], 0xc0, i);
+      replace_opcode_xx_x(arch, opcode_c2_x[i][arch], 0xc2, i);
+      replace_opcode_xx_x(arch, opcode_c4_x[i][arch], 0xc4, i);
+      replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
+      replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
+      replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
+    }
+
+    // "Optimized" Instructions
+
+#ifdef OPTION_OPTINST
+
+    for(i = 0; i < 256; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_15__[i][arch], 0x15, i); /* Optimized CLR */
+      replace_opcode_xxxx(arch, opcode_18__[i][arch], 0x18, i); /* Optimized LR */
+      replace_opcode_xxxx(arch, opcode_1E__[i][arch], 0x1e, i); /* Optimized ALR */
+      replace_opcode_xxxx(arch, opcode_1F__[i][arch], 0x1f, i); /* Optimized SLR */
+      replace_opcode_xxxx(arch, opcode_BF_x[0][arch], 0xbf, i); /* Optimized ICM */
+    }
+
+    for(i = 0; i < 16; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_41_0[i][arch], 0x41, i << 4); /* Optimized LA */
+      replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
+      replace_opcode_xxxx(arch, opcode_50_0[i][arch], 0x50, i << 4); /* Optimized ST */
+      replace_opcode_xxxx(arch, opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
+      replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
+      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xa7, (i << 4) + 0x4); /* Optimized BRC */
+      replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
+      replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
+      replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
+    }
+
+    replace_opcode_xxxx(arch, opcode_D20x[0][arch], 0xd2, 0x00); /* Optimized MVC */
+    replace_opcode_xxxx(arch, opcode_D50x[0][arch], 0xd5, 0x00); /* Optimized CLC */
+    replace_opcode_xxxx(arch, opcode_D50x[1][arch], 0xd5, 0x01); /* Optimized CLC */
+    replace_opcode_xxxx(arch, opcode_D50x[2][arch], 0xd5, 0x03); /* Optimized CLC */
+    replace_opcode_xxxx(arch, opcode_D50x[3][arch], 0xd5, 0x07); /* Optimized CLC */
+
+    bit = 0x80;
+
+    for(i = 0; i < 8; i++)
+    {
+      replace_opcode_xxxx(arch, opcode_91xx[i][arch], 0x91, bit); /* Single bit TM */
+      bit >>= 1;
+    }
+
+    for(i = 0; i < 256; i++)
+    {
+      switch(i)
+      {
+        case 0x04:
+
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch]; /* Optimized LG */
+          break;
+
+        case 0x24:
+
+          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch]; /* Optimized STG */
+          break;
+
+        default:
+
+          runtime_opcode_e3_0______xx[arch][i] = opcode_e3xx[i][arch];
+          break;
+      }
+    }
+#endif /* OPTION_OPTINST */
+  }
+}
+
+/*-------------------------------------------------------------------*/
+/*                      init_opcode_pointers                         */
+/*-------------------------------------------------------------------*/
+/*               (called by cpu.c function cpu_init)                 */
+/*-------------------------------------------------------------------*/
+
+void init_opcode_pointers( REGS* regs )
+{
+  if (!regs)
+    return;
+
+  regs->s370_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_370];
+  regs->s370_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_370];
+  regs->s370_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_370];
+  regs->s370_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_370];
+  regs->s370_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_370];
+
+  regs->s390_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_390];
+  regs->s390_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_390];
+  regs->s390_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_390];
+  regs->s390_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_390];
+  regs->s390_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_390];
+
+  regs->z900_runtime_opcode_xxxx         = runtime_opcode_xxxx        [ARCH_900];
+  regs->z900_runtime_opcode_e3________xx = runtime_opcode_e3________xx[ARCH_900];
+  regs->z900_runtime_opcode_eb________xx = runtime_opcode_eb________xx[ARCH_900];
+  regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900];
+  regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900];
+
+#ifdef OPTION_OPTINST
+  regs->s370_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_370];
+  regs->s390_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_390];
+  regs->z900_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_900];
+#endif
+}
 
 #endif /*!defined( _GEN_ARCH )*/
 

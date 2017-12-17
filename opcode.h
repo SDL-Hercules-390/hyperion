@@ -3126,7 +3126,7 @@ void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
-void init_opcode_tables(void);
+void init_opcode_tables();
 void init_opcode_pointers(REGS *regs);
 
 
