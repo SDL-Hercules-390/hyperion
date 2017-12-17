@@ -1883,47 +1883,34 @@ typedef struct MBK  MBK;
                                                Bit 168 can only be 1 when
                                                bit 2 is zero.            */
 
+#define STFL_IBM_LAST_BIT            168    /* Last defined IBM facility */
+
+#define STFL_IBM_BY_SIZE        (ROUND_UP( STFL_IBM_LAST_BIT, 8 ) / 8)
+#define STFL_IBM_DW_SIZE        (ROUND_UP( STFL_IBM_BY_SIZE, sizeof( DW )) / sizeof( DW ))
+
 /*-------------------------------------------------------------------*/
 /*                      Hercules Facility bits                       */
 /*-------------------------------------------------------------------*/
-/* The below facility definitions are HERCULES SPECIFIC and not part */
-/* of the architecture.  They are placed here for the convenience    */
-/* of being able to use the Virtual Architecture Level facility.     */
+/* The below facility bits are HERCULES SPECIFIC and not part of the */
+/* architecture.  They are placed here for the convenience of being  */
+/* able to use the Virtual Architecture Level facility (i.e. the     */
+/* FACILITY_CHECK and FACILITY_ENABLED macros).                      */
 /*                                                                   */
-/* Note that Hercules's facility bits are placed at the VERY END of  */
-/* the facility bits array in order to cause the least interference  */
-/* with IBM.  We do this because once a facily bit is assigned then  */
-/* it becomes "set in stone" and can NEVER from that point onward be */
-/* changed.  Facility bit assignments are thus PERMANENT, *forever*. */
+/* Note that Hercules's facility bits start at the first bit of the  */
+/* first byte of the first double-word (DW) immediately following    */
+/* the IBM defined bits, and are inaccessible to the guest. Both of  */
+/* the STFLE and SIE instruction functions only reference/use the    */
+/* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
+/* to Hercules's facility bits. Only the archlvl command functions   */
+/* can access the Hercules facility bits and only Hercules itself    */
+/* uses them internally.                                             */
+/*                                                                   */
+/* When IBM defines new facilities the only thing you need to do is  */
+/* define the new bits and then adjust the above STFL_IBM_LAST_BIT   */
+/* value as appropriate. Nothing else needs to be done.              */
 /*-------------------------------------------------------------------*/
 
-// Maximum architected value... (see STFLE instruction)
-
-#define STFL_MAX_DW             256
-#define STFL_MAX_BYTES          (STFL_MAX_DW * sizeof(DW))
-#define STFL_MAX_BITS           (STFL_MAX_BYTES * 8)
-
-// Reserve a number of bits for Hercules...
-
-#define STFL_NUM_HERC_DW        2
-#define STFL_NUM_HERC_BYTES     (STFL_NUM_HERC_DW * sizeof(DW))
-#define STFL_NUM_HERC_BITS      (STFL_NUM_HERC_BYTES * 8)
-
-// Determine where IBM's bits end and where Herc's will start,
-// and calculate the byte size and doubleword size for both.
-
-#define STFL_IBM_LAST_BIT       (STFL_MAX_BITS - STFL_NUM_HERC_BITS - 1)
-#define STFL_IBM_BY_SIZE        ((STFL_IBM_LAST_BIT+8-1)/8)
-#define STFL_IBM_DW_SIZE        ((STFL_IBM_BY_SIZE+sizeof(DW)-1)/sizeof(DW))
-
-#define STFL_HERC_FIRST_BIT     (STFL_IBM_LAST_BIT + 1)
-#define STFL_HERC_LAST_BIT      (STFL_HERC_FIRST_BIT + STFL_NUM_HERC_BITS - 1)
-#define STFL_HERC_BY_SIZE       ((STFL_HERC_LAST_BIT+8-1)/8)
-#define STFL_HERC_DW_SIZE       ((STFL_HERC_BY_SIZE+sizeof(DW)-1)/sizeof(DW))
-
-/*-------------------------------------------------------------------*/
-/*                      Hercules Facility bits                       */
-/*-------------------------------------------------------------------*/
+#define STFL_HERC_FIRST_BIT     (STFL_IBM_DW_SIZE * sizeof( DW ) * 8)
 
 #define STFL_HERC_MOVE_INVERSE           ( STFL_HERC_FIRST_BIT  +   0 )
 #define STFL_HERC_MSA_EXTENSION_1        ( STFL_HERC_FIRST_BIT  +   1 )
@@ -1940,6 +1927,10 @@ typedef struct MBK  MBK;
 #define STFL_HERC_QDIO_ASSIST            ( STFL_HERC_FIRST_BIT  +  12 )
 #define STFL_HERC_INTERVAL_TIMER         ( STFL_HERC_FIRST_BIT  +  13 )
 #define STFL_HERC_DETECT_PGMINTLOOP      ( STFL_HERC_FIRST_BIT  +  14 )
+#define STFL_HERC_LAST_BIT               ( STFL_HERC_FIRST_BIT  +  14 )
+
+#define STFL_HERC_BY_SIZE       (ROUND_UP( STFL_HERC_LAST_BIT, 8 ) / 8)
+#define STFL_HERC_DW_SIZE       (ROUND_UP( STFL_HERC_BY_SIZE, sizeof( DW )) / sizeof( DW ))
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */

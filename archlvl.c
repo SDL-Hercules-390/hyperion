@@ -163,10 +163,6 @@ typedef struct FACTAB   FACTAB;
 /* in any facility bit sequence as it is always seached serially.    */
 /* However, it is greatly preferred that it be kept in sequence.     */
 /*                                                                   */
-/* Hercules-specific facilities that are not part of z/Architecture  */
-/* are defined at the end of the facilities list and consume bit     */
-/* positions 16256 to 16383 (the last 128 possible facility bits).   */
-/*                                                                   */
 /* PROGRAMMING NOTE: All facilities, regardless of whether they are  */
 /* currently supported or not, should be defined in the below table  */
 /* and guarded by #if defined statements.  If the facility is not    */
@@ -533,13 +529,23 @@ FACILITY( 146_MSA_EXTENSION_8,      NONE,       NONE,       NONE,       NONE )
 FACILITY( 168_ESA390_COMPAT_MODE,   NONE,       NONE,       NONE,       NONE )
 #endif
 
-//------------------------------------------------------------------------------------
-//                              Hercules Facilities                          
-//------------------------------------------------------------------------------------
-// The below facilities are HERCULES SPECIFIC and not part of the architecture
-// but DO indicate the availability of actual facilities and are returned to the
-// guest in the actual facilities list returned by the STFLE instruction.
-//------------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
+/*                      Hercules Facility bits                       */
+/*-------------------------------------------------------------------*/
+/* The below facility bits are HERCULES SPECIFIC and not part of the */
+/* architecture.  They are placed here for the convenience of being  */
+/* able to use the Virtual Architecture Level facility (i.e. the     */
+/* FACILITY_CHECK and FACILITY_ENABLED macros).                      */
+/*                                                                   */
+/* Note that Hercules's facility bits start at the first bit of the  */
+/* first byte of the first double-word (DW) immediately following    */
+/* the IBM defined bits, and are inaccessible to the guest. Both of  */
+/* the STFLE and SIE instruction functions only reference/use the    */
+/* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
+/* to Hercules's facility bits. Only the archlvl command functions   */
+/* can access the Hercules facility bits and only Hercules itself    */
+/* uses them internally.                                             */
+/*-------------------------------------------------------------------*/
 
 //        Facility                      Default     Mandatory   Supported   Group
 
