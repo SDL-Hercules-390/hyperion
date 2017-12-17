@@ -12,48 +12,25 @@
 
 #include "hstdinc.h"
 
-/*-------------------------------------------------------------------*/
-/* A number of dummy functions are defined by UNDEF_INST that are    */
-/* never referenced because the actual instruction does not define   */
-/* the instruction for a particular architecture. This applies, for  */
-/* example to z900_insert_storage_key and s390_insert_storage_key.   */
-/* With clang, the z900 instruction is diagnosed, but the s390 one   */
-/* is not.  Go figure.  Trying to fix this through the morass of     */
-/* recursive #include is not compatible with retaining one's sanity. */
-/* Thus, for this module, we shoot the messenger.                    */
-/*                                                                   */
-DISABLE_GCC_UNUSED_FUNCTION_WARNING     /*    shoot the messenger    */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-#if !defined( _HENGINE_DLL_ )
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
 #endif
 
-#if !defined( _OPCODE_C_ )
+#ifndef _OPCODE_C_
 #define _OPCODE_C_
 #endif
 
-#include "feature.h"
-
-#if !defined( _GEN_ARCH )
-
-#if defined( _ARCHMODE3 )
- #define  _GEN_ARCH _ARCHMODE3
- #include "opcode.c"
- #undef   _GEN_ARCH
-#endif
-
-#if defined( _ARCHMODE2 )
- #define  _GEN_ARCH _ARCHMODE2
- #include "opcode.c"
- #undef   _GEN_ARCH
-#endif
-
-#endif /*!defined( _GEN_ARCH )*/
-
 #include "hercules.h"
 #include "opcode.h"
+
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+/* In this section you should only test FEATURE_xxx values without   */
+/* the underscore since they're defined differently for each build   */
+/* architecture.  That is, you should only be testing whether the    */
+/* given feature is enabled for the CURRENT build architecture.      */
+/*-------------------------------------------------------------------*/
 
 #undef  UNDEF_INST
 #define UNDEF_INST( _x ) \
@@ -1166,20 +1143,44 @@ DEF_INST( dummy_instruction )
 }
 
 /*-------------------------------------------------------------------*/
-/*             Static instruction disassembly functions              */
-/*              and instruction routing jump tables                  */
-/*-------------------------------------------------------------------*/
-/* Must be compiled *AFTER* all of the above UNDEF_INST an DEF_INST  */
-/* are compiled since each "GENx370x390x900" entry in the opcode     */
-/* routing tables much further below necessarily reference each      */
-/* build architecture's unique ARCH_DEP instruction function name    */
-/* (i.e. z900_add_register, s370_add_register, etc). Thus the below  */
-/* #ifdef test for _GEN_ARCH to prevent compiling this code block    */
-/* until AFTER the above code block is compiled FIRST, for each of   */
-/* the supported build architectures.                                */
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
 #if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCHMODE2 )
+    #define   _GEN_ARCH     _ARCHMODE2
+    #include "opcode.c"
+  #endif
+
+  #if defined(              _ARCHMODE3 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCHMODE3
+    #include "opcode.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     *
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*                                                                   */
+/*  This is the code block where you would also place all of your    */
+/*  non-ARCHDEP static functions and tables.                         */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*             Static instruction disassembly functions              */
+/*              and instruction routing jump tables                  */
+/*-------------------------------------------------------------------*/
 
 static zz_func opcode_table[256][GEN_MAXARCH];
 static zz_func opcode_01xx[256][GEN_MAXARCH];
@@ -6228,7 +6229,6 @@ static zz_func opcode_E3_0______24[1][GEN_MAXARCH] =
 
 #endif /* OPTION_OPTINST */
 
-
 /*-------------------------------------------------------------------*/
 /*                Opcode Table Replacement Functions                 */
 /*-------------------------------------------------------------------*/
@@ -6573,6 +6573,4 @@ void init_opcode_pointers( REGS* regs )
 #endif
 }
 
-#endif /*!defined( _GEN_ARCH )*/
-
-/* end of OPCODE.C */
+#endif /* !defined( _GEN_ARCH ) */
