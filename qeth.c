@@ -3525,7 +3525,7 @@ U32 mask4;
             VERIFY( socket_set_blocking_mode(grp->ppfd[1],0) == 0);
 
             /* Set defaults */
-            grp->ttdev = strdup( sysblk.netdev );
+            grp->ttdev = strdup( DEF_NETDEV );
             grp->ttfd = -1;
         }
         else
@@ -3694,7 +3694,7 @@ U32 mask4;
 
         /* If no tuntap device was specified use the defined default */
         if (!grp->ttdev)
-            grp->ttdev = sysblk.netdev;
+            grp->ttdev = strdup( DEF_NETDEV );
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)

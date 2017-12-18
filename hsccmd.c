@@ -3737,7 +3737,7 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
     // order or for newer versions of CTCI-WIN (3.6.0) whatever is
     // defined as your default CTCI-WIN host network adapter.
 
-    char* netdev = sysblk.netdev;
+    const char* netdev = DEF_NETDEV;
 
     UNREFERENCED( cmdline );
 
@@ -3770,7 +3770,7 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
     sysblk.netdev = strdup( netdev );
 
     // "%-14s set to %s"
-    WRMSG( HHC02204, "I", argv[0], sysblk.netdev );
+    WRMSG( HHC02204, "I", argv[0], DEF_NETDEV );
     return 0;
 }
 

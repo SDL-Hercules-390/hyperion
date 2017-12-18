@@ -2683,7 +2683,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     memset( &addr, 0, sizeof( struct in_addr ) );
 
     // Set some initial defaults
-    pLCSBLK->pszTUNDevice   = strdup( sysblk.netdev );
+    pLCSBLK->pszTUNDevice   = strdup( DEF_NETDEV );
     pLCSBLK->pszOATFilename = NULL;
     pLCSBLK->pszIPAddress   = NULL;
 #if defined( OPTION_W32_CTCI )

@@ -36,11 +36,11 @@
 
 #include "hstdinc.h"
 
-#if !defined(_BLDCFG_C_)
+#ifndef _BLDCFG_C_
 #define _BLDCFG_C_
 #endif
 
-#if !defined(_HENGINE_DLL_)
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
 #endif
 
@@ -138,5 +138,25 @@ int     devtmax;                        /* Max number device threads */
 
     return 0;
 } /* end function build_config */
+
+/*-------------------------------------------------------------------*/
+/* Function to initialize the default network device                 */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* init_sysblk_netdev()
+{
+    if (!sysblk.netdev)
+    {
+        /* Initialize default NETDEV */
+
+#if defined( __APPLE__ ) || defined( __FreeBSD__ )
+        sysblk.netdev = strdup( "/dev/tun" );
+#elif !defined( OPTION_W32_CTCI )
+        sysblk.netdev = strdup( "/dev/net/tun" );
+#else
+        sysblk.netdev = strdup( tt32_get_default_iface() );
+#endif
+    }
+    return sysblk.netdev;
+}
 
 #endif /*!defined(_GEN_ARCH)*/

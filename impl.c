@@ -867,9 +867,6 @@ int     rc;
         WRMSG( HHC00018, "W", "NOT " );
 #endif // defined( _MSVC_ )
 
-    /* Initialize default NETDEV */
-    sysblk.netdev = strdup( DEFAULT_NETDEV );
-
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
 #endif

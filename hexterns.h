@@ -263,6 +263,7 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 
 /* Functions in module bldcfg.c */
 int build_config (const char *fname);
+BLDC_DLL_IMPORT const char* init_sysblk_netdev();
 
 /* Functions in module script.c */
 SCRI_DLL_IMPORT int process_config (const char *fname);

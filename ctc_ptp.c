@@ -2594,7 +2594,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #endif
 
     // Set some initial defaults
-    STRLCPY( pPTPBLK->szTUNCharDevName, sysblk.netdev );
+    STRLCPY( pPTPBLK->szTUNCharDevName, DEF_NETDEV );
 #if defined( OPTION_W32_CTCI )
     pPTPBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
     pPTPBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;

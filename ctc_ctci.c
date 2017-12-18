@@ -1197,7 +1197,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Set some initial defaults
     STRLCPY( pCTCBLK->szMTU,     "1500" );
     STRLCPY( pCTCBLK->szNetMask, "255.255.255.255" );
-    STRLCPY( pCTCBLK->szTUNCharDevName, sysblk.netdev );
+    STRLCPY( pCTCBLK->szTUNCharDevName, DEF_NETDEV );
 
 #if defined( OPTION_W32_CTCI )
     pCTCBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;

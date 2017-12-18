@@ -466,14 +466,7 @@ struct SYSBLK {
         char   *hercules_pgmpath;       /* Starting pgm path name    */
         char   *hercules_cmdline;       /* Hercules Command line     */
         char   *netdev;                 /* Network device name       */
-
-#if defined( __APPLE__ ) || defined( __FreeBSD__ )
-  #define  DEFAULT_NETDEV   "/dev/tun"
-#elif !defined( OPTION_W32_CTCI )
-  #define  DEFAULT_NETDEV   "/dev/net/tun"
-#else
-  #define  DEFAULT_NETDEV   tt32_get_default_iface()
-#endif
+#define DEF_NETDEV init_sysblk_netdev() /* Retrieve sysblk.netdev    */
 
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
