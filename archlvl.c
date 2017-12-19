@@ -351,8 +351,8 @@ FACILITY( 041_IEEE_EXCEPT_SIM,      ZARCH,      NONE,       ZARCH,      ALS23 )
 
 //------------------------------------------------------------------------------
 
-#if defined( _FEATURE_042_DECIMAL_FLOAT_FACILITY )
-FACILITY( 042_DECIMAL_FLOAT,        ZARCH,      NONE,       ZARCH,      ALS23 )
+#if defined( _FEATURE_042_DFP_FACILITY )
+FACILITY( 042_DFP,        ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
 
 #if defined( _FEATURE_043_DFP_HPERF_FACILITY )

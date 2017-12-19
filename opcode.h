@@ -3607,7 +3607,7 @@ DEF_INST( load_program_parameter );                               /*810*/
 
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_042_DFP_FACILITY )
 DEF_INST( add_dfp_ext_reg );
 DEF_INST( add_dfp_long_reg );
 DEF_INST( compare_dfp_ext_reg );
@@ -3662,7 +3662,7 @@ DEF_INST( test_data_class_dfp_short );
 DEF_INST( test_data_group_dfp_ext );
 DEF_INST( test_data_group_dfp_long );
 DEF_INST( test_data_group_dfp_short );
-#endif /*defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )*/
+#endif /*defined( FEATURE_042_DFP_FACILITY )*/
 
 #if defined( FEATURE_044_PFPO_FACILITY )
 DEF_INST( perform_floating_point_operation );

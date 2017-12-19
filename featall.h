@@ -249,7 +249,7 @@
 #undef  FEATURE_041_FPR_GR_TRANSFER_FACILITY
 #undef  FEATURE_041_FPS_SIGN_HANDLING_FACILITY
 #undef  FEATURE_041_IEEE_EXCEPT_SIM_FACILITY                    /*407*/
-#undef  FEATURE_042_DECIMAL_FLOAT_FACILITY                      /*DFP*/
+#undef  FEATURE_042_DFP_FACILITY                                /*DFP*/
 #undef  FEATURE_043_DFP_HPERF_FACILITY
 #undef  FEATURE_044_PFPO_FACILITY                               /*407*/
 #undef  FEATURE_045_DISTINCT_OPERANDS_FACILITY                  /*810*/

@@ -20,12 +20,12 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
+#if defined(FEATURE_042_DFP_FACILITY)
 #include "decNumber/include/decimal128.h"
 #include "decNumber/include/decimal64.h"
 #include "decNumber/include/decimal32.h"
 #include "decNumber/include/decPacked.h"
-#endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
+#endif /*defined(FEATURE_042_DFP_FACILITY)*/
 
 #if defined(FEATURE_041_FPS_ENHANCEMENT_FACILITY)
 /*===================================================================*/
@@ -364,7 +364,7 @@ BYTE            dxc;                    /* Data exception code       */
 #endif /*defined(FEATURE_041_FPS_ENHANCEMENT_FACILITY)*/
 
 
-#if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)
+#if defined(FEATURE_042_DFP_FACILITY)
 /*===================================================================*/
 /* DECIMAL FLOATING POINT INSTRUCTIONS                               */
 /*===================================================================*/
@@ -5142,7 +5142,7 @@ int             lmd;                    /* Leftmost digit            */
 
 } /* end DEF_INST(test_data_group_dfp_short) */
 
-#endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
+#endif /*defined(FEATURE_042_DFP_FACILITY)*/
 
 #if !defined(_GEN_ARCH)
 

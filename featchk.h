@@ -215,8 +215,8 @@
  #define    _FEATURE_041_IEEE_EXCEPT_SIM_FACILITY
 #endif
 
-#if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
- #define    _FEATURE_042_DECIMAL_FLOAT_FACILITY
+#if defined( FEATURE_042_DFP_FACILITY )
+ #define    _FEATURE_042_DFP_FACILITY
 #endif
 
 #if defined( FEATURE_043_DFP_HPERF_FACILITY )
@@ -770,7 +770,7 @@
  #error FEATURE_033_CSS_FACILITY_2 requires FEATURE_032_CSS_FACILITY
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Floating point extensions facility requires Decimal floating point facility
 #endif
 
@@ -778,15 +778,15 @@
  #error Floating point extensions facility requires Binary floating point support
 #endif
 
-#if defined( FEATURE_042_DECIMAL_FLOAT_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
+#if defined( FEATURE_042_DFP_FACILITY ) && !defined( FEATURE_BASIC_FP_EXTENSIONS )
  #error Decimal floating point facility requires Basic FP extensions
 #endif
 
-#if defined( FEATURE_043_DFP_HPERF_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_043_DFP_HPERF_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error DFP has high performance requires Decimal floating point facility
 #endif
 
-#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_048_DFP_ZONE_CONV_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Decimal-floating-point Zoned-conversion facility requires Decimal floating point facility
 #endif
 
@@ -818,7 +818,7 @@
  #error You cannot have "Message Security Assist extension 4" without having "Message Security Assist extension 3"
 #endif
 
-#if defined( FEATURE_080_DFP_PACK_CONV_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_080_DFP_PACK_CONV_FACILITY ) && !defined( FEATURE_042_DFP_FACILITY )
  #error Decimal-floating-point Packed-conversion facility requires Decimal floating point facility
 #endif
 

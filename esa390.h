@@ -1719,8 +1719,8 @@ typedef struct MBK  MBK;
 
 #define STFL_040_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                                facility installed z/Arch */
-#define STFL_041_FPS_ENHANCEMENT      41    /* Floating point support
-                                               enhancements (DFP-rounding,
+#define STFL_041_FPS_ENHANCEMENT      41    /* Floating-point-support-
+                                               enhancement (DFP-rounding,
                                                FPR-GR-transfer, FPS-sign-
                                                handling and IEEE-exception-
                                                simulator) installed      */
@@ -1729,7 +1729,7 @@ typedef struct MBK  MBK;
 #define STFL_041_FPS_SIGN_HANDLING    41    /* Ibid.                     */
 #define STFL_041_IEEE_EXCEPT_SIM      41    /* Ibid.                     */
 
-#define STFL_042_DECIMAL_FLOAT        42    /* Decimal floating point
+#define STFL_042_DFP                  42    /* Decimal-floating-point
                                                (DFP) facility installed. */
 #define STFL_043_DFP_HPERF            43    /* DFP has high performance.
                                                Bit 42 is one if bit 43 is*/

@@ -407,7 +407,7 @@
 
 #endif /* !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
 
-#if !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if !defined( FEATURE_042_DFP_FACILITY )
  UNDEF_INST( add_dfp_ext_reg )
  UNDEF_INST( add_dfp_long_reg )
  UNDEF_INST( compare_dfp_ext_reg )
@@ -462,7 +462,7 @@
  UNDEF_INST( test_data_group_dfp_ext )
  UNDEF_INST( test_data_group_dfp_long )
  UNDEF_INST( test_data_group_dfp_short )
-#endif /*!defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )*/
+#endif /*!defined( FEATURE_042_DFP_FACILITY )*/
 
 #if !defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )
  UNDEF_INST( add_distinct_register )                              /*810*/
