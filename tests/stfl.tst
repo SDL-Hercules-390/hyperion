@@ -38,7 +38,7 @@ r 200.10
 *Want "First two doublewords of truncated facilities list" $(FW1) $(FW2) 00000000 00000000
 
 r 210.10
-*Want "First two doublewords of extended facilities list"  $(FW1) $(FW2) $(FW3)   00000000
+*Want "First two doublewords of extended facilities list"  $(FW1) $(FW2) $(FW3) 00000000
 
 r 220.10
 *Want "Double words two and three" 00000000 00000000 00000000 00000000
