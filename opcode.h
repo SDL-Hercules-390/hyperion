@@ -613,7 +613,7 @@ do { \
 #undef FPC_BRM
 #undef FPC_CHECK
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 
   #define FPC_BRM     FPC_BRM_3BIT
 
@@ -627,7 +627,7 @@ do { \
     )                                               \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
-#else /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#else /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
   #define FPC_BRM     FPC_BRM_2BIT
 
@@ -636,7 +636,7 @@ do { \
     if ((_fpc) & FPC_RESERVED)                      \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
-#endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 #undef   SIE_ACTIVE
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
@@ -3546,7 +3546,7 @@ DEF_INST( store_relative_long_long );                             /*208*/
 DEF_INST( execute_relative_long );                                /*208*/
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 DEF_INST( convert_fix32_to_dfp_ext_reg );                         /*810*/
 DEF_INST( convert_fix32_to_dfp_long_reg );                        /*810*/
 DEF_INST( convert_u32_to_dfp_ext_reg );                           /*810*/
@@ -3572,7 +3572,7 @@ DEF_INST( convert_bfp_ext_to_u64_reg );                           /*810*/
 DEF_INST( convert_bfp_long_to_u64_reg );                          /*810*/
 DEF_INST( convert_bfp_short_to_u64_reg );                         /*810*/
 DEF_INST( set_bfp_rounding_mode_3bit );                           /*810*/
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 #if defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
 DEF_INST( load_program_parameter );                               /*810*/

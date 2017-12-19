@@ -832,7 +832,7 @@ int             exp;                    /* Adjusted exponent         */
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 #if !defined(_DFP_FPE_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
 /* Convert 32-bit signed binary integer to decimal number            */
@@ -1261,7 +1261,7 @@ decContext      setmax;                 /* Working context           */
 
 #define _DFP_FPE_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_FPE_ARCH_INDEPENDENT_)*/
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 #if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)                 /*912*/
 #if !defined(_DFP_ZONED_ARCH_INDEPENDENT_)
@@ -2092,7 +2092,7 @@ decContext      set;                    /* Working context           */
 } /* end DEF_INST(compare_exponent_dfp_long_reg) */
 
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B959 CXFTR - Convert from fixed 32 to DFP Extended Register [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2106,7 +2106,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2143,7 +2143,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2181,7 +2181,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2218,7 +2218,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2241,7 +2241,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_u32_to_dfp_long_reg) */
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2318,7 +2318,7 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(convert_fix64_to_dfp_long_reg) */
 
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B95A CXLGTR - Convert from unsigned 64 to DFP Ext Register [RRF]  */
 /*-------------------------------------------------------------------*/
@@ -2332,7 +2332,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2369,7 +2369,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2392,7 +2392,7 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_u64_to_dfp_long_reg) */
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2682,7 +2682,7 @@ char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
 #endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/          /*912*/
 
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B949 CFXTR - Convert from DFP Extended Register to fixed 32 [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2697,7 +2697,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2749,7 +2749,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2800,7 +2800,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2852,7 +2852,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -2887,7 +2887,7 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_u32_reg) */
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2987,7 +2987,7 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(convert_dfp_long_to_fix64_reg) */
 
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B94A CLGXTR - Convert from DFP Ext Register to unsigned 64 [RRF]  */
 /*-------------------------------------------------------------------*/
@@ -3002,7 +3002,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -3054,7 +3054,7 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -3089,7 +3089,7 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(convert_dfp_long_to_u64_reg) */
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/

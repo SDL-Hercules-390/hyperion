@@ -54,7 +54,7 @@
 #define FEATURE_034_GEN_INST_EXTN_FACILITY                      /*208*/
 #define FEATURE_035_EXECUTE_EXTN_FACILITY                       /*208*/
 #define FEATURE_036_ENH_MONITOR_FACILITY                        /*810*/
-#define FEATURE_037_FP_EXTENSIONS_FACILITY                      /*@SRO*/
+#define FEATURE_037_FP_EXTENSION_FACILITY                       /*@SRO*/
 //efine FEATURE_038_OP_CMPSC_FACILITY
 #define FEATURE_040_LOAD_PROG_PARAM_FACILITY                    /*810*/
 #define FEATURE_041_DFP_ROUNDING_FACILITY

@@ -42,7 +42,7 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( NO_IEEE_SUPPORT )
- #undef FEATURE_037_FP_EXTENSIONS_FACILITY
+ #undef FEATURE_037_FP_EXTENSION_FACILITY
  #undef FEATURE_BINARY_FLOATING_POINT
  #undef FEATURE_FPS_EXTENSIONS
 #endif
@@ -183,8 +183,8 @@
  #define    _FEATURE_036_ENH_MONITOR_FACILITY
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
- #define    _FEATURE_037_FP_EXTENSIONS_FACILITY
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
+ #define    _FEATURE_037_FP_EXTENSION_FACILITY
 #endif
 
 #if defined( FEATURE_038_OP_CMPSC_FACILITY )
@@ -770,11 +770,11 @@
  #error FEATURE_033_CSS_FACILITY_2 requires FEATURE_032_CSS_FACILITY
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
  #error Floating point extensions facility requires Decimal floating point facility
 #endif
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY ) && !defined( FEATURE_BINARY_FLOATING_POINT )
  #error Floating point extensions facility requires Binary floating point support
 #endif
 

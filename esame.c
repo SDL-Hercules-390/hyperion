@@ -142,7 +142,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->fpc &= ~(FPC_BRM_2BIT);
     regs->fpc |= (effective_addr2 & FPC_BRM_2BIT);
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
     /* Zeroize FPC bit 29 if FP Extension Facility is installed */
     regs->fpc &= ~(FPC_BIT29);
 #endif
@@ -151,7 +151,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
-#if defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B2B8 SRNMB - Set BFP Rounding Mode (3-bit)                    [S] */
 /*-------------------------------------------------------------------*/
@@ -161,7 +161,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 037_FP_EXTENSIONS, regs );
+    FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     S(inst, regs, b2, effective_addr2);
 
@@ -182,7 +182,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->fpc |= (effective_addr2 & FPC_BRM_3BIT);
 
 } /* end DEF_INST(set_bfp_rounding_mode_3bit) */
-#endif /* defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 
 #if defined(FEATURE_LINKAGE_STACK)

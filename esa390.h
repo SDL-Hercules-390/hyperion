@@ -1710,7 +1710,7 @@ typedef struct MBK  MBK;
                                                facility is installed  208*/
 #define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor         810
                                                facility installed     810*/
-#define STFL_037_FP_EXTENSIONS        37    /* Floating-point extension
+#define STFL_037_FP_EXTENSION         37    /* Floating-point extension
                                                facility installed. When bit
                                                37 is one, so is bit 42.  */
 #define STFL_038_OP_CMPSC             38    /* Order-preserving-compression

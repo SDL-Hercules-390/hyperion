@@ -313,8 +313,8 @@ FACILITY( 035_EXECUTE_EXTN,         ZARCH,      NONE,       ZARCH,      ALS23 )
 FACILITY( 036_ENH_MONITOR,          ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
 
-#if defined( _FEATURE_037_FP_EXTENSIONS_FACILITY )
-FACILITY( 037_FP_EXTENSIONS,        ZARCH,      NONE,       ZARCH,      ALS23 )
+#if defined( _FEATURE_037_FP_EXTENSION_FACILITY )
+FACILITY( 037_FP_EXTENSION,        ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
 
 #if defined( _FEATURE_038_OP_CMPSC_FACILITY )

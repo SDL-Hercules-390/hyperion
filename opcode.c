@@ -346,7 +346,7 @@
  UNDEF_INST( execute_relative_long )                              /*208*/
 #endif
 
-#if !defined( FEATURE_037_FP_EXTENSIONS_FACILITY )
+#if !defined( FEATURE_037_FP_EXTENSION_FACILITY )
  UNDEF_INST( convert_bfp_ext_to_u32_reg )                         /*810*/
  UNDEF_INST( convert_bfp_ext_to_u64_reg )                         /*810*/
  UNDEF_INST( convert_bfp_long_to_u32_reg )                        /*810*/
@@ -372,7 +372,7 @@
  UNDEF_INST( convert_u64_to_dfp_ext_reg )                         /*810*/
  UNDEF_INST( convert_u64_to_dfp_long_reg )                        /*810*/
  UNDEF_INST( set_bfp_rounding_mode_3bit )                         /*810*/
-#endif /* !defined( FEATURE_037_FP_EXTENSIONS_FACILITY ) */
+#endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 #if !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
  UNDEF_INST( load_program_parameter )
