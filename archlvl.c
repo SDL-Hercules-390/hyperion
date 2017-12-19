@@ -186,7 +186,7 @@ FACILITY( 000_N3_ESA390,            Z390,       NONE,       Z390,       ALS123 )
 
 #if defined( _FEATURE_001_ZARCH_INSTALLED_FACILITY )
 FACILITY( 001_ZARCH_INSTALLED,      Z390,       NONE,       Z390,       ALS123 )
-//CILITY( 002_ZARCH_ACTIVE,         ZARCH,      ZARCH,      ZARCH,      ALS23  )
+FACILITY( 002_ZARCH_ACTIVE,         ZARCH,      ZARCH,      ZARCH,      ALS23  )
 #endif
 
 #if defined( _FEATURE_003_DAT_ENHANCE_FACILITY_1 )
