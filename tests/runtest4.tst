@@ -15,7 +15,7 @@ defsym  secs1     2
 defsym  secs2     3
 defsym  secs3     4
 *
-defsym  maxdur   4.5    #  Expected test duration, give or take.
+defsym  maxdur   10.5   #  Pessimistic test duration
 *
 * ----------------------------------------------------------------------------
 *
