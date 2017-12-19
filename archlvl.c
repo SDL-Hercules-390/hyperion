@@ -327,9 +327,9 @@ FACILITY( 040_LOAD_PROG_PARAM,      ZARCH,      NONE,       ZARCH,      ALS23 )
 
 //------------------------------------------------------------------------------
 
-#if defined( _FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
+#if defined( _FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
-FACILITY( 041_FPS_ENHANCEMENTS,     ZARCH,      NONE,       ZARCH,      ALS23 )
+FACILITY( 041_FPS_ENHANCEMENT,     ZARCH,      NONE,       ZARCH,      ALS23 )
 
 #if defined( _FEATURE_041_DFP_ROUNDING_FACILITY )
 FACILITY( 041_DFP_ROUNDING,         ZARCH,      NONE,       ZARCH,      ALS23 )
@@ -347,7 +347,7 @@ FACILITY( 041_FPS_SIGN_HANDLING,    ZARCH,      NONE,       ZARCH,      ALS23 )
 FACILITY( 041_IEEE_EXCEPT_SIM,      ZARCH,      NONE,       ZARCH,      ALS23 )
 #endif
 
-#endif /* defined( _FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
+#endif /* defined( _FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
 
 //------------------------------------------------------------------------------
 

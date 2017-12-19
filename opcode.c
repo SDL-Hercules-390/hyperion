@@ -382,7 +382,7 @@
  UNDEF_INST( perform_floating_point_operation )
 #endif
 
-#if !defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
+#if !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
 #if !defined( FEATURE_041_DFP_ROUNDING_FACILITY )
  UNDEF_INST( set_dfp_rounding_mode )
@@ -405,7 +405,7 @@
  UNDEF_INST( set_fpc_and_signal )
 #endif
 
-#endif /* !defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
+#endif /* !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
 
 #if !defined( FEATURE_042_DECIMAL_FLOAT_FACILITY )
  UNDEF_INST( add_dfp_ext_reg )

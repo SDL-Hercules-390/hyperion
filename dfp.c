@@ -27,7 +27,7 @@
 #include "decNumber/include/decPacked.h"
 #endif /*defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)*/
 
-#if defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)
+#if defined(FEATURE_041_FPS_ENHANCEMENT_FACILITY)
 /*===================================================================*/
 /* FLOATING POINT SUPPORT INSTRUCTIONS                               */
 /*===================================================================*/
@@ -361,7 +361,7 @@ BYTE            dxc;                    /* Data exception code       */
 
 } /* end DEF_INST(set_fpc_and_signal) */
 #endif /*defined(FEATURE_041_IEEE_EXCEPT_SIM_FACILITY)*/
-#endif /*defined(FEATURE_041_FPS_ENHANCEMENTS_FACILITY)*/
+#endif /*defined(FEATURE_041_FPS_ENHANCEMENT_FACILITY)*/
 
 
 #if defined(FEATURE_042_DECIMAL_FLOAT_FACILITY)

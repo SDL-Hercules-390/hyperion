@@ -3580,7 +3580,7 @@ DEF_INST( load_program_parameter );                               /*810*/
 
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY )
+#if defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
  #if defined( FEATURE_041_DFP_ROUNDING_FACILITY )
   DEF_INST( set_dfp_rounding_mode );
@@ -3603,7 +3603,7 @@ DEF_INST( load_program_parameter );                               /*810*/
   DEF_INST( set_fpc_and_signal );
  #endif
 
-#endif /* defined( FEATURE_041_FPS_ENHANCEMENTS_FACILITY ) */
+#endif /* defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 

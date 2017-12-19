@@ -1719,7 +1719,7 @@ typedef struct MBK  MBK;
 
 #define STFL_040_LOAD_PROG_PARAM      40    /* Load-Program-Parameter
                                                facility installed z/Arch */
-#define STFL_041_FPS_ENHANCEMENTS     41    /* Floating point support
+#define STFL_041_FPS_ENHANCEMENT      41    /* Floating point support
                                                enhancements (DFP-rounding,
                                                FPR-GR-transfer, FPS-sign-
                                                handling and IEEE-exception-
