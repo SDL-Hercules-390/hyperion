@@ -103,12 +103,16 @@
 #define archlvl_cmd_desc        "Set Architecture Level"
 #define archlvl_cmd_help        \
                                 \
-  "Format: archlvl s/370|als0 | esa/390|als1 | esame|als2 | z/arch|als3\n"      \
-  "                enable|disable <facility> [s/370|esa/390|z/arch]\n"          \
-  "                query [<facility> | all]\n"                                  \
-  "command without any argument simply displays the current architecture\n"     \
+  "Format:   ARCHLVL S/370|ALS0 | ESA/390|ALS1 | ESAME|ALS2 | z/ARCH|ALS3\n"    \
+  "                  ENABLE|DISABLE <facility> [S/370|ESA/390|z/ARCH]\n"        \
+  "                  QUERY [<facility> | ALL]\n"                                \
+  "\n"                                                                          \
+  "Entering the command without arguments displays the current architecture\n"  \
   "mode. Entering the command with an argument sets the architecture mode\n"    \
-  "to the given value or enables, disables or queries the given facility.\n"
+  "to the given value, or enables, disables or queries the given facility.\n"   \
+  "\n"                                                                          \
+  "The ARCHLVL QUERY ALL command can be used to obtain a list of facilities\n"  \
+  "which can be enabled or disabled.\n"
 
 #define archmode_cmd_desc       "Alias for archlvl"
 #define asnlx_cmd_desc          "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"

@@ -18,12 +18,52 @@ Hercules: Release Notes
 <p>
 <dl>
 
+
+  <dt>External Packages
+  <dd>
+  <p>
+    Select source code and associated functionality has been moved out of
+    the Hercules repository and into separately maintained External Package
+    repositories.  Refer to the
+    <a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
+    document for more information.
+  </p>
+
+
   <dt>Minimum supported Windows platform is now Windows Vista
   <dd>
   <p>
     The new minimum supported Windows platform is now Windows Vista.  All
     Hercules users still running older versions of Windows should upgrade
     to at least Windows Vista or greater, with Windows 7 being preferred.
+  </p>
+
+
+  <dt>Facility names have changed
+  <dd>
+  <p>
+    The name of the facilities as used by the <code>ARCHLVL enable|disable|query</code>
+    command have changed. Previous the facility name was just an abbreviated
+    name for the given facility (e.g. <code>ASN_LX_REUSE</code>). Such names have all been
+    changed to include their associated 3-digit bit number as part of their
+    name. For example, the previously named <code>ASN_LX_REUSE</code> facility has now
+    been renamed to <code>006_ASN_LX_REUSE</code> instead. This was done to ensure the
+    specifed facility was the one you actually meant since many facilities
+    are named similarly to other facilities.
+  </p>
+
+
+  <dt>"ASN and LX Reuse" now defaults to enabled
+  <dd>
+  <p>
+    The "ASN and LX Reuse" facility (STFL bit 6) is now enabled by default
+    for the z/Architecture mode, as it should have been all along.  It is
+    still disabled by default for the ESA/390 architecture mode however.
+    </p><p>
+    In earlier versions of Hercules it defaulted to disabled requiring those
+    running z/Architecture guest operating systems to have to manually add
+    an <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement to their configuration file.
+    Such statements are now no longer necessary.
   </p>
 
 
@@ -268,15 +308,6 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>External Packages
-  <dd>
-  <p>
-    Select source code and associated functionality has been moved out of
-    the Hercules repository and into separately maintained External Package
-    repositories.  Refer to the
-    <a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
-    document for more information.
-  </p>
 </dl>
 
 <hr>

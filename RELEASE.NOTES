@@ -26,6 +26,30 @@
   to at least Windows Vista or greater, with Windows 7 being preferred.
 
 
+* Facility names have changed
+
+  The name of the facilities as used by the 'ARCHLVL enable|disable|query'
+  command have changed. Previous the facility name was just an abbreviated
+  name for the given facility (e.g. ASN_LX_REUSE). Such names have all been
+  changed to include their associated 3-digit bit number as part of their
+  name. For example, the previously named "ASN_LX_REUSE" facility has now
+  been renamed to "006_ASN_LX_REUSE" instead. This was done to ensure the
+  specifed facility was the one you actually meant since many facilities
+  are named similarly to other facilities.
+
+
+* "ASN and LX Reuse" now defaults to enabled
+
+  The "ASN and LX Reuse" facility (STFL bit 6) is now enabled by default
+  for the z/Architecture mode, as it should have been all along.  It is
+  still disabled by default for the ESA/390 architecture mode however.
+
+  In earlier versions of Hercules it defaulted to disabled requiring those
+  running z/Architecture guest operating systems to have to manually add
+  an "ARCHLVL ENABLE 006_ASN_LX_REUSE" statement to their configuration file.
+  Such statements are now no longer necessary.
+
+
 * "MAXCPU" and "NUMCPU" statements
 
   The combination of NUMCPU and MAXCPU controls the behavior of how many
@@ -52,28 +76,28 @@
   generally precede (come before) any other ARCHLVL statement that enables
   or disables a given architectural feature.
 
-  For example: on certain IBM operating systems the z/Architecture "ASN
-  and LX Reuse Facility" feature must be enabled or the system will not IPL.
-  The facility is enabled in Hercules via the ARCHLVL ENABLE 006_ASN_LX_REUSE
-  configuration file statement, but since the facility is a z/Architecture-
-  only feature, your initial architecture must either be set to "z/Arch"
-  beforehand or else you need to specify the optional [archmode] parameter
-  on your ARCHLVL ENABLE 006_ASN_LX_REUSE statement.
-
-  This means the ARCHLVL z/Arch< statement must usually come before your
-  ARCHLVL ENABLE 006_ASN_LX_REUSE statement in your configuration file.
-  Otherwise the ASN and LX Reuse Facility would not be enabled.
+  For example: on certain IBM operating systems the z/Architecture "PFPO
+  Facility" must be enabled or the system will not IPL. While at the time
+  of this writing Hercules does not currently support the Perform Floating-
+  Point-Operation (PFPO) Facility, the STFLE facility bit can nonetheless
+  be forcibly enabled anyway via the "ARCHLVL ENABLE BIT44" configuration
+  file statement. Since the facility is a z/Architecture-only feature however,
+  your initial architecture must either be set to "z/Arch" beforehand, or
+  else you need to specify the optional 'archlvl' parameter on your "ARCHLVL
+  ENABLE BIT44" statement. This usually means your "ARCHLVL z/Arch" statement
+  must come before your "ARCHLVL ENABLE BIT44" statement in your configuration
+  file. Otherwise the PFPO Facility would not get enabled.
 
   With the introduction of limited automatic LPAR-mode/BASIC-mode switching
   (see next item below), LPARNUM statements should follow ARCHLVL statements
   if LPAR mode is truly desired for ARCHLVL S/370 (which is usually not the
   case).
 
-  The ARCHLVL statement is currently the only system parameter where the
-  sequence may matter. The order of all other system parameters does not
-  currently matter. This may change in the future however, so be sure to
-  always carefully read through the RELEASE NOTES (this document) with
-  each new release of Hercules.
+  The ARCHLVL and LPARNUM statements are currently the only system parameter
+  configuration file statements whose sequence matters. The order of all other
+  configuration file system parameter statements should not currently matter.
+  This may change in the future however, so be sure to always carefully read
+  through the RELEASE NOTES (this document) with each new update to Hercules.
 
 
 * Limited automatic LPARNUM updating when setting certain architecture modes
