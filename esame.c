@@ -5537,9 +5537,12 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 PSA    *psa;                            /* -> Prefixed storage area  */
 
-    S(inst, regs, b2, effective_addr2);
+    /* Program Check if z/Architecture is not installed */
+    FACILITY_CHECK( 001_ZARCH_INSTALLED, regs );
 
-    PRIV_CHECK(regs);
+    S( inst, regs, b2, effective_addr2 );
+
+    PRIV_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs,IC0, STFL))
@@ -5574,7 +5577,10 @@ int     ndbl;                           /* #of doublewords to store  */
 int     sdbl;                           /* Supported dblwrd size     */
 int     cc;                             /* Condition code            */
 
-    S(inst, regs, b2, effective_addr2);
+    /* Program Check if STFLE is not installed */
+    FACILITY_CHECK( 007_STFL_EXTENDED, regs );
+
+    S( inst, regs, b2, effective_addr2 );
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs,IC0, STFL))

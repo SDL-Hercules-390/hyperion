@@ -769,6 +769,10 @@
  #error SIE requires storage key assist
 #endif
 
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_STORE_FACILITY_LIST )
+ #error z/Architecture requires the STFL instruction
+#endif
+
 #if defined( FEATURE_004_IDTE_SC_SEGTAB_FACILITY ) \
 && !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  #error FEATURE_004_IDTE_SC_SEGTAB_FACILITY requires FEATURE_003_DAT_ENHANCE_FACILITY_1
