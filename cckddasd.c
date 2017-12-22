@@ -455,6 +455,9 @@ int             i;                      /* Index                     */
     /* If no more devices then perform global termination */
     if (cckdblk.dev1st == NULL) cckddasd_term ();
 
+    dev->buf = NULL;
+    dev->bufsize = 0;
+
     return 0;
 } /* end function cckddasd_close_device */
 

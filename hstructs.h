@@ -1057,6 +1057,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
         int     bufcur;                 /* Buffer data identifier    */
         BYTE   *buf;                    /* -> Device data buffer     */
+        BYTE   *prev_buf;               /* (saved previous value)    */
         int     bufsize;                /* Device data buffer size   */
         int     buflen;                 /* Device buffer length used */
         int     bufoff;                 /* Offset into data buffer   */

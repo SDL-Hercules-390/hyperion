@@ -1320,9 +1320,11 @@ int     i;                              /* Loop index                */
            that continue accessing the buffer for a brief period even
            though the device has already been detached.
         */
-        if (dev->buf)
+        if (dev->buf && dev->buf == dev->prev_buf)
             free_aligned( dev->buf );
-        dev->buf = malloc_aligned (dev->bufsize, 4096);
+
+        dev->buf = dev->prev_buf = malloc_aligned( dev->bufsize, 4096 );
+
         if (dev->buf == NULL)
         {
             char buf[64];
