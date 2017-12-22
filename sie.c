@@ -39,7 +39,7 @@ static int s390_run_sie (REGS *regs);
 #if defined(_900)
 static int z900_run_sie (REGS *regs);
 #endif /*defined(_900)*/
-static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
+static int (* run_sie[NUM_INSTR_TAB_PTRS]) (REGS *regs) =
     {
 #if defined(_370)
         s370_run_sie,
@@ -299,7 +299,7 @@ U64     dreg;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if (STATEBK->mx & SIE_MX_ESAME)
     {
-        GUESTREGS->arch_mode = ARCH_900;
+        GUESTREGS->arch_mode = ARCH_900_IDX;
         GUESTREGS->program_interrupt = &z900_program_interrupt;
         GUESTREGS->trace_br = (func)&z900_trace_br;
         icode = z900_load_psw(GUESTREGS, STATEBK->psw);
@@ -308,7 +308,7 @@ U64     dreg;
     if (STATEBK->m & SIE_M_370)
     {
 #if defined(_370)
-        GUESTREGS->arch_mode = ARCH_370;
+        GUESTREGS->arch_mode = ARCH_370_IDX;
         GUESTREGS->program_interrupt = &s370_program_interrupt;
         icode = s370_load_psw(GUESTREGS, STATEBK->psw);
 #else
@@ -325,7 +325,7 @@ U64     dreg;
     if (STATEBK->m & SIE_M_XA)
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
     {
-        GUESTREGS->arch_mode = ARCH_390;
+        GUESTREGS->arch_mode = ARCH_390_IDX;
         GUESTREGS->program_interrupt = &s390_program_interrupt;
         GUESTREGS->trace_br = (func)&s390_trace_br;
         icode = s390_load_psw(GUESTREGS, STATEBK->psw);
@@ -350,7 +350,7 @@ U64     dreg;
 #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                      PX_MASK;
 #else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-                     (GUESTREGS->arch_mode == ARCH_900) ? PX_MASK : 0x7FFFF000;
+                     (GUESTREGS->arch_mode == ARCH_900_IDX) ? PX_MASK : 0x7FFFF000;
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 #if defined(FEATURE_REGION_RELOCATE)
@@ -873,7 +873,7 @@ int     n;
     STORE_W(STATEBK->gr15, GUESTREGS->GR(15));
 
     /* Store the PSW */
-    if(GUESTREGS->arch_mode == ARCH_390)
+    if(GUESTREGS->arch_mode == ARCH_390_IDX)
         s390_store_psw (GUESTREGS, STATEBK->psw);
 #if defined(_370) || defined(_900)
     else
@@ -977,7 +977,7 @@ static int ARCH_DEP(run_sie) (REGS *regs)
     int   icode;    /* SIE longjmp intercept code      */
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
-    const zz_func *current_opcode_table;
+    const instr_func *current_opcode_table;
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -1423,14 +1423,14 @@ U32    newgr1;
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "sie.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "sie.c"
 #endif
 

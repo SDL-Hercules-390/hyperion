@@ -364,23 +364,23 @@ struct REGS {                           /* Processor registers       */
      /* ------------------------------------------------------------ */
 
      /* Runtime opcode tables, use replace_opcode to modify */
-        const zz_func *s370_runtime_opcode_xxxx,
+        const instr_func *s370_runtime_opcode_xxxx,
                *s370_runtime_opcode_e3________xx,
                *s370_runtime_opcode_eb________xx,
                *s370_runtime_opcode_ec________xx,
                *s370_runtime_opcode_ed________xx;
-        const zz_func *s390_runtime_opcode_xxxx,
+        const instr_func *s390_runtime_opcode_xxxx,
                *s390_runtime_opcode_e3________xx,
                *s390_runtime_opcode_eb________xx,
                *s390_runtime_opcode_ec________xx,
                *s390_runtime_opcode_ed________xx;
-        const zz_func *z900_runtime_opcode_xxxx,
+        const instr_func *z900_runtime_opcode_xxxx,
                *z900_runtime_opcode_e3________xx,
                *z900_runtime_opcode_eb________xx,
                *z900_runtime_opcode_ec________xx,
                *z900_runtime_opcode_ed________xx;
 #ifdef OPTION_OPTINST
-        const zz_func
+        const instr_func
                *s370_runtime_opcode_e3_0______xx,
                *s390_runtime_opcode_e3_0______xx,
                *z900_runtime_opcode_e3_0______xx;
@@ -472,9 +472,9 @@ struct SYSBLK {
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    config;                 /* (Re)Configuration Lock    */
         int     arch_mode;              /* Architecturual mode       */
-                                        /* 0 == S/370   (ARCH_370)   */
-                                        /* 1 == ESA/390 (ARCH_390)   */
-                                        /* 2 == ESAME   (ARCH_900)   */
+                                        /* 0 == S/370   (ARCH_370_IDX)   */
+                                        /* 1 == ESA/390 (ARCH_390_IDX)   */
+                                        /* 2 == ESAME   (ARCH_900_IDX)   */
         RADR    mainsize;               /* Main storage size (bytes) */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
@@ -529,7 +529,7 @@ struct SYSBLK {
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 
         /* Active Facility List */
-        BYTE    facility_list[GEN_MAXARCH][STFL_HERC_BY_SIZE];
+        BYTE    facility_list[NUM_INSTR_TAB_PTRS][STFL_HERC_BY_SIZE];
 
      /* CPU Measurement Counter facility
         CPU Measurement Sampling facility
@@ -1198,7 +1198,7 @@ struct DEVBLK {                         /* Device configuration block*/
          (_dev)->tschpending)
 
 #define INITIAL_POWERON_370() \
-    ( !sysblk.ipled && ARCH_370 == sysblk.arch_mode )
+    ( !sysblk.ipled && ARCH_370_IDX == sysblk.arch_mode )
 
         /*  Execute Channel Pgm Counts */
         U64     excps;                  /* Number of channel pgms Ex */

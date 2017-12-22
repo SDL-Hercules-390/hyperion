@@ -390,12 +390,12 @@ void losc_check(char *ostype);
 HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
 CMDT_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
 HPAN_DLL_IMPORT void  (panel_display_r)          (void);
-OPCD_DLL_IMPORT void *(replace_opcode_r)         (int arch, zz_func inst, int opcode1, int opcode2);
+OPCD_DLL_IMPORT void *(replace_opcode_r)         (int arch, instr_func inst, int opcode1, int opcode2);
 
 HSYS_DLL_IMPORT int   (*system_command) (int argc, char *argv[], char *cmdline);
 HSYS_DLL_IMPORT void  (*daemon_task)    (void);
 HSYS_DLL_IMPORT void  (*panel_display)  (void);
-HSYS_DLL_IMPORT void *(*replace_opcode) (int arch, zz_func inst, int opcode1, int opcode2);
+HSYS_DLL_IMPORT void *(*replace_opcode) (int arch, instr_func inst, int opcode1, int opcode2);
 HSYS_DLL_IMPORT void *(*panel_command)  (void *);
 
 HSYS_DLL_IMPORT void *(*debug_device_state)         (DEVBLK *);
@@ -416,7 +416,7 @@ HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
 #define daemon_task                     NULL
 void *panel_command (void *cmdline);
 void panel_display (void);
-void *replace_opcode (int arch, zz_func inst, int opcode1, int opcode2);
+void *replace_opcode (int arch, instr_func inst, int opcode1, int opcode2);
 #define debug_cpu_state                 NULL
 #define debug_cd_cmd                    NULL
 #define debug_device_state              NULL

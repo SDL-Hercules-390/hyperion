@@ -3236,9 +3236,9 @@ BYTE    f = ' ', c = '\0';
      * config.c
      */
     if ( (!mainsize && sysblk.maxcpu > 0) ||    /* 0 only valid if MAXCPU 0           */
-         ( sysblk.arch_mode == ARCH_370 &&      /* 64M maximum for S/370 support      */
+         ( sysblk.arch_mode == ARCH_370_IDX &&      /* 64M maximum for S/370 support      */
            mainsize > 0x004000 ) ||             /*     ...                            */
-         ( sysblk.arch_mode == ARCH_390 &&      /*  2G maximum for ESA/390 support    */
+         ( sysblk.arch_mode == ARCH_390_IDX &&      /*  2G maximum for ESA/390 support    */
            mainsize > 0x080000 ) ||             /*     ...                            */
          ( sizeof(size_t) < 8 &&                /*  4G maximum for 32-bit host        */
            mainsize > 0x100000 ) )              /*     addressing                     */
@@ -3334,7 +3334,7 @@ u_int   locktype = 0;
     /* Handle size suffix and suffix overflow */
     {
         U64 shiftsize = xpndsize;
-        size_t sizeof_RADR = (ARCH_900 == sysblk.arch_mode) ? sizeof(U64)
+        size_t sizeof_RADR = (ARCH_900_IDX == sysblk.arch_mode) ? sizeof(U64)
                                                             : sizeof(U32);
         if ( rc == 2 )
         {
@@ -4888,7 +4888,7 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         if (1
-            && ARCH_370 == sysblk.arch_mode
+            && ARCH_370_IDX == sysblk.arch_mode
             && (lparnum == 0 || lparnum > 16)
         )
         {
@@ -5220,7 +5220,7 @@ int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
         }
         else /* Setting format-1 cpuid format */
         {
-            if (ARCH_370 == sysblk.arch_mode)
+            if (ARCH_370_IDX == sysblk.arch_mode)
             {
                 // "Invalid argument %s%s"
                 WRMSG( HHC02205, "E", argv[1], ": must be 0 for System/370" );
@@ -8135,7 +8135,7 @@ int qcpuid_cmd( int argc, char* argv[], char* cmdline )
         }
     }
 
-    if (ARCH_370 != sysblk.arch_mode)
+    if (ARCH_370_IDX != sysblk.arch_mode)
     {
         /* Show 'CPC SI' information from SYSBLK */
         qcpuid_cpcsi( sysblk.cpuid, "SYSBLK" );

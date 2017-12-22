@@ -771,7 +771,7 @@ int rc = 0;
             sie_flag = 1;
         }
 #endif
-        if (regs->arch_mode == ARCH_370)
+        if (regs->arch_mode == ARCH_370_IDX)
         {
             itimer = INT_TIMER(regs);
         /* The interval timer counts 76800 per second, or one every

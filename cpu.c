@@ -1085,7 +1085,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #ifdef FEATURE_S370_CHANNEL
     /* CSW has already been stored at PSA+X'40' */
 
-    if (sysblk.arch_mode == ARCH_370 &&
+    if (sysblk.arch_mode == ARCH_370_IDX &&
         ECMODE(&regs->psw))
     {
         /* For ECMODE, store the I/O device address at PSA+X'B8' */
@@ -1228,7 +1228,7 @@ RADR    fsta;                           /* Failing storage address   */
 REGS *s370_run_cpu (int cpu, REGS *oldregs);
 REGS *s390_run_cpu (int cpu, REGS *oldregs);
 REGS *z900_run_cpu (int cpu, REGS *oldregs);
-static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
+static REGS *(* run_cpu[NUM_INSTR_TAB_PTRS]) (int cpu, REGS *oldregs) =
                 {
 #if defined(_370)
                     s370_run_cpu,
@@ -1712,7 +1712,7 @@ cpustate_stopping:
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
-const zz_func   *current_opcode_table;
+const instr_func   *current_opcode_table;
 register REGS   *regs;
 BYTE   *ip;
 int     i;
@@ -1904,14 +1904,14 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "cpu.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "cpu.c"
 #endif
 
@@ -1939,17 +1939,17 @@ int  arch_mode;
     /* Call the appropriate store_psw routine based on archmode */
     switch(arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             s370_store_psw(&cregs, addr);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             s390_store_psw(&cregs, addr);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_store_psw(&cregs, addr);
             break;
 #endif
@@ -1977,7 +1977,7 @@ int     arch_mode;                        /* architecture mode       */
 
     memset(qword, 0, sizeof(qword));
 
-    if( arch_mode != ARCH_900 )
+    if( arch_mode != ARCH_900_IDX )
     {
         copy_psw (regs, qword);
         return(snprintf(buf, buflen,
@@ -2008,7 +2008,7 @@ QWORD   qword;                            /* quadword work area      */
 
     memset(qword, 0, sizeof(qword));
 
-    if( regs->arch_mode != ARCH_900 )
+    if( regs->arch_mode != ARCH_900_IDX )
     {
         copy_psw (regs, qword);
         sprintf(buf, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
@@ -2030,7 +2030,7 @@ QWORD   qword;                            /* quadword work area      */
 } /* end function str_psw */
 
 
-const char* arch_name[GEN_MAXARCH] =
+const char* arch_name[NUM_INSTR_TAB_PTRS] =
 {
 #if defined(_370)
         _ARCH_370_NAME,

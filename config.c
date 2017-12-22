@@ -23,14 +23,14 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #if !defined( _GEN_ARCH )
 
-#if defined( _ARCHMODE3 )
- #define  _GEN_ARCH _ARCHMODE3
+#if defined( _ARCH_NUM_2 )
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "config.c"
  #undef   _GEN_ARCH
 #endif
 
-#if defined( _ARCHMODE2 )
- #define  _GEN_ARCH _ARCHMODE2
+#if defined( _ARCH_NUM_1 )
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "config.c"
  #undef   _GEN_ARCH
 #endif
@@ -153,15 +153,15 @@ int cpu;
     }
 
     /* Round requested storage size to architectural segment boundaries
-     *    ARCH_370  1   4K page
-     *    ARCH_390  256 4K pages (or 1M)
-     *    ARCH_900  256 4K pages (or 1M)
+     *    ARCH_370_IDX  1   4K page
+     *    ARCH_390_IDX  256 4K pages (or 1M)
+     *    ARCH_900_IDX  256 4K pages (or 1M)
      */
     if (mainsize)
     {
 #if 0
         if (mainsize <= (16 << (SHIFT_MEGABYTE - SHIFT_4K)))
-            storsize = MAX((sysblk.arch_mode <= ARCH_390) ? 1 : 2,
+            storsize = MAX((sysblk.arch_mode <= ARCH_390_IDX) ? 1 : 2,
                            mainsize);
             /* The side effect of this for values less than 256 is to establish
              * zones with a memory size of zero megabytes.  Channel subsystem I/O
@@ -171,7 +171,7 @@ int cpu;
              * channel status.
              */
 #else
-        if (sysblk.arch_mode == ARCH_370)
+        if (sysblk.arch_mode == ARCH_370_IDX)
             storsize = MAX(1,mainsize);
         else
 #endif
@@ -776,7 +776,7 @@ int     i;                              /* Loop index                */
         if (!sysblk.shutdown)
         {
 #if defined(_370)
-            if (sysblk.arch_mode != ARCH_370)
+            if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
                 build_detach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
@@ -850,7 +850,7 @@ int     cpu;
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->allocated)
         {
-            if (sysblk.arch_mode == ARCH_370)
+            if (sysblk.arch_mode == ARCH_370_IDX)
                 detach_device(SSID_TO_LCSS(dev->ssid), dev->devnum);
             else
                 detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan, dev->devnum);
@@ -1344,13 +1344,13 @@ int     i;                              /* Loop index                */
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
 #if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
+    if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
         build_attach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /*
-    if(lcss!=0 && sysblk.arch_mode==ARCH_370)
+    if(lcss!=0 && sysblk.arch_mode==ARCH_370_IDX)
     {
         // "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
         WRMSG (HHC01458, "W", lcss, devnum);
@@ -1430,7 +1430,7 @@ DEVBLK *dev;                            /* -> Device block           */
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
 #if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
+    if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
         build_detach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
@@ -1454,7 +1454,7 @@ DEVBLK *dev;                            /* -> Device block           */
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Build Channel Report */
 #if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
+    if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
         build_attach_chrpt( dev );
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/

@@ -25,8 +25,8 @@ static void    *(*resolver)(char *ep);
 /* This is the entry for an instruction to be replaced */
 struct  s37x_inst_table_entry
 {
-    zz_func newfun;   /* New function */
-    zz_func oldfun;   /* Save of old function */
+    instr_func newfun;   /* New function */
+    instr_func oldfun;   /* Save of old function */
     int index;          /* Index in table */
 };
 
@@ -499,13 +499,13 @@ static  void    s37x_replace_opcode(struct s37x_inst_table_entry *tb,int code,in
         }
         if(set)
         {
-            tb[i].oldfun=replace_opcode(ARCH_370, tb[i].newfun,code1,code2);
+            tb[i].oldfun=replace_opcode(ARCH_370_IDX, tb[i].newfun,code1,code2);
 //            logmsg("Replacing Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,tb[i].oldfun,tb[i].newfun);
         }
         else
         {
-            zz_func old;
-            old=replace_opcode(ARCH_370, tb[i].oldfun,code1,code2);
+            instr_func old;
+            old=replace_opcode(ARCH_370_IDX, tb[i].oldfun,code1,code2);
             UNREFERENCED(old);
 //            logmsg("Restoring Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);
         }

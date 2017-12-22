@@ -131,7 +131,7 @@
 #define GENx37Xx___x900   GENx___x___x900
 #define GENx37Xx390x900   GENx___x390x900
 
-typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
+typedef void (ATTR_REGPARM(2) *instr_func) (BYTE inst[], REGS *regs);
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 
@@ -2804,13 +2804,13 @@ do { \
 #else /* __GEN_ARCH == 390 && defined( _FEATURE_ZSIE ) */
 
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
-    ( ((_regs)->arch_mode == ARCH_390) ?            \
+    ( ((_regs)->arch_mode == ARCH_390_IDX) ?            \
     s390_translate_addr((_addr), (_arn), (_regs), (_acctype)) : \
     z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    (((_regs)->arch_mode == ARCH_390) \
+    (((_regs)->arch_mode == ARCH_390_IDX) \
     ? s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)) \
     : z900_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey))), \
     (_regs)->dat.aaddr \

@@ -17,14 +17,14 @@
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "dyninst.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "dyninst.c"
 #endif
 
@@ -33,8 +33,8 @@ typedef struct
   BYTE opcode1;
   BYTE opcode2;
   int arch;
-  zz_func newinst;
-  zz_func oldinst;
+  instr_func newinst;
+  instr_func oldinst;
 }
 DYNINST;
 
@@ -84,12 +84,12 @@ static void update_dyninst()
 {
   int arch;
   char name[64];
-  zz_func newinst;
-  zz_func oldinst;
+  instr_func newinst;
+  instr_func oldinst;
   int opcode1;
   int opcode2;
 
-  for(arch = 0; arch < GEN_ARCHCOUNT; arch++)
+  for(arch = 0; arch < NUM_GEN_ARCHS; arch++)
   {
     for(opcode1 = 0; opcode1 < 0x100 && dyninst_index < MAXDYNINST; opcode1++)
     {

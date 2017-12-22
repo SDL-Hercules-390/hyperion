@@ -12,18 +12,20 @@
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 _DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
         U32 *asteo, U32 aste[]);
 _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
         int atemask, REGS *regs);
 #endif
-#if defined(FEATURE_ACCESS_REGISTERS)
+
+#if defined( FEATURE_ACCESS_REGISTERS )
 _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
         int acctype, REGS *regs, U32 *asteo, U32 aste[]);
 _DAT_C_STATIC void ARCH_DEP(purge_alb_all) ();
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
 #endif
+
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
         REGS *regs, int acctype);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ();
@@ -31,9 +33,11 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
-#if ARCH_MODE == ARCH_390 && defined(_900)
+
+#if ARCH_IDX == ARCH_390_IDX && defined( _900 )
 _DAT_C_STATIC void z900_invalidate_tlb (REGS *regs, BYTE mask);
 #endif
+
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
         U32 op2, REGS *regs);
@@ -41,19 +45,20 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey, size_t len);
-#if defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900
+
+#if defined( _FEATURE_SIE ) && ARCH_IDX != ARCH_900_IDX
 _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
         int acctype);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
 _LOGICAL_C_STATIC BYTE *z900_logical_to_main (U64 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
 _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
         int acctype);
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif
 
 _VSTORE_C_STATIC void ARCH_DEP(vstorec) (const void *src, BYTE len,
         VADR addr, int arn, REGS *regs);
@@ -81,22 +86,22 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         int len, int acctype, REGS *regs);
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec);
 
-#if defined(FEATURE_027_MVCOS_FACILITY)
+#if defined( FEATURE_027_MVCOS_FACILITY )
 _VSTORE_C_STATIC void ARCH_DEP(move_charx) (VADR addr1, int space1,
        BYTE key1, VADR addr2, int space2, BYTE key2,
        int len, REGS *regs);
-#endif /*defined(FEATURE_027_MVCOS_FACILITY)*/
+#endif
 
-#if defined(_FEATURE_SIE) && defined(_370) && !defined(_IEEE_C_)
+#if defined( _FEATURE_SIE ) && defined( _370 ) && !defined( _IEEE_C_ )
 _VFETCH_C_STATIC BYTE * s370_instfetch (REGS *regs, int exec);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
-#if defined(_FEATURE_ZSIE) && defined(_900)
+#if defined( _FEATURE_ZSIE ) && defined( _900 )
 _VFETCH_C_STATIC BYTE * s390_instfetch (REGS *regs, int exec);
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif
 
-#if !defined(_INLINE_H)
 
+#ifndef _INLINE_H
 #define _INLINE_H
 
 

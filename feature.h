@@ -44,23 +44,23 @@
 /*  Now #define the FEATUREs for the current build architecture(s)   */
 /*-------------------------------------------------------------------*/
 
-#undef       __GEN_ARCH                 // (TWO underscores!)
-#if !defined( _GEN_ARCH )               // (ONE underscore!)
- #define __GEN_ARCH   _ARCHMODE1        // (first build architecture)
+#undef       __GEN_ARCH                   // (TWO underscores!)
+#if !defined( _GEN_ARCH )                 // (ONE underscore!)
+ #define     __GEN_ARCH    _ARCH_NUM_0    // (first build architecture)
 #else
- #define __GEN_ARCH   _GEN_ARCH         // (next build architecture)
+ #define     __GEN_ARCH    _GEN_ARCH      // (next build architecture)
 #endif
 
-#include  "featall.h"                   // (all FEATUREs #undef'ed here)
+#include  "featall.h"                     // (all FEATUREs #undef'ed here)
 
-#if   __GEN_ARCH == 370                 // (building for S/370?)
- #include      "feat370.h"              // (#define S/370 FEATUREs)
+#if   __GEN_ARCH == 370                   // (building for S/370?)
+ #include      "feat370.h"                // (#define S/370 FEATUREs)
 
-#elif __GEN_ARCH == 390                 // (building for S/390?)
- #include      "feat390.h"              // (#define S/390 FEATUREs)
+#elif __GEN_ARCH == 390                   // (building for S/390?)
+ #include      "feat390.h"                // (#define S/390 FEATUREs)
 
-#elif __GEN_ARCH == 900                 // (building for z/Arch?)
- #include      "feat900.h"              // (#define z/Arch FEATUREs)
+#elif __GEN_ARCH == 900                   // (building for z/Arch?)
+ #include      "feat900.h"                // (#define z/Arch FEATUREs)
 
 #else
  #error Unable to determine Architecture Mode
@@ -76,7 +76,7 @@
 /*  past this section of code.                                       */
 /*-------------------------------------------------------------------*/
 
-#undef ARCH_MODE
+#undef ARCH_IDX
 #undef APPLY_PREFIXING
 #undef AMASK
 #undef ADDRESS_MAXWRAP
@@ -149,7 +149,7 @@
 #if __GEN_ARCH == 370
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE           ARCH_370
+#define ARCH_IDX            ARCH_370_IDX
 #define ARCH_DEP(_name)     s370_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
@@ -272,7 +272,7 @@
 #elif __GEN_ARCH == 390
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE           ARCH_390
+#define ARCH_IDX            ARCH_390_IDX
 #define ARCH_DEP(_name)     s390_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
@@ -407,7 +407,7 @@
 #elif __GEN_ARCH == 900
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_MODE           ARCH_900
+#define ARCH_IDX            ARCH_900_IDX
 #define ARCH_DEP(_name)     z900_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \

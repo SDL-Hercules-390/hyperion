@@ -640,31 +640,31 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined(  OPTION_370_MODE )
- #define            _370
- #define _ARCHMODE1  370
- #define        ARCH_370        0
+#if defined(            OPTION_370_MODE )
+ #define                      _370              // (define if arch gen'ed)
+ #define                  ARCH_370_IDX     0    // (array index for arch)
+ #define       _ARCH_NUM_0     370              // (the arch to be gen'ed)
 #endif
 
-#if defined(  OPTION_390_MODE )
- #define            _390
- #if !defined( _ARCHMODE1 )
-  #define _ARCHMODE1 390
-  #define       ARCH_390        0
+#if defined(            OPTION_390_MODE )
+ #define                      _390
+ #if !defined( _ARCH_NUM_0 )
+  #define                 ARCH_390_IDX      0
+  #define      _ARCH_NUM_0     390
  #else
-  #define _ARCHMODE2 390
-  #define       ARCH_390        1
+  #define                 ARCH_390_IDX      1
+  #define      _ARCH_NUM_1     390
  #endif
 #endif
 
-#if defined(  OPTION_900_MODE )
- #define            _900
- #if !defined( _ARCHMODE2 )
-  #define _ARCHMODE2 900
-  #define       ARCH_900        1
+#if defined(            OPTION_900_MODE )
+ #define                      _900
+ #if !defined( _ARCH_NUM_1 )
+  #define                 ARCH_900_IDX      1
+  #define      _ARCH_NUM_1     900
  #else
-  #define _ARCHMODE3 900
-  #define       ARCH_900        2
+  #define                 ARCH_900_IDX      2
+  #define      _ARCH_NUM_2     900
  #endif
 #endif
 
@@ -676,28 +676,56 @@
 
 /*-------------------------------------------------------------------*/
 
-#if !defined( ARCH_370 )
- #define      ARCH_370          -1
+#if !defined( ARCH_370_IDX )
+ #define      ARCH_370_IDX      -1
 #endif
-#if !defined( ARCH_390 )
- #define      ARCH_390          -1
+#if !defined( ARCH_390_IDX )
+ #define      ARCH_390_IDX      -1
 #endif
-#if !defined( ARCH_900 )
- #define      ARCH_900          -1
+#if !defined( ARCH_900_IDX )
+ #define      ARCH_900_IDX      -1
 #endif
 
 /*-------------------------------------------------------------------*/
+/* The "NUM_GEN_ARCHS" value is used as an array size for any table  */
+/* which needs a slot for each gen'ed architecture.  Use either the  */
+/* "ARCH_nnn_IDX" constant or the 'sysblk.arch_mode' value to index  */
+/* into the table to reach the desired entry.                        */
+/*-------------------------------------------------------------------*/
 
-#if   defined( _ARCHMODE3 )
- #define    GEN_ARCHCOUNT       3
-#elif defined( _ARCHMODE2 )
- #define    GEN_ARCHCOUNT       2
+#if   defined(  _ARCH_NUM_2 )
+ #define NUM_GEN_ARCHS          3
+#elif defined(  _ARCH_NUM_1 )
+ #define NUM_GEN_ARCHS          2
 #else
- #define    GEN_ARCHCOUNT       1
+ #define NUM_GEN_ARCHS          1
 #endif
 
-#define INSTRUCTION_DECODE_ENTRIES      2
-#define GEN_MAXARCH     GEN_ARCHCOUNT + INSTRUCTION_DECODE_ENTRIES
+//--------------------------------------------------------------------
+// PROGRAMMING NOTE: we need an extra 2 slots in each opcode table
+// entry to accommodate the extra 2 arguments ('mnemonic' and 'p')
+// that are passed to the opcode disassembly (DISASM_TYPE) functions
+// in opcode.c, declared as:
+//
+//     int disasm_type( BYTE inst[], char mnemonic[], char *p );
+//
+// For example, notice the definition of the "GENx370x390x900" macro
+// in opcode.h, which defines opcode table entries for each opcode,
+// and defines not only a pointer to the intruction function for each
+// architecture, but which ALSO defines the following entries as well:
+//
+//      (void*)&disasm_ ## _format, \
+//      (void*)& _mnemonic "\0" #_name \
+//
+// as the last 2 entries for each opcode slot. Thus the need for an
+// extra "+2" slots in the below "NUM_INSTR_TAB_PTRS" definition: so
+// the opcode tables in opcode.c defined by "GENx370x390x900" macro
+// have room for the 2 needed extra pointers used by the DISASM_TYPE
+// functions.
+
+#define NUM_INSTR_TAB_PTRS   NUM_GEN_ARCHS + 2   // (see NOTE above)
+
+//--------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
 #else // (featchk pass 2: check sanity of #defined features)

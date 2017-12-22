@@ -5007,14 +5007,14 @@ DEF_INST(perform_cryptographic_key_management_operation)
 
 #if !defined( _GEN_ARCH )
 
-  #if defined(              _ARCHMODE2 )
-    #define   _GEN_ARCH     _ARCHMODE2
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
     #include "dyncrypt.c"
   #endif
 
-  #if defined(              _ARCHMODE3 )
+  #if defined(              _ARCH_NUM_2 )
     #undef    _GEN_ARCH
-    #define   _GEN_ARCH     _ARCHMODE3
+    #define   _GEN_ARCH     _ARCH_NUM_2
     #include "dyncrypt.c"
   #endif
 

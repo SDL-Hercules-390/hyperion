@@ -67,14 +67,14 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
 
 #if !defined(_GEN_ARCH)             // (first time here?)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2      // (set next build architecture)
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1      // (set next build architecture)
  #include "hscemode.c"              // (compile ourselves again)
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3      // (set next build architecture)
+ #define  _GEN_ARCH _ARCH_NUM_2      // (set next build architecture)
  #include "hscemode.c"              // (compile ourselves again)
 #endif
 
@@ -394,10 +394,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
-    shift = regs->arch_mode == ARCH_370 ? 11 : 12;
-    bytemask = regs->arch_mode == ARCH_370 ? 0x1FFFFF : 0x3FFFFF;
-    pagemask = regs->arch_mode == ARCH_370 ? 0x00E00000 :
-               regs->arch_mode == ARCH_390 ? 0x7FC00000 :
+    shift = regs->arch_mode == ARCH_370_IDX ? 11 : 12;
+    bytemask = regs->arch_mode == ARCH_370_IDX ? 0x1FFFFF : 0x3FFFFF;
+    pagemask = regs->arch_mode == ARCH_370_IDX ? 0x00E00000 :
+               regs->arch_mode == ARCH_390_IDX ? 0x7FC00000 :
                                      0xFFFFFFFFFFC00000ULL;
 
     MSGBUF( buf, "tlbID 0x%6.6X mainstor %p",regs->tlbID,regs->mainstor);
@@ -425,10 +425,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     if (regs->sie_active)
     {
         regs = regs->guestregs;
-        shift = regs->guestregs->arch_mode == ARCH_370 ? 11 : 12;
-        bytemask = regs->arch_mode == ARCH_370 ? 0x1FFFFF : 0x3FFFFF;
-        pagemask = regs->arch_mode == ARCH_370 ? 0x00E00000 :
-                   regs->arch_mode == ARCH_390 ? 0x7FC00000 :
+        shift = regs->guestregs->arch_mode == ARCH_370_IDX ? 11 : 12;
+        bytemask = regs->arch_mode == ARCH_370_IDX ? 0x1FFFFF : 0x3FFFFF;
+        pagemask = regs->arch_mode == ARCH_370_IDX ? 0x00E00000 :
+                   regs->arch_mode == ARCH_390_IDX ? 0x7FC00000 :
                                          0xFFFFFFFFFFC00000ULL;
 
         MSGBUF( buf, "SIE: tlbID 0x%4.4x mainstor %p",regs->tlbID,regs->mainstor);
@@ -534,15 +534,15 @@ int pr_cmd( int argc, char *argv[], char *cmdline )
     switch( regs->arch_mode )
     {
 #if defined( _370 )
-    case ARCH_370:
+    case ARCH_370_IDX:
         rc = s370_archdep_pr_cmd( regs, argc, argv ); break;
 #endif
 #if defined( _390 )
-    case ARCH_390:
+    case ARCH_390_IDX:
         rc = s390_archdep_pr_cmd( regs, argc, argv ); break;
 #endif
 #if defined( _900 )
-    case ARCH_900:
+    case ARCH_900_IDX:
         rc = z900_archdep_pr_cmd( regs, argc, argv ); break;
 #endif
     default:
@@ -662,11 +662,11 @@ char  buf[512];
             if (strcmp(argv[n]+3,"24") == 0)
                 newam = 24;
             else if (strcmp(argv[n]+3,"31") == 0
-                    && (sysblk.arch_mode == ARCH_390
-                        || sysblk.arch_mode == ARCH_900))
+                    && (sysblk.arch_mode == ARCH_390_IDX
+                        || sysblk.arch_mode == ARCH_900_IDX))
                 newam = 31;
             else if (strcmp(argv[n]+3,"64") == 0
-                    && sysblk.arch_mode == ARCH_900)
+                    && sysblk.arch_mode == ARCH_900_IDX)
                 newam = 64;
             else
                 errflag = 1;
@@ -712,8 +712,8 @@ char  buf[512];
     /* Update the PSW address-space control mode, if specified */
     if (updas
         && (ECMODE(&regs->psw)
-            || sysblk.arch_mode == ARCH_390
-            || sysblk.arch_mode == ARCH_900))
+            || sysblk.arch_mode == ARCH_390_IDX
+            || sysblk.arch_mode == ARCH_900_IDX))
     {
         regs->psw.asc = newas;
     }
@@ -1066,7 +1066,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                               sysblk.regs[i]->intwait && !(sysblk.waiting_mask & CPU_BIT(i)) ? "yes" : "no");
         WRMSG( HHC00864, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               test_lock(&sysblk.cpulock[i]) ? "" : "not ");
-        if (ARCH_370 == sysblk.arch_mode)
+        if (ARCH_370_IDX == sysblk.arch_mode)
         {
             if (0xFFFF == sysblk.regs[i]->chanset)
             {
@@ -1083,7 +1083,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         WRMSG( HHC00867, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, INSTCOUNT(sysblk.regs[i]));
         WRMSG( HHC00868, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad, sysblk.regs[i]->siototal);
         copy_psw(sysblk.regs[i], curpsw);
-        if (ARCH_900 == sysblk.arch_mode)
+        if (ARCH_900_IDX == sysblk.arch_mode)
         {
             MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                 curpsw[0], curpsw[1], curpsw[2], curpsw[3],
@@ -1121,7 +1121,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC00860, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_SERVSIG ? "" : "not ");
             WRMSG( HHC00864, "I", "IE", sysblk.regs[i]->cpuad, test_lock(&sysblk.cpulock[i]) ? "" : "not ");
 
-            if (ARCH_370 == sysblk.arch_mode)
+            if (ARCH_370_IDX == sysblk.arch_mode)
             {
                 if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
                 {
@@ -1137,7 +1137,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)sysblk.regs[i]->guestregs->instcount);
             WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
-            if (ARCH_900 == sysblk.arch_mode)
+            if (ARCH_900_IDX == sysblk.arch_mode)
             {
                MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
                    curpsw[0], curpsw[1], curpsw[2], curpsw[3],
@@ -1352,7 +1352,7 @@ char buf[512];
             return 0;
         }
 
-        if ( ARCH_900 == regs->arch_mode )
+        if ( ARCH_900_IDX == regs->arch_mode )
             regs->GR_G(reg_num) = (U64) reg_value;
         else
             regs->GR_L(reg_num) = (U32) reg_value;
@@ -1522,7 +1522,7 @@ char buf[512];
             WRMSG(HHC02205, "E", argv[1], "");
             return 0;
         }
-        if ( ARCH_900 == regs->arch_mode )
+        if ( ARCH_900_IDX == regs->arch_mode )
             regs->CR_G(cr_num) = (U64)cr_value;
         else
             regs->CR_G(cr_num) = (U32)cr_value;
@@ -2447,7 +2447,7 @@ void setCpuIdregs
     MCEL    = arg_MCEL    >= 0 ? (U32) arg_MCEL                : sysblk.cpuid;
 
     /* Version is always zero in z/Architecture mode */
-    if (regs->arch_mode == ARCH_900)
+    if (regs->arch_mode == ARCH_900_IDX)
         version = 0;
 
     /* Register new CPU ID settings */
@@ -2455,7 +2455,7 @@ void setCpuIdregs
     regs->cpuversion = version;
     regs->cpuserial  = serial;
 
-    if (ARCH_370 != sysblk.arch_mode)
+    if (ARCH_370_IDX != sysblk.arch_mode)
     {
         /* Handle LPAR formatting */
         if (sysblk.lparmode)
@@ -2624,23 +2624,23 @@ void enable_lparmode( const int enable )
     if (enable)
     {
 #if defined( _370 )
-        sysblk.facility_list[ ARCH_370 ][fbyte] |= fbit;
+        sysblk.facility_list[ ARCH_370_IDX ][fbyte] |= fbit;
 #endif
 #if defined( _390 )
-        sysblk.facility_list[ ARCH_390 ][fbyte] |= fbit;
+        sysblk.facility_list[ ARCH_390_IDX ][fbyte] |= fbit;
 #endif
 #if defined( _900 )
-        sysblk.facility_list[ ARCH_900 ][fbyte] |= fbit;
+        sysblk.facility_list[ ARCH_900_IDX ][fbyte] |= fbit;
 #endif
     } else { // disable
 #if defined( _370 )
-        sysblk.facility_list[ ARCH_370 ][fbyte] &= ~fbit;
+        sysblk.facility_list[ ARCH_370_IDX ][fbyte] &= ~fbit;
 #endif
 #if defined( _390 )
-        sysblk.facility_list[ ARCH_390 ][fbyte] &= ~fbit;
+        sysblk.facility_list[ ARCH_390_IDX ][fbyte] &= ~fbit;
 #endif
 #if defined( _900 )
-        sysblk.facility_list[ ARCH_900 ][fbyte] &= ~fbit;
+        sysblk.facility_list[ ARCH_900_IDX ][fbyte] &= ~fbit;
 #endif
     }
 

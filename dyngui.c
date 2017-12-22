@@ -820,7 +820,7 @@ void  UpdateCPUStatus ()
 #endif //  defined(_FEATURE_SIE)
             ,
 #if        defined(_900)
-            ARCH_900 == pTargetCPU_REGS->arch_mode         ? 'Z' : '.'
+            ARCH_900_IDX == pTargetCPU_REGS->arch_mode         ? 'Z' : '.'
 #else  // !defined(_900)
                                                                    '.'
 #endif //  defined(_900)

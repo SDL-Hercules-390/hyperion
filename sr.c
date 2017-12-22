@@ -464,24 +464,24 @@ int      numconfdev=0;
             SR_READ_STRING(file, buf, len);
             i = -1;
 #if defined (_370)
-            if (strcasecmp (buf, arch_name[ARCH_370]) == 0)
+            if (strcasecmp (buf, arch_name[ARCH_370_IDX]) == 0)
             {
-                i = ARCH_370;
+                i = ARCH_370_IDX;
             }
 #endif
 #if defined (_390)
-            if (strcasecmp (buf, arch_name[ARCH_390]) == 0)
+            if (strcasecmp (buf, arch_name[ARCH_390_IDX]) == 0)
             {
-                i = ARCH_390;
+                i = ARCH_390_IDX;
             }
 #endif
 #if defined (_900)
             if (0
-                || strcasecmp (buf, arch_name[ARCH_900]) == 0
+                || strcasecmp (buf, arch_name[ARCH_900_IDX]) == 0
                 || strcasecmp (buf, "ESAME") == 0
             )
             {
-                i = ARCH_900;
+                i = ARCH_900_IDX;
             }
 #endif
             if (i < 0)
@@ -773,19 +773,19 @@ int      numconfdev=0;
             SR_READ_BUF(file, buf, len);
             switch (regs->arch_mode) {
 #if defined (_370)
-            case ARCH_370:
+            case ARCH_370_IDX:
                 len = 8;
                 rc = s370_load_psw(regs, (BYTE *)&buf);
                 break;
 #endif
 #if defined (_390)
-            case ARCH_390:
+            case ARCH_390_IDX:
                 len = 8;
                 rc = s390_load_psw(regs, (BYTE *)&buf);
                 break;
 #endif
 #if defined (_900)
-            case ARCH_900:
+            case ARCH_900_IDX:
                 len = 16;
                 rc = z900_load_psw(regs, (BYTE *)&buf);
                 break;
@@ -1369,19 +1369,19 @@ int      numconfdev=0;
             dev->resumesuspended=1;
             switch (sysblk.arch_mode) {
 #if defined(_370)
-            case ARCH_370:
+            case ARCH_370_IDX:
                 rc = create_thread (&dev->tid, DETACHED,
                                     s370_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_390)
-            case ARCH_390:
+            case ARCH_390_IDX:
                 rc = create_thread (&dev->tid, DETACHED,
                                     s390_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_900)
-            case ARCH_900:
+            case ARCH_900_IDX:
                 rc = create_thread (&dev->tid, DETACHED,
                                     z900_execute_ccw_chain, dev, "device thread");
                 break;
@@ -1398,7 +1398,7 @@ int      numconfdev=0;
 
     /* Indicate crw pending for any new devices */
 #if defined(_370)
-    if (sysblk.arch_mode != ARCH_370)
+    if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
     machine_check_crwpend();
 

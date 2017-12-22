@@ -68,7 +68,7 @@ int i;
 
     hprintf(webblk->sock, "<H2>Control Registers</H2>\n");
     hprintf(webblk->sock, "<PRE>\n");
-    if(regs->arch_mode != ARCH_900)
+    if(regs->arch_mode != ARCH_900_IDX)
         for (i = 0; i < 16; i++)
             hprintf(webblk->sock, "CR%2.2d=%8.8X%s", i, regs->CR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
@@ -97,7 +97,7 @@ int i;
 
     hprintf(webblk->sock, "<H2>General Registers</H2>\n");
     hprintf(webblk->sock, "<PRE>\n");
-    if(regs->arch_mode != ARCH_900)
+    if(regs->arch_mode != ARCH_900_IDX)
         for (i = 0; i < 16; i++)
             hprintf(webblk->sock, "GR%2.2d=%8.8X%s", i, regs->GR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
@@ -162,7 +162,7 @@ void cgibin_psw(WEBBLK *webblk)
 
     hprintf(webblk->sock, "<P>\n");
 
-    if( regs->arch_mode != ARCH_900 )
+    if( regs->arch_mode != ARCH_900_IDX )
     {
         copy_psw (regs, qword);
         hprintf(webblk->sock, "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
@@ -407,7 +407,7 @@ REGS *regs;
             sprintf(regname,"alter_gr%d",i);
             if((value = cgi_variable(webblk,regname)))
             {
-                if(regs->arch_mode != ARCH_900)
+                if(regs->arch_mode != ARCH_900_IDX)
                     sscanf(value,"%"SCNx32,&(regs->GR_L(i)));
                 else
                     sscanf(value,"%"SCNx64,&(regs->GR_G(i)));
@@ -423,7 +423,7 @@ REGS *regs;
             sprintf(regname,"alter_cr%d",i);
             if((value = cgi_variable(webblk,regname)))
             {
-                if(regs->arch_mode != ARCH_900)
+                if(regs->arch_mode != ARCH_900_IDX)
                     sscanf(value,"%"SCNx32,&(regs->CR_L(i)));
                 else
                     sscanf(value,"%"SCNx64,&(regs->CR_G(i)));
@@ -486,7 +486,7 @@ REGS *regs;
                               "<table>\n");
         for(i = 0; i < 16; i++)
         {
-            if(regs->arch_mode != ARCH_900)
+            if(regs->arch_mode != ARCH_900_IDX)
                 hprintf(webblk->sock,"%s<td>GR%d</td><td><input type=text name=alter_gr%d size=8 "
                   "value=%8.8X></td>\n%s",
                   (i&3)==0?"<tr>\n":"",i,i,regs->GR_L(i),((i&3)==3)?"</tr>\n":"");
@@ -530,7 +530,7 @@ REGS *regs;
                               "<table>\n");
         for(i = 0; i < 16; i++)
         {
-            if(regs->arch_mode != ARCH_900)
+            if(regs->arch_mode != ARCH_900_IDX)
                 hprintf(webblk->sock,"%s<td>CR%d</td><td><input type=text name=alter_cr%d size=8 "
                   "value=%8.8X></td>\n%s",
                   (i&3)==0?"<tr>\n":"",i,i,regs->CR_L(i),((i&3)==3)?"</tr>\n":"");
@@ -550,7 +550,7 @@ REGS *regs;
     }
 
 
-    if(regs->arch_mode != ARCH_370)
+    if(regs->arch_mode != ARCH_370_IDX)
     {
         if(!select_ar)
         {

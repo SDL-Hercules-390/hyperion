@@ -927,14 +927,14 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "vector.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "vector.c"
 #endif
 

@@ -577,14 +577,14 @@ PSA     *sspsa;                         /* -> Store status area      */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "external.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "external.c"
 #endif
 
@@ -593,19 +593,19 @@ void store_status (REGS *ssreg, U64 aaddr)
 {
     switch(ssreg->arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             aaddr &= 0x7FFFFFFF;
             s370_store_status (ssreg, aaddr);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             aaddr &= 0x7FFFFFFF;
             s390_store_status (ssreg, aaddr);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_store_status (ssreg, aaddr);
             break;
 #endif

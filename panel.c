@@ -734,10 +734,10 @@ static void NP_screen_redraw (REGS *regs)
     if (sysblk.hicpu)
     {
         /* PSW_LINE = PSW */
-        NPpswmode = (regs->arch_mode == ARCH_900);
+        NPpswmode = (regs->arch_mode == ARCH_900_IDX);
         NPpswzhost =
 #if defined(_FEATURE_SIE)
-                     !NPpswmode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900;
+                     !NPpswmode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
 #else
                      0;
 #endif /*defined(_FEATURE_SIE)*/
@@ -746,11 +746,11 @@ static void NP_screen_redraw (REGS *regs)
 
         /* Register area */
         set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-        NPregmode = (regs->arch_mode == ARCH_900 && (NPregdisp == 0 || NPregdisp == 1));
+        NPregmode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp == 1));
         NPregzhost =
 #if defined(_FEATURE_SIE)
-                     (regs->arch_mode != ARCH_900
-                   && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900
+                     (regs->arch_mode != ARCH_900_IDX
+                   && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
                    && (NPregdisp == 0 || NPregdisp == 1));
 #else
                      0;
@@ -1026,10 +1026,10 @@ static void NP_update(REGS *regs)
             regs = regs->guestregs;
 #endif /*defined(_FEATURE_SIE)*/
 
-        mode = (regs->arch_mode == ARCH_900);
+        mode = (regs->arch_mode == ARCH_900_IDX);
         zhost =
 #if defined(_FEATURE_SIE)
-                !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900;
+                !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
 #else // !defined(_FEATURE_SIE)
                 0;
 #endif // defined(_FEATURE_SIE)
@@ -1104,11 +1104,11 @@ static void NP_update(REGS *regs)
         }
 
         /* Redraw the register template if the regmode switched */
-        mode = (regs->arch_mode == ARCH_900 && (NPregdisp == 0 || NPregdisp == 1));
+        mode = (regs->arch_mode == ARCH_900_IDX && (NPregdisp == 0 || NPregdisp == 1));
         zhost =
 #if defined(_FEATURE_SIE)
-                (regs->arch_mode != ARCH_900
-              && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900
+                (regs->arch_mode != ARCH_900_IDX
+              && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
               && (NPregdisp == 0 || NPregdisp == 1));
 #else // !defined(_FEATURE_SIE)
                      0;
@@ -3075,7 +3075,7 @@ FinishShutdown:
                 {
                     len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
                                    fetch_fw(curpsw), fetch_fw(curpsw+4));
-                    if (regs->arch_mode == ARCH_900)
+                    if (regs->arch_mode == ARCH_900_IDX)
                         len += sprintf (buf+len, "%16.16"PRIX64" ",
                                         fetch_dw (curpsw+8));
 #if defined(_FEATURE_SIE)
@@ -3097,7 +3097,7 @@ FinishShutdown:
                            regs->checkstop                    ? 'C' : '.',
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
-                           regs->arch_mode == ARCH_900        ? 'Z' : '.');
+                           regs->arch_mode == ARCH_900_IDX        ? 'Z' : '.');
                 }
                 else
                     len += sprintf (buf+len,"%s", "Offline");

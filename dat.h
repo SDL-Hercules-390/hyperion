@@ -1934,7 +1934,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
     mainwid = main + regs->tlbID;
 
     INVALIDATE_AIA_MAIN(regs, main);
-    shift = regs->arch_mode == ARCH_370 ? 11 : 12;
+    shift = regs->arch_mode == ARCH_370_IDX ? 11 : 12;
     for (i = 0; i < TLBN; i++)
         if (MAINADDR(regs->tlb.main[i],
                      (regs->tlb.TLB_VADDR(i) | (i << shift)))
@@ -1952,7 +1952,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
     if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA_MAIN(regs->guestregs, main);
-        shift = regs->guestregs->arch_mode == ARCH_370 ? 11 : 12;
+        shift = regs->guestregs->arch_mode == ARCH_370_IDX ? 11 : 12;
         for (i = 0; i < TLBN; i++)
             if (MAINADDR(regs->guestregs->tlb.main[i],
                          (regs->guestregs->tlb.TLB_VADDR(i) | (i << shift)))
@@ -1970,7 +1970,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
     if (regs->guest)
     {
         INVALIDATE_AIA_MAIN(regs->hostregs, main);
-        shift = regs->hostregs->arch_mode == ARCH_370 ? 11 : 12;
+        shift = regs->hostregs->arch_mode == ARCH_370_IDX ? 11 : 12;
         for (i = 0; i < TLBN; i++)
             if (MAINADDR(regs->hostregs->tlb.main[i],
                          (regs->hostregs->tlb.TLB_VADDR(i) | (i << shift)))

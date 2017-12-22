@@ -32,14 +32,14 @@
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE3)
- #define  _GEN_ARCH _ARCHMODE3
+#if defined(_ARCH_NUM_2)
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "script.c"
  #undef   _GEN_ARCH
 #endif
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "script.c"
  #undef   _GEN_ARCH
 #endif
@@ -1320,7 +1320,7 @@ set_restart(const char * s)
 
     regs = sysblk.regs[sysblk.pcpu];
 
-    if (sysblk.arch_mode == ARCH_900)
+    if (sysblk.arch_mode == ARCH_900_IDX)
     {
         PSA_900 * psa = regs->zpsa;
         const int len = sizeof(psa->rstnew);

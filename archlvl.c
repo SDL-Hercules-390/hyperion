@@ -22,17 +22,17 @@
 
 #if !defined(   _GEN_ARCH )
 
-  // _ARCHMODE1 has been built.
+  // _ARCH_NUM_0 has been built.
   // Now build the other architectures...
 
-  #if defined(                _ARCHMODE2 )
-    #define     _GEN_ARCH     _ARCHMODE2
+  #if defined(                _ARCH_NUM_1 )
+    #define     _GEN_ARCH     _ARCH_NUM_1
     #include    "archlvl.c"
   #endif
 
-  #if defined(                _ARCHMODE3 )
+  #if defined(                _ARCH_NUM_2 )
     #undef      _GEN_ARCH
-    #define     _GEN_ARCH     _ARCHMODE3
+    #define     _GEN_ARCH     _ARCH_NUM_2
     #include    "archlvl.c"
   #endif
 
@@ -76,11 +76,11 @@ static ARCHTAB archtab[] =
 #if defined( _370 )
 
     /* S/370 = ALS0 */
-    ARCHLVL( _ARCH_370_NAME,  ARCH_370, ALS0 )
-    ARCHLVL( "370",           ARCH_370, ALS0 )
-    ARCHLVL( "S370",          ARCH_370, ALS0 )
-    ARCHLVL( "S/370",         ARCH_370, ALS0 )
-    ARCHLVL( "ALS0",          ARCH_370, ALS0 )
+    ARCHLVL( _ARCH_370_NAME,  ARCH_370_IDX, ALS0 )
+    ARCHLVL( "370",           ARCH_370_IDX, ALS0 )
+    ARCHLVL( "S370",          ARCH_370_IDX, ALS0 )
+    ARCHLVL( "S/370",         ARCH_370_IDX, ALS0 )
+    ARCHLVL( "ALS0",          ARCH_370_IDX, ALS0 )
 #endif
 
 /*
@@ -90,27 +90,27 @@ static ARCHTAB archtab[] =
 #if defined( _390 )
 
     /* ESA/390 = ALS1 */
-    ARCHLVL( _ARCH_390_NAME,  ARCH_390, ALS1 )
-    ARCHLVL( "ESA",           ARCH_390, ALS1 )
-    ARCHLVL( "ESA390",        ARCH_390, ALS1 )
-    ARCHLVL( "S/390",         ARCH_390, ALS1 )
-    ARCHLVL( "S390",          ARCH_390, ALS1 )
-    ARCHLVL( "390",           ARCH_390, ALS1 )
-    ARCHLVL( "ALS1",          ARCH_390, ALS1 )
+    ARCHLVL( _ARCH_390_NAME,  ARCH_390_IDX, ALS1 )
+    ARCHLVL( "ESA",           ARCH_390_IDX, ALS1 )
+    ARCHLVL( "ESA390",        ARCH_390_IDX, ALS1 )
+    ARCHLVL( "S/390",         ARCH_390_IDX, ALS1 )
+    ARCHLVL( "S390",          ARCH_390_IDX, ALS1 )
+    ARCHLVL( "390",           ARCH_390_IDX, ALS1 )
+    ARCHLVL( "ALS1",          ARCH_390_IDX, ALS1 )
 #endif
 
 #if defined( _900 )
 
     /* ESAME = ALS2 */
-    ARCHLVL( "ESA/ME",        ARCH_900, ALS2 )
-    ARCHLVL( "ESAME",         ARCH_900, ALS2 )
-    ARCHLVL( "ALS2",          ARCH_900, ALS2 )
+    ARCHLVL( "ESA/ME",        ARCH_900_IDX, ALS2 )
+    ARCHLVL( "ESAME",         ARCH_900_IDX, ALS2 )
+    ARCHLVL( "ALS2",          ARCH_900_IDX, ALS2 )
 
     /* z/Arch = ALS3 */
-    ARCHLVL( _ARCH_900_NAME,  ARCH_900, ALS3 )
-    ARCHLVL( "zArch",         ARCH_900, ALS3 )
-    ARCHLVL( "z",             ARCH_900, ALS3 )
-    ARCHLVL( "ALS3",          ARCH_900, ALS3 )
+    ARCHLVL( _ARCH_900_NAME,  ARCH_900_IDX, ALS3 )
+    ARCHLVL( "zArch",         ARCH_900_IDX, ALS3 )
+    ARCHLVL( "z",             ARCH_900_IDX, ALS3 )
+    ARCHLVL( "ALS3",          ARCH_900_IDX, ALS3 )
 #endif
 
     { NULL, 0, 0 }          // (end of table)
@@ -622,7 +622,7 @@ static void set_alslevel( int alslevel )
     int      i, j;
 
     for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
-        for(j = 0; j < GEN_MAXARCH; j++)
+        for(j = 0; j < NUM_INSTR_TAB_PTRS; j++)
             sysblk.facility_list[j][i] = 0;
 
     for(ft = factab; ft->name; ft++)
@@ -636,15 +636,15 @@ static void set_alslevel( int alslevel )
         {
 #if defined(_370)
             if(ft->mode & S370)
-                sysblk.facility_list[ARCH_370][fbyte] |= fbit;
+                sysblk.facility_list[ARCH_370_IDX][fbyte] |= fbit;
 #endif
 #if defined(_390)
             if(ft->mode & ESA390)
-                sysblk.facility_list[ARCH_390][fbyte] |= fbit;
+                sysblk.facility_list[ARCH_390_IDX][fbyte] |= fbit;
 #endif
 #if defined(_900)
             if(ft->mode & ZARCH)
-                sysblk.facility_list[ARCH_900][fbyte] |= fbit;
+                sysblk.facility_list[ARCH_900_IDX][fbyte] |= fbit;
 #endif
         }
     }
@@ -774,13 +774,13 @@ static void do_force_facbit( int bitno, BYTE enable, BYTE mode,
 static void force_facbit( int bitno, BYTE enable, BYTE mode )
 {
 #if defined( _370 )
-    do_force_facbit( bitno, enable, mode, S370,   ARCH_370, _ARCH_370_NAME );
+    do_force_facbit( bitno, enable, mode, S370,   ARCH_370_IDX, _ARCH_370_NAME );
 #endif
 #if defined( _390 )
-    do_force_facbit( bitno, enable, mode, ESA390, ARCH_390, _ARCH_390_NAME );
+    do_force_facbit( bitno, enable, mode, ESA390, ARCH_390_IDX, _ARCH_390_NAME );
 #endif
 #if defined( _900 )
-    do_force_facbit( bitno, enable, mode, ZARCH,  ARCH_900, _ARCH_900_NAME );
+    do_force_facbit( bitno, enable, mode, ZARCH,  ARCH_900_IDX, _ARCH_900_NAME );
 #endif
 }
 
@@ -846,13 +846,13 @@ static BYTE set_facility( FACTAB* ft, BYTE enable, BYTE mode )
     }
 
 #if defined( _370 )
-    do_set_facility( ft, enable, mode, S370,   ARCH_370, _ARCH_370_NAME );
+    do_set_facility( ft, enable, mode, S370,   ARCH_370_IDX, _ARCH_370_NAME );
 #endif
 #if defined( _390 )
-    do_set_facility( ft, enable, mode, ESA390, ARCH_390, _ARCH_390_NAME );
+    do_set_facility( ft, enable, mode, ESA390, ARCH_390_IDX, _ARCH_390_NAME );
 #endif
 #if defined( _900 )
-    do_set_facility( ft, enable, mode, ZARCH,  ARCH_900, _ARCH_900_NAME );
+    do_set_facility( ft, enable, mode, ZARCH,  ARCH_900_IDX, _ARCH_900_NAME );
 #endif
 
     return TRUE;
@@ -1094,7 +1094,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     if (1
-        && sysblk.arch_mode > ARCH_370
+        && sysblk.arch_mode > ARCH_370_IDX
         && sysblk.mainsize  > 0
         && sysblk.mainsize  < (1 << SHIFT_MEBIBYTE)
     )
@@ -1127,18 +1127,18 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     /* If S/370 archmode was just set, force LPARNUM to BASIC.
        Else if LPARNUM is BASIC, change it back to LPARNUM 1
-       if archmode is z/Arch. Else (ARCH_390) leave it alone.
+       if archmode is z/Arch. Else (ARCH_390_IDX) leave it alone.
        The user can override this automatic LPARNUM switching
        via their own subsequent LPARNUM stmt/cmd if such auto-
        matic behavior is not desired.
     */
     if (1
-        && ARCH_370 == sysblk.arch_mode
+        && ARCH_370_IDX == sysblk.arch_mode
         && om_basic != sysblk.operation_mode
     )
         panel_command( "-LPARNUM BASIC" );
     else if (1
-        && ARCH_900 == sysblk.arch_mode
+        && ARCH_900_IDX == sysblk.arch_mode
         && om_basic == sysblk.operation_mode
     )
     {

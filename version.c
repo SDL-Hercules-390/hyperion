@@ -504,7 +504,7 @@ static const char *build_info[] = {
 
 /* Report emulation modes */
 
-#if !defined(_ARCHMODE2)
+#if !defined(_ARCH_NUM_1)
     "Mode:"
 #else
     "Modes:"

@@ -886,14 +886,14 @@ U16 evd_len;
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "scedasd.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "scedasd.c"
 #endif
 
@@ -906,15 +906,15 @@ int load_hmc (char *fname, int cpu, int clear)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             return s370_load_hmc (fname, cpu, clear);
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             return s390_load_hmc (fname, cpu, clear);
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_hmc (fname, cpu, clear);
 #endif
@@ -930,15 +930,15 @@ int load_main (char *fname, RADR startloc, int noisy)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             return s370_load_main (fname, startloc, noisy);
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             return s390_load_main (fname, startloc, noisy);
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             return z900_load_main (fname, startloc, noisy);
 #endif
     }

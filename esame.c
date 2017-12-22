@@ -5067,7 +5067,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                  || (regs->hostregs->arch_mode == ARCH_900)
+                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                   ) && SIE_STATB(regs, RCPO2, RCPBY))
                 {
@@ -5096,7 +5096,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                     if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                      || (regs->hostregs->arch_mode == ARCH_900)
+                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                  )
                     {
@@ -5111,7 +5111,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                         /* For ESA/390 the RCP byte entry is at offset 1 in a
                            four byte entry directly beyond the page table,
                            for ESAME mode, this entry is eight bytes long */
-                        rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                        rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                     }
                     else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5324,7 +5324,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                     if ((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                      || (regs->hostregs->arch_mode == ARCH_900)
+                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                       ) && SIE_STATB(regs, RCPO2, RCPBY))
                         { SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, regs); }
@@ -5340,7 +5340,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                         if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                          || (regs->hostregs->arch_mode == ARCH_900)
+                          || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                      )
                         {
@@ -5355,7 +5355,7 @@ int     page_offset;                    /* Low order bits of R2      */
                             /* For ESA/390 the RCP byte entry is at offset 1 in a
                                four byte entry directly beyond the page table,
                                for ESAME mode, this entry is eight bytes long */
-                            rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                            rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                         }
                         else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5384,7 +5384,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                           && !(SIE_FEATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                            || (regs->hostregs->arch_mode == ARCH_900)
+                            || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                       )
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5430,7 +5430,7 @@ int     page_offset;                    /* Low order bits of R2      */
                         /* Insert key in new storage key */
                         if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                            || (regs->hostregs->arch_mode == ARCH_900)
+                            || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                       )
                             regs->mainstor[rcpa-1] = sk
@@ -8460,14 +8460,14 @@ U64     effective_addr2;                /* Effective address         */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "esame.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "esame.c"
 #endif
 

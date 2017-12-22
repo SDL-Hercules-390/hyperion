@@ -408,14 +408,14 @@ RADR    fsta = 0;
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "machchk.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "machchk.c"
 #endif
 
@@ -497,17 +497,17 @@ int i;
 
         switch(regs->arch_mode) {
 #if defined(_370)
-            case ARCH_370:
+            case ARCH_370_IDX:
                 s370_sync_mck_interrupt(regs);
                 break;
 #endif
 #if defined(_390)
-            case ARCH_390:
+            case ARCH_390_IDX:
                 s390_sync_mck_interrupt(regs);
                 break;
 #endif
 #if defined(_900)
-            case ARCH_900:
+            case ARCH_900_IDX:
                 z900_sync_mck_interrupt(regs);
                 break;
 #endif

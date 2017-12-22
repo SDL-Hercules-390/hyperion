@@ -465,7 +465,7 @@ int display_gregs (REGS *regs, char *buf, int buflen, char *hdr)
 #endif
 
 #if defined(_900)
-    if(regs->arch_mode != ARCH_900)
+    if(regs->arch_mode != ARCH_900_IDX)
     {
 #endif
         for(i=0;i<16;i++)
@@ -500,7 +500,7 @@ int display_cregs (REGS *regs, char *buf, int buflen, char *hdr)
 #endif
 
 #if defined(_900)
-    if(regs->arch_mode != ARCH_900)
+    if(regs->arch_mode != ARCH_900_IDX)
     {
 #endif
         for(i=0;i<16;i++)
@@ -599,7 +599,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         "%s%1d:%04X D/T%04X\n",
         hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
 
-    if (ARCH_370 == sysblk.arch_mode)
+    if (ARCH_370_IDX == sysblk.arch_mode)
     {
         len+=snprintf(buf+len,buflen-len,
             "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
@@ -703,7 +703,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
     u.status = (U8)dev->scsw.unitstat;
     len+=snprintf(buf+len,buflen-len,
         "%s    %s %s%s%s%s%s%s%s%s%s\n",
-        hdr, status_type[(sysblk.arch_mode == ARCH_370)],
+        hdr, status_type[(sysblk.arch_mode == ARCH_370_IDX)],
         u.status == 0 ? "is Normal" : "",
         u.b.b0 ? "Attention " : "",
         u.b.b1 ? "SM " : "",
@@ -2219,7 +2219,7 @@ char    absorr[8];                      /* Uppercase command         */
         RADR    pageadr  = saddr & PAGEFRAME_PAGEMASK;
         size_t  pageoff  = saddr - pageadr;
         size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
-        BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
+        BYTE    addrwid  = (ARCH_900_IDX == sysblk.arch_mode) ? 64: 32;
 
         /* Dump absolute storage one whole page at a time */
 
@@ -2410,7 +2410,7 @@ size_t  totamt;                         /* Total amount to be dumped */
         RADR    pageadr  = saddr & PAGEFRAME_PAGEMASK;
         size_t  pageoff  = saddr - pageadr;
         size_t  pageamt  = PAGEFRAME_PAGESIZE - pageoff;
-        BYTE    addrwid  = (ARCH_900 == sysblk.arch_mode) ? 64: 32;
+        BYTE    addrwid  = (ARCH_900_IDX == sysblk.arch_mode) ? 64: 32;
 
         /* Dump absolute storage one whole page at a time */
 
@@ -2737,14 +2737,14 @@ char    regs_msg_buf[4*512] = {0};
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "hscmisc.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "hscmisc.c"
 #endif
 
@@ -2756,15 +2756,15 @@ void alter_display_real_or_abs (REGS *regs, int argc, char *argv[], char *cmdlin
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             s370_alter_display_real_or_abs (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             s390_alter_display_real_or_abs (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_alter_display_real_or_abs (regs, argc, argv, cmdline); break;
 #endif
     }
@@ -2783,15 +2783,15 @@ void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
 
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             s370_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             s390_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
     }
@@ -2812,17 +2812,17 @@ void display_inst(REGS *iregs, BYTE *inst)
 
     switch(regs->arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             s370_display_inst(regs,inst);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             s390_display_inst(regs,inst);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_display_inst(regs,inst);
             break;
 #endif
@@ -2844,17 +2844,17 @@ void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
 
     switch(regs->arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             s370_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             s390_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             z900_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif

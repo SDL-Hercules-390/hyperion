@@ -130,7 +130,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
          * [3] Check for interval timer interrupt    *
          *-------------------------------------------*/
 
-        if(regs->arch_mode == ARCH_370)
+        if(regs->arch_mode == ARCH_370_IDX)
         {
             if( chk_int_timer(regs) )
                 intmask |= regs->cpubit;

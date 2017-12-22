@@ -670,14 +670,14 @@ int bootfile;
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "scescsi.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "scescsi.c"
 #endif
 
@@ -885,15 +885,15 @@ int load_boot (DEVBLK *dev, int cpu, int clear, int ldind)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             return s370_load_boot (dev, cpu, clear, ldind);
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             return s390_load_boot (dev, cpu, clear, ldind);
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_boot (dev, cpu, clear, ldind);
 #endif

@@ -123,8 +123,8 @@ int ARCH_DEP(system_reset)
 
     /* Define the target mode for reset */
     if (flags &&
-        target_mode > ARCH_390)
-        regs_mode = ARCH_390;
+        target_mode > ARCH_390_IDX)
+        regs_mode = ARCH_390_IDX;
     else
         regs_mode = target_mode;
 
@@ -335,7 +335,7 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
     /* Save the original architecture mode for later */
     orig_arch_mode = sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
-    capture = (!clear) && IS_CPU_ONLINE(cpu) && sysblk.arch_mode == ARCH_900;
+    capture = (!clear) && IS_CPU_ONLINE(cpu) && sysblk.arch_mode == ARCH_900_IDX;
 
     /* Capture the z/Arch PSW if this is a Load-normal IPL */
     if (capture)
@@ -350,8 +350,8 @@ int ARCH_DEP(common_load_begin) (int cpu, int clear)
      *             CLEAR KEY and LOAD-NORMAL KEY, p. 12-3.
      */
     if ( (rc = ARCH_DEP(system_reset(cpu, ((clear & 0x01) | 0x02),
-                                     sysblk.arch_mode > ARCH_390 ?
-                                     ARCH_390 : sysblk.arch_mode))) )
+                                     sysblk.arch_mode > ARCH_390_IDX ?
+                                     ARCH_390_IDX : sysblk.arch_mode))) )
         return (rc);
 
     /* Save our captured-z/Arch-PSW if this is a Load-normal IPL
@@ -695,14 +695,14 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "ipl.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "ipl.c"
 #endif
 
@@ -721,17 +721,17 @@ int load_ipl (U16 lcss, U16 devnum, int cpu, int clear)
     switch (sysblk.arch_mode)
     {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             rc = s370_load_ipl (lcss, devnum, cpu, clear);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             rc = s390_load_ipl (lcss, devnum, cpu, clear);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             rc = s390_load_ipl (lcss, devnum, cpu, clear);
             break;
@@ -754,17 +754,17 @@ int initial_cpu_reset (REGS *regs)
     switch (regs->arch_mode)
     {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             rc = s370_initial_cpu_reset (regs);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             rc = s390_initial_cpu_reset (regs);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             rc = s390_initial_cpu_reset (regs);
             break;
@@ -787,17 +787,17 @@ int system_reset (const int cpu, const int flags, const int target_mode)
     switch (sysblk.arch_mode)
     {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             rc = s370_system_reset (cpu, flags, target_mode);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             rc = s390_system_reset (cpu, flags, target_mode);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             rc = z900_system_reset (cpu, flags, target_mode);
             break;
 #endif
@@ -819,17 +819,17 @@ int cpu_reset (REGS *regs)
     switch (regs->arch_mode)
     {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             rc = s370_cpu_reset (regs);
             break;
 #endif
 #if defined(_390)
-        case ARCH_390:
+        case ARCH_390_IDX:
             rc = s390_cpu_reset (regs);
             break;
 #endif
 #if defined(_900)
-        case ARCH_900:
+        case ARCH_900_IDX:
             rc = z900_cpu_reset (regs);
             break;
 #endif

@@ -121,14 +121,14 @@ int ARCH_DEP( foobar_func )( RADR *raddr, VADR vaddr, REGS *regs )
 
 #if !defined(_GEN_ARCH)             // (first time here?)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2      // (set next build architecture)
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1      // (set next build architecture)
  #include "_archdep_templ.c"        // (compile ourselves again)
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3      // (set next build architecture)
+ #define  _GEN_ARCH _ARCH_NUM_2      // (set next build architecture)
  #include "_archdep_templ.c"        // (compile ourselves again)
 #endif
 
@@ -158,15 +158,15 @@ int feature_xxx_func()
     switch( regs->arch_mode )  // (switch based on RUN-TIME archmode)
     {
 #if defined( _370 )
-    case ARCH_370:
+    case ARCH_370_IDX:
         return s370_foobar_func( ....arguments go here.... );
 #endif
 #if defined( _390 )
-    case ARCH_390:
+    case ARCH_390_IDX:
         return s390_foobar_func( ....arguments go here.... );
 #endif
 #if defined( _900 )
-    case ARCH_900:
+    case ARCH_900_IDX:
         return z900_foobar_func( ....arguments go here.... );
 #endif
     }

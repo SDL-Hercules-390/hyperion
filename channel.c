@@ -882,7 +882,7 @@ display_scsw (const DEVBLK *dev, const SCSW scsw)
 {
     switch (sysblk.arch_mode)
     {
-        case ARCH_370:
+        case ARCH_370_IDX:
         {
             U8  csw[8];
 
@@ -4061,7 +4061,7 @@ int     rc;                             /* Return code               */
     dev->priority |= dev->orb.cupriority;
 
     /* Schedule the I/O for execution */
-    rc = schedule_ioq((sysblk.arch_mode == ARCH_370) ? regs : NULL,
+    rc = schedule_ioq((sysblk.arch_mode == ARCH_370_IDX) ? regs : NULL,
                       dev);
 
     /* Done; release locks and return */
@@ -5924,7 +5924,7 @@ retry:
     /* Perform additional architecture post processing and cleanup */
     switch (sysblk.arch_mode)
     {
-        case ARCH_370:
+        case ARCH_370_IDX:
         {
             IOINT*  ioint;              /* -> I/O interrupt          */
             IRB     irb;                /* -> IRB                    */
@@ -6114,14 +6114,14 @@ DEVLIST *pZoneDevs = NULL;              /* devices in requested zone */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "channel.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "channel.c"
 #endif
 
@@ -6134,16 +6134,16 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
     switch(sysblk.arch_mode)
     {
 #if defined(_370)
-        case ARCH_370:
+        case ARCH_370_IDX:
             /* Do NOT raise if initial power-on state */
             if (!INITIAL_POWERON_370())
                 return s370_device_attention(dev, unitstat);
 #endif
 #if defined(_390)
-        case ARCH_390: return s390_device_attention(dev, unitstat);
+        case ARCH_390_IDX: return s390_device_attention(dev, unitstat);
 #endif
 #if defined(_900)
-        case ARCH_900: return z900_device_attention(dev, unitstat);
+        case ARCH_900_IDX: return z900_device_attention(dev, unitstat);
 #endif
     }
     return 3;   /* subchannel is not valid or not enabled */
@@ -6154,13 +6154,13 @@ void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
     switch (arch_mode)
     {
 #if defined(_370)
-        case ARCH_370: s370_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+        case ARCH_370_IDX: s370_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
 #if defined(_390)
-        case ARCH_390: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+        case ARCH_390_IDX: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
 #if defined(_900)
-        case ARCH_900: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+        case ARCH_900_IDX: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
     }
 }

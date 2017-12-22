@@ -1293,7 +1293,7 @@ BYTE    storkey;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-              || (regs->hostregs->arch_mode == ARCH_900)
+              || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
               ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
@@ -1315,7 +1315,7 @@ BYTE    storkey;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                  || (regs->hostregs->arch_mode == ARCH_900)
+                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                              )
                 {
@@ -1330,7 +1330,7 @@ BYTE    storkey;
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                        for ESAME mode, this entry is eight bytes long */
-                    rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                    rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -1456,7 +1456,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
       && !regs->sie_pref
       && (SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-      || (regs->hostregs->arch_mode == ARCH_900)
+      || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
       ) && !SIE_FEATB(regs, RCPO2, RCPBY))
     {
@@ -1474,7 +1474,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
             /* For ESA/390 the RCP byte entry is at offset 0 in a
                four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
-            n += regs->hostregs->arch_mode == ARCH_900 ? 2048 : 1024;
+            n += regs->hostregs->arch_mode == ARCH_900_IDX ? 2048 : 1024;
 
             /* Insert PGSTE key bits 0-4 into R1 register bits
                56-60 and set bits 61-63 to zeroes */
@@ -4226,7 +4226,7 @@ BYTE    storkey;                        /* Storage key               */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-              || (regs->hostregs->arch_mode == ARCH_900)
+              || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
               ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
@@ -4256,7 +4256,7 @@ BYTE    storkey;                        /* Storage key               */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                  || (regs->hostregs->arch_mode == ARCH_900)
+                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                          )
                 {
@@ -4271,7 +4271,7 @@ BYTE    storkey;                        /* Storage key               */
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                        for ESAME mode, this entry is eight bytes long */
-                    rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                    rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5244,7 +5244,7 @@ BYTE    r1key;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if ((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                  || (regs->hostregs->arch_mode == ARCH_900)
+                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                   ) && SIE_STATB(regs, RCPO2, RCPBY))
                     { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
@@ -5260,7 +5260,7 @@ BYTE    r1key;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                     if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                      || (regs->hostregs->arch_mode == ARCH_900)
+                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                  )
                     {
@@ -5275,7 +5275,7 @@ BYTE    r1key;
                         /* For ESA/390 the RCP byte entry is at offset 1 in a
                            four byte entry directly beyond the page table,
                            for ESAME mode, this entry is eight bytes long */
-                        rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
+                        rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                     }
                     else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5304,7 +5304,7 @@ BYTE    r1key;
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                       && !(SIE_FEATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                        || (regs->hostregs->arch_mode == ARCH_900)
+                        || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                   )
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5355,7 +5355,7 @@ BYTE    r1key;
                     /* Insert key in new storage key */
                     if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                        || (regs->hostregs->arch_mode == ARCH_900)
+                        || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                   )
                         regs->mainstor[rcpa-1] = r1key
@@ -6080,11 +6080,11 @@ static char *ordername[] = {
 
                     case 0:  // from: --  z/Arch   --to-->   390
 
-                        if(sysblk.arch_mode == ARCH_390)
+                        if(sysblk.arch_mode == ARCH_390_IDX)
                             status = SIGP_STATUS_INVALID_PARAMETER;
                         else
                         {
-                            sysblk.arch_mode = ARCH_390;
+                            sysblk.arch_mode = ARCH_390_IDX;
                             set_arch = 1;
 
                             INVALIDATE_AIA(regs);
@@ -6108,11 +6108,11 @@ static char *ordername[] = {
 
                     case 1:   // from: --  390   --to-->   z/Arch
 
-                        if(sysblk.arch_mode == ARCH_900)
+                        if(sysblk.arch_mode == ARCH_900_IDX)
                             status = SIGP_STATUS_INVALID_PARAMETER;
                         else
                         {
-                            sysblk.arch_mode = ARCH_900;
+                            sysblk.arch_mode = ARCH_900_IDX;
                             set_arch = 1;
 
                             INVALIDATE_AIA(regs);
@@ -6136,11 +6136,11 @@ static char *ordername[] = {
 
                     case 2:    //  restore CAPTURED z/Arch PSW...
 
-                        if(sysblk.arch_mode == ARCH_900)
+                        if(sysblk.arch_mode == ARCH_900_IDX)
                             status = SIGP_STATUS_INVALID_PARAMETER;
                         else
                         {
-                            sysblk.arch_mode = ARCH_900;
+                            sysblk.arch_mode = ARCH_900_IDX;
                             set_arch = 1;
 
                             INVALIDATE_AIA(regs);
@@ -6168,11 +6168,11 @@ static char *ordername[] = {
                     case 37:
                         if (FACILITY_ENABLED( HERC_SIGP_SETARCH_S370, regs ))
                         {
-                            if(sysblk.arch_mode == ARCH_370)
+                            if(sysblk.arch_mode == ARCH_370_IDX)
                                 status = SIGP_STATUS_INVALID_PARAMETER;
                             else
                             {
-                                sysblk.arch_mode = ARCH_370;
+                                sysblk.arch_mode = ARCH_370_IDX;
                                 set_arch = 1;
                             }
                         }
@@ -7500,14 +7500,14 @@ U32     op;                             /* Operand                   */
 
 #if !defined(_GEN_ARCH)
 
-#if defined(_ARCHMODE2)
- #define  _GEN_ARCH _ARCHMODE2
+#if defined(_ARCH_NUM_1)
+ #define  _GEN_ARCH _ARCH_NUM_1
  #include "control.c"
 #endif
 
-#if defined(_ARCHMODE3)
+#if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCHMODE3
+ #define  _GEN_ARCH _ARCH_NUM_2
  #include "control.c"
 #endif
 
