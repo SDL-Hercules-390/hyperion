@@ -1228,7 +1228,7 @@ RADR    fsta;                           /* Failing storage address   */
 REGS *s370_run_cpu (int cpu, REGS *oldregs);
 REGS *s390_run_cpu (int cpu, REGS *oldregs);
 REGS *z900_run_cpu (int cpu, REGS *oldregs);
-static REGS *(* run_cpu[NUM_INSTR_TAB_PTRS]) (int cpu, REGS *oldregs) =
+static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
                 {
 #if defined(_370)
                     s370_run_cpu,
@@ -2030,7 +2030,7 @@ QWORD   qword;                            /* quadword work area      */
 } /* end function str_psw */
 
 
-const char* arch_name[NUM_INSTR_TAB_PTRS] =
+const char* arch_name[ NUM_GEN_ARCHS ] =
 {
 #if defined(_370)
         _ARCH_370_NAME,

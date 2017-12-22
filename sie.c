@@ -39,7 +39,7 @@ static int s390_run_sie (REGS *regs);
 #if defined(_900)
 static int z900_run_sie (REGS *regs);
 #endif /*defined(_900)*/
-static int (* run_sie[NUM_INSTR_TAB_PTRS]) (REGS *regs) =
+static int (*run_sie[ NUM_GEN_ARCHS ])( REGS* regs) =
     {
 #if defined(_370)
         s370_run_sie,
@@ -48,7 +48,7 @@ static int (* run_sie[NUM_INSTR_TAB_PTRS]) (REGS *regs) =
         s390_run_sie,
 #endif
 #if defined(_900)
-        z900_run_sie
+        z900_run_sie,
 #endif
     };
 
