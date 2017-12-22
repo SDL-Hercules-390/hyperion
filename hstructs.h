@@ -357,34 +357,36 @@ struct REGS {                           /* Processor registers       */
         func    trace_br;
 
      /* Active Facility List */
-        BYTE    facility_list[STFL_HERC_BY_SIZE];
+        BYTE    facility_list[ STFL_HERC_BY_SIZE ];
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
      /* ------------------------------------------------------------ */
 
-     /* Runtime opcode tables, use replace_opcode to modify */
-        const instr_func *s370_runtime_opcode_xxxx,
-               *s370_runtime_opcode_e3________xx,
-               *s370_runtime_opcode_eb________xx,
-               *s370_runtime_opcode_ec________xx,
-               *s370_runtime_opcode_ed________xx;
-        const instr_func *s390_runtime_opcode_xxxx,
-               *s390_runtime_opcode_e3________xx,
-               *s390_runtime_opcode_eb________xx,
-               *s390_runtime_opcode_ec________xx,
-               *s390_runtime_opcode_ed________xx;
-        const instr_func *z900_runtime_opcode_xxxx,
-               *z900_runtime_opcode_e3________xx,
-               *z900_runtime_opcode_eb________xx,
-               *z900_runtime_opcode_ec________xx,
-               *z900_runtime_opcode_ed________xx;
+     /* Runtime opcode tables. Use 'replace_opcode' to modify */
+
+        const instr_func    *s370_runtime_opcode_xxxx,
+                            *s370_runtime_opcode_e3________xx,
+                            *s370_runtime_opcode_eb________xx,
+                            *s370_runtime_opcode_ec________xx,
+                            *s370_runtime_opcode_ed________xx;
+
+        const instr_func    *s390_runtime_opcode_xxxx,
+                            *s390_runtime_opcode_e3________xx,
+                            *s390_runtime_opcode_eb________xx,
+                            *s390_runtime_opcode_ec________xx,
+                            *s390_runtime_opcode_ed________xx;
+
+        const instr_func    *z900_runtime_opcode_xxxx,
+                            *z900_runtime_opcode_e3________xx,
+                            *z900_runtime_opcode_eb________xx,
+                            *z900_runtime_opcode_ec________xx,
+                            *z900_runtime_opcode_ed________xx;
 #ifdef OPTION_OPTINST
-        const instr_func
-               *s370_runtime_opcode_e3_0______xx,
-               *s390_runtime_opcode_e3_0______xx,
-               *z900_runtime_opcode_e3_0______xx;
-#endif /* #ifdef OPTION_OPTINST */
+        const instr_func    *s370_runtime_opcode_e3_0______xx,
+                            *s390_runtime_opcode_e3_0______xx,
+                            *z900_runtime_opcode_e3_0______xx;
+#endif
 
      /* TLB - Translation lookaside buffer                           */
         unsigned int tlbID;             /* Validation identifier     */
