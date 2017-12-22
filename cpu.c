@@ -1222,24 +1222,24 @@ RADR    fsta;                           /* Failing storage address   */
 } /* end function perform_mck_interrupt */
 
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
+REGS* s370_run_cpu( int cpu, REGS* oldregs );
+REGS* s390_run_cpu( int cpu, REGS* oldregs );
+REGS* z900_run_cpu( int cpu, REGS* oldregs );
 
-REGS *s370_run_cpu (int cpu, REGS *oldregs);
-REGS *s390_run_cpu (int cpu, REGS *oldregs);
-REGS *z900_run_cpu (int cpu, REGS *oldregs);
 static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
-                {
+{
 #if defined(_370)
-                    s370_run_cpu,
+            s370_run_cpu,
 #endif
 #if defined(_390)
-                    s390_run_cpu,
+            s390_run_cpu,
 #endif
 #if defined(_900)
-                    z900_run_cpu
+            z900_run_cpu
 #endif
-                };
+};
 
 
 /*-------------------------------------------------------------------*/

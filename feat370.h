@@ -12,9 +12,9 @@
 /*********************************************************************/
 
 #if !defined( OPTION_370_MODE )
-#define _ARCH_370_NAME ""
+#define _ARCH_370_NAME      ""
 #else
-#define _ARCH_370_NAME "S/370"
+#define _ARCH_370_NAME      "S/370"
 
 #define FEATURE_2K_STORAGE_KEYS
 #define FEATURE_BASIC_STORAGE_KEYS

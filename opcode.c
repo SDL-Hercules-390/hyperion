@@ -1244,8 +1244,8 @@ static instr_func runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 #endif
 
 /*---------------------------------------------------------------------------*/
-/* Following function will be resolved within the runtime opcode tables and  */
-/* set with function init_opcode_tables.                                     */
+/* Following function will be resolved within the runtime opcode tables      */
+/* and set with function init_opcode_tables.                                 */
 /*---------------------------------------------------------------------------*/
 #define execute_opcode_01xx     operation_exception
 #define execute_opcode_a4xx     operation_exception
@@ -1274,16 +1274,19 @@ static instr_func runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 /*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
-#define DISASM_ROUTE(_table,_route) \
-int disasm_ ## _table (BYTE inst[], char unused[], char *p) \
-{ \
-func disasm_fn; \
-char* mnemonic; \
-    UNREFERENCED(unused); \
-    mnemonic = (void*)opcode_ ## _table [inst _route ][NUM_INSTR_TAB_PTRS-1]; \
-    disasm_fn = (void*)opcode_ ## _table [inst _route ][NUM_INSTR_TAB_PTRS-2]; \
-    return disasm_fn(inst, mnemonic, p); \
+#define DISASM_ROUTE( _table, _route )                                                \
+                                                                                      \
+int disasm_ ## _table( BYTE inst[], char unused[], char* p )                          \
+{                                                                                     \
+    func   disasm_fn;                                                                 \
+    char*  mnemonic;                                                                  \
+    UNREFERENCED( unused );                                                           \
+    mnemonic  = (void*) opcode_ ## _table [ inst _route ][ NUM_INSTR_TAB_PTRS - 1 ];  \
+    disasm_fn = (void*) opcode_ ## _table [ inst _route ][ NUM_INSTR_TAB_PTRS - 2 ];  \
+    return disasm_fn( inst, mnemonic, p );                                            \
 }
+
+/*----------------------------------------------------------------------------*/
 
 DISASM_ROUTE(table,[0])
 DISASM_ROUTE(01xx,[1])
@@ -1305,6 +1308,8 @@ DISASM_ROUTE(ebxx,[5])
 DISASM_ROUTE(ecxx,[5])
 DISASM_ROUTE(edxx,[5])
 
+/*----------------------------------------------------------------------------*/
+
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
  #define opcode_a4xx        v_opcode_a4xx
@@ -1320,23 +1325,33 @@ DISASM_ROUTE(edxx,[5])
  #undef  opcode_e4xx
 
 #else /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+
  #define disasm_a4xx    disasm_none
  #define disasm_a6xx    disasm_none
  #define disasm_e4xx    disasm_none
+
 #endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
-#define DISASM_TYPE(_type)  \
-static int disasm_ ## _type (BYTE inst[], char mnemonic[], char *p) \
-{ \
-char* name; \
-char operands[64]
+/*----------------------------------------------------------------------------*/
 
-#define DISASM_PRINT(...) \
-    name = mnemonic+1; \
-    while(*name++);  \
-    snprintf(operands,sizeof(operands), ## __VA_ARGS__ ); \
-    return sprintf(p, "%-5s %-19s    %s",mnemonic,operands,name); \
+#define DISASM_TYPE(_type)                                              \
+                                                                        \
+static int disasm_ ## _type( BYTE inst[], char mnemonic[], char* p )    \
+{                                                                       \
+    char* name;                                                         \
+    char operands[64]
+
+/*----------------------------------------------------------------------------*/
+
+#define DISASM_PRINT(...)                                               \
+                                                                        \
+    name = mnemonic+1;  /* Start at 2nd character of mnemonic  */       \
+    while (*name++);    /* Get past mnemonic to reach the name */       \
+    snprintf( operands, sizeof( operands ), ## __VA_ARGS__ );           \
+    return sprintf( p, "%-5s %-19s    %s", mnemonic, operands, name );  \
 }
+
+/*----------------------------------------------------------------------------*/
 
 DISASM_TYPE(none);
   UNREFERENCED(inst);

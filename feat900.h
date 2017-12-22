@@ -12,9 +12,9 @@
 /*********************************************************************/
 
 #if !defined( OPTION_900_MODE )
-#define _ARCH_900_NAME ""
+#define _ARCH_900_NAME      ""
 #else
-#define _ARCH_900_NAME "z/Arch" /* also: "ESAME" */
+#define _ARCH_900_NAME      "z/Arch"
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs with STFL/STFLE facility bits defined               */

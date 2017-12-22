@@ -703,25 +703,34 @@
 
 //--------------------------------------------------------------------
 // PROGRAMMING NOTE: we need an extra 2 slots in each opcode table
-// entry to accommodate the extra 2 arguments ('mnemonic' and 'p')
-// that are passed to the opcode disassembly (DISASM_TYPE) functions
-// in opcode.c, declared as:
+// entry to allow for the 2 extra pointers needed by the instruction
+// DISASM_TYPE disassembly functions called by the DISASM_ROUTE maro.
 //
-//     int disasm_type( BYTE inst[], char mnemonic[], char *p );
+// Notice the DISASM_ROUTE macro in opcode.c accessing the two extra
+// pointers in the opcode table entry:
 //
-// For example, notice the definition of the "GENx370x390x900" macro
-// in opcode.h, which defines opcode table entries for each opcode,
-// and defines not only a pointer to the intruction function for each
-// architecture, but which ALSO defines the following entries as well:
+//      mnemonic   =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 1 ];
+//      disasm_fn  =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 2 ];
+//      return disasm_fn( inst, mnemonic, p );
 //
-//      (void*)&disasm_ ## _format, \
-//      (void*)& _mnemonic "\0" #_name \
+// and how the DISASM_TYPE macro defines those functions:
 //
-// as the last 2 entries for each opcode slot. Thus the need for an
-// extra "+2" slots in the below "NUM_INSTR_TAB_PTRS" definition: so
+//      int disasm_type( BYTE inst[], char mnemonic[], char *p );
+//
+// Finally also notice the definition of the "GENx370x390x900" macro
+// in opcode.h, which defines opcode table entries for each opcode:
+// it defines not only a pointer to the intruction function for each
+// architecture, but also defines those 2 extra pointers:
+//
+//      (void*) &disasm_ ## _format,
+//      (void*) & _mnemonic "\0" #_name
+//
+// as the last 2 entries for each opcode table entry. Thus the need
+// for the "+2" in the below# define for "NUM_INSTR_TAB_PTRS": so
 // the opcode tables in opcode.c defined by "GENx370x390x900" macro
-// have room for the 2 needed extra pointers used by the DISASM_TYPE
-// functions.
+// has room for the 2 needed extra pointers used by the DISASM_TYPE
+// instruction disassembly functions called if tracing instructions.
+//--------------------------------------------------------------------
 
 #define NUM_INSTR_TAB_PTRS   NUM_GEN_ARCHS + 2   // (see NOTE above)
 
@@ -756,7 +765,7 @@
 #endif
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( _FEATURE_SIE ) \
-    && !defined( FEATURE_STORAGE_KEY_ASSIST )
+&& !defined( FEATURE_STORAGE_KEY_ASSIST )
  #error SIE requires storage key assist
 #endif
 

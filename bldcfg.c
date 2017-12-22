@@ -96,13 +96,17 @@ int     devtmax;                        /* Max number device threads */
     sysblk.numvec = 0;
 #endif
 
-#if defined(_900)
-    set_archlvl(_ARCH_900_NAME);
-#elif defined(_390)
-    set_archlvl(_ARCH_390_NAME);
-#else
-    set_archlvl(_ARCH_370_NAME);
+    /* Default architecture is highest supported.  Thus
+       z/Arch first (900), then S/390 second (390), etc.
+    */
+#if defined(                  _900 )
+    VERIFY( set_archlvl( _ARCH_900_NAME ));
+#elif defined(                _390 )
+    VERIFY( set_archlvl( _ARCH_390_NAME ));
+#else //                      _370
+    VERIFY( set_archlvl( _ARCH_370_NAME ));
 #endif
+
     devtmax  = MAX_DEVICE_THREADS;
 
     ptt_trace_init (0, 1);

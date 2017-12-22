@@ -12,9 +12,9 @@
 /*********************************************************************/
 
 #if !defined( OPTION_390_MODE )
-#define _ARCH_390_NAME ""
+#define _ARCH_390_NAME      ""
 #else
-#define _ARCH_390_NAME "ESA/390"
+#define _ARCH_390_NAME      "ESA/390"
 
 /*-------------------------------------------------------------------*/
 /*          FEATUREs with STFL facility bits defined                 */
