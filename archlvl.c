@@ -622,7 +622,7 @@ static void set_alslevel( int alslevel )
     int      i, j;
 
     for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
-        for(j = 0; j < NUM_INSTR_TAB_PTRS; j++)
+        for(j = 0; j < NUM_GEN_ARCHS; j++)
             sysblk.facility_list[j][i] = 0;
 
     for(ft = factab; ft->name; ft++)
