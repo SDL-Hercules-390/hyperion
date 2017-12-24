@@ -6,3 +6,4 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
+#include "hqawarn.h"

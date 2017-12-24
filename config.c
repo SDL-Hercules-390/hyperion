@@ -779,8 +779,8 @@ int     i;                              /* Loop index                */
             if (sysblk.arch_mode != ARCH_370_IDX)
 #endif
                 build_detach_chrpt( dev );
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
         }
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
     }
 
     /* Free the argv array */

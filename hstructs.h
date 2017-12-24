@@ -539,7 +539,7 @@ struct SYSBLK {
         U64     program_parameter;      /* Program Parameter Register*/
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-        RWLOCK  wklock;                 /* Update lock               */
+        RWLOCK  wklock;                 /* Wrapping-key lock         */
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
         BYTE    wkdea_reg[24];
         BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */

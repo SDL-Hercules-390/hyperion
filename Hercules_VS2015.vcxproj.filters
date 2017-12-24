@@ -2446,6 +2446,9 @@
     <ClInclude Include="hqainc.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hqawarn.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="hRexx.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

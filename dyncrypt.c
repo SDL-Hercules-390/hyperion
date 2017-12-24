@@ -81,7 +81,7 @@ static const int kmctr_pblens[32] =
 // 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
     0,  0, 16, 24, 32,  0,  0,  0,  0,  0, 48, 56, 64,  0,  0,  0
 };
-#endif
+#endif // KMCTR_PBLENS
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -194,7 +194,6 @@ void crypto_secure0( void* p, size_t n )
 #endif
 }
 
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
 /*----------------------------------------------------------------------------*/
 /* GCM multiplication over GF(2^128)                                          */
 /*----------------------------------------------------------------------------*/
@@ -289,7 +288,6 @@ void xts_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
   for (i=0; i <= 15; i++)
       c[i] = reverse_bits( c_r[i] );
 }
-#endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
 
 /*----------------------------------------------------------------------------*/
 /* Message Security Assist Extension query                                    */
@@ -341,7 +339,6 @@ static void sha1_seticv(SHA1_CTX *ctx, BYTE icv[20])
   }
 }
 
-#if defined( FEATURE_MSA_EXTENSION_FACILITY_1 )
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
@@ -373,9 +370,7 @@ static void sha256_seticv(SHA2_CTX *ctx, BYTE icv[32])
     ctx->state.st32[i] |= icv[j++];
   }
 }
-#endif /* defined( FEATURE_MSA_EXTENSION_FACILITY_1 ) */
 
-#if defined( FEATURE_MSA_EXTENSION_FACILITY_2 )
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
@@ -415,9 +410,7 @@ static void sha512_seticv(SHA2_CTX *ctx, BYTE icv[64])
     ctx->state.st64[i] |= (U64) icv[j++];
   }
 }
-#endif /* defined( FEATURE_MSA_EXTENSION_FACILITY_2 ) */
 
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
 /*----------------------------------------------------------------------------*/
 /* Shif left                                                                  */
 /*----------------------------------------------------------------------------*/
@@ -441,58 +434,6 @@ void shift_left(BYTE *dst, BYTE* src, int len)
       dst[len - 1 - i] = src[len - 1 - i] << 1;
     }
   }
-}
-#endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
-
-#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-/*----------------------------------------------------------------------------*/
-/* Unwrap key using aes                                                       */
-/*----------------------------------------------------------------------------*/
-static int unwrap_aes(BYTE *key, int keylen)
-{
-  BYTE buf[16];
-  rijndael_ctx context;
-  BYTE cv[16];
-  int i;
-
-  obtain_rdlock(&sysblk.wklock);
-
-  /* Verify verification pattern */
-  if(unlikely(memcmp(&key[keylen], sysblk.wkvpaes_reg, 32)))
-  {
-    release_rwlock(&sysblk.wklock);
-    return(1);
-  }
-  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
-  release_rwlock(&sysblk.wklock);
-  switch(keylen)
-  {
-    case 16:
-    {
-      rijndael_decrypt(&context, key, key);
-      break;
-    }
-    case 24:
-    {
-      rijndael_decrypt(&context, &key[8], buf);
-      memcpy(&key[8], &buf[8], 8);
-      memcpy(cv, key, 8);
-      rijndael_decrypt(&context, key, key);
-      for(i = 0; i < 8; i++)
-        key[i + 16] = buf[i] ^ cv[i];
-      break;
-    }
-    case 32:
-    {
-      memcpy(cv, key, 16);
-      rijndael_decrypt(&context, key, key);
-      rijndael_decrypt(&context, &key[16], &key[16]);
-      for(i = 0; i < 16; i++)
-        key[i + 16] ^= cv[i];
-      break;
-    }
-  }
-  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -595,6 +536,57 @@ void des3_decrypt(des3_context *ctx, CHAR8 input, CHAR8 output)
     des_decipher(out, xL, xR, sched);
     store_fw(output, out[0]);
     store_fw(output+4, out[1]);
+}
+
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+/*----------------------------------------------------------------------------*/
+/* Unwrap key using aes                                                       */
+/*----------------------------------------------------------------------------*/
+static int unwrap_aes(BYTE *key, int keylen)
+{
+  BYTE buf[16];
+  rijndael_ctx context;
+  BYTE cv[16];
+  int i;
+
+  obtain_rdlock(&sysblk.wklock);
+
+  /* Verify verification pattern */
+  if(unlikely(memcmp(&key[keylen], sysblk.wkvpaes_reg, 32)))
+  {
+    release_rwlock(&sysblk.wklock);
+    return(1);
+  }
+  rijndael_set_key(&context, sysblk.wkaes_reg, 256);
+  release_rwlock(&sysblk.wklock);
+  switch(keylen)
+  {
+    case 16:
+    {
+      rijndael_decrypt(&context, key, key);
+      break;
+    }
+    case 24:
+    {
+      rijndael_decrypt(&context, &key[8], buf);
+      memcpy(&key[8], &buf[8], 8);
+      memcpy(cv, key, 8);
+      rijndael_decrypt(&context, key, key);
+      for(i = 0; i < 8; i++)
+        key[i + 16] = buf[i] ^ cv[i];
+      break;
+    }
+    case 32:
+    {
+      memcpy(cv, key, 16);
+      rijndael_decrypt(&context, key, key);
+      rijndael_decrypt(&context, &key[16], &key[16]);
+      for(i = 0; i < 16; i++)
+        key[i + 16] ^= cv[i];
+      break;
+    }
+  }
+  return(0);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -706,9 +698,8 @@ static void wrap_dea(BYTE *key, int keylen)
     des3_encrypt(&context, &key[i], &key[i]);
   }
 }
-#endif /* defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
+#endif // defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
 /*----------------------------------------------------------------------------*/
 /* 2^m table with GF multiplication entries 127, 126, 125, ...                */
 /* 2                  2^b1                                                    */
@@ -848,7 +839,6 @@ static BYTE exp_table[128][16] =
   { 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
-#endif /* defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
 #endif /* #ifndef __STATIC_FUNCTIONS__ */
 
 /*----------------------------------------------------------------------------*/

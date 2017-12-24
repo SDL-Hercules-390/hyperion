@@ -1016,6 +1016,7 @@
     <ClInclude Include="hostopts.h" />
     <ClInclude Include="hqadefs.h" />
     <ClInclude Include="hqainc.h" />
+    <ClInclude Include="hqawarn.h" />
     <ClInclude Include="hRexx.h" />
     <ClInclude Include="hscutl.h" />
     <ClInclude Include="hsocket.h" />

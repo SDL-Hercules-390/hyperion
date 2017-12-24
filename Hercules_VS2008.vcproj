@@ -1336,6 +1336,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hqawarn.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hRexx.h"
 							>
 						</File>

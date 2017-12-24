@@ -11,45 +11,48 @@
 #include "opcode.h"
 
 #if defined(_370)
+
 /* This file is only a STUB to separate the module part of s37x
    from the functional code.
+
    This is necessary because the final location of the functional
    code may depend on the host operating system capabilities.
-   The actual functional code resides in s37x.c */
+
+   The actual functional code resides in s37x.c
+*/
 
 #if defined( OPTION_370_EXTENSION )
 
-DLL_IMPORT void s37x_replace_opcode_scan(int x);
+DLL_IMPORT void s37x_replace_opcode_scan( int set );
 
 HDL_REGISTER_SECTION;
 {
-    s37x_replace_opcode_scan(1);
+    s37x_replace_opcode_scan( TRUE );
 }
 END_REGISTER_SECTION
 
 /* Module end : restore the instruction functions */
 HDL_FINAL_SECTION;
 {
-    s37x_replace_opcode_scan(0);
+    s37x_replace_opcode_scan( FALSE );
 }
 END_FINAL_SECTION
 
-#else /* defined( OPTION_370_EXTENSION ) */
-
-HDL_REGISTER_SECTION;
+HDL_DEPENDENCY_SECTION;
 {
-    logmsg("the S/370 Extension module requires the OPTION_S370_EXTENSION build option\n");
-    return -1;
+    HDL_DEPENDENCY (HERCULES);
 }
-END_REGISTER_SECTION
+END_DEPENDENCY_SECTION
 
+#else /* !defined( OPTION_370_EXTENSION ) */
+
+HDL_DEPENDENCY_SECTION;
+{
+    LOGMSG("The S/370 Extension module requires the OPTION_370_EXTENSION build option\n");
+    hdl_depc_rc = -1;
+}
+END_DEPENDENCY_SECTION
 
 #endif /* defined( OPTION_370_EXTENSION ) */
 
 #endif // defined(_370)
-
-HDL_DEPENDENCY_SECTION;
-{
-     HDL_DEPENDENCY (HERCULES);
-
-} END_DEPENDENCY_SECTION

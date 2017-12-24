@@ -113,7 +113,9 @@
 #define  NO_SHUTDOWN_CONFIRMATION       /* Confirm quit and ssd cmds */
 #endif
 
+#if !defined(OPTION_OPTINST) && !defined(NO_OPTINST)
 #define OPTION_OPTINST                  /* Optimized instructions    */
+#endif
 
 #if !defined(ENABLE_CONFIG_INCLUDE) && !defined(NO_CONFIG_INCLUDE)
 #define  ENABLE_CONFIG_INCLUDE          /* enable config file includes */

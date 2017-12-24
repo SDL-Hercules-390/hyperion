@@ -952,6 +952,7 @@ noinst_HEADERS =          \
   hostopts.h              \
   hqadefs.h               \
   hqainc.h                \
+  hqawarn.h               \
   hRexx.h                 \
   hRexxapi.c              \
   hscutl.h                \

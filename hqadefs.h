@@ -456,6 +456,46 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*  HQA Scenario    23     Without S/370 Extensions backport          */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 23  // Without S/370 Extensions backport
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 23\n"
+
+  #define NO_370_EXTENSION
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    24     Without Optimized Instructions            */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 24  // Without Optimized Instructions
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 24\n"
+
+  #define NO_OPTINST
+
+#endif
+
+/*-------------------------------------------------------------------*/
+/*  HQA Scenario    25     Without 370 Extensions or Optimized Instr */
+/*-------------------------------------------------------------------*/
+
+#if HQA_SCENARIO == 25  // Without 370 Extensions or Optimized Instr
+
+  #undef  CUSTOM_BUILD_STRING
+  #define CUSTOM_BUILD_STRING "\n\n         HQA Scenario 25\n"
+
+  #define NO_370_EXTENSION
+  #define NO_OPTINST
+
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // !defined(HQA_SCENARIO) || HQA_SCENARIO == 0
 

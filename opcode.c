@@ -6180,21 +6180,21 @@ static instr_func opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
 static instr_func opcode_A7_4[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A704*/ GENx370x390x900 (nop4,RX,"BRC"),
- /*A714*/ GENx370x390x900 (A714,RX,"BRC"),
- /*A724*/ GENx370x390x900 (A724,RX,"BRC"),
- /*A734*/ GENx370x390x900 (A734,RX,"BRC"),
- /*A744*/ GENx370x390x900 (A744,RX,"BRC"),
- /*A754*/ GENx370x390x900 (A754,RX,"BRC"),
+ /*A714*/ GENx37Xx390x900 (A714,RX,"BRC"),
+ /*A724*/ GENx37Xx390x900 (A724,RX,"BRC"),
+ /*A734*/ GENx37Xx390x900 (A734,RX,"BRC"),
+ /*A744*/ GENx37Xx390x900 (A744,RX,"BRC"),
+ /*A754*/ GENx37Xx390x900 (A754,RX,"BRC"),
  /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A774*/ GENx370x390x900 (A774,RX,"BRC"),
- /*A784*/ GENx370x390x900 (A784,RX,"BRC"),
+ /*A774*/ GENx37Xx390x900 (A774,RX,"BRC"),
+ /*A784*/ GENx37Xx390x900 (A784,RX,"BRC"),
  /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A7A4*/ GENx370x390x900 (A7A4,RX,"BRC"),
- /*A7B4*/ GENx370x390x900 (A7B4,RX,"BRC"),
- /*A7C4*/ GENx370x390x900 (A7C4,RX,"BRC"),
- /*A7D4*/ GENx370x390x900 (A7D4,RX,"BRC"),
- /*A7E4*/ GENx370x390x900 (A7E4,RX,"BRC"),
- /*A7F4*/ GENx370x390x900 (A7F4,RX,"BRC")
+ /*A7A4*/ GENx37Xx390x900 (A7A4,RX,"BRC"),
+ /*A7B4*/ GENx37Xx390x900 (A7B4,RX,"BRC"),
+ /*A7C4*/ GENx37Xx390x900 (A7C4,RX,"BRC"),
+ /*A7D4*/ GENx37Xx390x900 (A7D4,RX,"BRC"),
+ /*A7E4*/ GENx37Xx390x900 (A7E4,RX,"BRC"),
+ /*A7F4*/ GENx37Xx390x900 (A7F4,RX,"BRC")
 };
 
 // Insert Characters Under Mask
@@ -6441,8 +6441,10 @@ void *replace_opcode   (int arch, instr_func inst, int opcode1, int opcode2)
 void init_opcode_tables()
 {
   int arch;
-  int bit;
   int i;
+#ifdef OPTION_OPTINST
+  int bit;
+#endif
 
   for(arch = 0; arch < NUM_GEN_ARCHS; arch++)
   {
