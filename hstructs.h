@@ -538,14 +538,15 @@ struct SYSBLK {
         Load Program Parameter facility */
         U64     program_parameter;      /* Program Parameter Register*/
 
-#ifdef _FEATURE_076_MSA_EXTENSION_FACILITY_3
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
         RWLOCK  wklock;                 /* Update lock               */
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
         BYTE    wkdea_reg[24];
         BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */
         BYTE    wkvpdea_reg[24];        /* Pattern registers         */
-#endif /* FEATURE_076_MSA_EXTENSION_FACILITY_3 */
-#if defined(_FEATURE_047_CMPSC_ENH_FACILITY)
+#endif
+
+#if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
         BYTE    zpbits;                 /* Zeropad alignment bits    */
 #define MIN_CMPSC_ZP_BITS   1           /* align to half word bndry  */
 #define DEF_CMPSC_ZP_BITS   8           /* align to  256 byte bndry  */
@@ -553,7 +554,7 @@ struct SYSBLK {
 #define CMPSC_ZP_BITS       ((U8)sysblk.zpbits)
 #define CMPSC_ZP_BYTES      ((U16)1 << CMPSC_ZP_BITS)
 #define CMPSC_ZP_MASK       (((U64)-1) >> (64 - CMPSC_ZP_BITS))
-#endif /* defined(_FEATURE_047_CMPSC_ENH_FACILITY) */
+#endif
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
