@@ -41,19 +41,19 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _370 )
- #define  _GEN370( _name )      &s370_ ## _name
+ #define  _GEN370( _name )      &s370_ ## _name,
 #else
  #define  _GEN370( _name )
 #endif
 
 #if defined( _390 )
- #define  _GEN390( _name )      &s390_ ## _name
+ #define  _GEN390( _name )      &s390_ ## _name,
 #else
  #define  _GEN390( _name )
 #endif
 
 #if defined( _900 )
- #define  _GEN900( _name )      &z900_ ## _name
+ #define  _GEN900( _name )      &z900_ ## _name,
 #else
  #define  _GEN900( _name )
 #endif
@@ -64,72 +64,72 @@
 
 #define GENx___x___x___                                 \
     {                                                   \
-        _GEN370( operation_exception ),                 \
-        _GEN390( operation_exception ),                 \
-        _GEN900( operation_exception ),                 \
+        _GEN370( operation_exception )                  \
+        _GEN390( operation_exception )                  \
+        _GEN900( operation_exception )                  \
         (void*) &disasm_none,                           \
         (void*) &"?????" "\0" "?"                       \
     }
 
 #define GENx370x___x___( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( _name ),                               \
-        _GEN390( operation_exception ),                 \
-        _GEN900( operation_exception ),                 \
+        _GEN370( _name )                                \
+        _GEN390( operation_exception )                  \
+        _GEN900( operation_exception )                  \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx___x390x___( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( operation_exception ),                 \
-        _GEN390( _name ),                               \
-        _GEN900( operation_exception ),                 \
+        _GEN370( operation_exception )                  \
+        _GEN390( _name )                                \
+        _GEN900( operation_exception )                  \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx370x390x___( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( _name ),                               \
-        _GEN390( _name ),                               \
-        _GEN900( operation_exception ),                 \
+        _GEN370( _name )                                \
+        _GEN390( _name )                                \
+        _GEN900( operation_exception )                  \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx___x___x900( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( operation_exception ),                 \
-        _GEN390( operation_exception ),                 \
-        _GEN900( _name ),                               \
+        _GEN370( operation_exception )                  \
+        _GEN390( operation_exception )                  \
+        _GEN900( _name )                                \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx370x___x900( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( _name ),                               \
-        _GEN390( operation_exception ),                 \
-        _GEN900( _name ),                               \
+        _GEN370( _name )                                \
+        _GEN390( operation_exception )                  \
+        _GEN900( _name )                                \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx___x390x900( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( operation_exception ),                 \
-        _GEN390( _name ),                               \
-        _GEN900( _name ),                               \
+        _GEN370( operation_exception )                  \
+        _GEN390( _name )                                \
+        _GEN900( _name )                                \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
 
 #define GENx370x390x900( _name, _format, _mnemonic )    \
     {                                                   \
-        _GEN370( _name ),                               \
-        _GEN390( _name ),                               \
-        _GEN900( _name ),                               \
+        _GEN370( _name )                                \
+        _GEN390( _name )                                \
+        _GEN900( _name )                                \
         (void*) &disasm_ ## _format,                    \
         (void*) & _mnemonic "\0" #_name                 \
     }
