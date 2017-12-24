@@ -301,16 +301,17 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
     if (rc)
         goto fatal;
 
-    rc = hthread_rwlockattr_destroy( &attr1 );
-    if (rc)
-        goto fatal;
+    plk->ilk = ilk;     /* (RWLOCK is now initialized) */
+    PTTRACE( "rwlock init", plk, &attr1, location, PTT_MAGIC );
 
     rc = hthread_mutexattr_destroy( &attr2 );
     if (rc)
         goto fatal;
 
-    plk->ilk = ilk;     /* (RWLOCK is now initialized) */
-    PTTRACE( "rwlock init", plk, &attr1, location, PTT_MAGIC );
+    rc = hthread_rwlockattr_destroy( &attr1 );
+    if (rc)
+        goto fatal;
+
     return 0;
 
 fatal:
