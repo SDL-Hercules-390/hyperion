@@ -335,7 +335,7 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
                     free (pttrace);
                     pttrace = NULL;
                 }
-                ptt_trace_init (n, 0);
+                ptt_trace_init( n, FALSE );
                 RELEASE_PTTLOCK;
             }
             else
@@ -389,14 +389,14 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* Initialize PTT tracing                                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ptt_trace_init( int n, int init )
+DLL_EXPORT void ptt_trace_init( int nTableSize, BOOL init )
 {
-    if (n > 0)
-        pttrace = calloc( n, PTT_TRACE_SIZE );
+    if (nTableSize > 0)
+        pttrace = calloc( nTableSize, PTT_TRACE_SIZE );
     else
         pttrace = NULL;
 
-    pttracen = pttrace ? n : 0;
+    pttracen = pttrace ? nTableSize : 0;
     pttracex = 0;
 
     if (init)       /* First time? */
