@@ -765,8 +765,7 @@ int initial_cpu_reset (REGS *regs)
 #endif
 #if defined(_900)
         case ARCH_900_IDX:
-            /* z/Arch always starts out in ESA390 mode */
-            rc = s390_initial_cpu_reset (regs);
+            rc = z900_initial_cpu_reset (regs);
             break;
 #endif
         default:
