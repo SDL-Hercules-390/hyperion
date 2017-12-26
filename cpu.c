@@ -1582,7 +1582,7 @@ cpustate_stopping:
             longjmp(regs->exitjmp, SIE_NO_INTERCEPT);
 
         /* If initial CPU reset pending then perform reset */
-        if (regs->sigpireset)
+        if (regs->sigp_ini_reset)
         {
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
@@ -1592,7 +1592,7 @@ cpustate_stopping:
         }
 
         /* If a CPU reset is pending then perform the reset */
-        if (regs->sigpreset)
+        if (regs->sigp_reset)
         {
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);

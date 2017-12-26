@@ -5882,7 +5882,7 @@ static char *ordername[] = {
 #endif /* defined(FEATURE_S370_CHANNEL) */
 
             /* Signal initial CPU reset function */
-            tregs->sigpireset = 1;
+            tregs->sigp_ini_reset = 1;
             tregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(tregs);
 
@@ -5895,7 +5895,7 @@ static char *ordername[] = {
 #endif /* defined(FEATURE_S370_CHANNEL) */
         case SIGP_RESET:
             /* Signal CPU reset function */
-            tregs->sigpreset = 1;
+            tregs->sigp_reset = 1;
             tregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(tregs);
 

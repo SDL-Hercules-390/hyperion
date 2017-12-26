@@ -3085,8 +3085,8 @@ void ARCH_DEP( diagf18_call ) (int r1, int r2, REGS *regs);
 /* Functions in module ipl.c */
 int           load_ipl             (U16 lcss, U16  devnum, int cpu, int clear);
 int ARCH_DEP( load_ipl )           (U16 lcss, U16  devnum, int cpu, int clear);
-int           system_reset         (const int cpu, const int flags, const int target_mode);
-int ARCH_DEP( system_reset )       (const int cpu, const int flags, const int target_mode);
+int           system_reset         ( const int target_mode, const bool clear, const bool ipl, const int cpu );
+int ARCH_DEP( system_reset )       ( const int target_mode, const bool clear, const bool ipl, const int cpu );
 int           cpu_reset            (REGS *regs);
 int ARCH_DEP( cpu_reset )          (REGS *regs);
 int           initial_cpu_reset    (REGS *regs);

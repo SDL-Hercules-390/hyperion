@@ -269,8 +269,8 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_PERMODE, regs->permode, 1);
         SR_WRITE_VALUE(file, SR_CPU_LOADSTATE, regs->loadstate, 1);
         SR_WRITE_VALUE(file, SR_CPU_INVALIDATE, regs->invalidate, 1);
-        SR_WRITE_VALUE(file, SR_CPU_SIGPRESET, regs->sigpreset, 1);
-        SR_WRITE_VALUE(file, SR_CPU_SIGPIRESET, regs->sigpireset, 1);
+        SR_WRITE_VALUE(file, SR_CPU_SIGP_RESET, regs->sigp_reset, 1);
+        SR_WRITE_VALUE(file, SR_CPU_SIGP_INI_RESET, regs->sigp_ini_reset, 1);
         SR_WRITE_VALUE(file, SR_CPU_INTS_STATE, regs->ints_state, sizeof(regs->ints_state));
         SR_WRITE_VALUE(file, SR_CPU_INTS_MASK, regs->ints_mask, sizeof(regs->ints_mask));
         for (j = 0; j < sysblk.maxcpu; j++)
@@ -984,16 +984,16 @@ int      numconfdev=0;
             regs->invalidate = rc;
             break;
 
-        case SR_CPU_SIGPRESET:
+        case SR_CPU_SIGP_RESET:
             SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            regs->sigpreset = rc;
+            regs->sigp_reset = rc;
             break;
 
-        case SR_CPU_SIGPIRESET:
+        case SR_CPU_SIGP_INI_RESET:
             SR_NULL_REGS_CHECK(regs);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            regs->sigpireset = rc;
+            regs->sigp_ini_reset = rc;
             break;
 
         case SR_CPU_INTS_STATE:

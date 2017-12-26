@@ -1105,7 +1105,10 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     else
     {
         OBTAIN_INTLOCK( NULL );
-        system_reset( sysblk.pcpu, 0, sysblk.arch_mode );
+        {
+            const bool clear = false, ipl = false;
+            system_reset( sysblk.arch_mode, clear, ipl, sysblk.pcpu );
+        }
         RELEASE_INTLOCK( NULL );
     }
 

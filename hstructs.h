@@ -163,8 +163,8 @@ struct REGS {                           /* Processor registers       */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 tracing:1,              /* 1=Trace is active         */
                 stepwait:1,             /* 1=Wait in inst stepping   */
-                sigpreset:1,            /* 1=SIGP cpu reset received */
-                sigpireset:1;           /* 1=SIGP initial cpu reset  */
+                sigp_reset:1,           /* 1=SIGP cpu reset received */
+                sigp_ini_reset:1;       /* 1=SIGP initial cpu reset  */
 
         CACHE_ALIGN                     /* --- 64-byte cache line -- */
         S64     tod_epoch;              /* TOD epoch for this CPU    */

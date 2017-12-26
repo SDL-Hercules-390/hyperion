@@ -308,8 +308,8 @@
 #define SR_CPU_LOADSTATE        0xace20116
 #define SR_CPU_INVALIDATE       0xace20117
 #define SR_CPU_RESET_OPCTAB     0xace20118
-#define SR_CPU_SIGPRESET        0xace20119
-#define SR_CPU_SIGPIRESET       0xace2011a
+#define SR_CPU_SIGP_RESET       0xace20119
+#define SR_CPU_SIGP_INI_RESET   0xace2011a
 #define SR_CPU_VTIMERINT        0xace2011b
 #define SR_CPU_RTIMERINT        0xace2011c
 #define SR_CPU_MALFCPU          0xace20120

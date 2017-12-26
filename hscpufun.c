@@ -281,23 +281,26 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* system reset/system reset clear function                          */
 /*-------------------------------------------------------------------*/
-static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
+static int reset_cmd( int ac, char* av[], char* cmdline, bool clear )
 {
     int rc;
+    const bool ipl = false;
 
-    UNREFERENCED(ac);
-    UNREFERENCED(av);
-    UNREFERENCED(cmdline);
-    OBTAIN_INTLOCK(NULL);
+    UNREFERENCED( ac );
+    UNREFERENCED( av );
+    UNREFERENCED( cmdline );
 
-    /* CPU does not have to be stopped to issue reset                */
-    /* SA22-7201-05:                                                 */
-    /*  p. 12-5, System-Reset-Clear Key                              */
-    /*  p. 12-5, System-Reset-Normal Key                             */
-    /*  p. 4-36 -- 4-37, CPU Reset                                   */
-    rc = system_reset (sysblk.pcpu, clear, sysblk.arch_mode);
-
-    RELEASE_INTLOCK(NULL);
+    OBTAIN_INTLOCK( NULL );
+    {
+        /* Note: there's no need to check if the CPUs are stopped.
+         * According to the Principles of Operation manual, both
+         * the system-reset-clear and system-reset-normal keys
+         * are effective when the CPU is in the operating, stopped,
+         * load, or check-stop state.
+         */
+        rc = system_reset( sysblk.arch_mode, clear, ipl, sysblk.pcpu );
+    }
+    RELEASE_INTLOCK( NULL );
 
     return rc;
 }
@@ -306,38 +309,34 @@ static int reset_cmd(int ac,char *av[],char *cmdline,int clear)
 /*-------------------------------------------------------------------*/
 /* system reset command                                              */
 /*-------------------------------------------------------------------*/
-int sysreset_cmd(int ac,char *av[],char *cmdline)
+int sysreset_cmd( int ac, char* av[], char* cmdline )
 {
     int rc;
+    bool clear = false;  // (default)
 
-    if (ac < 2)
-        rc = reset_cmd( ac, av, cmdline, 0 );
-    else if (ac == 2)
+    if (ac > 2)
     {
-        if (!strcasecmp( "clear", av[1] ))
-        {
-            rc = reset_cmd( ac, av, cmdline, 1 );
-        }
-        else if (!strcasecmp( "normal", av[1] ))
-        {
-            rc = reset_cmd( ac, av, cmdline, 0 );
-        }
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", av[2], "" );
+        return -1;
+    }
+
+    if (ac == 2)
+    {
+        if (     !strcasecmp( "clear",  av[1] )) clear = true;
+        else if (!strcasecmp( "normal", av[1] )) clear = false;
         else
         {
             // "Invalid argument %s%s"
             WRMSG( HHC02205, "E", av[1], "" );
-            rc = -1;
+            return -1;
         }
     }
-    else // (ac > 2)
-    {
-        // "Invalid argument %s%s"
-        WRMSG( HHC02205, "E", av[2], "" );
-        rc = -1;
-    }
 
-    if (rc >= 0)
+    if ((rc = reset_cmd( ac, av, cmdline, clear )) >= 0)
         WRMSG( HHC02311, "I", cmdline ); // "%s completed"
+
+    // else error message already issued elsewhere
 
     return rc;
 }
@@ -346,60 +345,67 @@ int sysreset_cmd(int ac,char *av[],char *cmdline)
 /*-------------------------------------------------------------------*/
 /* system reset clear command                                        */
 /*-------------------------------------------------------------------*/
-int sysclear_cmd(int ac,char *av[],char *cmdline)
+int sysclear_cmd( int ac, char* av[], char* cmdline )
 {
     int rc;
+    const bool clear = true;
 
     if (ac > 1)
     {
         // "Invalid argument %s%s"
         WRMSG( HHC02205, "E", av[1], "" );
-        rc = -1;
+        return -1;
     }
 
-    if ((rc = reset_cmd( ac, av, cmdline, 1 )) >= 0)
+    if ((rc = reset_cmd( ac, av, cmdline, clear )) >= 0)
         WRMSG( HHC02311, "I", av[0] ); // "%s completed"
+
+    // else error message already issued elsewhere
 
     return rc;
 }
 
 
 /*-------------------------------------------------------------------*/
-/* ipl function                                                      */
-/* Format:
- *      ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxx ] [clear]
-*/
+/* ipl2 : IPL/IPLC command helper.                                   */
+/*                                                                   */
+/*   IPL xxxx | cccc [LOADPARM xxxxnnnn | PARM xxxxxxx] [CLEAR]      */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
-int ipl_cmd2(int argc, char *argv[], char *cmdline, int clr_prm)
+static int ipl_cmd2( int argc, char* argv[], char* cmdline, bool clear_opt )
 {
-BYTE c;                                 /* Character work area       */
-int  rc;                                /* Return code               */
-int  i;
-int  clear = clr_prm;                   /* Called with Clear option  */
-int j;
+BYTE    c;                              /* Character work area       */
+int     rc;                             /* Return code               */
+int     i, j;
+bool    clear = clear_opt;              /* Called with clear option  */
 size_t  maxb;
-U16  lcss;
-U16  devnum;
-char *cdev, *clcss;
-char save_loadparm[16];
-int  rest_loadparm = FALSE;
+U16     lcss;
+U16     devnum;
+char*   cdev;
+char*   clcss;
+char    save_loadparm[16];
+bool    reset_loadparm = false;
 
     save_loadparm[0] = '\0';
 
     UNREFERENCED( cmdline );
 
     /* Primary CPU must be online */
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    if (!IS_CPU_ONLINE( sysblk.pcpu ))
     {
-        WRMSG(HHC00816, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+        // "Processor %s%02X: processor is not %s"
+        WRMSG( HHC00816, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
         return -1;
     }
 
     /* Check that target processor type allows IPL */
-    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZAAP
-     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZIIP)
+    if (0
+        || SCCB_PTYP_ZAAP == sysblk.ptyp[ sysblk.pcpu ]
+        || SCCB_PTYP_ZIIP == sysblk.ptyp[ sysblk.pcpu ]
+    )
     {
-        WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
+        // "Processor %s%02X: not eligible for ipl nor restart"
+        WRMSG( HHC00818, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu );
         return -1;
     }
 
@@ -409,93 +415,104 @@ int  rest_loadparm = FALSE;
         missing_devnum();
         return -1;
     }
-#define MAXPARMSTRING   sizeof(sysblk.iplparmstring)
-    sysblk.haveiplparm=0;
-    maxb=0;
-    if ( argc > 2 )
+
+#define MAXPARMSTRING   sizeof( sysblk.iplparmstring )
+
+    sysblk.haveiplparm = 0;
+    maxb = 0;
+
+    if (argc > 2)
     {
-        if ( CMD( argv[2], clear, 2 ) )
+        if (CMD( argv[2], CLEAR, 2 ))
         {
-            clear = 1;
+            clear = true;
         }
-        else if ( CMD( argv[2], loadparm, 4 ) )
+        else if (CMD( argv[2], LOADPARM, 4 ))
         {
             STRLCPY( save_loadparm, str_loadparm() );
-            rest_loadparm = TRUE;
-            if ( argc == 4 )
-                set_loadparm(argv[3]);
+            reset_loadparm = true;
+
+            if (argc == 4)
+                set_loadparm( argv[3] );
         }
-        else if ( CMD(argv[2], parm, 4) )
+        else if (CMD( argv[2], PARM, 4 ))
         {
-            memset(sysblk.iplparmstring,0,MAXPARMSTRING);
-            sysblk.haveiplparm=1;
-            for ( i = 3; i < argc && maxb < MAXPARMSTRING; i++ )
+            memset( sysblk.iplparmstring, 0, MAXPARMSTRING );
+            sysblk.haveiplparm = TRUE;
+
+            for (i=3; i < argc && maxb < MAXPARMSTRING; i++)
             {
-                if ( i !=3 )
+                if (i != 3)
                 {
-                    sysblk.iplparmstring[maxb++]=0x40;
+                    sysblk.iplparmstring[ maxb++ ] = 0x40;
                 }
-                for ( j = 0; j < (int)strlen(argv[i]) && maxb < MAXPARMSTRING; j++ )
+
+                for (j=0; j < (int) strlen( argv[i] ) && maxb < MAXPARMSTRING; j++)
                 {
-                    if ( islower(argv[i][j]) )
-                    {
-                        argv[i][j]=toupper(argv[i][j]);
-                    }
-                    sysblk.iplparmstring[maxb]=host_to_guest(argv[i][j]);
+                    if (islower( argv[i][j] ))
+                        argv[i][j] = toupper( argv[i][j] );
+
+                    sysblk.iplparmstring[ maxb ] = host_to_guest( argv[i][j] );
                     maxb++;
                 }
             }
         }
     }
 
-    OBTAIN_INTLOCK(NULL);
-
-    /* The ipl device number might be in format lcss:devnum */
-    if ( (cdev = strchr(argv[1],':')) )
+    OBTAIN_INTLOCK( NULL );
     {
-        clcss = argv[1];
-        cdev++;
-    }
-    else
-    {
-        clcss = NULL;
-        cdev = argv[1];
-    }
-
-    /* If the ipl device is not a valid hex number we assume */
-    /* This is a load from the service processor             */
-    if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
-        rc = load_hmc(argv[1], sysblk.pcpu, clear);
-    else
-    {
-#if defined(_FEATURE_SCSI_IPL)
-        DEVBLK *dev;
-#endif /*defined(_FEATURE_SCSI_IPL)*/
-
-        *--cdev = '\0';
-
-        if (clcss)
+        /* The ipl device number might be in format lcss:devnum */
+        if ((cdev = strchr( argv[1], ':' )))
         {
-            if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
-            {
-                WRMSG(HHC02205, "E", clcss, ": LCSS id is invalid" );
-                if ( rest_loadparm ) set_loadparm( save_loadparm );
-                return -1;
-            }
+            clcss = argv[1];
+            cdev++;
         }
         else
-            lcss = 0;
+        {
+            clcss = NULL;
+            cdev = argv[1];
+        }
 
-#if defined(_FEATURE_SCSI_IPL)
-        if((dev = find_device_by_devnum(lcss,devnum))
-          && support_boot(dev) >= 0)
-            rc = load_boot(dev, sysblk.pcpu, clear, 0);
+        /* If the ipl device is not a valid hex number, then   */
+        /* we assume this is a load from the service processor */
+        if (sscanf( cdev, "%hx%c", &devnum, &c ) != 1)
+            rc = load_hmc( argv[1], sysblk.pcpu, clear );
         else
-#endif /*defined(_FEATURE_SCSI_IPL)*/
-            rc = load_ipl (lcss, devnum, sysblk.pcpu, clear);
-    }
+        {
+#if defined( _FEATURE_SCSI_IPL )
+            DEVBLK* dev;
+#endif
+            *--cdev = '\0';
 
-    RELEASE_INTLOCK(NULL);
+            if (clcss)
+            {
+                if (sscanf( clcss, "%hd%c", &lcss, &c ) != 1)
+                {
+                    // Invalid argument %s%s"
+                    WRMSG( HHC02205, "E", clcss, ": LCSS id is invalid" );
+
+                    if (reset_loadparm)
+                        set_loadparm( save_loadparm );
+
+                    return -1;
+                }
+            }
+            else
+                lcss = 0;
+
+#if defined( _FEATURE_SCSI_IPL )
+
+            if (1
+                && (dev = find_device_by_devnum( lcss, devnum ))
+                && support_boot( dev ) >= 0
+            )
+                rc = load_boot( dev, sysblk.pcpu, clear, 0 );
+            else
+#endif
+                rc = load_ipl( lcss, devnum, sysblk.pcpu, clear );
+        }
+    }
+    RELEASE_INTLOCK( NULL );
 
     return rc;
 }
@@ -504,18 +521,20 @@ int  rest_loadparm = FALSE;
 /*-------------------------------------------------------------------*/
 /* ipl command                                                       */
 /*-------------------------------------------------------------------*/
-int ipl_cmd(int argc, char *argv[], char *cmdline)
+int ipl_cmd( int argc, char* argv[], char* cmdline )
 {
-    return ipl_cmd2(argc,argv,cmdline,0);
+    const bool clear = false;
+    return ipl_cmd2( argc, argv, cmdline, clear );
 }
 
 
 /*-------------------------------------------------------------------*/
 /* ipl clear command                                                 */
 /*-------------------------------------------------------------------*/
-int iplc_cmd(int argc, char *argv[], char *cmdline)
+int iplc_cmd( int argc, char* argv[], char* cmdline )
 {
-    return ipl_cmd2(argc,argv,cmdline,1);
+    const bool clear = true;
+    return ipl_cmd2( argc, argv, cmdline, clear );
 }
 
 
