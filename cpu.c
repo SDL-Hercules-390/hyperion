@@ -1736,7 +1736,7 @@ int     aswitch;
             sysblk.regs[cpu] = regs;
             release_lock(&sysblk.cpulock[cpu]);
             // "Processor %s%02X: architecture mode %s"
-            WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
+            WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_name(regs));
         }
     }
     else
@@ -1747,7 +1747,7 @@ int     aswitch;
             return NULL;
 
         // "Processor %s%02X: architecture mode %s"
-        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_mode_string(regs));
+        WRMSG (HHC00811, "I", PTYPSTR(cpu), cpu, get_arch_name(regs));
 
 #ifdef FEATURE_S370_S390_VECTOR_FACILITY
         if (regs->vf->online)
@@ -1796,9 +1796,11 @@ int     aswitch;
         return oldregs;
     }
 
-    /* Initialize Architecture Level Set */
-    init_als(regs);
-    current_opcode_table=regs->ARCH_DEP(runtime_opcode_xxxx);
+    /* Initialize Facilities List */
+    init_cpu_facilities( regs );
+
+    /* Get pointer to primary opcode table */
+    current_opcode_table = regs->ARCH_DEP( runtime_opcode_xxxx );
 
     /* Signal cpu has started */
     if(!aswitch)
@@ -2028,25 +2030,5 @@ QWORD   qword;                            /* quadword work area      */
     return(buf);
 
 } /* end function str_psw */
-
-
-const char* arch_name[ NUM_GEN_ARCHS ] =
-{
-#if defined(_370)
-        _ARCH_370_NAME,
-#endif
-#if defined(_390)
-        _ARCH_390_NAME,
-#endif
-#if defined(_900)
-        _ARCH_900_NAME
-#endif
-};
-
-const char* get_arch_mode_string(REGS* regs)
-{
-    if (!regs) return arch_name[sysblk.arch_mode];
-    else return arch_name[regs->arch_mode];
-}
 
 #endif /*!defined(_GEN_ARCH)*/

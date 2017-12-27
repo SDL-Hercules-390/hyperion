@@ -1609,8 +1609,8 @@ typedef struct MBK  MBK;
 /* latest z/Architecture Pinciples of Operation.  They correspond    */
 /* to similarly named 'FEATURE_XXX" #defines listed in featall.h.    */
 /*                                                                   */
-/* Their names (minus the 'STFL_' prefix) are used by the FACILITY   */
-/* macro and FACILITY_ENABLED macro.  The FACILITY macro is used in  */
+/* Their names (minus the 'STFL_' prefix) are used by the FT macro   */
+/* macro and FACILITY_ENABLED macro.  The FT macro is used within    */
 /* archlvl.c to define the entries in the FACTAB facilities table    */
 /* that indicates which individual facilities are available in each  */
 /* architecture.                                                     */
@@ -1830,7 +1830,7 @@ typedef struct MBK  MBK;
                                                packed-conversion facility
                                                installed. Bit 42 is also
                                                one when bit 80 is one.   */
-//efine STFL_nnn_UNASSIGNED       81-127    /* Unassigned                */
+//efine STFL_nnn_UNASSIGNED       81-127    /* Unassigned or IBM internal*/
 
 #define STFL_128_IBM_INTERNAL        128    /* IBM internal use          */
 
@@ -1877,7 +1877,7 @@ typedef struct MBK  MBK;
                                                when bit 146 is one.      */
 #define STFL_147_IBM_INTERNAL        147    /* IBM internal use          */
 
-//efine STFL_nnn_UNASSIGNED      148-167    /* Unassigned                */
+//efine STFL_nnn_UNASSIGNED      148-167    /* Unassigned or IBM internal*/
 
 #define STFL_168_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode.
                                                Bit 168 can only be 1 when

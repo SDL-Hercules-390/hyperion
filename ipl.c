@@ -485,7 +485,7 @@ int rc;
         {
             char buffer[256];
             MSGBUF(buffer, "architecture mode %s, csw status %2.2X%2.2X, sense %s",
-                get_arch_mode_string((REGS *)0),
+                get_arch_name( NULL ),
                 unitstat, chanstat, buf);
             WRMSG (HHC00828, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buffer);
         }
@@ -540,7 +540,7 @@ int rc;
     {
         char buf[80];
         MSGBUF(buf, "architecture mode %s, invalid ipl psw %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
-                get_arch_mode_string((REGS *)0),
+                get_arch_name( NULL ),
                 regs->psa->iplpsw[0], regs->psa->iplpsw[1],
                 regs->psa->iplpsw[2], regs->psa->iplpsw[3],
                 regs->psa->iplpsw[4], regs->psa->iplpsw[5],
@@ -628,8 +628,8 @@ int i, rc = 0;                          /* Array subscript           */
         regs->guestregs->cpustate = CPUSTATE_STARTED;
    }
 
-    /* Initialize Architecture Level Set */
-    init_als(regs);
+    /* Re-initialize the facilities list for this CPU */
+    init_cpu_facilities( regs );
 
     /* Ensure CPU ID is accurate in case archmode changed */
     setCpuIdregs( regs, -1, -1, -1, -1 );

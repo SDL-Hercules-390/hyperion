@@ -70,8 +70,7 @@
 /*-------------------------------------------------------------------*/
 int build_config (const char *hercules_cnf)
 {
-int     i;                              /* Array subscript           */
-int     devtmax;                        /* Max number device threads */
+    int i;
 
     /*      From impl.c, using system defaults of:
      *
@@ -90,34 +89,23 @@ int     devtmax;                        /* Max number device threads */
     sysblk.maxcpu = MAX_CPU_ENGINES;
 #endif
 
-#ifdef    _FEATURE_S370_S390_VECTOR_FACILITY
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
     sysblk.numvec = sysblk.maxcpu;
 #else
     sysblk.numvec = 0;
 #endif
 
-    /* Default architecture is highest supported.  Thus
-       z/Arch first (900), then S/390 second (390), etc.
-    */
-#if defined(                  _900 )
-    VERIFY( set_archlvl( _ARCH_900_NAME ));
-#elif defined(                _390 )
-    VERIFY( set_archlvl( _ARCH_390_NAME ));
-#else //                      _370
-    VERIFY( set_archlvl( _ARCH_370_NAME ));
-#endif
-
-    devtmax  = MAX_DEVICE_THREADS;
-
-    ptt_trace_init (0, 1);
+    init_default_archmode();
+    init_facilities_lists();
+    ptt_trace_init( 0, TRUE );
 
     /* Set max number device threads */
-    sysblk.devtmax = devtmax;
+    sysblk.devtmax  = MAX_DEVICE_THREADS;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 
-#if defined(OPTION_LPP_RESTRICT)
     /* Default the licence setting */
+#if defined( OPTION_LPP_RESTRICT )
     losc_set(PGM_PRD_OS_RESTRICTED);
 #endif
 
@@ -125,18 +113,18 @@ int     devtmax;                        /* Max number device threads */
     csr_reset();
 
     /* Default CPU type CP */
-    for (i = 0; i < sysblk.maxcpu; i++)
+    for (i=0; i < sysblk.maxcpu; i++)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Default main storage to 2M with one CPU */
-    configure_storage(2 << (SHIFT_MEBIBYTE - 12));
+    configure_storage( 2 << ( SHIFT_MEBIBYTE - 12 ));
     configure_numcpu(1);
 
-    if (hercules_cnf && (process_config(hercules_cnf)))
+    if (hercules_cnf && (process_config( hercules_cnf )))
         return -1;
 
     /* Connect each channel set to its home cpu */
-    for (i = 0; i < sysblk.maxcpu; i++)
+    for (i=0; i < sysblk.maxcpu; i++)
         if (IS_CPU_ONLINE(i))
             sysblk.regs[i]->chanset = i < FEATURE_LCSS_MAX ? i : 0xFFFF;
 

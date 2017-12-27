@@ -100,21 +100,21 @@
 #define aia_cmd_desc            "Display AIA fields"
 #define alrf_cmd_desc           "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
 #define ar_cmd_desc             "Display access registers"
-#define archlvl_cmd_desc        "Set Architecture Level"
+#define archlvl_cmd_desc        "Set Architecture Mode or Enable/Disable Facility"
 #define archlvl_cmd_help        \
                                 \
-  "Format:   ARCHLVL S/370|ALS0 | ESA/390|ALS1 | ESAME|ALS2 | z/ARCH|ALS3\n"    \
-  "                  ENABLE|DISABLE <facility> [S/370|ESA/390|z/ARCH]\n"        \
-  "                  QUERY [<facility> | ALL]\n"                                \
+  "Format:   ARCHLVL S/370  | ESA/390 | z/ARCH\n"    \
+  "                  ENABLE | DISABLE <facility> [S/370|ESA/390|z/ARCH]\n"      \
+  "                  QUERY    [ ALL | <facility> ]\n"                           \
   "\n"                                                                          \
   "Entering the command without arguments displays the current architecture\n"  \
   "mode. Entering the command with an argument sets the architecture mode\n"    \
   "to the given value, or enables, disables or queries the given facility.\n"   \
   "\n"                                                                          \
-  "The ARCHLVL QUERY ALL command can be used to obtain a list of facilities\n"  \
-  "which can be enabled or disabled.\n"
+  "Use the ARCHLVL QUERY command to obtain the list of facility names that\n"   \
+  "can then be used in a ARCHLVL ENABLE/DISABLE <facility> command.\n"
 
-#define archmode_cmd_desc       "Alias for archlvl"
+#define archmode_cmd_desc       "Deprecated. Use the archlvl command instead"
 #define asnlx_cmd_desc          "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
 #define attach_cmd_desc         "Configure device"
 #define attach_cmd_help         \

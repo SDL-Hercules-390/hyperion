@@ -635,7 +635,7 @@
 #if  !defined( OPTION_370_MODE ) \
   && !defined( OPTION_390_MODE ) \
   && !defined( OPTION_900_MODE )
- #error No Architecture mode
+ #error At least one of OPTION_370_MODE, OPTION_390_MODE or OPTION_900_MODE must be specified
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -670,8 +670,8 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined(_900) && !defined(_390)
- #error OPTION_900_MODE requires OPTION_390_MODE to be enabled too
+#if defined( _900 ) && !defined( _390 )
+ #error OPTION_900_MODE requires OPTION_390_MODE to be #defined too
 #endif
 
 /*-------------------------------------------------------------------*/

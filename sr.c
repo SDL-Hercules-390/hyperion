@@ -159,7 +159,7 @@ BYTE     psw[16];
 
     /* Write system data */
     TRACE("SR: Saving System Data...\n");
-    SR_WRITE_STRING(file,SR_SYS_ARCH_NAME,arch_name[sysblk.arch_mode]);
+    SR_WRITE_STRING(file,SR_SYS_ARCH_NAME, get_arch_name( NULL ));
     SR_WRITE_VALUE (file,SR_SYS_STARTED_MASK,started_mask,sizeof(started_mask));
     SR_WRITE_VALUE (file,SR_SYS_MAINSIZE,sysblk.mainsize,sizeof(sysblk.mainsize));
     TRACE("SR: Saving MAINSTOR...\n");
@@ -461,39 +461,30 @@ int      numconfdev=0;
             break;
 
         case SR_SYS_ARCH_NAME:
-            SR_READ_STRING(file, buf, len);
-            i = -1;
-#if defined (_370)
-            if (strcasecmp (buf, arch_name[ARCH_370_IDX]) == 0)
+        {
+            int save_sysblk_arch_mode = sysblk.arch_mode;
+
+            SR_READ_STRING( file, buf, len );
+
+            for (i=0; i < NUM_GEN_ARCHS; i++)
             {
-                i = ARCH_370_IDX;
+                sysblk.arch_mode = i; // (is it this archmode?)
+                if (strcasecmp( buf, get_arch_name( NULL )) == 0)
+                    break; // (yep! found it!)
             }
-#endif
-#if defined (_390)
-            if (strcasecmp (buf, arch_name[ARCH_390_IDX]) == 0)
+
+            if (i >= NUM_GEN_ARCHS)  // (did we find it?)
             {
-                i = ARCH_390_IDX;
-            }
-#endif
-#if defined (_900)
-            if (0
-                || strcasecmp (buf, arch_name[ARCH_900_IDX]) == 0
-                || strcasecmp (buf, "ESAME") == 0
-            )
-            {
-                i = ARCH_900_IDX;
-            }
-#endif
-            if (i < 0)
-            {
+                sysblk.arch_mode = save_sysblk_arch_mode;
                 // "SR: archmode '%s' not supported"
                 WRMSG(HHC02008, "E", buf);
                 goto sr_error_exit;
             }
-            sysblk.arch_mode = i;
+
             sysblk.pcpu = 0;
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-            break;
+        }
+        break;
 
         case SR_SYS_MAINSIZE:
             SR_READ_VALUE(file, len, &mainsize, sizeof(mainsize));

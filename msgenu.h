@@ -705,12 +705,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00890 "Facility( %-27s ) %sabled"
 //efine HHC00891 (available)
 #define HHC00892 "Facility name not specified"
-#define HHC00893 "Facility(%s) does not exist"
+#define HHC00893 "Facility( %s ) does not exist"
 //efine HHC00894 (available)
-#define HHC00895 "Archmode %s is invalid"
-#define HHC00896 "Facility(%s) not supported for specfied archmode"
-//efine HHC00897 (available)
-#define HHC00898 "Facility(%s) %sabled for archmode %s"
+#define HHC00895 "Archmode '%s' is invalid"
+#define HHC00896 "Facility( %s ) not supported for archmode '%s'"
+#define HHC00897 "Facility( %s ) is required for archmode '%s'"
+#define HHC00898 "Facility( %s ) %sabled for archmode '%s'"
 //efine HHC00899 (available)
 
 // reserve 009xx for ctc related messages

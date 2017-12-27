@@ -459,7 +459,7 @@ REGS *regs;
                           "<input type=hidden name=select_cr value=%c>\n"
                           "<input type=hidden name=select_ar value=%c>\n",
                           cpu, select_gr?'S':'H',select_cr?'S':'H',select_ar?'S':'H');
-    hprintf(webblk->sock,"Mode: %s\n",get_arch_mode_string(regs));
+    hprintf( webblk->sock, "Mode: %s\n", get_arch_name( regs ));
     hprintf(webblk->sock,"</form>\n");
 
     if(!select_gr)

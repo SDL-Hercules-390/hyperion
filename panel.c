@@ -486,7 +486,7 @@ static void restore_command_line()
     cur_cons_col = saved_cons_col;
 }
 
-static void draw_text (char *text)
+static void draw_text( const char* text )
 {
     int   len;
     char *short_text;
@@ -697,7 +697,7 @@ static void NP_screen_redraw (REGS *regs)
         fill_text (' ', 16);
         draw_text ("CPU:    %");
         fill_text (' ', 30);
-        draw_text ((char *)get_arch_mode_string(NULL));
+        draw_text (get_arch_name( NULL ));
     }
 
     set_color (COLOR_LIGHT_GREY, COLOR_BLUE);
