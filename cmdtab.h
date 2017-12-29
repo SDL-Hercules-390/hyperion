@@ -100,12 +100,12 @@
 #define aia_cmd_desc            "Display AIA fields"
 #define alrf_cmd_desc           "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
 #define ar_cmd_desc             "Display access registers"
-#define archlvl_cmd_desc        "Set Architecture Mode or Enable/Disable Facility"
+#define archlvl_cmd_desc        "Set Arch Mode or Enable/Disable/Query Facility"
 #define archlvl_cmd_help        \
                                 \
-  "Format:   ARCHLVL S/370  | ESA/390 | z/ARCH\n"    \
-  "                  ENABLE | DISABLE <facility> [S/370|ESA/390|z/ARCH]\n"      \
-  "                  QUERY    [ ALL | <facility> ]\n"                           \
+  "Format: ARCHLVL S/370 | ESA/390 | z/ARCH\n"                                  \
+  "        ARCHLVL ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH]\n"  \
+  "        ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]\n"     \
   "\n"                                                                          \
   "Entering the command without arguments displays the current architecture\n"  \
   "mode. Entering the command with an argument sets the architecture mode\n"    \

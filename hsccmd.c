@@ -5253,8 +5253,8 @@ int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
         /* Make sure all CPUs are deconfigured or stopped */
         if (are_any_cpus_started())
         {
-            // "All CPU's must be stopped to change architecture"
-            WRMSG( HHC02253, "E" );
+            // "All CPU's must be stopped %s"
+            WRMSG( HHC02253, "E", "to change CPUIDFMT" );
             return HERRCPUONL;
         }
 

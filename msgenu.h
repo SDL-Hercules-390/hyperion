@@ -103,8 +103,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
 /* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
 /*-------------------------------------------------------------------*/
-#define FLOGMSG( f,   fmt,   ... ) PFWRITEMSG( WRMSG_NORMAL, f,    fmt,              ## __VA_ARGS__ )
-#define  LOGMSG(      fmt,   ... ) PWRITEMSG(  WRMSG_NORMAL,       fmt,              ## __VA_ARGS__ )
+#define FLOGMSG( f,   fmt,   ... ) PFWRITEMSG( WRMSG_NORMAL, f,    fmt,                 ## __VA_ARGS__ )
+#define  LOGMSG(      fmt,   ... ) PWRITEMSG(  WRMSG_NORMAL,       fmt,                 ## __VA_ARGS__ )
 #define FWRMSG(  f, id, sev, ... ) FLOGMSG(                  f, #id "%s " id "\n", sev, ## __VA_ARGS__ )
 #define  WRMSG(     id, sev, ... ) LOGMSG(                      #id "%s " id "\n", sev, ## __VA_ARGS__ )
 
@@ -115,8 +115,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
 /* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
 /*-------------------------------------------------------------------*/
-#define PFLOGMSG( pan, f, fmt,     ... ) PFWRITEMSG( pan, f,    fmt,              ## __VA_ARGS__ )
-#define  PLOGMSG( pan,    fmt,     ... ) PWRITEMSG(  pan,       fmt,              ## __VA_ARGS__ )
+#define PFLOGMSG( pan, f, fmt,     ... ) PFWRITEMSG( pan, f,    fmt,                 ## __VA_ARGS__ )
+#define  PLOGMSG( pan,    fmt,     ... ) PWRITEMSG(  pan,       fmt,                 ## __VA_ARGS__ )
 #define PFWRMSG(  pan, f, id, sev, ... ) PFLOGMSG(   pan, f, #id "%s " id "\n", sev, ## __VA_ARGS__ )
 #define  PWRMSG(  pan,    id, sev, ... ) PLOGMSG(    pan,    #id "%s " id "\n", sev, ## __VA_ARGS__ )
 
@@ -702,15 +702,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00886 "CRW 0x%8.8X: %s"
 //efine HHC00887 - HHC00889 (available)
 
-#define HHC00890 "Facility( %-27s ) %sabled"
-//efine HHC00891 (available)
+#define HHC00890 "Facility( %-27s ) %s for %s"
+#define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
 #define HHC00892 "Facility name not specified"
-#define HHC00893 "Facility( %s ) does not exist"
-//efine HHC00894 (available)
-#define HHC00895 "Archmode '%s' is invalid"
-#define HHC00896 "Facility( %s ) not supported for archmode '%s'"
-#define HHC00897 "Facility( %s ) is required for archmode '%s'"
-#define HHC00898 "Facility( %s ) %sabled for archmode '%s'"
+#define HHC00893 "Facility( %s ) does not exist for %s"
+#define HHC00894 "%s facility list: %s"
+#define HHC00895 "ARCHLVL '%s' is invalid"
+#define HHC00896 "Facility( %s ) not supported for %s"
+#define HHC00897 "Facility( %s ) is required for %s"
+#define HHC00898 "Facility( %s ) %s%s for %s"
 //efine HHC00899 (available)
 
 // reserve 009xx for ctc related messages
@@ -1365,7 +1365,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02250 "Loading file %s to location %s"
 #define HHC02251 "Address exceeds main storage size"
 #define HHC02252 "Sorry, too many instructions"
-#define HHC02253 "All CPU's must be stopped to change architecture"
+#define HHC02253 "All CPU's must be stopped %s"
 #define HHC02254 " i: %12"PRId64
 #define HHC02255 "%3d: %12"PRId64
 #define HHC02256 "Command %s is deprecated, use %s instead"
