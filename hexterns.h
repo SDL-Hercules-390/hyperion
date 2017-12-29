@@ -368,7 +368,7 @@ extern void setCpuId         ( const unsigned int cpu,
                                S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL );
 extern BYTE resetAllCpuIds();
 extern void setOperationMode();
-extern void enable_lparmode( const int enable );
+extern void enable_lparmode( const bool enable );
 
 /* Functions in module cmdtab.c */
 CMDT_DLL_IMPORT int InternalHercCmd(char *cmdline); /* (NEVER for guest) */

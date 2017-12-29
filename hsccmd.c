@@ -4899,7 +4899,7 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
 
         /* Set new LPAR number, CPU ID format and operation mode */
         OBTAIN_INTLOCK( NULL );
-        enable_lparmode( 1 );
+        enable_lparmode( true );
         sysblk.lparnum = lparnum;
 
         if (lparnum == 0)
@@ -4921,7 +4921,7 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
     {
         /* Set new LPAR number, CPU ID format and operation mode */
         OBTAIN_INTLOCK( NULL );
-        enable_lparmode( 0 );
+        enable_lparmode( false );
         sysblk.lparnum  = 0;
         sysblk.cpuidfmt = 0;
         sysblk.operation_mode = om_basic;

@@ -105,20 +105,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /*-------------------------------------------------------------------*/
 #define FLOGMSG( f,   fmt,   ... ) PFWRITEMSG( WRMSG_NORMAL, f,    fmt,              ## __VA_ARGS__ )
 #define  LOGMSG(      fmt,   ... ) PWRITEMSG(  WRMSG_NORMAL,       fmt,              ## __VA_ARGS__ )
-#define FWRMSG(  f, id, sev, ... ) FLOGMSG(                  f, #id sev " " id "\n", ## __VA_ARGS__ )
-#define  WRMSG(     id, sev, ... ) LOGMSG(                      #id sev " " id "\n", ## __VA_ARGS__ )
+#define FWRMSG(  f, id, sev, ... ) FLOGMSG(                  f, #id "%s " id "\n", sev, ## __VA_ARGS__ )
+#define  WRMSG(     id, sev, ... ) LOGMSG(                      #id "%s " id "\n", sev, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /* Macros that allow you to specify a custom write message option.   */
 /* Use these macros when you want to issue a message to the panel    */
-/* only without it appearing in DIAG8's response buffer for example. */
+/* ONLY without it appearing in DIAG8's response buffer for example. */
 /* PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required    */
 /* for compatibility with both gcc and MSVC and MUSTN'T be removed!  */
 /*-------------------------------------------------------------------*/
 #define PFLOGMSG( pan, f, fmt,     ... ) PFWRITEMSG( pan, f,    fmt,              ## __VA_ARGS__ )
 #define  PLOGMSG( pan,    fmt,     ... ) PWRITEMSG(  pan,       fmt,              ## __VA_ARGS__ )
-#define PFWRMSG(  pan, f, id, sev, ... ) PFLOGMSG(   pan, f, #id sev " " id "\n", ## __VA_ARGS__ )
-#define  PWRMSG(  pan,    id, sev, ... ) PLOGMSG(    pan,    #id sev " " id "\n", ## __VA_ARGS__ )
+#define PFWRMSG(  pan, f, id, sev, ... ) PFLOGMSG(   pan, f, #id "%s " id "\n", sev, ## __VA_ARGS__ )
+#define  PWRMSG(  pan,    id, sev, ... ) PLOGMSG(    pan,    #id "%s " id "\n", sev, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /* ckddasd.c/fbadasd.c dasd I/O tracing helper macro                 */
@@ -135,7 +135,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
             /* "%1d:%04X ....(debug trace message)... */        \
             fwritemsg( __FILE__, __LINE__, __FUNCTION__,        \
                 WRMSG_NORMAL, stdout,                           \
-                #id sev " " id "\n",                            \
+                #id "%s " id "\n", sev,                         \
                 SSID_TO_LCSS( dev->ssid ),                      \
                 dev->devnum, ## __VA_ARGS__ );                  \
         }                                                       \

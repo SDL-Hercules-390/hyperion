@@ -64,7 +64,7 @@ gpr
 # BC12 2828: z/VM 5.4 -- returns 2 doublewords
 #
 #   FB6BFFFB FCFFF840
-$   000C0000 00000000
+#   000C0000 00000000
 #
 #----------------------------------------------------------------------
 # zPDT emulating an EC12 -- returns 3 doublewords
