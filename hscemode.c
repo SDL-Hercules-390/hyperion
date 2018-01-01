@@ -83,154 +83,161 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
 /*       NON-architecure-dependent code from here onward             */
 /*-------------------------------------------------------------------*/
 
-/* Issue generic Device not found error message */
-static inline int devnotfound_msg(U16 lcss,U16 devnum)
+static inline int devnotfound_msg( const U16 lcss, const U16 devnum )
 {
-    WRMSG(HHC02200,"E",lcss,devnum);
+    // "%1d:%04X device not found"
+    WRMSG( HHC02200, "E", lcss, devnum );
     return -1;
 }
 
-/* Issue generic Missing device number message */
 static inline void missing_devnum()
 {
-    WRMSG(HHC02201,"E");
+    // "Device number missing"
+    WRMSG( HHC02201, "E" );
 }
 
 
-static inline char *aea_mode_str(BYTE mode)
+/*-------------------------------------------------------------------*/
+/*                (aea command helper function)                      */
+/*-------------------------------------------------------------------*/
+static inline const char* aea_mode_str( const BYTE mode)
 {
-static char *name[] = { "DAT-Off", "Primary", "AR", "Secondary", "Home",
-                        0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR",
-                        "PER/Secondary", "PER/Home" };
+    static const char* name[] =
+    {
+        "DAT-Off",
+        "Primary",
+        "AR",
+        "Secondary",
+        "Home",
+        0,
+        0,
+        0,
+        "PER/DAT-Off",
+        "PER/Primary",
+        "PER/AR",
+        "PER/Secondary",
+        "PER/Home"
+    };
 
-    return name[(mode & 0x0f) | ((mode & 0xf0) ? 8 : 0)];
+    return name[ (mode & 0x0f) | ((mode & 0xf0) ? 8 : 0) ];
 }
+
+
+/*-------------------------------------------------------------------*/
+/*                (aea command helper function)                      */
+/*-------------------------------------------------------------------*/
+static void report_aea( REGS* regs )
+{
+    int    i;
+    char   buf[128];
+    char   wrk[128];
+
+    // HHC02282 == "%s"  // (aea_cmd)
+
+    MSGBUF( buf, "aea mode   %s", aea_mode_str( regs->aea_mode ));
+    WRMSG( HHC02282, "I", buf );
+
+    //------------------------------------------------------------
+
+    STRLCPY( buf, "aea ar    " );
+
+    for (i = USE_HOME_SPACE; i < 0; i++)
+    {
+        if (regs->AEA_AR(i) > 0)
+              MSGBUF( wrk, " %2.2X", regs->AEA_AR(i));
+        else  MSGBUF( wrk, " %2d",   regs->AEA_AR(i));
+
+        STRLCAT( buf, wrk);
+    }
+
+    for (i=0; i < 16; i++)
+    {
+        if (regs->AEA_AR(i) > 0)
+              MSGBUF( wrk, " %2.2X", regs->AEA_AR(i));
+        else  MSGBUF( wrk, " %2d",   regs->AEA_AR(i));
+
+        STRLCAT( buf, wrk);
+    }
+
+    WRMSG( HHC02282, "I", buf );
+
+    //------------------------------------------------------------
+
+    STRLCPY( buf, "aea common            " );
+
+    if (regs->AEA_COMMON( CR_ASD_REAL ) > 0)
+          MSGBUF( wrk, " %2.2X", regs->AEA_COMMON( CR_ASD_REAL ));
+    else  MSGBUF( wrk, " %2d",   regs->AEA_COMMON( CR_ASD_REAL ));
+
+    STRLCAT( buf, wrk);
+
+    for (i=0; i < 16; i++)
+    {
+        if (regs->AEA_COMMON(i) > 0)
+              MSGBUF( wrk, " %2.2X", regs->AEA_COMMON(i));
+        else  MSGBUF( wrk, " %2d",   regs->AEA_COMMON(i));
+
+        STRLCAT( buf, wrk);
+    }
+
+    WRMSG( HHC02282, "I", buf );
+
+    //------------------------------------------------------------
+
+    MSGBUF( buf, "aea cr[1]  %16.16"PRIX64, regs->CR_G(      1      )); WRMSG( HHC02282, "I", buf );
+    MSGBUF( buf, "    cr[7]  %16.16"PRIX64, regs->CR_G(      7      )); WRMSG( HHC02282, "I", buf );
+    MSGBUF( buf, "    cr[13] %16.16"PRIX64, regs->CR_G(     13      )); WRMSG( HHC02282, "I", buf );
+    MSGBUF( buf, "    cr[r]  %16.16"PRIX64, regs->CR_G( CR_ASD_REAL )); WRMSG( HHC02282, "I", buf );
+
+    //------------------------------------------------------------
+
+    for (i=0; i < 16; i++)
+    {
+        if (regs->AEA_AR(i) > 15)
+        {
+            MSGBUF( buf, "    alb[%d] %16.16"PRIX64, i, regs->CR_G( CR_ALB_OFFSET + i ));
+            WRMSG( HHC02282, "I", buf );
+        }
+    }
+}
+
 
 /*-------------------------------------------------------------------*/
 /* aea - display aea values                                          */
 /*-------------------------------------------------------------------*/
-int aea_cmd(int argc, char *argv[], char *cmdline)
+int aea_cmd( int argc, char* argv[], char* cmdline )
 {
-    int     i;                          /* Index                     */
-    REGS   *regs;
-    char   buf[128];
-    int    len;
+    REGS*  regs;
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
     {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
-    }
-    regs = sysblk.regs[sysblk.pcpu];
-
-    MSGBUF( buf, "aea mode   %s", aea_mode_str(regs->aea_mode));
-    WRMSG(HHC02282, "I", buf);
-
-    len = sprintf(buf, "aea ar    ");
-    for (i = USE_HOME_SPACE; i < 0; i++)
-         if (regs->AEA_AR(i) > 0)
-            len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
-        else
-            len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
-    for (i = 0; i < 16; i++)
-         if (regs->AEA_AR(i) > 0)
-            len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
-        else
-            len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
-    WRMSG(HHC02282, "I", buf);
-
-    len = sprintf(buf, "aea common            ");
-    if (regs->AEA_COMMON(CR_ASD_REAL) > 0)
-        len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(CR_ASD_REAL));
-    else
-        len += sprintf(buf + len, " %2d",regs->AEA_COMMON(CR_ASD_REAL));
-    for (i = 0; i < 16; i++)
-        if (regs->AEA_COMMON(i) > 0)
-            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(i));
-        else
-            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(i));
-    WRMSG(HHC02282, "I", buf);
-
-    MSGBUF( buf, "aea cr[1]  %16.16"PRIX64, regs->CR_G(1));
-    WRMSG(HHC02282, "I", buf);
-    MSGBUF( buf, "    cr[7]  %16.16"PRIX64, regs->CR_G(7));
-    WRMSG(HHC02282, "I", buf);
-    MSGBUF( buf, "    cr[13] %16.16"PRIX64, regs->CR_G(13));
-    WRMSG(HHC02282, "I", buf);
-    MSGBUF( buf, "    cr[r]  %16.16"PRIX64, regs->CR_G(CR_ASD_REAL));
-    WRMSG(HHC02282, "I", buf);
-
-    for (i = 0; i < 16; i++)
-        if (regs->AEA_AR(i) > 15)
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
         {
-            MSGBUF( buf, "    alb[%d] %16.16"PRIX64, i,
-                    regs->CR_G(CR_ALB_OFFSET + i));
-            WRMSG(HHC02282, "I", buf);
+            release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
+            return -1;
         }
 
-    if (regs->sie_active)
-    {
-        regs = regs->guestregs;
+        regs = sysblk.regs[ sysblk.pcpu ];
+        report_aea( regs );
 
-        WRMSG(HHC02282, "I", "aea SIE");
-        MSGBUF( buf, "aea mode   %s",aea_mode_str(regs->aea_mode));
-        WRMSG(HHC02282, "I", buf);
+        if (regs->sie_active)
+        {
+            // HHC02282 == "%s"  // (aea_cmd)
+            WRMSG( HHC02282, "I", "aea SIE" );
 
-        len = sprintf(buf, "aea ar    ");
-        for (i = USE_HOME_SPACE; i < 0; i++)
-            if (regs->AEA_AR(i) > 0)
-                len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
-            else
-                len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
-        for (i = 0; i < 16; i++)
-            if (regs->AEA_AR(i) > 0)
-                len += sprintf(buf + len, " %2.2X",regs->AEA_AR(i));
-            else
-                len += sprintf(buf + len, " %2d",regs->AEA_AR(i));
-        WRMSG(HHC02282, "I", buf);
-
-        len = sprintf(buf, "aea common            ");
-        if (regs->AEA_COMMON(CR_ASD_REAL) > 0)
-            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(CR_ASD_REAL));
-        else
-            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(CR_ASD_REAL));
-        for (i = 0; i < 16; i++)
-        if (regs->AEA_COMMON(i) > 0)
-            len += sprintf(buf + len, " %2.2X",regs->AEA_COMMON(i));
-        else
-            len += sprintf(buf + len, " %2d",regs->AEA_COMMON(i));
-        WRMSG(HHC02282, "I", buf);
-
-        MSGBUF( buf, "aea cr[1]  %16.16"PRIX64, regs->CR_G(1));
-        WRMSG(HHC02282, "I", buf);
-        MSGBUF( buf, "    cr[7]  %16.16"PRIX64, regs->CR_G(7));
-        WRMSG(HHC02282, "I", buf);
-        MSGBUF( buf, "    cr[13] %16.16"PRIX64, regs->CR_G(13));
-        WRMSG(HHC02282, "I", buf);
-        MSGBUF( buf, "    cr[r]  %16.16"PRIX64, regs->CR_G(CR_ASD_REAL));
-        WRMSG(HHC02282, "I", buf);
-
-        for (i = 0; i < 16; i++)
-            if (regs->AEA_AR(i) > 15)
-            {
-                MSGBUF( buf, "    alb[%d] %16.16"PRIX64, i,
-                        regs->CR_G(CR_ALB_OFFSET + i));
-                WRMSG(HHC02282, "I", buf);
-            }
+            regs = regs->guestregs;
+            report_aea( regs );
+        }
     }
-
-    release_lock (&sysblk.cpulock[sysblk.pcpu]);
-
+    release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
     return 0;
 }
-
 
 
 /*-------------------------------------------------------------------*/
@@ -323,36 +330,61 @@ int traceopt_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
 {
-    REGS   *regs;
-    char buf[128];
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
     {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
+        REGS*  regs;
+        char   buf[128];
+
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "E", PTYPSTR( sysblk.pcpu ),
+                sysblk.pcpu, "online" );
+            return -1;
+        }
+
+        regs = sysblk.regs[ sysblk.pcpu ];
+
+        MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p aim %p",
+
+                regs->AIV_G,
+                regs->aip,
+                regs->ip,
+                regs->aie,
+                (BYTE*) regs->aim
+        );
+
+        // "%s" (aia_cmd)
+        WRMSG( HHC02283, "I", buf );
+
+        if (regs->sie_active)
+        {
+            char wrk[128];
+
+            regs = regs->guestregs;
+
+            MSGBUF( wrk, "AIV %16.16"PRIx64" aip %p ip %p aie %p"
+                
+                , regs->AIV_G
+                , regs->aip
+                , regs->ip
+                , regs->aie
+            );
+
+            STRLCPY( buf, "SIE: " );
+            STRLCAT( buf, wrk );
+
+            // "%s" (aia_cmd)
+            WRMSG( HHC02283, "I", buf );
+        }
     }
-    regs = sysblk.regs[sysblk.pcpu];
-
-    MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p aim %p",
-            regs->AIV_G,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
-    WRMSG(HHC02283, "I", buf);
-
-    if (regs->sie_active)
-    {
-        regs = regs->guestregs;
-        sprintf(buf + sprintf(buf, "SIE: "), "AIV %16.16"PRIx64" aip %p ip %p aie %p",
-            regs->AIV_G,regs->aip,regs->ip,regs->aie);
-        WRMSG(HHC02283, "I", buf);
-    }
-
-    release_lock (&sysblk.cpulock[sysblk.pcpu]);
+    release_lock ( &sysblk.cpulock[ sysblk.pcpu ]);
 
     return 0;
 }
@@ -458,6 +490,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
 
 #if defined(SIE_DEBUG_PERFMON)
 /*-------------------------------------------------------------------*/
@@ -878,7 +911,6 @@ REGS *regs;
 }
 
 
-
 /*-------------------------------------------------------------------*/
 /* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b                 */
 /*-------------------------------------------------------------------*/
@@ -1025,9 +1057,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             first = last = -1;
         }
 
-// /*DEBUG*/logmsg( _("hsccmd.c: %s%02X: Any cpu interrupt %spending\n"),
+// /*DEBUG*/logmsg( "hsccmd.c: %s%02X: Any cpu interrupt %spending\n",
 // /*DEBUG*/    PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
-// /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : _("not ") );
+// /*DEBUG*/    sysblk.regs[i]->cpuint ? "" : "not " );
 //
         WRMSG( HHC00850, "I", PTYPSTR(sysblk.regs[i]->cpuad), sysblk.regs[i]->cpuad,
                               IC_INTERRUPT_CPU(sysblk.regs[i]),
@@ -1305,7 +1337,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 }
 
 
-
 /*-------------------------------------------------------------------*/
 /* gpr command - display or alter general purpose registers          */
 /*-------------------------------------------------------------------*/
@@ -1537,19 +1568,18 @@ char buf[512];
     return 0;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* i command - generate I/O attention interrupt for device           */
 /*-------------------------------------------------------------------*/
-int i_cmd(int argc, char *argv[], char *cmdline)
+int i_cmd( int argc, char* argv[], char* cmdline )
 {
-REGS *regs;
-
-    int      rc = 0;
-    U16      devnum;
-    U16      lcss;
+    REGS*    regs;
     DEVBLK*  dev;
+    int      rc = 0;
+    U16      lcss, devnum;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     if (argc < 2)
     {
@@ -1557,34 +1587,45 @@ REGS *regs;
         return -1;
     }
 
-    rc=parse_single_devnum(argv[1],&lcss,&devnum);
-    if (rc<0)
+    rc = parse_single_devnum( argv[1], &lcss, &devnum );
+
+    if (rc < 0)
+        return -1;  // (error message already issued)
+
+    if (!(dev = find_device_by_devnum( lcss, devnum )))
     {
+        devnotfound_msg( lcss, devnum );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (lcss, devnum)))
+    rc = device_attention( dev, CSW_ATTN );
+
+    switch (rc)
     {
-        devnotfound_msg(lcss,devnum);
-        return -1;
+        // "%1d:%04X attention request raised"
+        case 0: WRMSG( HHC02230, "I", lcss, devnum ); break;
+
+        // "%1d:%04X busy or interrupt pending"
+        case 1: WRMSG( HHC02231, "E", lcss, devnum ); break;
+
+        // "%1d:%04X attention request rejected"
+        case 2: WRMSG( HHC02232, "E", lcss, devnum ); break;
+
+        // "%1d:%04X subchannel not enabled"
+        case 3: WRMSG( HHC02233, "E", lcss, devnum ); break;
     }
 
-    rc = device_attention (dev, CSW_ATTN);
+    regs = sysblk.regs[ sysblk.pcpu ];
 
-    switch (rc) {
-        case 0: WRMSG(HHC02230, "I", lcss, devnum);
-                break;
-        case 1: WRMSG(HHC02231, "E", lcss, devnum);
-                break;
-        case 2: WRMSG(HHC02232, "E", lcss, devnum);
-                break;
-        case 3: WRMSG(HHC02233, "E", lcss, devnum);
-                break;
+    if (1
+        && rc == 3 /* subchannel is not valid or not enabled */
+        && IS_CPU_ONLINE( sysblk.pcpu )
+        && CPUSTATE_STOPPED == regs->cpustate
+    )
+    {
+        // "Are you sure you didn't mean 'ipl %04X'"
+        WRMSG( HHC02234, "W", devnum );
     }
-
-    regs = sysblk.regs[sysblk.pcpu];
-    if (rc == 3 && IS_CPU_ONLINE(sysblk.pcpu) && CPUSTATE_STOPPED == regs->cpustate)
-        WRMSG(HHC02234, "W", devnum );
 
     return rc;
 }
@@ -2389,8 +2430,8 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
     }
     return 0;
 }
-
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
+
 
 /*-------------------------------------------------------------------*/
 /* createCpuId  -  Create the requested CPU ID                       */
@@ -2418,6 +2459,7 @@ U64 createCpuId
 
     return result;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* setCpuIdregs  -  Set the CPU ID for the requested CPU context     */
@@ -2502,6 +2544,7 @@ void setCpuIdregs
     regs->cpuid = createCpuId( model, version, serial, MCEL );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* setCpuId  -  Set the CPU ID for the requested CPU                 */
 /*-------------------------------------------------------------------*/
@@ -2535,6 +2578,7 @@ void setCpuId
     set_cpu_timer_mode( regs );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* setOperationMode  -  Set the operation mode for the system        */
 /*-------------------------------------------------------------------*/
@@ -2553,6 +2597,7 @@ void setOperationMode()
       ((sysblk.cpuidfmt || sysblk.lparnum < 1 || sysblk.lparnum > 16) ?
        om_emif : om_mif) : om_basic;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* Set/update all CPU IDs                                            */
@@ -2590,6 +2635,7 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
    return TRUE;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* setAllCpuIds_lock  -  Obtain INTLOCK and then set all CPU IDs     */
 /*-------------------------------------------------------------------*/
@@ -2605,6 +2651,7 @@ BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, co
     return success;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* resetAllCpuIds - Reset all CPU IDs based on sysblk CPU ID updates */
 /*-------------------------------------------------------------------*/
@@ -2612,6 +2659,7 @@ BYTE resetAllCpuIds()
 {
     return setAllCpuIds( -1, -1, -1, -1 );
 }
+
 
 /*-------------------------------------------------------------------*/
 /* enable_lparmode  -  Enable/Disable LPAR mode                      */
