@@ -914,36 +914,44 @@ REGS *regs;
 /*-------------------------------------------------------------------*/
 /* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b                 */
 /*-------------------------------------------------------------------*/
-int trace_cmd(int argc, char *argv[], char *cmdline)
+int trace_cmd( int argc, char* argv[], char* cmdline )
 {
-int  on = 0, off = 0, query = 0;
-int  trace = 0;
-int  rc;
-BYTE c[2];
-U64  addr[2];
-char range[256];
+    U64   addr[2];
+    char  range[128] = {0};
+    int   rc;
+    BYTE  c[2];
+    bool  trace = false, on = false, off = false, query = false;
 
-    trace = cmdline[0] == 't';
+    trace = (cmdline[0] == 't');
 
-    if (strlen(cmdline) > 1)
+    /* Save whether this is a on/off "t+" or "t-" command,
+       or a "t?" query command
+    */
+    if (strlen( cmdline ) > 1)
     {
-        on = cmdline[1] == '+'
-         || (cmdline[0] == 'b' && cmdline[1] == ' ');
-        off = cmdline[1] == '-';
+        on =    cmdline[1] == '+'
+           ||  (cmdline[0] == 'b' && cmdline[1] == ' ');
+        off =   cmdline[1] == '-';
         query = cmdline[1] == '?';
     }
 
-    if (argc > 2 || (off && argc > 1) || (query && argc > 1))
+    /* Check for correct number of arguments */
+    if (0
+        ||           argc > 2
+        || (off   && argc > 1)
+        || (query && argc > 1)
+    )
     {
-        WRMSG(HHC02205, "E", argv[1], "");
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
         return -1;
     }
 
     /* Get address range */
     if (argc == 2)
     {
-        rc = sscanf(argv[1], "%"SCNx64"%c%"SCNx64"%c",
-                    &addr[0], &c[0], &addr[1], &c[1]);
+        rc = sscanf( argv[1], "%"SCNx64"%c%"SCNx64"%c",
+                    &addr[0], &c[0], &addr[1], &c[1] );
         if (rc == 1)
         {
             c[0] = '-';
@@ -951,11 +959,14 @@ char range[256];
         }
         else if (rc != 3 || (c[0] != '-' && c[0] != ':' && c[0] != '.'))
         {
-            WRMSG(HHC02205, "E", argv[1], "");
+            // Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "" );
             return -1;
         }
+
         if (c[0] == '.')
             addr[1] += addr[0] - 1;
+
         if (trace)
         {
             sysblk.traceaddr[0] = addr[0];
@@ -973,42 +984,164 @@ char range[256];
     /* Set tracing/stepping bit on or off */
     if (on || off)
     {
-        OBTAIN_INTLOCK(NULL);
-        if (trace)
-            sysblk.insttrace = on;
-        else
-            sysblk.inststep = on;
-        SET_IC_TRACE;
-        RELEASE_INTLOCK(NULL);
+#if defined( OPTION_MIPS_COUNTING )
+        bool auto_msg = false;
+#endif
+        OBTAIN_INTLOCK( NULL );
+        {
+            if (trace)
+                sysblk.insttrace = on;
+            else
+                sysblk.inststep  = on;
+
+#if defined( OPTION_MIPS_COUNTING )
+
+        /* Explicit tracing overrides automatic tracing */
+        if (sysblk.auto_trace_on || sysblk.auto_trace_off)
+        {
+            sysblk.auto_trace_on  = 0;
+            sysblk.auto_trace_off = 0;
+            auto_msg = true;
+        }
+#endif
+            SET_IC_TRACE;
+        }
+        RELEASE_INTLOCK( NULL );
+
+#if defined( OPTION_MIPS_COUNTING )
+        if (auto_msg)
+        {
+            // "Automatic tracing disabled"
+            WRMSG( HHC02373, "I" );
+        }
+#endif
     }
 
     /* Build range for message */
+
     range[0] = '\0';
+
     if (trace && (sysblk.traceaddr[0] != 0 || sysblk.traceaddr[1] != 0))
-        sprintf(range, "range %"PRIx64"%c%"PRIx64,
-                sysblk.traceaddr[0], c[0],
-                c[0] != '.' ? sysblk.traceaddr[1] :
-                sysblk.traceaddr[1] - sysblk.traceaddr[0] + 1);
+    {
+        MSGBUF( range, "range %"PRIx64"%c%"PRIx64
+
+            , sysblk.traceaddr[0]
+            , c[0]
+            , c[0] != '.' ? sysblk.traceaddr[1]
+                          : sysblk.traceaddr[1] - sysblk.traceaddr[0] + 1
+        );
+    }
     else if (!trace && (sysblk.stepaddr[0] != 0 || sysblk.stepaddr[1] != 0))
-        sprintf(range, "range %"PRIx64"%c%"PRIx64,
-                sysblk.stepaddr[0], c[0],
-                c[0] != '.' ? sysblk.stepaddr[1] :
-                sysblk.stepaddr[1] - sysblk.stepaddr[0] + 1);
+    {
+        MSGBUF( range, "range %"PRIx64"%c%"PRIx64
+
+            , sysblk.stepaddr[0]
+            , c[0]
+            , c[0] != '.' ? sysblk.stepaddr[1]
+                          : sysblk.stepaddr[1] - sysblk.stepaddr[0] + 1
+        );
+    }
 
     /* Determine if this trace is on or off for message */
     on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
 
-    /* Display message */
+    // "Instruction %s %s %s"
+    WRMSG( HHC02229, "I",
 
-    WRMSG(HHC02229, "I",
-           cmdline[0] == 't' ? _("tracing") :
-           cmdline[0] == 's' ? _("stepping") : _("break"),
-           on ? _("on") : _("off"),
-           range);
+           cmdline[0] == 't' ? "tracing"  :
+           cmdline[0] == 's' ? "stepping" : "break",
+           on ? "on" : "off",
+           range
+    );
 
+#if defined( OPTION_MIPS_COUNTING )
+
+    /* Also show automatic tracing settings if enabled */
+    if (sysblk.auto_trace_on || sysblk.auto_trace_off)
+        panel_command( "-t+-" );
+#endif
     return 0;
 }
 
+
+#if defined( OPTION_MIPS_COUNTING )
+/*-------------------------------------------------------------------*/
+/* automatic tracing command:   "t+-  [ON=nnnn  [OFF=nnnn]]"         */
+/*-------------------------------------------------------------------*/
+int auto_trace_cmd( int argc, char* argv[], char* cmdline )
+{
+    U64  auto_trace_on;
+    U64  auto_trace_off;
+
+    UNREFERENCED( cmdline );
+
+    if (argc >= 2)
+    {
+        char c;
+
+        /* Parse/validate arguments */
+        if (0
+            ||  argc > 3
+            || (            strncasecmp( "ON=",  argv[1], 3 ) != 0)
+            || (argc > 2 && strncasecmp( "OFF=", argv[2], 4 ) != 0)
+            || (            sscanf( argv[1] + 3, "%"SCNu64"%c", &auto_trace_on,  &c ) != 1)
+            || (argc > 2 && sscanf( argv[2] + 4, "%"SCNu64"%c", &auto_trace_off, &c ) != 1)
+        )
+        {
+            // "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+
+        if (argc < 3)
+            auto_trace_off = ULLONG_MAX;
+
+        if (!auto_trace_on || !auto_trace_off)
+        {
+            // "Automatic tracing value(s) must be greater than zero"
+            WRMSG( HHC02376, "E" );
+            return -1;
+        }
+
+        /* Enable/Disable automatic tracing */
+        OBTAIN_INTLOCK( NULL );
+
+        sysblk.auto_trace_on  = sysblk.insttrace ? 0 : auto_trace_on;
+        sysblk.auto_trace_off = auto_trace_off;
+
+        SET_IC_TRACE;
+    }
+    else
+    {
+        /* Retrieve current settings */
+        OBTAIN_INTLOCK( NULL );
+
+        auto_trace_on  = sysblk.auto_trace_on;
+        auto_trace_off = sysblk.auto_trace_off;
+    }
+
+    RELEASE_INTLOCK( NULL );
+
+    /* Display current settings */
+    if (!auto_trace_on && !auto_trace_off)
+    {
+        // "Automatic tracing not enabled"
+        WRMSG( HHC02372, "I" );
+    }
+    else if (!auto_trace_on)
+    {
+        // "Automatic tracing active, OFF=%"PRIu64
+        WRMSG( HHC02375, "I",  auto_trace_off );
+    }
+    else // (auto_trace_on && auto_trace_off)
+    {
+        // "Automatic tracing enabled, ON=%"PRIu64", OFF=%"PRIu64
+        WRMSG( HHC02374, "I", auto_trace_on, auto_trace_off );
+    }
+
+    return 0;
+}
+#endif /* defined( OPTION_MIPS_COUNTING ) */
 
 
 /*-------------------------------------------------------------------*/

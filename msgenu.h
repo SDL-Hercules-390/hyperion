@@ -702,9 +702,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00886 "CRW 0x%8.8X: %s"
 //efine HHC00887 - HHC00889 (available)
 
-#define HHC00890 "Facility( %-27s ) %s for %s"
+//efine HHC00890 (available)
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
-#define HHC00892 "Facility name not specified"
+//efine HHC00892 (available)
 #define HHC00893 "Facility( %s ) does not exist for %s"
 #define HHC00894 "%s facility list: %s"
 #define HHC00895 "ARCHLVL '%s' is invalid"
@@ -1452,7 +1452,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02337 "runtest is only valid as a scripting command"
 #define HHC02338 "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
 #define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
-/* #define HHC02340                                                  */
+//efine HHC02340 (available)
 #define HHC02341 "Script %d: test: unknown runtest keyword: %s"
 #define HHC02342 "%s file '%s' not found:  %s"
 #define HHC02343 "Terminating due to %d argument errors"
@@ -1460,24 +1460,30 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02345 "%s device %1d:%04X group has registered IP address %s"
 #define HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
 #define HHC02347 "No %s devices found"
-//efine HHC02348 - HHC02349 (available)
+//efine HHC02348 (available)
+//efine HHC02349 (available)
 
-// range 02350 - 02369 available
+// range 02350 - 02359 available
+// range 02360 - 02369 available
 
-//efine HHC02370 (available)
-//efine HHC02371 (available)
-//efine HHC02372 (available)
-//efine HHC02373 (available)
-//efine HHC02374 (available)
+#define HHC02370 "Automatic tracing started"
+#define HHC02371 "Automatic tracing stopped"
+#define HHC02372 "Automatic tracing not enabled"
+#define HHC02373 "Automatic tracing disabled"
+#define HHC02374 "Automatic tracing enabled, ON=%"PRIu64", OFF=%"PRIu64
+#define HHC02375 "Automatic tracing active, OFF=%"PRIu64
+#define HHC02376 "Automatic tracing value(s) must be greater than zero"
+//efine HHC02377 (available)
+//efine HHC02378 (available)
+//efine HHC02379 (available)
 
+//efine HHC02380 - HHC02385 (available)
 #define HHC02386 "Configure CPU error %d"
 #define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"
 #define HHC02389 "CPUs must be offline or stopped"
 
-// reserve 02390 for ieee.c
-//efine HHC02390 (available)
-//efine HHC02391 (available)
+// range 02390 - 02399 available
 
 // reserve 024xx for dasd* utilities
 //dasdcat.c

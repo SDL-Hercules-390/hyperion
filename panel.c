@@ -116,9 +116,7 @@ static U32    NPdata;
 #ifdef OPTION_MIPS_COUNTING
 static U32    NPmips;
 static U32    NPsios;
-#else
-static U64    NPinstcount;
-#endif // OPTION_MIPS_COUNTING
+#endif
 static int    NPcpugraph;
 static int    NPcpugraphpct[MAX_CPU_ENGINES];
 

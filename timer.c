@@ -171,116 +171,186 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 /* if the TOD clock exceeds the clock comparator for any CPU,        */
 /* it signals any waiting CPUs to wake up and process interrupts.    */
 /*-------------------------------------------------------------------*/
-void *timer_update_thread (void *argp)
+void* timer_update_thread ( void* argp )
 {
-#ifdef OPTION_MIPS_COUNTING
+#if defined( OPTION_MIPS_COUNTING )
 int     i;                              /* Loop index                */
-REGS   *regs;                           /* -> REGS                   */
-U64     mipsrate;                       /* Calculated MIPS rate      */
-U64     siosrate;                       /* Calculated SIO rate       */
+
+REGS*   regs;                           /* -> REGS                   */
+U64     curr_mips;                      /* Calculated MIPS rate      */
+U64     curr_sios;                      /* Calculated SIO rate       */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
+U64     instcount;                      /* Interval instructions     */
 
 /* Clock times use the top 64-bits of the ETOD clock                 */
 U64     now;                            /* Current time of day       */
 U64     then;                           /* Previous time of day      */
-U64     diff;                           /* Interval                  */
-U64     halfdiff;                       /* One-half interval         */
+U64     interval;                       /* Interval                  */
+U64     half_intrv;                     /* One-half interval         */
 U64     waittime;                       /* Wait time                 */
 const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
-#define diffrate(_x,_y) \
-        ((((_x) * (_y)) + halfdiff) / diff)
+#define curr_rate( _count, _interval ) \
+        ((((_count) * (_interval)) + half_intrv) / interval)
 
-#endif /*OPTION_MIPS_COUNTING*/
+bool onmsg, offmsg;
 
-    UNREFERENCED(argp);
+#endif /* defined( OPTION_MIPS_COUNTING ) */
+
+    UNREFERENCED( argp );
 
     /* Set timer thread priority */
-    set_thread_priority(0, sysblk.todprio);
+    set_thread_priority( 0, sysblk.todprio );
 
-    /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Timer");
-    SET_THREAD_NAME_ID(-1, "CPU Timer");
+    // "Thread id "TIDPAT", prio %2d, name %s started"
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), "Timer" );
 
-#ifdef OPTION_MIPS_COUNTING
+    SET_THREAD_NAME_ID( -1, "CPU Timer" );
+
+#if defined( OPTION_MIPS_COUNTING )
+
     then = host_tod();
+
     while (!sysblk.shutdown)
     {
         /* Update TOD clock and save TOD clock value */
         now = update_tod_clock();
 
-        diff = now - then;
+        /* Calculate the elpased interval */
+        interval = (now - then);
 
-        if (diff >= period)             /* Period expired? */
+        /* Is it time to recalcluate our rates? */
+        if (interval >= period)
         {
-            halfdiff = diff / 2;        /* One-half interval for rounding */
-            then = now;
-            total_mips = total_sios = 0;
-    #if defined(OPTION_SHARED_DEVICES)
+            half_intrv = interval / 2;  // (for rounding)
+            then = now;                 // (for next time)
+
+            /* Zero all counters */
+            total_mips = 0;
+            total_sios = 0;
+            instcount  = 0;
+
+#if defined( OPTION_SHARED_DEVICES )
             total_sios = sysblk.shrdcount;
             sysblk.shrdcount = 0;
-    #endif
+#endif
 
-            for (i = 0; i < sysblk.hicpu; i++)
+            /* Do for each defined/online CPU... */
+            for (i=0; i < sysblk.hicpu; i++)
             {
-                obtain_lock (&sysblk.cpulock[i]);
-
-                if (!IS_CPU_ONLINE(i))
+                obtain_lock( &sysblk.cpulock[ i ]);
                 {
-                    release_lock(&sysblk.cpulock[i]);
-                    continue;
+                    if (!IS_CPU_ONLINE( i ))
+                    {
+                        release_lock( &sysblk.cpulock[ i ]);
+                        continue;
+                    }
+
+                    regs = sysblk.regs[i];
+
+                    /* 0% if CPU is STOPPED */
+                    if (regs->cpustate == CPUSTATE_STOPPED)
+                    {
+                        regs->mipsrate = 0;
+                        regs->siosrate = 0;
+                        regs->cpupct   = 0;
+                        release_lock( &sysblk.cpulock[ i ]);
+                        continue;
+                    }
+
+                    /* Accumulate instructions this interval */
+                    instcount        +=  regs->instcount;
+
+                    /* Calculate instructions per second */
+                    curr_mips         =  regs->instcount;
+                    regs->instcount   =  0;
+                    regs->prevcount  +=  curr_mips;
+
+                    curr_mips         =  curr_rate( curr_mips, period );
+                    regs->mipsrate    =  curr_mips;
+                    total_mips       +=  curr_mips;
+
+                    /* Calculate SIOs per second */
+                    curr_sios        =  regs->siocount;
+                    regs->siocount   =  0;
+                    regs->siototal  +=  curr_sios;
+
+                    curr_sios        =  curr_rate( curr_sios, period );
+                    regs->siosrate   =  curr_sios;
+                    total_sios      +=  curr_sios;
+
+                    /* Calculate CPU busy percentage */
+                    waittime = regs->waittime;
+                    regs->waittime = 0;
+
+                    if (regs->waittod)
+                    {
+                        waittime += (now - regs->waittod);
+                        regs->waittod = now;
+                    }
+
+                    regs->cpupct = min( (interval > waittime) ?
+                                         curr_rate( interval - waittime, 100 ) : 0,
+                                         100 );
+
                 }
-
-                regs = sysblk.regs[i];
-
-                /* 0% if CPU is STOPPED */
-                if (regs->cpustate == CPUSTATE_STOPPED)
-                {
-                    regs->mipsrate = regs->siosrate = regs->cpupct = 0;
-                    release_lock(&sysblk.cpulock[i]);
-                    continue;
-                }
-
-                /* Calculate instructions per second */
-                mipsrate = regs->instcount;
-                regs->instcount = 0;
-                regs->prevcount += mipsrate;
-                mipsrate = diffrate(mipsrate, period);
-                regs->mipsrate = mipsrate;
-                total_mips += mipsrate;
-
-                /* Calculate SIOs per second */
-                siosrate = regs->siocount;
-                regs->siocount = 0;
-                regs->siototal += siosrate;
-                siosrate = diffrate(siosrate, period);
-                regs->siosrate = siosrate;
-                total_sios += siosrate;
-
-                /* Calculate CPU busy percentage */
-                waittime = regs->waittime;
-                regs->waittime = 0;
-                if (regs->waittod)
-                {
-                    waittime += now - regs->waittod;
-                    regs->waittod = now;
-                }
-                regs->cpupct = min((diff > waittime) ?
-                                     diffrate(diff - waittime, 100) : 0,
-                                   100);
-
-                release_lock(&sysblk.cpulock[i]);
+                release_lock( &sysblk.cpulock[ i ]);
 
             } /* end for(cpu) */
 
-            /* Total for ALL CPUs together */
-            sysblk.mipsrate = total_mips;
-            sysblk.siosrate = total_sios;
+            /* Update SYSBLK values for entire system */
+            OBTAIN_INTLOCK( NULL );
+            {
+                sysblk.instcount += instcount;
+                sysblk.mipsrate   = total_mips;
+                sysblk.siosrate   = total_sios;
 
-            update_maxrates_hwm(); // (update high-water-mark values)
+                update_maxrates_hwm(); // (update high-water-mark values)
 
-        } /* end if(diff >= period) */
+                /* Start/stop automatic tracing if needed */
+                onmsg  = false;
+                offmsg = false;
+                if (1
+                    && sysblk.auto_trace_on
+                    && sysblk.instcount >= sysblk.auto_trace_on
+                )
+                {
+                    onmsg = true;
+                    sysblk.insttrace = true;
+                    sysblk.auto_trace_on = 0;  // (prevent re-trigger)
+                    SET_IC_TRACE;
+                }
+                /* PROGRAMMING NOTE: using 'else' forces automatic tracing
+                   to occur (be active) for at least one reporting interval.
+                   Otherwise, if it were a separate 'if', we might disable
+                   automatic tracing immediately after having enabled it!
+                */
+                else if (1
+                    && sysblk.auto_trace_off
+                    && sysblk.instcount >= sysblk.auto_trace_off
+                )
+                {
+                    offmsg = true;
+                    sysblk.insttrace = false;
+                    sysblk.auto_trace_off = 0;  // (prevent re-trigger)
+                    SET_IC_TRACE;
+                }
+            }
+            RELEASE_INTLOCK( NULL );
+
+            if (onmsg)
+            {
+                // "Automatic tracing started"
+                WRMSG( HHC02370, "I" );
+            }
+            else if (offmsg)
+            {
+                // "Automatic tracing stopped"
+                WRMSG( HHC02371, "I" );
+            }
+
+        } /* end if(interval >= period) */
 
 #else /* ! OPTION_MIPS_COUNTING */
 
@@ -297,7 +367,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     } /* end while */
 
-    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Timer");
+    // "Thread id "TIDPAT", prio %2d, name %s ended"
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "Timer" );
 
     sysblk.todtid = 0;
 

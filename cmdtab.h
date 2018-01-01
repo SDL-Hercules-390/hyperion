@@ -1420,35 +1420,67 @@
   "identical in functionality to the \"sysclear\" command.\n"
 
 #define tminus_cmd_desc         "Turn off instruction tracing"
-#define t_cmd_desc              "Instruction trace"
+#define t_cmd_desc              "Set instruction tracing address range"
 #define t_cmd_help              \
                                 \
   "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"            \
-  "sets the instruction tracing range (which is totally separate from\n"         \
-  "the instruction stepping and breaking range).\n"                              \
-  "With or without a range, the t command displays whether instruction\n"        \
-  "tracing is on or off and the range if any.\n"                                 \
-  "The t command by itself does not activate instruction tracing.\n"             \
-  "Use the t+ command to activate instruction tracing.\n"                        \
-  "\"t 0\" eliminates the range (all addresses will be traced).\n"
+  "\n"                                                                           \
+  "Sets the instruction tracing address range (which is totally separate\n"      \
+  "from the instruction stepping and breaking address range).\n"                 \
+  "\n"                                                                           \
+  "With or without an address range, the 't' command displays whether\n"         \
+  "instruction tracing is on or off, and the address range (if any).\n"          \
+  "\n"                                                                           \
+  "The 't' command by itself does NOT activate instruction tracing.\n"           \
+  "Use the 't+' command to activate instruction tracing.  Use 't 0'\n"           \
+  "to remove the address range causing all addresses to be traced.\n"
 
-#define tquest_cmd_desc         "Instruction trace query"
+#define tquest_cmd_desc         "Query instruction tracing values"
 #define tquest_cmd_help         \
                                 \
   "Format: \"t?\" displays whether instruction tracing is on or off\n"           \
-  "and the range if any.\n"
+  "and the address range if any.\n"
 
 #define tckd_cmd_desc           "Turn CKD_KEY tracing on/off"
 #define odev_cmd_desc           "Turn ORB tracing on/off"
 #define tdev_cmd_desc           "Turn CCW tracing on/off"
-#define tplus_cmd_desc          "Instruction trace on"
+#define tplus_cmd_desc          "Turn on instruction tracing"
 #define tplus_cmd_help          \
                                 \
-  "Format: \"t+\" turns on instruction tracing. A range can be specified\n"      \
-  "as for the \"t\" command, otherwise the existing range is used. If there\n"   \
-  "is no range (or range was specified as 0) then all instructions will\n"       \
-  "be traced.\n"
+  "Format: \"t+\" turns on instruction tracing. An address range can be\n"       \
+  "specified as for the \"t\" command, else the existing address range\n"        \
+  "is used. If there is no address range (or it was specified as 0) then\n"      \
+  "all instructions will be traced.\n"
 
+#if defined( OPTION_MIPS_COUNTING )
+#define auto_trace_desc         "Automatic instruction tracing"
+#define auto_trace_help         \
+                                \
+  "Format:  \"t+-  [ON=nnnnn  [OFF=nnnnn]]\n"                                    \
+  "\n"                                                                           \
+  "Automatically activates and deactivates instruction tracing based on\n"       \
+  "the instruction count values provided. If no 'OFF' value is specified\n"      \
+  "instruction tracing remains activated until explicitly deactivated via\n"     \
+  "the 't-' command.\n"                                                          \
+  "\n"                                                                           \
+  "Once the system-wide instruction count value (displayed at the bottom\n"      \
+  "of screen) becomes greater or equal to the specified value, tracing is\n"     \
+  "automatically activated (as if the 't+' command were given), and will\n"      \
+  "remain active until either explicitly deactivated via the 't-' command\n"     \
+  "or automatically deactivated once the 'OFF' value is reached.\n"              \
+  "\n"                                                                           \
+  "Note that instruction counts reported by Hercules are APPROXIMATE and\n"      \
+  "should not be heavily relied on.  Also note that automatic tracing only\n"    \
+  "checks the instruction count at the same rate that the MIPS/SIOS rates\n"     \
+  "are calculated/updated, which is currently only approximately once per\n"     \
+  "second, meaning once automatic tracing is triggered, instructions will\n"     \
+  "be traced for at least one second at the very minimum.\n"                     \
+  "\n"                                                                           \
+  "Using either of the 't+' or 't-' commands will disable/reset automatic\n"     \
+  "tracing.  Enter the 't+-' command by itself (without any arguments) at\n"     \
+  "any time to display the current settings.\n"
+
+#endif /* defined( OPTION_MIPS_COUNTING ) */
 #define timerint_cmd_desc       "Display or set timers update interval"
 #define timerint_cmd_help       \
                                 \
@@ -1643,6 +1675,9 @@ COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )
 COMMAND( "t+",                      trace_cmd,              SYSCMDNOPER,        tplus_cmd_desc,         tplus_cmd_help      )
+#if defined( OPTION_MIPS_COUNTING )
+COMMAND( "t+-",                     auto_trace_cmd,         SYSCMDNOPER,        auto_trace_desc,         auto_trace_help    )
+#endif
 COMMAND( "timerint",                timerint_cmd,           SYSCMDNOPER,        timerint_cmd_desc,      timerint_cmd_help   )
 COMMAND( "tlb",                     tlb_cmd,                SYSCMDNOPER,        tlb_cmd_desc,           NULL                )
 COMMAND( "toddrag",                 toddrag_cmd,            SYSCMDNOPER,        toddrag_cmd_desc,       NULL                )

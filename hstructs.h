@@ -743,6 +743,10 @@ struct SYSBLK {
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
+#if defined( OPTION_MIPS_COUNTING )
+        U64     auto_trace_on;          /* Automatic t+ instcount    */
+        U64     auto_trace_off;         /* Automatic t- instcount    */
+#endif
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
 #ifdef _FEATURE_ECPSVM
 //
