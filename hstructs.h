@@ -792,13 +792,6 @@ struct SYSBLK {
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
 
-#if defined(OPTION_COUNTING)
-        S64     count[OPTION_COUNTING];
-#define COUNT(n) sysblk.count[(n)]++
-#else
-#define COUNT(n)
-#endif
-
 #if defined(OPTION_INSTRUCTION_COUNTING)
 #define IMAP_FIRST sysblk.imap01
         U64 imap01[256];

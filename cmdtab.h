@@ -176,7 +176,6 @@
   "options and statistics, and to set new cckd options.\n"                      \
   "Type \"cckd help\" for additional information.\n"
 
-#define cd_cmd_desc             "Change directory"
 #define cf_cmd_desc             "Configure current CPU online or offline"
 #define cf_cmd_help             \
                                 \
@@ -246,7 +245,6 @@
   "surrounded within parenthesis. Enter the command without any operands\n"     \
   "to display the current values.\n"
 
-#define count_cmd_desc          "Display/clear overall instruction count"
 #define cp_updt_cmd_desc        "Create/Modify user character conversion table"
 #define cp_updt_cmd_help        \
                                 \
@@ -465,7 +463,6 @@
   "directly to the host operating system via the 'sh' and 'exec' commands.\n"   \
   "Use the SHCMDOPT command's NODIAG8 option to disable this ability.\n"
 
-#define dir_cmd_desc            "Displays a list of files and subdirs in a directory"
 #define ds_cmd_desc             "Display subchannel"
 #define ecps_cmd_desc           "Command deprecated - Use \"ECPSVM\""
 #define ecps_cmd_help           \
@@ -724,7 +721,6 @@
    "STIDP stores a basic-mode CPU ID. The default LPAR identification\n"         \
    "number is 1.\n"
 
-#define ls_cmd_desc             "List directory contents"
 #define lsdep_cmd_desc          "List module dependencies"
 #define lsmod_cmd_desc          "List dynamic modules"
 #define mainsize_cmd_desc       "Define/Display mainsize parameter"
@@ -1020,7 +1016,6 @@
   "     to=nnn           automatic display timeout  (number of seconds)\n"          \
   "     nnnnnn           table size                 (number of entries)\n"
 
-#define pwd_cmd_desc            "Print working directory"
 #define qcpuid_cmd_desc         "Display cpuid(s)"
 #define qcpuid_cmd_help         \
                                 \
@@ -1685,15 +1680,9 @@ COMMAND( "traceopt",                traceopt_cmd,           SYSCMDNOPER,        
 COMMAND( "u",                       u_cmd,                  SYSCMDNOPER,        u_cmd_desc,             u_cmd_help          )
 COMMAND( "v",                       v_cmd,                  SYSCMDNOPER,        v_cmd_desc,             v_cmd_help          )
 
-#if 0 // Changing directory on the fly will invalidate all relative filenames in the configuration that have not yet been opened
-COMMAND( "cd",                      cd_cmd,                 SYSCMDNDIAG8,       cd_cmd_desc,            NULL                )
-#endif
 COMMAND( "i",                       i_cmd,                  SYSCMDNDIAG8,       i_cmd_desc,             NULL                )
 COMMAND( "ipl",                     ipl_cmd,                SYSCMDNDIAG8,       ipl_cmd_desc,           ipl_cmd_help        )
 COMMAND( "iplc",                    iplc_cmd,               SYSCMDNDIAG8,       iplc_cmd_desc,          iplc_cmd_help       )
-#if 0
-COMMAND( "pwd",                     pwd_cmd,                SYSCMDNDIAG8,       pwd_cmd_desc,           NULL                )
-#endif
 COMMAND( "restart",                 restart_cmd,            SYSCMDNDIAG8,       restart_cmd_desc,       NULL                )
 COMMAND( "ext",                     ext_cmd,                SYSCMDNDIAG8,       ext_cmd_desc,           NULL                )
 COMMAND( "startall",                startall_cmd,           SYSCMDNDIAG8,       startall_cmd_desc,      NULL                )
@@ -1791,14 +1780,6 @@ COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
-#if 0
-#if defined( _MSVC_ )
-COMMAND( "dir",                     dir_cmd,                SYSCMDNDIAG8,       dir_cmd_desc,           NULL                )
-#else
-COMMAND( "ls",                      ls_cmd,                 SYSCMDNDIAG8,       ls_cmd_desc,            NULL                )
-#endif
-#endif
-
 #if defined( ENABLE_BUILTIN_SYMBOLS )
 CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
@@ -1809,9 +1790,6 @@ COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
 COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          NULL,                   NULL                )
 #endif /*defined(HAVE_MLOCKALL)*/
-#if defined( OPTION_COUNTING )
-COMMAND( "count",                   count_cmd,              SYSCMDNOPER,        count_cmd_desc,         NULL                )
-#endif
 #if defined( OPTION_DYNAMIC_LOAD )
 COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )

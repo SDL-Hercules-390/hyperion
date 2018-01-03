@@ -1764,40 +1764,6 @@ int i_cmd( int argc, char* argv[], char* cmdline )
 }
 
 
-#if defined(OPTION_COUNTING)
-/*-------------------------------------------------------------------*/
-/* count - display counts                                            */
-/*-------------------------------------------------------------------*/
-int count_cmd(int argc, char *argv[], char *cmdline)
-{
-    int     i;                          /* Index                     */
-    U64     instcount = 0;              /* Instruction count         */
-
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    if (argc > 1 && CMD(argv[1],clear,5) )
-    {
-        for (i = 0; i < sysblk.maxcpu; i++)
-            if (IS_CPU_ONLINE(i))
-                sysblk.regs[i]->instcount = sysblk.regs[i]->prevcount = 0;
-        for (i = 0; i < OPTION_COUNTING; i++)
-            sysblk.count[i] = 0;
-    }
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i))
-            instcount += INSTCOUNT(sysblk.regs[i]);
-    WRMSG(HHC02254, "I", instcount);
-
-    for (i = 0; i < OPTION_COUNTING; i++)
-        WRMSG(HHC02255, "I", i, sysblk.count[i]);
-
-    return 0;
-}
-#endif
-
-
 #if defined(OPTION_INSTRUCTION_COUNTING)
 /*-------------------------------------------------------------------*/
 /* icount command - display instruction counts                       */

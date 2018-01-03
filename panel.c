@@ -1563,12 +1563,6 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 
     if ( elapsed_secs >= ( maxrates_rpt_intvl * 60 ) )
     {
-#if 0
-        // I'll ask if I want to know, please.
-        if (sysblk.panel_init)
-            panel_command( "maxrates" );
-#endif
-
         prev_high_mips_rate = curr_high_mips_rate;
         prev_high_sios_rate = curr_high_sios_rate;
 
