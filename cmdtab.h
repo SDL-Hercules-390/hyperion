@@ -190,12 +190,11 @@
 
 #define cfall_cmd_desc          "Configure all CPU's online or offline"
 #define clocks_cmd_desc         "Display tod clkc and cpu timer"
-#define cmdlevel_cmd_desc       "Display/Set current command group"
-#define cmdlevel_cmd_help       \
+#define cmdlvl_cmd_desc         "Display/Set current command group"
+#define cmdlvl_cmd_help         \
                                 \
-  "Format: cmdlevel [{+/-}{ALL|MAINT|PROGrammer|OPERator|DEVELoper}]\n"
+  "Format: cmdlevel [{+/-}{ALL|MAINT|PROG|OPER|DEVEL|DEBUG}...]\n"
 
-#define cmdlvl_cmd_desc         "(alias for cmdlevel)"
 #define cmdsep_cmd_desc         "Display/Set command line separator"
 #define cmdsep_cmd_help         \
                                 \
@@ -1578,8 +1577,7 @@ COMMAND( "sclproot",                sclproot_cmd,           SYSCONFIG,          
 COMMAND( "#",                       comment_cmd,            SYSALL,             hash_cmd_desc,          NULL                )
 COMMAND( "*",                       comment_cmd,            SYSALL,             star_cmd_desc,          NULL                )
 COMMAND( "?",                       HelpCommand,            SYSALL,             quest_cmd_desc,         NULL                )
-COMMAND( "cmdlevel",                CmdLevel,               SYSALL,             cmdlevel_cmd_desc,      cmdlevel_cmd_help   )
-COMMAND( "cmdlvl",                  CmdLevel,               SYSALL,             cmdlvl_cmd_desc,        NULL                )
+COMMAND( "cmdlvl",                  cmdlvl_cmd,             SYSALL,             cmdlvl_cmd_desc,        cmdlvl_cmd_help     )
 COMMAND( "cmdsep",                  cmdsep_cmd,             SYSALL,             cmdsep_cmd_desc,        cmdsep_cmd_help     )
 COMMAND( "help",                    HelpCommand,            SYSALL,             help_cmd_desc,          help_cmd_help       )
 COMMAND( "hst",                     History,                SYSALL,             hst_cmd_desc,           hst_cmd_help        )

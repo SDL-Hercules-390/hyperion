@@ -8496,9 +8496,9 @@ int qstor_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /*-------------------------------------------------------------------*/
-/* cmdlevel - display/set the current command level group(s)         */
+/* cmdlvl - display/set the current command level group(s)           */
 /*-------------------------------------------------------------------*/
-int CmdLevel( int argc, char* argv[], char* cmdline )
+int cmdlvl_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
@@ -8513,7 +8513,7 @@ int CmdLevel( int argc, char* argv[], char* cmdline )
 
         for (i=1; i < argc; i++)
         {
-            strupper( level, p = argv[i] );
+            p = argv[i];
 
            if (p[0] == '-')
            {
@@ -8527,6 +8527,8 @@ int CmdLevel( int argc, char* argv[], char* cmdline )
             }
             else
                 on = TRUE;
+
+            strupper( level, p );
 
             if (strabbrev( "ALL", level, 1 ))
             {
