@@ -417,64 +417,114 @@ static void* WinMsgThread( void* arg )
 }
 #endif /* defined( _MSVC_ ) */
 
-#if !defined(NO_SIGABEND_HANDLER)
+#if !defined( NO_SIGABEND_HANDLER )
 /*-------------------------------------------------------------------*/
 /* Linux watchdog thread -- detects malfunctioning CPU engines       */
 /*-------------------------------------------------------------------*/
-static void *watchdog_thread(void *arg)
+static void* watchdog_thread( void* arg )
 {
-S64 savecount[MAX_CPU_ENGINES];
-int i;
+    REGS* regs;
+    S64   savecount[ MAX_CPU_ENGINES ];
+    int   cpu;
 
-    UNREFERENCED(arg);
+    UNREFERENCED( arg );
 
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an
-       inoperable cpu */
+       inoperable cpu
+    */
+    if (sysblk.cpuprio >= 0)
+        set_thread_priority( 0, sysblk.cpuprio + 1 );
 
-    if(sysblk.cpuprio >= 0)
-        set_thread_priority(0, sysblk.cpuprio+1);
+    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+        savecount[ cpu ] = -1;
 
-    for (i = 0; i < sysblk.maxcpu; i ++) savecount[i] = -1;
-
-    while(!sysblk.shutdown)
+    while (!sysblk.shutdown)
     {
-        for (i = 0; i < sysblk.maxcpu; i++)
+        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         {
-//          obtain_lock (&sysblk.cpulock[i]);
-            if (IS_CPU_ONLINE(i)
-             && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
-             && (!WAITSTATE(&sysblk.regs[i]->psw)
-#if defined(_FEATURE_WAITSTATE_ASSIST)
-             && !(sysblk.regs[i]->sie_active && WAITSTATE(&sysblk.regs[i]->guestregs->psw))
-#endif
-                                           ))
+            /* We're only interested in CPUs
+               that are ONLINE and STARTED
+            */
+            if (0
+                || !IS_CPU_ONLINE( cpu )
+                || (regs = sysblk.regs[ cpu ])->cpustate != CPUSTATE_STARTED
+            )
             {
-                /* If the cpu is running but not executing
-                   instructions then it must be malfunctioning */
-                if((INSTCOUNT(sysblk.regs[i]) == (U64)savecount[i])
-                  && !HDC1(debug_watchdog_signal, sysblk.regs[i]) )
-                {
-                    /* Send signal to looping CPU */
-                    signal_thread(sysblk.cputid[i], SIGUSR1);
-                    savecount[i] = -1;
-                }
-                else
-                    /* Save current instcount */
-                    savecount[i] = INSTCOUNT(sysblk.regs[i]);
+                /* CPU not ONLINE or not STARTED */
+                savecount[ cpu ] = -1;
+                continue;
             }
-            else
-                /* mark savecount invalid as CPU not in running state */
-                savecount[i] = -1;
-//          release_lock (&sysblk.cpulock[i]);
+
+            /* CPU is ONLINE and STARTED. Now check to see if it's
+               maybe in a WAITSTATE. If so, we're not interested.
+            */
+            if (0
+                || WAITSTATE( &regs->psw )
+#if defined( _FEATURE_WAITSTATE_ASSIST )
+                || (1
+                    && regs->sie_active
+                    && WAITSTATE( &regs->guestregs->psw )
+                   )
+#endif
+            )
+            {
+                /* CPU is in a WAITSTATE */
+                savecount[ cpu ] = -1;
+                continue;
+            }
+
+            /* We have found a running CPU that should be executing
+               instructions. Compare its current instruction count
+               with our previously saved value. If they're different
+               then it has obviously executed SOME instructions and
+               all is well. Save its current instruction counter and
+               move on the next CPU. This one appears to be healthy.
+            */
+            if (INSTCOUNT( regs ) != (U64) savecount[ cpu ])
+            {
+                /* Save updated instruction count for next time */
+                savecount[ cpu ] = INSTCOUNT( regs );
+                continue;
+            }
+               
+            /*
+               Uh oh! We have found a malfunctioning CPU! It has not
+               executed any instructions at all within the last check
+               interval! Let the defined HDL watchdog hook deal with
+               this situation (if such a hook has been defined).
+            */
+            if (HDC1( debug_watchdog_signal, regs ))
+                continue;
+
+            /* Either there was no HDL watchdog hook defined for this
+               situation or else it returned false indicating it was
+               not abe to deal with the situation itself, so we have
+               to deal with it as best we can: send a signal to the
+               malfunctioning CPU's thread to cause a Machine Check.
+               The guest will then (if it's able to!) deal with the
+               its Machine Check however it needs to (e.g. by taking
+               the malfunctioning CPU offline, etc).
+            */
+            signal_thread( sysblk.cputid[ cpu ], SIGUSR1 );
+
+            /* Now reset our saved instruction count value to prevent
+               us from throwing another Machine Checks the next time
+               we wakeup. This means the guest has one check interval
+               to take the CPU offline. (It obviously cannot FIX the
+               problem since it's not ITS problem to fix! It's OURS!
+               Hercules obviously has a SERIOUS BUG somewhere!)
+            */
+            savecount[ cpu ] = -1;
         }
-        /* Sleep for 20 seconds */
-        SLEEP(20);
-    }
+
+        SLEEP( WATCHDOG_SECS );     // (sleep for another interval)
+
+    } // while (!sysblk.shutdown)
 
     return NULL;
 }
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
+#endif /* !defined( NO_SIGABEND_HANDLER ) */
 
 /*-------------------------------------------------------------------*/
 /* Herclin (plain line mode Hercules) message callback function      */

@@ -265,74 +265,6 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*      Some handy quantity definitions                              */
-/*-------------------------------------------------------------------*/
-#define  ONE_KILOBYTE   ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */
-#define  TWO_KILOBYTE   ((U32)(2           *        1024))  /* 2^11 (16^2)  * 8  */
-#define  FOUR_KILOBYTE  ((U32)(4           *        1024))  /* 2^12 (16^3)       */
-#define  _64_KILOBYTE   ((U32)(64          *        1024))  /* 2^16 (16^4)       */
-#define  HALF_MEGABYTE  ((U32)(512         *        1024))  /* 2^19 (16^4)  * 8  */
-#define  ONE_MEGABYTE   ((U32)(1024        *        1024))  /* 2^20 (16^5)       */
-#define  ONE_GIGABYTE   ((U64)ONE_MEGABYTE * (U64) (1024))  /* 2^30 (16^7)  * 4  */
-#define  ONE_TERABYTE   (ONE_GIGABYTE      * (U64) (1024))  /* 2^40 (16^10)      */
-#define  ONE_PETABYTE   (ONE_TERABYTE      * (U64) (1024))  /* 2^50 (16^12) * 4  */
-#define  ONE_EXABYTE    (ONE_PETABYTE      * (U64) (1024))  /* 2^60 (16^15)      */
-#if defined(U128)
-#define  ONE_ZETTABYTE  (ONE_EXABYTE       * (U128)(1024))  /* 2^70 (16^17) * 4  */
-#define  ONE_YOTTABYTE  (ONE_ZETTABYTE     * (U128)(1024))  /* 2^80 (16^20)      */
-#endif
-
-#define  SHIFT_KILOBYTE     10
-#define  SHIFT_4K           12
-#define  SHIFT_64KBYTE      16
-#define  SHIFT_MEGABYTE     20
-#define  SHIFT_GIGABYTE     30
-#define  SHIFT_TERABYTE     40
-#define  SHIFT_PETABYTE     50
-#define  SHIFT_EXABYTE      60
-#define  SHIFT_ZETTABYTE    70
-#define  SHIFT_YOTTABYTE    80
-
-/* IEC Binary Prefixes, etc */
-#define  ONE_KIBIBYTE  ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */
-#define  TWO_KIBIBYTE  ((U32)(2           *        1024))  /* 2^11 (16^2)  * 8  */
-#define  FOUR_KIBIBYTE ((U32)(4           *        1024))  /* 2^12 (16^3)       */
-#define  _64_KIBIBYTE  ((U32)(64          *        1024))  /* 2^16 (16^4)       */
-#define  HALF_MEBIBYTE ((U32)(512         *        1024))  /* 2^19 (16^4)  * 8  */
-#define  ONE_MEBIBYTE  ((U32)(1024        *        1024))  /* 2^20 (16^5)       */
-#define  ONE_GIBIBYTE  ((U64)ONE_MEBIBYTE * (U64) (1024))  /* 2^30 (16^7)  * 4  */
-#define  ONE_TEBIBYTE  (ONE_GIBIBYTE      * (U64) (1024))  /* 2^40 (16^10)      */
-#define  ONE_PEBIBYTE  (ONE_TEBIBYTE      * (U64) (1024))  /* 2^50 (16^12) * 4  */
-#define  ONE_EXBIBYTE  (ONE_PEBIBYTE      * (U64) (1024))  /* 2^60 (16^15)      */
-#if defined(U128)
-#define  ONE_ZEBIBYTE  (ONE_EXBIBYTE      * (U128)(1024))  /* 2^70 (16^17) * 4  */
-#define  ONE_YOBIBYTE  (ONE_ZEBIBYTE      * (U128)(1024))  /* 2^80 (16^20)      */
-#endif
-
-#define  SHIFT_KIBIBYTE     10
-#define  SHIFT_MEBIBYTE     20
-#define  SHIFT_GIBIBYTE     30
-#define  SHIFT_TEBIBYTE     40
-#define  SHIFT_PEBIBYTE     50
-#define  SHIFT_EXBIBYTE     60
-#define  SHIFT_ZEBIBYTE     70
-#define  SHIFT_YOBIBYTE     80
-
-/* US VERSIONS */
-#define ONE_HUNDRED     ((U32)                        (100))    /* zeros = 2  */
-#define ONE_THOUSAND    ((U32)                       (1000))    /* zeros = 3  */
-#define ONE_MILLION     ((U32)(1000           *       1000))    /* zeros = 6  */
-#define ONE_BILLION     ((U64)ONE_MILLION     * (U64)(1000))    /* zeros = 9  */
-#define ONE_TRILLION    ((U64)ONE_BILLION     * (U64)(1000))    /* zeros = 12 */
-#define ONE_QUADRILLION ((U64)ONE_TRILLION    * (U64)(1000))    /* zeros = 15 */
-#define ONE_QUINTILLION ((U64)ONE_QUADRILLION * (U64)(1000))    /* zeros = 18 */
-#define ONE_SEXTILLION  ((U64)ONE_QUINTILLION * (U64)(1000))    /* zeros = 21 */
-#define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))    /* zeros = 24 */
-
-#define  _4K       4096     // (just a much shorter name)
-#define  _1M    1048576     // (just a much shorter name)
-
-/*-------------------------------------------------------------------*/
 /*      Some handy memory/string comparison macros                   */
 /*-------------------------------------------------------------------*/
 #define mem_eq(_a,_b,_n)            (!memcmp(_a,_b,_n))
@@ -408,12 +340,6 @@
 
 #define  NCMP(_lvar,_rvar,_svar) ( !memcmp( _lvar, _rvar, _svar ) )
 #define  SNCMP(_lvar,_rvar,_svar) ( !strncasecmp( _lvar, _rvar, _svar ) )
-
-/*-------------------------------------------------------------------*/
-/*      Script processing constants                                  */
-/*-------------------------------------------------------------------*/
-#define  MAX_SCRIPT_STMT    1024        /* Max script stmt length    */
-#define  MAX_SCRIPT_DEPTH   10          /* Max script nesting depth  */
 
 /*-------------------------------------------------------------------*/
 /*      Debugging / Tracing macros.                                  */
