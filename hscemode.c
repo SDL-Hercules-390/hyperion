@@ -985,31 +985,30 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     if (on || off)
     {
 #if defined( OPTION_MIPS_COUNTING )
-        bool auto_msg = false;
+        bool auto_disabled = false;
 #endif
         OBTAIN_INTLOCK( NULL );
         {
+#if defined( OPTION_MIPS_COUNTING )
+
+            /* Explicit tracing overrides automatic tracing */
+            if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
+            {
+                auto_disabled = true;
+                sysblk.auto_trace_beg = 0;
+                sysblk.auto_trace_amt = 0;
+            }
+#endif
             if (trace)
                 sysblk.insttrace = on;
             else
                 sysblk.inststep  = on;
-
-#if defined( OPTION_MIPS_COUNTING )
-
-        /* Explicit tracing overrides automatic tracing */
-        if (sysblk.auto_trace_on || sysblk.auto_trace_off)
-        {
-            sysblk.auto_trace_on  = 0;
-            sysblk.auto_trace_off = 0;
-            auto_msg = true;
-        }
-#endif
             SET_IC_TRACE;
         }
         RELEASE_INTLOCK( NULL );
 
 #if defined( OPTION_MIPS_COUNTING )
-        if (auto_msg)
+        if (auto_disabled)
         {
             // "Automatic tracing disabled"
             WRMSG( HHC02373, "I" );
@@ -1057,7 +1056,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 #if defined( OPTION_MIPS_COUNTING )
 
     /* Also show automatic tracing settings if enabled */
-    if (sysblk.auto_trace_on || sysblk.auto_trace_off)
+    if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
         panel_command( "-t+-" );
 #endif
     return 0;
@@ -1070,22 +1069,24 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int auto_trace_cmd( int argc, char* argv[], char* cmdline )
 {
-    U64  auto_trace_on;
-    U64  auto_trace_off;
+    U64  auto_trace_beg;        // (instrcount to begin tracing)
+    U64  auto_trace_amt;        // (amt of instruction to trace)
 
     UNREFERENCED( cmdline );
 
-    if (argc >= 2)
+    if (argc > 1)
     {
         char c;
 
         /* Parse/validate arguments */
         if (0
-            ||  argc > 3
-            || (            strncasecmp( "ON=",  argv[1], 3 ) != 0)
-            || (argc > 2 && strncasecmp( "OFF=", argv[2], 4 ) != 0)
-            || (            sscanf( argv[1] + 3, "%"SCNu64"%c", &auto_trace_on,  &c ) != 1)
-            || (argc > 2 && sscanf( argv[2] + 4, "%"SCNu64"%c", &auto_trace_off, &c ) != 1)
+            || (argc != 3)
+
+            || (strncasecmp( "BEG=", argv[1], 4 ) != 0)
+            || (strncasecmp( "AMT=", argv[2], 4 ) != 0)
+
+            || (sscanf( argv[1] + 4, "%"SCNu64"%c", &auto_trace_beg, &c ) != 1)
+            || (sscanf( argv[2] + 4, "%"SCNu64"%c", &auto_trace_amt, &c ) != 1)
         )
         {
             // "Invalid command usage. Type 'help %s' for assistance."
@@ -1093,50 +1094,45 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
             return -1;
         }
 
-        if (argc < 3)
-            auto_trace_off = ULLONG_MAX;
-
-        if (!auto_trace_on || !auto_trace_off)
+        if (!auto_trace_beg || !auto_trace_amt)
         {
             // "Automatic tracing value(s) must be greater than zero"
             WRMSG( HHC02376, "E" );
             return -1;
         }
 
-        /* Enable/Disable automatic tracing */
+        /* Enable automatic tracing */
         OBTAIN_INTLOCK( NULL );
 
-        sysblk.auto_trace_on  = sysblk.insttrace ? 0 : auto_trace_on;
-        sysblk.auto_trace_off = auto_trace_off;
-
-        SET_IC_TRACE;
+        sysblk.auto_trace_beg = auto_trace_beg;
+        sysblk.auto_trace_amt = auto_trace_amt;
     }
-    else
+    else // (argc <= 1)
     {
         /* Retrieve current settings */
         OBTAIN_INTLOCK( NULL );
 
-        auto_trace_on  = sysblk.auto_trace_on;
-        auto_trace_off = sysblk.auto_trace_off;
+        auto_trace_beg = sysblk.auto_trace_beg;
+        auto_trace_amt = sysblk.auto_trace_amt;
     }
 
     RELEASE_INTLOCK( NULL );
 
     /* Display current settings */
-    if (!auto_trace_on && !auto_trace_off)
+    if (!auto_trace_beg && !auto_trace_amt)
     {
         // "Automatic tracing not enabled"
         WRMSG( HHC02372, "I" );
     }
-    else if (!auto_trace_on)
+    else if (!auto_trace_beg)
     {
-        // "Automatic tracing active, OFF=%"PRIu64
-        WRMSG( HHC02375, "I",  auto_trace_off );
+        // "Automatic tracing is active"
+        WRMSG( HHC02375, "I" );
     }
-    else // (auto_trace_on && auto_trace_off)
+    else // (auto_trace_beg && auto_trace_amt)
     {
-        // "Automatic tracing enabled, ON=%"PRIu64", OFF=%"PRIu64
-        WRMSG( HHC02374, "I", auto_trace_on, auto_trace_off );
+        // "Automatic tracing enabled: BEG=%"PRIu64", AMT=%"PRIu64
+        WRMSG( HHC02374, "I", auto_trace_beg, auto_trace_amt );
     }
 
     return 0;

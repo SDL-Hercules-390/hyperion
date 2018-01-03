@@ -1450,29 +1450,25 @@
 #define auto_trace_desc         "Automatic instruction tracing"
 #define auto_trace_help         \
                                 \
-  "Format:  \"t+-  [ON=nnnnn  [OFF=nnnnn]]\n"                                    \
+  "Format:  \"t+-    [ BEG=<instrcount>   AMT=num ]\"\n"                         \
   "\n"                                                                           \
   "Automatically activates and deactivates instruction tracing based on\n"       \
-  "the instruction count values provided. If no 'OFF' value is specified\n"      \
-  "instruction tracing remains activated until explicitly deactivated via\n"     \
-  "the 't-' command.\n"                                                          \
+  "the values provided.\n"                                                       \
   "\n"                                                                           \
   "Once the system-wide instruction count value (displayed at the bottom\n"      \
-  "of screen) becomes greater or equal to the specified value, tracing is\n"     \
-  "automatically activated (as if the 't+' command were given), and will\n"      \
-  "remain active until either explicitly deactivated via the 't-' command\n"     \
-  "or automatically deactivated once the 'OFF' value is reached.\n"              \
+  "of the screen) becomes greater or equal to the specified 'BEG=' value\n"      \
+  "tracing is automatically activated (as if the 't+' command were given)\n"     \
+  "and remains active until either at least 'AMT' instructions are traced\n"     \
+  "or tracing is explicitly deactivated via the 't-' command.\n"                 \
   "\n"                                                                           \
-  "Note that instruction counts reported by Hercules are APPROXIMATE and\n"      \
-  "should not be heavily relied on.  Also note that automatic tracing only\n"    \
-  "checks the instruction count at the same rate that the MIPS/SIOS rates\n"     \
-  "are calculated/updated, which is currently only approximately once per\n"     \
-  "second, meaning once automatic tracing is triggered, instructions will\n"     \
-  "be traced for at least one second at the very minimum.\n"                     \
+  "Note that instruction counts reported by Hercules are approximate and\n"      \
+  "should not be relied on for accuracy.  Also note automatic tracing only\n"    \
+  "checks the instruction count approximately once every 257 instructions\n"     \
+  "or so and introduces a performance penalty when enabled.\n"                   \
   "\n"                                                                           \
   "Using either of the 't+' or 't-' commands will disable/reset automatic\n"     \
-  "tracing.  Enter the 't+-' command by itself (without any arguments) at\n"     \
-  "any time to display the current settings.\n"
+  "tracing.  Enter the 't+-' command by itself (without any arguments) to\n"     \
+  "display the current settings.\n"
 
 #endif /* defined( OPTION_MIPS_COUNTING ) */
 #define timerint_cmd_desc       "Display or set timers update interval"
@@ -1485,7 +1481,17 @@
   "is 50 microseconds, which strikes a reasonable balance between\n"             \
   "clock accuracy and overall host performance. The minimum allowed\n"           \
   "value is 1 microsecond and the maximum is 1000000 microseconds\n"             \
-  "(i.e. one second).\n"
+  "(i.e. one second). Also note that due to host system limitations\n"           \
+  "and/or design, some hosts may end up rounding or coalescing such\n"           \
+  "short intervals to a longer millisecond interval instead.\n"                  \
+  "\n"                                                                           \
+  "CAUTION! While lower TIMERINT values may help increase the accuracy\n"        \
+  "of your guest's TOD Clock and CPU Timer values, it may also have\n"           \
+  "a SEVERE NEGATIVE IMPACT on host operating system performance. This\n"        \
+  "is especially true when a low TIMERINT value is coupled with a high\n"        \
+  "HERCPRIO and TODPRIO priority setting. You should exercise EXTREME\n"         \
+  "CAUTION when choosing your desired TIMERINT value in relationship\n"          \
+  "to your chosen HERCPRIO and TODPRIO priority settings.\n"
 
 #define tlb_cmd_desc            "Display TLB tables"
 #define toddrag_cmd_desc        "Display or set TOD clock drag factor"

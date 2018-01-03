@@ -1707,6 +1707,10 @@ cpustate_stopping:
 
 } /* process_interrupt */
 
+#if defined( OPTION_MIPS_COUNTING )
+static void do_automatic_tracing();
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Run CPU                                                           */
 /*-------------------------------------------------------------------*/
@@ -1815,13 +1819,15 @@ int     aswitch;
     regs->execflag = 0;
 
     do {
+#if defined( OPTION_MIPS_COUNTING )
+        U64 instcount; // (auto-tracing)
+#endif
         if (INTERRUPT_PENDING( regs ))
             ARCH_DEP( process_interrupt )( regs );
 
         ip = INSTRUCTION_FETCH( regs, 0 );
 
         EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
-        regs->instcount++;
 
         /* BHe: I have tried several settings. But 2 unrolled
            executes gives (core i7 at my place) the best results.
@@ -1836,8 +1842,31 @@ int     aswitch;
             UNROLLED_EXECUTE( current_opcode_table, regs );
             UNROLLED_EXECUTE( current_opcode_table, regs );
         }
-        regs->instcount += (i * 2);
+        regs->instcount += 1 + (i * 2);
 
+        /* Update system-wide sysblk.instcount instruction counter */
+#if defined( _MSVC_ )
+
+        /* Microsoft's API returns the RESULTS of the addition */
+        instcount = InterlockedExchangeAdd64( &sysblk.instcount, 1 + (i * 2) );
+
+#else // GCC
+
+    #if defined( HAVE_SYNC_BUILTINS )
+
+        /* GCC's API returns the value BEFORE it was added to */
+        instcount = __sync_fetch_and_add( &sysblk.instcount, 1 + (i * 2) )
+            + 1 + (i * 2);
+    #else
+
+        /* Otherwise we'll just have to do it non-atomically */
+        instcount = sysblk.instcount += 1 + (i * 2);
+    #endif
+#endif
+
+#if defined( OPTION_MIPS_COUNTING )
+        do_automatic_tracing();
+#endif
     }
     while (1);
 
@@ -2030,5 +2059,86 @@ QWORD   qword;                            /* quadword work area      */
     return(buf);
 
 } /* end function str_psw */
+
+#if defined( OPTION_MIPS_COUNTING )
+#pragma optimize( "", off ) // +++++ TEMPORARY WHILE DEBUGGING! +++++
+/*-------------------------------------------------------------------*/
+/*                      Automatic Tracing                            */
+/*-------------------------------------------------------------------*/
+static void do_automatic_tracing()
+{
+    static U64  inst_count;         // (current sysblk.instcount)
+    static U64  missed_by;          // (how far past trigger we went)
+    static U64  too_much;           // (num extra instructions traced)
+
+    bool started = false, stopped = false;
+
+    /* Return immediately if automatic tracing not enabled or active */
+    if (!sysblk.auto_trace_amt)
+        return;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        static U64  beg_count  = 0;     // (when auto-tracing began)
+
+        static U64  auto_trace_beg;     // (instrcount to begin tracing)
+        static U64  auto_trace_amt;     // (amt of instruction to trace)
+
+        static U64  traced_amt;         // (amt instr. traced so far)
+
+        /* Check again under control of INTLOCK */
+        if (!sysblk.auto_trace_amt)
+        {
+            RELEASE_INTLOCK( NULL );
+            return;
+        }
+
+        auto_trace_beg  = sysblk.auto_trace_beg;
+        auto_trace_amt  = sysblk.auto_trace_amt;
+        inst_count      = sysblk.instcount;
+
+        /* Should Automatic Tracing be started? */
+        if (1
+            && !beg_count                       // (hasn't begun yet?)
+            && inst_count >= auto_trace_beg     // (but it should be?)
+        )
+        {
+            started = true;                     // (remember started)
+            beg_count = inst_count;             // (when it was begun)
+            missed_by = (inst_count - auto_trace_beg);
+            sysblk.insttrace = true;            // (activate tracing)
+            sysblk.auto_trace_beg = 0;          // (prevent re-trigger)
+            SET_IC_TRACE;                       // (force interrupt)
+        }
+
+        /* Should Automatic Tracing be stopped? */
+        else if (1
+            && beg_count
+            && (traced_amt = (inst_count - beg_count)) >= auto_trace_amt
+        )
+        {
+            stopped = true;                     // (remember stopped)
+            beg_count = 0;                      // (reset for next time)
+            too_much = (traced_amt - auto_trace_amt);
+            sysblk.insttrace = false;           // (deactivate tracing)
+            sysblk.auto_trace_amt = 0;          // (prevent re-trigger)
+            SET_IC_TRACE;                       // (force interrupt)
+        }
+    }
+    RELEASE_INTLOCK( NULL );
+
+    if (started)
+    {
+        // "Automatic tracing started at instrcount %"PRIu64" (BEG+%"PRIu64")"
+        WRMSG( HHC02370, "I", inst_count, missed_by );
+    }
+    else if (stopped)
+    {
+        // "Automatic tracing stopped at instrcount %"PRIu64" (AMT+%"PRIu64")"
+        WRMSG( HHC02371, "I", inst_count, too_much );
+    }
+}
+#pragma optimize( "", on ) // +++++ TEMPORARY WHILE DEBUGGING! +++++
+#endif // defined( OPTION_MIPS_COUNTING )
 
 #endif /*!defined(_GEN_ARCH)*/

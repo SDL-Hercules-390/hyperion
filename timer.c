@@ -162,6 +162,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 
 } /* end function check_timer_event */
 
+
 /*-------------------------------------------------------------------*/
 /* TOD clock and timer thread                                        */
 /*                                                                   */
@@ -181,7 +182,6 @@ U64     curr_mips;                      /* Calculated MIPS rate      */
 U64     curr_sios;                      /* Calculated SIO rate       */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
-U64     instcount;                      /* Interval instructions     */
 
 /* Clock times use the top 64-bits of the ETOD clock                 */
 U64     now;                            /* Current time of day       */
@@ -193,8 +193,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
 #define curr_rate( _count, _interval ) \
         ((((_count) * (_interval)) + half_intrv) / interval)
-
-bool onmsg, offmsg;
 
 #endif /* defined( OPTION_MIPS_COUNTING ) */
 
@@ -229,13 +227,11 @@ bool onmsg, offmsg;
             /* Zero all counters */
             total_mips = 0;
             total_sios = 0;
-            instcount  = 0;
 
 #if defined( OPTION_SHARED_DEVICES )
             total_sios = sysblk.shrdcount;
             sysblk.shrdcount = 0;
 #endif
-
             /* Do for each defined/online CPU... */
             for (i=0; i < sysblk.hicpu; i++)
             {
@@ -258,9 +254,6 @@ bool onmsg, offmsg;
                         release_lock( &sysblk.cpulock[ i ]);
                         continue;
                     }
-
-                    /* Accumulate instructions this interval */
-                    instcount        +=  regs->instcount;
 
                     /* Calculate instructions per second */
                     curr_mips         =  regs->instcount;
@@ -300,55 +293,10 @@ bool onmsg, offmsg;
             } /* end for(cpu) */
 
             /* Update SYSBLK values for entire system */
-            OBTAIN_INTLOCK( NULL );
-            {
-                sysblk.instcount += instcount;
-                sysblk.mipsrate   = total_mips;
-                sysblk.siosrate   = total_sios;
+            sysblk.mipsrate = total_mips;
+            sysblk.siosrate = total_sios;
 
-                update_maxrates_hwm(); // (update high-water-mark values)
-
-                /* Start/stop automatic tracing if needed */
-                onmsg  = false;
-                offmsg = false;
-                if (1
-                    && sysblk.auto_trace_on
-                    && sysblk.instcount >= sysblk.auto_trace_on
-                )
-                {
-                    onmsg = true;
-                    sysblk.insttrace = true;
-                    sysblk.auto_trace_on = 0;  // (prevent re-trigger)
-                    SET_IC_TRACE;
-                }
-                /* PROGRAMMING NOTE: using 'else' forces automatic tracing
-                   to occur (be active) for at least one reporting interval.
-                   Otherwise, if it were a separate 'if', we might disable
-                   automatic tracing immediately after having enabled it!
-                */
-                else if (1
-                    && sysblk.auto_trace_off
-                    && sysblk.instcount >= sysblk.auto_trace_off
-                )
-                {
-                    offmsg = true;
-                    sysblk.insttrace = false;
-                    sysblk.auto_trace_off = 0;  // (prevent re-trigger)
-                    SET_IC_TRACE;
-                }
-            }
-            RELEASE_INTLOCK( NULL );
-
-            if (onmsg)
-            {
-                // "Automatic tracing started"
-                WRMSG( HHC02370, "I" );
-            }
-            else if (offmsg)
-            {
-                // "Automatic tracing stopped"
-                WRMSG( HHC02371, "I" );
-            }
+            update_maxrates_hwm(); // (update high-water-mark values)
 
         } /* end if(interval >= period) */
 
@@ -359,7 +307,6 @@ bool onmsg, offmsg;
         /* Update TOD clock */
         update_tod_clock();
 
-
 #endif /*OPTION_MIPS_COUNTING*/
 
         /* Sleep for another timer update interval... */
@@ -367,10 +314,10 @@ bool onmsg, offmsg;
 
     } /* end while */
 
+    sysblk.todtid = 0;
+
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "Timer" );
-
-    sysblk.todtid = 0;
 
     return NULL;
 

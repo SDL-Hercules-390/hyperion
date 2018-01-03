@@ -1316,6 +1316,8 @@ AC_CACHE_CHECK( [if atomic '_sync' builtins are available],
     [
         AC_COMPILE_IFELSE(
         [
+            static unsigned long long ll = 0;
+            static unsigned long long *pll = &ll;
             static unsigned char  b = 0;
             static unsigned char *p = &b;
             void main()
@@ -1323,6 +1325,7 @@ AC_CACHE_CHECK( [if atomic '_sync' builtins are available],
                 __sync_or_and_fetch  ( p, 0xFF );
                 __sync_and_and_fetch ( p, 0x00 );
                 __sync_xor_and_fetch ( p, 0xAC );
+                __sync_fetch_and_add ( pll, 88 );
             }
         ],
         [hc_cv_sync_builtins_available=yes],

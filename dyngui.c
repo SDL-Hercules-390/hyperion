@@ -337,14 +337,15 @@ BYTE   gui_wants_fregs       = 0;
 BYTE   gui_wants_fregs64     = 0;
 BYTE   gui_wants_devlist     = 0;
 BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
-#if defined(OPTION_MIPS_COUNTING)
+
+#if defined( OPTION_MIPS_COUNTING )
 BYTE   gui_wants_aggregates  = 1;
 BYTE   gui_wants_cpupct      = 0;
 BYTE   gui_wants_cpupct_all  = 0;
 int    prev_cpupct    [ MAX_CPU_ENGINES ];
 U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
-#endif // defined(OPTION_MIPS_COUNTING)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "panel_command" override...
@@ -513,7 +514,8 @@ void*  gui_panel_command (char* pszCommand)
         return NULL;
     }
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
+
     if (strncasecmp(pszCommand,"CPUPCT=",7) == 0)
     {
         gui_wants_cpupct = atoi(pszCommand+7);
@@ -531,7 +533,7 @@ void*  gui_panel_command (char* pszCommand)
         gui_forced_refresh = 1;
         return NULL;
     }
-#endif
+#endif // defined( OPTION_MIPS_COUNTING )
 
     // Silently ignore any unrecognized special GUI commands...
 
@@ -559,6 +561,7 @@ QWORD  psw, prev_psw;
 BYTE   wait_bit;
 BYTE   prev_cpustate   = 0xFF;
 U64    prev_instcount  = 0;
+U64    curr_instcount  = 0;
 
 U32    prev_gr   [16];
 U64    prev_gr64 [16];
@@ -599,7 +602,8 @@ void  UpdateStatus ()
         );
     }
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
+
     if (gui_wants_cpupct)
     {
         if (gui_wants_aggregates)
@@ -654,19 +658,22 @@ void  UpdateStatus ()
             }
         }
     }
-#endif
+#endif // defined( OPTION_MIPS_COUNTING )
 
     // Determine if we need to inform the GUI of anything...
 
-    bStatusChanged = FALSE;     // (whether or not anything has changed)
+    bStatusChanged = FALSE;   // (whether or not anything has changed)
+
+    curr_instcount = gui_wants_aggregates ?
+        sysblk.instcount : INSTCOUNT( pTargetCPU_REGS );
 
     if (0
         || gui_forced_refresh
-        || pTargetCPU_REGS != pPrevTargetCPU_REGS
-        || pcpu != prev_pcpu
-        || memcmp(prev_psw, psw, sizeof(prev_psw)) != 0
-        || prev_cpustate   != pTargetCPU_REGS->cpustate
-        || prev_instcount != INSTCOUNT(pTargetCPU_REGS)
+        || pTargetCPU_REGS           != pPrevTargetCPU_REGS
+        || pcpu                      != prev_pcpu
+        || curr_instcount            != prev_instcount
+        || pTargetCPU_REGS->cpustate != prev_cpustate
+        || memcmp( prev_psw, psw, sizeof( prev_psw )) != 0
     )
     {
         bStatusChanged = TRUE;          // (something has indeed changed...)
@@ -677,10 +684,10 @@ void  UpdateStatus ()
         // Save new values for next time...
 
         pPrevTargetCPU_REGS = pTargetCPU_REGS;
-        prev_pcpu = pcpu;
-        memcpy(prev_psw, psw, sizeof(prev_psw));
-        prev_cpustate = pTargetCPU_REGS->cpustate;
-        prev_instcount = INSTCOUNT(pTargetCPU_REGS);
+        prev_cpustate       = pTargetCPU_REGS->cpustate;
+        prev_instcount      = curr_instcount;
+        prev_pcpu           = pcpu;
+        memcpy( prev_psw, psw, sizeof( prev_psw ));
     }
 
     // If anything has changed, inform the GUI...
@@ -730,7 +737,7 @@ void  UpdateStatus ()
 
 void HandleForcedRefresh()
 {
-#ifdef OPTION_MIPS_COUNTING
+#if defined( OPTION_MIPS_COUNTING )
     prev_mips_rate          = INT_MAX;
     prev_sios_rate          = INT_MAX;
 #endif
@@ -761,7 +768,7 @@ void HandleForcedRefresh()
     memset(   &prev_fpr64[0], 0xFF,
         sizeof(prev_fpr64) );
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
     memset(   &prev_cpupct   [0], 0xFF,
         sizeof(prev_cpupct   ) );
 #endif
@@ -820,16 +827,16 @@ void  UpdateCPUStatus ()
 #endif //  defined(_FEATURE_SIE)
             ,
 #if        defined(_900)
-            ARCH_900_IDX == pTargetCPU_REGS->arch_mode         ? 'Z' : '.'
+            ARCH_900_IDX == pTargetCPU_REGS->arch_mode     ? 'Z' : '.'
 #else  // !defined(_900)
                                                                    '.'
 #endif //  defined(_900)
-            ,(U64)INSTCOUNT(pTargetCPU_REGS)
+            ,curr_instcount
         );
 
     } // endif cpu is online/offline
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
 
     // MIPS rate and SIOS rate...
     {
@@ -873,7 +880,7 @@ void  UpdateCPUStatus ()
         }
     }
 
-#endif // defined(OPTION_MIPS_COUNTING)
+#endif // defined( OPTION_MIPS_COUNTING )
 }
 
 ///////////////////////////////////////////////////////////////////////////////

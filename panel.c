@@ -93,10 +93,11 @@ static int    NPcpunum_valid,
               NPregs_valid,
               NPaddr_valid,
               NPdata_valid,
-#ifdef OPTION_MIPS_COUNTING
+
+#if defined( OPTION_MIPS_COUNTING )
               NPmips_valid,
               NPsios_valid,
-#endif // OPTION_MIPS_COUNTING
+#endif
               NPdevices_valid,
               NPcpugraph_valid;
 
@@ -113,10 +114,12 @@ static U64    NPregs64[16];
 static U32    NPregs[16];
 static U32    NPaddress;
 static U32    NPdata;
-#ifdef OPTION_MIPS_COUNTING
+
+#if defined( OPTION_MIPS_COUNTING )
 static U32    NPmips;
 static U32    NPsios;
 #endif
+
 static int    NPcpugraph;
 static int    NPcpugraphpct[MAX_CPU_ENGINES];
 
@@ -673,7 +676,7 @@ static void NP_screen_redraw (REGS *regs)
     NPdevices_valid  = NPcpugraph_valid = 0;
 #if defined(OPTION_MIPS_COUNTING)
     NPmips_valid     = NPsios_valid     = 0;
-#endif /*defined(OPTION_MIPS_COUNTING)*/
+#endif
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
@@ -826,7 +829,8 @@ static void NP_screen_redraw (REGS *regs)
         draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
     }
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
+
     if (sysblk.hicpu)
     {
         set_pos ((BUTTONS_LINE+1), 3);
@@ -836,15 +840,16 @@ static void NP_screen_redraw (REGS *regs)
 
     if (0
         || sysblk.hicpu
-#if defined(OPTION_SHARED_DEVICES)
+
+#if defined( OPTION_SHARED_DEVICES )
         || sysblk.shrdport
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
     )
     {
         set_pos ((BUTTONS_LINE+1), 10);
         draw_text ("IO/s");
     }
-#endif /*defined(OPTION_MIPS_COUNTING)*/
+#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     if (sysblk.hicpu)
     {
@@ -868,6 +873,7 @@ static void NP_screen_redraw (REGS *regs)
     NPcpugraph_ncpu = MIN(cons_rows - line - 1, sysblk.hicpu);
     set_pos (line++, 1);
     fill_text ('-', 38);
+
     if (sysblk.hicpu)
     {
         NPcpugraph = 1;
@@ -989,7 +995,8 @@ static void NP_update(REGS *regs)
         regs = regs->hostregs;
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(OPTION_MIPS_COUNTING)
+#if defined( OPTION_MIPS_COUNTING )
+
     /* percent CPU busy */
     if (sysblk.hicpu)
     {
@@ -1007,7 +1014,8 @@ static void NP_update(REGS *regs)
         snprintf(buf, sizeof(buf), "%3d", (n > 0 ? cpupct_total/n : 0));
         draw_text (buf);
     }
-#else // !defined(OPTION_MIPS_COUNTING)
+#else // !defined( OPTION_MIPS_COUNTING )
+
     if (!NPcpupct_valid)
     {
         set_color (COLOR_WHITE, COLOR_BLUE);
@@ -1015,7 +1023,7 @@ static void NP_update(REGS *regs)
         draw_text ("     ");
         NPcpupct_valid = 1;
     }
-#endif /*defined(OPTION_MIPS_COUNTING)*/
+#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     if (sysblk.hicpu)
     {
@@ -1302,8 +1310,9 @@ static void NP_update(REGS *regs)
         }
     }
 
+#if defined( OPTION_MIPS_COUNTING )
+
     /* Rates */
-#ifdef OPTION_MIPS_COUNTING
     if ((!NPmips_valid || sysblk.mipsrate != NPmips) && sysblk.hicpu)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
@@ -1323,9 +1332,10 @@ static void NP_update(REGS *regs)
 
     if (0
         || (sysblk.hicpu && (!NPsios_valid || NPsios != sysblk.siosrate))
-#if defined(OPTION_SHARED_DEVICES)
+
+#if defined( OPTION_SHARED_DEVICES )
         || sysblk.shrdport
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
     )
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
@@ -1335,7 +1345,7 @@ static void NP_update(REGS *regs)
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
     }
-#endif /* OPTION_MIPS_COUNTING */
+#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     /* Optional cpu graph */
     if (NPcpugraph)
@@ -1526,7 +1536,7 @@ static void NP_update(REGS *regs)
 
 static void panel_cleanup(void *unused);    // (forward reference)
 
-#ifdef OPTION_MIPS_COUNTING
+#if defined( OPTION_MIPS_COUNTING )
 
 ///////////////////////////////////////////////////////////////////////
 // "maxrates" command support...
@@ -1573,7 +1583,7 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
         curr_int_start_time = current_time;
     }
 }
-#endif // OPTION_MIPS_COUNTING
+#endif // defined( OPTION_MIPS_COUNTING )
 ///////////////////////////////////////////////////////////////////////
 
 REGS *copy_regs(int cpu)
@@ -1645,16 +1655,16 @@ REGS   *regs;                           /* -> CPU register context    */
 QWORD   curpsw;                         /* Current PSW                */
 QWORD   prvpsw;                         /* Previous PSW               */
 BYTE    prvstate = 0xFF;                /* Previous stopped state     */
-U64     prvicount = 0;                  /* Previous instruction count */
-#if defined(OPTION_MIPS_COUNTING)
-U64     prvtcount = 0;                  /* Previous total count       */
-U64     totalcount = 0;                 /* sum of all instruction cnt */
+
+#if defined( OPTION_MIPS_COUNTING )
+U64     prev_instcount = 0;             /* Previous sysblk.instcount  */
 U32     numcpu = 0;                     /* Online CPU count           */
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-int     prvcpupct = 0;                  /* Previous cpu percentage    */
-#if defined(OPTION_SHARED_DEVICES)
+#endif
+#if defined( OPTION_SHARED_DEVICES )
 U32     prvscount = 0;                  /* Previous shrdcount         */
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
+
+int     prvcpupct = 0;                  /* Previous cpu percentage    */
 int     prvpcpu = 0;                    /* Previous pcpu              */
 int     prvparch = 0;                   /* Previous primary arch.     */
 char    readbuf[MSG_SIZE];              /* Message read buffer        */
@@ -2894,43 +2904,42 @@ FinishShutdown:
         /* =END= */
 
         /* Obtain the PSW for target CPU */
-        regs = copy_regs(sysblk.pcpu);
-        memset( curpsw, 0, sizeof(curpsw) );
-        copy_psw (regs, curpsw);
+        regs = copy_regs( sysblk.pcpu );
+        memset( curpsw, 0, sizeof( curpsw ));
+        copy_psw( regs, curpsw );
 
-        totalcount = 0;
         numcpu = 0;
-        for ( i = 0; i < sysblk.maxcpu; ++i )
-            if ( IS_CPU_ONLINE(i) )
-                ++numcpu,
-                totalcount += INSTCOUNT(sysblk.regs[i]);
+        for (i=0; i < sysblk.maxcpu; ++i )
+            if (IS_CPU_ONLINE( i ))
+                ++numcpu;
 
-        /* Set the display update indicator if the PSW has changed
-           or if the instruction counter has changed, or if
-           the CPU stopped state has changed */
-        if (memcmp(curpsw, prvpsw, sizeof(curpsw)) != 0
-         || prvicount != totalcount
-         || prvcpupct != regs->cpupct
-#if defined(OPTION_SHARED_DEVICES)
-         || prvscount != sysblk.shrdcount
-#endif // defined(OPTION_SHARED_DEVICES)
-         || prvstate != regs->cpustate
-#if defined(OPTION_MIPS_COUNTING)
-         || (NPDup && NPcpugraph && prvtcount != sysblk.instcount)
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-           )
+        /* Set the display update indicator
+           if anything interesting happened.
+        */
+        if (0
+            || memcmp( curpsw, prvpsw, sizeof( curpsw )) != 0
+            || prvcpupct != regs->cpupct
+            || prvstate  != regs->cpustate
+
+#if defined( OPTION_SHARED_DEVICES )
+            || prvscount != sysblk.shrdcount
+#endif
+#if defined( OPTION_MIPS_COUNTING )
+            || (prev_instcount != sysblk.instcount && NPDup && NPcpugraph)
+#endif
+        )
         {
             redraw_status = 1;
             memcpy (prvpsw, curpsw, sizeof(prvpsw));
-            prvicount = totalcount;
             prvcpupct = regs->cpupct;
             prvstate  = regs->cpustate;
-#if defined(OPTION_SHARED_DEVICES)
+
+#if defined( OPTION_SHARED_DEVICES )
             prvscount = sysblk.shrdcount;
-#endif // defined(OPTION_SHARED_DEVICES)
-#if defined(OPTION_MIPS_COUNTING)
-            prvtcount = sysblk.instcount;
-#endif /*defined(OPTION_MIPS_COUNTING)*/
+#endif
+#if defined( OPTION_MIPS_COUNTING )
+            prev_instcount = sysblk.instcount;
+#endif
         }
 
         /* =NP= : Display the screen - traditional or NP */
@@ -3105,7 +3114,6 @@ FinishShutdown:
                  * "instcnt <string>; mips nnnnn; IO/s nnnnnn"
                  * "IO/s nnnnnn"
                  */
-
                 i = 0;
                 if (numcpu)
                 {
@@ -3114,7 +3122,7 @@ FinishShutdown:
                     /* Format instruction count */
                     i = snprintf(ibuf, sizeof(ibuf),
                                  "instcnt %s",
-                                 format_int(totalcount));
+                                 format_int( sysblk.instcount ));
 
                     if ((len + i + 12) < cons_cols)
                     {

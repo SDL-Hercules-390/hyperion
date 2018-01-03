@@ -1466,12 +1466,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // range 02350 - 02359 available
 // range 02360 - 02369 available
 
-#define HHC02370 "Automatic tracing started"
-#define HHC02371 "Automatic tracing stopped"
+#define HHC02370 "Automatic tracing started at instrcount %"PRIu64" (BEG+%"PRIu64")"
+#define HHC02371 "Automatic tracing stopped at instrcount %"PRIu64" (AMT+%"PRIu64")"
 #define HHC02372 "Automatic tracing not enabled"
 #define HHC02373 "Automatic tracing disabled"
-#define HHC02374 "Automatic tracing enabled, ON=%"PRIu64", OFF=%"PRIu64
-#define HHC02375 "Automatic tracing active, OFF=%"PRIu64
+#define HHC02374 "Automatic tracing enabled: BEG=%"PRIu64", AMT=%"PRIu64
+#define HHC02375 "Automatic tracing is active"
 #define HHC02376 "Automatic tracing value(s) must be greater than zero"
 //efine HHC02377 (available)
 //efine HHC02378 (available)

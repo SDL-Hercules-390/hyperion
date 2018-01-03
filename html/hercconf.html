@@ -1404,7 +1404,10 @@ a real System/390.  The configuration file is an ASCII text file.
     clock/timer values.  The default interval is 50 microseconds, which
     strikes a reasonable balance between clock accuracy and overall host
     performance. The minimum allowed value is 1 microsecond and the maximum
-    is 1000000 microseconds (i.e. one second).
+    is 1000000 microseconds (i.e. one second). Also note that due to host
+    system limitations and/or design, some hosts might round or
+    <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
+    microsecond wait intervals up to a longer millisecond interval instead.
     <p>
     <i><b>Caution:</b> &nbsp;While a lower TIMERINT value may help
     increase the accuracy of your guest's TOD Clock and CPU Timer values,

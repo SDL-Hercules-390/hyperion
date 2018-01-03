@@ -744,8 +744,8 @@ struct SYSBLK {
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
 #if defined( OPTION_MIPS_COUNTING )
-        U64     auto_trace_on;          /* Automatic t+ instcount    */
-        U64     auto_trace_off;         /* Automatic t- instcount    */
+        U64     auto_trace_beg;         /* Automatic t+ instcount    */
+        U64     auto_trace_amt;         /* Automatic tracing amount  */
 #endif
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
 #ifdef _FEATURE_ECPSVM
