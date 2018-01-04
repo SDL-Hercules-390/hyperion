@@ -2061,7 +2061,6 @@ QWORD   qword;                            /* quadword work area      */
 } /* end function str_psw */
 
 #if defined( OPTION_MIPS_COUNTING )
-#pragma optimize( "", off ) // +++++ TEMPORARY WHILE DEBUGGING! +++++
 /*-------------------------------------------------------------------*/
 /*                      Automatic Tracing                            */
 /*-------------------------------------------------------------------*/
@@ -2138,7 +2137,6 @@ static void do_automatic_tracing()
         WRMSG( HHC02371, "I", inst_count, too_much );
     }
 }
-#pragma optimize( "", on ) // +++++ TEMPORARY WHILE DEBUGGING! +++++
 #endif // defined( OPTION_MIPS_COUNTING )
 
 #endif /*!defined(_GEN_ARCH)*/
