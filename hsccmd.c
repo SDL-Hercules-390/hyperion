@@ -452,133 +452,31 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 /* quit or exit command - terminate the emulator                     */
 /*-------------------------------------------------------------------*/
-int quit_cmd(int argc, char *argv[],char *cmdline)
+int quit_cmd( int argc, char* argv[], char* cmdline )
 {
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
-    time_t  end;
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    UNREFERENCED(cmdline);
-
-    if ( ( argc > 2 ) ||
-         ( argc > 1 && !CMD(argv[1],force,5) ) )
+    if (0
+        || (argc > 2 )
+        || (argc > 1 && !CMD( argv[1], FORCE, 5 ))
+    )
     {
+        // "Invalid argument %s%s"
         WRMSG( HHC02205, "E", argv[argc-1], "" );
-        return 0;
-    }
-
-    if ( argc > 1 )
-    {
-        sysblk.shutimmed = TRUE;
-    }
-
-    if ( sysblk.quitmout == 0 )
-    {
-        do_shutdown();
-    }
-    else
-    {
-        int i;
-        int j;
-
-        for ( i = 0, j = 0; i < sysblk.maxcpu; i++ )
-        {
-            if ( IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED )
-            {
-                j++;
-            }
-        }
-
-        if ( j > 0 )
-        {
-            time( &end );
-            if ( difftime( end, sysblk.shutquittime ) > sysblk.quitmout )
-            {
-                WRMSG( HHC00069, "I", j > 1 ? "are" : "is",
-                    j, j > 1 ? "s" : "" );
-                // "Confirm command by entering %s again within %d seconds"
-                WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
-                time( &sysblk.shutquittime );
-            }
-            else
-            {
-                do_shutdown();
-            }
-        }
-        else
-        {
-            do_shutdown();
-        }
-    }
-#else  //!defined( OPTION_SHUTDOWN_CONFIRMATION )
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    if ( ( argc > 2 ) ||
-         ( argc > 1 && !CMD(argv[1],force,5) ) )
-    {
-        WRMSG( HHC02205, "E", argv[argc-1], "" );
-        return 0;
-    }
-
-    if ( argc > 1 )
-    {
-        sysblk.shutimmed = TRUE;
-    }
-    do_shutdown();
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-    return 0;   /* (make compiler happy) */
-}
-
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
-/*-------------------------------------------------------------------*/
-/* quitmout command                                                  */
-/*-------------------------------------------------------------------*/
-int quitmout_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-
-    strupper( argv[0], argv[0] );
-
-    if ( argc == 2)
-    {
-        int     tm = 0;
-        BYTE    c;
-
-        if ( 1
-            && sscanf(argv[1], "%d%c", &tm, &c) == 1
-            && (
-                 ( ( sysblk.sysgroup & (SYSGROUP_SYSALL - SYSGROUP_SYSOPER) ) && tm >= 0 )
-                ||
-                 ( ( sysblk.sysgroup & SYSGROUP_SYSOPER ) && tm >= 2 )
-               )
-            && tm <= 60
-           )
-        {
-            sysblk.quitmout = tm;
-            if ( MLVL(VERBOSE) )
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-            return 0;
-        }
-        else
-        {
-            // "Missing or invalid argument(s)"
-            WRMSG( HHC17000, "E" );
-            return -1;
-        }
-    }
-    else if ( argc < 1 || argc > 2 )
-    {
-        // "Missing or invalid argument(s)"
-        WRMSG( HHC17000, "E" );
         return -1;
     }
 
-    WRMSG( HHC17100, "I", sysblk.quitmout );
+    if (argc > 1)
+    {
+        sysblk.shutimmed = TRUE;
+    }
 
-    return 0;
+    do_shutdown();
+
+    UNREACHABLE_CODE( return 0 );
 }
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
 
 /*-------------------------------------------------------------------*/
 /* history command                                                   */
@@ -7403,45 +7301,16 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* ssd - signal shutdown command                                     */
 /*-------------------------------------------------------------------*/
-int ssd_cmd(int argc, char *argv[], char *cmdline)
+int ssd_cmd( int argc, char* argv[], char* cmdline )
 {
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
+    static const U16  count = 0;  // SCLP_READ_EVENT_DATA return value
+    static const BYTE unit  = 0;  // SCLP_READ_EVENT_DATA return value
 
-    time_t  end;
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
-    UNREFERENCED(cmdline);
-
-    if ((argc > 2) ||
-        (argc > 1 && !CMD(argv[1],now,3)))
-    {
-        WRMSG(HHC02205, "E", argv[argc-1], "");
-        return 0;
-    }
-
-    if ( (argc > 1) ||
-         (sysblk.quitmout == 0)
-       )
-    {
-        signal_quiesce(0,0);
-    }
-    else
-    {
-        time( &end );
-        if ( difftime( end, sysblk.SSD_time ) > sysblk.quitmout )
-        {
-            // "Confirm command by entering %s again within %d seconds"
-            WRMSG( HHC02266, "A", argv[0], sysblk.quitmout );
-            time( &sysblk.SSD_time );
-        }
-        else
-            signal_quiesce(0, 0);
-    }
-#else  // !defined( OPTION_SHUTDOWN_CONFIRMATION )
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-    signal_quiesce(0, 0);
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
+    signal_quiesce( count, unit );    // (notify guest of shutdown)
 
     return 0;
 }

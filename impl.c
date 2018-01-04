@@ -691,11 +691,6 @@ int     rc;
     /* set default tape autoinit value to OFF   */
     sysblk.noautoinit = TRUE;
 
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
-    /* set default quit timeout value (also ssd) */
-    sysblk.quitmout = QUITTIME_PERIOD;
-#endif
-
     /* Default command separator is OFF (disabled) */
     sysblk.cmdsep = 0;
 
@@ -773,11 +768,6 @@ int     rc;
 
 #ifdef PANEL_REFRESH_RATE
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
-#endif
-
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
-    /* Set the quitmout value */
-    sysblk.quitmout = QUITTIME_PERIOD;     /* quit timeout value */
 #endif
 
 #if defined(OPTION_SHARED_DEVICES)

@@ -1062,8 +1062,8 @@
   "able to scroll the display, etc. Basically all screen updating\n"             \
   "is disabled. Entering 'quiet' again re-enables screen updating.\n"
 
-#define quit_ssd_cmd_desc       "Terminate the emulator"
-#define quit_ssd_cmd_help       \
+#define quit_cmd_desc          "Terminate the emulator"
+#define quit_cmd_help           \
                                 \
   "Format: \"quit [force]\"  Terminates the emulator. If the guest OS\n"         \
   "                        has enabled Signal Shutdown, then a\n"                \
@@ -1103,30 +1103,6 @@
   "  \"bootprog [number]\"        The boot program number to be loaded\n"        \
   "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"    \
   "  \"scpdata  [data]\"          Information to be passed to the OS\n"
-
-#define quit_cmd_desc           "Terminate the emulator"
-#define quit_cmd_help           \
-                                \
-  "Format: \"quit [force]\"  Terminates the emulator. The \"quit\"\n"            \
-  "                        command will first check that all online\n"           \
-  "                        CPUs are stopped. If any CPU is not in a\n"           \
-  "                        stopped state, a message is displayed\n"              \
-  "                        indicating the number of CPUs running. A\n"           \
-  "                        second message follows that prompts for\n"            \
-  "                        confirmation by entering a second \"quit\"\n"         \
-  "                        command to start termination of the\n"                \
-  "                        emulator.\n"                                          \
-  "              force     This option will terminate hercules\n"                \
-  "                        immediately.\n"
-
-#define quitmout_cmd_desc       "Set/Display the quit timeout value"
-#define quitmout_cmd_help       \
-                                \
-  "Format: \"quitmount [n]\" Sets or displays the elasped time that\n"           \
-  "                        a confirming quit/ssd command must be\n"              \
-  "                        entered.\n"                                           \
-  "               n        This is a value between 2 and 60,\n"                  \
-  "                        representing seconds.\n"
 
 #define r_cmd_desc              "Display or alter real storage"
 #define r_cmd_help              \
@@ -1824,12 +1800,7 @@ COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        
 #if defined( OPTION_SHARED_DEVICES )
 COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      NULL                )
 #endif
-#if defined ( OPTION_SHUTDOWN_CONFIRMATION )
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
-COMMAND( "quitmout",                quitmout_cmd,           SYSCMDNOPER,        quitmout_cmd_desc,      quitmout_cmd_help   )
-#else
-COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_ssd_cmd_desc,      quit_ssd_cmd_help   )
-#endif
 #if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )
 #endif

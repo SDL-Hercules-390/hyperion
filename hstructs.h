@@ -864,13 +864,6 @@ struct SYSBLK {
   #define  DEFAULT_MLVL     (MLVL_VERBOSE)
 #endif
 
-#if defined( OPTION_SHUTDOWN_CONFIRMATION )
-#define QUITTIME_PERIOD     10
-        int     quitmout;               /* Current timeout value     */
-        time_t  shutquittime;           /* Quit requested time       */
-        time_t  SSD_time;               /* SSD requested time        */
-#endif // defined( OPTION_SHUTDOWN_CONFIRMATION )
-
         BLOCK_TRAILER;                  /* eye-end                   */
 };
 

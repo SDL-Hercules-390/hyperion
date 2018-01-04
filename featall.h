@@ -105,10 +105,6 @@
                                            slashes                   */
 #endif
 
-#if !defined(OPTION_SHUTDOWN_CONFIRMATION) && !defined(NO_SHUTDOWN_CONFIRMATION)
-#define  NO_SHUTDOWN_CONFIRMATION       /* Confirm quit and ssd cmds */
-#endif
-
 #if !defined(OPTION_OPTINST) && !defined(NO_OPTINST)
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
