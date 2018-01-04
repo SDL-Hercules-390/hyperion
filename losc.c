@@ -1,71 +1,67 @@
 /* LOSC.C       (c) Copyright Jan Jaeger, 2009-2012                  */
 /*              Hercules Licensed Operating System Check             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
 #endif
 
-#if !defined(_LOSC_C_)
+#ifndef _LOSC_C_
 #define _LOSC_C_
 #endif
 
 #include "hercules.h"
 
-#if defined(OPTION_LPP_RESTRICT)
-static char *licensed_os[] = {
-      "MVS", /* Generic name for MVS, OS/390, z/OS       */
-      "VM",  /* Generic name for VM, VM/XA, VM/ESA, z/VM */
+static char* licensed_os[] =
+{
+      "MVS",    /* Generic name for MVS, OS/390, z/OS       */
+      "VM",     /* Generic name for VM, VM/XA, VM/ESA, z/VM */
       "VSE",
       "TPF",
-      NULL };
+      NULL
+};
 
-static int    os_licensed = 0;
-static int    check_done = 0;
+static int   os_licensed  = 0;
+static bool  check_done   = false;
 
-void losc_set (int license_status)
+void losc_set( int license_status )
 {
     os_licensed = license_status;
-    check_done = 0;
+    check_done  = false;
 }
 
-void losc_check(char *ostype)
+void losc_check( char* ostype )
 {
-char **lictype;
-int i;
-CPU_BITMAP mask;
+    char**      lictype;
+    CPU_BITMAP  mask;
+    int         i;
 
-    if(check_done)
+    if (check_done)
         return;
-    else
-        check_done = 1;
 
-    for(lictype = licensed_os; *lictype; lictype++)
+    check_done = true;
+
+    for (lictype = licensed_os; *lictype; lictype++)
     {
-        if(!strncasecmp(ostype, *lictype, strlen(*lictype)))
+        if (!strncasecmp( ostype, *lictype, strlen( *lictype )))
         {
-            if(os_licensed == PGM_PRD_OS_LICENSED)
-                WRMSG(HHC00130, "W");
-            else
+            if (os_licensed == PGM_PRD_OS_LICENSED)
+            {
+                // "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
+                WRMSG( HHC00130, "W" );
+            }
+            else// (os_licensed == PGM_PRD_OS_RESTRICTED)
             {
                 // "A licensed program product operating system detected, all processors have been stopped"
-                WRMSG(HHC00131, "A");
-                mask = sysblk.started_mask;
-                for (i = 0; mask; i++)
-                {
-                    if (mask & 1)
-                    {
-                        REGS *regs = sysblk.regs[i];
-                        regs->opinterv = 1;
-                        regs->cpustate = CPUSTATE_STOPPING;
-                        ON_IC_INTERRUPT(regs);
-                        signal_condition(&regs->intcond);
-                    }
-                    mask >>= 1;
-                }
+                WRMSG( HHC00131, "A" );
+
+                stop_all_cpus_intlock_held();
             }
         }
     }
 }
-#endif /*defined(OPTION_LPP_RESTRICT)*/

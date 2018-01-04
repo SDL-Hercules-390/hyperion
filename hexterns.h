@@ -377,10 +377,8 @@ CMDT_DLL_IMPORT int HercCmdLine (char *cmdline);    /* (maybe guest cmd) */
 CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 
 /* Functions in module losc.c */
-#if defined(OPTION_LPP_RESTRICT)
-void losc_set (int license_status);
-void losc_check(char *ostype);
-#endif /*defined(OPTION_LPP_RESTRICT)*/
+void losc_set  ( int license_status );
+void losc_check( char* ostype );
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
@@ -568,10 +566,13 @@ CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...) ATTR_PRINTF(3,4);
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
 void do_shutdown();
-int are_all_cpus_stopped();
-int are_all_cpus_stopped_intlock_held();
-int are_any_cpus_started();
-int are_any_cpus_started_intlock_held();
+void stop_all_cpus();
+void stop_all_cpus_intlock_held();
+bool are_all_cpus_stopped();
+bool are_all_cpus_stopped_intlock_held();
+bool are_any_cpus_started();
+bool are_any_cpus_started_intlock_held();
+
 int display_gregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
 int display_cregs (REGS *regs, char *buf, int buflen, char *hdr);

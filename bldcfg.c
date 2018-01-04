@@ -105,9 +105,7 @@ int build_config (const char *hercules_cnf)
     sysblk.devthwm  = sysblk.devtunavail = 0;
 
     /* Default the licence setting */
-#if defined( OPTION_LPP_RESTRICT )
-    losc_set(PGM_PRD_OS_RESTRICTED);
-#endif
+    losc_set( PGM_PRD_OS_RESTRICTED );
 
     /* Reset the clock steering registers */
     csr_reset();

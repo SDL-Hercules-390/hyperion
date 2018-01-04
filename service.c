@@ -335,52 +335,51 @@ BYTE *event_msg = (BYTE*)(evd_bk+1);
 }
 
 
-static void sclp_cpident(SCCB_HEADER *sccb)
+static void sclp_cpident( SCCB_HEADER* sccb )
 {
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
-SCCB_CPI_BK  *cpi_bk  = (SCCB_CPI_BK*)(evd_hdr + 1);
-int i;
-char systype[9], sysname[9], sysplex[9];
-U64  syslevel;
+    SCCB_EVD_HDR*  evd_hdr = (SCCB_EVD_HDR*) (sccb    + 1);
+    SCCB_CPI_BK*   cpi_bk  = (SCCB_CPI_BK*)  (evd_hdr + 1);
 
-    if(*(cpi_bk->system_type))
-        set_systype(cpi_bk->system_type);
-    if(*(cpi_bk->system_name))
-        set_sysname(cpi_bk->system_name);
-    if(*(cpi_bk->sysplex_name))
-        set_sysplex(cpi_bk->sysplex_name);
+    char systype[9], sysname[9], sysplex[9];
+    U64  syslevel;
+    int i;
 
-    for(i = 0; i < 8; i++)
+    if (*(cpi_bk->system_type )) set_systype( cpi_bk->system_type  );
+    if (*(cpi_bk->system_name )) set_sysname( cpi_bk->system_name  );
+    if (*(cpi_bk->sysplex_name)) set_sysplex( cpi_bk->sysplex_name );
+
+    for (i=0; i < 8; i++)
     {
-        systype[i] = guest_to_host(cpi_bk->system_type[i]);
-        sysname[i] = guest_to_host(cpi_bk->system_name[i]);
-        sysplex[i] = guest_to_host(cpi_bk->sysplex_name[i]);
+        systype[i] = guest_to_host( cpi_bk->system_type [i] );
+        sysname[i] = guest_to_host( cpi_bk->system_name [i] );
+        sysplex[i] = guest_to_host( cpi_bk->sysplex_name[i] );
     }
+
     systype[8] = sysname[8] = sysplex[8] = 0;
-    for(i = 7; i >= 0 && systype[i] == ' '; i--)
-        systype[i] = 0;
-    for(i = 7; i >= 0 && sysname[i] == ' '; i--)
-        sysname[i] = 0;
-    for(i = 7; i >= 0 && sysplex[i] == ' '; i--)
-        sysplex[i] = 0;
-    FETCH_DW(syslevel,cpi_bk->system_level);
 
-    WRMSG(HHC00004, "I",systype,sysname,sysplex,syslevel);
+    for (i=7; i >= 0 && systype[i] == ' '; i--) systype[i] = 0;
+    for (i=7; i >= 0 && sysname[i] == ' '; i--) sysname[i] = 0;
+    for (i=7; i >= 0 && sysplex[i] == ' '; i--) sysplex[i] = 0;
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
+    FETCH_DW( syslevel, cpi_bk->system_level );
+
+    // "Control program identification: type %s, name %s, sysplex %s, level %"PRIX64
+    WRMSG( HHC00004, "I", systype, sysname, sysplex, syslevel );
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
     {
         char buf[128];
-        MSGBUF(buf, "%"PRIX64, syslevel );
-        set_symbol("SYSTYPE", systype);
-        set_symbol("SYSNAME", sysname);
-        set_symbol("SYSPLEX", sysplex);
-        set_symbol("SYSLEVEL", buf);
+
+        MSGBUF( buf, "%"PRIX64, syslevel );
+
+        set_symbol( "SYSTYPE",  systype );
+        set_symbol( "SYSNAME",  sysname );
+        set_symbol( "SYSPLEX",  sysplex );
+        set_symbol( "SYSLEVEL", buf     );
     }
 #endif
 
-#if defined(OPTION_LPP_RESTRICT)
-    losc_check(systype);
-#endif /*defined(OPTION_LPP_RESTRICT)*/
+    losc_check( systype );
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
@@ -1396,11 +1395,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_INFO;
 
         break;
-        docheckstop:
-            ARCH_DEP(checkstop_config)();
-            RELEASE_INTLOCK(regs);
-            longjmp(regs->progjmp,SIE_NO_INTERCEPT);
-            UNREACHABLE_CODE( return );
+
+docheckstop:
+        ARCH_DEP( checkstop_config )();
+        RELEASE_INTLOCK( regs );
+        longjmp( regs->progjmp, SIE_NO_INTERCEPT );
+        UNREACHABLE_CODE( return );
 
     case SCLP_READ_CHP_INFO:
 

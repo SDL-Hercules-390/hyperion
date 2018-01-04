@@ -4227,49 +4227,45 @@ int sh_cmd( int argc, char* argv[], char* cmdline )
     return (*cmdline) ? herc_system( cmdline ) : -1;
 }
 
-#if defined(OPTION_LPP_RESTRICT)
 /*-------------------------------------------------------------------*/
 /* pgmprdos config command                                           */
 /*-------------------------------------------------------------------*/
-int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
+int pgmprdos_cmd( int argc, char* argv[], char* cmdline )
 {
+    UNREFERENCED( cmdline );
 
-    UNREFERENCED(cmdline);
+    strupper( argv[0], argv[0] );
 
     /* Parse program product OS allowed */
     if (argc == 2)
     {
-        if ( CMD( argv[1], LICENSED, 3 ) || CMD( argv[1], LICENCED, 3 ) )
+        if (0
+            || CMD( argv[1], LICENSED, 3 )
+            || CMD( argv[1], LICENCED, 3 )  // (alternate spelling)
+        )
         {
-            losc_set(PGM_PRD_OS_LICENSED);
+            losc_set( PGM_PRD_OS_LICENSED );
         }
-        else if ( CMD( argv[1], RESTRICTED, 3 ) )
+        else if (CMD( argv[1], RESTRICTED, 3 ))
         {
-            losc_set(PGM_PRD_OS_RESTRICTED);
+            losc_set( PGM_PRD_OS_RESTRICTED );
         }
         else
         {
-            WRMSG(HHC02205, "E", argv[1], "");
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "" );
             return -1;
         }
     }
     else
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
     return 0;
 }
-#else
-int pgmprdos_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-    return 1;
-}
-#endif /*defined(OPTION_LPP_RESTRICT)*/
 
 /*-------------------------------------------------------------------*/
 /* diag8cmd command                                                  */

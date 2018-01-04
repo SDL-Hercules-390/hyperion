@@ -335,10 +335,10 @@
 #define OS_LINUX        0x78FFFFFFF7DE7FD6ULL   /* Linux             */
 #endif
 
-/* Definitions for program product OS restriction flag. This flag is ORed
-   with the SCLP READ CPU INFO response code. A 4 here makes the CPU look
-   like an IFL (Integrated Facility for Linux) engine, which cannot run
-   licensed ESA/390 or z/Architecture OSes.
+/* Definitions for program product OS restriction flag. This flag
+   is ORed with the SCLP READ CPU INFO response code. A 4 here makes
+   the CPU look like an IFL (Integrated Facility for Linux) engine,
+   which cannot run licensed ESA/390 or z/Architecture OSes.
 */
 #define PGM_PRD_OS_RESTRICTED 4                 /* Restricted        */
 #define PGM_PRD_OS_LICENSED   0                 /* Licensed          */

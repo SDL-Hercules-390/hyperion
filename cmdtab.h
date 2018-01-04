@@ -1813,11 +1813,7 @@ COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        
 #if defined( OPTION_IODELAY_KLUDGE )
 COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        iodelay_cmd_desc,       iodelay_cmd_help    )
 #endif
-#if defined( OPTION_LPP_RESTRICT )
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      pgmprdos_cmd_help   )
-#else
-COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       NULL,                   NULL                )
-#endif
 #if defined( OPTION_MIPS_COUNTING )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
 #endif

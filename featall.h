@@ -22,10 +22,6 @@
 #define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
-#if !defined(OPTION_LPP_RESTRICT) && !defined(NO_LPP_RESTRICT)
-#define OPTION_LPP_RESTRICT             /* Disable Licensed Software */
-#endif
-
 #if !defined(OPTION_SMP) && !defined(NO_SMP)
 #define OPTION_SMP                      /* Enable SMP support        */
 #endif

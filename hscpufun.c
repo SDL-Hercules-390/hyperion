@@ -139,30 +139,15 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
     int rc = 0;
     CPU_BITMAP mask;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc == 1 )
+    if (argc == 1)
     {
-        OBTAIN_INTLOCK(NULL);
-
-        mask = sysblk.started_mask;
-        for (i = 0; mask; i++)
-        {
-            if (mask & 1)
-            {
-                REGS *regs = sysblk.regs[i];
-                regs->opinterv = 1;
-                regs->cpustate = CPUSTATE_STOPPING;
-                ON_IC_INTERRUPT(regs);
-                signal_condition(&regs->intcond);
-            }
-            mask >>= 1;
-        }
-
-        RELEASE_INTLOCK(NULL);
+        stop_all_cpus();
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }

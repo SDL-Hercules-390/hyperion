@@ -28,9 +28,48 @@
 #define _HSCMISC_C
 
 /*-------------------------------------------------------------------*/
+/* Stop ALL CPUs                              (INTLOCK not held)     */
+/*-------------------------------------------------------------------*/
+void stop_all_cpus()
+{
+    OBTAIN_INTLOCK( NULL );
+    {
+        stop_all_cpus_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Stop ALL CPUs                              (INTLOCK held)         */
+/*-------------------------------------------------------------------*/
+void stop_all_cpus_intlock_held()
+{
+    CPU_BITMAP  mask;
+    REGS*       regs;
+    int         i;
+
+    for (i=0, mask = sysblk.started_mask; mask; i++, mask >>= 1)
+    {
+        if (mask & 1)
+        {
+            regs = sysblk.regs[i];
+
+            regs->opinterv = 1;
+            regs->cpustate = CPUSTATE_STOPPING;
+
+            ON_IC_INTERRUPT( regs );
+
+            signal_condition( &regs->intcond );
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Test if any CPUs are in started state      (INTLOCK held)         */
 /*-------------------------------------------------------------------*/
-int are_any_cpus_started_intlock_held()
+bool are_any_cpus_started_intlock_held()
 {
 int cpu;
 
@@ -38,15 +77,15 @@ int cpu;
         for (cpu = 0; cpu < sysblk.hicpu; cpu++)
             if (IS_CPU_ONLINE( cpu ))
                 if (sysblk.regs[ cpu ]->cpustate == CPUSTATE_STARTED)
-                    return TRUE;
-    return FALSE;
+                    return true;
+    return false;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Test if all CPUs are in stopped state      (INTLOCK held)         */
 /*-------------------------------------------------------------------*/
-int are_all_cpus_stopped_intlock_held()
+bool are_all_cpus_stopped_intlock_held()
 {
 int cpu;
 
@@ -54,17 +93,17 @@ int cpu;
         for (cpu = 0; cpu < sysblk.hicpu; cpu++)
             if (IS_CPU_ONLINE( cpu ))
                 if (sysblk.regs[ cpu ]->cpustate != CPUSTATE_STOPPED)
-                    return FALSE;
-    return TRUE;
+                    return false;
+    return true;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Test if any CPUs are in started state      (INTLOCK not held)     */
 /*-------------------------------------------------------------------*/
-int are_any_cpus_started()
+bool are_any_cpus_started()
 {
-int any_started;
+bool any_started;
 
     OBTAIN_INTLOCK( NULL );
     {
@@ -78,9 +117,9 @@ int any_started;
 /*-------------------------------------------------------------------*/
 /* Test if all CPUs are in stopped state      (INTLOCK not held)     */
 /*-------------------------------------------------------------------*/
-int are_all_cpus_stopped()
+bool are_all_cpus_stopped()
 {
-int all_stopped;
+bool all_stopped;
 
     OBTAIN_INTLOCK( NULL );
     {
