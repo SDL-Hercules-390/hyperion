@@ -5,24 +5,22 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
+/* This module implements blah, blah, blah...                        */
+/* ... described in the manual XXnn-nnnn-vv "Name of Manual"...      */
+/* Basically a short description of this module's purpose.           */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* Optional Additional credits section:                              */
+/*   Name of other people who have contributed to this module        */
+/*   and possibly a description of what they contributed,            */
+/*   as well as any people who helped or inspired you...             */
+/*-------------------------------------------------------------------*/
+
 #if 0 // ** REMOVE ME! ** REMOVE ME! ** REMOVE ME! ** REMOVE ME! **
 
-/*-------------------------------------------------------------------*/
-/* This is an example (sample) source module containing architecture */
-/* dependent code. Copy it to whatever name you require, remove the  */
-/* #if 0 and #endif to activate it, and change it as needed. Replace */
-/* the comments you are reading with a more detailed description of  */
-/* the purpose of your module and how it accomplishes its mission.   */
-/* Also mention reference manuals used during its development too.   */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* Additional credits:                                               */
-/*    List here other people who helped or inspired you...           */
-/*    List here other people who helped or inspired you...           */
-/*-------------------------------------------------------------------*/
-
-#include "hstdinc.h"        // (MUST ALWAYS BE FIRST!)
+#include "hstdinc.h"        // (MUST ALWAYS BE FIRST)
 
 #define _XXXXXXX_C_         // (ALWAYS) (see hexterns.h)
 #define _XXXXX_DLL_         // (ALWAYS) (usually _HENGINE_DLL_)
@@ -33,38 +31,30 @@
 //#include "xxxxxx.h"       // (other needed includes go here)
 //#include "xxxxxx.h"       // (other needed includes go here)
 
-#ifndef _WE_DID_THIS_ALREADY_
-#define _WE_DID_THIS_ALREADY_
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
 
-//-------------------------------------------------------------------
-//                  code compiled only one time
-//-------------------------------------------------------------------
-// Place functions that are NEITHER *build* architecture dependent
-// nor architectural FEATURE (nor _FEATURE) dependent here. These
-// function get compiled ONE TIME and ONLY one time. Note: you must
-// NOT use any build architecture dependent values in any of these
-// functions since only the values for the FIRST build architecture
-// have been #defined at this point (usually S370). These functions
-// may be static or not, or DLL_EXPORT or not, it doesn't matter,
-// but static helper functions used by the functions which follow
-// are the type of functions which are usually placed here.
-//-------------------------------------------------------------------
+// Note: non-arch-dep static functions should ideally be at the end
+// but you can put them here by using an ifdef similar to the below
+
+#if !defined( COMPILE_THIS_ONLY_ONCE )
+#define       COMPILE_THIS_ONLY_ONCE
 
 /*-------------------------------------------------------------------*/
-/* Simple function description/purpose                               */
+/*                non_arch_dep_static_helper_one                     */
 /*-------------------------------------------------------------------*/
-static int foo()
+static int  non_arch_dep_static_helper_two( xxx... );   // (fwd ref)
+static int  non_arch_dep_static_helper_one( xxx... )
 {
+    //------------------------------------------------------------
+    //                     IMPORTANT
+    // You MUST NOT use any feature.h macros in your non-arch_dep
+    // functions. See the IMPORTANT PROGRAMMING NOTE at the end.
+    //------------------------------------------------------------
+    return 0;
 }
-
-/*-------------------------------------------------------------------*/
-/* Simple function description/purpose                               */
-/*-------------------------------------------------------------------*/
-static int bar()
-{
-}
-
-#endif /* _WE_DID_THIS_ALREADY_ */
+#endif // COMPILE_THIS_ONLY_ONCE
 
 //-------------------------------------------------------------------
 //                      ARCH_DEP() code
@@ -75,11 +65,18 @@ static int bar()
 // time they are compiled with a different set of FEATURE_XXX defines
 // appropriate for that architecture. Use #ifdef FEATURE_XXX guards
 // to check whether the current BUILD architecture has that given
-// feature #defined for it or not. WARNING! Do NOT use _FEATURE_XXX!
-// The underscore feature #defines mean something else entirely! Only
-// test for FEATURE_XXX! (WITHOUT the underscore!) These functions
-// may be static or not, or DLL_EXPORT or not, it doesn't matter.
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
+
+/*-------------------------------------------------------------------*/
+/*                    arch_dep_helper_func                           */
+/*-------------------------------------------------------------------*/
+static int  ARCH_DEP( arch_dep_helper_func )( function arguments... )
+{
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /* Advanced function description including purpose...                */
@@ -107,45 +104,103 @@ int ARCH_DEP( foobar_func )( RADR *raddr, VADR vaddr, REGS *regs )
     /* call another arch dep function */
     ARCH_DEP( some_other_func )( vaddr, regs );
 
+
 #if defined( FEATURE_XXX )
     /* Code to handle this feature... */
 #endif // defined( FEATURE_XXX )
+
+
+#if defined( FEATURE_nnn_XXXX_FACILITY )
+    if (FACILITY_ENABLED( nnn_XXXX, regs ))
+    {
+    }
+#endif // defined( FEATURE_nnn_XXXX_FACILITY )
+
 
     return foobar;
 
 } /* end function foobar_func */
 
 /*-------------------------------------------------------------------*/
-/* Compile ARCH_DEP() functions for other build architectures...     */
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
-#if !defined(_GEN_ARCH)             // (first time here?)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1      // (set next build architecture)
- #include "_archdep_templ.c"        // (compile ourselves again)
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "ourselves.c"
+  #endif
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2      // (set next build architecture)
- #include "_archdep_templ.c"        // (compile ourselves again)
-#endif
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "ourselves.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     *
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*               non_arch_dep_static_helper_two                      */
+/*-------------------------------------------------------------------*/
+static int  non_arch_dep_static_helper_two( xxx... )
+{
+    //------------------------------------------------------------
+    //                     IMPORTANT
+    // You MUST NOT use any feature.h macros in your non-arch_dep
+    // functions. See the IMPORTANT PROGRAMMING NOTE just below.
+    //------------------------------------------------------------
+    return 0;
+}
+
 
 //-------------------------------------------------------------------
 //                      _FEATURE_XXX code
 //-------------------------------------------------------------------
-// Place any _FEATURE_XXX depdendent functions (WITH the underscore!)
+// Place any _FEATURE_XXX depdendent functions (WITH the underscore)
 // here. You may need to define such functions whenever one or more
-// build architectures has a given FEATURE_XXX (WITHOUT underscore!)
+// build architectures has a given FEATURE_XXX (WITHOUT underscore)
 // defined for it. The underscore means AT LEAST ONE of the build
 // architectures #defined that feature. (See featchk.h) You must NOT
-// use any #ifdef FEATURE_XXX here! Test for ONLY for _FEATURE_XXX!
+// use any #ifdef FEATURE_XXX here. Test for ONLY for _FEATURE_XXX.
 // The functions in this area are compiled ONCE (only ONE time) and
 // ONLY one time but are always compiled LAST after everything else.
-// These functions may be static or not, or DLL_EXPORT or not, it
-// doesn't matter.
 //-------------------------------------------------------------------
+
+
+/*********************************************************************/
+/*                  IMPORTANT PROGRAMMING NOTE                       */
+/*********************************************************************/
+/*                                                                   */
+/* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
+/* macros anywhere in any of your non-arch_dep functions. This means */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function.  */
+/*                                                                   */
+/* Basically you MUST NOT use any architecture dependent macro that  */
+/* is #defined in the "feature.h" header.  If you you need to use    */
+/* any of them, then your function MUST be an "ARCH_DEP" function    */
+/* that is placed within the ARCH_DEP section at the beginning of    */
+/* this module where it can be compiled multiple times, once for     */
+/* each of the supported architectures so the macro gets #defined    */
+/* to its proper value for the architecture. YOU HAVE BEEN WARNED.   */
+/*                                                                   */
+/*********************************************************************/
+
 
 #if defined( _FEATURE_XXX )       // (is FEATURE_XXX code needed?)
 /*-------------------------------------------------------------------*/
@@ -154,24 +209,30 @@ int ARCH_DEP( foobar_func )( RADR *raddr, VADR vaddr, REGS *regs )
 /*-------------------------------------------------------------------*/
 int feature_xxx_func()
 {
+    int rc;
+
     //switch( sysblk.arch_mode )  // (switch based on RUN-TIME archmode)
+
     switch( regs->arch_mode )  // (switch based on RUN-TIME archmode)
     {
+
 #if defined( _370 )
-    case ARCH_370_IDX:
-        return s370_foobar_func( ....arguments go here.... );
+    case  ARCH_370_IDX:  rc = s370_foobar_func( ... ); break;
 #endif
+
+
 #if defined( _390 )
-    case ARCH_390_IDX:
-        return s390_foobar_func( ....arguments go here.... );
+    case  ARCH_390_IDX:  rc = s390_foobar_func( ... ); break;
 #endif
+
+
 #if defined( _900 )
-    case ARCH_900_IDX:
-        return z900_foobar_func( ....arguments go here.... );
+    case  ARCH_900_IDX:  rc = z900_foobar_func( ... ); break;
 #endif
+
     }
 
-    return 0;
+    return rc;
 }
 #endif // _FEATURE_XXX
 
