@@ -210,7 +210,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
     then = host_tod();
 
-    while (!sysblk.shutdown)
+    while (!sysblk.shutfini)
     {
         /* Update TOD clock and save TOD clock value */
         now = update_tod_clock();
