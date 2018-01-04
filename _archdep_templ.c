@@ -95,14 +95,31 @@ static int  ARCH_DEP( arch_dep_helper_func )( function arguments... )
 /* of functionality... Detailed description of functionality...      */
 /* Detailed description of functionality... Detailed description     */
 /* of functionality... Detailed description of functionality...      */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP( foobar_func )( RADR *raddr, VADR vaddr, REGS *regs )
+int ARCH_DEP( foobar_func )( REGS* regs, xxx... )
 {
-    /* call non-archdep helper function */
-    int foobar = foo();
+    RADR  raddr;
+    VADR  vaddr;
+    int   rc;
 
-    /* call another arch dep function */
-    ARCH_DEP( some_other_func )( vaddr, regs );
+
+    /* call non-archdep helper function */
+    foo();
+
+
+    /* call another arch-dep function */
+    ARCH_DEP( some_other_func )( regs, &raddr, &vaddr );
+
+
+#if defined( FEATURE_nnn_XXXX_FACILITY )
+    if (FACILITY_ENABLED( nnn_XXXX, regs ))
+    {
+        rc = 0;
+    }
+    else
+        rc = -1;
+#endif // defined( FEATURE_nnn_XXXX_FACILITY )
 
 
 #if defined( FEATURE_XXX )
@@ -110,14 +127,7 @@ int ARCH_DEP( foobar_func )( RADR *raddr, VADR vaddr, REGS *regs )
 #endif // defined( FEATURE_XXX )
 
 
-#if defined( FEATURE_nnn_XXXX_FACILITY )
-    if (FACILITY_ENABLED( nnn_XXXX, regs ))
-    {
-    }
-#endif // defined( FEATURE_nnn_XXXX_FACILITY )
-
-
-    return foobar;
+    return rc;
 
 } /* end function foobar_func */
 
@@ -207,7 +217,7 @@ static int  non_arch_dep_static_helper_two( xxx... )
 /* This function is needed to support FEATURE_XXX.                   */
 /* This is an example of a RUN-TIME-ARCHITECTURE dependent function  */
 /*-------------------------------------------------------------------*/
-int feature_xxx_func()
+int feature_xxx_func( REGS* regs )
 {
     int rc;
 
@@ -217,17 +227,17 @@ int feature_xxx_func()
     {
 
 #if defined( _370 )
-    case  ARCH_370_IDX:  rc = s370_foobar_func( ... ); break;
+    case  ARCH_370_IDX:  rc = s370_foobar_func( regs, ... ); break;
 #endif
 
 
 #if defined( _390 )
-    case  ARCH_390_IDX:  rc = s390_foobar_func( ... ); break;
+    case  ARCH_390_IDX:  rc = s390_foobar_func( regs, ... ); break;
 #endif
 
 
 #if defined( _900 )
-    case  ARCH_900_IDX:  rc = z900_foobar_func( ... ); break;
+    case  ARCH_900_IDX:  rc = z900_foobar_func( regs, ... ); break;
 #endif
 
     }
