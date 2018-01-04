@@ -1789,7 +1789,6 @@ size_t  loopcount;                    /* Number of iterations done   */
     {
 #if defined( _MSVC_ )
         /* Wait for keyboard input */
-#define WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS  (20)
         for (i=
 #if defined(PANEL_REFRESH_RATE)
                sysblk.panrate
@@ -3280,36 +3279,6 @@ PANMSG* p;
 
     /* Position to next line */
     fwrite("\n",1,1,stderr);
-
-#ifdef OPTION_MIPS_COUNTING
-    {
-        char*   pszCurrIntervalStartDateTime;
-        char*   pszCurrentDateTime;
-        char    buf[128];
-        time_t  current_time;
-
-        current_time = time( NULL );
-
-        pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
-        pszCurrIntervalStartDateTime[strlen(pszCurrIntervalStartDateTime) - 1] = 0;
-        pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
-        pszCurrentDateTime[strlen(pszCurrentDateTime) - 1] = 0;
-
-        WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates");
-        MSGBUF( buf, "  from %s", pszCurrIntervalStartDateTime);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "    to %s", pszCurrentDateTime);
-        WRMSG(HHC02272, "I", buf);
-        MSGBUF( buf, "  MIPS: %d.%02d  IO/s: %d",
-                    curr_high_mips_rate / 1000000,
-                    curr_high_mips_rate % 1000000,
-                    curr_high_sios_rate );
-        WRMSG(HHC02272, "I", buf);
-
-        free( pszCurrIntervalStartDateTime );
-        free( pszCurrentDateTime           );
-    }
-#endif
 
     set_screen_color(stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
 

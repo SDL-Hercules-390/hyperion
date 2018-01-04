@@ -449,11 +449,34 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
     return 0;   // (make compiler happy)
 }
 
+
+/*-------------------------------------------------------------------*/
+/* quit or exit command helper thread                                */
+/*-------------------------------------------------------------------*/
+static void* quit_thread( void* arg )
+{
+    static const useconds_t  quitdelay_usecs  =
+        (2 * WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS) * 1000;
+
+    UNREFERENCED( arg );
+
+    // Wait twice as long as the panel thread waits for
+    // keyboard input so that it has time to process its
+    // messages at least twice to ensure that the "exit"
+    // command has time to be echoed to the screen.
+
+    usleep( quitdelay_usecs );
+    do_shutdown();
+    UNREACHABLE_CODE( return NULL );
+}
+
 /*-------------------------------------------------------------------*/
 /* quit or exit command - terminate the emulator                     */
 /*-------------------------------------------------------------------*/
 int quit_cmd( int argc, char* argv[], char* cmdline )
 {
+    static TID tid;
+
     UNREFERENCED( argc );
     UNREFERENCED( argv );
     UNREFERENCED( cmdline );
@@ -469,13 +492,15 @@ int quit_cmd( int argc, char* argv[], char* cmdline )
     }
 
     if (argc > 1)
-    {
         sysblk.shutimmed = TRUE;
-    }
 
-    do_shutdown();
+    // Launch the shutdown from a separate thread only
+    // so the "exit" command can be echoed to the panel.
 
-    UNREACHABLE_CODE( return 0 );
+    VERIFY( create_thread( &tid, DETACHED,
+        quit_thread, 0, "quit_thread" ) == 0);
+
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/

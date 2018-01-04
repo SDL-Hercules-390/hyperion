@@ -443,4 +443,10 @@
 
 #define WATCHDOG_SECS           20      /* Seconds between checks    */
 
+/*-------------------------------------------------------------------*/
+/*                   Panel thread heartbeat                          */
+/*-------------------------------------------------------------------*/
+
+#define WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS  (20)
+
 #endif // _HCONSTS_H
