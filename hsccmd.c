@@ -467,7 +467,7 @@ static void* quit_thread( void* arg )
 
     usleep( quitdelay_usecs );
     do_shutdown();
-    UNREACHABLE_CODE( return NULL );
+    return NULL;
 }
 
 /*-------------------------------------------------------------------*/
