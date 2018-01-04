@@ -135,24 +135,17 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
 {
-    int i;
-    int rc = 0;
-    CPU_BITMAP mask;
-
     UNREFERENCED( cmdline );
 
-    if (argc == 1)
-    {
-        stop_all_cpus();
-    }
-    else
+    if (argc != 1)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
-        rc = -1;
+        return -1;
     }
 
-    return rc;
+    stop_all_cpus();
+    return 0;
 }
 
 #ifdef _FEATURE_CPU_RECONFIG

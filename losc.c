@@ -37,9 +37,7 @@ void losc_set( int license_status )
 
 void losc_check( char* ostype )
 {
-    char**      lictype;
-    CPU_BITMAP  mask;
-    int         i;
+    char**  lictype;
 
     if (check_done)
         return;
