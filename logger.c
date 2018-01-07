@@ -222,8 +222,6 @@ static void logger_term(void *arg)
 
         }
 
-        fprintf( stderr, "\n" );
-
         /* In external GUI mode, the external GUI will receive this
            message when the logger_thread writes it to the hardcopy
            file just before it exits. If we also issued it here too,
