@@ -21,6 +21,574 @@
 #include "hostinfo.h"
 
 /*-------------------------------------------------------------------*/
+/*                TEMPORARY Architecture bit-masks                   */
+/*       (for use by the temporary ARCH_DEP facility tables)         */
+/*-------------------------------------------------------------------*/
+
+#undef NONE
+#undef S370
+#undef E390
+#undef Z900
+#undef Z390
+#undef MALL
+
+#if   __GEN_ARCH == 370             // (building for S/370?)
+
+    #define NONE     0x00           /* NO architectures or disabled  */
+    #define S370     0x80           /* S/370 architecture            */
+    #define E390     0x00           /* ESA/390 architecture          */
+    #define Z900     0x00           /* z/Arch architecture           */
+    #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
+    #define MALL     (S370|Z390)    /* All architectures             */
+
+#elif __GEN_ARCH == 390             // (building for S/390?)
+
+    #define NONE     0x00           /* NO architectures or disabled  */
+    #define S370     0x00           /* S/370 architecture            */
+    #define E390     0x40           /* ESA/390 architecture          */
+    #define Z900     0x00           /* z/Arch architecture           */
+    #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
+    #define MALL     (S370|Z390)    /* All architectures             */
+
+#elif __GEN_ARCH == 900             // (building for z/Arch?)
+
+    #define NONE     0x00           /* NO architectures or disabled  */
+    #define S370     0x00           /* S/370 architecture            */
+    #define E390     0x00           /* ESA/390 architecture          */
+    #define Z900     0x20           /* z/Arch architecture           */
+    #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
+    #define MALL     (S370|Z390)    /* All architectures             */
+
+#endif
+
+#ifndef FACTAB_STRUCT_DEFINED
+#define FACTAB_STRUCT_DEFINED
+/*-------------------------------------------------------------------*/
+/*                  Facility Table structure                         */
+/*-------------------------------------------------------------------*/
+struct FACTAB
+{
+    const char*  name;              /* Short facility name           */
+    const char*  long_name;         /* Long name = Description       */
+          int    bitno;             /* Bit number                    */
+          int    supmask;           /* Which archs support it        */
+          int    defmask;           /* Default for which archs       */
+          int    reqmask;           /* Which archs require it        */
+};
+typedef struct FACTAB   FACTAB;
+
+#define FT( _sup, _def, _req, _name, _desc )                        \
+{                                                                   \
+    QSTR( _name ),                                                  \
+    _desc,                                                          \
+    STFL_ ## _name,  /* esa390.h 'STFL_XXX' bit number #define */   \
+    _sup,                                                           \
+    _def,                                                           \
+    _req                                                            \
+},
+#endif // FACTAB_STRUCT_DEFINED
+
+/*-------------------------------------------------------------------*/
+/*              Temporary ARCH_DEP Facility Table                    */
+/*-------------------------------------------------------------------*/
+/* The facility names used in the below FT macro invocations are,    */
+/* when prefixed with 'STFL_', the facility bit number as #defined   */
+/* in header esa390.h (e.g. FT( 044_PFPO, ..) ==> STFL_044_PFPO 44)  */
+/*                                                                   */
+/* Also note that the entries in the below table do NOT have to be   */
+/* in any facility bit sequence as it is always seached serially.    */
+/* However, it is greatly preferred that it be kept in sequence.     */
+/*                                                                   */
+/* Sup (Supported) means the facility is supported by Hercules for   */
+/* the given architectures.  Def (Default) indicates the facility    */
+/* defaults to enabled for the specified architectures.  The Req     */
+/* (Required) field indicates the facility is a REQUIRED facility    */
+/* for the architecture and enabling/disabling it isn't allowed.     */
+/*                                                                   */
+/* ALL known facilities should ALWAYS be defined in the below table  */
+/* REGARDLESS of whether or not it has been implemented yet within   */
+/* Hercules.  If the facility is not implemented in Hercules yet,    */
+/* (i.e. no code has been written to support it yet), then simply    */
+/* specify "NONE" in all three Sup/Def/Req columns.  Once support    */
+/* for the facility has been coded, then just update the columns     */
+/* as appropriate so the guest can start using them.                 */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                     ***  CRITICAL!   ***                          */
+/*                                                                   */
+/* All of the below FT macro invokations should be wrapped with an   */
+/* #if defined( FEATURE_nnn... ) statement WITHOUT the underscore!   */
+/*                                                                   */
+/* This is because the below tables are ARCH_DEP tables which are    */
+/* compiled differently depending on the architecture is currently   */
+/* being built.                                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+static FACTAB ARCH_DEP( facs_tab )[] =      /* Arch-DEPENDENT table  */
+{
+/*-------------------------------------------------------------------*/
+/*  Sup   Def   Req   Short Name...                 Description...   */
+/*-------------------------------------------------------------------*/
+
+#if defined(  FEATURE_000_N3_INSTR_FACILITY )
+FT( Z390, Z390, NONE, 000_N3_ESA390,                "N3 Instructions are installed" )
+#endif
+
+#if defined(  FEATURE_001_ZARCH_INSTALLED_FACILITY )
+FT( Z390, Z390, NONE, 001_ZARCH_INSTALLED,          "z/Architecture architectural mode is installed" )
+FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE,             "z/Architecture architectural mode is active" )
+#endif
+
+#if defined(  FEATURE_003_DAT_ENHANCE_FACILITY_1 )
+FT( Z390, Z390, NONE, 003_DAT_ENHANCE_1,            "DAT-Enhancement Facility 1" )
+#endif
+
+#if defined(  FEATURE_004_IDTE_SC_SEGTAB_FACILITY )
+FT( NONE, NONE, NONE, 004_IDTE_SC_SEGTAB,           "IDTE selective clearing when segment-table invalidated" )
+#endif
+
+#if defined(  FEATURE_005_IDTE_SC_REGTAB_FACILITY )
+FT( NONE, NONE, NONE, 005_IDTE_SC_REGTAB,           "IDTE selective clearing when region-table invalidated" )
+#endif
+
+#if defined(  FEATURE_006_ASN_LX_REUSE_FACILITY )
+FT( Z900, Z900, NONE, 006_ASN_LX_REUSE,             "ASN-and-LX-Reuse Facility" )
+#endif
+
+#if defined(  FEATURE_007_STFL_EXTENDED_FACILITY )
+FT( Z900, Z900, NONE, 007_STFL_EXTENDED,            "Store-Facility-List-Extended Facility" )
+#endif
+
+#if defined(  FEATURE_008_ENHANCED_DAT_FACILITY_1 )
+FT( Z900, Z900, NONE, 008_EDAT_1,                   "Enhanced-DAT Facility 1" )
+#endif
+
+#if defined(  FEATURE_009_SENSE_RUN_STATUS_FACILITY )
+FT( Z900, Z900, NONE, 009_SENSE_RUN_STATUS,         "Sense-Running-Status Facility" )
+#endif
+
+#if defined(  FEATURE_010_CONDITIONAL_SSKE_FACILITY )
+FT( Z900, Z900, NONE, 010_CONDITIONAL_SSKE,         "Conditional-SSKE Facility" )
+#endif
+
+#if defined(  FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
+FT( Z900, Z900, NONE, 011_CONFIG_TOPOLOGY,          "Configuration-Topology Facility" )
+#endif
+
+#if defined(  FEATURE_013_IPTE_RANGE_FACILITY )
+FT( Z900, Z900, NONE, 013_IPTE_RANGE,               "IPTE-Range Facility" )
+#endif
+
+#if defined(  FEATURE_014_NONQ_KEY_SET_FACILITY )
+FT( Z900, Z900, NONE, 014_NONQ_KEY_SET,             "Nonquiescing Key-Setting Facility" )
+#endif
+
+#if defined(  FEATURE_016_EXT_TRANSL_FACILITY_2 )
+FT( Z390, Z390, NONE, 016_EXT_TRANSL_2,             "Extended-Translation Facility 2" )
+#endif
+
+#if defined(  FEATURE_017_MSA_FACILITY )
+FT( Z390, Z390, NONE, 017_MSA,                      "Message-Security Assist" )
+#endif
+
+#if defined(  FEATURE_018_LONG_DISPL_INST_FACILITY )
+FT( Z390, Z390, NONE, 018_LONG_DISPL_INST,          "Long-Displacement Facility" )
+#endif
+
+#if defined(  FEATURE_019_LONG_DISPL_HPERF_FACILITY )
+FT( Z390, Z390, NONE, 019_LONG_DISPL_HPERF,         "Long-Displacement Facility Has High Performance" )
+#endif
+
+#if defined(  FEATURE_020_HFP_MULT_ADD_SUB_FACILITY )
+FT( Z390, Z390, NONE, 020_HFP_MULT_ADD_SUB,         "HFP-Multiply-and-Add/Subtract Facility" )
+#endif
+
+#if defined(  FEATURE_021_EXTENDED_IMMED_FACILITY )
+FT( Z900, Z900, NONE, 021_EXTENDED_IMMED,           "Extended-Immediate Facility" )
+#endif
+
+#if defined(  FEATURE_022_EXT_TRANSL_FACILITY_3 )
+FT( Z900, Z900, NONE, 022_EXT_TRANSL_3,             "Extended-Translation Facility 3" )
+#endif
+
+#if defined(  FEATURE_023_HFP_UNNORM_EXT_FACILITY )
+FT( Z900, Z900, NONE, 023_HFP_UNNORM_EXT,           "HFP-Unnormalized-Extensions Facility" )
+#endif
+
+#if defined(  FEATURE_024_ETF2_ENHANCEMENT_FACILITY )
+FT( Z900, Z900, NONE, 024_ETF2_ENHANCEMENT,         "ETF2-Enhancement Facility" )
+#endif
+
+#if defined(  FEATURE_025_STORE_CLOCK_FAST_FACILITY )
+FT( Z900, Z900, NONE, 025_STORE_CLOCK_FAST,         "Store-Clock-Fast Facility" )
+#endif
+
+#if defined(  FEATURE_026_PARSING_ENHANCE_FACILITY )
+FT( Z900, Z900, NONE, 026_PARSING_ENHANCE,          "Parsing-Enhancement Facility" )
+#endif
+
+#if defined(  FEATURE_027_MVCOS_FACILITY )
+FT( Z900, Z900, NONE, 027_MVCOS,                    "Move-with-Optional-Specifications Facility" )
+#endif
+
+#if defined(  FEATURE_028_TOD_CLOCK_STEER_FACILITY )
+FT( Z900, Z900, NONE, 028_TOD_CLOCK_STEER,          "TOD-Clock-Steering Facility" )
+#endif
+
+#if defined(  FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
+FT( Z900, Z900, NONE, 030_ETF3_ENHANCEMENT,         "ETF3-Enhancement Facility" )
+#endif
+
+#if defined(  FEATURE_031_EXTRACT_CPU_TIME_FACILITY )
+FT( Z900, Z900, NONE, 031_EXTRACT_CPU_TIME,         "Extract-CPU-Time Facility" )
+#endif
+
+#if defined(  FEATURE_032_CSS_FACILITY )
+FT( Z900, Z900, NONE, 032_CSSF,                     "Compare-and-Swap-and-Store Facility" )
+#endif
+
+#if defined(  FEATURE_033_CSS_FACILITY_2 )
+FT( Z900, Z900, NONE, 033_CSSF2,                    "Compare-and-Swap-and-Store Facility 2" )
+#endif
+
+#if defined(  FEATURE_034_GEN_INST_EXTN_FACILITY )
+FT( Z900, Z900, NONE, 034_GEN_INST_EXTN,            "General-Instructions-Extension Facility" )
+#endif
+
+#if defined(  FEATURE_035_EXECUTE_EXTN_FACILITY )
+FT( Z900, Z900, NONE, 035_EXECUTE_EXTN,             "Execute-Extensions Facility" )
+#endif
+
+#if defined(  FEATURE_036_ENH_MONITOR_FACILITY )
+FT( Z900, Z900, NONE, 036_ENH_MONITOR,              "Enhanced-Monitor Facility" )
+#endif
+
+#if defined(  FEATURE_037_FP_EXTENSION_FACILITY )
+FT( Z900, Z900, NONE, 037_FP_EXTENSION,             "Floating-Point-Extension Facility" )
+#endif
+
+#if defined(  FEATURE_038_OP_CMPSC_FACILITY )
+FT( NONE, NONE, NONE, 038_OP_CMPSC,                 "Order-Preserving-Compression Facility" )
+#endif
+
+#if defined(  FEATURE_040_LOAD_PROG_PARAM_FACILITY )
+FT( Z900, Z900, NONE, 040_LOAD_PROG_PARAM,          "Load-Program-Parameter Facility" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY )
+
+FT( Z900, Z900, NONE, 041_FPS_ENHANCEMENT,          "Floating-Point-Support-Enhancement Facility" )
+
+#if defined(  FEATURE_041_DFP_ROUNDING_FACILITY )
+FT( Z900, Z900, NONE, 041_DFP_ROUNDING,             "Decimal-Floating-Point-Rounding Facility" )
+#endif
+
+#if defined(  FEATURE_041_FPR_GR_TRANSFER_FACILITY )
+FT( Z900, Z900, NONE, 041_FPR_GR_TRANSFER,          "FPR-GR-Transfer Facility" )
+#endif
+
+#if defined(  FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
+FT( Z900, Z900, NONE, 041_FPS_SIGN_HANDLING,        "Floating-Point-Support-Sign-Handling Facility" )
+#endif
+
+#if defined(  FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
+FT( Z900, Z900, NONE, 041_IEEE_EXCEPT_SIM,          "IEEE-Exception-Simulation Facility" )
+#endif
+
+#endif /* defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_042_DFP_FACILITY )
+FT( Z900, Z900, NONE, 042_DFP,                      "Decimal-Floating-Point Facility" )
+#endif
+
+#if defined(  FEATURE_043_DFP_HPERF_FACILITY )
+FT( Z900, Z900, NONE, 043_DFP_HPERF,                "Decimal-Floating-Point Facility Has High Performance" )
+#endif
+
+//------------------------------------------------------------------------------
+// Allow the PFPO facility to be manually enabled Until proper support for it
+// is coded since some modern operating systems require it (z/OS and z/VM).
+
+//#if defined(  FEATURE_044_PFPO_FACILITY )
+FT( Z900, NONE, NONE, 044_PFPO,                     "PFPO (Perform Floating-Point Operation) Facility" )
+//#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_045_DISTINCT_OPERANDS_FACILITY )
+FT( Z900, Z900, NONE, 045_DISTINCT_OPERANDS,        "Distinct-Operands Facility" )
+#endif
+
+#if defined(  FEATURE_045_FAST_BCR_SERIAL_FACILITY )
+FT( Z900, Z900, NONE, 045_FAST_BCR_SERIAL,          "Fast-BCR-Serialization Facility" )
+#endif
+
+#if defined(  FEATURE_045_HIGH_WORD_FACILITY )
+FT( Z900, Z900, NONE, 045_HIGH_WORD,                "High-Word Facility" )
+#endif
+
+#if defined(  FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
+FT( Z900, Z900, NONE, 045_INTERLOCKED_ACCESS_1,     "Interlocked-Access Facility 1" )
+#endif
+
+#if defined(  FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )
+FT( Z900, Z900, NONE, 045_LOAD_STORE_ON_COND_1,     "Load/Store-on-Condition Facility 1" )
+#endif
+
+#if defined(  FEATURE_045_POPULATION_COUNT_FACILITY )
+FT( Z900, Z900, NONE, 045_POPULATION_COUNT,         "Population-Count Facility" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_047_CMPSC_ENH_FACILITY )
+FT( Z900, Z900, NONE, 047_CMPSC_ENH,                "CMPSC-Enhancement Facility" )
+#endif
+
+#if defined(  FEATURE_048_DFP_ZONE_CONV_FACILITY )
+FT( Z900, Z900, NONE, 048_DFP_ZONE_CONV,            "Decimal-Floating-Point-Zoned-Conversion Facility" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_049_EXECUTION_HINT_FACILITY )
+FT( Z900, Z900, NONE, 049_EXECUTION_HINT,           "Execution-Hint Facility" )
+#endif
+
+#if defined(  FEATURE_049_LOAD_AND_TRAP_FACILITY )
+FT( Z900, Z900, NONE, 049_LOAD_AND_TRAP,            "Load-and-Trap Facility" )
+#endif
+
+#if defined(  FEATURE_049_PROCESSOR_ASSIST_FACILITY )
+FT( Z900, Z900, NONE, 049_PROCESSOR_ASSIST,         "Processor-Assist Facility" )
+#endif
+
+#if defined(  FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
+FT( Z900, Z900, NONE, 049_MISC_INSTR_EXT_1,         "Miscellaneous-Instruction-Extensions Facility 1" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_050_CONSTR_TRANSACT_FACILITY )
+FT( NONE, NONE, NONE, 050_CONSTR_TRANSACT,          "Constrained-Transactional-Execution Facility" )
+#endif
+
+#if defined(  FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
+FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING,       "Local-TLB-Clearing Facility" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 )
+#if IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
+FT( NONE, NONE, NONE, 052_INTERLOCKED_ACCESS_2,     "Interlocked-Access Facility 2" )
+#else
+FT( Z900, Z900, NONE, 052_INTERLOCKED_ACCESS_2,     "Interlocked-Access Facility 2" )
+#endif
+#endif /* defined(  FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 ) */
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
+FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2,     "Load/Store-on-Condition Facility 2" )
+#endif
+
+#if defined(  FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
+FT( NONE, NONE, NONE, 053_LOAD_ZERO_RIGHTMOST,      "Load-and-Zero-Rightmost-Byte Facility" )
+#endif
+
+//------------------------------------------------------------------------------
+
+#if defined(  FEATURE_054_EE_CMPSC_FACILITY )
+FT( NONE, NONE, NONE, 054_EE_CMPSC,                 "Entropy-Encoding-Compression Facility" )
+#endif
+
+#if defined(  FEATURE_057_MSA_EXTENSION_FACILITY_5 )
+FT( NONE, NONE, NONE, 057_MSA_EXTENSION_5,          "Message-Security-Assist Extension 5" )
+#endif
+
+#if defined(  FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+FT( NONE, NONE, NONE, 058_MISC_INSTR_EXT_2,         "Miscellaneous-Instruction-Extensions Facility 2" )
+#endif
+
+#if defined(  FEATURE_066_RES_REF_BITS_MULT_FACILITY )
+FT( Z900, Z900, NONE, 066_RES_REF_BITS_MULT,        "Reset-Reference-Bits-Multiple Facility" )
+#endif
+
+#if defined(  FEATURE_067_CPU_MEAS_COUNTER_FACILITY )
+FT( Z900, Z900, NONE, 067_CPU_MEAS_COUNTER,         "CPU-Measurement Counter Facility" )
+#endif
+
+#if defined(  FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
+FT( Z900, Z900, NONE, 068_CPU_MEAS_SAMPLNG,         "CPU-Measurement Sampling Facility" )
+#endif
+
+#if defined(  FEATURE_073_TRANSACT_EXEC_FACILITY )
+FT( NONE, NONE, NONE, 073_TRANSACT_EXEC,            "Transactional-Execution Facility" )
+#endif
+
+#if defined(  FEATURE_074_STORE_HYPER_INFO_FACILITY )
+FT( NONE, NONE, NONE, 074_STORE_HYPER_INFO,         "Store-Hypervisor-Information Facility" )
+#endif
+
+#if defined(  FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
+FT( Z900, Z900, NONE, 075_ACC_EX_FS_INDIC,          "Access-Exception-Fetch/Store-Indication Facility" )
+#endif
+
+#if defined(  FEATURE_076_MSA_EXTENSION_FACILITY_3 )
+FT( Z900, Z900, NONE, 076_MSA_EXTENSION_3,          "Message-Security-Assist Extension 3" )
+#endif
+
+#if defined(  FEATURE_077_MSA_EXTENSION_FACILITY_4 )
+FT( Z900, Z900, NONE, 077_MSA_EXTENSION_4,          "Message-Security-Assist Extension 4" )
+#endif
+
+#if defined(  FEATURE_078_ENHANCED_DAT_FACILITY_2 )
+FT( NONE, NONE, NONE, 078_EDAT_2,                   "Enhanced-DAT Facility 2" )
+#endif
+
+#if defined(  FEATURE_080_DFP_PACK_CONV_FACILITY )
+FT( NONE, NONE, NONE, 080_DFP_PACK_CONV,            "Decimal-Floating-Point-Packed-Conversion Facility" )
+#endif
+
+#if defined(  FEATURE_129_ZVECTOR_FACILITY )
+FT( NONE, NONE, NONE, 129_ZVECTOR,                  "Vector Facility for z/Architecture" )
+#endif
+
+#if defined(  FEATURE_130_INSTR_EXEC_PROT_FACILITY )
+FT( NONE, NONE, NONE, 130_INSTR_EXEC_PROT,          "Instruction-Execution-Protection Facility" )
+#endif
+
+#if defined(  FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY )
+FT( NONE, NONE, NONE, 131_SIDE_EFFECT_ACCESS,       "Side-Effect-Access Facility" )
+#endif
+
+#if defined(  FEATURE_133_GUARDED_STORAGE_FACILITY )
+FT( NONE, NONE, NONE, 133_GUARDED_STORAGE,          "Guarded-Storage Facility" )
+#endif
+
+#if defined(  FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
+FT( NONE, NONE, NONE, 134_ZVECTOR_PACK_DEC,         "Vector Packed-Decimal Facility" )
+#endif
+
+#if defined(  FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
+FT( NONE, NONE, NONE, 135_ZVECTOR_ENH_1,            "Vector-Enhancements Facility 1" )
+#endif
+
+#if defined(  FEATURE_138_CONFIG_ZARCH_MODE_FACILITY )
+FT( NONE, NONE, NONE, 138_CONFIG_ZARCH_MODE,        "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
+#endif
+
+#if defined(  FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+FT( NONE, NONE, NONE, 139_MULTIPLE_EPOCH,           "Multiple-Epoch Facility" )
+#endif
+
+#if defined(  FEATURE_142_ST_CPU_COUNTER_MULT_FACILITY )
+FT( NONE, NONE, NONE, 142_ST_CPU_COUNTER_MULT,      "Store-CPU-Counter-Multiple Facility" )
+#endif
+
+#if defined(  FEATURE_144_TEST_PEND_EXTERNAL_FACILITY )
+FT( NONE, NONE, NONE, 144_TEST_PEND_EXTERNAL,       "Test-Pending-External-Interruption Facility" )
+#endif
+
+#if defined(  FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+FT( NONE, NONE, NONE, 145_INS_REF_BITS_MULT,        "Insert-Reference-Bits-Multiple Facility" )
+#endif
+
+#if defined(  FEATURE_146_MSA_EXTENSION_FACILITY_8 )
+FT( NONE, NONE, NONE, 146_MSA_EXTENSION_8,          "Message-Security-Assist Extension 8" )
+#endif
+
+#if defined(  FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
+FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE,       "ESA/390-Compatability-Mode Facility" )
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                      Hercules Facility bits                       */
+/*-------------------------------------------------------------------*/
+/* The below facility bits are HERCULES SPECIFIC and not part of the */
+/* architecture.  They are placed here for the convenience of being  */
+/* able to use the Virtual Architecture Level facility (i.e. the     */
+/* FACILITY_CHECK and FACILITY_ENABLED macros).                      */
+/*                                                                   */
+/* Note that Hercules's facility bits start at the first bit of the  */
+/* first byte of the first double-word (DW) immediately following    */
+/* the IBM defined bits, and are inaccessible to the guest. Both of  */
+/* the STFLE and SIE instruction functions only reference/use the    */
+/* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
+/* to Hercules's facility bits. Only the archlvl command functions   */
+/* can access the Hercules facility bits and only Hercules itself    */
+/* uses them internally.                                             */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Sup (Supported) means the facility is supported by Hercules for   */
+/* the given architectures.  Def (Default) indicates the facility    */
+/* defaults to enabled for the specified architectures.  The Req     */
+/* (Required) field indicates the facility is a REQUIRED facility    */
+/* for the architecture and enabling/disabling it isn't allowed.     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*  Sup   Def   Req   Short Name...             Description...       */
+/*-------------------------------------------------------------------*/
+
+FT( MALL, MALL, Z900, HERC_MOVE_INVERSE,        "Hercules MVCIN Move Inverse Instruction Support" )
+
+#if defined(       FEATURE_MSA_EXTENSION_FACILITY_1 )
+FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1,     "Hercules Message-Security-Assist Extension 1 Support" )
+#endif
+
+#if defined(      FEATURE_MSA_EXTENSION_FACILITY_2 )
+FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_2,     "Hercules Message-Security-Assist Extension 2 Support" )
+#endif
+
+#if defined(  FEATURE_HERCULES_DIAGCALLS )
+FT( MALL, NONE, NONE, HERC_PROBSTATE_DIAGF08,   "Hercules Problem-State Diagnose X'F08' Support" )
+FT( MALL, NONE, NONE, HERC_SIGP_SETARCH_S370,   "Hercules SIGP Set Architecture S/370 Support" )
+#if defined(       FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
+FT( MALL, NONE, NONE, HERC_HOST_RESOURCE_ACCESS,"Hercules Host Resource Access Support" )
+#endif
+#endif
+
+#if defined(       FEATURE_QEBSM )
+FT( Z390, Z390, NONE, HERC_QEBSM,               "Hercules QDIO Enhanced Buffer-State Management Support" )
+#endif
+
+#if defined(       FEATURE_QDIO_THININT )
+FT( Z390, Z390, NONE, HERC_QDIO_THININT,        "Hercules QDIO Thin-Interrupts Support" )
+#endif
+
+#if defined(       FEATURE_QDIO_TDD )
+FT( Z390, NONE, NONE, HERC_QDIO_TDD,            "Hercules QDIO Time-Delayed-Dispatching Support" )
+#endif
+
+#if defined(       FEATURE_SVS )
+FT( Z390, Z390, NONE, HERC_SVS,                 "Hercules SVS Set Vector Summary Instruction Support" )
+#endif
+
+#if defined(          FEATURE_HYPERVISOR )
+FT( MALL, MALL, NONE, HERC_LOGICAL_PARTITION,   "Hercules Logical Partition (LPAR) Support" )
+#endif
+
+#if defined(         FEATURE_EMULATE_VM )
+FT( MALL, NONE, NONE, HERC_VIRTUAL_MACHINE,     "Hercules Emulate Virtual Machine Support" )
+#endif
+
+FT( Z390, NONE, NONE, HERC_QDIO_ASSIST,         "Hercules QDIO-Assist Support" )
+
+#if defined(       FEATURE_INTERVAL_TIMER )
+FT( MALL, MALL, Z390, HERC_INTERVAL_TIMER,      "Hercules Interval Timer Support" )
+#endif
+
+FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP,   "Hercules Detect-Program-Interrupt-Loop Support" )
+
+};
+
+/*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
@@ -45,8 +613,15 @@
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*                  Architecture bit-masks                           */
+/*                ACTUAL Architecture bit-masks                      */
 /*-------------------------------------------------------------------*/
+
+#undef  NONE
+#undef  S370
+#undef  E390
+#undef  Z900
+#undef  Z390
+#undef  MALL
 
 #define NONE     0x00               /* NO architectures or disabled  */
 #define S370     0x80               /* S/370 architecture            */
@@ -57,8 +632,9 @@
 #define MALL     (S370|Z390)        /* All architectures             */
 
 /*-------------------------------------------------------------------*/
-/*                  Architecture Table structure                     */
+/*                  Architecture Level Table                         */
 /*-------------------------------------------------------------------*/
+
 struct ARCHTAB
 {
     const char*  name;              /* Architecture name             */
@@ -74,22 +650,17 @@ typedef struct ARCHTAB  ARCHTAB;
     (_amask)                                                        \
 },
 
-/*-------------------------------------------------------------------*/
-/*                Architecture Level Table (archtab)                 */
-/*-------------------------------------------------------------------*/
 static ARCHTAB archtab[] =
 {
-    //---------------------------------------------------------
-    //
-    //                  PROGRAMMING NOTE
-    //
-    //  The "_ARCH_nnn_NAME" entries MUST come first. The
-    //  'get_archtab_by_arch' function expects it.
-    //
-    //  The FIRST entry is our DEFAULT initial startup archi-
-    //  tecture set by the 'init_default_archmode' function.
-    //
-    //---------------------------------------------------------
+//---------------------------------------------------------
+//
+//  The "_ARCH_nnn_NAME" entries MUST come first. The
+//  'get_archtab_by_arch' function expects it.
+//
+//  The FIRST entry is our DEFAULT initial startup archi-
+//  tecture set by the 'init_default_archmode' function.
+//
+//---------------------------------------------------------
 
 #if defined( _900 )
     AT( _ARCH_900_NAME,  ARCH_900_IDX,  Z900 )  //  "z/Arch"  feat900.h
@@ -127,8 +698,120 @@ static ARCHTAB archtab[] =
     AT( "ESAME",         ARCH_900_IDX,  Z900 )
     AT( "ESA/ME",        ARCH_900_IDX,  Z900 )
 #endif
+};
 
-    { NULL, 0, 0 }          // (end of table)
+/*-------------------------------------------------------------------*/
+/* The ACTUAL facilities table, initialized by init_facilities_lists */
+/*-------------------------------------------------------------------*/
+/*  The individual ARCH_DEP( facs_tab ) tables are merged into this  */
+/*  table to yield the actual facilities table the system will use.  */
+/*-------------------------------------------------------------------*/
+
+static FACTAB factab[] =
+{
+FT( NONE, NONE, NONE, 000_N3_ESA390,                "N3 Instructions are installed" )
+FT( NONE, NONE, NONE, 001_ZARCH_INSTALLED,          "z/Architecture architectural mode is installed" )
+FT( NONE, NONE, NONE, 002_ZARCH_ACTIVE,             "z/Architecture architectural mode is active" )
+FT( NONE, NONE, NONE, 003_DAT_ENHANCE_1,            "DAT-Enhancement Facility 1" )
+FT( NONE, NONE, NONE, 004_IDTE_SC_SEGTAB,           "IDTE selective clearing when segment-table invalidated" )
+FT( NONE, NONE, NONE, 005_IDTE_SC_REGTAB,           "IDTE selective clearing when region-table invalidated" )
+FT( NONE, NONE, NONE, 006_ASN_LX_REUSE,             "ASN-and-LX-Reuse Facility" )
+FT( NONE, NONE, NONE, 007_STFL_EXTENDED,            "Store-Facility-List-Extended Facility" )
+FT( NONE, NONE, NONE, 008_EDAT_1,                   "Enhanced-DAT Facility 1" )
+FT( NONE, NONE, NONE, 009_SENSE_RUN_STATUS,         "Sense-Running-Status Facility" )
+FT( NONE, NONE, NONE, 010_CONDITIONAL_SSKE,         "Conditional-SSKE Facility" )
+FT( NONE, NONE, NONE, 011_CONFIG_TOPOLOGY,          "Configuration-Topology Facility" )
+FT( NONE, NONE, NONE, 013_IPTE_RANGE,               "IPTE-Range Facility" )
+FT( NONE, NONE, NONE, 014_NONQ_KEY_SET,             "Nonquiescing Key-Setting Facility" )
+FT( NONE, NONE, NONE, 016_EXT_TRANSL_2,             "Extended-Translation Facility 2" )
+FT( NONE, NONE, NONE, 017_MSA,                      "Message-Security Assist" )
+FT( NONE, NONE, NONE, 018_LONG_DISPL_INST,          "Long-Displacement Facility" )
+FT( NONE, NONE, NONE, 019_LONG_DISPL_HPERF,         "Long-Displacement Facility Has High Performance" )
+FT( NONE, NONE, NONE, 020_HFP_MULT_ADD_SUB,         "HFP-Multiply-and-Add/Subtract Facility" )
+FT( NONE, NONE, NONE, 021_EXTENDED_IMMED,           "Extended-Immediate Facility" )
+FT( NONE, NONE, NONE, 022_EXT_TRANSL_3,             "Extended-Translation Facility 3" )
+FT( NONE, NONE, NONE, 023_HFP_UNNORM_EXT,           "HFP-Unnormalized-Extensions Facility" )
+FT( NONE, NONE, NONE, 024_ETF2_ENHANCEMENT,         "ETF2-Enhancement Facility" )
+FT( NONE, NONE, NONE, 025_STORE_CLOCK_FAST,         "Store-Clock-Fast Facility" )
+FT( NONE, NONE, NONE, 026_PARSING_ENHANCE,          "Parsing-Enhancement Facility" )
+FT( NONE, NONE, NONE, 027_MVCOS,                    "Move-with-Optional-Specifications Facility" )
+FT( NONE, NONE, NONE, 028_TOD_CLOCK_STEER,          "TOD-Clock-Steering Facility" )
+FT( NONE, NONE, NONE, 030_ETF3_ENHANCEMENT,         "ETF3-Enhancement Facility" )
+FT( NONE, NONE, NONE, 031_EXTRACT_CPU_TIME,         "Extract-CPU-Time Facility" )
+FT( NONE, NONE, NONE, 032_CSSF,                     "Compare-and-Swap-and-Store Facility" )
+FT( NONE, NONE, NONE, 033_CSSF2,                    "Compare-and-Swap-and-Store Facility 2" )
+FT( NONE, NONE, NONE, 034_GEN_INST_EXTN,            "General-Instructions-Extension Facility" )
+FT( NONE, NONE, NONE, 035_EXECUTE_EXTN,             "Execute-Extensions Facility" )
+FT( NONE, NONE, NONE, 036_ENH_MONITOR,              "Enhanced-Monitor Facility" )
+FT( NONE, NONE, NONE, 037_FP_EXTENSION,             "Floating-Point-Extension Facility" )
+FT( NONE, NONE, NONE, 038_OP_CMPSC,                 "Order-Preserving-Compression Facility" )
+FT( NONE, NONE, NONE, 040_LOAD_PROG_PARAM,          "Load-Program-Parameter Facility" )
+FT( NONE, NONE, NONE, 041_FPS_ENHANCEMENT,          "Floating-Point-Support-Enhancement Facility" )
+FT( NONE, NONE, NONE, 041_DFP_ROUNDING,             "Decimal-Floating-Point-Rounding Facility" )
+FT( NONE, NONE, NONE, 041_FPR_GR_TRANSFER,          "FPR-GR-Transfer Facility" )
+FT( NONE, NONE, NONE, 041_FPS_SIGN_HANDLING,        "Floating-Point-Support-Sign-Handling Facility" )
+FT( NONE, NONE, NONE, 041_IEEE_EXCEPT_SIM,          "IEEE-Exception-Simulation Facility" )
+FT( NONE, NONE, NONE, 042_DFP,                      "Decimal-Floating-Point Facility" )
+FT( NONE, NONE, NONE, 043_DFP_HPERF,                "Decimal-Floating-Point Facility Has High Performance" )
+FT( NONE, NONE, NONE, 044_PFPO,                     "PFPO (Perform Floating-Point Operation) Facility" )
+FT( NONE, NONE, NONE, 045_DISTINCT_OPERANDS,        "Distinct-Operands Facility" )
+FT( NONE, NONE, NONE, 045_FAST_BCR_SERIAL,          "Fast-BCR-Serialization Facility" )
+FT( NONE, NONE, NONE, 045_HIGH_WORD,                "High-Word Facility" )
+FT( NONE, NONE, NONE, 045_INTERLOCKED_ACCESS_1,     "Interlocked-Access Facility 1" )
+FT( NONE, NONE, NONE, 045_LOAD_STORE_ON_COND_1,     "Load/Store-on-Condition Facility 1" )
+FT( NONE, NONE, NONE, 045_POPULATION_COUNT,         "Population-Count Facility" )
+FT( NONE, NONE, NONE, 047_CMPSC_ENH,                "CMPSC-Enhancement Facility" )
+FT( NONE, NONE, NONE, 048_DFP_ZONE_CONV,            "Decimal-Floating-Point-Zoned-Conversion Facility" )
+FT( NONE, NONE, NONE, 049_EXECUTION_HINT,           "Execution-Hint Facility" )
+FT( NONE, NONE, NONE, 049_LOAD_AND_TRAP,            "Load-and-Trap Facility" )
+FT( NONE, NONE, NONE, 049_PROCESSOR_ASSIST,         "Processor-Assist Facility" )
+FT( NONE, NONE, NONE, 049_MISC_INSTR_EXT_1,         "Miscellaneous-Instruction-Extensions Facility 1" )
+FT( NONE, NONE, NONE, 050_CONSTR_TRANSACT,          "Constrained-Transactional-Execution Facility" )
+FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING,       "Local-TLB-Clearing Facility" )
+FT( NONE, NONE, NONE, 052_INTERLOCKED_ACCESS_2,     "Interlocked-Access Facility 2" )
+FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2,     "Load/Store-on-Condition Facility 2" )
+FT( NONE, NONE, NONE, 053_LOAD_ZERO_RIGHTMOST,      "Load-and-Zero-Rightmost-Byte Facility" )
+FT( NONE, NONE, NONE, 054_EE_CMPSC,                 "Entropy-Encoding-Compression Facility" )
+FT( NONE, NONE, NONE, 057_MSA_EXTENSION_5,          "Message-Security-Assist Extension 5" )
+FT( NONE, NONE, NONE, 058_MISC_INSTR_EXT_2,         "Miscellaneous-Instruction-Extensions Facility 2" )
+FT( NONE, NONE, NONE, 066_RES_REF_BITS_MULT,        "Reset-Reference-Bits-Multiple Facility" )
+FT( NONE, NONE, NONE, 067_CPU_MEAS_COUNTER,         "CPU-Measurement Counter Facility" )
+FT( NONE, NONE, NONE, 068_CPU_MEAS_SAMPLNG,         "CPU-Measurement Sampling Facility" )
+FT( NONE, NONE, NONE, 073_TRANSACT_EXEC,            "Transactional-Execution Facility" )
+FT( NONE, NONE, NONE, 074_STORE_HYPER_INFO,         "Store-Hypervisor-Information Facility" )
+FT( NONE, NONE, NONE, 075_ACC_EX_FS_INDIC,          "Access-Exception-Fetch/Store-Indication Facility" )
+FT( NONE, NONE, NONE, 076_MSA_EXTENSION_3,          "Message-Security-Assist Extension 3" )
+FT( NONE, NONE, NONE, 077_MSA_EXTENSION_4,          "Message-Security-Assist Extension 4" )
+FT( NONE, NONE, NONE, 078_EDAT_2,                   "Enhanced-DAT Facility 2" )
+FT( NONE, NONE, NONE, 080_DFP_PACK_CONV,            "Decimal-Floating-Point-Packed-Conversion Facility" )
+FT( NONE, NONE, NONE, 129_ZVECTOR,                  "Vector Facility for z/Architecture" )
+FT( NONE, NONE, NONE, 130_INSTR_EXEC_PROT,          "Instruction-Execution-Protection Facility" )
+FT( NONE, NONE, NONE, 131_SIDE_EFFECT_ACCESS,       "Side-Effect-Access Facility" )
+FT( NONE, NONE, NONE, 133_GUARDED_STORAGE,          "Guarded-Storage Facility" )
+FT( NONE, NONE, NONE, 134_ZVECTOR_PACK_DEC,         "Vector Packed-Decimal Facility" )
+FT( NONE, NONE, NONE, 135_ZVECTOR_ENH_1,            "Vector-Enhancements Facility 1" )
+FT( NONE, NONE, NONE, 138_CONFIG_ZARCH_MODE,        "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
+FT( NONE, NONE, NONE, 139_MULTIPLE_EPOCH,           "Multiple-Epoch Facility" )
+FT( NONE, NONE, NONE, 142_ST_CPU_COUNTER_MULT,      "Store-CPU-Counter-Multiple Facility" )
+FT( NONE, NONE, NONE, 144_TEST_PEND_EXTERNAL,       "Test-Pending-External-Interruption Facility" )
+FT( NONE, NONE, NONE, 145_INS_REF_BITS_MULT,        "Insert-Reference-Bits-Multiple Facility" )
+FT( NONE, NONE, NONE, 146_MSA_EXTENSION_8,          "Message-Security-Assist Extension 8" )
+FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE,       "ESA/390-Compatability-Mode Facility" )
+FT( NONE, NONE, NONE, HERC_MOVE_INVERSE,            "Hercules MVCIN Move Inverse Instruction Support" )
+FT( NONE, NONE, NONE, HERC_MSA_EXTENSION_1,         "Hercules Message-Security-Assist Extension 1 Support" )
+FT( NONE, NONE, NONE, HERC_MSA_EXTENSION_2,         "Hercules Message-Security-Assist Extension 2 Support" )
+FT( NONE, NONE, NONE, HERC_PROBSTATE_DIAGF08,       "Hercules Problem-State Diagnose X'F08' Support" )
+FT( NONE, NONE, NONE, HERC_SIGP_SETARCH_S370,       "Hercules SIGP Set Architecture S/370 Support" )
+FT( NONE, NONE, NONE, HERC_HOST_RESOURCE_ACCESS,    "Hercules Host Resource Access Support" )
+FT( NONE, NONE, NONE, HERC_QEBSM,                   "Hercules QDIO Enhanced Buffer-State Management Support" )
+FT( NONE, NONE, NONE, HERC_QDIO_THININT,            "Hercules QDIO Thin-Interrupts Support" )
+FT( NONE, NONE, NONE, HERC_QDIO_TDD,                "Hercules QDIO Time-Delayed-Dispatching Support" )
+FT( NONE, NONE, NONE, HERC_SVS,                     "Hercules SVS Set Vector Summary Instruction Support" )
+FT( NONE, NONE, NONE, HERC_LOGICAL_PARTITION,       "Hercules Logical Partition (LPAR) Support" )
+FT( NONE, NONE, NONE, HERC_VIRTUAL_MACHINE,         "Hercules Emulate Virtual Machine Support" )
+FT( NONE, NONE, NONE, HERC_QDIO_ASSIST,             "Hercules QDIO-Assist Support" )
+FT( NONE, NONE, NONE, HERC_INTERVAL_TIMER,          "Hercules Interval Timer Support" )
+FT( NONE, NONE, NONE, HERC_DETECT_PGMINTLOOP,       "Hercules Detect-Program-Interrupt-Loop Support" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -146,18 +829,18 @@ void init_default_archmode()
 /*-------------------------------------------------------------------*/
 static const ARCHTAB* get_archtab_by_arch( int archnum )
 {
-    // An "Architecture mode" (archmode or arch_mode) is the same
-    // thing as an "Architecture number" (archnum or arch_num),
+    // An "Architecture mode" (archmode, arch_mode) is the same
+    // thing as an "Architecture number" (archnum, arch_num),
     // which is simply an index value determined at build time
-    // depending on which architectures Hercules was built with
-    // support for (the "ARCH_nnn_IDX" value #defined by featchk.h)
-    // and is used to index into architecture dependent tables such
-    // as sysblk.facility_list and the opcode tables in opcode.c
+    // depending on which architectures that Hercules was built
+    // with support for (ARCH_nnn_IDX #defined by featchk.h) and
+    // is used to index into architecture dependent tables such as
+    // the sysblk.facility_list and the opcode tables in opcode.c
 
-    const ARCHTAB* at;
-    for (at = archtab; at->name; at++)
-        if (at->num == archnum)
-            return at;
+    size_t i;
+    for (i=0; i < _countof( archtab ); i++)
+        if (archtab[i].num == archnum)
+            return &archtab[i];
     return NULL;
 }
 
@@ -166,10 +849,10 @@ static const ARCHTAB* get_archtab_by_arch( int archnum )
 /*-------------------------------------------------------------------*/
 static const ARCHTAB* get_archtab_by_name( const char* name )
 {
-    const ARCHTAB* at;
-    for (at = archtab; at->name; at++)
-        if (strcasecmp( at->name, name ) == 0)
-            return at;
+    size_t i;
+    for (i=0; i < _countof( archtab ); i++)
+        if (strcasecmp( archtab[i].name, name ) == 0)
+            return &archtab[i];
     return NULL;
 }
 
@@ -201,516 +884,73 @@ const char* get_arch_name( REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/*                  Facility Table structure                         */
+/*   Table of Facility Table POINTERS for each gen'ed architecture   */
 /*-------------------------------------------------------------------*/
-struct FACTAB
+
+static const FACTAB* arch_factab[ NUM_GEN_ARCHS ] =
 {
-    const char*  name;              /* Short facility name           */
-    const char*  long_name;         /* Long name = Description       */
-    const int    bitno;             /* Bit number                    */
-    const int    supmask;           /* Which archs support it        */
-    const int    defmask;           /* Default for which archs       */
-    const int    reqmask;           /* Which archs require it        */
+#if defined( _ARCH_NUM_0 )
+  #if        _ARCH_NUM_0 == 370
+                           s370_facs_tab,
+  #elif      _ARCH_NUM_0 == 390
+                           s390_facs_tab,
+  #else //   _ARCH_NUM_0 == 900
+                           z900_facs_tab,
+  #endif
+#endif
+#if defined( _ARCH_NUM_1 )
+  #if        _ARCH_NUM_1 == 370
+                           s370_facs_tab,
+  #elif      _ARCH_NUM_1 == 390
+                           s390_facs_tab,
+  #else //   _ARCH_NUM_1 == 900
+                           z900_facs_tab,
+  #endif
+#endif
+#if defined( _ARCH_NUM_2 )
+  #if        _ARCH_NUM_2 == 370
+                           s370_facs_tab,
+  #elif      _ARCH_NUM_2 == 390
+                           s390_facs_tab,
+  #else //   _ARCH_NUM_2 == 900
+                           z900_facs_tab,
+  #endif
+#endif
 };
-typedef struct FACTAB   FACTAB;
-
-#define FT( _sup, _def, _req, _name, _desc )                        \
-{                                                                   \
-    QSTR( _name ),                                                  \
-    _desc,                                                          \
-    STFL_ ## _name,  /* esa390.h 'STFL_XXX' bit number #define */   \
-    _sup,                                                           \
-    _def,                                                           \
-    _req                                                            \
-},
 
 /*-------------------------------------------------------------------*/
-/*                      Facility Table (factab)                      */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/* The facility names used in the below FT macro invocations are,    */
-/* when prefixed with 'STFL_', the facility bit number as #defined   */
-/* in header esa390.h (e.g. FT( 044_PFPO, ..) ==> STFL_044_PFPO 44)  */
-/*                                                                   */
-/* Also note that the entries in the below table do NOT have to be   */
-/* in any facility bit sequence as it is always seached serially.    */
-/* However, it is greatly preferred that it be kept in sequence.     */
-/*                                                                   */
-/* Sup (Supported) means the facility is supported by Hercules for   */
-/* the given architectures.  Def (Default) indicates the facility    */
-/* defaults to enabled for the specified architectures.  The Req     */
-/* (Required) field indicates the facility is a REQUIRED facility    */
-/* for the architecture and enabling/disabling it isn't allowed.     */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/*                      PROGRAMMING NOTE!                            */
-/*                                                                   */
-/* ALL known facilities should ALWAYS be defined in the below table  */
-/* REGARDLESS of whether no not it has been implemented yet within   */
-/* Hercules.  If the facility is not implemented in Hercules yet,    */
-/* (i.e. no code has been written to support it yet), then simply    */
-/* specify "NONE" in all three Sup/Def/Req columns.  Once support    */
-/* for the facility has been coded, then just update the columns     */
-/* as appropriate so the guest can start using them.                 */
-/*                                                                   */
+/*   Table of Facility Table SIZES for each gen'ed architecture      */
 /*-------------------------------------------------------------------*/
 
-static FACTAB factab[] =
+static const size_t num_arch_ft_entries[ NUM_GEN_ARCHS ] =
 {
-/*-------------------------------------------------------------------*/
-/*  Sup   Def   Req   Short Name...                 Description...   */
-/*-------------------------------------------------------------------*/
-
-#if defined( _FEATURE_000_N3_INSTR_FACILITY )
-FT( Z390, Z390, NONE, 000_N3_ESA390,                "N3 Instructions are installed" )
+#if defined( _ARCH_NUM_0 )
+  #if        _ARCH_NUM_0 == 370
+                 _countof( s370_facs_tab ),
+  #elif      _ARCH_NUM_0 == 390
+                 _countof( s390_facs_tab ),
+  #else //   _ARCH_NUM_0 == 900
+                 _countof( z900_facs_tab ),
+  #endif
+#endif
+#if defined( _ARCH_NUM_1 )
+  #if        _ARCH_NUM_1 == 370
+                 _countof( s370_facs_tab ),
+  #elif      _ARCH_NUM_1 == 390
+                 _countof( s390_facs_tab ),
+  #else //   _ARCH_NUM_1 == 900
+                 _countof( z900_facs_tab ),
+  #endif
+#endif
+#if defined( _ARCH_NUM_2 )
+  #if        _ARCH_NUM_2 == 370
+                 _countof( s370_facs_tab ),
+  #elif      _ARCH_NUM_2 == 390
+                 _countof( s390_facs_tab ),
+  #else //   _ARCH_NUM_2 == 900
+                 _countof( z900_facs_tab ),
+  #endif
 #endif
-
-#if defined( _FEATURE_001_ZARCH_INSTALLED_FACILITY )
-FT( Z390, Z390, NONE, 001_ZARCH_INSTALLED,          "z/Architecture architectural mode is installed" )
-FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE,             "z/Architecture architectural mode is active" )
-#endif
-
-#if defined( _FEATURE_003_DAT_ENHANCE_FACILITY_1 )
-FT( Z390, Z390, NONE, 003_DAT_ENHANCE_1,            "DAT-Enhancement Facility 1" )
-#endif
-
-#if defined( _FEATURE_004_IDTE_SC_SEGTAB_FACILITY )
-FT( NONE, NONE, NONE, 004_IDTE_SC_SEGTAB,           "IDTE selective clearing when segment-table invalidated" )
-#endif
-
-#if defined( _FEATURE_005_IDTE_SC_REGTAB_FACILITY )
-FT( NONE, NONE, NONE, 005_IDTE_SC_REGTAB,           "IDTE selective clearing when region-table invalidated" )
-#endif
-
-#if defined( _FEATURE_006_ASN_LX_REUSE_FACILITY )
-FT( Z900, Z900, NONE, 006_ASN_LX_REUSE,             "ASN-and-LX-Reuse Facility" )
-#endif
-
-#if defined( _FEATURE_007_STFL_EXTENDED_FACILITY )
-FT( Z900, Z900, NONE, 007_STFL_EXTENDED,            "Store-Facility-List-Extended Facility" )
-#endif
-
-#if defined( _FEATURE_008_ENHANCED_DAT_FACILITY_1 )
-FT( Z900, Z900, NONE, 008_EDAT_1,                   "Enhanced-DAT Facility 1" )
-#endif
-
-#if defined( _FEATURE_009_SENSE_RUN_STATUS_FACILITY )
-FT( Z900, Z900, NONE, 009_SENSE_RUN_STATUS,         "Sense-Running-Status Facility" )
-#endif
-
-#if defined( _FEATURE_010_CONDITIONAL_SSKE_FACILITY )
-FT( Z900, Z900, NONE, 010_CONDITIONAL_SSKE,         "Conditional-SSKE Facility" )
-#endif
-
-#if defined( _FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
-FT( Z900, Z900, NONE, 011_CONFIG_TOPOLOGY,          "Configuration-Topology Facility" )
-#endif
-
-#if defined( _FEATURE_013_IPTE_RANGE_FACILITY )
-FT( Z900, Z900, NONE, 013_IPTE_RANGE,               "IPTE-Range Facility" )
-#endif
-
-#if defined( _FEATURE_014_NONQ_KEY_SET_FACILITY )
-FT( Z900, Z900, NONE, 014_NONQ_KEY_SET,             "Nonquiescing Key-Setting Facility" )
-#endif
-
-#if defined( _FEATURE_016_EXT_TRANSL_FACILITY_2 )
-FT( Z390, Z390, NONE, 016_EXT_TRANSL_2,             "Extended-Translation Facility 2" )
-#endif
-
-#if defined( _FEATURE_017_MSA_FACILITY )
-FT( Z390, Z390, NONE, 017_MSA,                      "Message-Security Assist" )
-#endif
-
-#if defined( _FEATURE_018_LONG_DISPL_INST_FACILITY )
-FT( Z390, Z390, NONE, 018_LONG_DISPL_INST,          "Long-Displacement Facility" )
-#endif
-
-#if defined( _FEATURE_019_LONG_DISPL_HPERF_FACILITY )
-FT( Z390, Z390, NONE, 019_LONG_DISPL_HPERF,         "Long-Displacement Facility Has High Performance" )
-#endif
-
-#if defined( _FEATURE_020_HFP_MULT_ADD_SUB_FACILITY )
-FT( Z390, Z390, NONE, 020_HFP_MULT_ADD_SUB,         "HFP-Multiply-and-Add/Subtract Facility" )
-#endif
-
-#if defined( _FEATURE_021_EXTENDED_IMMED_FACILITY )
-FT( Z900, Z900, NONE, 021_EXTENDED_IMMED,           "Extended-Immediate Facility" )
-#endif
-
-#if defined( _FEATURE_022_EXT_TRANSL_FACILITY_3 )
-FT( Z900, Z900, NONE, 022_EXT_TRANSL_3,             "Extended-Translation Facility 3" )
-#endif
-
-#if defined( _FEATURE_023_HFP_UNNORM_EXT_FACILITY )
-FT( Z900, Z900, NONE, 023_HFP_UNNORM_EXT,           "HFP-Unnormalized-Extensions Facility" )
-#endif
-
-#if defined( _FEATURE_024_ETF2_ENHANCEMENT_FACILITY )
-FT( Z900, Z900, NONE, 024_ETF2_ENHANCEMENT,         "ETF2-Enhancement Facility" )
-#endif
-
-#if defined( _FEATURE_025_STORE_CLOCK_FAST_FACILITY )
-FT( Z900, Z900, NONE, 025_STORE_CLOCK_FAST,         "Store-Clock-Fast Facility" )
-#endif
-
-#if defined( _FEATURE_026_PARSING_ENHANCE_FACILITY )
-FT( Z900, Z900, NONE, 026_PARSING_ENHANCE,          "Parsing-Enhancement Facility" )
-#endif
-
-#if defined( _FEATURE_027_MVCOS_FACILITY )
-FT( Z900, Z900, NONE, 027_MVCOS,                    "Move-with-Optional-Specifications Facility" )
-#endif
-
-#if defined( _FEATURE_028_TOD_CLOCK_STEER_FACILITY )
-FT( Z900, Z900, NONE, 028_TOD_CLOCK_STEER,          "TOD-Clock-Steering Facility" )
-#endif
-
-#if defined( _FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
-FT( Z900, Z900, NONE, 030_ETF3_ENHANCEMENT,         "ETF3-Enhancement Facility" )
-#endif
-
-#if defined( _FEATURE_031_EXTRACT_CPU_TIME_FACILITY )
-FT( Z900, Z900, NONE, 031_EXTRACT_CPU_TIME,         "Extract-CPU-Time Facility" )
-#endif
-
-#if defined( _FEATURE_032_CSS_FACILITY )
-FT( Z900, Z900, NONE, 032_CSSF,                     "Compare-and-Swap-and-Store Facility" )
-#endif
-
-#if defined( _FEATURE_033_CSS_FACILITY_2 )
-FT( Z900, Z900, NONE, 033_CSSF2,                    "Compare-and-Swap-and-Store Facility 2" )
-#endif
-
-#if defined( _FEATURE_034_GEN_INST_EXTN_FACILITY )
-FT( Z900, Z900, NONE, 034_GEN_INST_EXTN,            "General-Instructions-Extension Facility" )
-#endif
-
-#if defined( _FEATURE_035_EXECUTE_EXTN_FACILITY )
-FT( Z900, Z900, NONE, 035_EXECUTE_EXTN,             "Execute-Extensions Facility" )
-#endif
-
-#if defined( _FEATURE_036_ENH_MONITOR_FACILITY )
-FT( Z900, Z900, NONE, 036_ENH_MONITOR,              "Enhanced-Monitor Facility" )
-#endif
-
-#if defined( _FEATURE_037_FP_EXTENSION_FACILITY )
-FT( Z900, Z900, NONE, 037_FP_EXTENSION,             "Floating-Point-Extension Facility" )
-#endif
-
-#if defined( _FEATURE_038_OP_CMPSC_FACILITY )
-FT( NONE, NONE, NONE, 038_OP_CMPSC,                 "Order-Preserving-Compression Facility" )
-#endif
-
-#if defined( _FEATURE_040_LOAD_PROG_PARAM_FACILITY )
-FT( Z900, Z900, NONE, 040_LOAD_PROG_PARAM,          "Load-Program-Parameter Facility" )
-#endif
-
-//------------------------------------------------------------------------------
-
-#if defined( _FEATURE_041_FPS_ENHANCEMENT_FACILITY )
-
-FT( Z900, Z900, NONE, 041_FPS_ENHANCEMENT,          "Floating-Point-Support-Enhancement Facility" )
-
-#if defined( _FEATURE_041_DFP_ROUNDING_FACILITY )
-FT( Z900, Z900, NONE, 041_DFP_ROUNDING,             "Decimal-Floating-Point-Rounding Facility" )
-#endif
-
-#if defined( _FEATURE_041_FPR_GR_TRANSFER_FACILITY )
-FT( Z900, Z900, NONE, 041_FPR_GR_TRANSFER,          "FPR-GR-Transfer Facility" )
-#endif
-
-#if defined( _FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
-FT( Z900, Z900, NONE, 041_FPS_SIGN_HANDLING,        "Floating-Point-Support-Sign-Handling Facility" )
-#endif
-
-#if defined( _FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
-FT( Z900, Z900, NONE, 041_IEEE_EXCEPT_SIM,          "IEEE-Exception-Simulation Facility" )
-#endif
-
-#endif /* defined( _FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
-
-//------------------------------------------------------------------------------
-
-#if defined( _FEATURE_042_DFP_FACILITY )
-FT( Z900, Z900, NONE, 042_DFP,                      "Decimal-Floating-Point Facility" )
-#endif
-
-#if defined( _FEATURE_043_DFP_HPERF_FACILITY )
-FT( Z900, Z900, NONE, 043_DFP_HPERF,                "Decimal-Floating-Point Facility Has High Performance" )
-#endif
-
-//------------------------------------------------------------------------------
-// Allow the PFPO facility to be manually enabled Until proper support for it
-// is coded since some modern operating systems require it (z/OS and z/VM).
-
-//#if defined( _FEATURE_044_PFPO_FACILITY )
-FT( Z900, NONE, NONE, 044_PFPO,                     "PFPO (Perform Floating-Point Operation) Facility" )
-//#endif
-
-//------------------------------------------------------------------------------
-
-#if defined( _FEATURE_045_DISTINCT_OPERANDS_FACILITY )
-FT( Z900, Z900, NONE, 045_DISTINCT_OPERANDS,        "Distinct-Operands Facility" )
-#endif
-
-#if defined( _FEATURE_045_FAST_BCR_SERIAL_FACILITY )
-FT( Z900, Z900, NONE, 045_FAST_BCR_SERIAL,          "Fast-BCR-Serialization Facility" )
-#endif
-
-#if defined( _FEATURE_045_HIGH_WORD_FACILITY )
-FT( Z900, Z900, NONE, 045_HIGH_WORD,                "High-Word Facility" )
-#endif
-
-#if defined( _FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
-FT( Z900, Z900, NONE, 045_INTERLOCKED_ACCESS_1,     "Interlocked-Access Facility 1" )
-#endif
-
-#if defined( _FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )
-FT( Z900, Z900, NONE, 045_LOAD_STORE_ON_COND_1,     "Load/Store-on-Condition Facility 1" )
-#endif
-
-#if defined( _FEATURE_045_POPULATION_COUNT_FACILITY )
-FT( Z900, Z900, NONE, 045_POPULATION_COUNT,         "Population-Count Facility" )
-#endif
-
-#if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
-FT( Z900, Z900, NONE, 047_CMPSC_ENH,                "CMPSC-Enhancement Facility" )
-#endif
-
-#if defined( _FEATURE_048_DFP_ZONE_CONV_FACILITY )
-FT( Z900, Z900, NONE, 048_DFP_ZONE_CONV,            "Decimal-Floating-Point-Zoned-Conversion Facility" )
-#endif
-
-#if defined( _FEATURE_049_EXECUTION_HINT_FACILITY )
-FT( Z900, Z900, NONE, 049_EXECUTION_HINT,           "Execution-Hint Facility" )
-#endif
-
-#if defined( _FEATURE_049_LOAD_AND_TRAP_FACILITY )
-FT( Z900, Z900, NONE, 049_LOAD_AND_TRAP,            "Load-and-Trap Facility" )
-#endif
-
-#if defined( _FEATURE_049_PROCESSOR_ASSIST_FACILITY )
-FT( Z900, Z900, NONE, 049_PROCESSOR_ASSIST,         "Processor-Assist Facility" )
-#endif
-
-#if defined( _FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
-FT( Z900, Z900, NONE, 049_MISC_INSTR_EXT_1,         "Miscellaneous-Instruction-Extensions Facility 1" )
-#endif
-
-#if defined( _FEATURE_050_CONSTR_TRANSACT_FACILITY )
-FT( NONE, NONE, NONE, 050_CONSTR_TRANSACT,          "Constrained-Transactional-Execution Facility" )
-#endif
-
-#if defined( _FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
-FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING,       "Local-TLB-Clearing Facility" )
-#endif
-
-//------------------------------------------------------------------------------
-
-#if defined( _FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 )
-
-#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
-FT( Z900, Z900, NONE, 052_INTERLOCKED_ACCESS_2,     "Interlocked-Access Facility 2" )
-#endif
-
-#endif /* defined( _FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 ) */
-
-//------------------------------------------------------------------------------
-
-#if defined( _FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
-FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2,     "Load/Store-on-Condition Facility 2" )
-#endif
-
-#if defined( _FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
-FT( NONE, NONE, NONE, 053_LOAD_ZERO_RIGHTMOST,      "Load-and-Zero-Rightmost-Byte Facility" )
-#endif
-
-#if defined( _FEATURE_054_EE_CMPSC_FACILITY )
-FT( NONE, NONE, NONE, 054_EE_CMPSC,                 "Entropy-Encoding-Compression Facility" )
-#endif
-
-#if defined( _FEATURE_057_MSA_EXTENSION_FACILITY_5 )
-FT( NONE, NONE, NONE, 057_MSA_EXTENSION_5,          "Message-Security-Assist Extension 5" )
-#endif
-
-#if defined( _FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
-FT( NONE, NONE, NONE, 058_MISC_INSTR_EXT_2,         "Miscellaneous-Instruction-Extensions Facility 2" )
-#endif
-
-#if defined( _FEATURE_066_RES_REF_BITS_MULT_FACILITY )
-FT( Z900, Z900, NONE, 066_RES_REF_BITS_MULT,        "Reset-Reference-Bits-Multiple Facility" )
-#endif
-
-#if defined( _FEATURE_067_CPU_MEAS_COUNTER_FACILITY )
-FT( Z900, Z900, NONE, 067_CPU_MEAS_COUNTER,         "CPU-Measurement Counter Facility" )
-#endif
-
-#if defined( _FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
-FT( Z900, Z900, NONE, 068_CPU_MEAS_SAMPLNG,         "CPU-Measurement Sampling Facility" )
-#endif
-
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-FT( NONE, NONE, NONE, 073_TRANSACT_EXEC,            "Transactional-Execution Facility" )
-#endif
-
-#if defined( _FEATURE_074_STORE_HYPER_INFO_FACILITY )
-FT( NONE, NONE, NONE, 074_STORE_HYPER_INFO,         "Store-Hypervisor-Information Facility" )
-#endif
-
-#if defined( _FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
-FT( Z900, Z900, NONE, 075_ACC_EX_FS_INDIC,          "Access-Exception-Fetch/Store-Indication Facility" )
-#endif
-
-#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-FT( Z900, Z900, NONE, 076_MSA_EXTENSION_3,          "Message-Security-Assist Extension 3" )
-#endif
-
-#if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-FT( Z900, Z900, NONE, 077_MSA_EXTENSION_4,          "Message-Security-Assist Extension 4" )
-#endif
-
-#if defined( _FEATURE_078_ENHANCED_DAT_FACILITY_2 )
-FT( NONE, NONE, NONE, 078_EDAT_2,                   "Enhanced-DAT Facility 2" )
-#endif
-
-#if defined( _FEATURE_080_DFP_PACK_CONV_FACILITY )
-FT( NONE, NONE, NONE, 080_DFP_PACK_CONV,            "Decimal-Floating-Point-Packed-Conversion Facility" )
-#endif
-
-#if defined( _FEATURE_129_ZVECTOR_FACILITY )
-FT( NONE, NONE, NONE, 129_ZVECTOR,                  "Vector Facility for z/Architecture" )
-#endif
-
-#if defined( _FEATURE_130_INSTR_EXEC_PROT_FACILITY )
-FT( NONE, NONE, NONE, 130_INSTR_EXEC_PROT,          "Instruction-Execution-Protection Facility" )
-#endif
-
-#if defined( _FEATURE_131_SIDE_EFFECT_ACCESS_FACILITY )
-FT( NONE, NONE, NONE, 131_SIDE_EFFECT_ACCESS,       "Side-Effect-Access Facility" )
-#endif
-
-#if defined( _FEATURE_133_GUARDED_STORAGE_FACILITY )
-FT( NONE, NONE, NONE, 133_GUARDED_STORAGE,          "Guarded-Storage Facility" )
-#endif
-
-#if defined( _FEATURE_134_ZVECTOR_PACK_DEC_FACILITY )
-FT( NONE, NONE, NONE, 134_ZVECTOR_PACK_DEC,         "Vector Packed-Decimal Facility" )
-#endif
-
-#if defined( _FEATURE_135_ZVECTOR_ENH_FACILITY_1 )
-FT( NONE, NONE, NONE, 135_ZVECTOR_ENH_1,            "Vector-Enhancements Facility 1" )
-#endif
-
-#if defined( _FEATURE_138_CONFIG_ZARCH_MODE_FACILITY )
-FT( NONE, NONE, NONE, 138_CONFIG_ZARCH_MODE,        "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
-#endif
-
-#if defined( _FEATURE_139_MULTIPLE_EPOCH_FACILITY )
-FT( NONE, NONE, NONE, 139_MULTIPLE_EPOCH,           "Multiple-Epoch Facility" )
-#endif
-
-#if defined( _FEATURE_142_ST_CPU_COUNTER_MULT_FACILITY )
-FT( NONE, NONE, NONE, 142_ST_CPU_COUNTER_MULT,      "Store-CPU-Counter-Multiple Facility" )
-#endif
-
-#if defined( _FEATURE_144_TEST_PEND_EXTERNAL_FACILITY )
-FT( NONE, NONE, NONE, 144_TEST_PEND_EXTERNAL,       "Test-Pending-External-Interruption Facility" )
-#endif
-
-#if defined( _FEATURE_145_INS_REF_BITS_MULT_FACILITY )
-FT( NONE, NONE, NONE, 145_INS_REF_BITS_MULT,        "Insert-Reference-Bits-Multiple Facility" )
-#endif
-
-#if defined( _FEATURE_146_MSA_EXTENSION_FACILITY_8 )
-FT( NONE, NONE, NONE, 146_MSA_EXTENSION_8,          "Message-Security-Assist Extension 8" )
-#endif
-
-#if defined( _FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
-FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE,       "ESA/390-Compatability-Mode Facility" )
-#endif
-
-/*-------------------------------------------------------------------*/
-/*                      Hercules Facility bits                       */
-/*-------------------------------------------------------------------*/
-/* The below facility bits are HERCULES SPECIFIC and not part of the */
-/* architecture.  They are placed here for the convenience of being  */
-/* able to use the Virtual Architecture Level facility (i.e. the     */
-/* FACILITY_CHECK and FACILITY_ENABLED macros).                      */
-/*                                                                   */
-/* Note that Hercules's facility bits start at the first bit of the  */
-/* first byte of the first double-word (DW) immediately following    */
-/* the IBM defined bits, and are inaccessible to the guest. Both of  */
-/* the STFLE and SIE instruction functions only reference/use the    */
-/* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
-/* to Hercules's facility bits. Only the archlvl command functions   */
-/* can access the Hercules facility bits and only Hercules itself    */
-/* uses them internally.                                             */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/* Sup (Supported) means the facility is supported by Hercules for   */
-/* the given architectures.  Def (Default) indicates the facility    */
-/* defaults to enabled for the specified architectures.  The Req     */
-/* (Required) field indicates the facility is a REQUIRED facility    */
-/* for the architecture and enabling/disabling it isn't allowed.     */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-/*  Sup   Def   Req   Short Name...             Description...       */
-/*-------------------------------------------------------------------*/
-
-FT( MALL, MALL, Z900, HERC_MOVE_INVERSE,                    "Hercules MVCIN Move Inverse Instruction Support" )
-
-#if defined(      _FEATURE_MSA_EXTENSION_FACILITY_1 )
-FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1,                 "Hercules Message-Security-Assist Extension 1 Support" )
-#endif
-
-#if defined(      _FEATURE_MSA_EXTENSION_FACILITY_2 )
-FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_2,                 "Hercules Message-Security-Assist Extension 2 Support" )
-#endif
-
-#if defined( _FEATURE_HERCULES_DIAGCALLS )
-FT( MALL, NONE, NONE, HERC_PROBSTATE_DIAGF08,               "Hercules Problem-State Diagnose X'F08' Support" )
-FT( MALL, NONE, NONE, HERC_SIGP_SETARCH_S370,               "Hercules SIGP Set Architecture S/370 Support" )
-#if defined(      _FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
-FT( MALL, NONE, NONE, HERC_HOST_RESOURCE_ACCESS,            "Hercules Host Resource Access Support" )
-#endif
-#endif
-
-#if defined(      _FEATURE_QEBSM )
-FT( Z390, Z390, NONE, HERC_QEBSM,               "Hercules QDIO Enhanced Buffer-State Management Support" )
-#endif
-
-#if defined(      _FEATURE_QDIO_THININT )
-FT( Z390, Z390, NONE, HERC_QDIO_THININT,        "Hercules QDIO Thin-Interrupts Support" )
-#endif
-
-#if defined(      _FEATURE_QDIO_TDD )
-FT( Z390, NONE, NONE, HERC_QDIO_TDD,            "Hercules QDIO Time-Delayed-Dispatching Support" )
-#endif
-
-#if defined(      _FEATURE_SVS )
-FT( Z390, Z390, NONE, HERC_SVS,                 "Hercules SVS Set Vector Summary Instruction Support" )
-#endif
-
-#if defined(         _FEATURE_HYPERVISOR )
-FT( MALL, MALL, NONE, HERC_LOGICAL_PARTITION,   "Hercules Logical Partition (LPAR) Support" )
-#endif
-
-#if defined(         _FEATURE_EMULATE_VM )
-FT( MALL, NONE, NONE, HERC_VIRTUAL_MACHINE,     "Hercules Emulate Virtual Machine Support" )
-#endif
-
-FT( Z390, NONE, NONE, HERC_QDIO_ASSIST,         "Hercules QDIO-Assist Support" )
-
-#if defined(      _FEATURE_INTERVAL_TIMER )
-FT( MALL, MALL, Z390, HERC_INTERVAL_TIMER,      "Hercules Interval Timer Support" )
-#endif
-
-FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP,   "Hercules Detect-Program-Interrupt-Loop Support" )
-
-{NULL, 0, 0, 0, 0}  // (end of table marker)
 };
 
 /*-------------------------------------------------------------------*/
@@ -721,8 +961,27 @@ void init_facilities_lists()
     // Called ONCE by bldcfg.c 'build_config' during system startup.
 
     const ARCHTAB* at;
-    const FACTAB*  ft;
     int arch, fbyte, fbit;
+    size_t i, n;
+
+    /* Merge each individual ARCH_DEP table entry into system factab */
+
+    for (i=0; i < _countof( factab ); i++)
+    {
+        for (arch=0; arch < NUM_GEN_ARCHS; arch++)
+        {
+            for (n=0; n < num_arch_ft_entries[ arch ]; n++)
+            {
+                if (arch_factab[ arch ][n].bitno == factab[i].bitno)
+                {
+                    /* Merge this arch's masks into system factab */
+                    factab[i].supmask |= arch_factab[ arch ][n].supmask;
+                    factab[i].defmask |= arch_factab[ arch ][n].defmask;
+                    factab[i].reqmask |= arch_factab[ arch ][n].reqmask;
+                }
+            }
+        }
+    }
 
     // Clear all architectures' facilities lists to ZEROS
 
@@ -736,22 +995,22 @@ void init_facilities_lists()
     {
         at = get_archtab_by_arch( arch );
 
-        for (ft = factab; ft->name; ft++)
+        for (i=0; i < _countof( factab ); i++)
         {
             // Initialize this architecture's facility bit only if
             // this facility applies to this architecture and it's
             // either a required facility or defaults to enabled.
 
             if (1
-                && (ft->supmask & at->amask)      // (applies?)
+                && (factab[i].supmask & at->amask)      // (applies?)
                 && (0
-                    || (ft->reqmask & at->amask)  // (required?)
-                    || (ft->defmask & at->amask)  // (default?)
+                    || (factab[i].reqmask & at->amask)  // (required?)
+                    || (factab[i].defmask & at->amask)  // (default?)
                    )
             )
             {
-                fbyte =         (ft->bitno / 8);
-                fbit  = 0x80 >> (ft->bitno % 8);
+                fbyte =         (factab[i].bitno / 8);
+                fbit  = 0x80 >> (factab[i].bitno % 8);
 
                 sysblk.facility_list[ arch ][ fbyte ] |= fbit;
             }
@@ -789,10 +1048,10 @@ static bool set_archmode_by_name( const char* archname )
 /*-------------------------------------------------------------------*/
 static const FACTAB* get_factab_by_name( const char* name )
 {
-    const FACTAB* ft;
-    for (ft = factab; ft->name; ft++)
-        if (strcasecmp( ft->name, name ) == 0)
-            return ft;
+    size_t i;
+    for (i=0; i < _countof( factab ); i++)
+        if (strcasecmp( factab[i].name, name ) == 0)
+            return &factab[i];
     return NULL;
 }
 
@@ -801,7 +1060,7 @@ static const FACTAB* get_factab_by_name( const char* name )
 /*-------------------------------------------------------------------*/
 static const FACTAB* get_factab_by_bitno( int bitno )
 {
-    const FACTAB* ft;
+    size_t i;
 
     if (0
         || bitno < 0
@@ -809,9 +1068,9 @@ static const FACTAB* get_factab_by_bitno( int bitno )
     )
         return NULL;
 
-    for (ft = factab; ft->name; ft++)
-        if (ft->bitno == bitno)
-            return ft;
+    for (i=0; i < _countof( factab ); i++)
+        if (factab[i].bitno == bitno)
+            return &factab[i];
     return NULL;
 }
 
@@ -850,8 +1109,6 @@ static int sort_ftpp_by_long_name( const void* p1, const void* p2 )
 /*-------------------------------------------------------------------*/
 static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 {
-    static const size_t  num_ptrs  = _countof( factab ) - 1;
-
     const FACTAB*   ft;         // ptr to FACTAB entry
     const FACTAB**  ftpp;       // ptr to ptr to FACTAB entry
     void*           ptr_array;  // ptr to array of FACTAB entry ptrs
@@ -863,7 +1120,7 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 
     // Allocate an array of FACTAB entry pointers
 
-    if (!(ptr_array = malloc( sizeof( const FACTAB* ) * num_ptrs )))
+    if (!(ptr_array = malloc( sizeof( const FACTAB* ) * _countof( factab ))))
     {
         // "Out of memory"
         WRMSG( HHC00152, "E" );
@@ -872,17 +1129,19 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 
     // Populate array of FACTAB entry pointers
 
-    for (num = num_ptrs, ftpp = ptr_array, ft = factab; num; num--, ftpp++, ft++)
+    for (num = _countof( factab ), ftpp = ptr_array, ft = factab; num; num--, ftpp++, ft++)
         *ftpp = ft;
 
     // Sort the array into the desired sequence
 
-    qsort( ptr_array, num_ptrs, sizeof( FACTAB* ),
+    qsort( ptr_array, _countof( factab ), sizeof( FACTAB* ),
         sort_by_long ? sort_ftpp_by_long_name
                      : sort_ftpp_by_bit_number );
 
     // Display column headers...
 
+    LOGMSG( "HHC00891I\n" );
+    LOGMSG( "HHC00891I                             %s Facility Table\n", at->name );
     LOGMSG( "HHC00891I\n" );
     LOGMSG( "HHC00891I Bit By Bi SRDC* Facility                    Description\n" );
     LOGMSG( "HHC00891I --- -- -- ----- --------------------------- ---------------------------------------------------------\n" );
@@ -890,7 +1149,7 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 
     // Display FACTAB entries for current architecture
 
-    for (num = num_ptrs, ftpp = ptr_array; num; num--, ftpp++)
+    for (num = _countof( factab ), ftpp = ptr_array; num; num--, ftpp++)
     {
         ft = *ftpp;
 
@@ -926,6 +1185,9 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
     }
 
     LOGMSG( "HHC00891I\n" );
+    LOGMSG( "HHC00891I             SDRC* = Supported, Default, Required, Current, Modified.\n" );
+    LOGMSG( "HHC00891I\n" );
+
     free( ptr_array );
     return true;
 }
@@ -944,7 +1206,7 @@ static bool archlvl_query( int argc, char* argv[] )
     const char*     p;
     const char*     sev;
     int             bitno, fbyte, fbit;
-    bool            enabled, modified;
+    bool            forced, enabled, modified;
     char            c;
 
     // Note: we know argc >= 2, otherwise why would we be called?
@@ -1016,31 +1278,49 @@ static bool archlvl_query( int argc, char* argv[] )
     )
     {
         ft = get_factab_by_bitno( bitno );
+        forced = true;
     }
     else
     {
         ft = get_factab_by_name( argv[2] );
+        forced = false;
     }
 
-    // Is this facility supported for the current architecture?
+    // Does this facility exist for the current architecture?
 
-    if (!ft || !(ft->supmask & at->amask))
+    if (!ft)
     {
-        const char* facname = ft ? ft->name : argv[2];
         // "Facility( %s ) does not exist for %s"
-        WRMSG( HHC00893, "E", facname, at->name );
+        WRMSG( HHC00892, "E", argv[2], at->name );
         return false;
     }
 
-    // Display facility setting
+    // Get byte and bit number
 
     fbyte =         (ft->bitno / 8);
     fbit  = 0x80 >> (ft->bitno % 8);
+
+    // Set some flags
 
     enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
 
     modified = ( (ft->defmask & at->amask) && !enabled) ||
                (!(ft->defmask & at->amask) &&  enabled);
+
+    // Is this facility supported for the current architecture?
+
+    if (1
+        && !forced
+        && !modified
+        && !(ft->supmask & at->amask)
+    )
+    {
+        // "Facility( %s ) not supported for %s"
+        WRMSG( HHC00893, "E", ft->name, at->name );
+        return false;
+    }
+
+    // Display facility setting
 
     sev = modified ? "W" : "I";
 
@@ -1066,6 +1346,7 @@ static int archlvl_enable_disable( int argc, char* argv[] )
 
     int   bitno, fbyte, fbit;
     bool  enable, forced = false;
+    bool  enabled, modified;
 
     strupper( argv[0], argv[0] );
 
@@ -1126,7 +1407,7 @@ static int archlvl_enable_disable( int argc, char* argv[] )
         )
         {
             // "Facility( %s ) does not exist for %s"
-            WRMSG( HHC00893, "E", argv[2], at->name );
+            WRMSG( HHC00892, "E", argv[2], at->name );
             return -1;
         }
 
@@ -1135,24 +1416,34 @@ static int archlvl_enable_disable( int argc, char* argv[] )
     else
         bitno = ft->bitno;
 
+    /* Get the bit and byte number */
+    fbyte  =         (bitno / 8);
+    fbit   = 0x80 >> (bitno % 8);
+
+    /* Set some flags */
+    enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
+
+    modified = ( (ft->defmask & at->amask) && !enabled) ||
+               (!(ft->defmask & at->amask) &&  enabled);
+
     /* Verify facility is supported for this architecture */
-    if (!(ft->supmask & at->amask) && !forced)
+    if (1
+        && !forced
+        && !modified
+        && !(ft->supmask & at->amask)
+    )
     {
         // "Facility( %s ) not supported for %s"
         WRMSG( HHC00896, "E", ft->name, at->name );
         return -1;
     }
 
-    /* Enable (or disable (if allowed)) the specified facility */
-
-    fbyte  =         (bitno / 8);
-    fbit   = 0x80 >> (bitno % 8);
-
+    /* Enable (or disable if allowed) the specified facility */
     if (enable)
     {
         sysblk.facility_list[ at->num ][fbyte ] |= fbit;
     }
-    else // disable: check if allowed
+    else // want to disable a facility: check if allowed
     {
         if (ft->reqmask & at->amask)
         {
@@ -1164,11 +1455,15 @@ static int archlvl_enable_disable( int argc, char* argv[] )
         sysblk.facility_list[ at->num ][fbyte] &= ~fbit;
     }
 
+    /* Update flags */
+    enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
+
+    modified = ( (ft->defmask & at->amask) && !enabled) ||
+               (!(ft->defmask & at->amask) &&  enabled);
+
+    /* Show results if requested */
     if (MLVL( VERBOSE ))
     {
-        bool  modified = ( enable && !(ft->defmask & at->amask)) ||
-                         (!enable &&  (ft->defmask & at->amask));
-
         sev = modified ? "W" : "I";
 
         // "Facility( %s ) %s%s for %s"
@@ -1184,7 +1479,7 @@ static int archlvl_enable_disable( int argc, char* argv[] )
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* ARCHLVL S/370 | ESA/390 | z/ARCH                                  */
-/* ARCHLVL ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH]  */
+/* ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH] */
 /* ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -1196,7 +1491,9 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     strupper( argv[0], argv[0] );
 
-    // Display current architecture mode?
+    /*-----------------------------------------------------*/
+    /*             Display Architecture Mode?              */
+    /*-----------------------------------------------------*/
 
     if (argc < 2)
     {
@@ -1214,7 +1511,9 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    /* Query facility? */
+    /*-----------------------------------------------------*/
+    /*                Query Facility?                      */
+    /*-----------------------------------------------------*/
 
     if (CMD( argv[1], QUERY, 1 ))
     {
@@ -1222,14 +1521,9 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return rc;
     }
 
-    /* Enable/Disable Facility? */
-    if (0
-        || CMD( argv[1], ENABLE,  3 )
-        || CMD( argv[1], DISABLE, 3 )
-    )
-    {
-        return archlvl_enable_disable( argc, argv );
-    }
+    /*-----------------------------------------------------*/
+    /*   Set Architecture -or- Enable/Disable Facility     */
+    /*-----------------------------------------------------*/
 
     /* Make sure all CPUs are deconfigured or stopped */
     if (are_any_cpus_started())
@@ -1238,6 +1532,22 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         WRMSG( HHC02253, "E", "to change ARCHLVL" );
         return HERRCPUONL;
     }
+
+    /*-----------------------------------------------------*/
+    /*             Enable/Disable Facility?                */
+    /*-----------------------------------------------------*/
+
+    if (0
+        || CMD( argv[1], ENABLE,  3 )
+        || CMD( argv[1], DISABLE, 3 )
+    )
+    {
+        return archlvl_enable_disable( argc, argv );
+    }
+
+    /*-----------------------------------------------------*/
+    /*                Set Architecture                     */
+    /*-----------------------------------------------------*/
 
     /* Set the architecture mode first */
     if (!set_archmode_by_name( argv[1] ))

@@ -104,7 +104,7 @@
 #define archlvl_cmd_help        \
                                 \
   "Format: ARCHLVL S/370 | ESA/390 | z/ARCH\n"                                  \
-  "        ARCHLVL ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH]\n"  \
+  "        ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH]\n" \
   "        ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]\n"     \
   "\n"                                                                          \
   "Entering the command without arguments displays the current architecture\n"  \

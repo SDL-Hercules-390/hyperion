@@ -704,8 +704,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 //efine HHC00890 (available)
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
-//efine HHC00892 (available)
-#define HHC00893 "Facility( %s ) does not exist for %s"
+#define HHC00892 "Facility( %s ) does not exist for %s"
+#define HHC00893 "Facility( %s ) not supported for %s"
 #define HHC00894 "%s facility list: %s"
 #define HHC00895 "ARCHLVL '%s' is invalid"
 #define HHC00896 "Facility( %s ) not supported for %s"
