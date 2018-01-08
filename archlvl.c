@@ -132,7 +132,7 @@ static FACTAB ARCH_DEP( facs_tab )[] =      /* Arch-DEPENDENT table  */
 /*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_000_N3_INSTR_FACILITY )
-FT( Z390, Z390, NONE, 000_N3_ESA390,                "N3 Instructions are installed" )
+FT( Z390, Z390, NONE, 000_N3_INSTR,                 "N3 Instructions are installed" )
 #endif
 
 #if defined(  FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -709,7 +709,7 @@ static ARCHTAB archtab[] =
 
 static FACTAB factab[] =
 {
-FT( NONE, NONE, NONE, 000_N3_ESA390,                "N3 Instructions are installed" )
+FT( NONE, NONE, NONE, 000_N3_INSTR,                 "N3 Instructions are installed" )
 FT( NONE, NONE, NONE, 001_ZARCH_INSTALLED,          "z/Architecture architectural mode is installed" )
 FT( NONE, NONE, NONE, 002_ZARCH_ACTIVE,             "z/Architecture architectural mode is active" )
 FT( NONE, NONE, NONE, 003_DAT_ENHANCE_1,            "DAT-Enhancement Facility 1" )

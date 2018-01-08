@@ -1627,7 +1627,7 @@ typedef struct MBK  MBK;
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define STFL_000_N3_ESA390             0    /* Instructions marked N3 in
+#define STFL_000_N3_INSTR              0    /* Instructions marked N3 in
                                                the reference summary are
                                                available in ESA/390 mode */
 #define STFL_001_ZARCH_INSTALLED       1    /* z/Arch mode is available on
