@@ -5527,7 +5527,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
 
 
-#if defined(FEATURE_STORE_FACILITY_LIST)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facility List                              [S] */
 /*-------------------------------------------------------------------*/
@@ -5562,7 +5562,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     memcpy(psa->stfl, regs->facility_list, sizeof(psa->stfl));
 
 } /* end DEF_INST(store_facility_list) */
-#endif /*defined(FEATURE_STORE_FACILITY_LIST) */
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
 #if defined(FEATURE_007_STFL_EXTENDED_FACILITY)
@@ -5635,7 +5635,7 @@ int     cc;                             /* Condition code            */
 #endif /*defined(FEATURE_007_STFL_EXTENDED_FACILITY)*/
 
 
-#if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_000_N3_INSTR_FACILITY ) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* B90F LRVGR - Load Reversed Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5649,10 +5649,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = bswap_64(regs->GR_G(r2));
 
 } /* end DEF_INST(load_reversed_long_register) */
-#endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B91F LRVR  - Load Reversed Register                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5666,10 +5666,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_L(r1) = bswap_32(regs->GR_L(r2));
 
 } /* end DEF_INST(load_reversed_register) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E30F LRVG  - Load Reversed Long                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5685,10 +5685,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = bswap_64(ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ));
 
 } /* end DEF_INST(load_reversed_long) */
-#endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E31E LRV   - Load Reversed                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5704,10 +5704,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = bswap_32(ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ));
 
 } /* end DEF_INST(load_reversed) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E31F LRVH  - Load Reversed Half                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5722,10 +5722,10 @@ VADR    effective_addr2;                /* Effective address         */
     /* Load R1 register from second operand */
     regs->GR_LHL(r1) = bswap_16(ARCH_DEP(vfetch2) ( effective_addr2, b2, regs ));
 } /* end DEF_INST(load_reversed_half) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_000_N3_INSTR_FACILITY ) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
 /* E32F STRVG - Store Reversed Long                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5741,10 +5741,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore8) ( bswap_64(regs->GR_G(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed_long) */
-#endif /*defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E33E STRV  - Store Reversed                                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5760,10 +5760,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore4) ( bswap_32(regs->GR_L(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E33F STRVH - Store Reversed Half                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5779,7 +5779,7 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore2) ( bswap_16(regs->GR_LHL(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed_half) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_LOAD_REVERSED)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
 #if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)

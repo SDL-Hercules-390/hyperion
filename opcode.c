@@ -40,7 +40,8 @@
 /*      FEATUREs with STFL/STFLE facility bits defined               */
 /*-------------------------------------------------------------------*/
 
-#if !defined( FEATURE_000_N3_INSTR_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if !defined( FEATURE_000_N3_INSTR_FACILITY )
+
  UNDEF_INST( add_logical_carry )
  UNDEF_INST( add_logical_carry_register )
  UNDEF_INST( branch_relative_and_save_long )
@@ -49,25 +50,28 @@
  UNDEF_INST( divide_logical_register )
  UNDEF_INST( extract_psw )
  UNDEF_INST( load_address_relative_long )
+ UNDEF_INST( load_reversed )
+ UNDEF_INST( load_reversed_half )
+ UNDEF_INST( load_reversed_register )
  UNDEF_INST( multiply_logical )
  UNDEF_INST( multiply_logical_register )
  UNDEF_INST( rotate_left_single_logical )
  UNDEF_INST( set_addressing_mode_24 )
  UNDEF_INST( set_addressing_mode_31 )
+ UNDEF_INST( store_facility_list )
+ UNDEF_INST( store_reversed )
+ UNDEF_INST( store_reversed_half )
  UNDEF_INST( subtract_logical_borrow )
  UNDEF_INST( subtract_logical_borrow_register )
  UNDEF_INST( test_addressing_mode )
-#endif /*!defined( FEATURE_000_N3_INSTR_FACILITY ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
-#if !defined( FEATURE_000_N3_INSTR_FACILITY ) && !defined( FEATURE_LOAD_REVERSED )
- UNDEF_INST( load_reversed )
- UNDEF_INST( load_reversed_half )
- UNDEF_INST( load_reversed_long_register )
- UNDEF_INST( load_reversed_register )
- UNDEF_INST( store_reversed )
- UNDEF_INST( store_reversed_half )
- UNDEF_INST( store_reversed_long )
-#endif
+ #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
+  UNDEF_INST( load_reversed_long_register )
+  UNDEF_INST( store_reversed_long )
+
+ #endif
+#endif /* !defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 #if !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  UNDEF_INST( compare_and_swap_and_purge_long )
@@ -1072,10 +1076,6 @@
 
 #if !defined( FEATURE_STORE_CPU_MULTIPLE_COUNTER_FACILITY )
  UNDEF_INST( store_cpu_counter_multiple )
-#endif
-
-#if !defined( FEATURE_STORE_FACILITY_LIST )
- UNDEF_INST( store_facility_list )
 #endif
 
 #if !defined( FEATURE_STORE_SYSTEM_INFORMATION )

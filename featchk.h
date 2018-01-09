@@ -769,8 +769,8 @@
  #error SIE requires storage key assist
 #endif
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_STORE_FACILITY_LIST )
- #error z/Architecture requires the STFL instruction
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_000_N3_INSTR_FACILITY )
+ #error z/Architecture requires the N3 instruction set
 #endif
 
 #if defined( FEATURE_004_IDTE_SC_SEGTAB_FACILITY ) \
@@ -791,8 +791,8 @@
  #error ASN-and-LX-Reuse facility requires Dual Address-Space feature
 #endif
 
-#if defined( FEATURE_007_STFL_EXTENDED_FACILITY ) && !defined( FEATURE_STORE_FACILITY_LIST )
- #error Store Facility List Extended Facility requires FEATURE_STORE_FACILITY_LIST
+#if defined( FEATURE_007_STFL_EXTENDED_FACILITY ) && !defined( FEATURE_000_N3_INSTR_FACILITY )
+ #error Store Facility List Extended Facility implies STFL (N3 instruction set)
 #endif
 
 #if defined( FEATURE_019_LONG_DISPL_HPERF_FACILITY ) && !defined( FEATURE_018_LONG_DISPL_INST_FACILITY )

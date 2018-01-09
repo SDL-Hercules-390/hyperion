@@ -3249,39 +3249,36 @@ int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
 /*        FEATUREs with STFL/STFLE facility bits defined             */
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_000_N3_INSTR_FACILITY )
+
 DEF_INST( add_logical_carry );
 DEF_INST( add_logical_carry_register );
 DEF_INST( divide_logical );
 DEF_INST( divide_logical_register );
 DEF_INST( extract_psw );
 DEF_INST( load_address_relative_long );
+DEF_INST( load_reversed_register );
+DEF_INST( load_reversed_long );
+DEF_INST( load_reversed );
+DEF_INST( load_reversed_half );
 DEF_INST( multiply_logical );
 DEF_INST( multiply_logical_register );
 DEF_INST( rotate_left_single_logical );
 DEF_INST( set_addressing_mode_24 );
 DEF_INST( set_addressing_mode_31 );
+DEF_INST( store_facility_list );
+DEF_INST( store_reversed );
+DEF_INST( store_reversed_half );
 DEF_INST( subtract_logical_borrow );
 DEF_INST( subtract_logical_borrow_register );
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_LOAD_REVERSED )
-
- DEF_INST( load_reversed_register );
- DEF_INST( load_reversed_long );
- DEF_INST( load_reversed );
- DEF_INST( load_reversed_half );
- DEF_INST( store_reversed );
- DEF_INST( store_reversed_half );
 
  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
   DEF_INST( load_reversed_long_register );
   DEF_INST( store_reversed_long );
- #endif
 
-#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_LOAD_REVERSED ) */
+ #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 
@@ -4268,10 +4265,6 @@ DEF_INST( set_address_space_control_fast );
 #if defined( FEATURE_SQUARE_ROOT )
 DEF_INST( squareroot_float_long_reg );
 DEF_INST( squareroot_float_short_reg );
-#endif
-
-#if defined( FEATURE_STORE_FACILITY_LIST )
-DEF_INST( store_facility_list );
 #endif
 
 #if defined( FEATURE_STORE_SYSTEM_INFORMATION )
