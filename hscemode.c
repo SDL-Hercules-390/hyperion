@@ -984,13 +984,10 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     /* Set tracing/stepping bit on or off */
     if (on || off)
     {
-#if defined( OPTION_MIPS_COUNTING )
         bool auto_disabled = false;
-#endif
+
         OBTAIN_INTLOCK( NULL );
         {
-#if defined( OPTION_MIPS_COUNTING )
-
             /* Explicit tracing overrides automatic tracing */
             if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
             {
@@ -998,7 +995,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 sysblk.auto_trace_beg = 0;
                 sysblk.auto_trace_amt = 0;
             }
-#endif
+
             if (trace)
                 sysblk.insttrace = on;
             else
@@ -1007,13 +1004,11 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         }
         RELEASE_INTLOCK( NULL );
 
-#if defined( OPTION_MIPS_COUNTING )
         if (auto_disabled)
         {
             // "Automatic tracing disabled"
             WRMSG( HHC02373, "I" );
         }
-#endif
     }
 
     /* Build range for message */
@@ -1053,17 +1048,14 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
            range
     );
 
-#if defined( OPTION_MIPS_COUNTING )
-
     /* Also show automatic tracing settings if enabled */
     if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
         panel_command( "-t+-" );
-#endif
+
     return 0;
 }
 
 
-#if defined( OPTION_MIPS_COUNTING )
 /*-------------------------------------------------------------------*/
 /* automatic tracing command:   "t+-  [ON=nnnn  [OFF=nnnn]]"         */
 /*-------------------------------------------------------------------*/
@@ -1137,7 +1129,6 @@ int auto_trace_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /* defined( OPTION_MIPS_COUNTING ) */
 
 
 /*-------------------------------------------------------------------*/

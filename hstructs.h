@@ -743,10 +743,8 @@ struct SYSBLK {
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
-#if defined( OPTION_MIPS_COUNTING )
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
-#endif
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
 #ifdef _FEATURE_ECPSVM
 //
@@ -841,12 +839,11 @@ struct SYSBLK {
         char    **herclogo;             /* Constructed logo screen   */
         char    *logofile;              /* File name of logo file    */
         size_t  logolines;              /* Logo file number of lines */
-#if defined(OPTION_MIPS_COUNTING)
+
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
-#endif /*defined(OPTION_MIPS_COUNTING)*/
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 

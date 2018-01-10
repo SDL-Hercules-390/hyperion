@@ -327,7 +327,6 @@ extern const char* get_arch_name( REGS* regs );
 /* Functions in module panel.c */
 void expire_kept_msgs(int unconditional);
 void set_console_title(char * status);
-#ifdef OPTION_MIPS_COUNTING
 HPAN_DLL_IMPORT U32    maxrates_rpt_intvl;  // (reporting interval)
 HPAN_DLL_IMPORT U32    curr_high_mips_rate; // (high water mark for current interval)
 HPAN_DLL_IMPORT U32    curr_high_sios_rate; // (high water mark for current interval)
@@ -336,7 +335,6 @@ HPAN_DLL_IMPORT U32    prev_high_sios_rate; // (saved high water mark for previo
 HPAN_DLL_IMPORT time_t curr_int_start_time; // (start time of current interval)
 HPAN_DLL_IMPORT time_t prev_int_start_time; // (start time of previous interval)
 HPAN_DLL_IMPORT void update_maxrates_hwm(); // (update high-water-mark values)
-#endif // OPTION_MIPS_COUNTING
 
 /* Functions in module hao.c (Hercules Automatic Operator) */
 #if defined(OPTION_HAO)

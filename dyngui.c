@@ -338,14 +338,12 @@ BYTE   gui_wants_fregs64     = 0;
 BYTE   gui_wants_devlist     = 0;
 BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
 
-#if defined( OPTION_MIPS_COUNTING )
 BYTE   gui_wants_aggregates  = 1;
 BYTE   gui_wants_cpupct      = 0;
 BYTE   gui_wants_cpupct_all  = 0;
 int    prev_cpupct    [ MAX_CPU_ENGINES ];
 U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "panel_command" override...
@@ -514,26 +512,25 @@ void*  gui_panel_command (char* pszCommand)
         return NULL;
     }
 
-#if defined( OPTION_MIPS_COUNTING )
-
     if (strncasecmp(pszCommand,"CPUPCT=",7) == 0)
     {
         gui_wants_cpupct = atoi(pszCommand+7);
         return NULL;
     }
+
     if (strncasecmp(pszCommand,"CPUPCTALL=",10) == 0)
     {
         if (!(gui_wants_cpupct_all = atoi(pszCommand+10)))
             memset( &prev_cpupct[0], 0xFF, sizeof(prev_cpupct) );
         return NULL;
     }
+
     if (strncasecmp(pszCommand,"AGGREGATE=",10) == 0)
     {
         gui_wants_aggregates = atoi(pszCommand+10);
         gui_forced_refresh = 1;
         return NULL;
     }
-#endif // defined( OPTION_MIPS_COUNTING )
 
     // Silently ignore any unrecognized special GUI commands...
 
@@ -602,8 +599,6 @@ void  UpdateStatus ()
         );
     }
 
-#if defined( OPTION_MIPS_COUNTING )
-
     if (gui_wants_cpupct)
     {
         if (gui_wants_aggregates)
@@ -658,7 +653,6 @@ void  UpdateStatus ()
             }
         }
     }
-#endif // defined( OPTION_MIPS_COUNTING )
 
     // Determine if we need to inform the GUI of anything...
 
@@ -737,10 +731,8 @@ void  UpdateStatus ()
 
 void HandleForcedRefresh()
 {
-#if defined( OPTION_MIPS_COUNTING )
     prev_mips_rate          = INT_MAX;
     prev_sios_rate          = INT_MAX;
-#endif
     prev_instcount          = ULLONG_MAX;
     prev_pcpu               = INT_MAX;
     pPrevTargetCPU_REGS     = NULL;
@@ -768,10 +760,8 @@ void HandleForcedRefresh()
     memset(   &prev_fpr64[0], 0xFF,
         sizeof(prev_fpr64) );
 
-#if defined( OPTION_MIPS_COUNTING )
     memset(   &prev_cpupct   [0], 0xFF,
         sizeof(prev_cpupct   ) );
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -836,8 +826,6 @@ void  UpdateCPUStatus ()
 
     } // endif cpu is online/offline
 
-#if defined( OPTION_MIPS_COUNTING )
-
     // MIPS rate and SIOS rate...
     {
         U32* mipsrate;
@@ -879,8 +867,6 @@ void  UpdateCPUStatus ()
             prev_sios_rate = *siosrate;
         }
     }
-
-#endif // defined( OPTION_MIPS_COUNTING )
 }
 
 ///////////////////////////////////////////////////////////////////////////////

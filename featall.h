@@ -31,10 +31,6 @@
 
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 
-#if !defined(OPTION_MIPS_COUNTING) && !defined(NO_MIPS_COUNTING)
-#define OPTION_MIPS_COUNTING            /* Display MIPS on ctl panel */
-#endif
-
 #define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */

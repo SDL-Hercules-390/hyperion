@@ -93,11 +93,8 @@ static int    NPcpunum_valid,
               NPregs_valid,
               NPaddr_valid,
               NPdata_valid,
-
-#if defined( OPTION_MIPS_COUNTING )
               NPmips_valid,
               NPsios_valid,
-#endif
               NPdevices_valid,
               NPcpugraph_valid;
 
@@ -114,12 +111,8 @@ static U64    NPregs64[16];
 static U32    NPregs[16];
 static U32    NPaddress;
 static U32    NPdata;
-
-#if defined( OPTION_MIPS_COUNTING )
 static U32    NPmips;
 static U32    NPsios;
-#endif
-
 static int    NPcpugraph;
 static int    NPcpugraphpct[MAX_CPU_ENGINES];
 
@@ -672,11 +665,8 @@ static void NP_screen_redraw (REGS *regs)
     /* Force all data to be redrawn */
     NPcpunum_valid   = NPcpupct_valid   = NPpsw_valid  =
     NPpswstate_valid = NPregs_valid     = NPaddr_valid =
-    NPdata_valid     =
-    NPdevices_valid  = NPcpugraph_valid = 0;
-#if defined(OPTION_MIPS_COUNTING)
+    NPdata_valid     = NPdevices_valid  = NPcpugraph_valid =
     NPmips_valid     = NPsios_valid     = 0;
-#endif
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
@@ -829,8 +819,6 @@ static void NP_screen_redraw (REGS *regs)
         draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
     }
 
-#if defined( OPTION_MIPS_COUNTING )
-
     if (sysblk.hicpu)
     {
         set_pos ((BUTTONS_LINE+1), 3);
@@ -849,7 +837,6 @@ static void NP_screen_redraw (REGS *regs)
         set_pos ((BUTTONS_LINE+1), 10);
         draw_text ("IO/s");
     }
-#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     if (sysblk.hicpu)
     {
@@ -995,8 +982,6 @@ static void NP_update(REGS *regs)
         regs = regs->hostregs;
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined( OPTION_MIPS_COUNTING )
-
     /* percent CPU busy */
     if (sysblk.hicpu)
     {
@@ -1014,16 +999,6 @@ static void NP_update(REGS *regs)
         snprintf(buf, sizeof(buf), "%3d", (n > 0 ? cpupct_total/n : 0));
         draw_text (buf);
     }
-#else // !defined( OPTION_MIPS_COUNTING )
-
-    if (!NPcpupct_valid)
-    {
-        set_color (COLOR_WHITE, COLOR_BLUE);
-        set_pos (1, 21);
-        draw_text ("     ");
-        NPcpupct_valid = 1;
-    }
-#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     if (sysblk.hicpu)
     {
@@ -1310,8 +1285,6 @@ static void NP_update(REGS *regs)
         }
     }
 
-#if defined( OPTION_MIPS_COUNTING )
-
     /* Rates */
     if ((!NPmips_valid || sysblk.mipsrate != NPmips) && sysblk.hicpu)
     {
@@ -1345,7 +1318,6 @@ static void NP_update(REGS *regs)
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
     }
-#endif /* defined( OPTION_MIPS_COUNTING ) */
 
     /* Optional cpu graph */
     if (NPcpugraph)
@@ -1536,8 +1508,6 @@ static void NP_update(REGS *regs)
 
 static void panel_cleanup(void *unused);    // (forward reference)
 
-#if defined( OPTION_MIPS_COUNTING )
-
 ///////////////////////////////////////////////////////////////////////
 // "maxrates" command support...
 
@@ -1583,7 +1553,7 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
         curr_int_start_time = current_time;
     }
 }
-#endif // defined( OPTION_MIPS_COUNTING )
+
 ///////////////////////////////////////////////////////////////////////
 
 REGS *copy_regs(int cpu)
@@ -1655,11 +1625,9 @@ REGS   *regs;                           /* -> CPU register context    */
 QWORD   curpsw;                         /* Current PSW                */
 QWORD   prvpsw;                         /* Previous PSW               */
 BYTE    prvstate = 0xFF;                /* Previous stopped state     */
-
-#if defined( OPTION_MIPS_COUNTING )
 U64     prev_instcount = 0;             /* Previous sysblk.instcount  */
 U32     numcpu = 0;                     /* Online CPU count           */
-#endif
+
 #if defined( OPTION_SHARED_DEVICES )
 U32     prvscount = 0;                  /* Previous shrdcount         */
 #endif
@@ -1764,7 +1732,6 @@ size_t  loopcount;                    /* Number of iterations done   */
     /* Notify logger_thread we're in control */
     sysblk.panel_init = 1;
 
-#ifdef OPTION_MIPS_COUNTING
     /* Initialize "maxrates" command reporting intervals */
     if ( maxrates_rpt_intvl == 1440 )
     {
@@ -1782,7 +1749,6 @@ size_t  loopcount;                    /* Number of iterations done   */
         curr_int_start_time = time( NULL );
 
     prev_int_start_time = curr_int_start_time;
-#endif
 
     /* Process messages and commands */
     for (loopcount = 0; ; loopcount++)
@@ -2923,9 +2889,7 @@ FinishShutdown:
 #if defined( OPTION_SHARED_DEVICES )
             || prvscount != sysblk.shrdcount
 #endif
-#if defined( OPTION_MIPS_COUNTING )
             || (prev_instcount != sysblk.instcount && NPDup && NPcpugraph)
-#endif
         )
         {
             redraw_status = 1;
@@ -2936,9 +2900,7 @@ FinishShutdown:
 #if defined( OPTION_SHARED_DEVICES )
             prvscount = sysblk.shrdcount;
 #endif
-#if defined( OPTION_MIPS_COUNTING )
             prev_instcount = sysblk.instcount;
-#endif
         }
 
         /* =NP= : Display the screen - traditional or NP */
@@ -3103,8 +3065,6 @@ FinishShutdown:
                     len += sprintf (buf+len,"%s", "Offline");
                 buf[len++] = ' ';
 
-
-#if defined(OPTION_MIPS_COUNTING)
                 /* Bottom line right corner can be when there is space:
                  * ""
                  * "instcnt <string>"
@@ -3181,7 +3141,6 @@ FinishShutdown:
                     strcpy (buf + len, ibuf);
                     len = cons_cols - 1;
                 }
-#endif /* OPTION_MIPS_COUNTING */
 
                 buf[cons_cols] = '\0';
                 set_pos (cons_rows, 1);

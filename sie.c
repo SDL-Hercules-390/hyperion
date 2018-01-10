@@ -1071,9 +1071,7 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                             U64 now = host_tod();
                             waittime.tv_sec = now / 1000000;
                             waittime.tv_nsec = ((now % 1000000) + 3333) * 1000;
-#ifdef OPTION_MIPS_COUNTING
                             regs->waittod = now;
-#endif
                             sysblk.waiting_mask |= regs->cpubit;
                             sysblk.intowner = LOCK_OWNER_NONE;
                             timed_wait_condition
@@ -1089,11 +1087,8 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                              * wait_condition.
                              */
                             sysblk.waiting_mask &= ~(regs->cpubit);
-
-#ifdef OPTION_MIPS_COUNTING
                             regs->waittime += host_tod() - regs->waittod;
                             regs->waittod = 0;
-#endif
                         }
 
                         RELEASE_INTLOCK(regs);

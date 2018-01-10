@@ -1707,10 +1707,7 @@ cpustate_stopping:
 
 } /* process_interrupt */
 
-#if defined( OPTION_MIPS_COUNTING )
-static void do_automatic_tracing();
-#endif
-
+static void do_automatic_tracing();         /*  (forward reference)  */
 /*-------------------------------------------------------------------*/
 /* Run CPU                                                           */
 /*-------------------------------------------------------------------*/
@@ -1819,9 +1816,8 @@ int     aswitch;
     regs->execflag = 0;
 
     do {
-#if defined( OPTION_MIPS_COUNTING )
         U64 instcount; // (auto-tracing)
-#endif
+
         if (INTERRUPT_PENDING( regs ))
             ARCH_DEP( process_interrupt )( regs );
 
@@ -1864,9 +1860,7 @@ int     aswitch;
     #endif
 #endif
 
-#if defined( OPTION_MIPS_COUNTING )
         do_automatic_tracing();
-#endif
     }
     while (1);
 
@@ -1904,30 +1898,35 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
         TOD saved_timer[2];
 
         OBTAIN_INTLOCK(hostregs);
-#ifdef OPTION_MIPS_COUNTING
+
         hostregs->waittod = host_tod();
-#endif
+
         /* The CPU timer is not decremented for a CPU that is in
-           the manual state (e.g. stopped in single step mode) */
+           the manual state (e.g. stopped in single step mode)
+        */
         save_cpu_timers(hostregs, &saved_timer[0],
                         regs,     &saved_timer[1]);
+
         hostregs->cpustate = CPUSTATE_STOPPED;
         sysblk.started_mask &= ~hostregs->cpubit;
         hostregs->stepwait = 1;
         sysblk.intowner = LOCK_OWNER_NONE;
+
         while (hostregs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&hostregs->intcond, &sysblk.intlock);
         }
+
         sysblk.intowner = hostregs->cpuad;
         hostregs->stepwait = 0;
         sysblk.started_mask |= hostregs->cpubit;
+
         set_cpu_timers(hostregs, saved_timer[0],
                        regs,     saved_timer[1]);
-#ifdef OPTION_MIPS_COUNTING
+
         hostregs->waittime += host_tod() - hostregs->waittod;
         hostregs->waittod = 0;
-#endif
+
         RELEASE_INTLOCK(hostregs);
     }
 } /* process_trace */
@@ -2060,7 +2059,6 @@ QWORD   qword;                            /* quadword work area      */
 
 } /* end function str_psw */
 
-#if defined( OPTION_MIPS_COUNTING )
 /*-------------------------------------------------------------------*/
 /*                      Automatic Tracing                            */
 /*-------------------------------------------------------------------*/
@@ -2137,6 +2135,5 @@ static void do_automatic_tracing()
         WRMSG( HHC02371, "I", inst_count, too_much );
     }
 }
-#endif // defined( OPTION_MIPS_COUNTING )
 
 #endif /*!defined(_GEN_ARCH)*/

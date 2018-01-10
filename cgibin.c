@@ -1096,7 +1096,6 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 
 }
 
-#if defined(OPTION_MIPS_COUNTING)
 /* contributed by Tim Pinkawa [timpinkawa@gmail.com] */
 void cgibin_xml_rates_info(WEBBLK *webblk)
 {
@@ -1111,11 +1110,8 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
     hprintf(webblk->sock,"\t<siosrate>%d</siosrate>\n", sysblk.siosrate);
     hprintf(webblk->sock,"</hercules>\n");
 }
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-
 
 //  cgibin_hwrite: helper function to output HTML
-
 void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
 {
     char buffer[1024];
@@ -1253,9 +1249,7 @@ CGITAB cgidir[] = {
     { "registers/general", &cgibin_reg_general },
     { "registers/control", &cgibin_reg_control },
     { "registers/psw", &cgibin_psw },
-#if defined(OPTION_MIPS_COUNTING)
     { "xml/rates", &cgibin_xml_rates_info },
-#endif /*defined(OPTION_MIPS_COUNTING)*/
     { NULL, NULL } };
 
 #endif /*defined(OPTION_HTTP_SERVER)*/

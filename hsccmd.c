@@ -205,7 +205,6 @@ static inline void missing_devnum()
     WRMSG( HHC02201, "E" );
 }
 
-#ifdef OPTION_MIPS_COUNTING
 /*-------------------------------------------------------------------*/
 /* maxrates command  -  report maximum seen mips/sios rates          */
 /*-------------------------------------------------------------------*/
@@ -344,8 +343,6 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
     return 0;   // (make compiler happy)
 }
-
-#endif // OPTION_MIPS_COUNTING
 
 /*-------------------------------------------------------------------*/
 /* message command - Display a line of text at the console           */
@@ -8220,8 +8217,6 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
         }
     }
 
-#ifdef OPTION_MIPS_COUNTING
-
     mipsrate = sysblk.mipsrate;
 
     // "Avgproc  %2.2d %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
@@ -8231,7 +8226,6 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
         (mipsrate / 1000000),
         (mipsrate % 1000000) / 10000,
         sysblk.siosrate, "" );
-#endif
 
     for (i=0; i < sysblk.maxcpu; i++)
     {

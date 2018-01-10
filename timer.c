@@ -36,11 +36,9 @@ int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
 CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 
-#if defined(OPTION_MIPS_COUNTING)
     /* If no CPUs are available, just return (device server mode) */
     if (!sysblk.hicpu)
       return;
-#endif /*defined(OPTION_MIPS_COUNTING)*/
 
     /* Access the diffent register contexts with the intlock held */
     OBTAIN_INTLOCK(NULL);
@@ -174,7 +172,6 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 /*-------------------------------------------------------------------*/
 void* timer_update_thread ( void* argp )
 {
-#if defined( OPTION_MIPS_COUNTING )
 int     i;                              /* Loop index                */
 
 REGS*   regs;                           /* -> REGS                   */
@@ -194,8 +191,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 #define curr_rate( _count, _interval ) \
         ((((_count) * (_interval)) + half_intrv) / interval)
 
-#endif /* defined( OPTION_MIPS_COUNTING ) */
-
     UNREFERENCED( argp );
 
     /* Set timer thread priority */
@@ -205,8 +200,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), "Timer" );
 
     SET_THREAD_NAME_ID( -1, "CPU Timer" );
-
-#if defined( OPTION_MIPS_COUNTING )
 
     then = host_tod();
 
@@ -299,15 +292,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
             update_maxrates_hwm(); // (update high-water-mark values)
 
         } /* end if(interval >= period) */
-
-#else /* ! OPTION_MIPS_COUNTING */
-
-    while (sysblk.cpus)
-    {
-        /* Update TOD clock */
-        update_tod_clock();
-
-#endif /*OPTION_MIPS_COUNTING*/
 
         /* Sleep for another timer update interval... */
         usleep ( sysblk.timerint );

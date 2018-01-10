@@ -1422,7 +1422,6 @@
   "is used. If there is no address range (or it was specified as 0) then\n"      \
   "all instructions will be traced.\n"
 
-#if defined( OPTION_MIPS_COUNTING )
 #define auto_trace_desc         "Automatic instruction tracing"
 #define auto_trace_help         \
                                 \
@@ -1446,7 +1445,6 @@
   "tracing.  Enter the 't+-' command by itself (without any arguments) to\n"     \
   "display the current settings.\n"
 
-#endif /* defined( OPTION_MIPS_COUNTING ) */
 #define timerint_cmd_desc       "Display or set timers update interval"
 #define timerint_cmd_help       \
                                 \
@@ -1650,9 +1648,7 @@ COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )
 COMMAND( "t+",                      trace_cmd,              SYSCMDNOPER,        tplus_cmd_desc,         tplus_cmd_help      )
-#if defined( OPTION_MIPS_COUNTING )
 COMMAND( "t+-",                     auto_trace_cmd,         SYSCMDNOPER,        auto_trace_desc,         auto_trace_help    )
-#endif
 COMMAND( "timerint",                timerint_cmd,           SYSCMDNOPER,        timerint_cmd_desc,      timerint_cmd_help   )
 COMMAND( "tlb",                     tlb_cmd,                SYSCMDNOPER,        tlb_cmd_desc,           NULL                )
 COMMAND( "toddrag",                 toddrag_cmd,            SYSCMDNOPER,        toddrag_cmd_desc,       NULL                )
@@ -1790,9 +1786,7 @@ COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        
 COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        iodelay_cmd_desc,       iodelay_cmd_help    )
 #endif
 COMMAND( "pgmprdos",                pgmprdos_cmd,           SYSCFGNDIAG8,       pgmprdos_cmd_desc,      pgmprdos_cmd_help   )
-#if defined( OPTION_MIPS_COUNTING )
 COMMAND( "maxrates",                maxrates_cmd,           SYSCMD,             maxrates_cmd_desc,      maxrates_cmd_help   )
-#endif
 #if defined( OPTION_SCSI_TAPE )
 COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        autoscsi_cmd_desc,      autoscsi_cmd_help   )
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )
