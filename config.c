@@ -1056,6 +1056,9 @@ int configure_cpu( int target_cpu )
             return HERRCPUOFF; /* CPU offline; create_thread failed */
         }
 
+    /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
+    pthread_getcpuclockid(sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
+
         /* Find out if we are a cpu thread */
         arecpu = are_cpu_thread( &ourcpu );
 
@@ -1131,6 +1134,7 @@ int deconfigure_cpu( int target_cpu )
         }
 
         sysblk.cputid[ target_cpu ] = 0;
+        sysblk.cpuclockid[ target_cpu ] = 0;
 
 #if defined( FEATURE_CONFIGURATION_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */

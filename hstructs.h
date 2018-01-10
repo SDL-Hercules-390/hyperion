@@ -193,8 +193,9 @@ struct REGS {                           /* Processor registers       */
         U64     siototal;               /* Total SIO/SSCH count      */
                                         /* --- 64-byte cache line -- */
         int     cpupct;                 /* Percent CPU busy          */
-        U64     waittod;                /* Time of day last wait (us)*/
-        U64     waittime;               /* Wait time (us) in interval*/
+        U64     waittod;                /* Time of day last wait     */
+        U64     waittime;               /* Wait time in interval     */
+        U64     waittime_accumulated;   /* Wait time accumulated     */
 
         CACHE_ALIGN                     /* --- 64-byte cache line -- */
         DAT     dat;                    /* Fields for DAT use        */
@@ -530,6 +531,8 @@ struct SYSBLK {
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
+        clockid_t                              /* CPU clock     @PJJ */
+                cpuclockid[MAX_CPU_ENGINES];   /* identifiers   @PJJ */
         BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
