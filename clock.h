@@ -333,7 +333,7 @@ us2timeval (const U64 us, struct timeval* tv)
 static INLINE TOD
 ns2etod (const S64 ns)
 {
-    return ((ns << 9) / 125);           /* (ns << 8) / 1000           */
+    return ((ns << 1) / 125);           /* (ns << 4) / 1000      @PJJ */
 }
 
 static INLINE TOD
@@ -674,6 +674,12 @@ timeval2tod (const struct timeval* tv)
     result  = sec2tod(tv->tv_sec);
     result += us2tod(tv->tv_usec);
     return (result);
+}
+
+static INLINE S64
+timespec2us (const struct timespec* ts)
+{
+    return ((ts->tv_sec) * 1000000 + ((ts->tv_nsec + 500) / 1000));
 }
 
 

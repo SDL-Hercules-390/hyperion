@@ -461,7 +461,7 @@ DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 RADR              abs;                 /* abs addr of data area      */
 int               i;                   /* loop counter               */
-struct rusage     usage;               /* RMF type data              */
+struct timespec   cputime;             /* to obtain thread time data */
 ETOD              ETOD;                /* Extended TOD clock         */
 U64               uCPU[MAX_CPU_ENGINES];    /* User CPU time    (us) */
 U64               tCPU[MAX_CPU_ENGINES];    /* Total CPU time   (us) */
@@ -508,9 +508,12 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
             if (IS_CPU_ONLINE(i))
             {
                 /* Get CPU times in microseconds */
-                getrusage((int)sysblk.cputid[i], &usage);
-                uCPU[i] = timeval2us(&usage.ru_utime);
-                tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);
+                if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
+                {
+                    uCPU[i] = timespec2us(&cputime);
+                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                                              + sysblk.regs[i]->waittime ) ;
+                }
             }
         }
 
@@ -608,11 +611,14 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
         {
             if (IS_CPU_ONLINE(i))
             {
-                /* Get CPU times in microseconds */
-                getrusage((int)sysblk.cputid[i], &usage);
                 oCPU[i] = etod2us(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
-                uCPU[i] = timeval2us(&usage.ru_utime);
-                tCPU[i] = uCPU[i] + timeval2us(&usage.ru_stime);
+                /* Get CPU times in microseconds */
+                if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
+                {
+                    uCPU[i] = timespec2us(&cputime);
+                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                                              + sysblk.regs[i]->waittime ) ;
+                }
                 wCPU[i] = tCPU[i] - uCPU[i];
             }
         }

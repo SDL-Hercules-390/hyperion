@@ -260,6 +260,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
                 /* Calculate CPU busy percentage */
                 waittime = regs->waittime;
+                regs->waittime_accumulated += waittime;
                 regs->waittime = 0;
                 if (regs->waittod)
                 {
