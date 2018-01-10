@@ -309,12 +309,8 @@ static void* con1052_panel_command( char *cmd )
         )
         {
             /* Echo that they typed to the Hercules console */
-#if defined( OPTION_SCP_MSG_PREFIX )
-            // "%s%s"
-            WRMSG( HHC00008, "I", "", cmd );
-#else
             LOGMSG( "%s%s\n", "", cmd );
-#endif
+
             /* Convert ASCII input to EBCDIC */
             input = cmd + pfxlen;
 
@@ -432,12 +428,8 @@ BYTE    c;                              /* Print character           */
 
                 if (nl) *nl++ = 0;
 
-#if defined( OPTION_SCP_MSG_PREFIX )
-                // "%s%s"
-                WRMSG( HHC00001, "I", dev->filename, str );
-#else
                 LOGMSG( "%s%s\n", dev->filename, str );
-#endif
+
                 str = nl;
             }
         }

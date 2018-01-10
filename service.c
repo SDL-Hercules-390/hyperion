@@ -1581,11 +1581,7 @@ docheckstop:
                                     guest_to_host(event_msg[i]) : 0x20;
                             }
                             message[i] = '\0';
-#ifdef OPTION_SCP_MSG_PREFIX
-                            WRMSG(HHC00001, "I", "", message);
-#else
                             LOGMSG("%s\n",message);
-#endif /* OPTION_SCP_MSG_PREFIX */
                         }
                     }
                     mcd_len -= obj_len;

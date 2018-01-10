@@ -312,13 +312,8 @@
 /*-------------------------------------------------------------------*/
 /* Miscellaneous Hercules-related constants...                       */
 /*-------------------------------------------------------------------*/
-#if defined(OPTION_WINDOWS_HOST_FILENAMES)
-#define PATHSEPC '\\'        /* Windows Versions */
-#define PATHSEPS "\\"
-#else
 #define PATHSEPC '/'         /* Everyone else */
 #define PATHSEPS "/"
-#endif
 
 #define SPACE   ' '    /* <---<<< Look close! There's a space there! */
 

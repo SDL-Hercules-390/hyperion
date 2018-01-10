@@ -81,16 +81,6 @@
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 //efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
 
-#if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
-#define NO_SCP_MSG_PREFIX               /* Prefix scp msg with HHC*  */
-#endif
-
-#if !defined(OPTION_WINDOWS_HOST_FILENAMES) && !defined(NO_WINDOWS_HOST_FILENAMES)
-#define  NO_WINDOWS_HOST_FILENAMES      /* Format files for display
-                                           in native host format
-                                           slashes                   */
-#endif
-
 #if !defined(OPTION_OPTINST) && !defined(NO_OPTINST)
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
