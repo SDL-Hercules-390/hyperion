@@ -26,7 +26,7 @@
 // Determine whether process is running "elevated" or not.
 // (returns 1==true running elevated, 0==false otherwise)
 
-W32_DLL_IMPORT  int is_elevated();
+W32_DLL_IMPORT  bool are_elevated();
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Translates a Win32 '[WSA]GetLastError()' value into a 'errno' value (if possible

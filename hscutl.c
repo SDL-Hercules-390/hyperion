@@ -981,7 +981,7 @@ DLL_EXPORT  int hopen( const char* path, int oflag, ... )
 
 /* Determine whether process is running "elevated" or not */
 /* (returns 1==true running elevated, 0==false otherwise) */
-int is_elevated()
+bool are_elevated()
 {
     // TODO: figure out how to do this on on non-Windows platforms!
 
@@ -989,7 +989,7 @@ int is_elevated()
     // there is no practical default value that we can return.
     // No matter what we return it will almost surely be wrong.
 
-    return 0;   // (see above TODO and PROGRAMMING NOTE)
+    return false;   // (see above TODO and PROGRAMMING NOTE)
 }
 
 #endif // !defined(_MSVC_)

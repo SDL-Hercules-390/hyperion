@@ -103,7 +103,7 @@
 
   /* Determine whether process is running "elevated" or not */
   /* (returns 1==true running elevated, 0==false otherwise) */
-  int is_elevated();
+  bool are_elevated();
 
 #endif // !defined(_MSVC_)
 

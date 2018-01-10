@@ -143,7 +143,7 @@ DLL_EXPORT const char* init_sysblk_netdev()
 #elif !defined( OPTION_W32_CTCI )
         sysblk.netdev = strdup( "/dev/net/tun" );
 #else
-        sysblk.netdev = strdup( tt32_get_default_iface() );
+        sysblk.netdev = strdup( are_elevated() ? tt32_get_default_iface() : "" );
 #endif
     }
     return sysblk.netdev;

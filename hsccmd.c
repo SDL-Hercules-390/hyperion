@@ -3669,7 +3669,7 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
     if (argc < 2)
     {
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", argv[0], netdev );
+        WRMSG( HHC02203, "I", argv[0], netdev[0] ?  netdev : "(empty)" );
         return 0;
     }
 
@@ -3680,20 +3680,12 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    netdev = argv[1];
-
-    if (strlen( netdev ) < 2)
-    {
-        // "Invalid value %s specified for %s"
-        WRMSG( HHC01451, "E", netdev, argv[0] );
-        return -1;
-    }
-
+    netdev = TRIM( argv[1] );
     free( sysblk.netdev );
     sysblk.netdev = strdup( netdev );
 
     // "%-14s set to %s"
-    WRMSG( HHC02204, "I", argv[0], DEF_NETDEV );
+    WRMSG( HHC02204, "I", argv[0], netdev[0] ?  netdev : "(empty)" );
     return 0;
 }
 
