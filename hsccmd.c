@@ -3957,7 +3957,6 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
     return rc;
 }
 
-#if defined(OPTION_HTTP_SERVER)
 /*-------------------------------------------------------------------*/
 /* http command - manage HTTP server                                 */
 /*-------------------------------------------------------------------*/
@@ -3974,7 +3973,6 @@ int http_cmd(int argc, char *argv[], char *cmdline)
 
     return rc;
 }
-#endif /*defined(OPTION_HTTP_SERVER)*/
 
 /*-------------------------------------------------------------------*/
 /* toddrag command - display or set TOD clock drag factor            */
@@ -8115,14 +8113,10 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-#if defined( OPTION_HTTP_SERVER )
-
     MSGBUF( buf, "on port %s with %s", http_get_port(), http_get_portauth() );
 
     // "%s server listening %s"
     WRMSG( HHC17001, "I", "HTTP", buf );
-
-#endif
 
 #if defined( OPTION_SHARED_DEVICES )
 

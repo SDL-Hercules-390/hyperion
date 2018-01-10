@@ -52,9 +52,6 @@
 #include "opcode.h"
 #include "httpmisc.h"
 
-#if defined(OPTION_HTTP_SERVER)
-
-
 void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
@@ -1251,5 +1248,3 @@ CGITAB cgidir[] = {
     { "registers/psw", &cgibin_psw },
     { "xml/rates", &cgibin_xml_rates_info },
     { NULL, NULL } };
-
-#endif /*defined(OPTION_HTTP_SERVER)*/

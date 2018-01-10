@@ -37,8 +37,6 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
-#if defined(OPTION_HTTP_SERVER)
-
 /* External reference to the cgi-bin directory in cgibin.c */
 extern CGITAB cgidir[];
 
@@ -1259,6 +1257,3 @@ static  char msgbuf[FILENAME_MAX+3];
 
     return p;
 }
-
-
-#endif /*defined(OPTION_HTTP_SERVER)*/

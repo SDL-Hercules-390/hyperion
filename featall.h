@@ -31,15 +31,9 @@
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 
-#ifdef _MSVC_                           /*        (Windows)          */
 #define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
 #define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
 #define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
-#else                                   /*      (non-Windows)        */
-#define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
-#define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
-#define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
-#endif
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 
@@ -81,11 +75,11 @@
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
+
 #define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 //efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
-#define OPTION_HTTP_SERVER              /* HTTP server support       */
 
 #if !defined(OPTION_SCP_MSG_PREFIX) && !defined(NO_SCP_MSG_PREFIX)
 #define NO_SCP_MSG_PREFIX               /* Prefix scp msg with HHC*  */

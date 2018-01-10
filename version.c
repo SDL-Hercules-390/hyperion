@@ -607,13 +607,9 @@ static const char *build_info[] = {
     "Without IPV6 support",
 #endif
 
-#if defined(OPTION_HTTP_SERVER)
     "With    HTTP Server support",
 #if defined(VERBOSE_VERSION) && defined(PKGDATADIR)
     "        HTTP document default root directory is "PKGDATADIR,
-#endif
-#else
-    "Without HTTP Server support",
 #endif
 
 #ifdef VERBOSE_VERSION
