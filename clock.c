@@ -372,16 +372,15 @@ static void adjust_tod_offset(const S64 offset)
 TOD
 thread_cputime(const REGS *regs)
 {
-    register TOD    result;
+    TOD             result;
+    int             rc = -1;
+    struct timespec cputime;
 
-    struct rusage   rusage;
-    int             rc;
-
-    rc = getrusage((int)sysblk.cputid[regs->cpuad], &rusage);
-    if (unlikely(rc == -1))
-        result = host_tod();
-    else
-        result  = timeval2etod(&rusage.ru_utime);
+    if (sysblk.cpuclockid[regs->cpuad])
+    {
+        rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
+    }
+    result = (likely(rc == 0)) ? timespec2etod(&cputime) : host_tod();
 
     return (result);
 }
@@ -391,15 +390,14 @@ U64
 thread_cputime_us(const REGS *regs)
 {
     U64 result;
+    int             rc = -1;
+    struct timespec cputime;
 
-    struct rusage   rusage;
-    int             rc;
-
-    rc = getrusage((int)sysblk.cputid[regs->cpuad], &rusage);
-    if (unlikely(rc == -1))
-        result = etod2us(host_tod());
-    else
-        result  = timeval2us(&rusage.ru_utime);
+    if (sysblk.cpuclockid[regs->cpuad])
+    {
+        rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
+    }
+    result = (likely(rc == 0)) ? timespec2us(&cputime) : etod2us(host_tod());
 
     return (result);
 }

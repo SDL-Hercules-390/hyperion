@@ -134,6 +134,7 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
     struct timeval  ru_stime;       // System time used
   };
   W32_DLL_IMPORT int getrusage ( int who, struct rusage* r_usage );
+  W32_DLL_IMPORT int pthread_getcpuclockid ( TID tid, clockid_t* clk_id );
 #endif
 
 #if !defined(HAVE_DECL_LOGIN_NAME_MAX) || !HAVE_DECL_LOGIN_NAME_MAX

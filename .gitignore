@@ -151,3 +151,4 @@ autoconf/compile
 allTests.*
 
 # Dynamically generated files
+/_nmake_pjj.bat

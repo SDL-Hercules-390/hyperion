@@ -469,6 +469,32 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
         return -1;
     }
 
+    // Simulate clock_gettime with a clk_id as set by pthread_getcpuclockid,
+    // which is simply a minus thread_id, i.e. clk_id = -tid. (PJJ Jan-2018)
+
+    if (clk_id < 0)
+    {
+        struct rusage  r_usage;
+        int            result;
+
+        result = getrusage( -clk_id, &r_usage );
+
+        tp->tv_sec   = r_usage.ru_utime.tv_sec;
+        tp->tv_nsec  = r_usage.ru_utime.tv_usec;
+
+        tp->tv_sec  += r_usage.ru_stime.tv_sec;
+        tp->tv_nsec += r_usage.ru_stime.tv_usec;
+
+        if (tp->tv_nsec > 1000000)
+        {
+            tp->tv_sec += tp->tv_nsec / 1000000;
+            tp->tv_nsec = tp->tv_nsec % 1000000;
+        }
+
+        tp->tv_nsec *= 1000;
+        return result;
+    }
+
     while (1) { // (for easy backward branching)
 
     // Query current high-performance counter value...
@@ -613,6 +639,18 @@ DLL_EXPORT int clock_gettime ( clockid_t clk_id, struct timespec *tp )
     // Done!
 
     return 0;       // (always, unless user error)
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// In Windows, thread specific timings can be obtained directly from the thread_id (tid),
+// but under Linux etc. a clock_id must be derived first from that thread_id.  Having
+// observed that such clock_id's are negative, we just simulate the clock_id as -tid.
+//                                                                          (PJJ Jan-2018)
+DLL_EXPORT int pthread_getcpuclockid ( TID tid, clockid_t* clk_id )
+{
+    *clk_id = -tid;
+    return 0;
 }
 
 
@@ -1174,7 +1212,6 @@ int DoGetRUsage( const int who, const int whotype, struct rusage* r_usage )
                 result = DoGetRUsage( who, rusage_type_process, r_usage );
             return (result);
     }
-
 
     if ( !result )
         return rusage_failure( r_usage );
