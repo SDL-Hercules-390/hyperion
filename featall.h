@@ -22,10 +22,6 @@
 #define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
-#if !defined(OPTION_SMP) && !defined(NO_SMP)
-#define OPTION_SMP                      /* Enable SMP support        */
-#endif
-
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 

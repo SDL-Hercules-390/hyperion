@@ -113,11 +113,7 @@
               mov    ebx, [u32NewValLow]
               mov    ecx, [u32NewValHigh]
               mov    esi, [pTarget]
-      #ifdef  OPTION_SMP
          lock cmpxchg8b  qword ptr [esi]
-      #else
-              cmpxchg8b  qword ptr [esi]
-      #endif
               setne  rc
               jz     success
               mov    esi, [pOldVal]
@@ -269,13 +265,6 @@
  *-------------------------------------------------------------------*/
 #if defined(_ext_ia32)
 
-#undef LOCK_PREFIX
-#ifdef OPTION_SMP
-#define LOCK_PREFIX "lock\n\t"
-#else
-#define LOCK_PREFIX ""
-#endif
-
     /*
      * If PIC is defined then ebx is used as the `thunk' reg
      * However cmpxchg8b requires ebx
@@ -296,8 +285,7 @@
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
-         LOCK_PREFIX
-         "cmpxchgb %b3,%4\n\t"
+         "lock; cmpxchgb %b3,%4\n\t"
          "setnz   %b0"
          : "=q"(code), "=a"(*old)
          : "1" (*old),
@@ -311,8 +299,7 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
-         LOCK_PREFIX
-         "cmpxchgl %3,%4\n\t"
+         "lock; cmpxchgl %3,%4\n\t"
          "setnz   %b0"
          : "=q"(code), "=a"(*old)
          : "1" (*old),
@@ -327,8 +314,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
  BYTE code;
 __asm__ __volatile__ (
          XCHG_BREG
-         LOCK_PREFIX
-         "cmpxchg8b %5\n\t"
+         "lock; cmpxchg8b %5\n\t"
          XCHG_BREG
          "setnz   %b0"
          : "=q"(code), "=A"(*old)
@@ -346,8 +332,7 @@ static __inline__ U64 fetch_dw_i686_noswap(const void *ptr)
  U64 value = *(U64 *)ptr;
 __asm__ __volatile__ (
          XCHG_BREG
-         LOCK_PREFIX
-         "cmpxchg8b (%4)\n\t"
+         "lock; cmpxchg8b (%4)\n\t"
          XCHG_BREG
          : "=A" (value)
          : "0" (value),
@@ -362,8 +347,7 @@ static __inline__ void store_dw_i686_noswap(void *ptr, U64 value) {
 __asm__ __volatile__ (
          XCHG_BREG
          "1:\t"
-         LOCK_PREFIX
-         "cmpxchg8b %3\n\t"
+         "lock; cmpxchg8b %3\n\t"
          "jne     1b\n\t"
          XCHG_BREG
          :
@@ -469,9 +453,7 @@ LABEL1
         bne     "BRNCH2"\n\
         stdcx.  %4,0,%2\n\
         bne-    "BRNCH1"\n"
-#ifdef OPTION_SMP
 "       sync\n"
-#endif /* OPTION_SMP */
 LABEL2
     : "=&r" (prev), "=m" (*p)
     : "r" (p), "r" (old), "r" (new), "m" (*p)
@@ -501,9 +483,7 @@ LABEL1
         bne     "BRNCH2"\n\
         stwcx.  %4,0,%2\n\
         bne-    "BRNCH1"\n"
-#ifdef OPTION_SMP
 "       sync\n"
-#endif /* OPTION_SMP */
 LABEL2
     : "=&r" (prev), "=m" (*p)
     : "r" (p), "r" (old), "r" (new), "m" (*p)
