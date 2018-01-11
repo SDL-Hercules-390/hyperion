@@ -97,8 +97,9 @@ static char *prefix[] = {
 }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
-#if defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)
+#ifndef STOP_CPUS_AND_IPL
 #define STOP_CPUS_AND_IPL
+#if defined( FEATURE_PROGRAM_DIRECTED_REIPL )
 /*---------------------------------------------------------------------------*/
 /* Within diagnose 0x308 (re-ipl) a thread is started with the next code.    */
 /*---------------------------------------------------------------------------*/
@@ -141,7 +142,8 @@ static void *stop_cpus_and_ipl(int *ipltype)
 
   return NULL;
 }
-#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)*/
+#endif /* defined( FEATURE_PROGRAM_DIRECTED_REIPL ) */
+#endif // STOP_CPUS_AND_IPL
 
 /*-------------------------------------------------------------------*/
 /* Diagnose instruction                                              */
