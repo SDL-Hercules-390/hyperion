@@ -1268,7 +1268,7 @@ BYTE REXX_DEP( Load )( BYTE verbose )
         if (verbose)
         {
             // "REXX(%s) dlopen '%s' failed: %s"
-            WRMSG( HHC17531, "E", REXX_DEP( PackageName ),
+            WRMSG( HHC17531, "W", REXX_DEP( PackageName ),
                 LibName, dlerror());
         }
         LibHandle    = NULL;
