@@ -1,7 +1,8 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2012                   */
-/*              (c)Copyright TurboHercules, SAS 2010-2011            */
+/* HTTPSERV.C   (C) Copyright Jan Jaeger, 2002-2012                  */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules HTTP Server for Console Ops                 */
 
+/*-------------------------------------------------------------------*/
 /* This file contains all code required for the HTTP server,         */
 /* when the http_server thread is started it will listen on          */
 /* the HTTP port specified on the HTTPPORT config statement.         */
@@ -25,8 +26,8 @@
 /* the http_serv.httproot tree symbolic links that refer to files    */
 /* outside the http_serv.httproot tree are not supported.            */
 /*                                                                   */
-/*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -37,43 +38,64 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
-/* External reference to the cgi-bin directory in cgibin.c */
+/*-------------------------------------------------------------------*/
+/* External reference to the cgi-bin directory in cgibin.c           */
+/*-------------------------------------------------------------------*/
 extern CGITAB cgidir[];
 
+/*-------------------------------------------------------------------*/
 
-static MIMETAB mime_types[] = {
-    { NULL,    NULL },                            /* No suffix entry */
-    { "txt",   "text/plain"                },
-    { "jcl",   "text/plain"                },
-    { "gif",   "image/gif"                 },
-    { "jpg",   "image/jpeg"                },
-    { "css",   "text/css"                  },
-    { "html",  "text/html"                 },
-    { "htm",   "text/html"                 },
-/* This one should be:
-    { "ico",   "image/vnd.microsoft.icon"  },
-   but Apache 2 sets it as: */
-    { "ico",   "image/x-icon"              },
-/* so we'll go with what's actually in use. --JRM */
-    { NULL,    NULL } };                     /* Default suffix entry */
+static MIMETAB mime_types[] =
+{
+    { NULL,    NULL },                  /* No suffix entry           */
 
-typedef struct _HTTP_SERV {
-        U16     httpport;               /* HTTP port number or zero  */
-        char   *httpuser;               /* HTTP userid               */
-        char   *httppass;               /* HTTP password             */
-        char   *httproot;               /* HTTP root                 */
-        BYTE    httpauth:1;             /* HTTP auth required flag   */
-        BYTE    httpbinddone:1;         /* HTTP waiting for bind     */
-        BYTE    httpshutdown:1;         /* HTTP Flag to signal shut  */
-        BYTE    httpstmtold:1;          /* HTTP old command type     */
-        COND    http_wait_shutdown;     /* HTTP Shutdown condition   */
-        LOCK    http_lock_shutdown;     /* HTTP Shutdown lock        */
-    } HTTP_SERV;
+    { "txt",   "text/plain" },
+    { "jcl",   "text/plain" },
+    { "gif",   "image/gif"  },
+    { "jpg",   "image/jpeg" },
+    { "css",   "text/css"   },
+    { "html",  "text/html"  },
+    { "htm",   "text/html"  },
 
-static HTTP_SERV    http_serv;
-static BYTE         http_struct_init = FALSE;
-static LOCK         http_lock_root;         /* HTTP Root Change Lock     */
+    /*----------------------------------------*/
+    /*  This one SHOULD be:                   */
+    /* { "ico", "image/vnd.microsoft.icon" }, */
+    /* but Apache 2 sets it as:               */
 
+    { "ico",   "image/x-icon" },
+
+    /* so we'll go with what's in use. --JRM  */
+    /*----------------------------------------*/
+
+    { NULL,    NULL }                   /* Default suffix entry      */
+};
+
+/*-------------------------------------------------------------------*/
+
+struct HTTP_SERV
+{
+    U16     httpport;                   /* HTTP port number or zero  */
+    char*   httpuser;                   /* HTTP userid               */
+    char*   httppass;                   /* HTTP password             */
+    char*   httproot;                   /* HTTP root                 */
+    BYTE    httpauth:1;                 /* HTTP auth required flag   */
+    BYTE    httpbinddone:1;             /* HTTP waiting for bind     */
+    BYTE    httpshutdown:1;             /* HTTP Flag to signal shut  */
+    BYTE    httpstmtold:1;              /* HTTP old command type     */
+    COND    http_wait_shutdown;         /* HTTP Shutdown condition   */
+    LOCK    http_lock_shutdown;         /* HTTP Shutdown lock        */
+};
+typedef struct HTTP_SERV    HTTP_SERV;
+
+/*-------------------------------------------------------------------*/
+
+static LOCK       http_lock_root;       /* HTTP Root Change Lock     */
+static HTTP_SERV  http_serv;
+static BYTE       http_struct_init = FALSE;
+
+/*-------------------------------------------------------------------*/
+/*                        html_include                               */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
@@ -104,6 +126,9 @@ DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
     return TRUE;
 }
 
+/*-------------------------------------------------------------------*/
+/*                         html_header                               */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void html_header(WEBBLK *webblk)
 {
     if (webblk->request_type != REQTYPE_POST)
@@ -115,14 +140,18 @@ DLL_EXPORT void html_header(WEBBLK *webblk)
         hprintf(webblk->sock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                        html_footer                                */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT void html_footer(WEBBLK *webblk)
 {
     if (!html_include(webblk,HTML_FOOTER))
         hprintf(webblk->sock,"\n</BODY>\n</HTML>\n");
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                          http_exit                                */
+/*-------------------------------------------------------------------*/
 static void http_exit(WEBBLK *webblk)
 {
 CGIVAR *cgivar;
@@ -190,7 +219,9 @@ int rc;
     exit_thread(NULL);
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                         http_error                                */
+/*-------------------------------------------------------------------*/
 static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 {
     hprintf(webblk->sock,"HTTP/1.0 %s\n%sConnection: close\n"
@@ -201,7 +232,9 @@ static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
     http_exit(webblk);
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                      http_timestring                              */
+/*-------------------------------------------------------------------*/
 static char *http_timestring(char *time_buff,int buff_size, time_t t)
 {
     struct tm *tm = localtime(&t);
@@ -209,7 +242,9 @@ static char *http_timestring(char *time_buff,int buff_size, time_t t)
     return time_buff;
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                     http_decode_base64                            */
+/*-------------------------------------------------------------------*/
 static void http_decode_base64(char *s)
 {
     char *b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -243,7 +278,9 @@ static void http_decode_base64(char *s)
     d[n] = 0;
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                         http_unescape                             */
+/*-------------------------------------------------------------------*/
 static char *http_unescape(char *buffer)
 {
     char *pointer = buffer;
@@ -292,7 +329,9 @@ static char *http_unescape(char *buffer)
     return buffer;
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                http_interpret_variable_string                     */
+/*-------------------------------------------------------------------*/
 static void http_interpret_variable_string(WEBBLK *webblk, char *qstring, int type)
 {
 char *name;
@@ -322,18 +361,21 @@ CGIVAR **cgivar;
     }
 }
 
+/*-------------------------------------------------------------------*/
 
 #if 0
 static void http_dump_cgi_variables(WEBBLK *webblk)
 {
-    CGIVAR *cv;
-    for(cv = webblk->cgivar; cv; cv = cv->next)
-        logmsg(_("cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
-          cv, cv->name, cv->value, cv->type);
+    CGIVAR* cv;
+    for (cv = webblk->cgivar; cv; cv = cv->next)
+        LOGMSG( "cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n",
+            cv, cv->name, cv->value, cv->type );
 }
 #endif
 
-
+/*-------------------------------------------------------------------*/
+/*                        http_variable                              */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT char *http_variable(WEBBLK *webblk, char *name, int type)
 {
     CGIVAR *cv;
@@ -343,7 +385,9 @@ DLL_EXPORT char *http_variable(WEBBLK *webblk, char *name, int type)
     return NULL;
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                      http_verify_path                             */
+/*-------------------------------------------------------------------*/
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
     char resolved_path[HTTP_PATH_LENGTH];
@@ -372,7 +416,9 @@ static void http_verify_path(WEBBLK *webblk, char *path)
                            "Invalid pathname");
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                       http_authenticate                           */
+/*-------------------------------------------------------------------*/
 static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 {
     char *pointer ,*user, *passwd;
@@ -429,7 +475,9 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
     return FALSE;
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                         http_download                             */
+/*-------------------------------------------------------------------*/
 static void http_download(WEBBLK *webblk, char *filename)
 {
     char buffer[HTTP_PATH_LENGTH];
@@ -467,7 +515,7 @@ static void http_download(WEBBLK *webblk, char *filename)
         hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
 
     hprintf(webblk->sock,"Expires: %s\n",
-      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_STATIC_EXPIRY_TIME));
+      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_EXPIRE_SECS));
 
     hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
     while ((length = read(fd, buffer, sizeof(buffer))) > 0)
@@ -476,7 +524,9 @@ static void http_download(WEBBLK *webblk, char *filename)
     http_exit(webblk);
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                          http_request                             */
+/*-------------------------------------------------------------------*/
 static void *http_request(void* arg)
 {
     WEBBLK *webblk;
@@ -621,7 +671,7 @@ static void *http_request(void* arg)
 
 #if defined(OPTION_DYNAMIC_LOAD)
     {
-    zz_cgibin dyncgi;
+        cgibin_func* dyncgi;
 
         if( (dyncgi = HDL_FINDSYM(webblk->baseurl)) )
         {
@@ -639,8 +689,9 @@ static void *http_request(void* arg)
                        "The requested file was not found");
     return NULL;
 }
+
 /*-------------------------------------------------------------------*/
-/* http command - manage HTTP server status                          */
+/*                          http_root                                */
 /*-------------------------------------------------------------------*/
 char *http_root()
 {
@@ -769,9 +820,8 @@ char *http_root()
 }
 
 /*-------------------------------------------------------------------*/
-/* HTTP SERVER THREAD - SHUTDOWN                                     */
+/*                        http_shutdown                              */
 /*-------------------------------------------------------------------*/
-
 static void http_shutdown(void * unused)
 {
     UNREFERENCED(unused);
@@ -786,7 +836,9 @@ static void http_shutdown(void * unused)
     release_lock(&http_serv.http_lock_shutdown);
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                        http_server                                */
+/*-------------------------------------------------------------------*/
 void *http_server (void *arg)
 {
 int                 rc;                 /* Return code               */
@@ -942,7 +994,7 @@ http_server_stop:
 } /* end function http_server */
 
 /*-------------------------------------------------------------------*/
-/* http startup - start HTTP server                                  */
+/*                         http_startup                              */
 /*-------------------------------------------------------------------*/
 int http_startup(int isconfigcalling)
 {
@@ -1003,7 +1055,7 @@ int http_startup(int isconfigcalling)
 }
 
 /*-------------------------------------------------------------------*/
-/* http command - manage HTTP server status                          */
+/*                          http_command                             */
 /*-------------------------------------------------------------------*/
 int http_command(int argc, char *argv[])
 {
@@ -1198,7 +1250,7 @@ int http_command(int argc, char *argv[])
 }
 
 /*-------------------------------------------------------------------*/
-/* http port - return port string                                    */
+/*                        http_get_port                              */
 /*-------------------------------------------------------------------*/
 char *http_get_port()
 {
@@ -1211,7 +1263,7 @@ static char msgbuf[128];
 }
 
 /*-------------------------------------------------------------------*/
-/* http auth - return port authorization string                      */
+/*                      http_get_portauth                            */
 /*-------------------------------------------------------------------*/
 char *http_get_portauth()
 {
@@ -1235,7 +1287,7 @@ static char msgbuf[128];
 }
 
 /*-------------------------------------------------------------------*/
-/* http root - return root string                                    */
+/*                       http_get_root                               */
 /*-------------------------------------------------------------------*/
 char *http_get_root()
 {
@@ -1257,3 +1309,5 @@ static  char msgbuf[FILENAME_MAX+3];
 
     return p;
 }
+
+/*-------------------------------------------------------------------*/

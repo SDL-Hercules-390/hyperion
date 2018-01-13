@@ -1,46 +1,60 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2012                   */
-/*              HTTP cgi-bin routines                                */
+/* CGIBIN.C     (C) Copyright Jan Jaeger, 2002-2012                  */
+/*                  HTTP cgi-bin routines                            */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
+/*                                                                   */
 /* This file contains all cgi routines that may be executed on the   */
-/* server (ie under control of a hercules thread)                    */
+/* server (i.e. under control of a hercules thread).  All cgi-bin    */
+/* routines are identified in the directory at the end of this file. */
+/* cgi-bin routines may call the following HTTP service routines:    */
 /*                                                                   */
-/*                                                                   */
-/* All cgi-bin routines are identified in the directory at the end   */
-/* of this file                                                      */
-/*                                                                   */
-/*                                                                   */
-/* The cgi-bin routines may call the following HTTP service routines */
-/*                                                                   */
+/*-------------------------------------------------------------------*/
 /* char *cgi_variable(WEBBLK *webblk, char *name);                   */
+/*                                                                   */
 /*   This call returns a pointer to the cgi variable requested       */
 /*   or a NULL pointer if the variable is not found                  */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
 /* char *cgi_cookie(WEBBLK *webblk, char *name);                     */
+/*                                                                   */
 /*   This call returns a pointer to the cookie requested             */
 /*   or a NULL pointer if the cookie is not found                    */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
 /* char *cgi_username(WEBBLK *webblk);                               */
+/*                                                                   */
 /*   Returns the username for which the user has been authenticated  */
 /*   or NULL if not authenticated (refer to auth/noauth parameter    */
 /*   on the HTTPPORT configuration statement)                        */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
 /* char *cgi_baseurl(WEBBLK *webblk);                                */
+/*                                                                   */
 /*   Returns the url as requested by the user                        */
 /*                                                                   */
-/*                                                                   */
+/*-------------------------------------------------------------------*/
 /* void html_header(WEBBLK *webblk);                                 */
+/*                                                                   */
 /*   Sets up the standard html header, and includes the              */
 /*   html/header.htmlpart file.                                      */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
 /* void html_footer(WEBBLK *webblk);                                 */
+/*                                                                   */
 /*   Sets up the standard html footer, and includes the              */
 /*   html/footer.htmlpart file.                                      */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
 /* int html_include(WEBBLK *webblk, char *filename);                 */
+/*                                                                   */
 /*   Includes an html file                                           */
 /*                                                                   */
-/*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 
@@ -52,6 +66,9 @@
 #include "opcode.h"
 #include "httpmisc.h"
 
+/*-------------------------------------------------------------------*/
+/*                       cgibin_reg_control                          */
+/*-------------------------------------------------------------------*/
 void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
@@ -80,7 +97,9 @@ int i;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                      cgibin_reg_general                           */
+/*-------------------------------------------------------------------*/
 void cgibin_reg_general(WEBBLK *webblk)
 {
 int i;
@@ -109,13 +128,13 @@ int i;
 
 }
 
-
-// void copy_psw (REGS *regs, BYTE *addr);
-
+/*-------------------------------------------------------------------*/
+/*                           cgibin_psw                              */
+/*-------------------------------------------------------------------*/
 void cgibin_psw(WEBBLK *webblk)
 {
     REGS *regs;
-    QWORD   qword;                            /* quadword work area      */
+    QWORD   qword;
 
     char *value;
     int autorefresh=0;
@@ -192,7 +211,9 @@ void cgibin_psw(WEBBLK *webblk)
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                         cgibin_syslog                             */
+/*-------------------------------------------------------------------*/
 void cgibin_syslog(WEBBLK *webblk)
 {
 int     num_bytes;
@@ -357,7 +378,9 @@ int     msgcount = 22;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                     cgibin_debug_registers                        */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_registers(WEBBLK *webblk)
 {
 int i, cpu = 0;
@@ -592,7 +615,9 @@ REGS *regs;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                      cgibin_debug_storage                         */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_storage(WEBBLK *webblk)
 {
 int i, j;
@@ -649,7 +674,9 @@ U32 addr = 0;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                           cgibin_ipl                              */
+/*-------------------------------------------------------------------*/
 void cgibin_ipl(WEBBLK *webblk)
 {
 int i;
@@ -733,7 +760,9 @@ U32 doipl;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                    cgibin_debug_device_list                       */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_device_list(WEBBLK *webblk)
 {
 DEVBLK *dev;
@@ -776,7 +805,9 @@ char   *devclass;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                  cgibin_debug_device_detail                       */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_device_detail(WEBBLK *webblk)
 {
 DEVBLK *sel, *dev = NULL;
@@ -945,7 +976,9 @@ int subchan;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                      cgibin_debug_misc                            */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_misc(WEBBLK *webblk)
 {
 int zone;
@@ -1024,7 +1057,9 @@ int zone;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                     cgibin_configure_cpu                          */
+/*-------------------------------------------------------------------*/
 void cgibin_configure_cpu(WEBBLK *webblk)
 {
 int i,j;
@@ -1079,7 +1114,9 @@ int i,j;
 
 }
 
-
+/*-------------------------------------------------------------------*/
+/*                 cgibin_debug_version_info                         */
+/*-------------------------------------------------------------------*/
 void cgibin_debug_version_info(WEBBLK *webblk)
 {
     html_header(webblk);
@@ -1093,7 +1130,11 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 
 }
 
-/* contributed by Tim Pinkawa [timpinkawa@gmail.com] */
+/*-------------------------------------------------------------------*/
+/*                      cgibin_xml_rates_info                        */
+/*-------------------------------------------------------------------*/
+/*       contributed by Tim Pinkawa [timpinkawa@gmail.com]           */
+/*-------------------------------------------------------------------*/
 void cgibin_xml_rates_info(WEBBLK *webblk)
 {
     hprintf(webblk->sock,"Expires: 0\n");
@@ -1108,7 +1149,9 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
     hprintf(webblk->sock,"</hercules>\n");
 }
 
-//  cgibin_hwrite: helper function to output HTML
+/*-------------------------------------------------------------------*/
+/*   cgibin_hwrite      --      helper function to output HTML       */
+/*-------------------------------------------------------------------*/
 void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
 {
     char buffer[1024];
@@ -1174,10 +1217,10 @@ void cgibin_hwrite(WEBBLK *webblk, char *msg, int msg_len)
     }
 }
 
-
-//  cgibin_cmd_cmd: issue panel command and return response only
-//  without the rest of the syslog, and without most of the HTML wrapping
-
+/*-------------------------------------------------------------------*/
+/* issue panel command and return response only, without the rest    */
+/* of the syslog, and without most of the HTML wrapping              */
+/*-------------------------------------------------------------------*/
 void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
 {
     char * response;
@@ -1212,10 +1255,10 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
     free (response);
 }
 
-
-//  handle http requests of the form:
-//  http://localhost:8081/cgi-bin/tasks/cmd?cmd=qcpuid
-
+/*-------------------------------------------------------------------*/
+/* handle http requests of the form:                                 */
+/*     http://localhost:8081/cgi-bin/tasks/cmd?cmd=qcpuid            */
+/*-------------------------------------------------------------------*/
 void cgibin_cmd(WEBBLK *webblk)
 {
 char   *command;
@@ -1228,23 +1271,32 @@ char   *command;
     }
 }
 
+/*-------------------------------------------------------------------*/
+/* The following table is the cgi-bin directory, which associates    */
+/* directory filenames with cgibin routines.                         */
+/*-------------------------------------------------------------------*/
+CGITAB cgidir[] =
+{
+    { "configure/cpu",       &cgibin_configure_cpu       },
 
-/* The following table is the cgi-bin directory, which               */
-/* associates directory filenames with cgibin routines               */
-
-CGITAB cgidir[] = {
-    { "tasks/cmd", &cgibin_cmd },
-    { "tasks/syslog", &cgibin_syslog },
-    { "tasks/ipl", &cgibin_ipl },
-    { "configure/cpu", &cgibin_configure_cpu },
-    { "debug/registers", &cgibin_debug_registers },
-    { "debug/storage", &cgibin_debug_storage },
-    { "debug/misc", &cgibin_debug_misc },
-    { "debug/version_info", &cgibin_debug_version_info },
-    { "debug/device/list", &cgibin_debug_device_list },
+    { "debug/registers",     &cgibin_debug_registers     },
+    { "debug/storage",       &cgibin_debug_storage       },
+    { "debug/misc",          &cgibin_debug_misc          },
+    { "debug/version_info",  &cgibin_debug_version_info  },
+    { "debug/device/list",   &cgibin_debug_device_list   },
     { "debug/device/detail", &cgibin_debug_device_detail },
-    { "registers/general", &cgibin_reg_general },
-    { "registers/control", &cgibin_reg_control },
-    { "registers/psw", &cgibin_psw },
-    { "xml/rates", &cgibin_xml_rates_info },
-    { NULL, NULL } };
+
+    { "tasks/cmd",           &cgibin_cmd                 },
+    { "tasks/syslog",        &cgibin_syslog              },
+    { "tasks/ipl",           &cgibin_ipl                 },
+
+    { "registers/general",   &cgibin_reg_general         },
+    { "registers/control",   &cgibin_reg_control         },
+    { "registers/psw",       &cgibin_psw                 },
+
+    { "xml/rates",           &cgibin_xml_rates_info      },
+
+    { NULL, NULL }
+};
+
+/*-------------------------------------------------------------------*/
