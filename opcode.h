@@ -565,10 +565,13 @@ do { \
 
 /* Virtual Architecture Level Set Facility */
 #define FACILITY_ENABLED(_faci, _regs) \
-        (((_regs)->facility_list[((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+        (((_regs)->facility_list                  [ ((STFL_ ## _faci)/8) ]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
 #define FACILITY_ENABLED_DEV(_faci) \
-        ((sysblk.facility_list[sysblk.arch_mode][((STFL_ ## _faci)/8)]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+        ((sysblk.facility_list[ sysblk.arch_mode ][ ((STFL_ ## _faci)/8) ]) & (0x80 >> ((STFL_ ## _faci) % 8)))
+
+#define FACILITY_ENABLED_ARCH( _faci, _arch ) \
+        ((sysblk.facility_list[     (_arch)      ][ ((STFL_ ## _faci)/8) ]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
 #define FACILITY_CHECK(_faci, _regs) \
     do { \

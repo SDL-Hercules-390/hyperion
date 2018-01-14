@@ -320,7 +320,7 @@ CONF_DLL_IMPORT BYTE are_cpu_thread( int* cpunum );
 
 /* Functions in module archlvl.c */
 extern void init_default_archmode();
-extern void init_facilities_lists();
+extern bool init_facilities_lists();
 extern void init_cpu_facilities( REGS* regs );
 extern const char* get_arch_name( REGS* regs );
 

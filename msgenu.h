@@ -702,7 +702,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00886 "CRW 0x%8.8X: %s"
 //efine HHC00887 - HHC00889 (available)
 
-//efine HHC00890 (available)
+#define HHC00890 "Cannot %s facility %s without first %s facility %s"
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
 #define HHC00892 "Facility( %s ) does not exist for %s"
 #define HHC00893 "Facility( %s ) not supported for %s"
@@ -711,7 +711,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00896 "Facility( %s ) not supported for %s"
 #define HHC00897 "Facility( %s ) is required for %s"
 #define HHC00898 "Facility( %s ) %s%s for %s"
-//efine HHC00899 (available)
+#define HHC00899 "%s facility %s fails consistency check"
 
 // reserve 009xx for ctc related messages
 /* ctcadpt.c, ctc_ctci.c, ctc_lcs.c, ctc_ptp.c, qeth.c */

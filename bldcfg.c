@@ -96,7 +96,10 @@ int build_config (const char *hercules_cnf)
 #endif
 
     init_default_archmode();
-    init_facilities_lists();
+
+    if (!init_facilities_lists())
+        return -1;
+
     ptt_trace_init( 0, TRUE );
 
     /* Set max number device threads */

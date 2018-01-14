@@ -32,7 +32,7 @@
 #undef Z390
 #undef MALL
 
-#if   __GEN_ARCH == 370             // (building for S/370?)
+#if   __GEN_ARCH == 370             /*    (building for S/370?)      */
 
     #define NONE     0x00           /* NO architectures or disabled  */
     #define S370     0x80           /* S/370 architecture            */
@@ -41,7 +41,7 @@
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
-#elif __GEN_ARCH == 390             // (building for S/390?)
+#elif __GEN_ARCH == 390             /*    (building for S/390?)      */
 
     #define NONE     0x00           /* NO architectures or disabled  */
     #define S370     0x00           /* S/370 architecture            */
@@ -50,7 +50,7 @@
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
-#elif __GEN_ARCH == 900             // (building for z/Arch?)
+#elif __GEN_ARCH == 900             /*    (building for z/Arch?)     */
 
     #define NONE     0x00           /* NO architectures or disabled  */
     #define S370     0x00           /* S/370 architecture            */
@@ -64,7 +64,9 @@
 #ifndef FACTAB_STRUCT_DEFINED
 #define FACTAB_STRUCT_DEFINED
 
-typedef bool FACMODCHK( bool enable, int bitno, int archnum );
+typedef bool FACMODCHK( bool enable, int bitno, int archnum,
+                        const char* action, const char* actioning,
+                        const char* target_facname );
 
 /*-------------------------------------------------------------------*/
 /*                  Facility Table structure                         */
@@ -102,7 +104,7 @@ typedef struct FACTAB   FACTAB;
     0,                                                              \
     0,                                                              \
 },
-#endif // FACTAB_STRUCT_DEFINED
+#endif /* FACTAB_STRUCT_DEFINED */
 
 /*-------------------------------------------------------------------*/
 /*              Temporary ARCH_DEP Facility Table                    */
@@ -152,7 +154,7 @@ FT( Z390, Z390, NONE, 000_N3_INSTR )
 #endif
 
 #if defined(  FEATURE_001_ZARCH_INSTALLED_FACILITY )
-FT( Z390, Z390, NONE, 001_ZARCH_INSTALLED )
+FT( Z390, Z390, Z900, 001_ZARCH_INSTALLED )
 FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE )
 #endif
 
@@ -292,7 +294,7 @@ FT( NONE, NONE, NONE, 038_OP_CMPSC )
 FT( Z900, Z900, NONE, 040_LOAD_PROG_PARAM )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
@@ -316,7 +318,7 @@ FT( Z900, Z900, NONE, 041_IEEE_EXCEPT_SIM )
 
 #endif /* defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_042_DFP_FACILITY )
 FT( Z900, Z900, NONE, 042_DFP )
@@ -326,15 +328,17 @@ FT( Z900, Z900, NONE, 042_DFP )
 FT( Z900, Z900, NONE, 043_DFP_HPERF )
 #endif
 
-//------------------------------------------------------------------------------
-// Allow the PFPO facility to be manually enabled Until proper support for it
-// is coded since some modern operating systems require it (z/OS and z/VM).
-
+/*-------------------------------------------------------------------*/
+/* Since some modern operating systems (e.g. z/OS and z/VM) require  */
+/* it, allow the PFPO facility to be forcibly enabled Until we can   */
+/* eventually code proper support for it.                            */
+/*-------------------------------------------------------------------*/
+// FIXME: code proper support for PFPO!
 //#if defined(  FEATURE_044_PFPO_FACILITY )
 FT( Z900, NONE, NONE, 044_PFPO )
 //#endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_045_DISTINCT_OPERANDS_FACILITY )
 FT( Z900, Z900, NONE, 045_DISTINCT_OPERANDS )
@@ -360,7 +364,7 @@ FT( Z900, Z900, NONE, 045_LOAD_STORE_ON_COND_1 )
 FT( Z900, Z900, NONE, 045_POPULATION_COUNT )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_047_CMPSC_ENH_FACILITY )
 FT( Z900, Z900, NONE, 047_CMPSC_ENH )
@@ -370,7 +374,7 @@ FT( Z900, Z900, NONE, 047_CMPSC_ENH )
 FT( Z900, Z900, NONE, 048_DFP_ZONE_CONV )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_049_EXECUTION_HINT_FACILITY )
 FT( Z900, Z900, NONE, 049_EXECUTION_HINT )
@@ -388,7 +392,7 @@ FT( Z900, Z900, NONE, 049_PROCESSOR_ASSIST )
 FT( Z900, Z900, NONE, 049_MISC_INSTR_EXT_1 )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_050_CONSTR_TRANSACT_FACILITY )
 FT( NONE, NONE, NONE, 050_CONSTR_TRANSACT )
@@ -398,7 +402,7 @@ FT( NONE, NONE, NONE, 050_CONSTR_TRANSACT )
 FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 )
 #if IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
@@ -408,7 +412,7 @@ FT( Z900, Z900, NONE, 052_INTERLOCKED_ACCESS_2 )
 #endif
 #endif /* defined(  FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 ) */
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
 FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2 )
@@ -418,7 +422,7 @@ FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2 )
 FT( NONE, NONE, NONE, 053_LOAD_ZERO_RIGHTMOST )
 #endif
 
-//------------------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_054_EE_CMPSC_FACILITY )
 FT( NONE, NONE, NONE, 054_EE_CMPSC )
@@ -678,15 +682,16 @@ typedef struct ARCHTAB  ARCHTAB;
 
 static ARCHTAB archtab[] =
 {
-//---------------------------------------------------------
-//
-//  The "_ARCH_nnn_NAME" entries MUST come first. The
-//  'get_archtab_by_arch' function expects it.
-//
-//  The FIRST entry is our DEFAULT initial startup archi-
-//  tecture set by the 'init_default_archmode' function.
-//
-//---------------------------------------------------------
+
+    //---------------------------------------------------------
+    //
+    //  The "_ARCH_nnn_NAME" entries MUST come first. The
+    //  'get_archtab_by_arch' function expects it.
+    //
+    //  The FIRST entry is our DEFAULT initial startup archi-
+    //  tecture set by the 'init_default_archmode' function.
+    //
+    //---------------------------------------------------------
 
 #if defined( _900 )
     AT( _ARCH_900_NAME,  ARCH_900_IDX,  Z900 )  //  "z/Arch"  feat900.h
@@ -730,19 +735,18 @@ static ARCHTAB archtab[] =
 /*   Facility Bit Modification Check Functions forward references    */
 /*-------------------------------------------------------------------*/
 
-static  bool  modn0or7  ( bool enable, int bitno, int archnum );
-static  bool  modidte   ( bool enable, int bitno, int archnum );
-static  bool  modlong   ( bool enable, int bitno, int archnum );
-static  bool  modtrans  ( bool enable, int bitno, int archnum );
-static  bool  modvec    ( bool enable, int bitno, int archnum );
-static  bool  modtod    ( bool enable, int bitno, int archnum );
-static  bool  modcpu    ( bool enable, int bitno, int archnum );
-static  bool  modmsa    ( bool enable, int bitno, int archnum );
-/* (bit 42 requires special handling as it interacts with many bits) */
-static  bool  modbit42  ( bool enable, int bitno, int archnum ); // (dfp, dfphi,fpx)
-static  bool  moddfphi  ( bool enable, int bitno, int archnum ); // (42, 43)
-static  bool  modfpx    ( bool enable, int bitno, int archnum ); // (42, 37)
-static  bool  moddfp    ( bool enable, int bitno, int archnum ); // (42, 48, 80)
+static  bool  mod0or7   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modidte   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modlong   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modtrans  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modvec    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modtod    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modcpu    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modmsa    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modbit42  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  moddfphi  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modfpx    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  moddfp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 
 /*-------------------------------------------------------------------*/
 /* The ACTUAL facilities table, initialized by init_facilities_lists */
@@ -755,112 +759,112 @@ static  bool  moddfp    ( bool enable, int bitno, int archnum ); // (42, 48, 80)
 static FACTAB factab[] =
 {
 /*-------------------------------------------------------------------*/
-/*  (function)  Short Name...                 Description...         */
+/*  (function)  Short Name...                Long Description...     */
 /*-------------------------------------------------------------------*/
-FT2( modn0or7,  000_N3_INSTR,                 "N3 Instructions are installed" )
-FT2( NULL,      001_ZARCH_INSTALLED,          "z/Architecture architectural mode is installed" )
-FT2( NULL,      002_ZARCH_ACTIVE,             "z/Architecture architectural mode is active" )
-FT2( modidte,   003_DAT_ENHANCE_1,            "DAT-Enhancement Facility 1" )
-FT2( modidte,   004_IDTE_SC_SEGTAB,           "IDTE selective clearing when segment-table invalidated" )
-FT2( modidte,   005_IDTE_SC_REGTAB,           "IDTE selective clearing when region-table invalidated" )
-FT2( NULL,      006_ASN_LX_REUSE,             "ASN-and-LX-Reuse Facility" )
-FT2( modn0or7,  007_STFL_EXTENDED,            "Store-Facility-List-Extended Facility" )
-FT2( NULL,      008_EDAT_1,                   "Enhanced-DAT Facility 1" )
-FT2( NULL,      009_SENSE_RUN_STATUS,         "Sense-Running-Status Facility" )
-FT2( NULL,      010_CONDITIONAL_SSKE,         "Conditional-SSKE Facility" )
-FT2( NULL,      011_CONFIG_TOPOLOGY,          "Configuration-Topology Facility" )
-FT2( NULL,      013_IPTE_RANGE,               "IPTE-Range Facility" )
-FT2( NULL,      014_NONQ_KEY_SET,             "Nonquiescing Key-Setting Facility" )
-FT2( NULL,      016_EXT_TRANSL_2,             "Extended-Translation Facility 2" )
-FT2( NULL,      017_MSA,                      "Message-Security Assist" )
-FT2( modlong,   018_LONG_DISPL_INST,          "Long-Displacement Facility" )
-FT2( modlong,   019_LONG_DISPL_HPERF,         "Long-Displacement Facility Has High Performance" )
-FT2( NULL,      020_HFP_MULT_ADD_SUB,         "HFP-Multiply-and-Add/Subtract Facility" )
-FT2( NULL,      021_EXTENDED_IMMED,           "Extended-Immediate Facility" )
-FT2( NULL,      022_EXT_TRANSL_3,             "Extended-Translation Facility 3" )
-FT2( NULL,      023_HFP_UNNORM_EXT,           "HFP-Unnormalized-Extensions Facility" )
-FT2( NULL,      024_ETF2_ENHANCEMENT,         "ETF2-Enhancement Facility" )
-FT2( modtod,    025_STORE_CLOCK_FAST,         "Store-Clock-Fast Facility" )
-FT2( NULL,      026_PARSING_ENHANCE,          "Parsing-Enhancement Facility" )
-FT2( NULL,      027_MVCOS,                    "Move-with-Optional-Specifications Facility" )
-FT2( modtod,    028_TOD_CLOCK_STEER,          "TOD-Clock-Steering Facility" )
-FT2( NULL,      030_ETF3_ENHANCEMENT,         "ETF3-Enhancement Facility" )
-FT2( NULL,      031_EXTRACT_CPU_TIME,         "Extract-CPU-Time Facility" )
-FT2( NULL,      032_CSSF,                     "Compare-and-Swap-and-Store Facility" )
-FT2( NULL,      033_CSSF2,                    "Compare-and-Swap-and-Store Facility 2" )
-FT2( NULL,      034_GEN_INST_EXTN,            "General-Instructions-Extension Facility" )
-FT2( NULL,      035_EXECUTE_EXTN,             "Execute-Extensions Facility" )
-FT2( NULL,      036_ENH_MONITOR,              "Enhanced-Monitor Facility" )
-FT2( modfpx,    037_FP_EXTENSION,             "Floating-Point-Extension Facility" )
-FT2( NULL,      038_OP_CMPSC,                 "Order-Preserving-Compression Facility" )
-FT2( NULL,      040_LOAD_PROG_PARAM,          "Load-Program-Parameter Facility" )
-FT2( NULL,      041_FPS_ENHANCEMENT,          "Floating-Point-Support-Enhancement Facility" )
-FT2( NULL,      041_DFP_ROUNDING,             "Decimal-Floating-Point-Rounding Facility" )
-FT2( NULL,      041_FPR_GR_TRANSFER,          "FPR-GR-Transfer Facility" )
-FT2( NULL,      041_FPS_SIGN_HANDLING,        "Floating-Point-Support-Sign-Handling Facility" )
-FT2( NULL,      041_IEEE_EXCEPT_SIM,          "IEEE-Exception-Simulation Facility" )
-FT2( modbit42,  042_DFP,                      "Decimal-Floating-Point Facility" )
-FT2( moddfphi,  043_DFP_HPERF,                "Decimal-Floating-Point Facility Has High Performance" )
-FT2( NULL,      044_PFPO,                     "PFPO (Perform Floating-Point Operation) Facility" )
-FT2( NULL,      045_DISTINCT_OPERANDS,        "Distinct-Operands Facility" )
-FT2( NULL,      045_FAST_BCR_SERIAL,          "Fast-BCR-Serialization Facility" )
-FT2( NULL,      045_HIGH_WORD,                "High-Word Facility" )
-FT2( NULL,      045_INTERLOCKED_ACCESS_1,     "Interlocked-Access Facility 1" )
-FT2( NULL,      045_LOAD_STORE_ON_COND_1,     "Load/Store-on-Condition Facility 1" )
-FT2( NULL,      045_POPULATION_COUNT,         "Population-Count Facility" )
-FT2( NULL,      047_CMPSC_ENH,                "CMPSC-Enhancement Facility" )
-FT2( moddfp,    048_DFP_ZONE_CONV,            "Decimal-Floating-Point-Zoned-Conversion Facility" )
-FT2( modtrans,  049_EXECUTION_HINT,           "Execution-Hint Facility" )
-FT2( modtrans,  049_LOAD_AND_TRAP,            "Load-and-Trap Facility" )
-FT2( modtrans,  049_PROCESSOR_ASSIST,         "Processor-Assist Facility" )
-FT2( modtrans,  049_MISC_INSTR_EXT_1,         "Miscellaneous-Instruction-Extensions Facility 1" )
-FT2( modtrans,  050_CONSTR_TRANSACT,          "Constrained-Transactional-Execution Facility" )
-FT2( NULL,      051_LOCAL_TLB_CLEARING,       "Local-TLB-Clearing Facility" )
-FT2( NULL,      052_INTERLOCKED_ACCESS_2,     "Interlocked-Access Facility 2" )
-FT2( NULL,      053_LOAD_STORE_ON_COND_2,     "Load/Store-on-Condition Facility 2" )
-FT2( NULL,      053_LOAD_ZERO_RIGHTMOST,      "Load-and-Zero-Rightmost-Byte Facility" )
-FT2( NULL,      054_EE_CMPSC,                 "Entropy-Encoding-Compression Facility" )
-FT2( NULL,      057_MSA_EXTENSION_5,          "Message-Security-Assist Extension 5" )
-FT2( NULL,      058_MISC_INSTR_EXT_2,         "Miscellaneous-Instruction-Extensions Facility 2" )
-FT2( NULL,      066_RES_REF_BITS_MULT,        "Reset-Reference-Bits-Multiple Facility" )
-FT2( modcpu,    067_CPU_MEAS_COUNTER,         "CPU-Measurement Counter Facility" )
-FT2( NULL,      068_CPU_MEAS_SAMPLNG,         "CPU-Measurement Sampling Facility" )
-FT2( modtrans,  073_TRANSACT_EXEC,            "Transactional-Execution Facility" )
-FT2( NULL,      074_STORE_HYPER_INFO,         "Store-Hypervisor-Information Facility" )
-FT2( NULL,      075_ACC_EX_FS_INDIC,          "Access-Exception-Fetch/Store-Indication Facility" )
-FT2( modmsa,    076_MSA_EXTENSION_3,          "Message-Security-Assist Extension 3" )
-FT2( NULL,      077_MSA_EXTENSION_4,          "Message-Security-Assist Extension 4" )
-FT2( NULL,      078_EDAT_2,                   "Enhanced-DAT Facility 2" )
-FT2( moddfp,    080_DFP_PACK_CONV,            "Decimal-Floating-Point-Packed-Conversion Facility" )
-FT2( modvec,    129_ZVECTOR,                  "Vector Facility for z/Architecture" )
-FT2( NULL,      130_INSTR_EXEC_PROT,          "Instruction-Execution-Protection Facility" )
-FT2( NULL,      131_SIDE_EFFECT_ACCESS,       "Side-Effect-Access Facility" )
-FT2( NULL,      133_GUARDED_STORAGE,          "Guarded-Storage Facility" )
-FT2( modvec,    134_ZVECTOR_PACK_DEC,         "Vector Packed-Decimal Facility" )
-FT2( modvec,    135_ZVECTOR_ENH_1,            "Vector-Enhancements Facility 1" )
-FT2( NULL,      138_CONFIG_ZARCH_MODE,        "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
-FT2( modtod,    139_MULTIPLE_EPOCH,           "Multiple-Epoch Facility" )
-FT2( modcpu,    142_ST_CPU_COUNTER_MULT,      "Store-CPU-Counter-Multiple Facility" )
-FT2( NULL,      144_TEST_PEND_EXTERNAL,       "Test-Pending-External-Interruption Facility" )
-FT2( NULL,      145_INS_REF_BITS_MULT,        "Insert-Reference-Bits-Multiple Facility" )
-FT2( modmsa,    146_MSA_EXTENSION_8,          "Message-Security-Assist Extension 8" )
-FT2( NULL,      168_ESA390_COMPAT_MODE,       "ESA/390-Compatability-Mode Facility" )
+FT2( mod0or7,   000_N3_INSTR,               "N3 Instructions are installed" )
+FT2( NULL,      001_ZARCH_INSTALLED,        "z/Architecture architectural mode is installed" )
+FT2( NULL,      002_ZARCH_ACTIVE,           "z/Architecture architectural mode is active" )
+FT2( modidte,   003_DAT_ENHANCE_1,          "DAT-Enhancement Facility 1" )
+FT2( modidte,   004_IDTE_SC_SEGTAB,         "IDTE selective clearing when segment-table invalidated" )
+FT2( modidte,   005_IDTE_SC_REGTAB,         "IDTE selective clearing when region-table invalidated" )
+FT2( NULL,      006_ASN_LX_REUSE,           "ASN-and-LX-Reuse Facility" )
+FT2( mod0or7,   007_STFL_EXTENDED,          "Store-Facility-List-Extended Facility" )
+FT2( NULL,      008_EDAT_1,                 "Enhanced-DAT Facility 1" )
+FT2( NULL,      009_SENSE_RUN_STATUS,       "Sense-Running-Status Facility" )
+FT2( NULL,      010_CONDITIONAL_SSKE,       "Conditional-SSKE Facility" )
+FT2( NULL,      011_CONFIG_TOPOLOGY,        "Configuration-Topology Facility" )
+FT2( NULL,      013_IPTE_RANGE,             "IPTE-Range Facility" )
+FT2( NULL,      014_NONQ_KEY_SET,           "Nonquiescing Key-Setting Facility" )
+FT2( NULL,      016_EXT_TRANSL_2,           "Extended-Translation Facility 2" )
+FT2( NULL,      017_MSA,                    "Message-Security Assist" )
+FT2( modlong,   018_LONG_DISPL_INST,        "Long-Displacement Facility" )
+FT2( modlong,   019_LONG_DISPL_HPERF,       "Long-Displacement Facility Has High Performance" )
+FT2( NULL,      020_HFP_MULT_ADD_SUB,       "HFP-Multiply-and-Add/Subtract Facility" )
+FT2( NULL,      021_EXTENDED_IMMED,         "Extended-Immediate Facility" )
+FT2( NULL,      022_EXT_TRANSL_3,           "Extended-Translation Facility 3" )
+FT2( NULL,      023_HFP_UNNORM_EXT,         "HFP-Unnormalized-Extensions Facility" )
+FT2( NULL,      024_ETF2_ENHANCEMENT,       "ETF2-Enhancement Facility" )
+FT2( modtod,    025_STORE_CLOCK_FAST,       "Store-Clock-Fast Facility" )
+FT2( NULL,      026_PARSING_ENHANCE,        "Parsing-Enhancement Facility" )
+FT2( NULL,      027_MVCOS,                  "Move-with-Optional-Specifications Facility" )
+FT2( modtod,    028_TOD_CLOCK_STEER,        "TOD-Clock-Steering Facility" )
+FT2( NULL,      030_ETF3_ENHANCEMENT,       "ETF3-Enhancement Facility" )
+FT2( NULL,      031_EXTRACT_CPU_TIME,       "Extract-CPU-Time Facility" )
+FT2( NULL,      032_CSSF,                   "Compare-and-Swap-and-Store Facility" )
+FT2( NULL,      033_CSSF2,                  "Compare-and-Swap-and-Store Facility 2" )
+FT2( NULL,      034_GEN_INST_EXTN,          "General-Instructions-Extension Facility" )
+FT2( NULL,      035_EXECUTE_EXTN,           "Execute-Extensions Facility" )
+FT2( NULL,      036_ENH_MONITOR,            "Enhanced-Monitor Facility" )
+FT2( modfpx,    037_FP_EXTENSION,           "Floating-Point-Extension Facility" )
+FT2( NULL,      038_OP_CMPSC,               "Order-Preserving-Compression Facility" )
+FT2( NULL,      040_LOAD_PROG_PARAM,        "Load-Program-Parameter Facility" )
+FT2( NULL,      041_FPS_ENHANCEMENT,        "Floating-Point-Support-Enhancement Facility" )
+FT2( NULL,      041_DFP_ROUNDING,           "Decimal-Floating-Point-Rounding Facility" )
+FT2( NULL,      041_FPR_GR_TRANSFER,        "FPR-GR-Transfer Facility" )
+FT2( NULL,      041_FPS_SIGN_HANDLING,      "Floating-Point-Support-Sign-Handling Facility" )
+FT2( NULL,      041_IEEE_EXCEPT_SIM,        "IEEE-Exception-Simulation Facility" )
+FT2( modbit42,  042_DFP,                    "Decimal-Floating-Point Facility" )
+FT2( moddfphi,  043_DFP_HPERF,              "Decimal-Floating-Point Facility Has High Performance" )
+FT2( NULL,      044_PFPO,                   "PFPO (Perform Floating-Point Operation) Facility" )
+FT2( NULL,      045_DISTINCT_OPERANDS,      "Distinct-Operands Facility" )
+FT2( NULL,      045_FAST_BCR_SERIAL,        "Fast-BCR-Serialization Facility" )
+FT2( NULL,      045_HIGH_WORD,              "High-Word Facility" )
+FT2( NULL,      045_INTERLOCKED_ACCESS_1,   "Interlocked-Access Facility 1" )
+FT2( NULL,      045_LOAD_STORE_ON_COND_1,   "Load/Store-on-Condition Facility 1" )
+FT2( NULL,      045_POPULATION_COUNT,       "Population-Count Facility" )
+FT2( NULL,      047_CMPSC_ENH,              "CMPSC-Enhancement Facility" )
+FT2( moddfp,    048_DFP_ZONE_CONV,          "Decimal-Floating-Point-Zoned-Conversion Facility" )
+FT2( modtrans,  049_EXECUTION_HINT,         "Execution-Hint Facility" )
+FT2( modtrans,  049_LOAD_AND_TRAP,          "Load-and-Trap Facility" )
+FT2( modtrans,  049_PROCESSOR_ASSIST,       "Processor-Assist Facility" )
+FT2( modtrans,  049_MISC_INSTR_EXT_1,       "Miscellaneous-Instruction-Extensions Facility 1" )
+FT2( modtrans,  050_CONSTR_TRANSACT,        "Constrained-Transactional-Execution Facility" )
+FT2( NULL,      051_LOCAL_TLB_CLEARING,     "Local-TLB-Clearing Facility" )
+FT2( NULL,      052_INTERLOCKED_ACCESS_2,   "Interlocked-Access Facility 2" )
+FT2( NULL,      053_LOAD_STORE_ON_COND_2,   "Load/Store-on-Condition Facility 2" )
+FT2( NULL,      053_LOAD_ZERO_RIGHTMOST,    "Load-and-Zero-Rightmost-Byte Facility" )
+FT2( NULL,      054_EE_CMPSC,               "Entropy-Encoding-Compression Facility" )
+FT2( NULL,      057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
+FT2( NULL,      058_MISC_INSTR_EXT_2,       "Miscellaneous-Instruction-Extensions Facility 2" )
+FT2( NULL,      066_RES_REF_BITS_MULT,      "Reset-Reference-Bits-Multiple Facility" )
+FT2( modcpu,    067_CPU_MEAS_COUNTER,       "CPU-Measurement Counter Facility" )
+FT2( NULL,      068_CPU_MEAS_SAMPLNG,       "CPU-Measurement Sampling Facility" )
+FT2( modtrans,  073_TRANSACT_EXEC,          "Transactional-Execution Facility" )
+FT2( NULL,      074_STORE_HYPER_INFO,       "Store-Hypervisor-Information Facility" )
+FT2( NULL,      075_ACC_EX_FS_INDIC,        "Access-Exception-Fetch/Store-Indication Facility" )
+FT2( modmsa,    076_MSA_EXTENSION_3,        "Message-Security-Assist Extension 3" )
+FT2( NULL,      077_MSA_EXTENSION_4,        "Message-Security-Assist Extension 4" )
+FT2( NULL,      078_EDAT_2,                 "Enhanced-DAT Facility 2" )
+FT2( moddfp,    080_DFP_PACK_CONV,          "Decimal-Floating-Point-Packed-Conversion Facility" )
+FT2( modvec,    129_ZVECTOR,                "Vector Facility for z/Architecture" )
+FT2( NULL,      130_INSTR_EXEC_PROT,        "Instruction-Execution-Protection Facility" )
+FT2( NULL,      131_SIDE_EFFECT_ACCESS,     "Side-Effect-Access Facility" )
+FT2( NULL,      133_GUARDED_STORAGE,        "Guarded-Storage Facility" )
+FT2( modvec,    134_ZVECTOR_PACK_DEC,       "Vector Packed-Decimal Facility" )
+FT2( modvec,    135_ZVECTOR_ENH_1,          "Vector-Enhancements Facility 1" )
+FT2( NULL,      138_CONFIG_ZARCH_MODE,      "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
+FT2( modtod,    139_MULTIPLE_EPOCH,         "Multiple-Epoch Facility" )
+FT2( modcpu,    142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multiple Facility" )
+FT2( NULL,      144_TEST_PEND_EXTERNAL,     "Test-Pending-External-Interruption Facility" )
+FT2( NULL,      145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Multiple Facility" )
+FT2( modmsa,    146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
+FT2( NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
 
-FT2( NULL,      HERC_MOVE_INVERSE,            "Hercules MVCIN Move Inverse Instruction Support" )
-FT2( NULL,      HERC_MSA_EXTENSION_1,         "Hercules Message-Security-Assist Extension 1 Support" )
-FT2( NULL,      HERC_MSA_EXTENSION_2,         "Hercules Message-Security-Assist Extension 2 Support" )
-FT2( NULL,      HERC_PROBSTATE_DIAGF08,       "Hercules Problem-State Diagnose X'F08' Support" )
-FT2( NULL,      HERC_SIGP_SETARCH_S370,       "Hercules SIGP Set Architecture S/370 Support" )
-FT2( NULL,      HERC_HOST_RESOURCE_ACCESS,    "Hercules Host Resource Access Support" )
-FT2( NULL,      HERC_QEBSM,                   "Hercules QDIO Enhanced Buffer-State Management Support" )
-FT2( NULL,      HERC_QDIO_THININT,            "Hercules QDIO Thin-Interrupts Support" )
-FT2( NULL,      HERC_QDIO_TDD,                "Hercules QDIO Time-Delayed-Dispatching Support" )
-FT2( NULL,      HERC_SVS,                     "Hercules SVS Set Vector Summary Instruction Support" )
-FT2( NULL,      HERC_LOGICAL_PARTITION,       "Hercules Logical Partition (LPAR) Support" )
-FT2( NULL,      HERC_VIRTUAL_MACHINE,         "Hercules Emulate Virtual Machine Support" )
-FT2( NULL,      HERC_QDIO_ASSIST,             "Hercules QDIO-Assist Support" )
-FT2( NULL,      HERC_INTERVAL_TIMER,          "Hercules Interval Timer Support" )
-FT2( NULL,      HERC_DETECT_PGMINTLOOP,       "Hercules Detect-Program-Interrupt-Loop Support" )
+FT2( NULL,      HERC_MOVE_INVERSE,          "Hercules MVCIN Move Inverse Instruction Support" )
+FT2( NULL,      HERC_MSA_EXTENSION_1,       "Hercules Message-Security-Assist Extension 1 Support" )
+FT2( NULL,      HERC_MSA_EXTENSION_2,       "Hercules Message-Security-Assist Extension 2 Support" )
+FT2( NULL,      HERC_PROBSTATE_DIAGF08,     "Hercules Problem-State Diagnose X'F08' Support" )
+FT2( NULL,      HERC_SIGP_SETARCH_S370,     "Hercules SIGP Set Architecture S/370 Support" )
+FT2( NULL,      HERC_HOST_RESOURCE_ACCESS,  "Hercules Host Resource Access Support" )
+FT2( NULL,      HERC_QEBSM,                 "Hercules QDIO Enhanced Buffer-State Management Support" )
+FT2( NULL,      HERC_QDIO_THININT,          "Hercules QDIO Thin-Interrupts Support" )
+FT2( NULL,      HERC_QDIO_TDD,              "Hercules QDIO Time-Delayed-Dispatching Support" )
+FT2( NULL,      HERC_SVS,                   "Hercules SVS Set Vector Summary Instruction Support" )
+FT2( NULL,      HERC_LOGICAL_PARTITION,     "Hercules Logical Partition (LPAR) Support" )
+FT2( NULL,      HERC_VIRTUAL_MACHINE,       "Hercules Emulate Virtual Machine Support" )
+FT2( NULL,      HERC_QDIO_ASSIST,           "Hercules QDIO-Assist Support" )
+FT2( NULL,      HERC_INTERVAL_TIMER,        "Hercules Interval Timer Support" )
+FT2( NULL,      HERC_DETECT_PGMINTLOOP,     "Hercules Detect-Program-Interrupt-Loop Support" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -1005,13 +1009,18 @@ static const size_t num_arch_ft_entries[ NUM_GEN_ARCHS ] =
 /*-------------------------------------------------------------------*/
 /*                   init_facilities_lists                  (public) */
 /*-------------------------------------------------------------------*/
-void init_facilities_lists()
+static const FACTAB* get_factab_by_bitno( int bitno );  /* (fwd ref) */
+
+bool init_facilities_lists()
 {
-    // Called ONCE by bldcfg.c 'build_config' during system startup.
+    /* Called ONCE by bldcfg.c 'build_config' during system startup. */
 
     const ARCHTAB* at;
+    const FACTAB* ft;
+    const char* archname;
+    size_t i, n, bitno;
     int arch, fbyte, fbit;
-    size_t i, n;
+    bool enable, rc = true;
 
     /* Merge each individual ARCH_DEP table entry into system factab */
 
@@ -1032,13 +1041,13 @@ void init_facilities_lists()
         }
     }
 
-    // Clear all architectures' sysblk facilities lists to ZEROS
+    /* Clear each architectures' sysblk facilities lists to ZEROS */
 
     for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
         for (fbyte = 0; fbyte < (int) STFL_HERC_BY_SIZE; fbyte++)
             sysblk.facility_list[ arch ][ fbyte ] = 0;
 
-    // Initialize all architectures' sysblk facilities to their default
+    /* Init each architectures' sysblk facilities to their default */
 
     for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
     {
@@ -1046,10 +1055,10 @@ void init_facilities_lists()
 
         for (i=0; i < _countof( factab ); i++)
         {
-            // Initialize this architecture's facility bit only if
-            // this facility applies to this architecture and it's
-            // either a required facility or defaults to enabled.
-
+            /*  Initialize this architecture's facility bit only if
+            **  this facility applies to this architecture and it's
+            **  either a required facility or defaults to enabled.
+            */
             if (1
                 && (factab[i].supmask & at->amask)      // (applies?)
                 && (0
@@ -1065,6 +1074,37 @@ void init_facilities_lists()
             }
         }
     }
+
+    /* Sanity check each architectures' sysblk facilities list */
+
+    for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
+    {
+        archname = get_arch_name_by_arch( arch );
+
+        for (bitno = 0; bitno <= STFL_HERC_LAST_BIT; bitno++)
+        {
+            if (1
+                && (ft = get_factab_by_bitno( bitno ))
+                && (ft->modokfunc)
+            )
+            {
+                fbyte =         (bitno / 8);
+                fbit  = 0x80 >> (bitno % 8);
+
+                enable = (sysblk.facility_list[ arch ][ fbyte ] & fbit) ?
+                    true : false;
+
+                if (!ft->modokfunc( enable, bitno, arch, NULL, NULL, NULL ))
+                {
+                    // "%s facility %s fails consistency check"
+                    WRMSG( HHC00899, "S", archname, ft->name );
+                    rc = false;
+                }
+            }
+        }
+    }
+
+    return rc;  // (true or false, success or failure)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1132,7 +1172,7 @@ static const char* get_facname_by_bitno( int bitno, const char** name )
     if (!(ft = get_factab_by_bitno( bitno )))
         *name = NULL;
     else
-        *name = strdup( ft->name );
+        *name = ft->name;
     return *name;
 }
 
@@ -1167,7 +1207,7 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
     char    sup, def, req, cur, mod;
     const char* sev;
 
-    // Allocate an array of FACTAB entry pointers
+    /* Allocate an array of FACTAB entry pointers */
 
     if (!(ptr_array = malloc( sizeof( const FACTAB* ) * _countof( factab ))))
     {
@@ -1176,18 +1216,18 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
         return false;
     }
 
-    // Populate array of FACTAB entry pointers
+    /* Populate array of FACTAB entry pointers */
 
     for (num = _countof( factab ), ftpp = ptr_array, ft = factab; num; num--, ftpp++, ft++)
         *ftpp = ft;
 
-    // Sort the array into the desired sequence
+    /* Sort the array into the desired sequence */
 
     qsort( ptr_array, _countof( factab ), sizeof( FACTAB* ),
         sort_by_long ? sort_ftpp_by_long_name
                      : sort_ftpp_by_bit_number );
 
-    // Display column headers...
+    /* Display column headers... */
 
     LOGMSG( "HHC00891I\n" );
     LOGMSG( "HHC00891I                             %s Facility Table\n", at->name );
@@ -1196,7 +1236,7 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
     LOGMSG( "HHC00891I --- -- -- ----- --------------------------- ---------------------------------------------------------\n" );
     LOGMSG( "HHC00891I\n" );
 
-    // Display FACTAB entries for current architecture
+    /* Display FACTAB entries for current architecture */
 
     for (num = _countof( factab ), ftpp = ptr_array; num; num--, ftpp++)
     {
@@ -1258,7 +1298,7 @@ static bool archlvl_query( int argc, char* argv[] )
     bool            forced, enabled, modified;
     char            c;
 
-    // Note: we know argc >= 2, otherwise why would we be called?
+    /* Note: we know argc >= 2, otherwise why would we be called? */
 
     if (argc > 3)
     {
@@ -1267,10 +1307,10 @@ static bool archlvl_query( int argc, char* argv[] )
         return false;
     }
 
-    // Get pointer to ARCHTAB entry for current architecture
+    /* Get pointer to ARCHTAB entry for current architecture */
     at = get_archtab_by_arch( sysblk.arch_mode );
 
-    // Query ALL?
+    /* Query ALL? */
 
     if (argc == 2 ||                               // (implicit ALL)
        (argc == 3 && (0
@@ -1284,7 +1324,7 @@ static bool archlvl_query( int argc, char* argv[] )
         return archlvl_query_all( at, sort_by_long );
     }
 
-    // Query RAW?
+    /* Query RAW? */
 
     if (argc == 3 && CMD( argv[2], RAW, 1 ))
     {
@@ -1314,7 +1354,7 @@ static bool archlvl_query( int argc, char* argv[] )
         return true;
     }
 
-    // Get pointer to requested facility table entry
+    /* Get pointer to requested facility table entry */
 
     if (strncasecmp( "BIT", p = argv[2], 3 ) == 0)
         p += 3;
@@ -1335,7 +1375,7 @@ static bool archlvl_query( int argc, char* argv[] )
         forced = false;
     }
 
-    // Does this facility exist for the current architecture?
+    /* Does this facility exist for the current architecture? */
 
     if (!ft)
     {
@@ -1344,19 +1384,19 @@ static bool archlvl_query( int argc, char* argv[] )
         return false;
     }
 
-    // Get byte and bit number
+    /* Get byte and bit number */
 
     fbyte =         (ft->bitno / 8);
     fbit  = 0x80 >> (ft->bitno % 8);
 
-    // Set some flags
+    /* Set some flags */
 
     enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
 
     modified = ( (ft->defmask & at->amask) && !enabled) ||
                (!(ft->defmask & at->amask) &&  enabled);
 
-    // Is this facility supported for the current architecture?
+    /* Is this facility supported for the current architecture? */
 
     if (1
         && !forced
@@ -1369,7 +1409,7 @@ static bool archlvl_query( int argc, char* argv[] )
         return false;
     }
 
-    // Display facility setting
+    /* Display facility setting */
 
     sev = modified ? "W" : "I";
 
@@ -1380,214 +1420,403 @@ static bool archlvl_query( int argc, char* argv[] )
     return true;
 }
 
-// --------------------------------------------------------------------
-//
-// Not mentioned in PoPs: N3 includes STFL so 7 implies 0
-//
-//  STFL_000_N3_INSTR              0    /* Instructions marked N3
-//                                         are installed             */
-//
-//  STFL_007_STFL_EXTENDED         7    /* Store facility list    @Z9
-//                                         extended is installed  @Z9*/
-//
-static bool modn0or7( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_005_IDTE_SC_REGTAB        5    /* IDTE selective clearing
-//                                         when regtab invalidated. Bit
-//                                         3 and 4 one when bit 5 is */
-//
-//  STFL_004_IDTE_SC_SEGTAB        4    /* IDTE selective clearing
-//                                         when segtab invalidated. Bit
-//                                         3 is one if bit 4 is one. */
-//
-//  STFL_003_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
-//                                         is installed.             */
-//
-static bool modidte( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_019_LONG_DISPL_HPERF     19    /* Long displacement facility
-//                                         has high performance. Bit 18
-//                                         is one if bit 19 is one.  */
-//
-//  STFL_018_LONG_DISPL_INST      18    /* Long displacement facility
-//                                         is installed              */
-//
-static bool modlong( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_073_TRANSACT_EXEC        73    /* Transactional-execution. Bit
-//                                         49 is one when bit 73 one */
-//
-//  STFL_050_CONSTR_TRANSACT      50    /* Constrained-transactional-
-//                                         execution facility. Bit only
-//                                         meaningful if bit 73 one. */
-//
-//  STFL_049_EXECUTION_HINT       49    /* Execution-hint, load-and-
-//                                         trap, processor-assist and
-//                                         miscellaneous-instruction-
-//                                         extension-1 installed     */
-//
-static bool modtrans( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_135_ZVECTOR_ENH_1       135    /* Vector-enhancements-1. When
-//                                         bit 135 is one, bit 129 is
-//                                         also one.                 */
-//
-//  STFL_134_ZVECTOR_PACK_DEC    134    /* Vector-packed-decimal. When
-//                                         bit 134 is one, bit 129 is
-//                                         also one.                 */
-//
-//  STFL_129_ZVECTOR             129    /* z/Arch Vector facility    */
-//
-static bool modvec( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_139_MULTIPLE_EPOCH      139    /* Multiple-epoch facility. If
-//                                         bit 139 is one, bits 25 and
-//                                         28 are also one.          */
-//
-//  STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast       @Z9
-//                                         enhancement installed  @Z9*/
-//
-//  STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
-//                                         facility is installed  @Z9*/
-//
-static bool modtod( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_142_ST_CPU_COUNTER_MULT 142    /* Store-CPU-counter-multiple
-//                                         facility is installed. Bit
-//                                         67 is one when bit 142 is.*/
-//
-//  STFL_067_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
-//                                         facility installed z/Arch */
-//
-static bool modcpu( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
-// --------------------------------------------------------------------
-//
-//  STFL_146_MSA_EXTENSION_8     146    /* Message-security-assist-
-//                                         extension-8. Bit 76 is one
-//                                         when bit 146 is one.      */
-//
-//  STFL_076_MSA_EXTENSION_3      76    /* Message Security Assist  810
-//                                         Extension 3 installed  810*/
-//
-static bool modmsa( bool enable, int bitno, int archnum )
-{
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
-    return true;
-}
 /*-------------------------------------------------------------------*/
-/* (bit 42 requires special handling as it interacts with many bits) */
+/*                         _hhc00890e                                */
 /*-------------------------------------------------------------------*/
-static bool modbit42( bool enable, int bitno, int archnum )
+/*      "Cannot %s facility %s without first %s facility %s"         */
+/*-------------------------------------------------------------------*/
+static bool _hhc00890e( int target_bit, const char* target_facname,
+                        const char* action, const char* actioning,
+                        int prerequisite_bit, const char* file,
+                        int line, const char* func )
 {
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
+    const char* prerequisite_facname;
+
+    fwritemsg( file, line, func, WRMSG_NORMAL, stdout, MSG( HHC00890, "E",
+        action,    get_facname_by_bitno( target_bit,       &target_facname       ),
+        actioning, get_facname_by_bitno( prerequisite_bit, &prerequisite_facname )));
+
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/*                          HHC00890E                                */
+/*-------------------------------------------------------------------*/
+/* Helper macro to return false immediately if no error message is   */
+/* wanted (action == NULL) or call helper function to issue message  */
+/* which always returns false.                                       */
+/*-------------------------------------------------------------------*/
+#define HHC00890E( prereq_bit )     (!action? false : _hhc00890e    \
+    ( bitno, target_facname, action, actioning, (prereq_bit),       \
+        __FILE__, __LINE__, __FUNCTION__ ))
+
+/*-------------------------------------------------------------------*/
+/*                          mod0or7                                  */
+/*-------------------------------------------------------------------*/
+/*  STFLE implies STFL so 7 implies 0. Therefore if 7 is on, then    */
+/* you can't disable 0, and can't enable 7 without also enabling 0.  */
+/*-------------------------------------------------------------------*/
+static bool mod0or7( bool enable, int bitno, int archnum,
+                     const char* action, const char* actioning,
+                     const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_007_STFL_EXTENDED)
+        {
+            if (!FACILITY_ENABLED_ARCH( 000_N3_INSTR, archnum ))
+                return HHC00890E(  STFL_000_N3_INSTR );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_000_N3_INSTR)
+        {
+            if (FACILITY_ENABLED_ARCH( 007_STFL_EXTENDED, archnum ))
+                return HHC00890E( STFL_007_STFL_EXTENDED );
+        }
+    }
+
     return true;
 }
-// --------------------------------------------------------------------
-//
-//  STFL_043_DFP_HPERF            43    /* DFP has high performance.
-//                                         Bit 42 is one if bit 43 is*/
-//
-//  STFL_042_DFP                  42    /* Decimal floating point
-//                                         (DFP) facility            */
-//
-static bool moddfphi( bool enable, int bitno, int archnum )
+
+/*-------------------------------------------------------------------*/
+/*                          modidte                                  */
+/*-------------------------------------------------------------------*/
+/*         bit 4 implies bit 3, and bit 5 implies bit 4.             */
+/*-------------------------------------------------------------------*/
+static bool modidte( bool enable, int bitno, int archnum,
+                     const char* action, const char* actioning,
+                     const char* target_facname )
 {
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
+    if (enable)
+    {
+        if (bitno == STFL_005_IDTE_SC_REGTAB)
+        {
+            if (!FACILITY_ENABLED_ARCH( 004_IDTE_SC_SEGTAB, archnum ))
+                return HHC00890E(  STFL_004_IDTE_SC_SEGTAB );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_003_DAT_ENHANCE_1)
+        {
+            if (FACILITY_ENABLED_ARCH( 004_IDTE_SC_SEGTAB, archnum ))
+                return HHC00890E( STFL_004_IDTE_SC_SEGTAB );
+        }
+        else if (bitno == STFL_004_IDTE_SC_SEGTAB)
+        {
+            if (FACILITY_ENABLED_ARCH( 005_IDTE_SC_REGTAB, archnum ))
+                return HHC00890E( STFL_005_IDTE_SC_REGTAB );
+        }
+    }
+
     return true;
 }
-// --------------------------------------------------------------------
-//
-//  STFL_037_FP_EXTENSION         37    /* Floating-point extension
-//                                         facility installed. When bit
-//                                         37 is one, so is bit 42.  */
-//
-//  STFL_042_DFP                  42    /* Decimal floating point
-//                                         (DFP) facility            */
-//
-static bool modfpx( bool enable, int bitno, int archnum )
+
+/*-------------------------------------------------------------------*/
+/*                          modlong                                  */
+/*-------------------------------------------------------------------*/
+/*                   bit 19 implies bit 18                           */
+/*-------------------------------------------------------------------*/
+static bool modlong( bool enable, int bitno, int archnum,
+                     const char* action, const char* actioning,
+                     const char* target_facname )
 {
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
+    if (enable)
+    {
+        if (bitno == STFL_019_LONG_DISPL_HPERF)
+        {
+            if (!FACILITY_ENABLED_ARCH( 018_LONG_DISPL_INST, archnum ))
+                return HHC00890E(  STFL_018_LONG_DISPL_INST );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_018_LONG_DISPL_INST)
+        {
+            if (FACILITY_ENABLED_ARCH( 019_LONG_DISPL_HPERF, archnum ))
+                return HHC00890E( STFL_019_LONG_DISPL_HPERF );
+        }
+    }
+
     return true;
 }
-// --------------------------------------------------------------------
-//
-// Not mentioned in PoPs: bit 42 is one if bit 48 or 80 is one.
-//
-//
-//  STFL_080_DFP_PACK_CONV        80    /* Decimal-floating-point
-//                                         packed-conversion facility
-//                                         installed. Bit 42 is also
-//                                         one when bit 80 is one.   */
-//
-//  STFL_048_DFP_ZONE_CONV        48    /* Decimal-floating-point-
-//                                         zoned-conversion facility
-//                                         installed. Bit 42 is also
-//                                         one when bit 48 is one.   */
-//
-//  STFL_042_DFP                  42    /* Decimal floating point
-//                                         (DFP) facility installed. */
-//
-static bool moddfp( bool enable, int bitno, int archnum )
+
+/*-------------------------------------------------------------------*/
+/*                          modtrans                                 */
+/*-------------------------------------------------------------------*/
+/*         bit 73 implies bit 49, bit 50 implies bit 73              */
+/*-------------------------------------------------------------------*/
+static bool modtrans( bool enable, int bitno, int archnum,
+                      const char* action, const char* actioning,
+                      const char* target_facname )
 {
-    UNREFERENCED( enable );
-    UNREFERENCED( bitno );
-    UNREFERENCED( archnum );
+    if (enable)
+    {
+        if (bitno == STFL_050_CONSTR_TRANSACT)
+        {
+            if (!FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
+                return HHC00890E(  STFL_073_TRANSACT_EXEC );
+        }
+        else if (bitno == STFL_073_TRANSACT_EXEC)
+        {
+            if (!FACILITY_ENABLED_ARCH( 049_EXECUTION_HINT, archnum ))
+                return HHC00890E(  STFL_049_EXECUTION_HINT );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_049_EXECUTION_HINT)
+        {
+            if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
+                return HHC00890E( STFL_073_TRANSACT_EXEC );
+        }
+        else if (bitno == STFL_073_TRANSACT_EXEC)
+        {
+            if (FACILITY_ENABLED_ARCH( 050_CONSTR_TRANSACT, archnum ))
+                return HHC00890E( STFL_050_CONSTR_TRANSACT );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           modvec                                  */
+/*-------------------------------------------------------------------*/
+/*              bits 134 and 135 each imply bit 129                  */
+/*-------------------------------------------------------------------*/
+static bool modvec( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (0
+            || bitno == STFL_134_ZVECTOR_PACK_DEC
+            || bitno == STFL_135_ZVECTOR_ENH_1
+        )
+        {
+            if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
+                return HHC00890E(  STFL_129_ZVECTOR );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_129_ZVECTOR)
+        {
+            if (FACILITY_ENABLED_ARCH( 134_ZVECTOR_PACK_DEC, archnum ))
+                return HHC00890E( STFL_134_ZVECTOR_PACK_DEC );
+
+            if (FACILITY_ENABLED_ARCH( 135_ZVECTOR_ENH_1, archnum ))
+                return HHC00890E( STFL_135_ZVECTOR_ENH_1 );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           modtod                                  */
+/*-------------------------------------------------------------------*/
+/*             bit 139 implies both bits 25 and bit 28               */
+/*-------------------------------------------------------------------*/
+static bool modtod( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_139_MULTIPLE_EPOCH)
+        {
+            if (!FACILITY_ENABLED_ARCH( 025_STORE_CLOCK_FAST, archnum ))
+                return HHC00890E(  STFL_025_STORE_CLOCK_FAST );
+
+            if (!FACILITY_ENABLED_ARCH( 028_TOD_CLOCK_STEER, archnum ))
+                return HHC00890E(  STFL_028_TOD_CLOCK_STEER );
+        }
+    }
+    else // disabling
+    {
+        if (0
+            || bitno == STFL_025_STORE_CLOCK_FAST
+            || bitno == STFL_028_TOD_CLOCK_STEER
+        )
+        {
+            if (FACILITY_ENABLED_ARCH( 139_MULTIPLE_EPOCH, archnum ))
+                return HHC00890E( STFL_139_MULTIPLE_EPOCH );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           modcpu                                  */
+/*-------------------------------------------------------------------*/
+/*                    bit 142 implies bit 67                         */
+/*-------------------------------------------------------------------*/
+static bool modcpu( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_142_ST_CPU_COUNTER_MULT)
+        {
+            if (!FACILITY_ENABLED_ARCH( 067_CPU_MEAS_COUNTER, archnum ))
+                return HHC00890E(  STFL_067_CPU_MEAS_COUNTER );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_067_CPU_MEAS_COUNTER)
+        {
+            if (FACILITY_ENABLED_ARCH( 142_ST_CPU_COUNTER_MULT, archnum ))
+                return HHC00890E( STFL_142_ST_CPU_COUNTER_MULT );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           modmsa                                  */
+/*-------------------------------------------------------------------*/
+/*                    bit 146 implies bit 76                         */
+/*-------------------------------------------------------------------*/
+static bool modmsa( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_146_MSA_EXTENSION_8)
+        {
+            if (!FACILITY_ENABLED_ARCH( 076_MSA_EXTENSION_3, archnum ))
+                return HHC00890E(  STFL_076_MSA_EXTENSION_3 );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_076_MSA_EXTENSION_3)
+        {
+            if (FACILITY_ENABLED_ARCH( 146_MSA_EXTENSION_8, archnum ))
+                return HHC00890E( STFL_146_MSA_EXTENSION_8 );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                           modbit42                                */
+/*-------------------------------------------------------------------*/
+/* bit 42 requires special handling as it interacts with many bits   */
+/*-------------------------------------------------------------------*/
+static bool modbit42( bool enable, int bitno, int archnum,
+                      const char* action, const char* actioning,
+                      const char* target_facname )
+{
+    return
+    (1
+        && modfpx  ( enable, bitno, archnum, action, actioning, target_facname )
+        && moddfp  ( enable, bitno, archnum, action, actioning, target_facname )
+        && moddfphi( enable, bitno, archnum, action, actioning, target_facname )
+    );
+}
+
+/*-------------------------------------------------------------------*/
+/*                           moddfphi                                */
+/*-------------------------------------------------------------------*/
+/*                    bit 43 implies bit 42                          */
+/*-------------------------------------------------------------------*/
+static bool moddfphi( bool enable, int bitno, int archnum,
+                      const char* action, const char* actioning,
+                      const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_043_DFP_HPERF)
+        {
+            if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
+                return HHC00890E(  STFL_042_DFP );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_042_DFP)
+        {
+            if (FACILITY_ENABLED_ARCH( 043_DFP_HPERF, archnum ))
+                return HHC00890E( STFL_043_DFP_HPERF );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                            modfpx                                 */
+/*-------------------------------------------------------------------*/
+/*                    bit 37 implies bit 42                          */
+/*-------------------------------------------------------------------*/
+static bool modfpx( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (bitno == STFL_037_FP_EXTENSION)
+        {
+            if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
+                return HHC00890E(  STFL_042_DFP );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_042_DFP)
+        {
+            if (FACILITY_ENABLED_ARCH( 037_FP_EXTENSION, archnum ))
+                return HHC00890E( STFL_037_FP_EXTENSION );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                            moddfp                                 */
+/*-------------------------------------------------------------------*/
+/*                 bit 80 and bit 48 each imply bit 42               */
+/*-------------------------------------------------------------------*/
+static bool moddfp( bool enable, int bitno, int archnum,
+                    const char* action, const char* actioning,
+                    const char* target_facname )
+{
+    if (enable)
+    {
+        if (0
+            || bitno == STFL_048_DFP_ZONE_CONV
+            || bitno == STFL_080_DFP_PACK_CONV
+        )
+        {
+            if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
+                return HHC00890E(  STFL_042_DFP );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_042_DFP)
+        {
+            if (FACILITY_ENABLED_ARCH( 048_DFP_ZONE_CONV, archnum ))
+                return HHC00890E( STFL_048_DFP_ZONE_CONV );
+
+            if (FACILITY_ENABLED_ARCH( 080_DFP_PACK_CONV, archnum ))
+                return HHC00890E( STFL_080_DFP_PACK_CONV );
+        }
+    }
+
     return true;
 }
 
@@ -1698,9 +1927,18 @@ static int archlvl_enable_disable( int argc, char* argv[] )
         return -1;
     }
 
-    /* Check for pre-requisite/post-requisite violation */
-    if (ft->modokfunc && !ft->modokfunc( enable, ft->bitno, at->num ))
-        return -1; // (error msg already issued)
+    /* Check for facility enable/disable pre-requisite violation */
+    if (ft->modokfunc)
+    {
+        const char*  action          = enable? "enable"   : "disable";
+        const char*  actioning       = enable? "enabling" : "disabling";
+        const char*  target_facname  = get_facname_by_bitno( bitno,
+                                                      &target_facname );
+
+        if (!ft->modokfunc( enable, ft->bitno, at->num,
+            action, actioning, target_facname ))
+            return -1; // (error msg already issued)
+    }
 
     /* Enable (or disable if allowed) the specified facility */
     if (enable)
@@ -1766,7 +2004,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
-    // Too many arguments?
+    /* Too many arguments? */
 
     if (argc > 4)
     {
