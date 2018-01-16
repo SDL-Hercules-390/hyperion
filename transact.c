@@ -90,7 +90,6 @@ int     r1, r2;                         /* Operand register numbers  */
 int     m3;                             /* M3 Mask value             */
 U32     abort_count;                    /* Transaction Abort count   */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_PROCESSOR_ASSIST, regs );
 
     RRF_M( inst, regs, r1, r2, m3 );

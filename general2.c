@@ -956,55 +956,64 @@ BYTE    rbyte[4];                       /* Byte work area            */
 /* B205 STCK  - Store Clock                                      [S] */
 /* B27C STCKF - Store Clock Fast                                 [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_clock)
+DEF_INST( store_clock )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word work area     */
 ETOD    ETOD;                           /* Extended TOD clock        */
 
-    S(inst, regs, b2, effective_addr2);
+#if defined( FEATURE_025_STORE_CLOCK_FAST_FACILITY )
+    if (inst[1] == 0x7C) // STCKF only
+    {
+        FACILITY_CHECK( 025_STORE_CLOCK_FAST, regs );
+    }
+#endif
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, IC2, STCK))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+    S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+#if defined( _FEATURE_SIE )
+
+    if (SIE_STATB( regs, IC2, STCK ))
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
+
+#if defined( FEATURE_025_STORE_CLOCK_FAST_FACILITY )
+
     if (inst[1] == 0x7C) // STCKF only
     {
         /* Retrieve the TOD clock value without embedded CPU address */
-        etod_clock(regs, &ETOD, ETOD_fast);
+        etod_clock( regs, &ETOD, ETOD_fast );
     }
     else
+#endif
     {
-#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
         /* Perform serialization before fetching clock */
-        PERFORM_SERIALIZATION (regs);
+        PERFORM_SERIALIZATION( regs );
 
         /* Retrieve the TOD clock value with embedded CPU address*/
-        etod_clock(regs, &ETOD, ETOD_standard);
-#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
+        etod_clock( regs, &ETOD, ETOD_standard );
     }
-#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
 
     /* Shift out epoch */
-    dreg = ETOD2TOD(ETOD);
+    dreg = ETOD2TOD( ETOD );
 
 // /*debug*/logmsg("Store TOD clock=%16.16"PRIX64"\n", dreg);
 
     /* Store TOD clock value at operand address */
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    ARCH_DEP( vstore8 )( dreg, effective_addr2, b2, regs );
 
-#if defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)
-    if(inst[1] != 0x7C) // not STCKF
-#endif /*defined(FEATURE_025_STORE_CLOCK_FAST_FACILITY)*/
+#if defined( FEATURE_025_STORE_CLOCK_FAST_FACILITY )
+
+    if (inst[1] != 0x7C) // not STCKF
+#endif
+    {
         /* Perform serialization after storing clock */
-        PERFORM_SERIALIZATION (regs);
+        PERFORM_SERIALIZATION( regs );
+    }
 
     /* Set condition code zero */
     regs->psw.cc = 0;
-
 }
 
 
@@ -2033,6 +2042,8 @@ DEF_INST(convert_utf8_to_utf32)
 #endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
+  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
+
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
 
@@ -2277,6 +2288,8 @@ DEF_INST(convert_utf16_to_utf32)
 #endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
+  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
+
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
 
@@ -2389,6 +2402,8 @@ DEF_INST(convert_utf32_to_utf8)
   BYTE utf8[4];                    /* utf8 character(s)              */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
+
+  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
 
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
@@ -2526,6 +2541,8 @@ DEF_INST(convert_utf32_to_utf16)
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   BYTE zabcd;                      /* Work value                     */
+
+  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
 
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
@@ -2753,6 +2770,8 @@ DEF_INST(translate_and_test_extended)
   int r1;
   int r2;
 
+  FACILITY_CHECK( 026_PARSING_ENHANCE, regs );
+
   RRF_M(inst, regs, r1, r2, m3);
 
   a_bit = ((m3 & 0x08) ? 1 : 0);
@@ -2846,6 +2865,8 @@ DEF_INST(translate_and_test_reverse_extended)
   int processed;              /* # bytes processed                   */
   int r1;
   int r2;
+
+  FACILITY_CHECK( 026_PARSING_ENHANCE, regs );
 
   RRF_M(inst, regs, r1, r2, m3);
 

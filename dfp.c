@@ -45,7 +45,6 @@ DEF_INST(load_positive_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRE(inst, regs, r1, r2);
@@ -68,7 +67,6 @@ DEF_INST(load_negative_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRE(inst, regs, r1, r2);
@@ -92,7 +90,6 @@ int     r1, r2, r3;                     /* Values of R fields        */
 int     i1, i2, i3;                     /* FP register subscripts    */
 U32     sign;                           /* Work area for sign bit    */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRF_M(inst, regs, r1, r2, r3);
@@ -124,7 +121,6 @@ DEF_INST(load_complement_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPS_SIGN_HANDLING, regs );
 
     RRE(inst, regs, r1, r2);
@@ -149,7 +145,6 @@ DEF_INST(load_fpr_from_gr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1;                             /* FP register subscript     */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPR_GR_TRANSFER, regs );
 
     RRE(inst, regs, r1, r2);
@@ -171,7 +166,6 @@ DEF_INST(load_gr_from_fpr_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i2;                             /* FP register subscript     */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_FPR_GR_TRANSFER, regs );
 
     RRE(inst, regs, r1, r2);
@@ -195,7 +189,6 @@ DEF_INST(set_dfp_rounding_mode)
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_DFP_ROUNDING, regs );
 
     S(inst, regs, b2, effective_addr2);
@@ -289,7 +282,6 @@ VADR            effective_addr2;        /* Effective address         */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_IEEE_EXCEPT_SIM, regs );
 
     S(inst, regs, b2, effective_addr2);
@@ -330,7 +322,6 @@ int             r1, unused;             /* Values of R fields        */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 041_IEEE_EXCEPT_SIM, regs );
 
     RRE(inst, regs, r1, unused);
@@ -1773,6 +1764,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -1821,6 +1814,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
 
@@ -1868,6 +1863,8 @@ decNumber       d1, d2, dr;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1911,6 +1908,8 @@ decNumber       d1, d2, dr;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -1952,6 +1951,8 @@ decimal128      x1, x2;                 /* Extended DFP values       */
 decNumber       d1, d2, dr;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -2000,6 +2001,8 @@ decNumber       d1, d2, dr;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -2045,6 +2048,8 @@ decimal128      x1, x2;                 /* Extended DFP values       */
 decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2073,6 +2078,8 @@ int             r1, r2;                 /* Values of R fields        */
 decimal64       x1, x2;                 /* Long DFP values           */
 decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -2105,7 +2112,6 @@ decimal128      x1;                     /* Extended DFP value        */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2142,7 +2148,6 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2180,7 +2185,6 @@ decimal128      x1;                     /* Extended DFP value        */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2217,7 +2221,6 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2255,6 +2258,8 @@ decimal128      x1;                     /* Extended DFP value        */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2287,6 +2292,8 @@ decimal64       x1;                     /* Long DFP value            */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -2331,7 +2338,6 @@ decimal128      x1;                     /* Extended DFP value        */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2368,7 +2374,6 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2406,6 +2411,8 @@ decNumber       dwork, *dp;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            pwork[16];              /* 31-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -2450,6 +2457,8 @@ decContext      set;                    /* Working context           */
 BYTE            pwork[8];               /* 15-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -2490,6 +2499,8 @@ decNumber       dwork, *dp;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            pwork[17];              /* 33-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -2541,6 +2552,8 @@ decContext      set;                    /* Working context           */
 BYTE            pwork[9];               /* 17-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -2591,7 +2604,6 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
@@ -2644,7 +2656,6 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
@@ -2696,7 +2707,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2748,7 +2758,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2799,7 +2808,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2851,7 +2859,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2903,6 +2910,8 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_M(inst, regs, r1, r2, m3);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -2951,6 +2960,8 @@ decimal64       x2;                     /* Long DFP value            */
 decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
     DFPINST_CHECK(regs);
@@ -3001,7 +3012,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -3053,7 +3063,6 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -3105,6 +3114,8 @@ decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[18];              /* 33-digit packed work area */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3152,6 +3163,8 @@ decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[9];               /* 17-digit packed work area */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
 
@@ -3195,6 +3208,8 @@ decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[17];              /* 33-digit packed work area */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -3243,6 +3258,8 @@ decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[9];               /* 17-digit packed work area */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -3290,7 +3307,6 @@ decContext      set;                    /* Working context           */
 int             cc;                     /* Condition code            */
 char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
@@ -3344,7 +3360,6 @@ decContext      set;                    /* Working context           */
 int             cc;                     /* Condition code            */
 char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 048_DFP_ZONE_CONV, regs );
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
@@ -3394,6 +3409,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -3437,6 +3454,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
 
@@ -3479,6 +3498,8 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             exponent;               /* Biased exponent           */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3519,6 +3540,8 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             exponent;               /* Biased exponent           */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -3557,6 +3580,8 @@ decimal128      x2;                     /* Extended DFP value        */
 decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             digits;                 /* Number of decimal digits  */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -3600,6 +3625,8 @@ decNumber       d2;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             digits;                 /* Number of decimal digits  */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -3640,6 +3667,8 @@ decimal128      x1, x3;                 /* Extended DFP values       */
 decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             bexp;                   /* Biased exponent           */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_M(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
@@ -3710,6 +3739,8 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 S64             bexp;                   /* Biased exponent           */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_M(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
 
@@ -3778,6 +3809,8 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3830,6 +3863,8 @@ decNumber       d;                      /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
 
@@ -3880,6 +3915,8 @@ decimal128      x1, x2;                 /* Extended DFP values       */
 decNumber       d1, d2, dc;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -3955,6 +3992,8 @@ decNumber       d1, d2, dc;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
 
@@ -4029,6 +4068,8 @@ decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -4095,6 +4136,8 @@ decimal32       x2;                     /* Short DFP value           */
 decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
@@ -4163,6 +4206,8 @@ decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[17];              /* 33-digit packed work area */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
@@ -4249,6 +4294,8 @@ int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[9];               /* 17-digit packed work area */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
     DFPINST_CHECK(regs);
 
@@ -4330,6 +4377,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -4373,6 +4422,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
 
@@ -4414,6 +4465,8 @@ decimal128      x1, x2, x3;             /* Extended DFP values       */
 decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
     DFPINST_CHECK(regs);
@@ -4458,6 +4511,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_RM(inst, regs, r1, r2, r3, m4);
     DFPINST_CHECK(regs);
 
@@ -4500,6 +4555,8 @@ decimal128      x1, x3;                 /* Extended DFP values       */
 decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
     DFPINST_CHECK(regs);
@@ -4556,6 +4613,8 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRF_RM(inst, regs, r1, r2, r3, m4);
     DFPINST_CHECK(regs);
 
@@ -4610,6 +4669,8 @@ decimal128      x1, x3;                 /* Extended DFP values       */
 decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     DFPINST_CHECK(regs);
@@ -4671,6 +4732,8 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     DFPINST_CHECK(regs);
 
@@ -4729,6 +4792,8 @@ decimal128      x1, x3;                 /* Extended DFP values       */
 decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     DFPINST_CHECK(regs);
@@ -4790,6 +4855,8 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     DFPINST_CHECK(regs);
 
@@ -4847,6 +4914,8 @@ decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -4894,6 +4963,8 @@ decimal64       x1, x2, x3;             /* Long DFP values           */
 decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
@@ -4944,6 +5015,8 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -4977,6 +5050,8 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
 
@@ -5008,6 +5083,8 @@ decimal32       x1;                     /* Short DFP value           */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
@@ -5041,6 +5118,8 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
@@ -5081,6 +5160,8 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
+    FACILITY_CHECK( 042_DFP, regs );
+
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
 
@@ -5118,6 +5199,8 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
+
+    FACILITY_CHECK( 042_DFP, regs );
 
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);

@@ -2177,7 +2177,6 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
     U32 op2;
     float128_t op1;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2210,7 +2209,6 @@ DEF_INST(convert_u32_to_bfp_long_reg)
     U32 op2;
     float64_t op1;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2244,7 +2242,6 @@ DEF_INST(convert_u32_to_bfp_short_reg)
     float32_t op1;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2277,7 +2274,6 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
     U64 op2;
     float128_t op1;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2312,7 +2308,6 @@ DEF_INST(convert_u64_to_bfp_long_reg)
     float64_t op1;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2350,7 +2345,6 @@ DEF_INST(convert_u64_to_bfp_short_reg)
     float32_t op1;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2408,7 +2402,6 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
     float128_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2461,7 +2454,6 @@ DEF_INST(convert_bfp_long_to_u32_reg)
     float64_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2514,7 +2506,6 @@ DEF_INST(convert_bfp_short_to_u32_reg)
     float32_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2566,7 +2557,6 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
     float128_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2619,7 +2609,6 @@ DEF_INST(convert_bfp_long_to_u64_reg)
     float64_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2670,7 +2659,6 @@ DEF_INST(convert_bfp_short_to_u64_reg)
     float32_t op2;
     U32 ieee_trap_conds = 0;
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 037_FP_EXTENSION, regs );
 
     RRF_MM(inst, regs, r1, r2, m3, m4);

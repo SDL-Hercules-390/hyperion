@@ -172,6 +172,8 @@ VADR    effective_addr1;                /* Effective address         */
 U32     n;                              /* 32-bit operand value      */
 int     cc;                             /* Condition Code            */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIY(inst, regs, i2, b1, effective_addr1);
 
     /* Load 32-bit operand from operand address */
@@ -208,6 +210,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U64     n;                              /* 64-bit operand value      */
 int     cc;                             /* Condition Code            */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -246,6 +250,8 @@ VADR    effective_addr1;                /* Effective address         */
 U32     n;                              /* 32-bit operand value      */
 int     cc;                             /* Condition Code            */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIY(inst, regs, i2, b1, effective_addr1);
 
     /* Load 32-bit operand from operand address */
@@ -281,6 +287,8 @@ VADR    effective_addr1;                /* Effective address         */
 U64     n;                              /* 64-bit operand value      */
 int     cc;                             /* Condition Code            */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIY(inst, regs, i2, b1, effective_addr1);
 
     /* Load 64-bit operand from operand address */
@@ -315,6 +323,8 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
     /* Compare signed operands and set comparison result */
@@ -342,6 +352,8 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
     /* Compare signed operands and set comparison result */
@@ -367,6 +379,8 @@ int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
@@ -394,6 +408,8 @@ int     m3;                             /* Mask bits                 */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
     /* Compare signed operands and set comparison result */
@@ -418,6 +434,8 @@ DEF_INST(compare_and_trap_register)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -444,6 +462,8 @@ DEF_INST(compare_and_trap_long_register)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -472,6 +492,8 @@ VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 S16     n;                              /* 16-bit storage value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Load 16-bit value from first operand address */
@@ -492,6 +514,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 S64     n;                              /* 64-bit storage value      */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     SIL(inst, regs, i2, b1, effective_addr1);
 
@@ -514,6 +538,8 @@ VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 S32     n;                              /* 32-bit storage value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Load 32-bit value from first operand address */
@@ -535,6 +561,8 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 S64     n;                              /* 64-bit operand value      */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -559,6 +587,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
@@ -581,6 +611,8 @@ DEF_INST(compare_halfword_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -607,6 +639,8 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
@@ -636,6 +670,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
     /* Compare signed operands and set comparison result */
@@ -662,6 +698,8 @@ int     m3;                             /* Mask bits                 */
 BYTE    i2;                             /* Immediate operand value   */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
@@ -690,6 +728,8 @@ BYTE    i2;                             /* Immediate operand value   */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
     /* Compare signed operands and set comparison result */
@@ -715,6 +755,8 @@ int     r1;                             /* Register number           */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 U16     i2;                             /* 16-bit immediate value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RIM(inst, regs, r1, i2, m3);
 
@@ -742,6 +784,8 @@ int     r1;                             /* Register number           */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 U16     i2;                             /* 16-bit immediate value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RIM(inst, regs, r1, i2, m3);
 
@@ -771,6 +815,8 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
     /* Compare unsigned operands and set comparison result */
@@ -798,6 +844,8 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
     /* Compare unsigned operands and set comparison result */
@@ -823,6 +871,8 @@ int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
@@ -850,6 +900,8 @@ int     m3;                             /* Mask bits                 */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
     /* Compare unsigned operands and set comparison result */
@@ -874,6 +926,8 @@ DEF_INST(compare_logical_and_trap_register)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -900,6 +954,8 @@ DEF_INST(compare_logical_and_trap_long_register)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -930,6 +986,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
     /* Compare unsigned operands and set comparison result */
@@ -958,6 +1016,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
     /* Compare unsigned operands and set comparison result */
@@ -984,6 +1044,8 @@ int     m3;                             /* Mask bits                 */
 BYTE    i2;                             /* Immediate operand value   */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
@@ -1012,6 +1074,8 @@ BYTE    i2;                             /* Immediate operand value   */
 S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
     /* Compare unsigned operands and set comparison result */
@@ -1037,6 +1101,8 @@ int     r1;                             /* Register number           */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 U16     i2;                             /* 16-bit immediate value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIE_RIM(inst, regs, r1, i2, m3);
 
@@ -1065,6 +1131,8 @@ int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 U16     i2;                             /* 16-bit immediate value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIE_RIM(inst, regs, r1, i2, m3);
 
     /* Compare unsigned operands and set comparison result */
@@ -1092,6 +1160,8 @@ VADR    effective_addr1;                /* Effective address         */
 U16     i2;                             /* 16-bit immediate value    */
 U32     n;                              /* 32-bit storage value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Load 32-bit value from first operand address */
@@ -1112,6 +1182,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U16     i2;                             /* 16-bit immediate value    */
 U16     n;                              /* 16-bit storage value      */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     SIL(inst, regs, i2, b1, effective_addr1);
 
@@ -1134,6 +1206,8 @@ VADR    effective_addr1;                /* Effective address         */
 U16     i2;                             /* 16-bit immediate value    */
 U64     n;                              /* 64-bit storage value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Load 64-bit value from first operand address */
@@ -1153,6 +1227,8 @@ DEF_INST(compare_logical_relative_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1179,6 +1255,8 @@ DEF_INST(compare_logical_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1207,6 +1285,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
@@ -1233,6 +1313,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
@@ -1256,6 +1338,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
@@ -1278,6 +1362,8 @@ DEF_INST(compare_relative_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1304,6 +1390,8 @@ DEF_INST(compare_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1332,6 +1420,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
@@ -1359,6 +1449,8 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     ai, li, ti;                     /* Operand address subfields */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -1432,6 +1524,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RXY0(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
@@ -1463,6 +1557,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Second operand value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from sign-extended second operand */
@@ -1486,6 +1582,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
@@ -1506,6 +1604,8 @@ DEF_INST(load_halfword_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1528,6 +1628,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
@@ -1548,6 +1650,8 @@ DEF_INST(load_logical_halfword_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1570,6 +1674,8 @@ DEF_INST(load_logical_relative_long_long_fullword)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1595,6 +1701,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
@@ -1618,6 +1726,8 @@ DEF_INST(load_relative_long_long)
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -1644,6 +1754,8 @@ int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
@@ -1669,6 +1781,8 @@ VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 S32     n;                              /* Sign-extended value of i2 */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Sign-extend 16-bit immediate value to 32 bits */
@@ -1689,6 +1803,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     SIL(inst, regs, i2, b1, effective_addr1);
 
     /* Store 16-bit immediate value at operand address */
@@ -1706,6 +1822,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 S16     i2;                             /* 16-bit immediate value    */
 S64     n;                              /* Sign-extended value of i2 */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     SIL(inst, regs, i2, b1, effective_addr1);
 
@@ -1728,6 +1846,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 S32     n;                              /* 32-bit operand values     */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
@@ -1749,6 +1869,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RIL(inst, regs, r1, opcd, i2);
 
     /* Multiply signed operands ignoring overflow */
@@ -1766,6 +1888,8 @@ DEF_INST(multiply_single_immediate_long_fullword)
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL(inst, regs, r1, opcd, i2);
 
@@ -1785,6 +1909,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -1810,6 +1936,8 @@ int     m1;                             /* Mask value                */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
+
     RXY(inst, regs, m1, b2, effective_addr2);
 
     /* The Prefetch Data instruction acts as a no-op */
@@ -1824,6 +1952,8 @@ DEF_INST(prefetch_data_relative_long)
 {
 int     m1;                             /* Mask value                */
 VADR    addr2;                          /* Relative operand address  */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, m1, addr2);
 
@@ -1954,6 +2084,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_and_selected_bits_long_reg)
 {
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_and_selected_bits_long_reg) */
 
@@ -1963,6 +2094,7 @@ DEF_INST(rotate_then_and_selected_bits_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_insert_selected_bits_long_reg)
 {
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_long_reg) */
 
@@ -1972,6 +2104,7 @@ DEF_INST(rotate_then_insert_selected_bits_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_or_selected_bits_long_reg)
 {
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_or_selected_bits_long_reg) */
 
@@ -1981,6 +2114,7 @@ DEF_INST(rotate_then_or_selected_bits_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
 {
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg) */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -1993,6 +2127,8 @@ DEF_INST(store_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -2009,6 +2145,8 @@ DEF_INST(store_relative_long)
 {
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -2028,6 +2166,8 @@ DEF_INST(store_relative_long_long)
 {
 int     r1;                             /* Register number           */
 VADR    addr2;                          /* Relative operand address  */
+
+    FACILITY_CHECK( 034_GEN_INST_EXTN, regs );
 
     RIL_A(inst, regs, r1, addr2);
 
@@ -2051,6 +2191,8 @@ DEF_INST(add_high_high_high_register)                           /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRR(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
@@ -2072,6 +2214,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(add_high_high_low_register)                            /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRR(inst, regs, r1, r2, r3);
 
@@ -2096,6 +2240,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RIL(inst, regs, r1, opcd, i2);
 
     /* Add signed operands and set condition code */
@@ -2117,6 +2263,8 @@ DEF_INST(add_logical_high_high_high_register)                   /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
@@ -2133,6 +2281,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(add_logical_high_high_low_register)                    /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -2153,6 +2303,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Add operands and set condition code */
@@ -2171,6 +2323,8 @@ DEF_INST(add_logical_with_signed_immediate_high_n)              /*810*/
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RIL0(inst, regs, r1, opcd, i2);
 
@@ -2193,6 +2347,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 S32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RIL_B(inst, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -2211,6 +2367,8 @@ DEF_INST(compare_high_high_register)                            /*810*/
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRE0(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
@@ -2227,6 +2385,8 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(compare_high_low_register)                             /*810*/
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRE0(inst, regs, r1, r2);
 
@@ -2247,6 +2407,8 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -2270,6 +2432,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
@@ -2286,6 +2450,8 @@ DEF_INST(compare_logical_high_high_register)                    /*810*/
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRE0(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
@@ -2301,6 +2467,8 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(compare_logical_high_low_register)                     /*810*/
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRE0(inst, regs, r1, r2);
 
@@ -2320,6 +2488,8 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -2342,6 +2512,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
@@ -2360,6 +2532,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended byte from operand address */
@@ -2376,6 +2550,8 @@ DEF_INST(load_fullword_high)                                    /*810*/
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -2394,6 +2570,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended halfword from operand address */
@@ -2410,6 +2588,8 @@ DEF_INST(load_logical_character_high)                           /*810*/
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -2428,6 +2608,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load halfword into R1 register bits 16-31 and clear bits 0-15 */
@@ -2441,6 +2623,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
 {
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_high_long_reg) */
 
@@ -2450,6 +2633,7 @@ DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
 {
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_low_long_reg) */
 
@@ -2462,6 +2646,8 @@ DEF_INST(store_character_high)                                  /*810*/
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -2480,6 +2666,8 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Store bits 0-31 of R1 register at operand address */
@@ -2497,6 +2685,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Store bits 16-31 of R1 register at operand address */
@@ -2511,6 +2701,8 @@ VADR    effective_addr2;                /* Effective address         */
 DEF_INST(subtract_high_high_high_register)                      /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRR(inst, regs, r1, r2, r3);
 
@@ -2533,6 +2725,8 @@ DEF_INST(subtract_high_high_low_register)                       /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRR(inst, regs, r1, r2, r3);
 
     /* Subtract signed operands and set condition code */
@@ -2554,6 +2748,8 @@ DEF_INST(subtract_logical_high_high_high_register)              /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
@@ -2570,6 +2766,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(subtract_logical_high_high_low_register)               /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_HIGH_WORD, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -2743,6 +2941,8 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add)                                          /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 
     /* Program check if fixed-point overflow */
@@ -2757,6 +2957,8 @@ DEF_INST(load_and_add)                                          /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_long)                                     /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 
     /* Program check if fixed-point overflow */
@@ -2771,6 +2973,7 @@ DEF_INST(load_and_add_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical)                                  /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_add_logical) */
 
@@ -2780,6 +2983,7 @@ DEF_INST(load_and_add_logical)                                  /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical_long)                             /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_add_logical_long) */
 
@@ -2789,6 +2993,7 @@ DEF_INST(load_and_add_logical_long)                             /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and)                                          /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_and) */
 
@@ -2798,6 +3003,7 @@ DEF_INST(load_and_and)                                          /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and_long)                                     /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_and_long) */
 
@@ -2807,6 +3013,7 @@ DEF_INST(load_and_and_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or)                                 /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or) */
 
@@ -2816,6 +3023,7 @@ DEF_INST(load_and_exclusive_or)                                 /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or_long)                            /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or_long) */
 
@@ -2825,6 +3033,7 @@ DEF_INST(load_and_exclusive_or_long)                            /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or)                                           /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_or) */
 
@@ -2834,6 +3043,7 @@ DEF_INST(load_and_or)                                           /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or_long)                                      /*810*/
 {
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_or_long) */
 
@@ -2849,6 +3059,8 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 U32     v1, v2;                         /* Operand values            */
 U32     w1, w2;                         /* Refetched values          */
+
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
@@ -2886,6 +3098,8 @@ VADR    effective_addr1,
 U64     v1, v2;                         /* Operand values            */
 U64     w1, w2;                         /* Refetched values          */
 
+    FACILITY_CHECK( 045_INTERLOCKED_ACCESS_1, regs );
+
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
     ODD_CHECK(r3, regs);
@@ -2922,6 +3136,8 @@ DEF_INST(load_on_condition_register)                            /*810*/
 int     r1, r2;                         /* Values of R fields        */
 int     m3;                             /* Value of M field          */
 
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
+
     RRF_M(inst, regs, r1, r2, m3);
 
     /* Test M3 mask bit corresponding to condition code */
@@ -2942,6 +3158,8 @@ DEF_INST(load_on_condition_long_register)                       /*810*/
 {
 int     r1, r2;                         /* Values of R fields        */
 int     m3;                             /* Value of M field          */
+
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
 
     RRF_M(inst, regs, r1, r2, m3);
 
@@ -2966,6 +3184,8 @@ int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
+
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
     /* Test M3 mask bit corresponding to condition code */
@@ -2988,6 +3208,8 @@ int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
@@ -3012,6 +3234,8 @@ int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
+
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
     /* Test M3 mask bit corresponding to condition code */
@@ -3034,6 +3258,8 @@ int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    FACILITY_CHECK( 045_LOAD_STORE_ON_COND_1, regs );
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
@@ -3059,6 +3285,8 @@ DEF_INST(add_distinct_register)                                 /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
@@ -3081,6 +3309,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(add_distinct_long_register)                            /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR(inst, regs, r1, r2, r3);
 
@@ -3105,6 +3335,8 @@ DEF_INST(add_distinct_halfword_immediate)                       /*810*/
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RIE(inst, regs, r1, r3, i2);
 
     /* Add signed operands and set condition code */
@@ -3128,6 +3360,8 @@ DEF_INST(add_distinct_long_halfword_immediate)                  /*810*/
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RIE(inst, regs, r1, r3, i2);
 
     /* Add signed operands and set condition code */
@@ -3150,6 +3384,8 @@ DEF_INST(add_logical_distinct_register)                         /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
@@ -3167,6 +3403,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(add_logical_distinct_long_register)                    /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -3187,6 +3425,8 @@ DEF_INST(add_logical_distinct_signed_halfword_immediate)        /*810*/
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RIE0(inst, regs, r1, r3, i2);
 
     /* Add operands and set condition code */
@@ -3206,6 +3446,8 @@ DEF_INST(add_logical_distinct_long_signed_halfword_immediate)   /*810*/
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RIE0(inst, regs, r1, r3, i2);
 
     /* Add operands and set condition code */
@@ -3223,6 +3465,8 @@ U16     i2;                             /* 16-bit immediate operand  */
 DEF_INST(and_distinct_register)                                 /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -3243,6 +3487,8 @@ DEF_INST(and_distinct_long_register)                            /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* AND second and third operands and put result in first operand */
@@ -3261,6 +3507,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(exclusive_or_distinct_register)                        /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -3281,6 +3529,8 @@ DEF_INST(exclusive_or_distinct_long_register)                   /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* XOR second and third operands and put result in first operand */
@@ -3300,6 +3550,8 @@ DEF_INST(or_distinct_register)                                  /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* OR second and third operands and put result in first operand */
@@ -3318,6 +3570,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(or_distinct_long_register)                             /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -3340,6 +3594,8 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RSY0(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3368,6 +3624,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n, n1, n2;                      /* 32-bit operand values     */
 U32     i, j;                           /* Integer work areas        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3426,6 +3684,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RSY0(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
@@ -3447,6 +3707,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RSY0(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
@@ -3464,6 +3726,8 @@ U32     n;                              /* Integer work area         */
 DEF_INST(subtract_distinct_register)                            /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR(inst, regs, r1, r2, r3);
 
@@ -3488,6 +3752,8 @@ DEF_INST(subtract_distinct_long_register)                       /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR(inst, regs, r1, r2, r3);
 
     /* Subtract signed operands and set condition code */
@@ -3510,6 +3776,8 @@ DEF_INST(subtract_logical_distinct_register)                    /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
+
     RRR0(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
@@ -3527,6 +3795,8 @@ int     r1, r2, r3;                     /* Values of R fields        */
 DEF_INST(subtract_logical_distinct_long_register)               /*810*/
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+
+    FACILITY_CHECK( 045_DISTINCT_OPERANDS, regs );
 
     RRR0(inst, regs, r1, r2, r3);
 
@@ -3552,6 +3822,8 @@ int     i;                              /* Loop counter              */
 U64     n;                              /* Contents of R2 register   */
 U64     result;                         /* Result counter            */
 U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
+
+    FACILITY_CHECK( 045_POPULATION_COUNT, regs );
 
     RRE0(inst, regs, r1, r2);
 
@@ -3585,7 +3857,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -3613,7 +3884,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -3642,7 +3912,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -3671,7 +3940,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -3700,7 +3968,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_LOAD_AND_TRAP, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -3736,7 +4003,6 @@ U32     n;                              /* 32-bit operand value      */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
@@ -3771,7 +4037,6 @@ U64     n;                              /* 64-bit operand value      */
 int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
@@ -3800,9 +4065,7 @@ int     cc;                             /* Comparison result         */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_insert_selected_bits_long_reg_n)
 {
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_MISC_INSTR_EXT_1, regs );
-
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_long_reg_n) */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -3821,7 +4084,6 @@ VADR    addr2, addr3;                   /* Effective addresses       */
 int     b3;                             /* Base of effective address */
 int     m1;                             /* Mask value                */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_EXECUTION_HINT, regs );
 
     SMI_A0(inst, regs, m1, addr2, b3, addr3);
@@ -3842,7 +4104,6 @@ DEF_INST(branch_prediction_relative_preload)                    /*912*/
 VADR    addr2, addr3;                   /* Effective addresses       */
 int     m1;                             /* Mask value                */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_EXECUTION_HINT, regs );
 
     MII_A0(inst, regs, m1, addr2, addr3);
@@ -3862,7 +4123,6 @@ DEF_INST(next_instruction_access_intent)                        /*912*/
 {
 BYTE    i1, i2;                         /* Immediate fields          */
 
-    /* Operation Exception if facility is not installed */
     FACILITY_CHECK( 049_EXECUTION_HINT, regs );
 
     IE0(inst, regs, i1, i2);
