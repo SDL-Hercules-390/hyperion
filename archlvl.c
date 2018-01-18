@@ -1266,12 +1266,9 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
         sup = (ft->supmask & at->amask)     ? 'Y' : '-';
         req = (ft->reqmask & at->amask)     ? 'Y' : '-';
         def = (ft->defmask & at->amask)     ? '1' : '0';
-
         cur = (enabled)                     ? '1' : '0';
-
         mod = (def == '1' && cur == '0') ||
               (def == '0' && cur == '1')    ? '*' : ' ';
-
         sev = (mod == '*')                  ? "W" : "I";
 
         // "%3d %02X %02X %c%c%c%c%c %-27s %s"
@@ -1295,6 +1292,56 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 
     free( ptr_array );
     return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                     archlvl_query_raw                             */
+/*-------------------------------------------------------------------*/
+static void archlvl_query_raw( const ARCHTAB* at )
+{
+    char buf[ 128 ] = {0};
+    char wrk[  20 ];
+    int  i;
+
+    for (i=0; i < STFL_IBM_DW_SIZE; i++)
+    {
+        MSGBUF( wrk, "%02X%02X%02X%02X %02X%02X%02X%02X "
+
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 0 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 1 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 2 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 3 ]
+
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 4 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 5 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 6 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 7 ]
+        );
+        STRLCAT( buf, wrk );
+    }
+
+    RTRIM( buf );
+    STRLCAT( buf, ", HERC: " );
+
+    for (; i < STFL_HERC_DW_SIZE; i++)
+    {
+        MSGBUF( wrk, "%02X%02X%02X%02X %02X%02X%02X%02X "
+
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 0 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 1 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 2 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 3 ]
+
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 4 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 5 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 6 ]
+            , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 7 ]
+        );
+        STRLCAT( buf, wrk );
+    }
+
+    // "%s facility list: %s"
+    WRMSG( HHC00894, "I", at->name, RTRIM( buf ));
 }
 
 /*-------------------------------------------------------------------*/
@@ -1344,49 +1391,7 @@ static bool archlvl_query( int argc, char* argv[] )
 
     if (argc == 3 && CMD( argv[2], RAW, 1 ))
     {
-        char buf[ 128 ] = {0};
-        char wrk[  20 ];
-        int  i;
-
-        for (i=0; i < STFL_IBM_DW_SIZE; i++)
-        {
-            MSGBUF( wrk, "%02X%02X%02X%02X %02X%02X%02X%02X "
-
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 0 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 1 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 2 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 3 ]
-
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 4 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 5 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 6 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 7 ]
-            );
-            STRLCAT( buf, wrk );
-        }
-
-        RTRIM( buf );
-        STRLCAT( buf, ", HERC: " );
-
-        for (; i < STFL_HERC_DW_SIZE; i++)
-        {
-            MSGBUF( wrk, "%02X%02X%02X%02X %02X%02X%02X%02X "
-
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 0 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 1 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 2 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 3 ]
-
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 4 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 5 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 6 ]
-                , sysblk.facility_list[ at->num ][ (i * sizeof( DW )) + 7 ]
-            );
-            STRLCAT( buf, wrk );
-        }
-
-        // "%s facility list: %s"
-        WRMSG( HHC00894, "I", at->name, RTRIM( buf ));
+        archlvl_query_raw( at );
         return true;
     }
 
