@@ -21,8 +21,20 @@
 #include "hostinfo.h"
 
 /*-------------------------------------------------------------------*/
-/*                TEMPORARY Architecture bit-masks                   */
-/*       (for use by the temporary ARCH_DEP facility tables)         */
+/*                   Architecture bit-masks                          */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _NONE
+#define    _NONE     0x00           /* NO architectures or disabled  */
+#define    _S370     0x80           /* S/370 architecture            */
+#define    _E390     0x40           /* ESA/390 architecture          */
+#define    _Z900     0x20           /* z/Arch architecture           */
+#define    _Z390     (_E390|_Z900)  /* BOTH ESA/390 and z/Arch       */
+#define    _MALL     (_S370|_Z390)  /* All architectures             */
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                ARCH_DEP Architecture bit-masks                    */
 /*-------------------------------------------------------------------*/
 
 #undef NONE
@@ -34,32 +46,36 @@
 
 #if   __GEN_ARCH == 370             /*    (building for S/370?)      */
 
-    #define NONE     0x00           /* NO architectures or disabled  */
-    #define S370     0x80           /* S/370 architecture            */
-    #define E390     0x00           /* ESA/390 architecture          */
-    #define Z900     0x00           /* z/Arch architecture           */
+    #define NONE     _NONE          /* NO architectures or disabled  */
+    #define S370     _S370          /* S/370 architecture            */
+    #define E390     _NONE          /* ESA/390 architecture          */
+    #define Z900     _NONE          /* z/Arch architecture           */
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
 #elif __GEN_ARCH == 390             /*    (building for S/390?)      */
 
-    #define NONE     0x00           /* NO architectures or disabled  */
-    #define S370     0x00           /* S/370 architecture            */
-    #define E390     0x40           /* ESA/390 architecture          */
-    #define Z900     0x00           /* z/Arch architecture           */
+    #define NONE     _NONE          /* NO architectures or disabled  */
+    #define S370     _NONE          /* S/370 architecture            */
+    #define E390     _E390          /* ESA/390 architecture          */
+    #define Z900     _NONE          /* z/Arch architecture           */
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
 #elif __GEN_ARCH == 900             /*    (building for z/Arch?)     */
 
-    #define NONE     0x00           /* NO architectures or disabled  */
-    #define S370     0x00           /* S/370 architecture            */
-    #define E390     0x00           /* ESA/390 architecture          */
-    #define Z900     0x20           /* z/Arch architecture           */
+    #define NONE     _NONE          /* NO architectures or disabled  */
+    #define S370     _NONE          /* S/370 architecture            */
+    #define E390     _NONE          /* ESA/390 architecture          */
+    #define Z900     _Z900          /* z/Arch architecture           */
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
 #endif
+
+/*-------------------------------------------------------------------*/
+/*                  Facility Table structure                         */
+/*-------------------------------------------------------------------*/
 
 #ifndef FACTAB_STRUCT_DEFINED
 #define FACTAB_STRUCT_DEFINED
@@ -67,10 +83,6 @@
 typedef bool FACMODCHK( bool enable, int bitno, int archnum,
                         const char* action, const char* actioning,
                         const char* target_facname );
-
-/*-------------------------------------------------------------------*/
-/*                  Facility Table structure                         */
-/*-------------------------------------------------------------------*/
 struct FACTAB
 {
     FACMODCHK*   modokfunc;         /* Modification Check function   */
@@ -153,8 +165,12 @@ static FACTAB ARCH_DEP( facs_tab )[] =      /* Arch-DEPENDENT table  */
 FT( Z390, Z390, NONE, 000_N3_INSTR )
 #endif
 
-#if defined(  FEATURE_001_ZARCH_INSTALLED_FACILITY )
-FT( Z390, Z390, Z900, 001_ZARCH_INSTALLED )
+/* PROGRAMMING NOTE: please note the use of underscore _FEATURE test */
+#if defined(    _FEATURE_001_ZARCH_INSTALLED_FACILITY )
+FT( _Z390, _Z390, _Z390, 001_ZARCH_INSTALLED )
+#endif
+
+#if defined(  FEATURE_002_ZARCH_ACTIVE_FACILITY )
 FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE )
 #endif
 
