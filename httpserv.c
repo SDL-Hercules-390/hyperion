@@ -673,7 +673,7 @@ static void *http_request(void* arg)
     {
         cgibin_func* dyncgi;
 
-        if( (dyncgi = HDL_FINDSYM(webblk->baseurl)) )
+        if( (dyncgi = hdl_findsym( webblk->baseurl )) )
         {
         char tbuf[80];
             hprintf(webblk->sock,"HTTP/1.0 200 OK\nConnection: close\n");
@@ -855,7 +855,7 @@ struct timeval      timeout;            /* timeout value             */
 
     http_serv.httpshutdown = TRUE;
 
-    hdl_adsc("http_shutdown",http_shutdown, NULL);
+    hdl_addshut("http_shutdown",http_shutdown, NULL);
 
     /* Set server thread priority; ignore any errors */
     set_thread_priority(0, sysblk.srvprio);
@@ -978,7 +978,7 @@ struct timeval      timeout;            /* timeout value             */
 
 http_server_stop:
     if ( !sysblk.shutdown )
-        hdl_rmsc(http_shutdown, NULL);
+        hdl_delshut(http_shutdown, NULL);
 
     /* Display thread started message on control panel */
     WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "HTTP server");

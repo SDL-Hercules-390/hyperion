@@ -642,9 +642,10 @@ int     rc;
     VERIFY( socket_init() == 0 );
 #endif
 
-    /* Ensure hdl_shut is called in case of shutdown
-       hdl_shut will ensure entries are only called once */
-    atexit( hdl_shut );
+    /* Ensure hdl_atexit is called in case of shutdown.
+       hdl_atexit ensures entries are called only once.
+    */
+    atexit( hdl_atexit );
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     set_symbol( "VERSION", VERSION);
@@ -1019,7 +1020,11 @@ int     rc;
 
 #if defined(OPTION_DYNAMIC_LOAD)
     /* Initialize the hercules dynamic loader */
-    hdl_main();
+    if ((rc = hdl_main()) != 0)
+    {
+        usleep( 100000 );
+        exit( rc );
+    }
 
     /* Load modules requested at startup */
     if (dll_count >= 0)
@@ -1195,7 +1200,7 @@ int     rc;
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-    hdl_adsc("release_config", release_config, NULL);
+    hdl_addshut("release_config", release_config, NULL);
 
     /* Build system configuration */
     if ( build_config (cfgorrc[want_cfg].filename) )

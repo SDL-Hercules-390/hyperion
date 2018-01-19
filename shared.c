@@ -2804,7 +2804,7 @@ char                    threadname[40];
     initialize_lock (&shrdlock);
     initialize_condition(&shrdcond);
 
-    hdl_adsc("shared_device_manager_shutdown",shared_device_manager_shutdown, NULL);
+    hdl_addshut("shared_device_manager_shutdown",shared_device_manager_shutdown, NULL);
 
     /* Handle connection requests and attention interrupts */
     while (sysblk.shrdport)
@@ -2883,7 +2883,7 @@ char                    threadname[40];
     signal_condition(&shrdcond);
 
     if ( !sysblk.shutdown )
-        hdl_rmsc(shared_device_manager_shutdown, NULL);
+        hdl_delshut(shared_device_manager_shutdown, NULL);
 
     sysblk.shrdtid = 0;
 

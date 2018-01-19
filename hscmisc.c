@@ -186,7 +186,7 @@ static void cancel_wait_sigq()
    or 'do_shutdown_wait' functions after all CPUs have been stopped.
 
    It is responsible for releasing the device configuration and then
-   calling the Hercules Dynamic Loader "hdl_shut" function to invoke
+   calling the Hercules Dynamic Loader "hdl_atexit" function to invoke
    all registered "Hercules at-exit/termination functions" (similar
    to 'atexit' but unique to Hercules) (to perform any other needed
    miscellaneous shutdown related processing).
@@ -198,7 +198,7 @@ static void cancel_wait_sigq()
    Note too that, *technically*, this function *should* wait for *all*
    other threads to finish terminating first before either exiting or
    returning back to the caller, but we don't currently enforce that
-   (since that's *really* what hdl_adsc + hdl_shut is designed for!).
+   (since that's *really* what hdl_addshut + hdl_atexit is designed for!).
 
    At the moment, as long as the three previously mentioned three most
    important shutdown tasks have been completed (stop cpus, release
@@ -211,7 +211,7 @@ static void cancel_wait_sigq()
    SO... If there are any threads that must be terminated completely
    and cleanly before Hercules can safely terminate, then you better
    add code to this function to ENSURE that your thread is terminated
-   properly! (and/or add a call to 'hdl_adsc' at the appropriate place
+   properly! (and/or add a call to 'hdl_addshut' at the appropriate place
    in the startup sequence). For this purpose, the use of "join_thread"
    is *strongly* encouraged as it *ensures* that your thread will not
    continue until the thread in question has completely exited first.
@@ -241,7 +241,7 @@ static void do_shutdown_now()
     // "Calling termination routines"
     WRMSG( HHC01423, "I" );
 
-    hdl_shut();
+    hdl_atexit();
 
     // "All termination routines complete"
     fprintf( stdout, MSG( HHC01424, "I" ));

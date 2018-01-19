@@ -1090,7 +1090,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         }
 
         /* Terminate TunTap on shutdown */
-        hdl_adsc("tuntap_term", tuntap_term, NULL);
+        hdl_addshut("tuntap_term", tuntap_term, NULL);
     }
 
     // Populate some common fields

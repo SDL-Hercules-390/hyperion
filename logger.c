@@ -579,7 +579,7 @@ DLL_EXPORT void logger_init(void)
     release_lock(&logger_lock);
 
     /* call logger_term on system shutdown */
-    hdl_adsc("logger_term",logger_term, NULL);
+    hdl_addshut("logger_term",logger_term, NULL);
 
 }
 

@@ -89,7 +89,7 @@ static char *prefix[] = {
     STRLCPY( entry, prefix[regs->arch_mode] );
     STRLCAT( entry, name );
 
-    if( (dllcall = HDL_FINDSYM(entry)) )
+    if( (dllcall = hdl_findsym( entry )) )
         dllcall(r1, r3, regs);
     else
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);

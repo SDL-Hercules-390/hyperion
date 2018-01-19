@@ -36,13 +36,13 @@ static DLLENT*  hdl_dll      = NULL;     /* dll chain                */
 static DLLENT*  hdl_cdll     = NULL;     /* current dll (hdl_lock)   */
 static HDLDEP*  hdl_depend   = NULL;     /* Version codes in hdlmain */
 static char*    hdl_modpath  = NULL;     /* modules load path        */
-static int      hdl_arg_p    = FALSE;    /* -p cmdline opt specified */
+static bool     hdl_arg_p    = false;    /* -p cmdline opt specified */
 
 /*-------------------------------------------------------------------*/
 /*                 Function forward references                       */
 /*-------------------------------------------------------------------*/
-static void hdl_didf( int, int, char*, void* );
-static void hdl_modify_opcode( int, HDLINS* );
+static void  hdl_didf          ( int, int, char*, void* );
+static void  hdl_modify_opcode ( bool insert, HDLINS* );
 
 #endif // defined( OPTION_DYNAMIC_LOAD )
 
@@ -50,57 +50,71 @@ static void hdl_modify_opcode( int, HDLINS* );
 /*     More global variables and function forward references         */
 /*-------------------------------------------------------------------*/
 
-static HDLSHD* hdl_shdlist  = NULL;      /* Shutdown call list       */
-static int     hdl_sdip     = FALSE;     /* hdl shutdown in progesss */
+static HDLSHUT* hdl_shutlist = NULL;     /* Shutdown call list       */
+static bool     hdl_shutting = false;    /* hdl shutdown in progesss */
 
 DLL_EXPORT char* (*hdl_device_type_equates)( const char* );
 
-/*-------------------------------------------------------------------*/
-/*              hdl_adsc - add shutdown call                         */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
-{
-HDLSHD *newcall;
-HDLSHD **tmpcall;
 
-    if(hdl_sdip)
+/*-------------------------------------------------------------------*/
+/*              hdl_addshut - add shutdown call                      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void hdl_addshut( char* shutname, SHUTFUNC* shutfunc, void* shutarg )
+{
+    HDLSHUT*   shut;
+    HDLSHUT**  pshut;
+
+    if (hdl_shutting)
         return;
 
     /* avoid duplicates - keep the first one */
-    for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
-        if( (*tmpcall)->shdcall == shdcall
-          && (*tmpcall)->shdarg == shdarg )
+    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
+    {
+        if (1
+            && (*pshut)->shutfunc == shutfunc
+            && (*pshut)->shutarg  == shutarg
+        )
             return;
+    }
 
-    newcall = malloc(sizeof(HDLSHD));
-    newcall->shdname = shdname;
-    newcall->shdcall = shdcall;
-    newcall->shdarg = shdarg;
-    newcall->next = hdl_shdlist;
-    hdl_shdlist = newcall;
+    /* Add new entry to head of list (LIFO) */
 
+    shut = malloc( sizeof( HDLSHUT ));
+
+    shut->next      =  hdl_shutlist;
+    shut->shutname  =  shutname;
+    shut->shutfunc  =  shutfunc;
+    shut->shutarg   =  shutarg;
+
+    hdl_shutlist = shut;
 }
 
-/*-------------------------------------------------------------------*/
-/*             hdl_rmsc - remove shutdown call                       */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_rmsc (void *shdcall, void *shdarg)
-{
-HDLSHD **tmpcall;
-int rc = -1;
 
-    if(hdl_sdip)
+/*-------------------------------------------------------------------*/
+/*             hdl_delshut - remove shutdown call                    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_delshut( SHUTFUNC* shutfunc, void* shutarg )
+{
+    HDLSHUT**  pshut;
+    HDLSHUT*   shut;
+    int        rc = -1;
+
+    if (hdl_shutting)
         return rc;
 
-    for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
+    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
     {
-        if( (*tmpcall)->shdcall == shdcall
-          && (*tmpcall)->shdarg == shdarg )
+        if (1
+            && (*pshut)->shutfunc == shutfunc
+            && (*pshut)->shutarg  == shutarg
+        )
         {
-        HDLSHD *frecall;
-            frecall = *tmpcall;
-            *tmpcall = (*tmpcall)->next;
-            free(frecall);
+            shut = *pshut;
+            {
+                *pshut = (*pshut)->next;
+            }
+            free( shut );
+
             rc = 0;
         }
     }
@@ -109,41 +123,41 @@ int rc = -1;
 
 
 /*-------------------------------------------------------------------*/
-/*          hdl_shut - call shutdown entries in LIFO order           */
+/*          hdl_atexit - call shutdown entries in LIFO order         */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_shut (void)
+DLL_EXPORT void hdl_atexit( void )
 {
-HDLSHD *shdent;
+    HDLSHUT*  shut;
 
-    if(MLVL(DEBUG))
+    if (MLVL( DEBUG ))
         // "HDL: begin shutdown sequence"
         WRMSG( HHC01500, "I" );
 
-    hdl_sdip = TRUE;
+    hdl_shutting = true;
 
-    for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
+    for (shut = hdl_shutlist; shut; shut = hdl_shutlist)
     {
         /* Remove shutdown call entry to ensure it is called once */
-        hdl_shdlist = shdent->next;
-
+        hdl_shutlist = shut->next;
         {
-            if(MLVL(DEBUG))
+            if (MLVL( DEBUG ))
                 // "HDL: calling %s"
-                WRMSG( HHC01501, "I", shdent->shdname );
+                WRMSG( HHC01501, "I", shut->shutname );
 
-            (shdent->shdcall) (shdent->shdarg);
+            shut->shutfunc( shut->shutarg );
 
-            if(MLVL(DEBUG))
+            if (MLVL( DEBUG ))
                 // "HDL: %s complete"
-                WRMSG( HHC01502, "I", shdent->shdname );
+                WRMSG( HHC01502, "I", shut->shutname );
         }
-        free(shdent);
+        free( shut );
     }
 
-        if(MLVL(DEBUG))
-            // "HDL: shutdown sequence complete"
-            WRMSG( HHC01504, "I" );
+    if (MLVL( DEBUG ))
+        // "HDL: shutdown sequence complete"
+        WRMSG( HHC01504, "I" );
 }
+
 
 #if defined( OPTION_DYNAMIC_LOAD )
 
@@ -159,6 +173,7 @@ static BYTE hdl_checkpath( const char* path )
     char workpath[ MAX_PATH ];
     struct stat statbuf;
     int invalid;
+
 #ifdef _MSVC_
     int len; char c;
 #endif
@@ -187,7 +202,7 @@ static BYTE hdl_checkpath( const char* path )
         c = workpath[ len - 1 ];     // (remember)
         workpath[ len - 1 ] = 0;     // (remove it)
     }
-#endif
+#endif // _MSVC_
 
     // Is the directory valid? (does it exist?)
 
@@ -214,6 +229,7 @@ static BYTE hdl_checkpath( const char* path )
     return !invalid ? TRUE : FALSE;     // (valid or invalid)
 }
 
+
 /*-------------------------------------------------------------------*/
 /*              hdl_initpath - initialize module path                */
 /*-------------------------------------------------------------------*/
@@ -232,7 +248,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
 
     if (path)
     {
-        hdl_arg_p = TRUE;  // (remember -p cmdline option specified)
+        hdl_arg_p = true;  // (remember -p cmdline option specified)
         hdl_modpath = strdup( path );
     }
     else
@@ -268,7 +284,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
                 hostpath( pathname, "hercules", sizeof( pathname ));
                 hdl_modpath = strdup( pathname );
             }
-#endif
+#endif // defined( MODULESDIR )
         }
     }
 
@@ -281,6 +297,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
 #endif
 }
 
+
 /*-------------------------------------------------------------------*/
 /*                 hdl_getpath - return module path                  */
 /*-------------------------------------------------------------------*/
@@ -290,6 +307,7 @@ DLL_EXPORT const char* hdl_getpath()
         hdl_initpath( NULL );   // (then initilize default)
     return hdl_modpath;         // (return current value)
 }
+
 
 /*-------------------------------------------------------------------*/
 /*             hdl_setpath - Set module load path                    */
@@ -372,14 +390,15 @@ DLL_EXPORT int hdl_setpath( const char* path )
     return 0;   // (success; set)
 }
 
+
 /*-------------------------------------------------------------------*/
-/*            hdl_dlopen - load a dynamic module                     */
+/*           hdl_dlopen - load a dynamic module                      */
 /*-------------------------------------------------------------------*/
-static void* hdl_dlopen( char* filename, int flag _HDL_UNUSED )
+static void* hdl_dlopen( char* filename, int flag )
 {
-char   *fullname;
-void   *ret;
-size_t  fulllen = 0;
+    char*   fullname;
+    void*   ret;
+    size_t  fulllen = 0;
 
     /*
      *  Check in this order:
@@ -389,7 +408,7 @@ size_t  fulllen = 0;
      *    3. modpath added if basename( filename )
      *    4. extension added to #3
      */
-    if ( (ret = dlopen( filename,flag )))   /* try filename as-is first */
+    if ((ret = dlopen( filename, flag ))) /* try filename as-is first */
         return ret;
 
      //  2. filename with extension if needed
@@ -452,34 +471,32 @@ size_t  fulllen = 0;
 /*-------------------------------------------------------------------*/
 /*              hdl_dvad - register device type                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_dvad (char *devname, DEVHND *devhnd)
+DLL_EXPORT void hdl_dvad( char* devname, DEVHND* devhnd )
 {
-HDLDEV *newhnd;
+    HDLDEV*  newhnd  = malloc( sizeof( HDLDEV ));
 
-    newhnd = malloc(sizeof(HDLDEV));
-    newhnd->name = strdup(devname);
-    newhnd->hnd = devhnd;
-    newhnd->next = hdl_cdll->hndent;
+    newhnd->name  =  strdup( devname );
+    newhnd->hnd   =  devhnd;
+    newhnd->next  =  hdl_cdll->hndent;
+
     hdl_cdll->hndent = newhnd;
 }
 
 
 /*-------------------------------------------------------------------*/
-/*              hdl_fhnd - find registered device handler            */
+/*             hdl_fhnd - find registered device handler             */
 /*-------------------------------------------------------------------*/
-static DEVHND * hdl_fhnd (const char *devname)
+static DEVHND* hdl_fhnd( const char* devname )
 {
-DLLENT *dllent;
-HDLDEV *hndent;
+    DLLENT*  dllent;
+    HDLDEV*  hndent;
 
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        for(hndent = dllent->hndent; hndent; hndent = hndent->next)
+        for (hndent = dllent->hndent; hndent; hndent = hndent->next)
         {
-            if(!strcasecmp(devname,hndent->name))
-            {
+            if (!strcasecmp( devname, hndent->name ))
                 return hndent->hnd;
-            }
         }
     }
 
@@ -488,128 +505,145 @@ HDLDEV *hndent;
 
 
 /*-------------------------------------------------------------------*/
-/*            hdl_bdnm - build device module name                    */
+/*           hdl_bdnm - build device module name                     */
 /*-------------------------------------------------------------------*/
-static char * hdl_bdnm (const char *ltype)
+static char* hdl_bdnm( const char* ltype )
 {
-char        *dtname;
-unsigned int n;
-size_t       m;
+    char*   dtname;
+    size_t  len, size;
 
     /* Don't forget the extra +1 for the \0 ending.             @PJJ */
-    m = strlen(ltype) + sizeof(HDL_HDTP_Q) + 1;
-    dtname = malloc(m);
-    strlcpy(dtname,HDL_HDTP_Q,m);
-    strlcat(dtname,ltype,m);
+    size = strlen( ltype ) + sizeof( HDL_HDTP_Q ) + 1;  // "hdt"
 
-    for(n = 0; n < strlen(dtname); n++)
-        if(isupper(dtname[n]))
-            dtname[n] = tolower(dtname[n]);
+    dtname = malloc( size );
+
+    strlcpy( dtname, HDL_HDTP_Q, size );    // "hdt"
+    strlcat( dtname, ltype,      size );
+
+    for (len = 0; len < strlen( dtname ); len++)
+        if (isupper( dtname[ len ]))
+            dtname[ len ] = tolower( dtname[ len ]);
 
     return dtname;
 }
 
 
 /*-------------------------------------------------------------------*/
-/*                  hdl_ghnd - obtain device handler                 */
+/*                 hdl_getdev - obtain device handler                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT DEVHND * hdl_ghnd (const char *devtype)
+DLL_EXPORT DEVHND* hdl_getdev( const char* devtype )
 {
-DEVHND *hnd;
-char *hdtname;
-char *ltype;
+    DEVHND*  hnd;
+    char*    hdtname;
+    char*    ltype;
 
-    if((hnd = hdl_fhnd(devtype)))
+    if ((hnd = hdl_fhnd( devtype )))
         return hnd;
 
-    hdtname = hdl_bdnm(devtype);
+    hdtname = hdl_bdnm( devtype );
 
-    if(hdl_load(hdtname,HDL_LOAD_NOMSG) || !hdl_fhnd(devtype))
+    if (0
+        || hdl_load( hdtname, HDL_LOAD_NOMSG )
+        || !hdl_fhnd( devtype )
+    )
     {
-        if(hdl_device_type_equates)
+        if (hdl_device_type_equates)
         {
-            if((ltype = hdl_device_type_equates(devtype)))
+            if ((ltype = hdl_device_type_equates( devtype )))
             {
-                free(hdtname);
-
-                hdtname = hdl_bdnm(ltype);
-
-                hdl_load(hdtname,HDL_LOAD_NOMSG);
+                free( hdtname );
+                hdtname = hdl_bdnm( ltype );
+                hdl_load( hdtname, HDL_LOAD_NOMSG );
             }
         }
     }
 
-    free(hdtname);
+    free( hdtname );
 
-    return hdl_fhnd(devtype);
+    return hdl_fhnd( devtype );
 }
 
 
 /*-------------------------------------------------------------------*/
-/*              hdl_list - list all entry points                     */
+/*              hdl_listmods - list all entry points                 */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_list (int flags)
+DLL_EXPORT void hdl_listmods( int flags )
 {
-DLLENT *dllent;
-MODENT *modent;
-char buf[256];
-int len;
+    DLLENT*  dllent;
+    MODENT*  modent;
+    char     buf[ 256 ];
+    int      len;
 
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        // "HDL: dll type = %s, name = %s, flags = (%s, %s)"
+        // "HDL: module type = %s, name = %s, flags = (%sunloadable, %sforced)"
         WRMSG( HHC01531, "I"
-            ,(dllent->flags & HDL_LOAD_MAIN)       ? "main"     : "load"
-            ,dllent->name
-            ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "not unloadable" : "unloadable"
-            ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : "not forced" );
+            , (dllent->flags & HDL_LOAD_MAIN)       ? "main" : "load"
+            ,  dllent->name
+            , (dllent->flags & HDL_LOAD_NOUNLOAD)   ? "not " : ""
+            , (dllent->flags & HDL_LOAD_WAS_FORCED) ? ""     : "not "
+        );
 
-        for(modent = dllent->modent; modent; modent = modent->modnext)
-            if((flags & HDL_LIST_ALL)
-              || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
+        for (modent = dllent->modent; modent; modent = modent->modnext)
+        {
+            if (0
+                || (flags & HDL_LIST_ALL)
+                || !(1
+                     && (dllent->flags & HDL_LOAD_MAIN)
+                     && !modent->fep
+                    )
+            )
             {
                 // "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
                 WRMSG( HHC01532, "I"
-                    ,modent->name
-                    ,modent->count
-                    ,modent->fep ? "" : ", unresolved"
-                    ,dllent->name );
+                    , modent->name
+                    , modent->count
+                    , modent->fep ? "" : ", unresolved"
+                    , dllent->name
+                );
             }
-
-        if(dllent->hndent)
-        {
-        HDLDEV *hndent;
-            len = 0;
-            for(hndent = dllent->hndent; hndent; hndent = hndent->next)
-                len += snprintf(buf + len, sizeof(buf) - len, " %s",hndent->name);
-            // "HDL:  devtype(s) =%s"
-            WRMSG( HHC01533, "I", buf );
-
         }
 
-        if(dllent->insent)
+        if (dllent->hndent)
         {
-        HDLINS *insent;
-            for(insent = dllent->insent; insent; insent = insent->next)
+            HDLDEV*  hndent;
+            len = 0;
+
+            for (hndent = dllent->hndent; hndent; hndent = hndent->next)
+                len += snprintf( buf + len, sizeof( buf ) - len, " %s", hndent->name );
+
+            // "HDL:  devtype(s) =%s"
+            WRMSG( HHC01533, "I", buf );
+        }
+
+        if (dllent->insent)
+        {
+            HDLINS*  insent;
+
+            for (insent = dllent->insent; insent; insent = insent->next)
             {
                 len = 0;
-#if defined(_370)
-                if(insent->archflags & HDL_INSTARCH_370)
-                    len += snprintf(buf + len, sizeof(buf) - len, ", archmode = " _ARCH_370_NAME);
+
+#if defined( _370 )
+                if (insent->archflags & HDL_INSTARCH_370)
+                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_370_NAME );
 #endif
-#if defined(_390)
-                if(insent->archflags & HDL_INSTARCH_390)
-                    len += snprintf(buf + len, sizeof(buf) - len, ", archmode = " _ARCH_390_NAME);
+
+#if defined( _390 )
+                if (insent->archflags & HDL_INSTARCH_390)
+                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_390_NAME );
 #endif
-#if defined(_900)
-                if(insent->archflags & HDL_INSTARCH_900)
-                    len += snprintf(buf + len, sizeof(buf) - len, ", archmode = " _ARCH_900_NAME);
+
+#if defined( _900 )
+                if (insent->archflags & HDL_INSTARCH_900)
+                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_900_NAME );
 #endif
                 // "HDL:  instruction = %s, opcode = %4.4X%s"
                 WRMSG( HHC01534, "I"
-                    ,insent->instname
-                    ,insent->opcode
-                    ,buf );
+                    , insent->instname
+                    , insent->opcode
+                    , buf
+                );
             }
         }
     }
@@ -617,62 +651,57 @@ int len;
 
 
 /*-------------------------------------------------------------------*/
-/*              hdl_dlst - list all dependencies                     */
+/*              hdl_listdeps - list all dependencies                 */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_dlst (void)
+DLL_EXPORT void hdl_listdeps()
 {
-HDLDEP *depent;
+    HDLDEP*  depent;
 
-    for(depent = hdl_depend;
-      depent;
-      depent = depent->next)
+    for (depent = hdl_depend; depent; depent = depent->next)
         // "HDL: dependency %s version %s size %d"
-        WRMSG( HHC01535,"I",depent->name,depent->version,depent->size );
+        WRMSG( HHC01535, "I", depent->name, depent->version, depent->size );
 }
 
 
 /*-------------------------------------------------------------------*/
 /*         hdl_dadd - add dependency                                 */
 /*-------------------------------------------------------------------*/
-static int hdl_dadd (char *name, char *version, int size)
+static void hdl_dadd( char* name, char* version, int size )
 {
-HDLDEP **newdep;
+    HDLDEP**  newdep;
 
-    for (newdep = &(hdl_depend);
-        *newdep;
-         newdep = &((*newdep)->next));
+    /* Locate last link in chain */
+    for (newdep = &(hdl_depend); *newdep; newdep = &((*newdep)->next));
 
-    (*newdep) = malloc(sizeof(HDLDEP));
-    (*newdep)->next    = NULL;
-    (*newdep)->name    = strdup(name);
-    (*newdep)->version = strdup(version);
-    (*newdep)->size    = size;
+    (*newdep) = malloc( sizeof( HDLDEP ));
 
-    return 0;
+    (*newdep)->next     =  NULL;
+    (*newdep)->name     =  strdup(name);
+    (*newdep)->version  =  strdup(version);
+    (*newdep)->size     =  size;
 }
 
 
 /*-------------------------------------------------------------------*/
 /*         hdl_dchk - dependency check                               */
 /*-------------------------------------------------------------------*/
-static int hdl_dchk (char *name, char *version, int size)
+static int hdl_dchk( char* name, char* version, int size )
 {
-HDLDEP *depent;
+    HDLDEP*  depent;
 
-    for(depent = hdl_depend;
-      depent && strcmp(name,depent->name);
-      depent = depent->next);
+    /* Locate last link in chain */
+    for (depent = hdl_depend; depent && strcmp( name, depent->name ); depent = depent->next);
 
-    if(depent)
+    if (depent)
     {
-        if(strcmp(version,depent->version))
+        if (strcmp( version, depent->version ))
         {
             // "HDL: dependency check failed for %s, version %s expected %s"
-            WRMSG( HHC01509, "I",name, version, depent->version );
+            WRMSG( HHC01509, "I", name, version, depent->version );
             return -1;
         }
 
-        if(size != depent->size)
+        if (size != depent->size)
         {
             // "HDL: dependency check failed for %s, size %d expected %d"
             WRMSG( HHC01510, "I", name, size, depent->size );
@@ -680,29 +709,27 @@ HDLDEP *depent;
         }
     }
     else
-    {
-        hdl_dadd(name,version,size);
-    }
+        hdl_dadd( name, version, size );
 
     return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
-/*                hdl_fent - find entry point                        */
+/*               hdl_findsym - find entry point                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void * hdl_fent (char *name)
+DLL_EXPORT void* hdl_findsym( char* name )
 {
-DLLENT *dllent;
-MODENT *modent;
-void *fep;
+    DLLENT*  dllent;
+    MODENT*  modent;
+    void*    sym;
 
     /* Find entry point and increase loadcount */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        for(modent = dllent->modent; modent; modent = modent->modnext)
+        for (modent = dllent->modent; modent; modent = modent->modnext)
         {
-            if(!strcmp(name,modent->name))
+            if (strcmp( name, modent->name ) == 0)
             {
                 modent->count++;
                 return modent->fep;
@@ -711,26 +738,26 @@ void *fep;
     }
 
     /* If not found then lookup as regular symbol */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        if((fep = dlsym(dllent->dll,name)))
+        if ((sym = dlsym( dllent->dll, name )))
         {
-            if(!(modent = malloc(sizeof(MODENT))))
+            if (!(modent = malloc( sizeof( MODENT ))))
             {
                 // "HDL: error in function %s: %s"
-                WRMSG( HHC01511, "E", "malloc()", strerror(errno) );
+                WRMSG( HHC01511, "E", "malloc()", strerror( errno ));
                 return NULL;
             }
 
-            modent->fep = fep;
-            modent->name = strdup(name);
-            modent->count = 1;
+            modent->fep    =  sym;
+            modent->name   =  strdup( name );
+            modent->count  =  1;
 
             /* Insert current entry as first in chain */
             modent->modnext = dllent->modent;
-            dllent->modent = modent;
+            dllent->modent  = modent;
 
-            return fep;
+            return sym;
         }
     }
 
@@ -740,48 +767,46 @@ void *fep;
 
 
 /*-------------------------------------------------------------------*/
-/*                hdl_nent - find next entry point in chain          */
+/*               hdl_next - find next entry point in chain           */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void * hdl_nent (void *fep)
+DLL_EXPORT void* hdl_next( void* sym )
 {
-DLLENT *dllent;
-MODENT *modent = NULL;
-char   *name;
+    DLLENT*  dllent;
+    MODENT*  modent  = NULL;
+    char*    name;
 
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        for(modent = dllent->modent; modent; modent = modent->modnext)
+        for (modent = dllent->modent; modent; modent = modent->modnext)
         {
-            if(modent->fep == fep)
+            if (modent->fep == sym)
                 break;
         }
 
-        if(modent && modent->fep == fep)
+        if (modent && modent->fep == sym)
             break;
     }
 
-    if(!modent)
+    if (!modent)
         return NULL;
 
     name = modent->name;
 
-    if(!(modent = modent->modnext))
+    if (!(modent = modent->modnext))
     {
-        if((dllent = dllent->dllnext))
+        if ((dllent = dllent->dllnext))
             modent = dllent->modent;
         else
             return NULL;
     }
 
     /* Find entry point */
-    for(; dllent; dllent = dllent->dllnext, modent = dllent->modent)
+    for (; dllent; dllent = dllent->dllnext, modent = dllent->modent)
     {
-        for(; modent; modent = modent->modnext)
+        for (; modent; modent = modent->modnext)
         {
-            if(!strcmp(name,modent->name))
-            {
+            if (!strcmp( name, modent->name ))
                 return modent->fep;
-            }
         }
     }
 
@@ -792,220 +817,109 @@ char   *name;
 /*-------------------------------------------------------------------*/
 /*          hdl_regi - register entry point                          */
 /*-------------------------------------------------------------------*/
-static void hdl_regi (char *name, void *fep)
+static void hdl_regi( char* name, void* sym )
 {
-MODENT *modent;
+    MODENT*  modent  = malloc( sizeof( MODENT ));
 
-    modent = malloc(sizeof(MODENT));
+    modent->fep      =  sym;
+    modent->name     =  strdup( name );
+    modent->count    =  0;
+    modent->modnext  =  hdl_cdll->modent;
 
-    modent->fep = fep;
-    modent->name = strdup(name);
-    modent->count = 0;
-
-    modent->modnext = hdl_cdll->modent;
     hdl_cdll->modent = modent;
-
 }
 
 
 /*-------------------------------------------------------------------*/
 /*          hdl_term - process all "HDL_FINAL_SECTION"s              */
 /*-------------------------------------------------------------------*/
-static void hdl_term (void *unused _HDL_UNUSED)
+static void hdl_term( void* unused )
 {
-DLLENT *dllent;
+    DLLENT*  dllent;
 
-    if(MLVL(DEBUG))
+    UNREFERENCED( unused );
+
+    if (MLVL( DEBUG ))
         // "HDL: begin termination sequence"
         WRMSG( HHC01512, "I" );
 
     /* Call all final routines, in reverse load order */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        if(dllent->hdlfini)
+        if (dllent->hdlfini)
         {
-            if(MLVL(DEBUG))
+            if (MLVL( DEBUG ))
                 // "HDL: calling module cleanup routine %s"
                 WRMSG( HHC01513, "I", dllent->name );
 
-            (dllent->hdlfini)();
+            dllent->hdlfini();
 
-            if(MLVL(DEBUG))
+            if (MLVL( DEBUG ))
                 // "HDL: module cleanup routine %s complete"
                 WRMSG( HHC01514, "I", dllent->name );
         }
     }
 
-    if(MLVL(DEBUG))
+    if (MLVL( DEBUG ))
         // "HDL: termination sequence complete"
         WRMSG( HHC01515, "I" );
 }
 
 
-#if defined(_MSVC_)
-/*-------------------------------------------------------------------*/
-/*         hdl_lexe - load exe                                       */
-/*-------------------------------------------------------------------*/
-static int hdl_lexe ()
-{
-DLLENT *dllent;
-MODENT *modent;
-
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext);
-
-    dllent->name = strdup("*Main");
-
-    if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
-    {
-        // "HDL: unable to open dll %s: %s"
-        WRMSG( HHC01516, "E", dllent->name, dlerror() );
-        free(dllent);
-        return -1;
-    }
-
-    dllent->flags = HDL_LOAD_MAIN;
-
-    if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
-    {
-        // "HDL: no dependency section in %s: %s"
-        WRMSG( HHC01517, "E", dllent->name, dlerror() );
-        free(dllent);
-        return -1;
-    }
-
-    dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q);
-
-    dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
-
-    dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
-
-    dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
-
-    dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
-
-    /* No modules or device types registered yet */
-    dllent->modent = NULL;
-    dllent->hndent = NULL;
-    dllent->insent = NULL;
-
-    obtain_lock(&hdl_lock);
-
-    if(dllent->hdldepc)
-    {
-        if((dllent->hdldepc)(&hdl_dchk))
-        {
-            // "HDL: dependency check failed for module %s"
-            WRMSG( HHC01518, "E", dllent->name );
-        }
-    }
-
-    hdl_cdll = dllent;
-
-    /* Call initializer */
-    if(hdl_cdll->hdlinit)
-        (dllent->hdlinit)(&hdl_regi);
-
-    /* Insert current entry as first in chain */
-    dllent->dllnext = hdl_dll;
-    hdl_dll = dllent;
-
-    /* Reset the loadcounts */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
-        for(modent = dllent->modent; modent; modent = modent->modnext)
-            modent->count = 0;
-
-    /* Call all resolvers */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
-    {
-        if(dllent->hdlreso)
-            (dllent->hdlreso)(&hdl_fent);
-    }
-
-    /* register any device types */
-    if(hdl_cdll->hdlddev)
-        (hdl_cdll->hdlddev)(&hdl_dvad);
-
-    /* register any new instructions */
-    if(hdl_cdll->hdldins)
-        (hdl_cdll->hdldins)(&hdl_didf);
-
-    hdl_cdll = NULL;
-
-    release_lock(&hdl_lock);
-
-    return 0;
-}
-#endif
-
-
 /*-------------------------------------------------------------------*/
 /*          hdl_main - initialize hercules dynamic loader            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_main (void)
+DLL_EXPORT int hdl_main()
 {
-HDLPRE *preload;
+    HDLPRE*  preload;
 
-    initialize_lock(&hdl_lock);
+    initialize_lock( &hdl_lock );
 
-    hdl_sdip = FALSE;
+    hdl_shutting = false;
 
     dlinit();
 
-    if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
+    if (!(hdl_cdll = hdl_dll = malloc( sizeof( DLLENT ))))
     {
         char buf[64];
-        MSGBUF( buf,  "malloc(%d)", (int)sizeof(DLLENT));
-        fprintf(stderr, MSG(HHC01511, "E", buf, strerror(errno)));
-        exit(1);
+        MSGBUF( buf,  "malloc(%d)", (int) sizeof( DLLENT ));
+        // "HDL: error in function %s: %s"
+        WRMSG( HHC01511, "S", buf, strerror( errno ));
+        return -1;
     }
 
-    hdl_cdll->name = strdup("*Hercules");
+    hdl_cdll->name = strdup( "*Hercules" );
 
-#if 1
+#if 1 // (ZZ FIXME: might not work on all platforms)
 
     /* This was a nice trick. Unfortunately, on some platforms  */
     /* it becomes impossible. Some platforms need fully defined */
     /* DLLs, some other platforms do not allow dlopen(self)     */
 
-    if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
+    if (!(hdl_cdll->dll = hdl_dlopen( NULL, RTLD_NOW )))
     {
-        fprintf(stderr, MSG(HHC01516, "E", "hercules", dlerror()));
-        exit(1);
+        // "HDL: unable to open module %s: %s"
+        WRMSG( HHC01516, "S", "hercules", dlerror());
+        return -1;
     }
 
-    hdl_cdll->flags = HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD;
+    hdl_cdll->flags = (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD);
 
-    if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
+    /* Locate the "hdl_depc" entry point */
+    if (!(hdl_cdll->hdldepc = dlsym( hdl_cdll->dll, HDL_DEPC_Q )))
     {
-        fprintf(stderr, MSG(HHC01517, "E", hdl_cdll->name, dlerror()));
-        exit(1);
+        // "HDL: no dependency section in %s: %s"
+        WRMSG( HHC01517, "S",  hdl_cdll->name, dlerror());
+        return -1;
     }
 
-    hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q);
+    hdl_cdll->hdlinit = dlsym( hdl_cdll->dll, HDL_INIT_Q ); // "hdl_init"
+    hdl_cdll->hdlreso = dlsym( hdl_cdll->dll, HDL_RESO_Q ); // "hdl_reso"
+    hdl_cdll->hdlddev = dlsym( hdl_cdll->dll, HDL_DDEV_Q ); // "hdl_ddev"
+    hdl_cdll->hdldins = dlsym( hdl_cdll->dll, HDL_DINS_Q ); // "hdl_dins"
+    hdl_cdll->hdlfini = dlsym( hdl_cdll->dll, HDL_FINI_Q ); // "hdl_fini"
 
-    hdl_cdll->hdlreso = dlsym(hdl_cdll->dll,HDL_RESO_Q);
-
-    hdl_cdll->hdlddev = dlsym(hdl_cdll->dll,HDL_DDEV_Q);
-
-    hdl_cdll->hdldins = dlsym(hdl_cdll->dll,HDL_DINS_Q);
-
-    hdl_cdll->hdlfini = dlsym(hdl_cdll->dll,HDL_FINI_Q);
-#else
-
-    hdl_cdll->flags = HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD;
-
-    hdl_cdll->hdldepc = &HDL_DEPC;
-
-    hdl_cdll->hdlinit = &HDL_INIT;
-
-    hdl_cdll->hdlreso = &HDL_RESO;
-
-    hdl_cdll->hdlddev = &HDL_DDEV;
-
-    hdl_cdll->hdldins = &HDL_DINS;
-
-    hdl_cdll->hdlfini = &HDL_FINI;
-#endif
+#endif // (ZZ FIXME: might not work on all platforms)
 
     /* No modules or device types registered yet */
     hdl_cdll->modent = NULL;
@@ -1015,51 +929,42 @@ HDLPRE *preload;
     /* No dll's loaded yet */
     hdl_cdll->dllnext = NULL;
 
-    obtain_lock(&hdl_lock);
-
-    if(hdl_cdll->hdldepc)
-        (hdl_cdll->hdldepc)(&hdl_dadd);
-
-    if(hdl_cdll->hdlinit)
-        (hdl_cdll->hdlinit)(&hdl_regi);
-
-    if(hdl_cdll->hdlreso)
-        (hdl_cdll->hdlreso)(&hdl_fent);
-
-    if(hdl_cdll->hdlddev)
-        (hdl_cdll->hdlddev)(&hdl_dvad);
-
-    if(hdl_cdll->hdldins)
-        (hdl_cdll->hdldins)(&hdl_didf);
-
-    release_lock(&hdl_lock);
+    obtain_lock( &hdl_lock );
+    {
+        if (hdl_cdll->hdldepc) hdl_cdll->hdldepc( &hdl_dadd );
+        if (hdl_cdll->hdlinit) hdl_cdll->hdlinit( &hdl_regi );
+        if (hdl_cdll->hdlreso) hdl_cdll->hdlreso( &hdl_findsym );
+        if (hdl_cdll->hdlddev) hdl_cdll->hdlddev( &hdl_dvad );
+        if (hdl_cdll->hdldins) hdl_cdll->hdldins( &hdl_didf );
+    }
+    release_lock( &hdl_lock );
 
     /* Register termination exit */
-    hdl_adsc( "hdl_term", hdl_term, NULL);
+    hdl_addshut( "hdl_term", hdl_term, NULL );
 
-    for(preload = hdl_preload; preload->name; preload++)
-        hdl_load(preload->name, preload->flag);
+    for (preload = hdl_preload; preload->name; preload++)
+        hdl_load( preload->name, preload->flag );
 
-#if defined(_MSVC_) && 0
-    hdl_lexe();
-#endif
+    return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
 /*             hdl_load - load a dll                                 */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_load (char *name,int flags)
+DLL_EXPORT int hdl_load( char* name, int flags )
 {
-DLLENT *dllent, *tmpdll;
-MODENT *modent;
-char *modname;
+    DLLENT*  dllent;
+    DLLENT*  tmpdll;
+    MODENT*  modent;
+    char*    modname;
 
-    modname = (modname = strrchr(name,'/')) ? modname+1 : name;
+    /* Search module chain to see if module is already loaded */
+    modname = (modname = strrchr( name, '/' )) ? modname+1 : name;
 
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        if(strfilenamecmp(modname,dllent->name) == 0)
+        if (strfilenamecmp( modname, dllent->name ) == 0)
         {
             // "HDL: module %s already loaded"
             WRMSG( HHC01519, "E", dllent->name );
@@ -1067,40 +972,44 @@ char *modname;
         }
     }
 
-    if(!(dllent = malloc(sizeof(DLLENT))))
+    if (!(dllent = malloc( sizeof( DLLENT ))))
     {
         // "HDL: error in function %s: %s"
-        WRMSG( HHC01511, "E", "malloc()", strerror(errno) );
+        WRMSG( HHC01511, "E", "malloc()", strerror( errno ));
         return -1;
     }
 
-    dllent->name = strdup(modname);
+    /* LOad the module */
+    dllent->name = strdup( modname );
 
-    if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
+    if (!(dllent->dll = hdl_dlopen( name, RTLD_NOW )))
     {
-        if(!(flags & HDL_LOAD_NOMSG))
-            // "HDL: unable to open dll %s: %s"
-            WRMSG( HHC01516, "E", name, dlerror() );
-        free(dllent);
+        if (!(flags & HDL_LOAD_NOMSG))
+            // "HDL: unable to open module %s: %s"
+            WRMSG( HHC01516, "E", name, dlerror());
+
+        free( dllent );
         return -1;
     }
 
     dllent->flags = (flags & (~HDL_LOAD_WAS_FORCED));
 
-    if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
+    /* Locate the "hdl_depc" entry point */
+    if (!(dllent->hdldepc = dlsym( dllent->dll, HDL_DEPC_Q )))
     {
         // "HDL: no dependency section in %s: %s"
-        WRMSG( HHC01517, "E", dllent->name, dlerror() );
-        dlclose(dllent->dll);
-        free(dllent);
+        WRMSG( HHC01517, "E", dllent->name, dlerror());
+        dlclose( dllent->dll );
+        free( dllent );
         return -1;
     }
 
-    for(tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
+    /* Reject loading the same module again twice */
+    for (tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
     {
-        if(tmpdll->hdldepc == dllent->hdldepc)
+        if (tmpdll->hdldepc == dllent->hdldepc)
         {
-            // "HDL: dll %s is duplicate of %s"
+            // "HDL: module %s is duplicate of %s"
             WRMSG( HHC01520, "E", dllent->name, tmpdll->name );
             dlclose(dllent->dll);
             free(dllent);
@@ -1108,238 +1017,279 @@ char *modname;
         }
     }
 
-
-    dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q);
-
-    dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
-
-    dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
-
-    dllent->hdldins = dlsym(dllent->dll,HDL_DINS_Q);
-
-    dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
+    dllent->hdlinit = dlsym( dllent->dll, HDL_INIT_Q ); // "hdl_init"
+    dllent->hdlreso = dlsym( dllent->dll, HDL_RESO_Q ); // "hdl_reso"
+    dllent->hdlddev = dlsym( dllent->dll, HDL_DDEV_Q ); // "hdl_ddev"
+    dllent->hdldins = dlsym( dllent->dll, HDL_DINS_Q ); // "hdl_dins"
+    dllent->hdlfini = dlsym( dllent->dll, HDL_FINI_Q ); // "hdl_fini"
 
     /* No modules or device types registered yet */
     dllent->modent = NULL;
     dllent->hndent = NULL;
     dllent->insent = NULL;
 
-    obtain_lock(&hdl_lock);
-
-    if(dllent->hdldepc)
+    obtain_lock( &hdl_lock );
     {
-        if((dllent->hdldepc)(&hdl_dchk))
+        /* Call module's HDL_DEPENDENCY_SECTION, if it has one */
+        if (dllent->hdldepc)
         {
-            // "HDL: dependency check failed for module %s"
-            WRMSG( HHC01518, "E", dllent->name );
-            if(!(flags & HDL_LOAD_FORCE))
+            if (dllent->hdldepc( &hdl_dchk ))
             {
-                dlclose(dllent->dll);
-                free(dllent);
-                release_lock(&hdl_lock);
-                return -1;
+                // "HDL: dependency check failed for module %s"
+                WRMSG( HHC01518, "E", dllent->name );
+
+                /* Allow module to be loaded anyway if forced */
+                if (!(flags & HDL_LOAD_FORCE))
+                {
+                    dlclose( dllent->dll );
+                    free( dllent );
+                    release_lock( &hdl_lock );
+                    return -1;
+                }
+
+                dllent->flags |= HDL_LOAD_WAS_FORCED;
             }
-            dllent->flags |= HDL_LOAD_WAS_FORCED;
         }
+
+        hdl_cdll = dllent;
+
+        /* Call module's HDL_REGISTER_SECTION, if it has one */
+        if (hdl_cdll->hdlinit)
+            dllent->hdlinit( &hdl_regi );
+
+        /* Insert current entry as first in chain */
+        dllent->dllnext = hdl_dll;
+        hdl_dll = dllent;
+
+        /* Reset the loadcounts */
+        for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+            for (modent = dllent->modent; modent; modent = modent->modnext)
+                modent->count = 0;
+
+        /* Call HDL_RESOLVER_SECTION again for every module in our chain */
+        for (dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+        {
+            if (dllent->hdlreso)
+                dllent->hdlreso( &hdl_findsym );
+        }
+
+        /* Call module's HDL_DEVICE_SECTION, if it has one */
+        if (hdl_cdll->hdlddev)
+            hdl_cdll->hdlddev( &hdl_dvad );
+
+        /* Call module's HDL_INSTRUCTION_SECTION, if it has one */
+        if(hdl_cdll->hdldins)
+            (hdl_cdll->hdldins)(&hdl_didf);
+
+        hdl_cdll = NULL;
     }
-
-    hdl_cdll = dllent;
-
-    /* Call initializer */
-    if(hdl_cdll->hdlinit)
-        (dllent->hdlinit)(&hdl_regi);
-
-    /* Insert current entry as first in chain */
-    dllent->dllnext = hdl_dll;
-    hdl_dll = dllent;
-
-    /* Reset the loadcounts */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
-        for(modent = dllent->modent; modent; modent = modent->modnext)
-            modent->count = 0;
-
-    /* Call all resolvers */
-    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
-    {
-        if(dllent->hdlreso)
-            (dllent->hdlreso)(&hdl_fent);
-    }
-
-    /* register any device types */
-    if(hdl_cdll->hdlddev)
-        (hdl_cdll->hdlddev)(&hdl_dvad);
-
-    /* register any new instructions */
-    if(hdl_cdll->hdldins)
-        (hdl_cdll->hdldins)(&hdl_didf);
-
-    hdl_cdll = NULL;
-
-    release_lock(&hdl_lock);
+    release_lock( &hdl_lock );
 
     return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
-/*             hdl_dele - unload a dll                               */
+/*             hdl_unload - unload a dll                             */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_dele (char *name)
+DLL_EXPORT int hdl_unload( char* name )
 {
-DLLENT **dllent, *tmpdll;
-MODENT *modent, *tmpmod;
-DEVBLK *dev;
-HDLDEV *hnd;
-HDLINS *ins;
-char *modname;
+    char*     modname;
+    DEVBLK*   dev;
 
-    modname = (modname = strrchr(name,'/')) ? modname+1 : name;
+    DLLENT**  dllent;
+    DLLENT*   tmpdll;
 
-    obtain_lock(&hdl_lock);
+    MODENT*   modent;
+    MODENT*   tmpmod;
 
-    for(dllent = &(hdl_dll); *dllent; dllent = &((*dllent)->dllnext))
+    HDLDEV*   hnd;
+    HDLDEV*   nexthnd;
+
+    HDLINS*   ins;
+    HDLINS*   nextins;
+
+    modname = (modname = strrchr( name, '/' )) ? modname+1 : name;
+
+    obtain_lock( &hdl_lock );
     {
-        if(strfilenamecmp(modname,(*dllent)->name) == 0)
+        /* Locate this module's entry in our chain */
+        for (dllent = &(hdl_dll);
+            *dllent && strfilenamecmp( modname, (*dllent)->name ) != 0;
+            dllent = &((*dllent)->dllnext))
         {
-            if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
-            {
-                release_lock(&hdl_lock);
-                // "HDL: unloading of module %s not allowed"
-                WRMSG( HHC01521, "E", (*dllent)->name );
-                return -1;
-            }
-
-            for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
-                if (IS_DEV( dev ))
-                    for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
-                        if(hnd->hnd == dev->hnd)
-                        {
-                            release_lock(&hdl_lock);
-                            // "HDL: module %s bound to device %1d:%04X"
-                            WRMSG( HHC01522, "E",(*dllent)->name, SSID_TO_LCSS(dev->ssid), dev->devnum );
-                            return -1;
-                        }
-
-            /* Call dll close routine */
-            if((*dllent)->hdlfini)
-            {
-            int rc;
-
-                if((rc = ((*dllent)->hdlfini)()))
-                {
-                    release_lock(&hdl_lock);
-                    // "HDL: unload of module %s rejected by final section"
-                    WRMSG( HHC01523, "E", (*dllent)->name );
-                    return rc;
-                }
-            }
-
-            modent = (*dllent)->modent;
-            while(modent)
-            {
-                tmpmod = modent;
-
-                /* remove current entry from chain */
-                modent = modent->modnext;
-
-                /* free module resources */
-                free(tmpmod->name);
-                free(tmpmod);
-            }
-
-            tmpdll = *dllent;
-
-            /* remove current entry from chain */
-            *dllent = (*dllent)->dllnext;
-
-            for(hnd = tmpdll->hndent; hnd;)
-            {
-            HDLDEV *nexthnd;
-                free(hnd->name);
-                nexthnd = hnd->next;
-                free(hnd);
-                hnd = nexthnd;
-            }
-
-            for(ins = tmpdll->insent; ins;)
-            {
-            HDLINS *nextins;
-
-                hdl_modify_opcode(FALSE, ins);
-                free(ins->instname);
-                nextins = ins->next;
-                free(ins);
-                ins = nextins;
-            }
-
-//          dlclose(tmpdll->dll);
-
-            /* free dll resources */
-            free(tmpdll->name);
-            free(tmpdll);
-
-            /* Reset the loadcounts */
-            for(tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
-                for(tmpmod = tmpdll->modent; tmpmod; tmpmod = tmpmod->modnext)
-                    tmpmod->count = 0;
-
-            /* Call all resolvers */
-            for(tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
-            {
-                if(tmpdll->hdlreso)
-                    (tmpdll->hdlreso)(&hdl_fent);
-            }
-
-            release_lock(&hdl_lock);
-
-            return 0;
+            ; // (nop)
         }
 
+        /* Was module found? */
+        if (!*dllent)
+        {
+            release_lock( &hdl_lock );
+            // "HDL: module %s not found"
+            WRMSG( HHC01524, "E", modname );
+            return -1;
+        }
+
+        /* Error if it 's not allowed to be unloaded */
+        if ((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
+        {
+            release_lock( &hdl_lock );
+            // "HDL: unloading of module %s not allowed"
+            WRMSG( HHC01521, "E", (*dllent)->name );
+            return -1;
+        }
+
+        /* Disallow device modules to be unloaded if a device
+           is still using it by searching the device chain to
+           see if any of their DEVHND vector table matches the
+           one for this module.
+        */
+        for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
+        {
+            /* Is device in use? */
+            if (IS_DEV( dev ))
+            {
+                /* Search DEVHND chain for this module to see
+                   if any of them match this device's. If so,
+                   then the current device is still using the
+                   module being unloaded (the device is still
+                   "bound" to the module being unloaded).
+                */
+                for (hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
+                {
+                    /* Is device still using this module? */
+                    if (dev->hnd == hnd->hnd)
+                    {
+                        release_lock( &hdl_lock );
+                        // "HDL: module %s bound to device %1d:%04X"
+                        WRMSG( HHC01522, "E", (*dllent)->name,
+                            SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        /* Call module's HDL_FINAL_SECTION, if it has one */
+        if ((*dllent)->hdlfini)
+        {
+            int rc;
+
+            if ((rc = ((*dllent)->hdlfini)()))
+            {
+                release_lock( &hdl_lock );
+                // "HDL: unload of module %s rejected by final section"
+                WRMSG( HHC01523, "E", (*dllent)->name );
+                return rc;
+            }
+        }
+
+        modent = (*dllent)->modent;
+
+        /* Free all symbols */
+        while (modent)
+        {
+            tmpmod = modent;
+
+            /* remove current entry from chain */
+            modent = modent->modnext;
+
+            /* free module resources */
+            free( tmpmod->name );
+            free( tmpmod );
+        }
+
+        /* Remove the module from our chain */
+        tmpdll  = *dllent;
+        *dllent = (*dllent)->dllnext;
+
+        /* Free all device registrations */
+        for (hnd = tmpdll->hndent; hnd;)
+        {
+            free( hnd->name );
+            nexthnd = hnd->next;
+            free( hnd );
+            hnd = nexthnd;
+        }
+
+        /* Free all instruction registrations */
+        for (ins = tmpdll->insent; ins;)
+        {
+            /* Go back to using the previously defined
+              instruction function
+            */
+            hdl_modify_opcode( false, ins );
+
+            free( ins->instname );
+            nextins = ins->next;
+            free( ins );
+            ins = nextins;
+        }
+
+        /* Free the module's chain entry itself */
+        free( tmpdll->name );
+        free( tmpdll );
+
+        /* Reset loadcounts for existing modules */
+        for (tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
+            for (tmpmod = tmpdll->modent; tmpmod; tmpmod = tmpmod->modnext)
+                tmpmod->count = 0;
+
+        /* (Re-)Call all existing modules' HDL_RESOLVER_SECTION again */
+        for (tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
+        {
+            if (tmpdll->hdlreso)
+                tmpdll->hdlreso( &hdl_findsym );
+        }
     }
+    release_lock( &hdl_lock );
 
-    release_lock(&hdl_lock);
-
-    // "HDL: module %s not found"
-    WRMSG( HHC01524, "E", modname );
-
-    return -1;
+    return 0;
 }
 
 
 /*-------------------------------------------------------------------*/
 /*                     hdl_modify_opcode                             */
 /*-------------------------------------------------------------------*/
-static void hdl_modify_opcode(int insert, HDLINS *instr)
+static void hdl_modify_opcode( bool insert, HDLINS* instr )
 {
-  if(insert)
+  if (insert)
   {
-#ifdef _370
-    if(instr->archflags & HDL_INSTARCH_370)
-      instr->original = replace_opcode(ARCH_370_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                      _370
+    if (instr->archflags &      HDL_INSTARCH_370)
+      instr->original = replace_opcode( ARCH_370_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
-#ifdef _390
-    if(instr->archflags & HDL_INSTARCH_390)
-      instr->original = replace_opcode(ARCH_390_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                      _390
+    if (instr->archflags &      HDL_INSTARCH_390)
+      instr->original = replace_opcode( ARCH_390_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
-#ifdef _900
-    if(instr->archflags & HDL_INSTARCH_900)
-      instr->original = replace_opcode(ARCH_900_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                      _900
+    if (instr->archflags &      HDL_INSTARCH_900)
+      instr->original = replace_opcode( ARCH_900_IDX, instr->instruction, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
+
   }
-  else
+  else // (!insert)
   {
-#ifdef _370
-    if(instr->archflags & HDL_INSTARCH_370)
-      replace_opcode(ARCH_370_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                 _370
+    if (instr->archflags & HDL_INSTARCH_370)
+      replace_opcode(              ARCH_370_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
-#ifdef _390
-    if(instr->archflags & HDL_INSTARCH_390)
-      replace_opcode(ARCH_390_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                 _390
+    if (instr->archflags & HDL_INSTARCH_390)
+      replace_opcode(              ARCH_390_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
-#ifdef _900
-    if(instr->archflags & HDL_INSTARCH_900)
-      replace_opcode(ARCH_900_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff);
+
+#ifdef                                 _900
+    if (instr->archflags & HDL_INSTARCH_900)
+      replace_opcode(              ARCH_900_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
+
   }
   return;
 }
@@ -1348,18 +1298,20 @@ static void hdl_modify_opcode(int insert, HDLINS *instr)
 /*-------------------------------------------------------------------*/
 /*          hdl_didf - Define instruction call                       */
 /*-------------------------------------------------------------------*/
-static void hdl_didf (int archflags, int opcode, char *name, void *routine)
+static void hdl_didf( int archflags, int opcode, char* name, void* routine )
 {
-HDLINS *newins;
+    HDLINS*  newins  = malloc( sizeof( HDLINS ));
 
-    newins = malloc(sizeof(HDLINS));
-    newins->opcode = opcode > 0xff ? opcode : (opcode << 8) ;
-    newins->archflags = archflags;
-    newins->instname = strdup(name);
-    newins->instruction = routine;
-    newins->next = hdl_cdll->insent;
+    newins->opcode       =  opcode > 0xff ? opcode : (opcode << 8) ;
+    newins->archflags    =  archflags;
+    newins->instname     =  strdup( name );
+    newins->instruction  =  routine;
+
+    /* Insert into chain */
+    newins->next =  hdl_cdll->insent;
     hdl_cdll->insent = newins;
-    hdl_modify_opcode(TRUE, newins);
+
+    hdl_modify_opcode( true, newins );
 }
 
 #endif /*defined( OPTION_DYNAMIC_LOAD )*/

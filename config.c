@@ -1271,7 +1271,7 @@ int     i;                              /* Loop index                */
     // function has been called however then you MUST use detach_devblk
     // to return it back to the pool so that the entire group is freed.
 
-    if(!(dev->hnd = hdl_ghnd(type)))
+    if(!(dev->hnd = hdl_getdev(type)))
     {
         // "%1d:%04X devtype %s not recognized"
         WRMSG (HHC01462, "E", lcss, devnum, type);

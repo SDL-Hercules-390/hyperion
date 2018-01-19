@@ -344,7 +344,7 @@ static void* con1052_panel_command( char *cmd )
     /* The entered command wasn't meant for us. Pass it
        on to the next command handler, if there is one.
     */
-    next_panel_command_handler = HDL_FINDNXT( con1052_panel_command );
+    next_panel_command_handler = hdl_next( &con1052_panel_command );
 
     if (next_panel_command_handler)
         return next_panel_command_handler( cmd );

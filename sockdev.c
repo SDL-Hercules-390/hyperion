@@ -50,7 +50,7 @@ static void init_sockdev ( void )
     if (init_done) return;
     InitializeListHead( &bind_head );
     initialize_lock( &bind_lock );
-    hdl_adsc( "term_sockdev", term_sockdev, NULL );
+    hdl_addshut( "term_sockdev", term_sockdev, NULL );
     init_done = TRUE;
 }
 

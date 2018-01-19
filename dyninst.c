@@ -94,7 +94,7 @@ static void update_dyninst()
     for(opcode1 = 0; opcode1 < 0x100 && dyninst_index < MAXDYNINST; opcode1++)
     {
       snprintf(name, sizeof(name), "%s%02X", prefix[arch], opcode1);
-      newinst = HDL_FINDSYM(name);
+      newinst = hdl_findsym( name );
       if(newinst)
       {
         oldinst = replace_opcode(arch, newinst, opcode1, -1);
@@ -134,7 +134,7 @@ static void update_dyninst()
           for(opcode2 = 0; opcode2 < 0x100 && dyninst_index < MAXDYNINST; opcode2++)
           {
             snprintf(name, sizeof(name), "%s%02X%02X", prefix[arch], opcode1, opcode2);
-            newinst = HDL_FINDSYM(name);
+            newinst = hdl_findsym( name );
             if(newinst)
             {
               oldinst = replace_opcode(arch, newinst, opcode1, opcode2);

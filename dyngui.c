@@ -543,7 +543,7 @@ NotSpecialGUICommand:
     // Hercules's "panel_command" function, but which MAY have been over-
     // ridden by yet some OTHER dynamically loaded command handler...
 
-    next_panel_command_handler = HDL_FINDNXT( gui_panel_command );
+    next_panel_command_handler = hdl_next( &gui_panel_command );
 
     if (!next_panel_command_handler)    // (extremely unlikely!)
         return (char *)-1;              // (extremely unlikely!)
@@ -1949,7 +1949,7 @@ void *(*next_debug_call)(REGS *);
         gui_fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
     }
 
-    if((next_debug_call = HDL_FINDNXT( gui_debug_cpu_state )))
+    if((next_debug_call = hdl_next( &gui_debug_cpu_state )))
         return next_debug_call( pREGS );
 
     return NULL;    // (I have no idea why this is a void* func)

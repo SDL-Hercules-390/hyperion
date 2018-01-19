@@ -98,7 +98,7 @@ char *(*nextcall)(char *);
         if(!strcasecmp(device_type->alias, typname))
             return device_type->name;
 
-    if((nextcall = HDL_FINDNXT(hdt_device_type_equates)))
+    if((nextcall = hdl_next( &hdt_device_type_equates )))
         return nextcall(typname);
 
     return NULL;

@@ -1652,7 +1652,7 @@ size_t  loopcount;                    /* Number of iterations done   */
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Control panel");
 
-    hdl_adsc("panel_cleanup",panel_cleanup, NULL);
+    hdl_addshut("panel_cleanup",panel_cleanup, NULL);
 
     history_init();
 

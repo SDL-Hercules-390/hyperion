@@ -7444,7 +7444,7 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
     for (i = 1; i < argc; i++)
     {
         WRMSG(HHC01528,"I",argv[i]);
-        if (!hdl_dele(argv[i]))
+        if (!hdl_unload(argv[i]))
             WRMSG(HHC01529,"I",argv[i]);
     }
 
@@ -7460,7 +7460,7 @@ int lsmod_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    hdl_list(HDL_LIST_DEFAULT);
+    hdl_listmods(HDL_LIST_DEFAULT);
 
     return 0;
 }
@@ -7474,7 +7474,7 @@ int lsdep_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    hdl_dlst();
+    hdl_listdeps();
 
     return 0;
 }
