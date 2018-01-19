@@ -1,4 +1,4 @@
-/* HEXTAPI.H   (c) Copyright Roger Bowler & Others, 2005-2012        */
+/* HEXTAPI.H   (C) Copyright Roger Bowler & Others, 2005-2012        */
 /*             Definition of Hercules External (public) APIs         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

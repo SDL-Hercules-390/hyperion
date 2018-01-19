@@ -1,4 +1,4 @@
-/* FTLIB.H      (c) Copyright TurboHercules, SAS 2010-2011           */
+/* FTLIB.H      (C) Copyright TurboHercules, SAS 2010-2011           */
 /*             Header files for FAKETAPE.                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

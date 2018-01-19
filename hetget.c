@@ -1,5 +1,5 @@
-/* HETGET.C     (c) Copyright Leland Lucius, 2000-2012               */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/* HETGET.C     (C) Copyright Leland Lucius, 2000-2012               */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Extract files from an HET file                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -9,7 +9,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETGET.C     (c) Copyright Leland Lucius, 2000-2009
+|| HETGET.C     (C) Copyright Leland Lucius, 2000-2009
 ||              Released under terms of the Q Public License.
 ||
 || Extract files from a AWS, HET or FAKETAPE file

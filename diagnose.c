@@ -1,11 +1,11 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2012                */
+/* DIAGNOSE.C   (C) Copyright Roger Bowler, 2000-2012                */
 /*              ESA/390 Diagnose Functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */

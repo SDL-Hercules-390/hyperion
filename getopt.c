@@ -1,4 +1,4 @@
-/*  GETOPT.C    (c) Copyright Roger Bowler, 1999-2012                */
+/*  GETOPT.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              NetBSD getopt parsing function                       */
 /*              Additional Copyright notices below                   */
 /*                                                                   */

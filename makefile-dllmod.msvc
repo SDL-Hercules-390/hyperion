@@ -1,5 +1,5 @@
 # ***************************************************************************
-# MAKEFILE-DLLMOD.MSVC (c) Copyright Roger Bowler, 2005-2010
+# MAKEFILE-DLLMOD.MSVC (C) Copyright Roger Bowler, 2005-2010
 #
 # Build Hercules for Win32 using MSVC and nmake (DLL version with loadable modules)
 #

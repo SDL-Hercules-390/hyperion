@@ -1,4 +1,4 @@
-/* W32DL.H      (c) Copyright Jan Jaeger, 2004-2012                  */
+/* W32DL.H      (C) Copyright Jan Jaeger, 2004-2012                  */
 /*                        dlopen compat                              */
 
 #ifndef _W32_DL_H

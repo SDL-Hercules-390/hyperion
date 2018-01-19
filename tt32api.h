@@ -1,4 +1,4 @@
-/* TT32API.H (c) Copyright Software Development Laboratories, 2002-2017 */
+/* TT32API.H (C) Copyright Software Development Laboratories, 2002-2017 */
 /*              TunTap32 DLL exported functions interface            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

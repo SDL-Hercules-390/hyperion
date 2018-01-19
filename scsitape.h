@@ -1,4 +1,4 @@
-/* SCSITAPE.H   (c) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* SCSITAPE.H   (C) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Hercules SCSI tape handling module                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

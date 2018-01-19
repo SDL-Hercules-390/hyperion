@@ -1,7 +1,7 @@
 # ***************************************************************************
 #     DEBUG_RETAIL.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Roger Bowler, 2005-2007
+# (C) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
 #
 #  Sets appropriate compiler/linker flags (cdebug & ldebug) depending on

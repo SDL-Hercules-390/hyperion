@@ -1,8 +1,8 @@
-/* CTCADPT.H    (c) Copyright James A. Pierson, 2002-2012            */
-/*              (c) Copyright Roger Bowler, 2000-2012                */
-/*              (c) Copyright Willem Konynenberg, 2000-2009          */
-/*              (c) Copyright Vic Cross, 2001-2009                   */
-/*              (c) Copyright David B. Trout, 2002-2009              */
+/* CTCADPT.H    (C) Copyright James A. Pierson, 2002-2012            */
+/*              (C) Copyright Roger Bowler, 2000-2012                */
+/*              (C) Copyright Willem Konynenberg, 2000-2009          */
+/*              (C) Copyright Vic Cross, 2001-2009                   */
+/*              (C) Copyright David B. Trout, 2002-2009              */
 /*              Hercules Channel-to-Channel Emulation Support        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

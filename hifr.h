@@ -1,5 +1,5 @@
-/* HIFR.H       (c) Copyright Roger Bowler, 2013                     */
-/*              (c) Copyright Ian Shorter, 2013                      */
+/* HIFR.H       (C) Copyright Roger Bowler, 2013                     */
+/*              (C) Copyright Ian Shorter, 2013                      */
 /*              Hercules IPV6 struct hifr/ifreq/in6_ifreq support    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

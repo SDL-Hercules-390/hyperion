@@ -1,4 +1,4 @@
-/* FILLFNAM.C   (c) Copyright Roger Bowler, 1999-2012                */
+/* FILLFNAM.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules filename completion functions               */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

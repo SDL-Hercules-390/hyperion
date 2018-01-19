@@ -1,4 +1,4 @@
-/* HINLINES.H   (c) Copyright Roger Bowler, 1999-2012                */
+/* HINLINES.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules-wide inline functions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,5 +1,5 @@
 /* TUNTAP.H    (C) Copyright James A. Pierson, 2002-2012             */
-/*             (c) Copyright "Fish" (David B. Trout), 2002-2012      */
+/*             (C) Copyright "Fish" (David B. Trout), 2002-2012      */
 /*              Hercules - TUN/TAP Abstraction Layer                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

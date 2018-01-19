@@ -1,4 +1,4 @@
-/* S37X.C       (c) Copyright Ivan S. Warren 2010                    */
+/* S37X.C       (C) Copyright Ivan S. Warren 2010                    */
 /*              Optional S370 Extensions                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

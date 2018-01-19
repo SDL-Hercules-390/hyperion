@@ -1,4 +1,4 @@
-/* QDIO.H       (c) Copyright Jan Jaeger,   2010-2012                */
+/* QDIO.H       (C) Copyright Jan Jaeger,   2010-2012                */
 /*              Queued Direct I/O                                    */
 
 /* This implementation is based on the S/390 Linux implementation    */

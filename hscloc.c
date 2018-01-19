@@ -1,4 +1,4 @@
-/* HSCLOC.C     (c) Copyright TurboHercules SAS, 2010-2011           */
+/* HSCLOC.C     (C) Copyright TurboHercules SAS, 2010-2011           */
 /*              Locate debugging functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

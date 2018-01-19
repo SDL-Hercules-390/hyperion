@@ -1,4 +1,4 @@
-/* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2012                */
+/* DECIMAL.C    (C) Copyright Roger Bowler, 1991-2012                */
 /*              ESA/390 Packed Decimal Routines                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -20,7 +20,7 @@
 /* Add trialrun to ED and EDMK                   Jan Jaeger 19/07/00 */
 /* Fix random MP bug - Mario Bezzi                                   */
 /* Clear DXC on data exception - Peter Kuschnerus                V209*/
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 /* TP instruction - Roger Bowler                            08/02/01 */
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
 /* binary_to_packed subroutine - Roger Bowler              02jul2003 */

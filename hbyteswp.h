@@ -1,4 +1,4 @@
-/* HBYTESWP.H   (c) Copyright Roger Bowler, 2012                     */
+/* HBYTESWP.H   (C) Copyright Roger Bowler, 2012                     */
 /*              Hercules Little <> Big Endian conversion             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

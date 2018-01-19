@@ -1,4 +1,4 @@
-/* HMALLOC.H    (c) Copyright Roger Bowler, 2013                     */
+/* HMALLOC.H    (C) Copyright Roger Bowler, 2013                     */
 /*               Hercules macros...                                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

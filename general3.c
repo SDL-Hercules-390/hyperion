@@ -1,4 +1,4 @@
-/* GENERAL3.C   (c) Copyright Roger Bowler, 1994-2012                */
+/* GENERAL3.C   (C) Copyright Roger Bowler, 1994-2012                */
 /*         Hercules CPU Emulator - Additional General Instructions   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

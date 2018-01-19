@@ -1,4 +1,4 @@
-/*  FTHREADS.H  (c) Copyright "Fish" (David B. Trout), 2001-2012     */
+/*  FTHREADS.H  (C) Copyright "Fish" (David B. Trout), 2001-2012     */
 /*              Fish's WIN32 version of pthreads                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

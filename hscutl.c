@@ -1,5 +1,5 @@
-/*  HSCUTL.C    (c) Copyright Ivan Warren & Others, 2003-2012        */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/*  HSCUTL.C    (C) Copyright Ivan Warren & Others, 2003-2012        */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules Platform Port & Misc Functions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,11 +1,11 @@
-/* DAT.C        (c) Copyright Roger Bowler, 1999-2012                */
+/* DAT.C        (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Supported DAT Functions                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 #include "hstdinc.h"
 

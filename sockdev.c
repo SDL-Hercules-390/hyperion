@@ -1,4 +1,4 @@
-/* SOCKET.C     (c) Copyright Roger Bowler, 1999-2012                */
+/* SOCKET.C     (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Socketdevice Handler                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

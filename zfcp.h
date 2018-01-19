@@ -1,4 +1,4 @@
-/* ZFCP.H       (c) Copyright Jan Jaeger,   2010-2012                */
+/* ZFCP.H       (C) Copyright Jan Jaeger,   2010-2012                */
 /*              Fibre Channel Protocol attached DASD emulation       */
 
 /* This implementation is based on the S/390 Linux implementation    */

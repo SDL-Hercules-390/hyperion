@@ -1,4 +1,4 @@
-/* OMATAPE.C    (c) Copyright Roger Bowler, 1999-2012                */
+/* OMATAPE.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for OMATAPE             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -471,7 +471,7 @@ END_FINAL_SECTION;
 
 
 
-/* DYNDIAG.C    (c) Copyright Jan Jaeger, 2003                       */
+/* DYNDIAG.C    (C) Copyright Jan Jaeger, 2003                       */
 /*              Hercules Dynamic Loader                              */
 
 /*              Sample diagf14 dll routine                           */
@@ -725,7 +725,7 @@ You need to ensure your .c SOURCE member always begins with the
 following very specific header file #include sequence:
 
 
-    /*  XXXXXX.C    (c) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
+    /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
     /*              Module description goes here...                      */
     /*                                                                   */
     /*   Released under "The Q Public License Version 1"                 */

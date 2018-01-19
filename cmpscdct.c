@@ -1,4 +1,4 @@
-/* CMPSCDCT.C   (c) Copyright "Fish" (David B. Trout), 2012-2014     */
+/* CMPSCDCT.C   (C) Copyright "Fish" (David B. Trout), 2012-2014     */
 /*              Compression Call Get Dictionary Entry functions      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

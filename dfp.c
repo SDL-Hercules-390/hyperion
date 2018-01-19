@@ -1,4 +1,4 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2007-2012                */
+/* DFP.C        (C) Copyright Roger Bowler, 2007-2012                */
 /*              Decimal Floating Point instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

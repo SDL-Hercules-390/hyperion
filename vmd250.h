@@ -1,4 +1,4 @@
-/* VMD250.H     (c) Copyright Harold Grovesteen, 2009-2012           */
+/* VMD250.H     (C) Copyright Harold Grovesteen, 2009-2012           */
 /*              z/VM 5.4 DIAGNOSE code X'250'                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

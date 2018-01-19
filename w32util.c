@@ -1,5 +1,5 @@
-/* W32UTIL.C    (c) Copyright "Fish" (David B. Trout), 2005-2012     */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/* W32UTIL.C    (C) Copyright "Fish" (David B. Trout), 2005-2012     */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Windows porting functions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2012                */
+/* DASDTAB.H    (C) Copyright Roger Bowler, 1999-2012                */
 /*              DASD table structures                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

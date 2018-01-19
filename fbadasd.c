@@ -1,4 +1,4 @@
-/* FBADASD.C    (c) Copyright Roger Bowler, 1999-2012                */
+/* FBADASD.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              ESA/390 FBA Direct Access Storage Device Handler     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

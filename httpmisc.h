@@ -1,4 +1,4 @@
-/* HTTPMISC.H   (c) Copyright Jan Jaeger, 2002-2012                  */
+/* HTTPMISC.H   (C) Copyright Jan Jaeger, 2002-2012                  */
 /*              Hercules HTTP Server for Console Ops                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

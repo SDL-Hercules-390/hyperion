@@ -1,4 +1,4 @@
-/* HAO.C        (c) Copyright Bernard van der Helm, 2002-2012        */
+/* HAO.C        (C) Copyright Bernard van der Helm, 2002-2012        */
 /*             Hercules Automatic Operator Implementation            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -10,7 +10,7 @@
 /*                                                                           */
 /* Implementation of the automatic operator within the Hercules emulator.    */
 /*                                                                           */
-/*                            (c) Copyright Bernard van der Helm, 2002-2011  */
+/*                            (C) Copyright Bernard van der Helm, 2002-2011  */
 /*                            Noordwijkerhout, The Netherlands.              */
 /*---------------------------------------------------------------------------*/
 

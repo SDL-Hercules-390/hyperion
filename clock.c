@@ -1,4 +1,4 @@
-/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2012                  */
+/* CLOCK.C      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              TOD Clock functions                                  */
 
 /* The emulated hardware clock is based on the host clock, adjusted  */

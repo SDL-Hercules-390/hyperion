@@ -1,5 +1,5 @@
-/* CTC_LCS.C    (c) Copyright James A. Pierson, 2002-2012            */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2011     */
+/* CTC_LCS.C    (C) Copyright James A. Pierson, 2002-2012            */
+/*              (C) Copyright "Fish" (David B. Trout), 2002-2011     */
 /*              Hercules LAN Channel Station Support                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

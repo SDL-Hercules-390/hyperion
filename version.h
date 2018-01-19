@@ -1,4 +1,4 @@
-/*  VERSION.H   (c) Copyright Roger Bowler, 1999-2012                */
+/*  VERSION.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*      HERCULES Emulator Version definition                         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

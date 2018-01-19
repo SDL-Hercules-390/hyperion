@@ -1,4 +1,4 @@
-/* DASDLS.C    (c) Copyright Roger Bowler, 1999-2012                 */
+/* DASDLS.C    (C) Copyright Roger Bowler, 1999-2012                 */
 /*              Hercules DASD Utilities: DASD list program           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

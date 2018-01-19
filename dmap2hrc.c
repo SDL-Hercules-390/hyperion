@@ -1,4 +1,4 @@
-/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001-2012                 */
+/* DMAP2HRC.C   (C) Copyright Jay Maynard, 2001-2012                 */
 /*              Convert P/390 DEVMAP to Hercules config file         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

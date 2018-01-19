@@ -1,6 +1,6 @@
-/* LOADMEM.C    (c) Copyright Roger Bowler, 1999                     */
-/*              (c) Copyright Paul Leisy, 2001                       */
-/*              (c) Copyright TurboHercules SAS, 2010-2012           */
+/* LOADMEM.C    (C) Copyright Roger Bowler, 1999                     */
+/*              (C) Copyright Paul Leisy, 2001                       */
+/*              (C) Copyright TurboHercules SAS, 2010-2012           */
 /*              Load memory functions                                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

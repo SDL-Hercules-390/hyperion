@@ -1,4 +1,4 @@
-/* W32MTIO.H    (c) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* W32MTIO.H    (C) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Win32 'mtio.h' (Magnetic Tape structures)            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

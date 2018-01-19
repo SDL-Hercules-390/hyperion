@@ -1,4 +1,4 @@
-/* CPUINT.H     (c) Copyright Jan Jaeger, 2001-2012                  */
+/* CPUINT.H     (C) Copyright Jan Jaeger, 2001-2012                  */
 /*              Hercules Interrupt State and Mask Definitions        */
 
 /**********************************************************************

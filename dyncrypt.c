@@ -11,7 +11,7 @@
 /* SA22-7832-04: z/Architecture Principles of Operation within the Hercules   */
 /* z/Architecture emulator.                                                   */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2011 */
+/*                              (C) Copyright Bernard van der Helm, 2003-2011 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
@@ -5071,7 +5071,7 @@ HDL_REGISTER_SECTION;
   char pkgvers[ 80 ];
 
   // "%s module loaded%s"
-  WRMSG( HHC00150, "I", "Crypto", " (c) Copyright 2003-2016 by Bernard van der Helm");
+  WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2016 by Bernard van der Helm");
   MSGBUF( pkgvers, "Built with crypto external package version %s", crypto_version() );
   // "%s"
   WRMSG( HHC01417, "I", pkgvers );

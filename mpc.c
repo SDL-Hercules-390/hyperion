@@ -1,6 +1,6 @@
-/* MPC.C        (c) Copyright Jan Jaeger,  2010-2012                 */
-/*              (c) Copyright Ian Shorter, 2011-2012                 */
-/*              (c) Copyright Harold Grovesteen, 2011-2012           */
+/* MPC.C        (C) Copyright Jan Jaeger,  2010-2012                 */
+/*              (C) Copyright Ian Shorter, 2011-2012                 */
+/*              (C) Copyright Harold Grovesteen, 2011-2012           */
 /*              MPC (Multi-Path Channel) functions                   */
 
 /* This implementation is based on the S/390 Linux implementation    */

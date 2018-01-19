@@ -1,5 +1,5 @@
-/* CCKDCDSK.C   (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Greg Smith, 2002-2012                  */
+/* CCKDCDSK.C   (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) Copyright Greg Smith, 2002-2012                  */
 /*       Perform chkdsk for a Compressed CKD Direct Access Storage   */
 /*       Device file.                                                */
 /*                                                                   */

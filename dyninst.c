@@ -1,4 +1,4 @@
-/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2012                  */
+/* DYNINST.C    (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
 
 /* This module dynamically loads instructions.  Instruction routine  */

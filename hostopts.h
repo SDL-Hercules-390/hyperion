@@ -1,4 +1,4 @@
-/* HOSTOPTS.H   (c) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* HOSTOPTS.H   (C) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Host-specific features and options for Hercules      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

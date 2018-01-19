@@ -1,4 +1,4 @@
-/* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2012                */
+/* DASDCONV.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules DASD Utilities: DASD image converter        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

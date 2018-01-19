@@ -1,5 +1,5 @@
-/* HERCIFC.H     (c) Copyright Roger Bowler, 2000-2012               */
-/*               (c) Copyright James A. Pierson, 2002-2009           */
+/* HERCIFC.H     (C) Copyright Roger Bowler, 2000-2012               */
+/*               (C) Copyright James A. Pierson, 2002-2009           */
 /*              Hercules Interface Configuration Program             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* W32UTIL.H    (c) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* W32UTIL.H    (C) Copyright "Fish" (David B. Trout), 2005-2012     */
 /*              Windows porting functions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* DASDCAT.C    (c) Copyright Roger Bowler, 1999-2012                */
+/* DASDCAT.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              DASD "cat" functions                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,7 +8,7 @@
 /*
  * dasdcat
  *
- * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2009
+ * Vast swathes copied from dasdpdsu.c (C) Copyright Roger Bowler, 1999-2009
  * Changes and additions Copyright 2000-2009 by Malcolm Beattie
  *
  *

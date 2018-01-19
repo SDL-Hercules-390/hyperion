@@ -1,5 +1,5 @@
-/* DASDSEQ.C    (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright James M. Morrison, 2001-2010           */
+/* DASDSEQ.C    (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) Copyright James M. Morrison, 2001-2010           */
 /*              Hercules Supported DASD definitions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

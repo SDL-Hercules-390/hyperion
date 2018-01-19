@@ -1,4 +1,4 @@
-/* W32CTCA.H    (c) Copyright "Fish" (David B. Trout), 2002-2014     */
+/* W32CTCA.H    (C) Copyright "Fish" (David B. Trout), 2002-2014     */
 /*    CTCI-WIN (Channel to Channel link to Win32 TCP/IP stack)       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

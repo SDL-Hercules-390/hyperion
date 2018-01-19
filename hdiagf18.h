@@ -1,4 +1,4 @@
-/* HDIAGF18.H   (c) Copyright, Harold Grovesteen, 2010-2012          */
+/* HDIAGF18.H   (C) Copyright, Harold Grovesteen, 2010-2012          */
 /*              Hercules DIAGNOSE code X'F18'                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

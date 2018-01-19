@@ -1,6 +1,6 @@
-/* HETMAP.C     (c) Copyright Leland Lucius, 2000-2012               */
-/*              (c) Copyright Paul F. Gorlinsky, 2010                */
-/*              (c) Copyright TurboHercules, SAS, 2011               */
+/* HETMAP.C     (C) Copyright Leland Lucius, 2000-2012               */
+/*              (C) Copyright Paul F. Gorlinsky, 2010                */
+/*              (C) Copyright TurboHercules, SAS, 2011               */
 /*         Displays information about a Hercules Emulated Tape       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -10,8 +10,8 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETMAP.C     (c) Copyright Leland Lucius, 2000-2009
-||              (c) Copyright Paul F Gorlinsky 2010 (SLANAL changes)
+|| HETMAP.C     (C) Copyright Leland Lucius, 2000-2009
+||              (C) Copyright Paul F Gorlinsky 2010 (SLANAL changes)
 ||              Released under terms of the Q Public License.
 ||
 || Displays information about the structure of a Hercules Emulated Tape.

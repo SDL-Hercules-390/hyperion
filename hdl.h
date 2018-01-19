@@ -1,4 +1,4 @@
-/* HDL.H        (c) Copyright Jan Jaeger, 2003-2012                  */
+/* HDL.H        (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
 
 #ifndef _HDL_H

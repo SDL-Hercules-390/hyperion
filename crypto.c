@@ -1,4 +1,4 @@
-/* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2012                  */
+/* CRYPTO.C     (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              Dummy Cryptographic Instructions                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* QETH.H       (c) Copyright Jan Jaeger,   2010-2012                */
+/* QETH.H       (C) Copyright Jan Jaeger,   2010-2012                */
 /*              OSA Express                                          */
 
 /* This implementation is based on the S/390 Linux implementation    */

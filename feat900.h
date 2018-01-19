@@ -1,4 +1,4 @@
-/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2012                  */
+/* FEAT900.H    (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              ESAME feature definitions                            */
 
 /*-------------------------------------------------------------------*/

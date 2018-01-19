@@ -1,4 +1,4 @@
-/* HEXDUMPE.C   (c) Copyright "Fish" (David B. Trout), 2014-2015     */
+/* HEXDUMPE.C   (C) Copyright "Fish" (David B. Trout), 2014-2015     */
 /*              Format a hex dump into the buffer provided           */
 /*              (with minor adjustments to accommodate Hercules)     */
 /*                                                                   */

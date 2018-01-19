@@ -1,4 +1,4 @@
-/* FTLIB.C      (c) Copyright TurboHercules, SAS 2010-2011           */
+/* FTLIB.C      (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules Tape Function Lib for FAKETAPE              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

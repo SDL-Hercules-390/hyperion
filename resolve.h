@@ -1,4 +1,4 @@
-/* RESOLVE.H    (c) Copyright Ian Shorter, 2011-2012                 */
+/* RESOLVE.H    (C) Copyright Ian Shorter, 2011-2012                 */
 /*              Resolve host name or IP address                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

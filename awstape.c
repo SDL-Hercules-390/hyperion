@@ -1,4 +1,4 @@
-/* AWSTAPE.C    (c) Copyright Roger Bowler, 1999-2012                */
+/* AWSTAPE.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for AWSTAPE             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

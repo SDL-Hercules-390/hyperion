@@ -1,4 +1,4 @@
-/* FAKETAPE.C   (c) Copyright Roger Bowler, 1999-2012                */
+/* FAKETAPE.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules Tape Device Handler for FAKETAPE            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

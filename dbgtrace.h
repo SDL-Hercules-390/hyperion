@@ -1,4 +1,4 @@
-/* DBGTRACE.H   (c) Copyright "Fish" (David B. Trout), 2011          */
+/* DBGTRACE.H   (C) Copyright "Fish" (David B. Trout), 2011          */
 /*              TRACE/ASSERT/VERIFY debugging macros                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

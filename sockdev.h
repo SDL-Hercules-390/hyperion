@@ -1,4 +1,4 @@
-/* SOCKDEV.H    (c) Copyright Roger Bowler, 1999-2012                */
+/* SOCKDEV.H    (C) Copyright Roger Bowler, 1999-2012                */
 /*              SocketDevice support                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

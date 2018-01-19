@@ -1,4 +1,4 @@
-/* ZFCP.C       (c) Copyright Jan Jaeger,   1999-2012                */
+/* ZFCP.C       (C) Copyright Jan Jaeger,   1999-2012                */
 /*              Fibre Channel Protocol attached DASD emulation       */
 /*                                                                   */
 

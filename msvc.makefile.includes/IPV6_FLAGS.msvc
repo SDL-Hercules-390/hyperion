@@ -1,7 +1,7 @@
 # ***************************************************************************
 #     IPV6_FLAGS.msvc (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Enrico Sorichetti, 2012
+# (C) Copyright Enrico Sorichetti, 2012
 # --------------------------------------------------------------------------
 #  Sets compiler flags for IPV6 support
 #

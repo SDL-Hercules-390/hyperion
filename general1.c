@@ -1,13 +1,13 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2012                */
+/* GENERAL1.C   (C) Copyright Roger Bowler, 1994-2012                */
 /*              Hercules CPU Emulator - Instructions A-M             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* UPT & CFC                (c) Copyright Peter Kuschnerus, 1999-2009*/
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* UPT & CFC                (C) Copyright Peter Kuschnerus, 1999-2009*/
+/* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements general instructions A-M of the            */
@@ -1886,8 +1886,8 @@ U32     n;                              /* 32-bit operand values     */
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2009            */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              (C) Copyright Peter Kuschnerus, 1999-2009            */
+/*              (C) Copyright "Fish" (David B. Trout), 2005-2009     */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(compare_and_form_codeword)

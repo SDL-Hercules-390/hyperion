@@ -1,4 +1,4 @@
-/* HSOCKET.H    (c) Copyright Roger Bowler, 2005-2012                */
+/* HSOCKET.H    (C) Copyright Roger Bowler, 2005-2012                */
 /*              Equates for socket functions                         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

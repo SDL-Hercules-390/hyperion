@@ -1,9 +1,9 @@
 # ***************************************************************************
 #     REXX_DIRS.msvc (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright Enrico Sorichetti, 2012
+# (C) Copyright Enrico Sorichetti, 2012
 #
-# based on the previous REXX_DIR.msvc (c) Copyright Roger Bowler, 2010-2011
+# based on the previous REXX_DIR.msvc (C) Copyright Roger Bowler, 2010-2011
 #
 # --------------------------------------------------------------------------
 #

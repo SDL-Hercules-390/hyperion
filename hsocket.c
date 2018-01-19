@@ -1,4 +1,4 @@
-/* HSOCKET.C    (c) Copyright Roger Bowler, 2003-2012                */
+/* HSOCKET.C    (C) Copyright Roger Bowler, 2003-2012                */
 /*             Hercules Socket read/write routines                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,7 +1,7 @@
-/* SIE.C        (c) Copyright Jan Jaeger, 1999-2012                  */
+/* SIE.C        (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Interpretive Execution                               */
 /*                                                                   */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*      This module contains the SIE instruction as                  */
 /*      described in IBM S/370 Extended Architecture                 */

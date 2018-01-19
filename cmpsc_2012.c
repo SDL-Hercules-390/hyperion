@@ -1,4 +1,4 @@
-/* CMPSC_2012.C (c) Copyright "Fish" (David B. Trout), 2012-2014     */
+/* CMPSC_2012.C (C) Copyright "Fish" (David B. Trout), 2012-2014     */
 /*              (c) Bernard van der Helm, 2000-2012                  */
 /*              S/390 Compression Call Instruction Functions         */
 /*                                                                   */

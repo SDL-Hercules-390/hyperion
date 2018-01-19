@@ -1,4 +1,4 @@
-/* CTC_PTP.H    (c) Copyright Ian Shorter, 2011-2012                 */
+/* CTC_PTP.H    (C) Copyright Ian Shorter, 2011-2012                 */
 /*              MPC Point-To-Point Support (PTP)                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

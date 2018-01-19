@@ -1,6 +1,6 @@
-/* CHANNEL.C    (c) Copyright Roger Bowler,    1999-2012             */
-/*              (c) Copyright Jan Jaeger,      1999-2012             */
-/*              (c) Copyright Mark L. Gaubatz, 2010, 2013            */
+/* CHANNEL.C    (C) Copyright Roger Bowler,    1999-2012             */
+/*              (C) Copyright Jan Jaeger,      1999-2012             */
+/*              (C) Copyright Mark L. Gaubatz, 2010, 2013            */
 /*              ESA/390 Channel Emulator                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -8,9 +8,9 @@
 /*   Hercules.                                                       */
 
 /* z/Architecture support -                                          */
-/*      (c) Copyright Jan Jaeger, 1999-2012                          */
+/*      (C) Copyright Jan Jaeger, 1999-2012                          */
 /* Rewrite of channel code and associated structures -               */
-/*      (c) Copyright Mark L. Gaubatz, 2010, 2013                    */
+/*      (C) Copyright Mark L. Gaubatz, 2010, 2013                    */
 
 /*-------------------------------------------------------------------*/
 /* This module contains the channel subsystem functions for the      */

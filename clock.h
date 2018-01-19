@@ -1,4 +1,4 @@
-/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2012                  */
+/* CLOCK.H      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              TOD Clock functions                                  */
 
 #if !defined(_CLOCK_C_)

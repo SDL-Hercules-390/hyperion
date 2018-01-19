@@ -1,5 +1,5 @@
-/* COMMADPT.C   (c) Copyright Roger Bowler & Others, 2002-2012       */
-/*              (c) Copyright, MHP, 2007-2008 (see below)            */
+/* COMMADPT.C   (C) Copyright Roger Bowler & Others, 2002-2012       */
+/*              (C) Copyright, MHP, 2007-2008 (see below)            */
 /*              Hercules Communication Line Driver                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -17,7 +17,7 @@
 
 /* ********************************************************************
 
-   TTY Mode Additions (c) Copyright, 2007 MHP <ikj1234i at yahoo dot com>
+   TTY Mode Additions (C) Copyright, 2007 MHP <ikj1234i at yahoo dot com>
 
    Feb. 2007- Add support for 2703 Telegraph Terminal Control Type II
    (for use with TTY ASR 33/35 or compatible terminals).
@@ -38,7 +38,7 @@
 
    *****************************************************************
 
-   2741 Mode Additions (c) Copyright, 2008 MHP <ikj1234i at yahoo dot com>
+   2741 Mode Additions (C) Copyright, 2008 MHP <ikj1234i at yahoo dot com>
 
    2741 mode is now working, though imperfectly as of yet.
 

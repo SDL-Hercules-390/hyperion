@@ -1,4 +1,4 @@
-/* CACHE.C    (c) Copyright Greg Smith, 2002-2012                    */
+/* CACHE.C    (C) Copyright Greg Smith, 2002-2012                    */
 /*            Dynamic cache manager for multi-threaded applications  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

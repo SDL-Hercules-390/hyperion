@@ -1,4 +1,4 @@
-/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2012                  */
+/* LOGGER.C     (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              System logger functions                              */
 
 /* If standard output or standard error is redirected then the log   */

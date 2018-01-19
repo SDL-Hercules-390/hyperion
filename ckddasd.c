@@ -1,4 +1,4 @@
-/* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2012                */
+/* CKDDASD.C    (C) Copyright Roger Bowler, 1999-2012                */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

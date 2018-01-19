@@ -1,4 +1,4 @@
-/*ECPSVM.C      (c) Copyright Roger Bowler, 2000-2012                */
+/*ECPSVM.C      (C) Copyright Roger Bowler, 2000-2012                */
 /*              Hercules ECPS:VM Support                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,7 +7,7 @@
 
 /***********************************************************/
 /* HERCULES ECPS:VM Support                                */
-/* (c) Copyright 2003-2009 Roger Bowler and Others         */
+/* (C) Copyright 2003-2009 Roger Bowler and Others         */
 /* Use of this program is governed by the QPL License      */
 /* Original Author : Ivan Warren                           */
 /* Prime Maintainer : Ivan Warren                          */

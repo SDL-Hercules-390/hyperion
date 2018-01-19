@@ -1,14 +1,14 @@
-/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2012                */
-/*              (c) Copyright Jan Jaeger, 1999-2012                  */
+/* GENERAL2.C   (C) Copyright Roger Bowler, 1994-2012                */
+/*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Hercules CPU Emulator - Instructions N-Z             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* UPT & CFC                (c) Copyright Peter Kuschnerus, 1999-2009*/
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* UPT & CFC                (C) Copyright Peter Kuschnerus, 1999-2009*/
+/* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements general instructions N-Z of the            */
@@ -1875,8 +1875,8 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 
 /*-------------------------------------------------------------------*/
 /* 0102 UPT   - Update Tree                                      [E] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2009            */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2009     */
+/*              (C) Copyright Peter Kuschnerus, 1999-2009            */
+/*              (C) Copyright "Fish" (David B. Trout), 2005-2009     */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(update_tree)

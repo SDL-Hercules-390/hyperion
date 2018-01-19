@@ -1,8 +1,8 @@
-/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2012                  */
+/* TRACE.C      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              Implicit tracing functions                           */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2012      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2012      */
+/* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
+/* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
 /* This module contains procedures for creating entries in the       */

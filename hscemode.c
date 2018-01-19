@@ -1,7 +1,7 @@
-/* HSCEMODE.C   (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Jan Jaeger, 1999-2012                  */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/* HSCEMODE.C   (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) Copyright "Fish" (David B. Trout), 2002-2009     */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              CE mode functions                                    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

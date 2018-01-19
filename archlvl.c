@@ -1,4 +1,4 @@
-/* ARCHLVL.C    (c) Copyright Jan Jaeger,   2010-2012                */
+/* ARCHLVL.C    (C) Copyright Jan Jaeger,   2010-2012                */
 /*                  Architecture Mode and Facilities                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

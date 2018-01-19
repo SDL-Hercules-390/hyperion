@@ -1,4 +1,4 @@
-/* STRSIGNAL.C  (c) Copyright Roger Bowler, 1999-2012                */
+/* STRSIGNAL.C  (C) Copyright Roger Bowler, 1999-2012                */
 /*                 Originally written by Fred Fish fnf@cygnus.com    */
 /*      Implements strsignal() for architectures without it          */
 /*                                                                   */

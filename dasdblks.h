@@ -1,4 +1,4 @@
-/* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2012                */
+/* DASDBLKS.H   (C) Copyright Roger Bowler, 1999-2012                */
 /*              DASD control block structures                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

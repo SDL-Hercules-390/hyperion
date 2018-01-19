@@ -1,4 +1,4 @@
-/* EXTSTRING.H  (c) Copyright Mark L. Gaubatz, 1985-2012             */
+/* EXTSTRING.H  (C) Copyright Mark L. Gaubatz, 1985-2012             */
 /*              Adapted for use by Hercules                          */
 /*              Extended string handling routines                    */
 /*                                                                   */

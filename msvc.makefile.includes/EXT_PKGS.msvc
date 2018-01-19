@@ -1,7 +1,7 @@
 # ***************************************************************************
 #     EXT_PKGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
 # --------------------------------------------------------------------------
-# (c) Copyright "Fish" (David B. Trout)
+# (C) Copyright "Fish" (David B. Trout)
 # --------------------------------------------------------------------------
 #
 #  Sets additional Hercules-related compiler/linker flags & #defines

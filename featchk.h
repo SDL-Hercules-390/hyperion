@@ -1,4 +1,4 @@
-/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2012                  */
+/* FEATCHK.H    (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              Feature definition consistency checks                */
 
 /*-------------------------------------------------------------------*/

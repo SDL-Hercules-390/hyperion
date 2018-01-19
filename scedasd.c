@@ -1,4 +1,4 @@
-/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2012                  */
+/* SCEDASD.C    (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Service Control Element DASD I/O functions           */
 
 #include "hstdinc.h"

@@ -1,4 +1,4 @@
-/* ESA390IO.H   (c) Copyright "Fish" (David B. Trout), 2013          */
+/* ESA390IO.H   (C) Copyright "Fish" (David B. Trout), 2013          */
 /*              Common I/O Device Commands structures                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

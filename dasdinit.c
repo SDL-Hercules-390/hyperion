@@ -1,4 +1,4 @@
-/* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2012                */
+/* DASDINIT.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              Hercules DASD Utilities: DASD image builder          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

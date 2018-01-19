@@ -1,4 +1,4 @@
-/* DYNGUI.C     (c) Copyright "Fish" (David B. Trout), 2003-2012     */
+/* DYNGUI.C     (C) Copyright "Fish" (David B. Trout), 2003-2012     */
 /*              Hercules External GUI Interface DLL                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

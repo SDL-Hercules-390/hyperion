@@ -1,5 +1,5 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2012                */
-/*              (c) Copyright Jan Jaeger, 1999-2012                  */
+/* HSCMISC.C    (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Miscellaneous System Command Routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

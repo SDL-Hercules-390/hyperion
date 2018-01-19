@@ -1,5 +1,5 @@
 /* logmsg.C     (C) Copyright Ivan Warren, 2003-2012                 */
-/*              (c) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*               logmsg frontend routing                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

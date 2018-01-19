@@ -1,4 +1,4 @@
-/* CHSC.H       (c) Copyright Jan Jaeger, 1999-2012                  */
+/* CHSC.H       (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Channel Subsystem interface fields                   */
 /*                                                                   */
 
