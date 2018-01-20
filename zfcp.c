@@ -1,6 +1,9 @@
 /* ZFCP.C       (C) Copyright Jan Jaeger,   1999-2012                */
 /*              Fibre Channel Protocol attached DASD emulation       */
 /*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* This module contains device handling functions for the            */
 /* ZFCP Fibre Channel Protocol interface, and will translate all     */

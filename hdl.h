@@ -1,5 +1,9 @@
 /* HDL.H        (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 #ifndef _HDL_H
 #define _HDL_H

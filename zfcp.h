@@ -1,5 +1,9 @@
 /* ZFCP.H       (C) Copyright Jan Jaeger,   2010-2012                */
 /*              Fibre Channel Protocol attached DASD emulation       */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* This implementation is based on the S/390 Linux implementation    */
 

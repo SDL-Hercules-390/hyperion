@@ -2,6 +2,10 @@
 /*              (C) Copyright Harold Grovesteen, 2011                */
 /*              Queued Direct Input Output                           */
 /*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+/*                                                                   */
 /*      This module contains the Signal Adapter instruction          */
 /*      and QEBSM EQBS and SQBS instructions                         */
 

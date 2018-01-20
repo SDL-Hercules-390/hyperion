@@ -1,5 +1,9 @@
 /* DYNINST.C    (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* This module dynamically loads instructions.  Instruction routine  */
 /* names must be registered under the name of s370_opcode_B220 for   */

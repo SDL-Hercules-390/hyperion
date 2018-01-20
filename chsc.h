@@ -1,6 +1,9 @@
 /* CHSC.H       (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Channel Subsystem interface fields                   */
 /*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* This module implements channel subsystem interface functions      */
 /* for the Hercules ESA/390 emulator.                                */

@@ -1,5 +1,9 @@
 /* ESAME.C      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              ESAME (z/Architecture) instructions                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the instructions which exist in ESAME      */

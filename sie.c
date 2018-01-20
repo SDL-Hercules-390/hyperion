@@ -1,6 +1,10 @@
 /* SIE.C        (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              Interpretive Execution                               */
 /*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+/*                                                                   */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*      This module contains the SIE instruction as                  */

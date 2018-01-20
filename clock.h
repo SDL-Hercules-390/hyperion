@@ -1,5 +1,9 @@
 /* CLOCK.H      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              TOD Clock functions                                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 #if !defined(_CLOCK_C_)
  #define _CLOCK_EXTERN extern

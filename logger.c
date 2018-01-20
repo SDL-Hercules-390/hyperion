@@ -1,5 +1,9 @@
 /* LOGGER.C     (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              System logger functions                              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* If standard output or standard error is redirected then the log   */
 /* is written to the redirection.                                    */

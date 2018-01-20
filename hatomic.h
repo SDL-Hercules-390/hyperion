@@ -1,5 +1,9 @@
 /* Hercules atomic operations.                                       */
 /*                                 John Hartmann 5 Oct 2015 11:32:17 */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*********************************************************************/
 /* This  file  was  put into the public domain 2015-10-05 by John P. */

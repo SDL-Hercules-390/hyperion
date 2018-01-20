@@ -1,5 +1,9 @@
 /* CLOCK.C      (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              TOD Clock functions                                  */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* The emulated hardware clock is based on the host clock, adjusted  */
 /* by means of an offset and a steering rate.                        */

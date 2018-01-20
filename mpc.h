@@ -2,6 +2,10 @@
 /*              (C) Copyright Ian Shorter, 2011-2012                 */
 /*              (C) Copyright Harold Grovesteen, 2011-2012           */
 /*              MPC (Multi-Path Channel) functions                   */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /* This implementation is based on the S/390 Linux implementation    */
 

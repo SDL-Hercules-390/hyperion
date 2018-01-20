@@ -1,5 +1,9 @@
 /* FEATCHK.H    (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              Feature definition consistency checks                */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
 /*  Perform various checks on feature combinations, and set          */
