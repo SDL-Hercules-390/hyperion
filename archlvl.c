@@ -580,7 +580,7 @@ FT( MALL, MALL, Z900, HERC_MOVE_INVERSE )
 FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1 )
 #endif
 
-#if defined(      FEATURE_MSA_EXTENSION_FACILITY_2 )
+#if defined(       FEATURE_MSA_EXTENSION_FACILITY_2 )
 FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_2 )
 #endif
 
@@ -592,10 +592,9 @@ FT( MALL, NONE, NONE, HERC_PROBSTATE_DIAGF08 )
 FT( MALL, NONE, NONE, HERC_SIGP_SETARCH_S370 )
 
 #if defined(       FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
-
 FT( MALL, NONE, NONE, HERC_HOST_RESOURCE_ACCESS )
-
 #endif
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -698,7 +697,6 @@ typedef struct ARCHTAB  ARCHTAB;
 
 static ARCHTAB archtab[] =
 {
-
     //---------------------------------------------------------
     //
     //  The "_ARCH_nnn_NAME" entries MUST come first. The

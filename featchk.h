@@ -632,8 +632,8 @@
 /*                 Build architecture #defines                       */
 /*-------------------------------------------------------------------*/
 /* _nnn (_370, _390, _900) are architectures present in the build.   */
-/* _ARCHMODEn controls self including for arch-dependent compiles.   */
-/* _ARCH_nnn is the index for each arch within various tables.       */
+/* _ARCH_NUM_n controls self including for arch-dependent compiles.  */
+/* _ARCH_nnn_IDX is the index for each arch within various tables.   */
 /*-------------------------------------------------------------------*/
 
 #if  !defined( OPTION_370_MODE ) \
@@ -730,7 +730,7 @@
 //      (void*) & _mnemonic "\0" #_name
 //
 // as the last 2 entries for each opcode table entry. Thus the need
-// for the "+2" in the below# define for "NUM_INSTR_TAB_PTRS": so
+// for the "+2" in the below #define for "NUM_INSTR_TAB_PTRS": so
 // the opcode tables in opcode.c defined by "GENx370x390x900" macro
 // has room for the 2 needed extra pointers used by the DISASM_TYPE
 // instruction disassembly functions called if tracing instructions.
