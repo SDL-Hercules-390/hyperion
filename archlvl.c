@@ -1248,6 +1248,8 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
     LOGMSG( "HHC00891I\n" );
     LOGMSG( "HHC00891I                             %s Facility Table\n", at->name );
     LOGMSG( "HHC00891I\n" );
+    LOGMSG( "HHC00891I           SDRC* = Supported, Default, Required, Current, Modified.\n" );
+    LOGMSG( "HHC00891I\n" );
     LOGMSG( "HHC00891I Bit By Bi SRDC* Facility                    Description\n" );
     LOGMSG( "HHC00891I --- -- -- ----- --------------------------- ---------------------------------------------------------\n" );
     LOGMSG( "HHC00891I\n" );
@@ -1287,7 +1289,7 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
     }
 
     LOGMSG( "HHC00891I\n" );
-    LOGMSG( "HHC00891I             SDRC* = Supported, Default, Required, Current, Modified.\n" );
+    LOGMSG( "HHC00891I           SDRC* = Supported, Default, Required, Current, Modified.\n" );
     LOGMSG( "HHC00891I\n" );
 
     free( ptr_array );
