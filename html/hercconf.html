@@ -45,9 +45,13 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
+    <a href="#ARCHLVL_FACILITY">ARCHLVL</a>    DISABLE  006_ASN_LX_REUSE
+
+    <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
+    <a href="#ECPSVM">ECPSVM</a>     no  notrap
+
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
     <a href="#LOADPARM">LOADPARM</a>   0120....
-    <a href="#ARCHLVL_FACILITY">ARCHLVL</a>    DISABLE  006_ASN_LX_REUSE
 
     <a href="#CPUSERIAL">CPUSERIAL</a>  000611
     <a href="#CPUMODEL">CPUMODEL</a>   3090
@@ -58,12 +62,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#MODEL">MODEL</a>      EMULATOR
     <a href="#PLANT">PLANT</a>      ZZ
     <a href="#MANUFACTURER">MANUFACTURER</a> HRC
-    <a href="#MAINSIZE">MAINSIZE</a>   64
+
+    <a href="#MAINSIZE">MAINSIZE</a>   1G
     <a href="#XPNDSIZE">XPNDSIZE</a>   0
-    <a href="#NUMCPU">NUMCPU</a>     1
-    <a href="#NUMVEC">NUMVEC</a>     1
+    <a href="#NUMCPU">NUMCPU</a>     4
+    <a href="#NUMVEC">NUMVEC</a>     0
     <a href="#MAXCPU">MAXCPU</a>     8
-    <a href="#ENGINES">ENGINES</a>    CP
+    <a href="#ENGINES">ENGINES</a>    CP,CP,AP,IP
+
     <a href="#SYSEPOCH">SYSEPOCH</a>   1900
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
@@ -72,6 +78,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#HTTPROOT">HTTP</a>       ROOT   /usr/local/share/hercules/
     <a href="#HTTPSTRT">HTTP</a>       START
 
+    <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
+    <a href="#LDMOD">LDMOD</a>      dyncrypt
     <a href="#NETDEV">NETDEV</a>     /dev/net/tun
 
     <a href="#CCKD">CCKD</a>       NOSFD=1
@@ -104,14 +112,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  +/tapes
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  -/tapes/vault
 
-    <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
-    <a href="#LDMOD">LDMOD</a>      dyncrypt
-
-    <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
-    <a href="#ECPSVM">ECPSVM</a>     no  notrap
-
-    <a href="#SCSIMOUNT">SCSIMOUNT</a>  no
     <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
+    <a href="#AUTOINIT">AUTOINIT</a>   on
+    <a href="#SCSIMOUNT">SCSIMOUNT</a>  no
 
     <a href="#INCLUDE">INCLUDE</a>    mydevs.cfg
     <a href="#IGNORE">IGNORE</a>     INCLUDE_ERRORS
@@ -159,13 +162,13 @@ a real System/390.  The configuration file is an ASCII text file.
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
 
-    0580      <a href="#3420">3420</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
-    0581      <a href="#3420">3420</a>    \\.\Tape0   # <a href="#SCSI">SCSI</a>  (Windows only)
-    0582      <a href="#3420">3420</a>    ickdsf.aws  <a href="#noautomount">noautomount</a>
-    0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
-    0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
+    0580      <a href="#3420">3420</a>    ickdsf.aws  <a href="#noautomount">noautomount</a>
+    0581      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
+    0582-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
 
-    0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
+    0590      <a href="#3420">3590</a>    \\.\Tape0   # <a href="#SCSI">SCSI</a>  (Windows only)
+    0591      <a href="#3420">3590</a>    /dev/nst0   # <a href="#SCSI">SCSI</a>  (Linux or Windows)
+    0592      <a href="#3420">3490</a>    /dev/nst1 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
 
     0020      <a href="#2703">2703</a>    lport=32003 dial=IN lnctl=tele2 uctrans=yes term=tty skip=88C9DF iskip=0A
     0023      <a href="#2703">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
@@ -279,6 +282,22 @@ a real System/390.  The configuration file is an ASCII text file.
     should be changed to use the new <a href="#ARCHLVL_FACILITY">ARCHLVL
     facility</a> statement format instead.
     <p>
+
+<a name="AUTOINIT"></a>
+<dt><code>AUTOINIT &nbsp; <u>ON</u> &#124; OFF</code>
+<dd><p>
+    The <code>AUTOINIT</code> option controls whether device files
+    for emulated tape volumes should be automatically created or not.
+    <p>
+    When <code>AUTOINIT</code> is <code>ON</code>, a devinit command
+    specifying a file that does not yet exist causes the tape driver
+    to automatically create an empty unlabeled tape volume consisting
+    of just two tapemarks when it discovers the specified file
+    does not exist yet.
+    When <code>AUTOINIT</code> is <code>OFF</code> a devinit command
+    instead fails with an expected "file not found" error.
+    For convenience the default setting is <code>ON</code>.
+
 
 <a name="AUTOMOUNT"></a>
 <dt><code>AUTOMOUNT &nbsp; <em>[&plusmn;]directory</em></code>
@@ -853,7 +872,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="HTTPPORT"></a>
-<dt><code>HTTP PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
+<dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
 <dd><p>
     Specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
@@ -866,7 +885,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="HTTPROOT"></a>
-<dt><code>HTTP ROOT &nbsp; <em>directory</em></code>
+<dt><code>HTTP &nbsp; ROOT &nbsp; <em>directory</em></code>
 <dd><p>
     Specifies the root directory where the HTTP server's files reside.
     If not specified, the default value for Win32 builds of Hercules is the
@@ -878,7 +897,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="HTTPSTRT"></a>
-<dt><code>HTTP START</code>
+<dt><code>HTTP &nbsp; START</code>
 <dd><p>
     Starts the HTTP server. (Note: The server is no longer started by default.)
     <p>
@@ -1282,7 +1301,7 @@ a real System/390.  The configuration file is an ASCII text file.
     the terms of the license for the operating system you intend to run on
     Hercules. If you specify LICENSED and run a licensed operating system in
     violation of that license, then don't come after the Hercules developers
-    when the vendor sends their lawyers after you.</b>
+    when the vendor sends their lawyers after you!</b>
     <p>
 
     <code>RESTRICTED</code> is the default. Specifying
@@ -2834,34 +2853,40 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     The only required parameter is the device filename. All other parameters
-    are optional and must follow the filename. Use '<b>*</b>' (asterisk) for
-    the filename to specify an empty (unmounted) tape drive. The specified file,
-    if other than '<b>*</b>', <i>must</i> exist.
+    are optional and must follow the filename. Use <code><big>*</big></code>
+    (asterisk) for the filename to specify an empty (unmounted) tape drive.
     <p>
-    Additionally, if the file name starts with the '@' character (at sign), the file
-    really describes a list of tape emulation files to be loaded in succession.
+
+    If the specified device filename does not exist then either an unlabeled
+    empty tape volume will be created for you automatically or a "file not
+    found" error will occur depending on the setting of the <code>AUTOINIT</code>
+    option. Refer to the <a href="#AUTOINIT"><code>AUTOINIT</code></a> option
+    for more information.
+
     <p>
+    If the file name starts with the <code><big>@</big></code> (at sign) character
+    the file instead describes an Automatic Cartridge Feeder (ACF) file containing
+    a list of tape emulation files to be automatically loaded in succession.
 
     The syntax of each line is identical to the information that can be
-    specified after the device type when the options are specified directly
-    after the device type in the configuration file.
-    <p>
-
-    If the emulation file filename in the file list is the '<b>*</b>' (asterisk)
-    character, then this specifies a set of options to be applied to <i>all</i>
-    additional emulation files specified in the file list.
+    specified in the configuration file after the device type.
+    If the emulation file filename in the file list is the <code><big>*</big></code>
+    (asterisk) character however, then the set of options which follow it apply
+    to all of the remaining emulation files in the list.
     <p>
 
     Parameters are appended in succession. In all cases, if the same parameter is
     specified more than once, the last instance takes precedence.
+    Therefore, it is possible to specify a set of parameters in the base configuration
+    file, another set on a <code><big>*</big></code> line, and another set for each
+    individual line. Parameters are then appended in that order: options specified on
+    the base device statement itself first, followed by those options specified on
+    the <code><big>*</big></code> statement, and finally those specified on each individual
+    file list statement last.
     <p>
 
-    Therefore, it is possible to specify a set of parameters in the base configuration
-    file, another set on a '*' line, and another set for each individual line.
-    Parameters are then appended in that order: options specified on the base device
-    statement itself first, followed by those options specified on the '*' statement,
-    and finally those specified on each individual file list statement last. <i>A
-    <b>SCSI tape</b> device should <b>not</b> be given in a file list.</i>
+    <i>A device filename identifying a <b>SCSI tape</b> device cannot be specified
+    in an Automatic Cartridge Feeder (ACF) file list.</i>
     <p>
 
     Refer to the distributed source-code's
@@ -3173,16 +3198,16 @@ a real System/390.  The configuration file is an ASCII text file.
         interface. Hercules emulation always makes the drive appear as a
         channel attached device such as 3420 or 3480, although the underlying
         physical drive may be any type of SCSI attached tape drive, including
-        4mm or 8mm DAT, DLT, SCSI attached 3480/3490 cartridge drives, and
-        SCSI attached 3420 open reel tape drives.
+        4mm or 8mm DAT, DLT, SCSI attached 3480/3490/3590 cartridge drives,
+        and SCSI attached 3420 open reel tape drives.
         <p>
         Host-attached SCSI tapes are read and written using variable length
         EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
-        as a result can be freely used/exchanged on either (i.e. SCSI tapes
-        created on a real mainframe can subsequently be read by Hercules just
-        fine, and a SCSI tape created by Hercules can be subsequently read on
-        a mainframe just fine, thus providing a convenient means of exchanging
-        data between the two).
+        as a result can be freely used and/or exchanged on either one (i.e.
+        SCSI tapes created on a real mainframe can subsequently be read by
+        Hercules just fine, and a SCSI tape created by Hercules can be subsequently
+        read on a mainframe just fine, thus providing a convenient means of
+        exchanging data between the two).
         <p>
         If you plan on using SCSI tapes with Hercules you might also be interested
         in the <a href="#SCSIMOUNT">SCSIMOUNT</a> configuration option.
@@ -3200,10 +3225,10 @@ a real System/390.  The configuration file is an ASCII text file.
         actually have and how it behaves, you may need to specify one or more
         additional optional parameters for Hercules to provide proper emulation
         of the desired device type.
-        For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive does
-        not return nor use a block-id format compatible with 3480/3490 drives
+        For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive
+        does not return nor use a block-id format compatible with 3480/3490 drives
         (it instead uses a full 32-bit block-id just like the model 3590 does).
-        It also does not support the Erase Gap CCW at all.
+        It also does not support the Erase Gap command at all.
         <p>
         Thus, in order to use, for example, a Quantum DLT drive with Hercules,
         you <i>MUST</i> specify some special additional options to prevent the

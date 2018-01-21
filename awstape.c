@@ -103,39 +103,60 @@ int passedeot_awstape (DEVBLK *dev)
 /* If successful, the file descriptor is stored in the device block  */
 /* and the return value is zero.  Otherwise the return value is -1.  */
 /*-------------------------------------------------------------------*/
-int open_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
 {
-int             rc = -1;                /* Return code               */
-char            pathname[MAX_PATH];     /* file path in host format  */
+    int   rc = -1;                      /* Return code               */
+    char  pathname[MAX_PATH];           /* file path in host format  */
 
     /* Check for no tape in drive */
-    if (!strcmp (dev->filename, TAPE_UNLOADED))
+
+    if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
     {
-        build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
         return -1;
     }
 
     /* Open the AWSTAPE file */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    if(!dev->tdparms.logical_readonly)
+
+    hostpath( pathname, dev->filename, sizeof( pathname ));
+
+    /* If NOT read-only... */
+
+    if (!dev->tdparms.logical_readonly)
     {
-        rc = HOPEN (pathname, O_RDWR | O_BINARY, S_IRUSR | S_IWUSR | S_IRGRP );
-        if ( rc < 0 && !sysblk.noautoinit )
+        /* Presume file exists and open it with read-write access */
+        rc = HOPEN( pathname, O_RDWR | O_BINARY,
+            S_IRUSR | S_IWUSR | S_IRGRP );
+
+        /* If that didn't work and the auto-create option is on,
+           then try to automatically create the file for them.
+        */
+        if (rc < 0 && sysblk.auto_tape_create)
         {
-            rc = HOPEN( pathname, O_RDWR | O_BINARY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP );
-            if ( rc >= 0 )
+            /* (use 'O_CREAT' this time) */
+
+            rc = HOPEN( pathname, O_RDWR | O_BINARY | O_CREAT,
+                S_IRUSR | S_IWUSR | S_IRGRP );
+
+            if (rc >= 0)
             {
                 int tmp_fd = dev->fd;
                 int ret_code = 0;
 
                 dev->fd = rc;
 
-                WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid),
+                // "%1d:%04X Tape file %s, type %s: tape created"
+                WRMSG( HHC00235, "I", SSID_TO_LCSS( dev->ssid ),
                        dev->devnum, dev->filename, "aws" );
+
+                /* Write two tapemarks */
+
                 ret_code = write_awsmark( dev, unitstat, code );
-                if ( ret_code >= 0 )
+
+                if (ret_code >= 0)
                     ret_code = write_awsmark( dev, unitstat, code );
-                if ( ret_code < 0 )
+
+                if (ret_code < 0)
                 {
                     dev->fd = tmp_fd;
                     rc = ret_code;
@@ -144,26 +165,32 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
     }
 
-    /* If file is read-only, attempt to open again */
-    if (dev->tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
+    /* If file is read-only then try again with read-only access */
+    if (0
+        || dev->tdparms.logical_readonly
+        || (rc < 0 && (EROFS  == errno || EACCES == errno))
+    )
     {
         dev->readonly = 1;
-        rc = HOPEN (pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
+        rc = HOPEN( pathname, O_RDONLY | O_BINARY, S_IRUSR | S_IRGRP );
     }
 
-    /* Check for successful open */
+    /* Check for open failure */
     if (rc < 0)
     {
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "open()", strerror(errno));
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG( HHC00205, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->filename, "aws", "open()", strerror( errno ));
 
         STRLCPY( dev->filename, TAPE_UNLOADED );
-        build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
         return -1;
     }
 
-    /* Store the file descriptor in the device block */
+    /* Open success. Save file descriptor and rewind to load-point */
+
     dev->fd = rc;
-    rc=rewind_awstape(dev,unitstat,code);
+    rc = rewind_awstape( dev, unitstat, code );
     return rc;
 
 } /* end function open_awstape */

@@ -732,7 +732,11 @@ struct SYSBLK {
                 showregsnone:1,         /* 1 = show no registers     */
                 nomountedtapereinit:1,  /* 1 = disallow tape devinit
                                              if tape already mounted */
-                noautoinit:1,           /* 1=AUTOINIT disabled       */
+                auto_tape_create:1,     /* 1=Automatically do minimal
+                                           'hetinit' at tape open to
+                                           create the tape file if it
+                                           does not yet exist.       */
+#define DEF_AUTO_TAPE_CREATE    TRUE    /* Default auto_tape_create  */
                 legacysenseid:1,        /* ena/disa senseid on       */
                                         /*   legacy devices          */
                 haveiplparm:1,          /* IPL PARM a la VM          */

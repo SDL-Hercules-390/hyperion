@@ -689,8 +689,8 @@ int     rc;
     /* set default console port address */
     sysblk.cnslport = strdup("3270");
 
-    /* set default tape autoinit value to OFF   */
-    sysblk.noautoinit = TRUE;
+    /* Initialize automatic creation of missing tape file to default */
+    sysblk.auto_tape_create = DEF_AUTO_TAPE_CREATE;
 
     /* Default command separator is OFF (disabled) */
     sysblk.cmdsep = 0;

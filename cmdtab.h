@@ -126,16 +126,24 @@
                                 \
   "This command is deprecated. Use \"scsimount\" instead.\n"
 
-#define autoinit_cmd_desc       "Display/Set automatic create empty tape file switch"
+#define autoinit_cmd_desc       "Display/Set auto-create-empty-tape-file option"
 #define autoinit_cmd_help       \
                                 \
-  "Format: \"autoinit [on|off]\"\n"                                             \
-  "Default for autoinit is off.\n"                                              \
-  "When autoinit is off, devinit will return a file not found error\n"          \
-  "if the specified file is not found.\n"                                       \
-  "When autoinit is on, devinit will initialize a blank, non-labeled\n"         \
-  "tape if the requested file is not found. Tape will have two tapemarks\n"     \
-  "and be positioned at the beginning of the tape."
+  "Format: \"AUTOINIT  [ ON | OFF ]\"\n"                                        \
+  "\n"                                                                          \
+  "The AUTOINIT option controls whether emulated tape drive device files\n"     \
+  "will be automatically created or not when it is discovered they do not\n"    \
+  "yet exist.\n"                                                                \
+  "\n"                                                                          \
+  "When AUTOINIT is ON (the default), a devinit command specifying a file\n"    \
+  "that does not yet exist causes the tape driver to automatically create\n"    \
+  "an unlabeled tape volume consisting of just two tapemarks whenever it\n"     \
+  "discovered the specified file does not exist.\n"                             \
+  "\n"                                                                          \
+  "When AUTOINIT is OFF, a devinit command instead fails with an expected\n"    \
+  "\"file not found\" error if the specified tape file does not exist.\n"       \
+  "\n"                                                                          \
+  "Entering the command without any arguments displays the current setting.\n"
 
 #define automount_cmd_desc      "Display/Update allowable tape automount directories"
 #define automount_cmd_help      \

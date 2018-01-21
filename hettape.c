@@ -28,24 +28,26 @@
 /* If successful, the het control blk is stored in the device block  */
 /* and the return value is zero.  Otherwise the return value is -1.  */
 /*-------------------------------------------------------------------*/
-int open_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
+int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 {
-int             rc;                     /* Return code               */
-char            pathname[MAX_PATH];     /* file path in host format  */
-
+    int   rc;                           /* Return code               */
+    char  pathname[MAX_PATH];           /* file path in host format  */
 
     /* Check for no tape in drive */
-    if (!strcmp (dev->filename, TAPE_UNLOADED))
+
+    if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
     {
-        build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_TAPEUNLOADED, dev, unitstat, code );
         return -1;
     }
 
     /* Open the HET file */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    rc = het_open (&dev->hetb, pathname,
-                   dev->tdparms.logical_readonly ? HETOPEN_READONLY :
-                   sysblk.noautoinit ? 0 : HETOPEN_CREATE );
+
+    hostpath( pathname, dev->filename, sizeof( pathname ));
+
+    rc = het_open( &dev->hetb, pathname,
+                   dev->tdparms.logical_readonly ? HETOPEN_READONLY
+                   : sysblk.auto_tape_create ? HETOPEN_CREATE : 0 );
 
     if (rc >= 0)
     {
@@ -53,57 +55,63 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         dev->fd = dev->hetb->fd;
         dev->fh = dev->hetb->fh;
 
-        if(dev->hetb->writeprotect)
-        {
-            dev->readonly=1;
-        }
-        rc = het_cntl (dev->hetb,
-                    HETCNTL_SET | HETCNTL_COMPRESS,
-                    dev->tdparms.compress);
+        if (dev->hetb->writeprotect)
+            dev->readonly = 1;
+
+        rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+            dev->tdparms.compress );
+
         if (rc >= 0)
         {
-            rc = het_cntl (dev->hetb,
-                        HETCNTL_SET | HETCNTL_METHOD,
-                        dev->tdparms.method);
+            rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_METHOD,
+                dev->tdparms.method );
+
             if (rc >= 0)
             {
-                rc = het_cntl (dev->hetb,
-                            HETCNTL_SET | HETCNTL_LEVEL,
-                            dev->tdparms.level);
+                rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_LEVEL,
+                    dev->tdparms.level );
+
                 if (rc >= 0)
                 {
-                    rc = het_cntl (dev->hetb,
-                                HETCNTL_SET | HETCNTL_CHUNKSIZE,
-                                dev->tdparms.chksize);
+                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_CHUNKSIZE,
+                        dev->tdparms.chksize );
                 }
             }
         }
     }
 
-    /* Check for successful open */
+    /* Check for open failure */
+
     if (rc < 0)
     {
         int save_errno = errno;
-        het_close (&dev->hetb);
+        het_close( &dev->hetb );
         dev->fd = -1;
         dev->fh = NULL;
         errno = save_errno;
+
         {
             char msgbuf[128];
-            MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-            WRMSG( HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            MSGBUF( msgbuf, "Het error '%s': '%s'",
+                het_error( rc ), strerror( errno ));
+
+            // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+            WRMSG( HHC00205, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
                     dev->filename, "het", "het_open()", msgbuf );
         }
 
         STRLCPY( dev->filename, TAPE_UNLOADED );
-        build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code );
         return -1;
     }
 
-    if ( !sysblk.noautoinit && dev->hetb->created )
+    /* Open success */
+
+    if (sysblk.auto_tape_create && dev->hetb->created)
     {
-        WRMSG( HHC00235, "I", SSID_TO_LCSS(dev->ssid),
-                dev->devnum, dev->filename, "het" );
+        // "%1d:%04X Tape file %s, type %s: tape created"
+        WRMSG( HHC00235, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            dev->filename, "het" );
     }
 
     return 0;

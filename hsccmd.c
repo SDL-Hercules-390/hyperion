@@ -1065,22 +1065,17 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* autoinit_cmd - show or set AUTOINIT switch                        */
 /*-------------------------------------------------------------------*/
-int autoinit_cmd( int argc, char *argv[], char *cmdline )
+int autoinit_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     strupper( argv[0], argv[0] );
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
-        if ( CMD(argv[1],on,2) )
-        {
-            sysblk.noautoinit = FALSE;
-        }
-        else if ( CMD(argv[1],off,3) )
-        {
-            sysblk.noautoinit = TRUE;
-        }
+        /* Set the option to the requested value */
+        if      (CMD( argv[1], ON,  2 )) sysblk.auto_tape_create = TRUE;
+        else if (CMD( argv[1], OFF, 3 )) sysblk.auto_tape_create = FALSE;
         else
         {
             // "Missing or invalid argument(s)"
@@ -1088,23 +1083,36 @@ int autoinit_cmd( int argc, char *argv[], char *cmdline )
             return -1;
         }
     }
-    else if ( argc < 1 || argc > 2 )
+    else if (argc < 1 || argc > 2)
     {
         // "Missing or invalid argument(s)"
         WRMSG( HHC17000, "E" );
         return -1;
     }
 
-    if ( argc == 1 )
-        WRMSG(HHC02203, "I", argv[0], sysblk.noautoinit ? "OFF" : "ON" );
+    if (argc == 1)
+    {
+        /* Display current setting */
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], sysblk.auto_tape_create ? "ON" : "OFF" );
+    }
     else
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], sysblk.noautoinit ? "OFF" : "ON" );
+    {
+        /* Display the setting that was just set */
+
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], sysblk.auto_tape_create ? "ON" : "OFF" );
+    }
 
     return 0;
 }
 
-static char * check_define_default_automount_dir()
+/*-------------------------------------------------------------------*/
+/*           check_define_default_automount_dir                      */
+/*-------------------------------------------------------------------*/
+static char* check_define_default_automount_dir()
 {
     /* Define default AUTOMOUNT directory if needed */
     if (sysblk.tamdir && sysblk.defdir == NULL)
