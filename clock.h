@@ -151,11 +151,7 @@ void adjust_tod_epoch(const S64);       /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */
 S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
-S64 cpu_timer_SIE(REGS *);              /* Retrieve SIE CPU timer    */
-void set_cpu_timer_mode(REGS *);        /* Set CPU timer source mode */
-S64 set_cpu_timer(REGS *, const TOD);   /* Set CPU timer             */
-void save_cpu_timers(REGS *, TOD *, REGS *, TOD *);
-void set_cpu_timers(REGS *, const TOD, REGS *, const TOD);
+void set_cpu_timer(REGS *, const S64);  /* Set CPU timer             */
 void set_int_timer(REGS *, const S32);  /* Set interval timer        */
 TOD tod_clock(REGS *);                  /* Get TOD clock non-unique  */
 typedef enum

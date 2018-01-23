@@ -170,9 +170,7 @@ struct REGS {                           /* Processor registers       */
         S64     tod_epoch;              /* TOD epoch for this CPU    */
         TOD     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
-        TOD     cpu_timer;              /* CPU timer                 */
-        TOD     cpu_timer_epoch;        /* CPU timer epoch           */
-        U32     cpu_timer_mode;         /* CPU timer source mode     */
+        S64     cpu_timer;              /* CPU timer                 */
         U32     todpr;                  /* TOD programmable register */
 
         S64     int_timer;              /* S/370 Interval timer      */

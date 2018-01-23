@@ -91,31 +91,24 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
          * [2] Decrement the CPU timer for each CPU  *
          *-------------------------------------------*/
 
-        /*  If LPAR mode and not waiting, or in BASIC mode, decrement
-         *  the CPU timer and update the CPU timer interrupt state, if.
-         *  necessary.
-         */
-        if (!WAITSTATE(&regs->psw) || !sysblk.lparmode)
+        /* Set interrupt flag if the CPU timer is negative */
+        if (CPU_TIMER(regs) < 0)
         {
-            /* Set interrupt flag if the CPU timer is negative */
-            if (cpu_timer(regs) < 0)
+            if (!IS_IC_PTIMER(regs))
             {
-                if (!IS_IC_PTIMER(regs))
-                {
-                    ON_IC_PTIMER(regs);
-                    intmask |= regs->cpubit;
-                }
+                ON_IC_PTIMER(regs);
+                intmask |= regs->cpubit;
             }
-            else if(IS_IC_PTIMER(regs))
-                OFF_IC_PTIMER(regs);
         }
+        else if(IS_IC_PTIMER(regs))
+            OFF_IC_PTIMER(regs);
 
 #if defined(_FEATURE_SIE)
         /* When running under SIE also update the SIE copy */
         if(regs->sie_active)
         {
             /* Set interrupt flag if the CPU timer is negative */
-            if (cpu_timer_SIE(regs) < 0)
+            if (CPU_TIMER(regs->guestregs) < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
                 intmask |= regs->cpubit;
