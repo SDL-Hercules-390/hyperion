@@ -804,10 +804,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\dyninst.c"
-							>
-						</File>
-						<File
 							RelativePath=".\ecpsvm.c"
 							>
 						</File>

@@ -99,7 +99,6 @@ endif
 dynamic_SRC = \
   dyncrypt.c  \
   dyngui.c    \
-  dyninst.c   \
   hdteq.c     \
   s37x.c      \
   s37xmod.c
@@ -211,7 +210,6 @@ HERCLIBS2 =   \
 HERCMODS =      \
   dyncrypt.la   \
   dyngui.la     \
-  dyninst.la    \
   hdteq.la      \
   hdtptp.la     \
   hdtqeth.la    \
@@ -288,59 +286,55 @@ dyncrypt_la_LIBADD  = $(DYNMOD_LD_ADD)
 dyngui_la_SOURCES   = dyngui.c
 dyngui_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 dyngui_la_LIBADD    = $(DYNMOD_LD_ADD)
-                  
-dyninst_la_SOURCES  = dyninst.c
-dyninst_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
-dyninst_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 s37x_la_SOURCES     = s37x.c s37xmod.c
 s37x_la_LDFLAGS     = $(DYNMOD_LD_FLAGS)
 s37x_la_LIBADD      = $(DYNMOD_LD_ADD)
-                  
+
 hdteq_la_SOURCES    = hdteq.c
 hdteq_la_LDFLAGS    = $(DYNMOD_LD_FLAGS)
 hdteq_la_LIBADD     = $(DYNMOD_LD_ADD)
-                  
+
 hdt1403_la_SOURCES  = printer.c sockdev.c
 hdt1403_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt1403_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt2880_la_SOURCES  = hchan.c
 hdt2880_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt2880_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt2703_la_SOURCES  = commadpt.c
 hdt2703_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt2703_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt3088_la_SOURCES  = ctc_lcs.c ctc_ctci.c ctcadpt.c tuntap.c netsupp.c
 hdt3088_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3088_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt3270_la_SOURCES  = console.c
 hdt3270_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3270_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt3420_la_SOURCES  = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c
 hdt3420_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3420_la_LIBADD   = $(DYNMOD_LD_ADD) libherct.la
-                  
+
 hdt3505_la_SOURCES  = cardrdr.c sockdev.c
 hdt3505_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3505_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdt3525_la_SOURCES  = cardpch.c
 hdt3525_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3525_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdtqeth_la_SOURCES  = qeth.c mpc.c resolve.c tuntap.c
 hdtqeth_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdtqeth_la_LIBADD   = $(DYNMOD_LD_ADD)
-                  
+
 hdtzfcp_la_SOURCES  = zfcp.c
 hdtzfcp_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdtzfcp_la_LIBADD   = $(DYNMOD_LD_ADD)
@@ -552,7 +546,6 @@ HLDFLAGS =            \
   -dlopen self        \
   -dlopen dyncrypt.la \
   -dlopen dyngui.la   \
-  -dlopen dyninst.la  \
   -dlopen s37x.la     \
   -dlopen hdteq.la    \
   -dlopen hdt1403.la  \
@@ -571,7 +564,6 @@ HLDFLAGS =            \
 HDEPS =               \
   dyncrypt.la         \
   dyngui.la           \
-  dyninst.la          \
   s37x.la             \
   hdteq.la            \
   hdt1403.la          \

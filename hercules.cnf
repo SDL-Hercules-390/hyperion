@@ -38,9 +38,8 @@
 #       Hercules Service Processor and Hercules Application Window
 #------------------------------------------------------------------------------
 
-
 # MODPATH   /usr/local/lib/hercules     # Where to search for modules
-# LDMOD     dyninst tcpip               # Modules to be loaded
+
 
 #------------------------------------------------------------------------------
 #       Hercules Service Processor and Hercules Application Window

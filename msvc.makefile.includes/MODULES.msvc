@@ -23,7 +23,6 @@ MODULES = \
     $(X)hdtqeth.dll  \
     $(X)hdtptp.dll   \
     $(X)hdtzfcp.dll  \
-    $(X)dyninst.dll  \
     $(X)s37x.dll     \
     $(X)dyncrypt.dll
 

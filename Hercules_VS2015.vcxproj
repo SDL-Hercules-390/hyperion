@@ -339,7 +339,6 @@
     <ClCompile Include="dmap2hrc.c" />
     <ClCompile Include="dyn76.c" />
     <ClCompile Include="dyngui.c" />
-    <ClCompile Include="dyninst.c" />
     <ClCompile Include="ecpsvm.c" />
     <ClCompile Include="esame.c" />
     <ClCompile Include="external.c" />

@@ -498,9 +498,6 @@
     <ClCompile Include="dyngui.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dyninst.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ecpsvm.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
