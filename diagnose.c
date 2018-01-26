@@ -19,22 +19,19 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
+#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
 #endif
 
-#if !defined(_DIAGNOSE_C_)
+#ifndef _DIAGNOSE_C_
 #define _DIAGNOSE_C_
 #endif
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
-#if !defined(_DIAGNOSE_H)
-
+#ifndef _DIAGNOSE_H
 #define _DIAGNOSE_H
 
 /*-------------------------------------------------------------------*/
@@ -50,52 +47,7 @@
 /* Diagnose 308 return codes */
 #define DIAG308_RC_OK           1
 
-#endif /*!defined(_DIAGNOSE_H)*/
-
-#if defined(OPTION_DYNAMIC_LOAD) && defined(FEATURE_HERCULES_DIAGCALLS)
-
-static void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
-{
-char name[32+1];
-char entry[64];
-unsigned int  i;
-void (*dllcall)(int, int, REGS *);
-
-static char *prefix[] = {
-#if defined(_370)
-    "s370_diagf14_",
-#endif
-#if defined(_390)
-    "s390_diagf14_",
-#endif
-#if defined(_900)
-    "z900_diagf14_"
-#endif
-    };
-
-    ARCH_DEP(vfetchc) (name,sizeof(name)-2, regs->GR(r1), USE_REAL_ADDR, regs);
-
-    for(i = 0; i < sizeof(name)-1; i++)
-    {
-        name[i] = guest_to_host(name[i]);
-        if(!isprint(name[i]) || isspace(name[i]))
-        {
-            name[i] = '\0';
-            break;
-        }
-    }
-    /* Ensure string terminator */
-    name[i] = '\0';
-    STRLCPY( entry, prefix[regs->arch_mode] );
-    STRLCAT( entry, name );
-
-    if( (dllcall = hdl_findsym( entry )) )
-        dllcall(r1, r3, regs);
-    else
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
-}
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif // _DIAGNOSE_H
 
 #ifndef STOP_CPUS_AND_IPL
 #define STOP_CPUS_AND_IPL
@@ -570,15 +522,6 @@ U32   code;
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(regs);
         break;
-
-#if defined(OPTION_DYNAMIC_LOAD)
-    case 0xF14:
-    /*---------------------------------------------------------------*/
-    /* Diagnose F14: Hercules DLL interface                          */
-    /*---------------------------------------------------------------*/
-        ARCH_DEP(diagf14_call) (r1, r2, regs);
-        break;
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #if defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY)
     case 0xF18:
