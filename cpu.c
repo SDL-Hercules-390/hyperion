@@ -1713,7 +1713,7 @@ static void do_automatic_tracing();         /*  (forward reference)  */
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
-const instr_func   *current_opcode_table;
+const INSTR_FUNC   *current_opcode_table;
 register REGS   *regs;
 BYTE   *ip;
 int     i;

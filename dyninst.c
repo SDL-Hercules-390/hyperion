@@ -37,8 +37,8 @@ typedef struct
   BYTE opcode1;
   BYTE opcode2;
   int arch;
-  instr_func newinst;
-  instr_func oldinst;
+  INSTR_FUNC newinst;
+  INSTR_FUNC oldinst;
 }
 DYNINST;
 
@@ -88,8 +88,8 @@ static void update_dyninst()
 {
   int arch;
   char name[64];
-  instr_func newinst;
-  instr_func oldinst;
+  INSTR_FUNC newinst;
+  INSTR_FUNC oldinst;
   int opcode1;
   int opcode2;
 

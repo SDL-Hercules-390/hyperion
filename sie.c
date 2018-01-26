@@ -981,7 +981,7 @@ static int ARCH_DEP(run_sie) (REGS *regs)
     int   icode;    /* SIE longjmp intercept code      */
     BYTE  oldv;     /* siebk->v change check reference */
     BYTE *ip;       /* instruction pointer             */
-    const instr_func *current_opcode_table;
+    const INSTR_FUNC *current_opcode_table;
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 

@@ -239,7 +239,7 @@ END_DEVICE_SECTION
 
   HDL_RESOLVER_SECTION;
   {
-    HDL_RESOLVE_PTRVAR ( psysblk, sysblk );
+    HDL_RESOLVE_SYMPTR ( psysblk, sysblk );
   }
   END_RESOLVER_SECTION
 

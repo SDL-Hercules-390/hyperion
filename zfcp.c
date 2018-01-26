@@ -1502,7 +1502,7 @@ HDL_RESOLVER_SECTION;
 {
   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
     #undef sysblk
-    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+    HDL_RESOLVE_SYMPTR( psysblk, sysblk );
   #endif
 }
 END_RESOLVER_SECTION

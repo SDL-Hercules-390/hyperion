@@ -48,7 +48,6 @@
 #include "devtype.h"
 #include "opcode.h"
 #include "hostinfo.h"
-#include "hdl.h"
 #include "tapedev.h"
 
 #if !defined(_GEN_ARCH)

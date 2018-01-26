@@ -146,7 +146,7 @@
 
 /*-------------------------------------------------------------------*/
 
-typedef void (ATTR_REGPARM(2) *instr_func) (BYTE inst[], REGS *regs);
+typedef void (ATTR_REGPARM(2) *INSTR_FUNC)( BYTE inst[], REGS* regs );
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 

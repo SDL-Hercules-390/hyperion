@@ -27,7 +27,7 @@ DLL_EXPORT void (*debug_tt32_tracing)(int) = NULL;
 
 DLL_EXPORT void *(*panel_command)   (void *);
 DLL_EXPORT void  (*panel_display)   (void);
-DLL_EXPORT void *(*replace_opcode)  (int arch, instr_func inst, int opcode1, int opcode2);
+DLL_EXPORT void *(*replace_opcode)  (int arch, INSTR_FUNC inst, int opcode1, int opcode2);
 DLL_EXPORT void  (*daemon_task)     (void);
 DLL_EXPORT int   (*system_command)  (int argc, char *argv[], char *cmdline);
 DLL_EXPORT void *(*debug_cpu_state) (REGS *);

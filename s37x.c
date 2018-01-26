@@ -7,7 +7,6 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
-#include "hdl.h"
 #include "opcode.h"
 
 #if defined(_370)
@@ -25,8 +24,8 @@ static void    *(*resolver)(char *ep);
 /* This is the entry for an instruction to be replaced */
 struct  s37x_inst_table_entry
 {
-    instr_func newfun;   /* New function */
-    instr_func oldfun;   /* Save of old function */
+    INSTR_FUNC newfun;   /* New function */
+    INSTR_FUNC oldfun;   /* Save of old function */
     int index;          /* Index in table */
 };
 
@@ -504,7 +503,7 @@ static  void    s37x_replace_opcode(struct s37x_inst_table_entry *tb,int code,in
         }
         else
         {
-            instr_func old;
+            INSTR_FUNC old;
             old=replace_opcode(ARCH_370_IDX, tb[i].oldfun,code1,code2);
             UNREFERENCED(old);
 //            logmsg("Restoring Opcode %2.2X%2.2X; Old = %p, New=%p\n",(unsigned char)code1,(unsigned char)code2,old,tb[i].oldfun);

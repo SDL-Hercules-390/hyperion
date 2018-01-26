@@ -314,7 +314,7 @@ typedef struct _DLLENT {                /* DLL entry                 */
 
 /*-------------------------------------------------------------------*/
 
-#define HDL_RESOLVE_PTRVAR( psym, sym )                             \
+#define HDL_RESOLVE_SYMPTR( psym, sym )                             \
                                                                     \
     psym = hdl_reso_fent( QSTR( sym ));
 

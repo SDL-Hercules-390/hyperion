@@ -7,7 +7,6 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
-#include "hdl.h"
 #include "opcode.h"
 
 #if defined(_370)

@@ -1111,7 +1111,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01514 "HDL: module cleanup routine %s complete"
 #define HHC01515 "HDL: termination sequence complete"
 #define HHC01516 "HDL: unable to open dll %s: %s"
-#define HHC01517 "HDL: no dependency section in %s: %s"
+#define HHC01517 "HDL: no HDL_DEPENDENCY_SECTION in %s: %s"
 #define HHC01518 "HDL: dependency check failed for module %s"
 #define HHC01519 "HDL: module %s already loaded"
 #define HHC01520 "HDL: dll %s is duplicate of %s"

@@ -2142,7 +2142,7 @@ END_REGISTER_SECTION
 // The following section "resolves" entry-points that this module needs. The
 // below HDL_RESOLVE entries define the names of Hercules's registered entry-
 // points that we need "imported" to us (so that we may call those functions
-// directly ourselves). The HDL_RESOLVE_PTRVAR entries set the named pointer
+// directly ourselves). The HDL_RESOLVE_SYMPTR entries set the named pointer
 // variable value (i.e. the name of OUR pointer variable) to the registered
 // entry-point value that was registered by Hercules or some other DLL.
 
@@ -2156,7 +2156,7 @@ HDL_RESOLVER_SECTION            // ("Resolve" needed entry-points)
 #if !defined( _MSVC_ )
     //                    Our pointer-     Registered entry-
     //                    variable name    point value name
-    HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
+    HDL_RESOLVE_SYMPTR (  psysblk,         sysblk            );
 #endif
 }
 END_RESOLVER_SECTION

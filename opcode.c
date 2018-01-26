@@ -1182,49 +1182,49 @@ DEF_INST( dummy_instruction )
 /*              and instruction routing jump tables                  */
 /*-------------------------------------------------------------------*/
 
-static instr_func opcode_table[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_01xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_a5_x[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_a7_x[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_b2xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_b3xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_b9xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_c0_x[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_c2_x[16][NUM_INSTR_TAB_PTRS];                      /*@Z9*/
-static instr_func opcode_c4_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
-static instr_func opcode_c6_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
-static instr_func opcode_c8_x[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_cc_x[16][NUM_INSTR_TAB_PTRS];                      /*810*/
-static instr_func opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_edxx[256][NUM_INSTR_TAB_PTRS];
-static instr_func v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
-static instr_func v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_b3xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS];                      /*@Z9*/
+static INSTR_FUNC opcode_c4_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
+static INSTR_FUNC opcode_c6_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
+static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_cc_x[16][NUM_INSTR_TAB_PTRS];                      /*810*/
+static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
 
 #ifdef OPTION_OPTINST
 
-static instr_func opcode_15__[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_18__[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_1E__[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_1F__[256][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_41_0[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_47_0[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_50_0[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_55_0[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_58_0[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_91xx[8][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_A7_4[16][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_D20x[1][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_D50x[4][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
-static instr_func opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_15__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_18__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_1E__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_1F__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_41_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_47_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_A7_4[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_D20x[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_D50x[4][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 
 #endif /* OPTION_OPTINST */
 
@@ -1232,15 +1232,15 @@ static instr_func opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 /* Two byte runtime opcode table + 4 6 byte opcode tables                     */
 /*----------------------------------------------------------------------------*/
 
-static instr_func runtime_opcode_xxxx[NUM_GEN_ARCHS][256 * 256];
+static INSTR_FUNC runtime_opcode_xxxx[NUM_GEN_ARCHS][256 * 256];
 
-static instr_func runtime_opcode_e3________xx[NUM_GEN_ARCHS][256];
-static instr_func runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
-static instr_func runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
-static instr_func runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_e3________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
 
 #ifdef OPTION_OPTINST
-static instr_func runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -1813,7 +1813,7 @@ int d2,b2;
 /*----------------------------------------------------------------------------*/
 /*       'GENx___x___x900' instruction opcode jump tables                     */
 /*----------------------------------------------------------------------------*/
-static instr_func opcode_table[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
 {
  /*00*/   GENx___x___x___ ,
  /*01*/   GENx370x390x900 (execute_opcode_01xx,01xx,""),
@@ -2073,7 +2073,7 @@ static instr_func opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*FF*/   GENx___x___x___ 
 };
 
-static instr_func opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*0100*/ GENx___x___x___ ,
  /*0101*/ GENx___x390x900 (program_return,E,"PR"),
@@ -2333,7 +2333,7 @@ static instr_func opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
  /*01FF*/ GENx___x390x900 (trap2,E,"TRAP2")
 };
 
-static instr_func opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A5x0*/ GENx___x___x900 (insert_immediate_high_high,RI,"IIHH"),
  /*A5x1*/ GENx___x___x900 (insert_immediate_high_low,RI,"IIHL"),
@@ -2353,7 +2353,7 @@ static instr_func opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
  /*A5xF*/ GENx___x___x900 (load_logical_immediate_low_low,RI,"LLILL")
 };
 
-static instr_func opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A7x0*/ GENx37Xx390x900 (test_under_mask_high,RI,"TMLH"),
  /*A7x1*/ GENx37Xx390x900 (test_under_mask_low,RI,"TMLL"),
@@ -2373,7 +2373,7 @@ static instr_func opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
  /*A7xF*/ GENx___x___x900 (compare_long_halfword_immediate,RI,"CGHI")
 };
 
-static instr_func opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B200*/ GENx370x390x900 (connect_channel_set,S,"CONCS"),
  /*B201*/ GENx370x390x900 (disconnect_channel_set,S,"DISCS"),
@@ -2633,7 +2633,7 @@ static instr_func opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B2FF*/ GENx___x390x900 (trap4,S,"TRAP4")
 };
 
-static instr_func opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B300*/ GENx37Xx390x900 (load_positive_bfp_short_reg,RRE,"LPEBR"),
  /*B301*/ GENx37Xx390x900 (load_negative_bfp_short_reg,RRE,"LNEBR"),
@@ -2893,7 +2893,7 @@ static instr_func opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
  /*B3FF*/ GENx___x390x900 (reround_dfp_ext_reg,RRF_RM,"RRXTR")
 };
 
-static instr_func opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B900*/ GENx___x___x900 (load_positive_long_register,RRE,"LPGR"),
  /*B901*/ GENx___x___x900 (load_negative_long_register,RRE,"LNGR"),
@@ -3153,7 +3153,7 @@ static instr_func opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9FF*/ GENx___x___x___
 };
 
-static instr_func opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C0x0*/ GENx37Xx390x900 (load_address_relative_long,RIL_A,"LARL"),
  /*C0x1*/ GENx___x___x900 (load_long_fullword_immediate,RIL,"LGFI"),               /*@Z9*/
@@ -3173,7 +3173,7 @@ static instr_func opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
  /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF")        /*@Z9*/
 };
 
-static instr_func opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C2x0*/ GENx___x___x900 (multiply_single_immediate_long_fullword,RIL,"MSGFI"),   /*208*/
  /*C2x1*/ GENx37Xx390x900 (multiply_single_immediate_fullword,RIL,"MSFI"),         /*208*/
@@ -3193,7 +3193,7 @@ static instr_func opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
  /*C2xF*/ GENx37Xx390x900 (compare_logical_fullword_immediate,RIL,"CLFI")          /*@Z9*/
 };
 
-static instr_func opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C4x0*/ GENx___x___x___ ,                                                        /*208*/
  /*C4x1*/ GENx___x___x___ ,                                                        /*208*/
@@ -3213,7 +3213,7 @@ static instr_func opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
  /*C4xF*/ GENx37Xx390x900 (store_relative_long,RIL_A,"STRL")                       /*208*/
 };
 
-static instr_func opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C6x0*/ GENx37Xx390x900 (execute_relative_long,RIL_A,"EXRL"),                    /*208*/
  /*C6x1*/ GENx___x___x___ ,                                                        /*208*/
@@ -3233,7 +3233,7 @@ static instr_func opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
  /*C6xF*/ GENx37Xx390x900 (compare_logical_relative_long,RIL_A,"CLRL")             /*208*/
 };
 
-static instr_func opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,SSF,"MVCOS"),
  /*C8x1*/ GENx___x___x900 (extract_cpu_time,SSF,"ECTG"),
@@ -3253,7 +3253,7 @@ static instr_func opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
  /*C8xF*/ GENx___x___x___
 };
 
-static instr_func opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*CCx0*/ GENx___x___x___ ,
  /*CCx1*/ GENx___x___x___ ,
@@ -3273,7 +3273,7 @@ static instr_func opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
  /*CCxF*/ GENx___x___x900 (compare_logical_high_immediate,RIL,"CLIH")              /*810*/
 };
 
-static instr_func opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E300*/ GENx___x___x___ ,
  /*E301*/ GENx___x___x___ ,
@@ -3533,7 +3533,7 @@ static instr_func opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E3FF*/ GENx___x___x___
 };
 
-static instr_func opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E500*/ GENx370x390x900 (load_address_space_parameters,SSE,"LASP"),
  /*E501*/ GENx370x390x900 (test_protection,SSE,"TPROT"),
@@ -3797,7 +3797,7 @@ static instr_func opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E5FF*/ GENx___x___x___
 };
 
-static instr_func opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E600*/ GENx370x___x___ (ecpsvm_basic_freex,SSE,"FREE"),
  /*E601*/ GENx370x___x___ (ecpsvm_basic_fretx,SSE,"FRET"),
@@ -4057,7 +4057,7 @@ static instr_func opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
  /*E6FF*/ GENx___x___x___
 };
 
-static instr_func opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*EB00*/ GENx___x___x___ ,
  /*EB01*/ GENx___x___x___ ,
@@ -4317,7 +4317,7 @@ static instr_func opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
  /*EBFF*/ GENx___x___x___
 };
 
-static instr_func opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*EC00*/ GENx___x___x___ ,
  /*EC01*/ GENx___x___x___ ,
@@ -4577,7 +4577,7 @@ static instr_func opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
  /*ECFF*/ GENx37Xx390x900 (compare_logical_immediate_and_branch,RIS,"CLIB")        /*208*/
 };
 
-static instr_func opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*ED00*/ GENx___x___x___ ,
  /*ED01*/ GENx___x___x___ ,
@@ -4837,7 +4837,7 @@ static instr_func opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
  /*EDFF*/ GENx___x___x___
 };
 
-static instr_func v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A400*/ GENx___x___x___ , /* VAE */
  /*A401*/ GENx___x___x___ , /* VSE */
@@ -5097,7 +5097,7 @@ static instr_func v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
  /*A4FF*/ GENx___x___x___
 };
 
-static instr_func v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A500*/ GENx___x___x___ , /* VAER */
  /*A501*/ GENx___x___x___ , /* VSER */
@@ -5357,7 +5357,7 @@ static instr_func v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
  /*A5FF*/ GENx___x___x___
 };
 
-static instr_func v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A600*/ GENx___x___x___ , /* VMXSE */
  /*A601*/ GENx___x___x___ , /* VMNSE */
@@ -5617,7 +5617,7 @@ static instr_func v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
  /*A6FF*/ GENx___x___x___
 };
 
-static instr_func v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E400*/ GENx___x___x___ , /* VLI, VLIE */
  /*E401*/ GENx___x___x___ , /* VSTI, VSTIE */
@@ -5905,7 +5905,7 @@ static instr_func v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
   CLRgen(r1, E), \
   CLRgen(r1, F)
 
-static instr_func opcode_15__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_15__[256][NUM_INSTR_TAB_PTRS] =
 {
   CLRgenr2(0),
   CLRgenr2(1),
@@ -5947,7 +5947,7 @@ static instr_func opcode_15__[256][NUM_INSTR_TAB_PTRS] =
   LRgen(r1, E), \
   LRgen(r1, F)
 
-static instr_func opcode_18__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_18__[256][NUM_INSTR_TAB_PTRS] =
 {
   LRgenr2(0),
   LRgenr2(1),
@@ -5989,7 +5989,7 @@ static instr_func opcode_18__[256][NUM_INSTR_TAB_PTRS] =
    ALRgen(r1, E), \
    ALRgen(r1, F)
 
-static instr_func opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
 {
   ALRgenr2(0),
   ALRgenr2(1),
@@ -6031,7 +6031,7 @@ static instr_func opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
    SLRgen(r1, E), \
    SLRgen(r1, F)
 
-static instr_func opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
 {
   SLRgenr2(0),
   SLRgenr2(1),
@@ -6053,7 +6053,7 @@ static instr_func opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
 
 // Load Address
 
-static instr_func opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*4100*/ GENx370x390x900 (4100,RX,"LA"),
  /*4110*/ GENx370x390x900 (4110,RX,"LA"),
@@ -6075,7 +6075,7 @@ static instr_func opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Branch on Condition
 
-static instr_func opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*4700*/ GENx370x390x900 (nop4,RX,"BC"),
  /*4710*/ GENx370x390x900 (4710,RX,"BC"),
@@ -6097,7 +6097,7 @@ static instr_func opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Store
 
-static instr_func opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5000*/ GENx370x390x900 (5000,RX,"ST"),
  /*5010*/ GENx370x390x900 (5010,RX,"ST"),
@@ -6119,7 +6119,7 @@ static instr_func opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Compare Logical
 
-static instr_func opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5500*/ GENx370x390x900 (5500,RX,"CL"),
  /*5510*/ GENx370x390x900 (5510,RX,"CL"),
@@ -6141,7 +6141,7 @@ static instr_func opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Load
 
-static instr_func opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5800*/ GENx370x390x900 (5800,RX,"L"),
  /*5810*/ GENx370x390x900 (5810,RX,"L"),
@@ -6163,7 +6163,7 @@ static instr_func opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Test Under Mask
 
-static instr_func opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
 {
  /*9180*/ GENx370x390x900 (9180,SI,"TM"),
  /*9140*/ GENx370x390x900 (9140,SI,"TM"),
@@ -6177,7 +6177,7 @@ static instr_func opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
 
 // Branch Relative on Condition
 
-static instr_func opcode_A7_4[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_A7_4[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A704*/ GENx370x390x900 (nop4,RX,"BRC"),
  /*A714*/ GENx37Xx390x900 (A714,RX,"BRC"),
@@ -6199,7 +6199,7 @@ static instr_func opcode_A7_4[16][NUM_INSTR_TAB_PTRS] =
 
 // Insert Characters Under Mask
 
-static instr_func opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
 {
  /*BF_x*/ GENx370x390x900 (BF_x,RS,"ICM"),
  /*BF_7*/ GENx370x390x900 (BF_7,RS,"ICM"),
@@ -6208,14 +6208,14 @@ static instr_func opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
 
 // Move Characters
 
-static instr_func opcode_D20x[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_D20x[1][NUM_INSTR_TAB_PTRS] =
 {
  /*D200*/ GENx370x390x900 (D200,SS,"MVC")
 };
 
 // Compare Logical Characters
 
-static instr_func opcode_D50x[4][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_D50x[4][NUM_INSTR_TAB_PTRS] =
 {
  /*D500*/ GENx370x390x900 (D500,SS,"CLC"),
  /*D501*/ GENx370x390x900 (D501,SS,"CLC"),
@@ -6223,21 +6223,21 @@ static instr_func opcode_D50x[4][NUM_INSTR_TAB_PTRS] =
  /*D507*/ GENx370x390x900 (D507,SS,"CLC")
 };
 
-static instr_func opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E3*/   GENx370x390x900 (E3_0,e3xx,"")
 };
 
 // Load 64-bit
 
-static instr_func opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E304*/ GENx___x___x900 (E3_0______04,RXY,"LG")
 };
 
 // Store 64-bit
 
-static instr_func opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E324*/ GENx___x___x900 (E3_0______24,RXY,"STG")
 };
@@ -6253,10 +6253,10 @@ static instr_func opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 /* functions which follow them.                                      */
 /*-------------------------------------------------------------------*/
 
-static instr_func replace_opcode_xx(int arch, instr_func inst, int opcode)
+static INSTR_FUNC replace_opcode_xx(int arch, INSTR_FUNC inst, int opcode)
 {
   int i;
-  instr_func oldinst;
+  INSTR_FUNC oldinst;
 
   if(arch < 0 || arch > NUM_GEN_ARCHS)
     return(NULL);
@@ -6277,9 +6277,9 @@ static instr_func replace_opcode_xx(int arch, instr_func inst, int opcode)
 
 /*-------------------------------------------------------------------*/
 
-static instr_func replace_opcode_xxxx(int arch, instr_func inst, int opcode1, int opcode2)
+static INSTR_FUNC replace_opcode_xxxx(int arch, INSTR_FUNC inst, int opcode1, int opcode2)
 {
-  instr_func oldinst;
+  INSTR_FUNC oldinst;
 
   if(arch < 0 || arch >= NUM_GEN_ARCHS)
     return(NULL);
@@ -6298,10 +6298,10 @@ static instr_func replace_opcode_xxxx(int arch, instr_func inst, int opcode1, in
 
 /*-------------------------------------------------------------------*/
 
-static instr_func replace_opcode_xx_x(int arch, instr_func inst, int opcode1, int opcode2)
+static INSTR_FUNC replace_opcode_xx_x(int arch, INSTR_FUNC inst, int opcode1, int opcode2)
 {
   int i;
-  instr_func oldinst;
+  INSTR_FUNC oldinst;
 
   if(arch < 0 || arch >= NUM_GEN_ARCHS)
     return(NULL);
@@ -6322,9 +6322,9 @@ static instr_func replace_opcode_xx_x(int arch, instr_func inst, int opcode1, in
 
 /*-------------------------------------------------------------------*/
 
-static instr_func replace_opcode_xx________xx(int arch, instr_func inst, int opcode1, int opcode2)
+static INSTR_FUNC replace_opcode_xx________xx(int arch, INSTR_FUNC inst, int opcode1, int opcode2)
 {
-  instr_func oldinst;
+  INSTR_FUNC oldinst;
 
   if(arch < 0 || arch >= NUM_GEN_ARCHS)
     return(NULL);
@@ -6373,9 +6373,9 @@ static instr_func replace_opcode_xx________xx(int arch, instr_func inst, int opc
 
 #if defined( OPTION_DYNAMIC_LOAD )
 DLL_EXPORT
-void *replace_opcode_r (int arch, instr_func inst, int opcode1, int opcode2)
+void* replace_opcode_r (int arch, INSTR_FUNC inst, int opcode1, int opcode2)
 #else
-void *replace_opcode   (int arch, instr_func inst, int opcode1, int opcode2)
+void* replace_opcode   (int arch, INSTR_FUNC inst, int opcode1, int opcode2)
 #endif
 {
   switch(opcode1)

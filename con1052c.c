@@ -615,7 +615,7 @@ END_DEPENDENCY_SECTION
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {
-    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+    HDL_RESOLVE_SYMPTR( psysblk, sysblk );
     HDL_RESOLVE( panel_command );
 }
 END_RESOLVER_SECTION
