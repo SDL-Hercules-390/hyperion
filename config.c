@@ -838,10 +838,12 @@ char   str[64];
 /*-------------------------------------------------------------------*/
 /* Function to terminate all CPUs and devices                        */
 /*-------------------------------------------------------------------*/
-void release_config()
+void release_config( void* arg )
 {
 DEVBLK *dev;
 int     cpu;
+
+    UNREFERENCED( arg );
 
     /* Deconfigure all CPU's */
     OBTAIN_INTLOCK(NULL);

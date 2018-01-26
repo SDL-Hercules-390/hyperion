@@ -270,7 +270,7 @@ SCRI_DLL_IMPORT int process_config (const char *fname);
 SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 
 /* Functions in module config.c */
-void release_config ();
+void release_config ( void* );
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
 int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,

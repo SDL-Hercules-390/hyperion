@@ -163,7 +163,7 @@ static void sigint_handler (int signo)
     if (sysblk.sigintreq)
     {
         /* Release the configuration */
-        release_config();
+        release_config( NULL );
         delayed_exit(1);
     }
 
