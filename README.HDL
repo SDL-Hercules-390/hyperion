@@ -89,44 +89,6 @@
     tered.  Unloading the module does not remove the dependency, this is
     to be consistent with the previous note about unloading.
 
-
-
-    Diagnose F14 - dll interface
-
-    Purpose:
-
-    Allow external routines to be called from OS running under hercules
-    external routines must reside in hercules dll's
-
-
-    Instruction:
-
-      Format:
-
-      83 r1 r3 d2(b2)
-
-      r1: register containing real address of external routine name to be
-          called this routine name is defined as CL32, and is subject to
-          EBCDIC to ASCII translation under control of hercules codepages.
-          This parameter must be 32 byte aligned.
-
-      r3: register containing user parameter.
-
-      d2(b2): 0xF14
-
-
-    External routine:
-
-      void xxxx_diagf14_routine_name(int r1, int r3, REGS *regs);
-
-      xxxx_diagf14_ prefix to routine_name
-      xxxx being either s370, s390 or z900 depending on architecture mode.
-
-      The instruction is subject to machine malfunction checking.
-      The external routine may be interrupted when an extended wait or loop
-      occurs.
-
-
 */
 
 #include "hercules.h"
@@ -467,90 +429,6 @@ HDL_FINAL_SECTION;
     my_cleanup();
 }
 END_FINAL_SECTION;
-
-
-
-
-/* DYNDIAG.C    (C) Copyright Jan Jaeger, 2003                       */
-/*              Hercules Dynamic Loader                              */
-
-/*              Sample diagf14 dll routine                           */
-
-/*                                                                   */
-/*   Assembler to call routine:                                      */
-/*                                                                   */
-/*              LRA  R1,=CL32'test'                                  */
-/*              LRA  R2,=X'01020304'  USERPARM                       */
-/*              DC   X'83120F14'   DIAG R1,R2,X'F14'                 */
-/*                                                                   */
-
-
-#include "hercules.h"
-
-#include "opcode.h"
-
-#include "inline.h"
-
-
-void ARCH_DEP(diagf14_test) (int r1, int r3, REGS *regs)
-{
-U32 r3loc;
-
-    logmsg("diagf14:  r3 = %8.8X\n",regs->GR_L(r3));
-    r3loc = ARCH_DEP(vfetch4) (regs->GR_L(r3), USE_REAL_ADDR, regs);
-    logmsg("diagf14: *r3 = %8.8X\n",r3loc);
-}
-
-
-
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "dyndiag.c"
-#endif
-
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "dyndiag.c"
-#endif
-
-
-HDL_DEPENDENCY_SECTION;
-{
-     HDL_DEPENDENCY (HERCULES);
-     HDL_DEPENDENCY (REGS);
-     HDL_DEPENDENCY (DEVBLK);
-     HDL_DEPENDENCY (SYSBLK);
-
-} END_DEPENDENCY_SECTION;
-
-
-HDL_REGISTER_SECTION;
-{
-
-    HDL_REGISTER(s370_diagf14_test,s370_diagf14_test);
-    HDL_REGISTER(s390_diagf14_test,s390_diagf14_test);
-    HDL_REGISTER(z900_diagf14_test,z900_diagf14_test);
-
-} END_REGISTER_SECTION;
-
-
-HDL_RESOLVER_SECTION;
-{
-
-} END_RESOLVER_SECTION;
-
-HDL_FINAL_SECTION;
-{
-
-} END_FINAL_SECTION;
-
-
-#endif /*!defined(_GEN_ARCH)*/
-
-/* END DYNDIAG.C */
 
 
 
