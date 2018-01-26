@@ -165,10 +165,31 @@ static FACTAB ARCH_DEP( facs_tab )[] =      /* Arch-DEPENDENT table  */
 FT( Z390, Z390, NONE, 000_N3_INSTR )
 #endif
 
-/* PROGRAMMING NOTE: please note the use of underscore _FEATURE test */
+/*-------------------------------------------------------------------*/
+/*                       PROGRAMMING NOTE                            */
+/*                                                                   */
+/* Please note the below use of underscore _FEATURE test.  This is   */
+/* the ONLY facility that uses the underscore _FEATURE test instead  */
+/* of the normal ARCH_DEP non-underscore FEATURE test.               */
+/*                                                                   */
+/* THIS IS VERY IMPORTANT since the feat390.h header doesn't #define */
+/* "FEATURE_001_ZARCH_INSTALLED_FACILITY" by default (to allow the   */
+/* building of versions of Hercules WITHOUT z/Architecture support,  */
+/* i.e. with ONLY ESA/390 support).                                  */
+/*                                                                   */
+/* We don't want to lie and tell ESA/390 mode that z/Architecture    */
+/* is installed when it really isn't, but we also need to tell the   */
+/* truth too, and tell ESA/390 mode that z/Architecture IS in fact   */
+/* installed if it really is (when OPTION_900_MODE is specified).    */
+/*                                                                   */
+/* By using the underscore _FEATURE test we handle BOTH situations.  */
+/*-------------------------------------------------------------------*/
+
 #if defined(    _FEATURE_001_ZARCH_INSTALLED_FACILITY )
 FT( _Z390, _Z390, _Z900, 001_ZARCH_INSTALLED )
 #endif
+
+/*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_002_ZARCH_ACTIVE_FACILITY )
 FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE )
