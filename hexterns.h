@@ -378,38 +378,39 @@ CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 void losc_set  ( int license_status );
 void losc_check( char* ostype );
 
-#if defined(OPTION_DYNAMIC_LOAD)
+#if defined( OPTION_DYNAMIC_LOAD )
 
-HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
-CMDT_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
-HPAN_DLL_IMPORT void  (panel_display_r)          (void);
-OPCD_DLL_IMPORT void *(replace_opcode_r)         (int arch, INSTR_FUNC inst, int opcode1, int opcode2);
+HSYS_DLL_IMPORT void  (*panel_display)  ();
+HPAN_DLL_IMPORT void    panel_display_r ();
+HSYS_DLL_IMPORT void* (*panel_command)  ( void* cmdline );
+CMDT_DLL_IMPORT void*   panel_command_r ( void* cmdline );
+HSYS_DLL_IMPORT void* (*replace_opcode) ( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
+OPCD_DLL_IMPORT void*   replace_opcode_r( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
+HSYS_DLL_IMPORT int   (*system_command) ( int argc, char* argv[], char* cmdline );
+HSYS_DLL_IMPORT void  (*daemon_task)    ();
 
-HSYS_DLL_IMPORT int   (*system_command) (int argc, char *argv[], char *cmdline);
-HSYS_DLL_IMPORT void  (*daemon_task)    (void);
-HSYS_DLL_IMPORT void  (*panel_display)  (void);
-HSYS_DLL_IMPORT void *(*replace_opcode) (int arch, INSTR_FUNC inst, int opcode1, int opcode2);
-HSYS_DLL_IMPORT void *(*panel_command)  (void *);
+HSYS_DLL_IMPORT void* (*debug_device_state)         (DEVBLK *);
+HSYS_DLL_IMPORT void* (*debug_cpu_state)            (REGS *);
+HSYS_DLL_IMPORT void* (*debug_cd_cmd)               (char *);
+HSYS_DLL_IMPORT void* (*debug_watchdog_signal)      (REGS *);
+HSYS_DLL_IMPORT void* (*debug_program_interrupt)    (REGS *, int);
+HSYS_DLL_IMPORT void* (*debug_diagnose)             (U32, int,  int, REGS *);
+HSYS_DLL_IMPORT void* (*debug_iucv)                 (int, VADR, REGS *);
+HSYS_DLL_IMPORT void* (*debug_sclp_unknown_command) (U32,    void *, REGS *);
+HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event)   (void *, void *, REGS *);
+HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
+HSYS_DLL_IMPORT void* (*debug_chsc_unknown_request) (void *, void *, REGS *);
+HSYS_DLL_IMPORT void* (*debug_sclp_event_data)      (void *, void *, REGS *);
 
-HSYS_DLL_IMPORT void *(*debug_device_state)         (DEVBLK *);
-HSYS_DLL_IMPORT void *(*debug_cpu_state)            (REGS *);
-HSYS_DLL_IMPORT void *(*debug_cd_cmd)               (char *);
-HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
-HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
-HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);
-HSYS_DLL_IMPORT void *(*debug_iucv)                 (int, VADR, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_unknown_command) (U32,    void *, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event)   (void *, void *, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
-HSYS_DLL_IMPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
+#else // !defined( OPTION_DYNAMIC_LOAD )
 
-#else
 #define system_command                  NULL
 #define daemon_task                     NULL
-void *panel_command (void *cmdline);
-void panel_display (void);
-void *replace_opcode (int arch, INSTR_FUNC inst, int opcode1, int opcode2);
+
+void  panel_display ();
+void* panel_command ( void* cmdline );
+void* replace_opcode( int arch, const INSTR_FUNC inst, int opcode1, int opcode2 );
+
 #define debug_cpu_state                 NULL
 #define debug_cd_cmd                    NULL
 #define debug_device_state              NULL
@@ -421,7 +422,8 @@ void *replace_opcode (int arch, INSTR_FUNC inst, int opcode1, int opcode2);
 #define debug_sclp_event_data           NULL
 #define debug_chsc_unknown_request      NULL
 #define debug_watchdog_signal           NULL
-#endif
+
+#endif // defined( OPTION_DYNAMIC_LOAD )
 
 /* Functions in module httpserv.c */
 int http_command(int argc, char *argv[]);

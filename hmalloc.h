@@ -14,6 +14,8 @@
 #ifndef _HMALLOC_H
 #define _HMALLOC_H
 
+#define free(p)     free((void*)(p))
+
 /*--------------------------------------------------------------------*/
 /*                   Cache Alignment Macros                           */
 /*                                                                    */

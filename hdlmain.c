@@ -51,14 +51,14 @@ static void** unresolved = NULL;
 
 HDL_REGISTER_SECTION;
 {
-    HDL_REGISTER( parse_args,                    parse_args       );
-    HDL_REGISTER( panel_command,                 panel_command_r  );
     HDL_REGISTER( panel_display,                 panel_display_r  );
+    HDL_REGISTER( panel_command,                 panel_command_r  );
     HDL_REGISTER( replace_opcode,                replace_opcode_r );
+    HDL_REGISTER( parse_args,                    parse_args       );
 
     HDL_REGISTER( daemon_task,                   UNRESOLVED       );
     HDL_REGISTER( system_command,                UNRESOLVED       );
-    HDL_REGISTER( hdl_device_type_equates,       UNRESOLVED       );
+    HDL_REGISTER( hdl_devequ,                    UNRESOLVED       );
 
     HDL_REGISTER( debug_cpu_state,               UNRESOLVED       );
     HDL_REGISTER( debug_cd_cmd,                  UNRESOLVED       );
@@ -85,11 +85,12 @@ END_REGISTER_SECTION;
 
 HDL_RESOLVER_SECTION;
 {
-    HDL_RESOLVE( panel_command                 );
     HDL_RESOLVE( panel_display                 );
-    HDL_RESOLVE( replace_opcode                );
-    HDL_RESOLVE( system_command                );
     HDL_RESOLVE( daemon_task                   );
+    HDL_RESOLVE( panel_command                 );
+    HDL_RESOLVE( system_command                );
+    HDL_RESOLVE( replace_opcode                );
+    HDL_RESOLVE( hdl_devequ                    );
 
     HDL_RESOLVE( debug_cpu_state               );
     HDL_RESOLVE( debug_cd_cmd                  );
@@ -107,7 +108,6 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_tt32_stats              );
     HDL_RESOLVE( debug_tt32_tracing            );
 #endif
-    HDL_RESOLVE( hdl_device_type_equates       );
 }
 END_RESOLVER_SECTION;
 

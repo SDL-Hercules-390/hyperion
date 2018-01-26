@@ -677,7 +677,7 @@ static void *http_request(void* arg)
     {
         cgibin_func* dyncgi;
 
-        if( (dyncgi = hdl_findsym( webblk->baseurl )) )
+        if( (dyncgi = (cgibin_func*) hdl_getsym( webblk->baseurl )) )
         {
         char tbuf[80];
             hprintf(webblk->sock,"HTTP/1.0 200 OK\nConnection: close\n");

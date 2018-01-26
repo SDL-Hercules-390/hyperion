@@ -7410,25 +7410,29 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* ldmod - load a module                                             */
 /*-------------------------------------------------------------------*/
-int ldmod_cmd(int argc, char *argv[], char *cmdline)
+int ldmod_cmd( int argc, char* argv[], char* cmdline )
 {
-    int     i;                          /* Index                     */
+    int  i;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 1)
+    strupper( argv[0], argv[0] );
+
+    if (argc <= 1)
     {
-        for (i = 1; i < argc; i++)
-        {
-            WRMSG(HHC01526,"I",argv[i]);
-            if (!hdl_load(argv[i], 0))
-                WRMSG(HHC01527,"I",argv[i]);
-        }
-    }
-    else
-    {
-        WRMSG(HHC01525,"E",argv[0]);
+        // "HDL: usage: %s <module>"
+        WRMSG( HHC01525, "E", argv[ 0 ]);
         return -1;
+    }
+
+    for (i=1; i < argc; i++)
+    {
+        // "HDL: loading module %s..."
+        WRMSG( HHC01526, "I", argv[ i ]);
+
+        if (hdl_loadmod( argv[i], 0 ) == 0)
+            // "HDL: module %s loaded"
+            WRMSG( HHC01527, "I", argv[ i ]);
     }
 
     return 0;
@@ -7437,23 +7441,29 @@ int ldmod_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* rmmod - delete a module                                           */
 /*-------------------------------------------------------------------*/
-int rmmod_cmd(int argc, char *argv[], char *cmdline)
+int rmmod_cmd( int argc, char* argv[], char* cmdline )
 {
-    int     i;                          /* Index                     */
+    int  i;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
 
     if (argc <= 1)
     {
-        WRMSG(HHC01525,"E",argv[0]);
+        // "HDL: usage: %s <module>"
+        WRMSG( HHC01525, "E", argv[ 0 ]);
         return -1;
     }
 
-    for (i = 1; i < argc; i++)
+    for (i=1; i < argc; i++)
     {
-        WRMSG(HHC01528,"I",argv[i]);
-        if (!hdl_unload(argv[i]))
-            WRMSG(HHC01529,"I",argv[i]);
+        // "HDL: unloading module %s..."
+        WRMSG( HHC01528, "I", argv[ i ]);
+
+        if (hdl_freemod( argv[ i ]) == 0)
+            // "HDL: module %s unloaded"
+            WRMSG( HHC01529, "I", argv[ i ]);
     }
 
     return 0;
@@ -7464,12 +7474,11 @@ int rmmod_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int lsmod_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( cmdline );
+    UNREFERENCED( argc    );
+    UNREFERENCED( argv    );
 
-    hdl_listmods(HDL_LIST_DEFAULT);
-
+    hdl_listmods( HDL_LIST_DEFAULT );
     return 0;
 }
 
@@ -7478,12 +7487,11 @@ int lsmod_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int lsdep_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( cmdline );
+    UNREFERENCED( argc    );
+    UNREFERENCED( argv    );
 
     hdl_listdeps();
-
     return 0;
 }
 

@@ -97,10 +97,12 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
    { NULL, "HERCULES_RC",  "hercules.rc",  "Run Commands",  },
 };
 
-#if defined(OPTION_DYNAMIC_LOAD)
-#define MAX_DLL_TO_LOAD         50
-static char   *dll_load[MAX_DLL_TO_LOAD];   /* Pointers to modnames  */
-static int     dll_count = -1;              /* index into array      */
+#if defined( OPTION_DYNAMIC_LOAD )
+
+#define                 MAX_MODS     50         /* Max mods to load  */
+static char*  modnames[ MAX_MODS ] = {0};       /* ptrs to modnames  */
+static int    modcount = 0;                     /* count of modnames */
+
 #endif
 
 /* forward define process_script_file (ISW20030220-3) */
@@ -1018,7 +1020,8 @@ int     rc;
     /* Initialize runtime opcode tables */
     init_opcode_tables();
 
-#if defined(OPTION_DYNAMIC_LOAD)
+#if defined( OPTION_DYNAMIC_LOAD )
+
     /* Initialize the hercules dynamic loader */
     if ((rc = hdl_main()) != 0)
     {
@@ -1027,64 +1030,65 @@ int     rc;
     }
 
     /* Load modules requested at startup */
-    if (dll_count >= 0)
+    if (modcount)
     {
-        int hl_err = FALSE;
-        for ( dll_count = 0; dll_count < MAX_DLL_TO_LOAD; dll_count++ )
+        int modnum;
+        bool err = false;
+
+        for (modnum = 0; modnum < modcount; modnum++)
         {
-            if (dll_load[dll_count] != NULL)
-            {
-                if (hdl_load(dll_load[dll_count], HDL_LOAD_DEFAULT) != 0)
-                {
-                    hl_err = TRUE;
-                }
-                free(dll_load[dll_count]);
-            }
-            else
-                break;
+            if (hdl_loadmod( modnames[ modnum ], HDL_LOAD_DEFAULT) != 0)
+                err = true;
+
+            free( modnames[ modnum ]);
+            modnames[ modnum ] = NULL;
         }
 
-        if (hl_err)
-        {
-            usleep(10000);      // give logger time to issue error message
-            WRMSG(HHC01408, "S");
-            delayed_exit(-1);
-            return(1);
-        }
+        modcount = 0;  // (reset back to zero now that they're all loaded)
 
+        if (err)
+        {
+            usleep( 10000 ); // (give logger time to show them the error message)
+            // "Hercules terminating, see previous messages for reason"
+            WRMSG( HHC01408, "S");
+            delayed_exit( -1 );
+            return 1;
+        }
     }
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
 #if defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD )
+
     /* Load DYNGUI module if needed */
     if (extgui)
     {
-        if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
+        if (hdl_loadmod("dyngui",HDL_LOAD_DEFAULT) != 0)
         {
-            usleep(10000); /* (give logger thread time to issue
-                               preceding HHC01516E message) */
-            WRMSG(HHC01409, "S");
-            delayed_exit(-1);
-            return(1);
+            usleep( 10000 ); // (give logger time to show them the error message)
+            // "Load of dyngui.dll failed, hercules terminated"
+            WRMSG( HHC01409, "S" );
+            delayed_exit( -1 );
+            return 1;
         }
     }
 #endif /* defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Register the SIGINT handler */
-    if ( signal (SIGINT, sigint_handler) == SIG_ERR )
+    if (signal( SIGINT, sigint_handler ) == SIG_ERR)
     {
-        WRMSG(HHC01410, "S", "SIGINT", strerror(errno));
-        delayed_exit(-1);
-        return(1);
+        // "Cannot register %s handler: %s"
+        WRMSG( HHC01410, "S", "SIGINT", strerror( errno ));
+        delayed_exit( -1 );
+        return 1;
     }
 
     /* Register the SIGTERM handler */
-    if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
+    if (signal( SIGTERM, sigterm_handler ) == SIG_ERR)
     {
         // "Cannot register %s handler: %s"
-        WRMSG(HHC01410, "S", "SIGTERM", strerror(errno));
-        delayed_exit(-1);
-        return(1);
+        WRMSG( HHC01410, "S", "SIGTERM", strerror( errno ));
+        delayed_exit( -1 );
+        return 1;
     }
 
 #if defined( _MSVC_ )
@@ -1099,7 +1103,7 @@ int     rc;
             // "Cannot register %s handler: %s"
             WRMSG( HHC01410, "S", "Console-ctrl", strerror( errno ));
             delayed_exit(-1);
-            return(1);
+            return 1;
         }
 
         g_hWndEvt = CreateEvent( NULL, TRUE, FALSE, NULL );
@@ -1111,7 +1115,7 @@ int     rc;
             WRMSG( HHC00102, "E", strerror( rc ));
             CloseHandle( g_hWndEvt );
             delayed_exit(-1);
-            return(1);
+            return 1;
         }
 
         // (wait for thread to create window)
@@ -1125,7 +1129,7 @@ int     rc;
             // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "WinMsgThread", "CreateWindowEx() failed");
             delayed_exit(-1);
-            return(1);
+            return 1;
         }
     }
 #endif
@@ -1175,7 +1179,7 @@ int     rc;
         {
             WRMSG(HHC01410, "S", "SIGILL/FPE/SEGV/BUS/USR", strerror(errno));
             delayed_exit(-1);
-            return(1);
+            return 1;
         }
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -1196,17 +1200,17 @@ int     rc;
     {
         WRMSG(HHC00102, "E", strerror(rc));
         delayed_exit(-1);
-        return(1);
+        return 1;
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
-    hdl_addshut("release_config", release_config, NULL);
+    hdl_addshut( "release_config", release_config, NULL );
 
     /* Build system configuration */
     if ( build_config (cfgorrc[want_cfg].filename) )
     {
         delayed_exit(-1);
-        return(1);
+        return 1;
     }
 
     /* Process the .rc file synchronously when in daemon mode. */
@@ -1465,12 +1469,12 @@ static int process_args( int argc, char* argv[] )
                     dllname;
                     dllname = strtok_r(NULL,", ",&strtok_str))
                 {
-                    if (dll_count < MAX_DLL_TO_LOAD - 1)
-                        dll_load[ ++dll_count ] = strdup( dllname );
+                    if (modcount < MAX_MODS)
+                        modnames[ modcount++ ] = strdup( dllname ); // (caller will free)
                     else
                     {
                         // "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-                        WRMSG( HHC01406, "W", MAX_DLL_TO_LOAD );
+                        WRMSG( HHC01406, "W", MAX_MODS );
                         break;
                     }
                 }

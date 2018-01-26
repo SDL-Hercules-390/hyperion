@@ -10,8 +10,6 @@
 
 #include "hercules.h"
 
-/*-------------------------------------------------------------------*/
-
 #ifndef _HDL_C_
   #ifndef _HUTIL_DLL_
     #define HDL_DLL_IMPORT    DLL_IMPORT
@@ -23,78 +21,191 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-
-#ifndef _HDLMAIN_C_
-  #ifndef _HENGINE_DLL_
-    #define HDM_DLL_IMPORT    DLL_IMPORT
-  #else
-    #define HDM_DLL_IMPORT    extern
-  #endif
-#else
-  #define   HDM_DLL_IMPORT    DLL_EXPORT
-#endif
-
-/*-------------------------------------------------------------------*/
-/*                       Shutdown handling                           */
+/*                           Flags                                   */
 /*-------------------------------------------------------------------*/
 
-struct HDLSHUT;
-typedef struct HDLSHUT   HDLSHUT;
-typedef void   SHUTFUNC( void* );
+#define HDL_LOAD_DEFAULT     0x00000000
+#define HDL_LOAD_MAIN        0x80000000 /* Hercules MAIN module flag */
+#define HDL_LOAD_NOUNLOAD    0x40000000 /* Module cannot be unloaded */
+#define HDL_LOAD_FORCE       0x20000000 /* Override dependency check */
+#define HDL_LOAD_NOMSG       0x10000000 /* Do not issue not found msg*/
+#define HDL_LOAD_WAS_FORCED  0x08000000 /* Module load was forced    */
 
-struct HDLSHUT
+#define HDL_INSTARCH_370     0x80000000
+#define HDL_INSTARCH_390     0x40000000
+#define HDL_INSTARCH_900     0x20000000
+#define HDL_INSTARCH_ALL     (HDL_INSTARCH_370 | HDL_INSTARCH_390 | HDL_INSTARCH_900)
+
+#define HDL_LIST_DEFAULT     0x00000000
+#define HDL_LIST_ALL         0x80000000 /* list all references       */
+
+/*-------------------------------------------------------------------*/
+/*                   HDL callback functions                          */
+/*-------------------------------------------------------------------*/
+/*   These are the HDL functions the loadable modules call into.     */
+/*-------------------------------------------------------------------*/
+
+typedef void  SHUTDN( void* );
+typedef int   DEPCHK( const char* depname, const char* depvers, int depsize );
+typedef void  REGSYM( const char* symname, void* symaddr );
+typedef void* GETSYM( const char* symname );
+typedef void  DEFDEV( const char* typname, DEVHND* devhnd );
+typedef void  DEFINS( int amask, int opcode, const char* name, void* func );
+typedef int   MODFIN();
+typedef char* EQUTYP( char* typname );
+
+/*-------------------------------------------------------------------*/
+/*                 Module entry-point functions                      */
+/*-------------------------------------------------------------------*/
+/*      These are the module functions that HDL calls into.          */
+/*-------------------------------------------------------------------*/
+
+typedef int   DEPSEC( DEPCHK* depchk );
+typedef void  REGSEC( REGSYM* regsym );
+typedef void  RESSEC( GETSYM* getsym );
+typedef void  DEVSEC( DEFDEV* defdev );
+typedef void  INSSEC( DEFINS* defins );
+typedef int   FINSEC();
+
+/*-------------------------------------------------------------------*/
+/*                HDLSHUT  --  Shutdown handling                     */
+/*-------------------------------------------------------------------*/
+
+struct HDLSHUT; typedef struct HDLSHUT HDLSHUT;
+
+struct HDLSHUT                          /* Thread shutdown control   */
 {
-    HDLSHUT*   next;            // Point to next entry in chain
-    char*      shutname;        // function name
-    SHUTFUNC*  shutfunc;        // function pointer
-    void*      shutarg;         // function argument
+    HDLSHUT*     next;                  /* Next entry                */
+    const char*  shutname;              /* Function name             */
+    SHUTDN*      shutfunc;              /* Function pointer          */
+    void*        shutarg;               /* Function argument         */
 };
 
 /*-------------------------------------------------------------------*/
-
-HDL_DLL_IMPORT void     hdl_atexit   ( void );                  /* Call all shutdown routines*/
-HDL_DLL_IMPORT void     hdl_addshut  ( char*, void*, void* );   /* Add shutdown routine      */
-HDL_DLL_IMPORT int      hdl_delshut  ( void*, void* );          /* Remove shutdown routine   */
-
+/*                  HDLPRE  --  Module Preloading                    */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT int          hdl_main     ();                        /* Main initialization rtn   */
-DLL_EXPORT void         hdl_initpath ( const char* );           /* Initialize module path    */
-DLL_EXPORT int          hdl_setpath  ( const char* );           /* Set module path (-1/+1/0) */
-DLL_EXPORT const char*  hdl_getpath  ();                        /* Return module path        */
-DLL_EXPORT int          hdl_load     ( char*, int );            /* load dll                  */
-DLL_EXPORT int          hdl_unload   ( char* );                 /* Unload dll                */
-DLL_EXPORT void         hdl_listmods ( int );                   /* list all loaded modules   */
-DLL_EXPORT void         hdl_listdeps ();                        /* list all dependencies     */
-DLL_EXPORT DEVHND*      hdl_getdev   ( const char* devtype );   /* Get device handler        */
-DLL_EXPORT void*        hdl_findsym  ( char* );                 /* Find entry name           */
-DLL_EXPORT void*        hdl_next     ( void* );                 /* Find next entry in chain  */
+struct HDLPRE; typedef struct HDLPRE HDLPRE;
+
+struct HDLPRE                           /* Preload list entry        */
+{
+    const char*  name;                  /* Module name               */
+    int          flag;                  /* Load flags                */
+};
 
 /*-------------------------------------------------------------------*/
-#if !defined( OPTION_DYNAMIC_LOAD )
+/*                  HDLDEP  --  Dependency entry                     */
 /*-------------------------------------------------------------------*/
 
-#define HDL_DEVICE_SECTION                                          \
-                                                                    \
-    DLL_EXPORT  DEVHND* hdl_getdev( const char* devtype ) {
+struct HDLDEP; typedef struct HDLDEP HDLDEP;
+
+struct HDLDEP                           /* Dependency entry          */
+{
+    const char*  name;                  /* Dependency name           */
+    const char*  version;               /* Version                   */
+    int          size;                  /* Structure/module size     */
+    HDLDEP*      next;                  /* Next entry                */
+};
 
 /*-------------------------------------------------------------------*/
-
-#define HDL_DEVICE( typename, devhnd )                              \
-                                                                    \
-    do                                                              \
-    {                                                               \
-        if (strcasecmp( QSTR( typename ), devtype ) == 0)           \
-            return &devhnd;                                         \
-    }                                                               \
-    while (0)
-
+/*                  HDLSYM  --  External Symbol entry                */
 /*-------------------------------------------------------------------*/
 
-#define END_DEVICE_SECTION          return NULL; }
+struct HDLSYM; typedef struct HDLSYM HDLSYM;
+
+struct HDLSYM                           /* External Symbol entry     */
+{
+    const char*  name;                  /* Function symbol name      */
+    void*        symbol;                /* symbol/function address   */
+    int          refcnt;                /* Symbol reference count    */
+    HDLSYM*      next;                  /* Next entry in chain       */
+};
 
 /*-------------------------------------------------------------------*/
-#else /* defined( OPTION_DYNAMIC_LOAD ) */
+/*                  HDLDEV  --  Device entry                         */
+/*-------------------------------------------------------------------*/
+
+struct HDLDEV; typedef struct HDLDEV HDLDEV;
+
+struct HDLDEV                           /* Device entry              */
+{
+    const char*  name;                  /* Device type name          */
+    DEVHND*      hnd;                   /* Device handlers           */
+    HDLDEV*      next;                  /* Next entry                */
+};
+
+/*-------------------------------------------------------------------*/
+/*                  HDLINS  --  Instruction entry                    */
+/*-------------------------------------------------------------------*/
+
+struct HDLINS; typedef struct HDLINS HDLINS;
+
+struct HDLINS                           /* Instruction entry         */
+{
+    const char*  instname;              /* Instruction name          */
+    void*        instfunc;              /* Instruction function      */
+    void*        original;              /* Original instruction      */
+    int          opcode;                /* Opcode                    */
+    int          amask;                 /* Architectures mask        */
+    HDLINS*      next;                  /* Next entry                */
+};
+
+/*-------------------------------------------------------------------*/
+/*                  HDLMOD  --  module entry                         */
+/*-------------------------------------------------------------------*/
+
+struct HDLMOD; typedef struct HDLMOD HDLMOD;
+
+struct HDLMOD                           /* module entry              */
+{
+    const char*  name;                  /* module name               */
+    void*        handle;                /* module handle (dlopen)    */
+    int          flags;                 /* load flags                */
+
+    DEPSEC*      depsec_ep;             /* hdl_check_depends_ep      */
+    REGSEC*      regsec_ep;             /* hdl_register_symbols_ep   */
+    RESSEC*      ressec_ep;             /* hdl_resolve_symbols_ep    */
+    DEVSEC*      devsec_ep;             /* hdl_define_devtypes_ep    */
+    INSSEC*      inssec_ep;             /* hdl_define_instructs_ep   */
+    FINSEC*      finsec_ep;             /* hdl_on_module_unload_ep   */
+
+    HDLSYM*      symbols;               /* First symbol entry        */
+    HDLDEV*      devices;               /* First device entry        */
+    HDLINS*      instructs;             /* First instruction entry   */
+    HDLMOD*      next;                  /* Next entry in chain       */
+};
+
+/*-------------------------------------------------------------------*/
+/*                  HDL Function declarations                        */
+/*-------------------------------------------------------------------*/
+
+HDL_DLL_IMPORT void         hdl_atexit   ( void );                                                  /* Call all shutdown routines*/
+HDL_DLL_IMPORT void         hdl_addshut  ( const char* shutname, SHUTDN* shutfunc, void* shutarg ); /* Add shutdown routine      */
+HDL_DLL_IMPORT int          hdl_delshut  ( SHUTDN* shutfunc, void* shutarg );                       /* Remove shutdown routine   */
+
+HDL_DLL_IMPORT int          hdl_main     ();                              /* Main initialization rtn   */
+HDL_DLL_IMPORT void         hdl_initpath ( const char* path );            /* Initialize module path    */
+HDL_DLL_IMPORT int          hdl_setpath  ( const char* path );            /* Set module path (-1/+1/0) */
+HDL_DLL_IMPORT const char*  hdl_getpath  ();                              /* Return module path        */
+HDL_DLL_IMPORT int          hdl_loadmod  ( const char* name, int flags ); /* load module               */
+HDL_DLL_IMPORT int          hdl_freemod  ( const char* name );            /* Unload module             */
+HDL_DLL_IMPORT void         hdl_listmods ( int flags );                   /* list all loaded modules   */
+HDL_DLL_IMPORT void         hdl_listdeps ();                              /* list all dependencies     */
+HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );         /* Get device-type handler   */
+HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );          /* Find next entry in chain  */
+
+#if defined( OPTION_DYNAMIC_LOAD )
+
+HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
+
+/*-------------------------------------------------------------------*/
+/*               publicly visiblae global variables                  */
+/*-------------------------------------------------------------------*/
+
+HDL_DLL_IMPORT EQUTYP*      hdl_devequ; /* device-type equates func  */
+
+/*-------------------------------------------------------------------*/
+/*                     HDL_USE_LIBTOOL                               */
 /*-------------------------------------------------------------------*/
 
 #if !defined( HDL_USE_LIBTOOL )
@@ -109,132 +220,28 @@ DLL_EXPORT void*        hdl_next     ( void* );                 /* Find next ent
 #endif
 
 /*-------------------------------------------------------------------*/
-
-typedef struct _HDLDEV {                /* Device entry              */
-    char *name;                         /* Device type name          */
-    DEVHND *hnd;                        /* Device handlers           */
-    struct _HDLDEV *next;               /* Next entry                */
-} HDLDEV;
-
-
+/*                     HDL_MODULE_SUFFIX                             */
 /*-------------------------------------------------------------------*/
 
-typedef struct _HDLINS {                /* Instruction entry         */
-    int  opcode;                        /* Opcode                    */
-    int  archflags;                     /* Architecture flags        */
-    char *instname;                     /* Instruction name          */
-    void *instruction;                  /* Instruction routine       */
-    void *original;                     /* Original instruction      */
-    struct _HDLINS *next;               /* Next entry                */
-} HDLINS;
+/*      NOTE:  SHLIBEXT defined by ISW in configure.ac/config.h      */
 
-/*-------------------------------------------------------------------*/
-
-struct _HDLDEP;
-typedef struct _HDLDEP {                /* Dependency entry          */
-    char *name;                         /* Dependency name           */
-    char *version;                      /* Version                   */
-    int  size;                          /* Structure/module size     */
-    struct _HDLDEP *next;               /* Next entry                */
-} HDLDEP;
-
-/*-------------------------------------------------------------------*/
-
-typedef struct _HDLPRE {                /* Preload list entry        */
-    char *name;                         /* Module name               */
-    int  flag;                          /* Load flags                */
-} HDLPRE;
-
-/*-------------------------------------------------------------------*/
-
-struct _MODENT;
-typedef struct _MODENT {                /* External Symbol entry     */
-    void (*fep)();                      /* Function entry point      */
-    char *name;                         /* Function symbol name      */
-    int  count;                         /* Symbol load count         */
-    struct _MODENT *modnext;            /* Next entry in chain       */
-} MODENT;
-
-/*-------------------------------------------------------------------*/
-
-struct _DLLENT;
-typedef struct _DLLENT {                /* DLL entry                 */
-    char *name;                         /* load module name          */
-    void *dll;                          /* DLL handle (dlopen)       */
-    int flags;                          /* load flags                */
-
-    int (*hdldepc)(void *);             /* hdl_depc                  */
-    int (*hdlreso)(void *);             /* hdl_reso                  */
-    int (*hdlinit)(void *);             /* hdl_init                  */
-    int (*hdlddev)(void *);             /* hdl_ddev                  */
-    int (*hdldins)(void *);             /* hdl_dins                  */
-    int (*hdlfini)();                   /* hdl_fini                  */
-
-    struct _MODENT *modent;             /* First symbol entry        */
-    struct _HDLDEV *hndent;             /* First device entry        */
-    struct _HDLINS *insent;             /* First instruction entry   */
-    struct _DLLENT *dllnext;            /* Next entry in chain       */
-
-} DLLENT;
-
-/*-------------------------------------------------------------------*/
-
-/* SHLIBEXT defined by ISW in configure.ac/config.h */
 #if defined( HDL_BUILD_SHARED ) && defined( LTDL_SHLIB_EXT )
-  #define   HDL_MODULE_SUFFIX   LTDL_SHLIB_EXT
+  #define   HDL_MODULE_SUFFIX       LTDL_SHLIB_EXT
 #else
   #if defined( LT_MODULE_EXT )
-    #define HDL_MODULE_SUFFIX   LT_MODULE_EXT
+    #define HDL_MODULE_SUFFIX       LT_MODULE_EXT
   #elif defined( _MSVC_ )
-    #define HDL_MODULE_SUFFIX   ".dll"
+    #define HDL_MODULE_SUFFIX       ".dll"
   #else
-    #define HDL_MODULE_SUFFIX   ".la"
+    #define HDL_MODULE_SUFFIX       ".la"
   #endif
 #endif
 
-/*-------------------------------------------------------------------*/
-
 #if defined( HDL_MODULE_SUFFIX )
- #define HDL_SUFFIX_LENGTH  (sizeof(HDL_MODULE_SUFFIX) - 1)
+ #define HDL_SUFFIX_LENGTH          (sizeof( HDL_MODULE_SUFFIX ) - 1)
 #else
- #define HDL_SUFFIX_LENGTH  0
+ #define HDL_SUFFIX_LENGTH          0
 #endif
-
-/*-------------------------------------------------------------------*/
-
-#define HDL_LOAD_DEFAULT     0x00000000
-#define HDL_LOAD_MAIN        0x00000001 /* Hercules MAIN module flag */
-#define HDL_LOAD_NOUNLOAD    0x00000002 /* Module cannot be unloaded */
-#define HDL_LOAD_FORCE       0x00000004 /* Override dependency check */
-#define HDL_LOAD_NOMSG       0x00000008 /* Do not issue not found msg*/
-#define HDL_LOAD_WAS_FORCED  0x00000010 /* Module load was forced    */
-
-#define HDL_INSTARCH_370     0x00000001
-#define HDL_INSTARCH_390     0x00000002
-#define HDL_INSTARCH_900     0x00000004
-#define HDL_INSTARCH_ALL     (HDL_INSTARCH_370 | HDL_INSTARCH_390 | HDL_INSTARCH_900)
-
-#define HDL_LIST_DEFAULT     0x00000000
-#define HDL_LIST_ALL         0x00000001 /* list all references       */
-
-/*-------------------------------------------------------------------*/
-
-#define HDL_DEPC        hdl_depc
-#define HDL_RESO        hdl_reso
-#define HDL_INIT        hdl_init
-#define HDL_FINI        hdl_fini
-#define HDL_DDEV        hdl_ddev
-#define HDL_DINS        hdl_dins
-
-#define HDL_HDTP        hdt
-
-#define HDL_DEPC_Q      QSTR( HDL_DEPC )
-#define HDL_RESO_Q      QSTR( HDL_RESO )
-#define HDL_INIT_Q      QSTR( HDL_INIT )
-#define HDL_FINI_Q      QSTR( HDL_FINI )
-#define HDL_DDEV_Q      QSTR( HDL_DDEV )
-#define HDL_DINS_Q      QSTR( HDL_DINS )
-#define HDL_HDTP_Q      QSTR( HDL_HDTP )
 
 /*-------------------------------------------------------------------*/
 /*                   HDL_DEPENDENCY_SECTION                          */
@@ -242,35 +249,31 @@ typedef struct _DLLENT {                /* DLL entry                 */
 
 #define HDL_DEPENDENCY_SECTION                                      \
                                                                     \
-    DLL_EXPORT int HDL_DEPC                                         \
-    (                                                               \
-        int (*hdl_depc_vers)( char*, char*, int )                   \
-    )                                                               \
+    DLL_EXPORT int hdl_check_depends_ep( DEPCHK* depchk )           \
     {                                                               \
-        int hdl_depc_rc = 0;                                        \
-        UNREFERENCED( hdl_depc_vers );
+        int depchk_rc = 0;
 
+/*-------------------------------------------------------------------*/
+/*                   END_DEPENDENCY_SECTION                          */
+/*-------------------------------------------------------------------*/
+
+#define END_DEPENDENCY_SECTION                                      \
+                                                                    \
+        return depchk_rc;                                           \
+    }
+
+/*-------------------------------------------------------------------*/
+/*                      HDL_DEPENDENCY                               */
 /*-------------------------------------------------------------------*/
 
 #define HDL_DEPENDENCY( dep )                                       \
                                                                     \
     do                                                              \
     {                                                               \
-        if (hdl_depc_vers                                           \
-        (                                                           \
-            QSTR( dep ),                                            \
-            HDL_VERS_ ## dep,                                       \
-            HDL_SIZE_ ## dep                                        \
-        ))                                                          \
-        {                                                           \
-            hdl_depc_rc = 1;                                        \
-        }                                                           \
+        if (depchk( QSTR( dep ), HDL_VERS_ ## dep, HDL_SIZE_ ## dep ))  \
+            depchk_rc = 1;                                          \
     }                                                               \
     while (0)
-
-/*-------------------------------------------------------------------*/
-
-#define END_DEPENDENCY_SECTION          return hdl_depc_rc; }
 
 /*-------------------------------------------------------------------*/
 /*                    HDL_REGISTER_SECTION                           */
@@ -278,49 +281,57 @@ typedef struct _DLLENT {                /* DLL entry                 */
 
 #define HDL_REGISTER_SECTION                                        \
                                                                     \
-    DLL_EXPORT void HDL_INIT                                        \
-    (                                                               \
-        int (*hdl_init_regi)( char*, void* )                        \
-    )                                                               \
-    {                                                               \
-        {UNREFERENCED( hdl_init_regi );}
+    DLL_EXPORT void hdl_register_symbols_ep( REGSYM* regsym )       \
+    {
 
+/*-------------------------------------------------------------------*/
+/*                   END_REGISTER_SECTION                            */
+/*-------------------------------------------------------------------*/
+
+#define END_REGISTER_SECTION                                        \
+                                                                    \
+    }
+
+/*-------------------------------------------------------------------*/
+/*                     HDL_REGISTER                                  */
 /*-------------------------------------------------------------------*/
 
 #define HDL_REGISTER( epname, varname )                             \
                                                                     \
-    hdl_init_regi( QSTR( epname ), &varname );
+    regsym( QSTR( epname ), &varname );
 
 /*-------------------------------------------------------------------*/
-
-#define END_REGISTER_SECTION            }
-
-/*-------------------------------------------------------------------*/
-/*                     HDL_RESOLVER_SECTION                          */
+/*                   HDL_RESOLVER_SECTION                            */
 /*-------------------------------------------------------------------*/
 
 #define HDL_RESOLVER_SECTION                                        \
                                                                     \
-    DLL_EXPORT void HDL_RESO                                        \
-    (                                                               \
-        void* (*hdl_reso_fent)( char* )                             \
-    )                                                               \
-    {                                                               \
-        {UNREFERENCED( hdl_reso_fent );}
+    DLL_EXPORT void hdl_resolve_symbols_ep( GETSYM* getsym )        \
+    {
 
 /*-------------------------------------------------------------------*/
+/*                    END_RESOLVER_SECTION                           */
+/*-------------------------------------------------------------------*/
 
-#define HDL_RESOLVE( sym )          sym = hdl_reso_fent( QSTR( sym ));
+#define END_RESOLVER_SECTION                                        \
+                                                                    \
+    }
 
+/*-------------------------------------------------------------------*/
+/*                       HDL_RESOLVE                                 */
+/*-------------------------------------------------------------------*/
+
+#define HDL_RESOLVE( sym )                                          \
+                                                                    \
+    sym = getsym( QSTR( sym ));
+
+/*-------------------------------------------------------------------*/
+/*                     HDL_RESOLVE_SYMPTR                            */
 /*-------------------------------------------------------------------*/
 
 #define HDL_RESOLVE_SYMPTR( psym, sym )                             \
                                                                     \
-    psym = hdl_reso_fent( QSTR( sym ));
-
-/*-------------------------------------------------------------------*/
-
-#define END_RESOLVER_SECTION        }
+    psym = getsym( QSTR( sym ));
 
 /*-------------------------------------------------------------------*/
 /*                    HDL_DEVICE_SECTION                             */
@@ -328,22 +339,41 @@ typedef struct _DLLENT {                /* DLL entry                 */
 
 #define HDL_DEVICE_SECTION                                          \
                                                                     \
-    DLL_EXPORT void HDL_DDEV                                        \
-    (                                                               \
-        int (*hdl_init_ddev)( char*, void* )                        \
-    )                                                               \
-    {                                                               \
-        {UNREFERENCED( hdl_init_ddev );}
+    DLL_EXPORT void hdl_define_devtypes_ep( DEFDEV* defdev )        \
+    {
 
 /*-------------------------------------------------------------------*/
+/*                    END_DEVICE_SECTION                             */
+/*-------------------------------------------------------------------*/
 
-#define HDL_DEVICE( typename, devhnd )                              \
+#define END_DEVICE_SECTION                                          \
                                                                     \
-    hdl_init_ddev( QSTR( typename ), &devhnd );
+    }
 
 /*-------------------------------------------------------------------*/
+/*                       HDL_DEVICE                                  */
+/*-------------------------------------------------------------------*/
 
-#define END_DEVICE_SECTION              }
+#define HDL_DEVICE( typname, devhnd )                               \
+                                                                    \
+    defdev( QSTR( typname ), &devhnd );
+
+/*-------------------------------------------------------------------*/
+/*                  HDL_INSTRUCTION_SECTION                          */
+/*-------------------------------------------------------------------*/
+
+#define HDL_INSTRUCTION_SECTION                                     \
+                                                                    \
+    DLL_EXPORT void hdl_define_instructs_ep( DEFINS* defins )       \
+    {
+
+/*-------------------------------------------------------------------*/
+/*                    END_INSTRUCTION_SECTION                        */
+/*-------------------------------------------------------------------*/
+
+#define END_INSTRUCTION_SECTION                                     \
+                                                                    \
+    }
 
 /*-------------------------------------------------------------------*/
 /*                      HDL_370_DEF_INST                             */
@@ -354,8 +384,8 @@ typedef struct _DLLENT {                /* DLL entry                 */
                                                                     \
     do                                                              \
     {                                                               \
-        if (arch & HDL_INSTARCH_370)                                \
-            hdl_init_dins( arch, opcode,                            \
+        if (arch &      HDL_INSTARCH_370)                           \
+            defins( arch, opcode,                                   \
                 QSTR( instrfunc ), &s370_ ## instrfunc );           \
     }                                                               \
     while (0)
@@ -373,8 +403,8 @@ typedef struct _DLLENT {                /* DLL entry                 */
                                                                     \
     do                                                              \
     {                                                               \
-        if (arch & HDL_INSTARCH_390)                                \
-            hdl_init_dins( arch, opcode,                            \
+        if (arch &      HDL_INSTARCH_390)                           \
+            defins( arch, opcode,                                   \
                 QSTR( instrfunc ), &s390_ ## instrfunc );           \
     }                                                               \
     while (0)
@@ -392,8 +422,8 @@ typedef struct _DLLENT {                /* DLL entry                 */
                                                                     \
     do                                                              \
     {                                                               \
-        if (arch & HDL_INSTARCH_900)                                \
-            hdl_init_dins( arch, opcode,                            \
+        if (arch &      HDL_INSTARCH_900)                           \
+            defins( arch, opcode,                                   \
                 QSTR( instrfunc ), &z900_ ## instrfunc );           \
     }                                                               \
     while (0)
@@ -401,19 +431,6 @@ typedef struct _DLLENT {                /* DLL entry                 */
 #else
  #define HDL_900_DEF_INST( arch, opcode, instrfunc)
 #endif
-
-/*-------------------------------------------------------------------*/
-/*                  HDL_INSTRUCTION_SECTION                          */
-/*-------------------------------------------------------------------*/
-
-#define HDL_INSTRUCTION_SECTION                                     \
-                                                                    \
-    DLL_EXPORT void HDL_DINS                                        \
-    (                                                               \
-        int (*hdl_init_dins)( int, int, void*, void* )              \
-    )                                                               \
-    {                                                               \
-        {UNREFERENCED( hdl_init_dins );}
 
 /*-------------------------------------------------------------------*/
 /*                       HDL_DEF_INST                                */
@@ -442,23 +459,58 @@ typedef struct _DLLENT {                /* DLL entry                 */
     }
 
 /*-------------------------------------------------------------------*/
-/*                    END_INSTRUCTION_SECTION                        */
-/*-------------------------------------------------------------------*/
-
-#define END_INSTRUCTION_SECTION     }
-
-/*-------------------------------------------------------------------*/
 /*                       FINAL_SECTION                               */
 /*-------------------------------------------------------------------*/
 
-#define HDL_FINAL_SECTION           DLL_EXPORT int HDL_FINI() { int rc = 0;
+#define HDL_FINAL_SECTION                                           \
+                                                                    \
+    DLL_EXPORT int hdl_on_module_unload_ep()                        \
+    {                                                               \
+        int rc = 0;
 
 /*-------------------------------------------------------------------*/
+/*                    END_FINAL_SECTION                              */
+/*-------------------------------------------------------------------*/
 
-#define END_FINAL_SECTION           return rc; }
+#define END_FINAL_SECTION                                           \
+                                                                    \
+        return rc;                                                  \
+    }
+
+
+#else /* !defined( OPTION_DYNAMIC_LOAD ) */
 
 /*-------------------------------------------------------------------*/
+/*                    HDL_DEVICE_SECTION                             */
+/*-------------------------------------------------------------------*/
+
+#define HDL_DEVICE_SECTION                                          \
+                                                                    \
+    DLL_EXPORT  DEVHND* hdl_DEVHND( const char* typname )           \
+    {
+
+/*-------------------------------------------------------------------*/
+/*                    END_DEVICE_SECTION                             */
+/*-------------------------------------------------------------------*/
+
+#define END_DEVICE_SECTION                                          \
+                                                                    \
+        return NULL;                                                \
+    }
+
+/*-------------------------------------------------------------------*/
+/*                       HDL_DEVICE                                  */
+/*-------------------------------------------------------------------*/
+
+#define HDL_DEVICE( typname, devhnd )                               \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        if (strcasecmp( QSTR( typname ), devtype ) == 0)            \
+            return &devhnd;                                         \
+    }                                                               \
+    while (0)
+
 #endif /* defined( OPTION_DYNAMIC_LOAD ) */
-/*-------------------------------------------------------------------*/
 
 #endif /* _HDL_H */
