@@ -426,24 +426,18 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
            )))
     {
         len += display_gregs (regs, buf + len, buflen - len - 1, "HHC02269I " );
-        if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2 || opcode == 0xB6 || opcode == 0xB7)
     {
         len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
-        if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
         len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
-        if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len, "\n");
     }
 
     if ((regs->CR(0) & CR0_AFP) && (               /* Display floating point control register if AFP enabled */
@@ -467,8 +461,6 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
         )
     {
         len += snprintf(buf + len, buflen - len, MSG(HHC02276,"I", regs->fpc));
-        if (sysblk.showregsfirst)
-             len += snprintf(buf + len, buflen - len, "\n");
     }
 
     /* Display floating-point registers if appropriate */
@@ -486,10 +478,12 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
         )
     {
         len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
-        if (sysblk.showregsfirst)
-            len += snprintf(buf + len, buflen - len, "\n");
     }
-    return(len);
+
+    if (len && sysblk.showregsfirst)
+        len += snprintf( buf + len, buflen - len, "\n" );
+
+    return len;
 }
 
 /*-------------------------------------------------------------------*/
