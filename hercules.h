@@ -64,8 +64,6 @@
 #ifndef _HERCULES_H       // MUST come AFTER "feature.h" is #included
 #define _HERCULES_H       // MUST come AFTER "feature.h" is #included
 
-#include "hstdinc.h"      // Precompilation-eligible header files
-
 #ifdef _MSVC_
   #include "getopt.h"
 #else
