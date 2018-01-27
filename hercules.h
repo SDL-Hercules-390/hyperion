@@ -74,19 +74,6 @@
   #endif
 #endif
 
-#ifdef OPTION_DYNAMIC_LOAD
-  #ifdef HDL_USE_LIBTOOL
-    #include "ltdl.h"
-  #else
-    #if defined(__MINGW__) || defined(_MSVC_)
-      #include "w32dl.h"
-    #else
-      #include <dlfcn.h>
-    #endif
-  #endif
-#endif
-
-
 ///////////////////////////////////////////////////////////////////////
 // Private Hercules-specific headers.....
 ///////////////////////////////////////////////////////////////////////
