@@ -17,33 +17,33 @@
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
-_DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
+U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
         U32 *asteo, U32 aste[]);
-_DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
+int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
         int atemask, REGS *regs);
 #endif
 
 #if defined( FEATURE_ACCESS_REGISTERS )
-_DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
+U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
         int acctype, REGS *regs, U32 *asteo, U32 aste[]);
-_DAT_C_STATIC void ARCH_DEP(purge_alb_all) ();
-_DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
+void ARCH_DEP(purge_alb_all) ();
+void ARCH_DEP(purge_alb) (REGS *regs);
 #endif
 
-_DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
+int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
         REGS *regs, int acctype);
-_DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ();
-_DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
-_DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra);
-_DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
-_DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
+void ARCH_DEP(purge_tlb_all) ();
+void ARCH_DEP(purge_tlb) (REGS *regs);
+void ARCH_DEP(purge_tlbe_all) (RADR pfra);
+void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
+void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
 
 #if ARCH_IDX == ARCH_390_IDX && defined( _900 )
-_DAT_C_STATIC void z900_invalidate_tlb (REGS *regs, BYTE mask);
+void z900_invalidate_tlb (REGS *regs, BYTE mask);
 #endif
 
-_DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
-_DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
+void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
+void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
         U32 op2, REGS *regs);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey);
@@ -53,14 +53,14 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
 #if defined( _FEATURE_SIE ) && ARCH_IDX != ARCH_900_IDX
 _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
-_DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
+int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
         int acctype);
 #endif
 
 #if defined( _FEATURE_ZSIE )
 _LOGICAL_C_STATIC BYTE *z900_logical_to_main (U64 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
-_DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
+int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
         int acctype);
 #endif
 

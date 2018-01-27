@@ -574,58 +574,23 @@
 /* (see for example source files dat.h/dat.c and vstore.h/vstore.c)  */
 /*-------------------------------------------------------------------*/
 
-#undef      _VSTORE_C_STATIC
-#if defined( OPTION_INLINE_VSTORE )
- #define    _VSTORE_C_STATIC        static inline
- #define    _VSTORE_FULL_C_STATIC   static
-#else
- #ifndef    _VSTORE_C
-  #ifndef   _HENGINE_DLL_
-   #define  _VSTORE_C_STATIC        DLL_IMPORT
-   #define  _VSTORE_FULL_C_STATIC   DLL_IMPORT
-  #else
-   #define  _VSTORE_C_STATIC        extern
-   #define  _VSTORE_FULL_C_STATIC   extern
-  #endif
+#undef  _VSTORE_C_STATIC
+#undef  _VFETCH_C_STATIC
+
+#define _VSTORE_C_STATIC            static inline
+#define _VFETCH_C_STATIC            static inline
+#define _VSTORE_FULL_C_STATIC       static
+
+#undef _LOGICAL_C_STATIC
+
+#ifndef    _DAT_C
+ #ifndef   _HENGINE_DLL_
+  #define  _LOGICAL_C_STATIC        DLL_IMPORT
  #else
-  #define   _VSTORE_C_STATIC        DLL_EXPORT
-  #define   _VSTORE_FULL_C_STATIC   DLL_EXPORT
+  #define  _LOGICAL_C_STATIC        extern
  #endif
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#undef      _VFETCH_C_STATIC
-#if defined( OPTION_INLINE_IFETCH )
- #define    _VFETCH_C_STATIC        static inline
 #else
- #define    _VFETCH_C_STATIC
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#undef      _DAT_C_STATIC
-#if defined( OPTION_INLINE_DAT )
- #define    _DAT_C_STATIC           static inline
-#else
- #define    _DAT_C_STATIC
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#undef      _LOGICAL_C_STATIC
-#if defined( OPTION_INLINE_LOGICAL )
- #define    _LOGICAL_C_STATIC       static inline
-#else
- #ifndef    _DAT_C
-  #ifndef   _HENGINE_DLL_
-   #define  _LOGICAL_C_STATIC       DLL_IMPORT
-  #else
-   #define  _LOGICAL_C_STATIC       extern
-  #endif
- #else
-  #define   _LOGICAL_C_STATIC       DLL_EXPORT
- #endif
+ #define   _LOGICAL_C_STATIC        DLL_EXPORT
 #endif
 
 /*-------------------------------------------------------------------*/

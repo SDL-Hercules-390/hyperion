@@ -19,24 +19,9 @@
 
 #include "hercules.h"
 
-#if !defined(OPTION_INLINE_VSTORE) || !defined(OPTION_INLINE_IFETCH)
-
-#include "opcode.h"
-#include "inline.h"    /* automatically #includes dat.h and vstore.h */
-
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "vstore.c"
-#endif
-
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "vstore.c"
-#endif
-
-#endif /* !defined(_GEN_ARCH) */
-
-#endif /* !defined(OPTION_INLINE_VSTORE) || !defined(OPTION_INLINE_IFETCH) */
+// TO BE DELETED
+// TO BE DELETED
+// TO BE DELETED
+// TO BE DELETED
+// TO BE DELETED
+// TO BE DELETED

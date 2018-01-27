@@ -25,7 +25,7 @@
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
 
-#if defined(OPTION_INLINE_DAT) || defined(_DAT_C)
+#if defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
@@ -54,7 +54,7 @@
 /*      translation specification exceptions, in which case the      */
 /*      function does not return.                                    */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
+U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
                                                 U32 *asteo, U32 aste[])
 {
 U32     afte_addr;                      /* Address of AFTE           */
@@ -204,7 +204,7 @@ asn_asx_tran_excp:
 /*      if the authority table entry address is invalid, and in      */
 /*      this case the function does not return.                      */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
+int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
                                                int atemask, REGS *regs)
 {
 RADR    ato;                            /* Authority table origin    */
@@ -300,7 +300,7 @@ auth_addr_excp:
 /*      translation specification exceptions, in which case the      */
 /*      function does not return.                                    */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
+U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
             int acctype, REGS *regs, U32 *asteo, U32 aste[])
 {
 U32     cb;                             /* DUCT or PASTE address     */
@@ -487,7 +487,7 @@ ext_auth_excp:
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer                                    */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
+void ARCH_DEP(purge_alb) (REGS *regs)
 {
 int i;
 
@@ -505,7 +505,7 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer for all CPUs                       */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_alb_all) ()
+void ARCH_DEP(purge_alb_all) ()
 {
 int i;
 
@@ -562,7 +562,7 @@ int i;
 /*      regs->dat.stid is set to TEA_ST_PRIMARY, TEA_ST_SECNDRY,     */
 /*      TEA_ST_HOME, or TEA_ST_ARMODE.                               */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC U16 ARCH_DEP(load_address_space_designator) (int arn,
+U16 ARCH_DEP(load_address_space_designator) (int arn,
            REGS *regs, int acctype)
 {
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -817,7 +817,7 @@ U16     eax;                            /* Authorization index       */
 /*      translation specification exceptions, in which case the      */
 /*      function does not return.                                    */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
+int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
                                             REGS *regs, int acctype)
 {
 RADR    sto = 0;                        /* Segment table origin      */
@@ -1734,7 +1734,7 @@ tran_excp_addr:
 /*-------------------------------------------------------------------*/
 /* Purge the translation lookaside buffer                            */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
+void ARCH_DEP(purge_tlb) (REGS *regs)
 {
     INVALIDATE_AIA(regs);
     if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
@@ -1760,7 +1760,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Purge the translation lookaside buffer for all CPUs               */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ()
+void ARCH_DEP(purge_tlb_all) ()
 {
 int i;
 
@@ -1775,7 +1775,7 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Purge translation lookaside buffer entries                        */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra)
+void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra)
 {
 int  i;
 RADR pte;
@@ -1843,7 +1843,7 @@ RADR ptemask;
 /*-------------------------------------------------------------------*/
 /* Purge translation lookaside buffer entries for all CPUs           */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra)
+void ARCH_DEP(purge_tlbe_all) (RADR pfra)
 {
 int i;
 
@@ -1858,7 +1858,7 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Invalidate all translation lookaside buffer entries               */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask)
+void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask)
 {
 int  i;
 
@@ -1919,7 +1919,7 @@ int  i;
 /*   TLB_VADDR also contains the tlbid, so the regs->tlbid is merged */
 /*   with the main input variable before the search is begun.        */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
+void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
 {
     int     i;                          /* index into TLB            */
     int     shift;                      /* Number of bits to shift   */
@@ -2009,7 +2009,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
 /* SYNCHRONIZE_CPUS issued while intlock is held.                    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-_DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
+void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
                                                     U32 op2, REGS *regs)
 {
 RADR    raddr;                          /* Addr of page table entry  */
@@ -2125,7 +2125,7 @@ RADR    pfra;
 
 } /* end function invalidate_pte */
 
-#endif /* defined(OPTION_INLINE_DAT) || defined(_DAT_C) */
+#endif /* defined(_DAT_C) */
 
 
 #if defined(FEATURE_PER2)
@@ -2147,7 +2147,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 #endif /*defined(FEATURE_PER2)*/
 
 
-#if defined(OPTION_INLINE_LOGICAL) || defined(_DAT_C)
+#if defined(_DAT_C)
 /*-------------------------------------------------------------------*/
 /* Convert logical address to absolute address and check protection  */
 /*                                                                   */
@@ -2397,6 +2397,6 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
     return ARCH_DEP(logical_to_main_l)(addr,arn,regs,acctype,akey,1);
 }
 
-#endif /* defined(OPTION_INLINE_LOGICAL) || defined(_DAT_C) */
+#endif /* defined(_DAT_C) */
 
 /* end of DAT.H */
