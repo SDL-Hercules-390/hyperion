@@ -51,20 +51,14 @@
 
 DISABLE_GCC_WARNING( "-Wunused-function" )
 
-#ifndef _HSCCMD_C_
 #define _HSCCMD_C_
-#endif
-
-#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
 #include "history.h"
 #include "httpmisc.h"
-
 #include "tapedev.h"
 #include "dasdtab.h"
 #include "ctcadpt.h"

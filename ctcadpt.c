@@ -27,7 +27,6 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "ctcadpt.h"
-
 #include "opcode.h"
 #include "devtype.h"
 

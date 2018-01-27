@@ -109,9 +109,9 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-#ifndef _TAPEDEV_C_
+
 #define _TAPEDEV_C_
-#endif
+#define _HTAPE_DLL_
 
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */

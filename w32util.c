@@ -18,12 +18,12 @@
 
 #include "hstdinc.h"
 
+//#define W32UTIL_DEBUG
+
 #define _W32UTIL_C_
 #define _HUTIL_DLL_
 
 #include "hercules.h"
-
-//#define W32UTIL_DEBUG
 
 #if defined(DEBUG) && !defined(W32UTIL_DEBUG)
  #define W32UTIL_DEBUG

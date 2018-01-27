@@ -14,8 +14,6 @@
 /*                            Noordwijkerhout, The Netherlands.              */
 /*---------------------------------------------------------------------------*/
 
-
-
 #include "hstdinc.h"
 
 #define _HAO_C_

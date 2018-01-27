@@ -6,9 +6,9 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
-#ifndef _FILLFNAM_C_
+
 #define _FILLFNAM_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "fillfnam.h"

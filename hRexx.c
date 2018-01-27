@@ -23,10 +23,9 @@
 
 #include "hstdinc.h"
 
-#ifndef _HREXX_C_
 #define _HREXX_C_
-
 #define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "hRexx.h"
 
@@ -1827,4 +1826,3 @@ resolved:
 } // end exec_cmd
 
 #endif // HAVE_REXX
-#endif /* #ifndef _HREXX_C_  */

@@ -19,20 +19,15 @@
 
 #include "hstdinc.h"
 
-#ifndef _HENGINE_DLL_
-#define _HENGINE_DLL_
-#endif
-
-#ifndef _DIAGNOSE_C_
 #define _DIAGNOSE_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
 
-#ifndef _DIAGNOSE_H
-#define _DIAGNOSE_H
+#ifndef COMPILE_THIS_ONLY_ONCE
+#define COMPILE_THIS_ONLY_ONCE
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -47,7 +42,7 @@
 /* Diagnose 308 return codes */
 #define DIAG308_RC_OK           1
 
-#endif // _DIAGNOSE_H
+#endif // COMPILE_THIS_ONLY_ONCE
 
 #ifndef STOP_CPUS_AND_IPL
 #define STOP_CPUS_AND_IPL

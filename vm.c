@@ -18,13 +18,8 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif /*_HENGINE_DLL_*/
-
-#if !defined(_VM_C_)
 #define _VM_C_
-#endif /* _VM_C_ */
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"

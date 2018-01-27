@@ -7,13 +7,8 @@
 
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_CMPSCGET_C_)
 #define _CMPSCGET_C_
-#endif
+#define _HENGINE_DLL_
 
 #if !defined( NOT_HERC )        // (building Hercules?)
 #include "hercules.h"

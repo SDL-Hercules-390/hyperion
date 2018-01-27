@@ -7,13 +7,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _HENGINE_DLL_
-#define _HENGINE_DLL_
-#endif
-
-#ifndef _LOSC_C_
 #define _LOSC_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 

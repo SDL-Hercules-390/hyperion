@@ -16,6 +16,7 @@
 
 #define _CCKDDASD_C_
 #define _HDASD_DLL_
+
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"

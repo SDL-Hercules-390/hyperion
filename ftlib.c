@@ -16,8 +16,10 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
+
 #define _FTLIB_C_
 #define _HTAPE_DLL_
+
 #include "hercules.h"   /* need Hercules control blocks              */
 #include "ftlib.h"      /* Main faketape header file                 */
 

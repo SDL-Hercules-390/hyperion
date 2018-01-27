@@ -8,12 +8,10 @@
 
 #include "hstdinc.h"
 
-#define _HUTIL_DLL_
 #define _LOGMSG_C_
+#define _HUTIL_DLL_
 
 #include "hercules.h"
-
-#define  BFR_CHUNKSIZE    (256)
 
 /*-------------------------------------------------------------------*/
 /*                Helper macro "BFR_VSNPRINTF"                       */
@@ -36,6 +34,8 @@
 /*  int       rc;     will contain final size                        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
+#define  BFR_CHUNKSIZE    (256)
 
 #define  BFR_VSNPRINTF()                                            \
                                                                     \
@@ -64,14 +64,14 @@
             va_copy( vl, original_vl );                             \
         }                                                           \
                                                                     \
-        if (bfr != NULL && strlen(bfr) == 0 && strlen(fmt) != 0)    \
+        if (bfr && strlen( bfr ) == 0 && strlen( fmt) != 0)         \
         {                                                           \
             free( bfr );                                            \
             bfr = strdup( fmt );                                    \
         }                                                           \
         else                                                        \
         {                                                           \
-            if (bfr != NULL)                                        \
+            if (bfr)                                                \
             {                                                       \
                 char* p = strdup( bfr );                            \
                 free( bfr );                                        \

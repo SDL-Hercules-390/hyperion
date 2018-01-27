@@ -31,18 +31,11 @@
 
 // #define  STACK_DEBUG
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_STACK_C_)
 #define _STACK_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 /*-------------------------------------------------------------------*/

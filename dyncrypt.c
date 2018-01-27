@@ -17,13 +17,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _DYNCRYPT_C_
 #define _DYNCRYPT_C_
-#endif /* #ifndef _DYNCRYPT_C_ */
-
-#ifndef _DYNCRYPT_DLL_
 #define _DYNCRYPT_DLL_
-#endif /* #ifndef _DYNCRYPT_DLL_ */
 
 #include "hercules.h"
 #include "opcode.h"

@@ -41,13 +41,8 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif /*_HENGINE_DLL_*/
-
-#if !defined(_HDIAGF18_C_)
 #define _HDIAGF18_C_
-#endif /* !defined(_HDIAGF18_C_) */
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"

@@ -11,13 +11,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _QDIO_C_
 #define _QDIO_C_
-#endif
-
-#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "opcode.h"

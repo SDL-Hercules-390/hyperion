@@ -15,13 +15,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _IMPL_C_
 #define _IMPL_C_
-#endif
-
-#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "opcode.h"

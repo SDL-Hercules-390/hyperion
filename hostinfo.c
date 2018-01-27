@@ -12,13 +12,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _HOSTINFO_C_
 #define _HOSTINFO_C_
-#endif
-
-#ifndef _HUTIL_DLL_
 #define _HUTIL_DLL_
-#endif
 
 #include "hercules.h"
 

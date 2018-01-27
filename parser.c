@@ -9,6 +9,7 @@
 
 #define _PARSER_C_
 #define _HUTIL_DLL_
+
 #include "hercules.h"
 #include "parser.h"
 

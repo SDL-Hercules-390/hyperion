@@ -78,18 +78,14 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif /*_HENGINE_DLL_*/
-
-#if !defined(_VMD250_C_)
 #define _VMD250_C_
-#endif /* !defined(_VMD250_C_) */
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
 #include "vmd250.h"
+
 #define FEATURE_VM_BLOCKIO
 #if defined(FEATURE_VM_BLOCKIO)
 

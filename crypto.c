@@ -8,17 +8,9 @@
 #include "hstdinc.h"
 
 #define _CRYPTO_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
-
-#ifndef _HENGINE_DLL_
-#define _HENGINE_DLL_
-#endif
-
-#ifndef _CRYPTO_C_
-#define _CRYPTO_C_
-#endif
-
 #include "opcode.h"
 
 //efine    WRAPPINGKEYS_DEBUG       // (#define for debugging)

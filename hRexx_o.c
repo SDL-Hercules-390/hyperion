@@ -10,13 +10,9 @@
 
 #include "hstdinc.h"
 
-#ifndef _HREXX_O_C_
 #define _HREXX_O_C_
-
-/*-------------------------------------------------------------------*/
-/* Hercules Rexx Support headers                                     */
-/*-------------------------------------------------------------------*/
 #define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "hRexx.h"
 
@@ -71,4 +67,3 @@
 #include "hRexxapi.c"
 
 #endif // OBJECT_REXX
-#endif // _HREXX_O_C_

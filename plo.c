@@ -10,20 +10,12 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_PLO_C_)
 #define _PLO_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 
 #if defined(FEATURE_PERFORM_LOCKED_OPERATION)
 int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2,

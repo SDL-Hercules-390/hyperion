@@ -36,13 +36,8 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_CONTROL_C_)
 #define _CONTROL_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"

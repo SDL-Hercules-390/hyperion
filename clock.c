@@ -55,19 +55,17 @@
 
 DISABLE_GCC_WARNING( "-Wunused-function" )
 
-#if !defined(_HENGINE_DLL_)
+#define _CLOCK_C_
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
 #include "sr.h"
-
-#if !defined(_CLOCK_C_)
-#define _CLOCK_C_
-
 #include "clock.h"
+
+#ifndef COMPILE_THIS_ONLY_ONCE
+#define COMPILE_THIS_ONLY_ONCE
 
 
 /*----------------------------------------------------------------------------*/
@@ -1073,8 +1071,7 @@ int clock_hresume(void *file)
     return 0;
 }
 
-
-#endif
+#endif // COMPILE_THIS_ONLY_ONCE
 
 
 #if defined(FEATURE_INTERVAL_TIMER)

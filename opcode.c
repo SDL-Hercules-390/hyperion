@@ -12,13 +12,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _HENGINE_DLL_
-#define _HENGINE_DLL_
-#endif
-
-#ifndef _OPCODE_C_
 #define _OPCODE_C_
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"

@@ -36,13 +36,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _BLDCFG_C_
 #define _BLDCFG_C_
-#endif
-
-#ifndef _HENGINE_DLL_
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "devtype.h"

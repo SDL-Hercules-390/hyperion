@@ -17,13 +17,8 @@
 
 #include "hstdinc.h"
 
-#if !defined(_SCRIPT_C_)
 #define _SCRIPT_C_
-#endif
-
-#if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
-#endif
 
 #include "hercules.h"
 #include "devtype.h"

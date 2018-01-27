@@ -100,13 +100,8 @@
 
 #include "hstdinc.h"
 
-#if !defined(_HENGINE_DLL_)
-#define _HENGINE_DLL_
-#endif
-
-#if !defined(_IEEE_C_)
 #define _IEEE_C_
-#endif
+#define _HENGINE_DLL_
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1

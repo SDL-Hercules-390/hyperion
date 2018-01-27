@@ -44,9 +44,8 @@
 
 DISABLE_GCC_WARNING( "-Wunused-function" )
 
-#if !defined(_HENGINE_DLL_)
+#define _CMPSC_C_
 #define _HENGINE_DLL_
-#endif
 
 #if !defined( NOT_HERC )                          // (building Hercules?)
 #include "hercules.h"
