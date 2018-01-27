@@ -8,26 +8,6 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
-#ifndef _LOGGER_C_
-#ifndef _HUTIL_DLL_
-#define LOGR_DLL_IMPORT     DLL_IMPORT
-#else
-#define LOGR_DLL_IMPORT     extern
-#endif
-#else
-#define LOGR_DLL_IMPORT     DLL_EXPORT
-#endif
-
-#ifndef _LOGMSG_C_
-#ifndef _HUTIL_DLL_
-#define LOGM_DLL_IMPORT     DLL_IMPORT
-#else
-#define LOGM_DLL_IMPORT     extern
-#endif
-#else
-#define LOGM_DLL_IMPORT     DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Define a default minimum/maximum logger pipe buffer size          */
 /*-------------------------------------------------------------------*/

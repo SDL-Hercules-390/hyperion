@@ -20,26 +20,6 @@
 /*  and thus are the same for all build architectures.               */
 /*-------------------------------------------------------------------*/
 
-#ifndef _CPU_C_
- #ifndef _HENGINE_DLL_
-  #define CPU_DLL_IMPORT DLL_IMPORT
- #else
-  #define CPU_DLL_IMPORT extern
- #endif
-#else
- #define CPU_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _OPCODE_C_
- #ifndef _HENGINE_DLL_
-  #define OPC_DLL_IMPORT DLL_IMPORT
- #else
-  #define OPC_DLL_IMPORT extern
- #endif
-#else
- #define OPC_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* helper macros to define an opcode table instruction function name */
 /*-------------------------------------------------------------------*/

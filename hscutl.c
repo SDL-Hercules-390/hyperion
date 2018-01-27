@@ -18,13 +18,8 @@
 
 #include "hstdinc.h"
 
-#ifndef _HSCUTL_C_
 #define _HSCUTL_C_
-#endif
-
-#ifndef _HUTIL_DLL_
 #define _HUTIL_DLL_
-#endif
 
 #include "hercules.h"
 

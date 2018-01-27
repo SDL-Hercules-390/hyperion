@@ -10,16 +10,6 @@
 
 #include "hercules.h"
 
-#ifndef _HDL_C_
-  #ifndef _HUTIL_DLL_
-    #define HDL_DLL_IMPORT    DLL_IMPORT
-  #else
-    #define HDL_DLL_IMPORT    extern
-  #endif
-#else
-  #define   HDL_DLL_IMPORT    DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /*                           Flags                                   */
 /*-------------------------------------------------------------------*/

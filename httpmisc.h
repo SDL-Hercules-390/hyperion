@@ -10,18 +10,6 @@
 
 /*-------------------------------------------------------------------*/
 
-#ifdef  _HTTPSERV_C_
-  #define   HTTP_DLL_IMPORT    DLL_EXPORT
-#else
-  #ifdef _HENGINE_DLL_
-    #define HTTP_DLL_IMPORT    extern
-  #else
-    #define HTTP_DLL_IMPORT    DLL_IMPORT
-  #endif
-#endif
-
-/*-------------------------------------------------------------------*/
-
 #if !defined( PKGDATADIR )
  #if !defined( _MSVC_ )
   #define HTTP_ROOT             "/usr/local/share/hercules/"

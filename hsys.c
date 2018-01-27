@@ -6,7 +6,10 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
+
 #define  _HSYS_C_
+#define  _HSYS_DLL_
+
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/

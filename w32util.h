@@ -12,16 +12,6 @@
 
 #include "hercules.h"
 
-#ifndef _W32UTIL_C_
-  #ifndef _HUTIL_DLL_
-    #define W32_DLL_IMPORT  DLL_IMPORT
-  #else
-    #define W32_DLL_IMPORT  extern
-  #endif
-#else
-  #define   W32_DLL_IMPORT  DLL_EXPORT
-#endif
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // Determine whether process is running "elevated" or not.
 // (returns 1==true running elevated, 0==false otherwise)

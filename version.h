@@ -17,16 +17,6 @@
 
 #include "hercules.h"
 
-#ifndef _VERSION_C_
-#ifndef _HUTIL_DLL_
-#define VER_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define VER_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else   /* _LOGGER_C_ */
-#define VER_DLL_IMPORT DLL_EXPORT
-#endif /* _LOGGER_C_ */
-
 #if !defined( _MSVC_ )
 
   // Due to autotool's insistance of defining 'VERSION' for us

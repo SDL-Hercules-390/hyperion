@@ -13,17 +13,6 @@
 #if !defined(_MPC_H)
 #define _MPC_H
 
-#ifndef _MPC_C_
-#ifndef _HENGINE_DLL_
-#define MPC_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define MPC_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define MPC_DLL_IMPORT DLL_EXPORT
-#endif
-
-
 /*********************************************************************/
 /* Structures                                                        */
 /*********************************************************************/

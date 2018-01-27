@@ -19,15 +19,6 @@
 #define MEMRCHR_H
 
 #include "hercules.h"
-#ifndef _MEMRCHR_C_
-#ifndef _HUTIL_DLL_
-#define MEM_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define MEM_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define MEM_DLL_IMPORT DLL_EXPORT
-#endif
 
 #if !defined(HAVE_MEMRCHR)  // (only if we need it)
 

@@ -12,16 +12,6 @@
 
 #include "hercules.h"
 
-#ifndef _QDIO_C_
-  #ifndef _HENGINE_DLL_
-    #define  QDIO_DLL_IMPORT   DLL_IMPORT
-  #else
-    #define  QDIO_DLL_IMPORT   extern
-  #endif
-#else
-  #define    QDIO_DLL_IMPORT   DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /*           Optional debug trace callback function                  */
 /*-------------------------------------------------------------------*/

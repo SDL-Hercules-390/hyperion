@@ -11,16 +11,6 @@
 #if !defined(_HSOCKET_H)
 #define _HSOCKET_H
 
-#ifndef _HSOCKET_C_
-#ifndef _HUTIL_DLL_
-#define HSOCK_DLL_IMPORT DLL_IMPORT
-#else
-#define HSOCK_DLL_IMPORT extern
-#endif
-#else
-#define HSOCK_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Socket related constants related to 'shutdown' API call           */
 /*-------------------------------------------------------------------*/

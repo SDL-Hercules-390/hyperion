@@ -5,400 +5,637 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
+/*  This header #defines a function/variable attribute depending on  */
+/*  which source file is being compiled and which module it is for,  */
+/*  allowing modules to access functions/variables in other modules  */
+/*  by declaring them as being imported or exported or just extern.  */
+/*                                                                   */
+/*  Each source file MUST start with a #include for "hstdinc.h", be  */
+/*  following by a #define for both the source file being compiled   */
+/*  as well as the module (DLL) it is a part of, and then #include   */
+/*  for header "hercules.h".  This is a requirement for any source   */
+/*  file that needs to export any of its functions to other modules. */
+/*                                                                   */
+/*  Refer to the "hscutl.c" source file as a simple example of this. */
+/*  If you need to #include other headers do so AFTER "hercules.h".  */
+/*                                                                   */
+/*  As always, please try to keep the below in alphabetical order.   */
+/*-------------------------------------------------------------------*/
+
 #ifndef _IMPEXP_H_
 #define _IMPEXP_H_
 
-// Define all DLL Imports depending on current file
+/*-------------------------------------------------------------------*/
+/*                          _HDASD_DLL_                              */
+/*-------------------------------------------------------------------*/
 
-#ifndef _HSYS_C_
-#define HSYS_DLL_IMPORT DLL_IMPORT
-#else   /* _HSYS_C_ */
-#define HSYS_DLL_IMPORT DLL_EXPORT
-#endif  /* _HSYS_C_ */
-
-#ifndef _CCKDDASD_C_
-#ifndef _HDASD_DLL_
-#define CCKD_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CCKD_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define CCKD_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HDL_C_
-#ifndef _HUTIL_DLL_
-#define HHDL_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HHDL_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HHDL_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _GETOPT_C_
-#ifndef _HUTIL_DLL_
-#define GOP_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define GOP_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define GOP_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCCMD_C_
-#ifndef _HENGINE_DLL_
-#define HCMD_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HCMD_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HCMD_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCMISC_C_
-#ifndef _HENGINE_DLL_
-#define HMISC_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HMISC_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HMISC_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCEMODE_C_
-#ifndef _HENGINE_DLL_
-#define HCEM_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HCEM_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HCEM_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCLOC_C_
-#ifndef _HENGINE_DLL_
-#define HCML_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HCML_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HCML_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCPUFUN_C_
-#ifndef _HENGINE_DLL_
-#define HCPU_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HCPU_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HCPU_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _CMDTAB_C_
-#ifndef _HENGINE_DLL_
-#define CMDT_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define CMDT_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define CMDT_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HAO_C_
-#ifndef _HENGINE_DLL_
-#define HAO_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HAO_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HAO_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _PANEL_C_
-#ifndef _HENGINE_DLL_
-#define HPAN_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define HPAN_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define HPAN_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _IMPL_C_
-#ifndef _HENGINE_DLL_
-#define IMPL_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define IMPL_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define IMPL_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _CCKDUTIL_C_
-#ifndef _HDASD_DLL_
-#define CCDU_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CCDU_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define CCDU_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _CONFIG_C_
-#ifndef _HENGINE_DLL_
-#define CONF_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define CONF_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define CONF_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _CHANNEL_C_
-#ifndef _HENGINE_DLL_
-#define CHAN_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define CHAN_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define CHAN_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _SCRIPT_C_
-#ifndef _HENGINE_DLL_
-#define SCRI_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define SCRI_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define SCRI_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _BLDCFG_C_
-#ifndef _HENGINE_DLL_
-#define BLDC_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define BLDC_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define BLDC_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _SERVICE_C_
-#ifndef _HENGINE_DLL_
-#define SERV_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define SERV_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define SERV_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _LOADPARM_C_
-#ifndef _HENGINE_DLL_
-#define LOADPARM_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define LOADPARM_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define LOADPARM_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _OPCODE_C_
-#ifndef _HENGINE_DLL_
-#define OPCD_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define OPCD_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
-#else
-#define OPCD_DLL_IMPORT DLL_EXPORT
-#endif
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-#ifndef _DASDUTIL_C_
-#ifndef _HDASD_DLL_
-#define DUT_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define DUT_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define DUT_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _DASDTAB_C_
-#ifndef _HDASD_DLL_
-#define DTB_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define DTB_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define DTB_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _SHARED_C_
-#ifndef _HDASD_DLL_
-#define SHR_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define SHR_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define SHR_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _FTLIB_C_
-#ifndef _HTAPE_DLL_
-#define FET_DLL_IMPORT DLL_IMPORT
-#else   /* _HTAPE_DLL_ */
-#define FET_DLL_IMPORT extern
-#endif  /* _HTAPE_DLL_ */
-#else
-#define FET_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HETLIB_C_
-#ifndef _HTAPE_DLL_
-#define HET_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HET_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HET_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _SLLIB_C_
-#ifndef _HTAPE_DLL_
-#define SLL_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define SLL_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define SLL_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _W32STAPE_C_
-  #ifndef _HTAPE_DLL_
-    #define W32ST_DLL_IMPORT  DLL_IMPORT
+#ifndef    _CACHE_C_
+  #ifndef  _HDASD_DLL_
+    #define CCH_DLL_IMPORT          DLL_IMPORT
   #else
-    #define W32ST_DLL_IMPORT  extern
+    #define CCH_DLL_IMPORT          extern
   #endif
 #else
-  #define   W32ST_DLL_IMPORT  DLL_EXPORT
+  #define   CCH_DLL_IMPORT          DLL_EXPORT
 #endif
 
-#ifndef _CACHE_C_
-#ifndef _HDASD_DLL_
-#define CCH_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CCH_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CCKDDASD_C_
+  #ifndef  _HDASD_DLL_
+    #define CCKD_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define CCKD_DLL_IMPORT         extern
+  #endif
 #else
-#define CCH_DLL_IMPORT DLL_EXPORT
+  #define   CCKD_DLL_IMPORT         DLL_EXPORT
 #endif
 
-#ifndef _CODEPAGE_C_
-#ifndef _HUTIL_DLL_
-#define COD_DLL_IMPORT DLL_IMPORT
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CCKDUTIL_C_
+  #ifndef  _HDASD_DLL_
+    #define CCDU_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define CCDU_DLL_IMPORT         extern
+  #endif
 #else
-#define COD_DLL_IMPORT extern
+  #define   CCDU_DLL_IMPORT         DLL_EXPORT
 #endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CKDDASD_C_
+  #ifndef  _HDASD_DLL_
+    #define CKD_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define CKD_DLL_IMPORT          extern
+  #endif
+#else
+  #define   CKD_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _DASDTAB_C_
+  #ifndef  _HDASD_DLL_
+    #define DTB_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define DTB_DLL_IMPORT          extern
+  #endif
+#else
+  #define   DTB_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _DASDUTIL_C_
+  #ifndef  _HDASD_DLL_
+    #define DUT_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define DUT_DLL_IMPORT          extern
+  #endif
+#else
+  #define   DUT_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _FBADASD_C_
+  #ifndef  _HDASD_DLL_
+    #define FBA_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define FBA_DLL_IMPORT          extern
+  #endif
+#else
+  #define   FBA_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _SHARED_C_
+  #ifndef  _HDASD_DLL_
+    #define SHR_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define SHR_DLL_IMPORT          extern
+  #endif
+#else
+  #define   SHR_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                        _HENGINE_DLL_                              */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _BLDCFG_C_
+  #ifndef  _HENGINE_DLL_
+    #define BLDC_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define BLDC_DLL_IMPORT         extern
+  #endif
+#else
+  #define   BLDC_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CHANNEL_C_
+  #ifndef  _HENGINE_DLL_
+    #define CHAN_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define CHAN_DLL_IMPORT         extern
+  #endif
+#else
+  #define   CHAN_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CMDTAB_C_
+  #ifndef  _HENGINE_DLL_
+    #define CMDT_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define CMDT_DLL_IMPORT         extern
+  #endif
+#else
+  #define   CMDT_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CONFIG_C_
+  #ifndef  _HENGINE_DLL_
+    #define CONF_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define CONF_DLL_IMPORT         extern
+  #endif
+#else
+  #define   CONF_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CPU_C_
+  #ifndef  _HENGINE_DLL_
+    #define CPU_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define CPU_DLL_IMPORT          extern
+  #endif
+#else
+  #define   CPU_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HAO_C_
+  #ifndef  _HENGINE_DLL_
+    #define HAO_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define HAO_DLL_IMPORT          extern
+  #endif
+#else
+  #define   HAO_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCCMD_C_
+  #ifndef  _HENGINE_DLL_
+    #define HCMD_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HCMD_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HCMD_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCEMODE_C_
+  #ifndef  _HENGINE_DLL_
+    #define HCEM_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HCEM_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HCEM_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCLOC_C_
+  #ifndef  _HENGINE_DLL_
+    #define HCML_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HCML_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HCML_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCMISC_C_
+  #ifndef  _HENGINE_DLL_
+    #define HMISC_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define HMISC_DLL_IMPORT        extern
+  #endif
+#else
+  #define HMISC_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCPUFUN_C_
+  #ifndef  _HENGINE_DLL_
+    #define HCPU_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HCPU_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HCPU_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HTTPSERV_C_
+  #ifndef  _HENGINE_DLL_
+    #define HTTP_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HTTP_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HTTP_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _IMPL_C_
+  #ifndef  _HENGINE_DLL_
+    #define IMPL_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define IMPL_DLL_IMPORT         extern
+  #endif
+#else
+  #define   IMPL_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _LOADPARM_C_
+  #ifndef  _HENGINE_DLL_
+    #define LOADPARM_DLL_IMPORT     DLL_IMPORT
+  #else
+    #define LOADPARM_DLL_IMPORT     extern
+  #endif
+#else
+  #define   LOADPARM_DLL_IMPORT     DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _MPC_C_
+  #ifndef  _HENGINE_DLL_
+    #define MPC_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define MPC_DLL_IMPORT          extern
+  #endif
+#else
+  #define   MPC_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _OPCODE_C_
+  #ifndef  _HENGINE_DLL_
+    #define OPCD_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define OPCD_DLL_IMPORT         extern
+  #endif
+#else
+  #define   OPCD_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _PANEL_C_
+  #ifndef  _HENGINE_DLL_
+    #define HPAN_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HPAN_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HPAN_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _QDIO_C_
+  #ifndef  _HENGINE_DLL_
+    #define QDIO_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define QDIO_DLL_IMPORT         extern
+  #endif
+#else
+  #define   QDIO_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _SCRIPT_C_
+  #ifndef  _HENGINE_DLL_
+    #define SCRI_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define SCRI_DLL_IMPORT         extern
+  #endif
+#else
+  #define   SCRI_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _SERVICE_C_
+  #ifndef  _HENGINE_DLL_
+    #define SERV_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define SERV_DLL_IMPORT         extern
+  #endif
+#else
+  #define   SERV_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                          _HTAPE_DLL_                              */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _FTLIB_C_
+  #ifndef  _HTAPE_DLL_
+    #define FET_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define FET_DLL_IMPORT          extern
+  #endif
+#else
+  #define   FET_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HETLIB_C_
+  #ifndef  _HTAPE_DLL_
+    #define HET_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define HET_DLL_IMPORT          extern
+  #endif
+#else
+  #define   HET_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _SLLIB_C_
+  #ifndef  _HTAPE_DLL_
+    #define SLL_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define SLL_DLL_IMPORT          extern
+  #endif
+#else
+  #define   SLL_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _W32STAPE_C_
+  #ifndef  _HTAPE_DLL_
+    #define W32ST_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define W32ST_DLL_IMPORT        extern
+  #endif
+#else
+  #define   W32ST_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                          _HUTIL_DLL_                              */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CODEPAGE_C_
+  #ifndef  _HUTIL_DLL_
+    #define COD_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define COD_DLL_IMPORT          extern
+  #endif
 #else 
-#define COD_DLL_IMPORT DLL_EXPORT
+  #define   COD_DLL_IMPORT          DLL_EXPORT
 #endif
 
-#ifndef _FBADASD_C_
-#ifndef _HDASD_DLL_
-#define FBA_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define FBA_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _FTHREADS_C_
+  #ifndef  _HUTIL_DLL_
+    #define FT_DLL_IMPORT           DLL_IMPORT
+  #else
+    #define FT_DLL_IMPORT           extern
+  #endif
 #else
-#define FBA_DLL_IMPORT DLL_EXPORT
+  #define   FT_DLL_IMPORT           DLL_EXPORT
 #endif
 
-#ifndef _CKDDASD_C_
-#ifndef _HDASD_DLL_
-#define CKD_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CKD_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _GETOPT_C_
+  #ifndef  _HUTIL_DLL_
+    #define GOP_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define GOP_DLL_IMPORT          extern
+  #endif
 #else
-#define CKD_DLL_IMPORT DLL_EXPORT
+  #define   GOP_DLL_IMPORT          DLL_EXPORT
 #endif
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HDL_C_
+  #ifndef  _HUTIL_DLL_
+    #define HDL_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define HDL_DLL_IMPORT          extern
+  #endif
+#else
+  #define   HDL_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HEXDUMPE_C_
+  #ifndef  _HUTIL_DLL_
+    #define HEXDMP_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define HEXDMP_DLL_IMPORT       extern
+  #endif
+#else
+  #define   HEXDMP_DLL_IMPORT       DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HOSTINFO_C_
+  #ifndef  _HUTIL_DLL_
+    #define HI_DLL_IMPORT           DLL_IMPORT
+  #else
+    #define HI_DLL_IMPORT           extern
+  #endif
+#else
+  #define   HI_DLL_IMPORT           DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCUTL_C_
+  #ifndef  _HUTIL_DLL_
+    #define HUT_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define HUT_DLL_IMPORT          extern
+  #endif
+#else
+  #define   HUT_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSCUTL2_C_
+  #ifndef  _HUTIL_DLL_
+    #define HU2_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define HU2_DLL_IMPORT          extern
+  #endif
+#else
+  #define   HU2_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSOCKET_C_
+  #ifndef  _HUTIL_DLL_
+    #define HSOCK_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define HSOCK_DLL_IMPORT        extern
+  #endif
+#else
+  #define   HSOCK_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HTHREAD_C_
+  #ifndef  _HUTIL_DLL_
+    #define HT_DLL_IMPORT           DLL_IMPORT
+  #else
+    #define HT_DLL_IMPORT           extern
+  #endif
+#else
+  #define   HT_DLL_IMPORT           DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _LOGGER_C_
+  #ifndef  _HUTIL_DLL_
+    #define LOGR_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define LOGR_DLL_IMPORT         extern
+  #endif
+#else
+  #define   LOGR_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _LOGMSG_C_
+  #ifndef  _HUTIL_DLL_
+    #define LOGM_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define LOGM_DLL_IMPORT         extern
+  #endif
+#else
+  #define   LOGM_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _MEMRCHR_C_
+  #ifndef  _HUTIL_DLL_
+    #define MEM_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define MEM_DLL_IMPORT          extern
+  #endif
+#else
+  #define   MEM_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _PARSER_C_
+  #ifndef  _HUTIL_DLL_
+    #define PAR_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define PAR_DLL_IMPORT          extern
+  #endif
+#else
+  #define   PAR_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _PTTRACE_C_
+  #ifndef  _HUTIL_DLL_
+    #define PTT_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define PTT_DLL_IMPORT          extern
+  #endif
+#else
+  #define   PTT_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _VERSION_C_
+  #ifndef  _HUTIL_DLL_
+    #define VER_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define VER_DLL_IMPORT          extern
+  #endif
+#else
+  #define   VER_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _W32UTIL_C_
+  #ifndef  _HUTIL_DLL_
+    #define W32_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define W32_DLL_IMPORT          extern
+  #endif
+#else
+  #define   W32_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                          _HSYS_DLL_                               */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _HSYS_C_
+  #ifndef  _HSYS_DLL_
+    #define HSYS_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define HSYS_DLL_IMPORT         extern
+  #endif
+#else
+  #define   HSYS_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // _IMPEXP_H_

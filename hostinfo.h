@@ -11,16 +11,6 @@
 
 #include "hercules.h"
 
-#ifndef _HOSTINFO_C_
-#ifndef _HUTIL_DLL_
-#define HI_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HI_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HI_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Host System Information block                                     */
 /*-------------------------------------------------------------------*/

@@ -10,16 +10,6 @@
 
 #include "hercules.h"
 
-#ifndef _FTHREADS_C_
-#ifndef _HUTIL_DLL_
-#define FT_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define FT_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define FT_DLL_IMPORT DLL_EXPORT
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////
 // Just a handy macro to have around...
 

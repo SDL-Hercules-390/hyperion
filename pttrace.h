@@ -13,19 +13,6 @@
 #define _PTTHREAD_H_
 
 /*-------------------------------------------------------------------*/
-/*           Standard Module Import/Export Definitions               */
-/*-------------------------------------------------------------------*/
-#ifndef _PTTRACE_C_
-  #ifndef _HUTIL_DLL_
-    #define PTT_DLL_IMPORT      DLL_IMPORT
-  #else
-    #define PTT_DLL_IMPORT      extern
-  #endif
-#else
-  #define   PTT_DLL_IMPORT      DLL_EXPORT
-#endif
-
-/*-------------------------------------------------------------------*/
 /*                     PTT Trace Classes                             */
 /*-------------------------------------------------------------------*/
 #define PTT_CL_LOG   0x0000000000000001 /* Logger records            */

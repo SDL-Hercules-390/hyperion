@@ -17,36 +17,6 @@
 
 #include "hercules.h"
 
-#ifndef _HSCUTL_C_
-#ifndef _HUTIL_DLL_
-#define HUT_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HUT_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HUT_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HSCUTL2_C_
-#ifndef _HUTIL_DLL_
-#define HU2_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HU2_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HU2_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _HEXDUMPE_C_
-#ifndef _HUTIL_DLL_
-#define HEXDMP_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HEXDMP_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HEXDMP_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*********************************************************************
   The following couple of Hercules 'utility' functions may be defined
   elsewhere depending on which host platform we're being built for...

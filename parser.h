@@ -10,16 +10,6 @@
 
 #include "hercules.h"
 
-#ifndef _PARSER_C_
-#ifndef _HUTIL_DLL_
-#define PAR_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define PAR_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define PAR_DLL_IMPORT DLL_EXPORT
-#endif
-
 #define  MAX_PARSER_STRLEN           79
 #define  _PARSER_STR_TYPE( len )     "%" QSTR( len ) "s"
 #define  PARSER_STR_TYPE             _PARSER_STR_TYPE( MAX_PARSER_STRLEN )

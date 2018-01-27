@@ -12,19 +12,6 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/*           Standard Module Import/Export Definitions               */
-/*-------------------------------------------------------------------*/
-#ifndef _HTHREAD_C_
-  #ifndef _HUTIL_DLL_
-    #define HT_DLL_IMPORT       DLL_IMPORT
-  #else
-    #define HT_DLL_IMPORT       extern
-  #endif
-#else
-  #define   HT_DLL_IMPORT       DLL_EXPORT
-#endif
-
-/*-------------------------------------------------------------------*/
 /*                 Locking/Threading Models                          */
 /*-------------------------------------------------------------------*/
 
