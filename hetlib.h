@@ -19,18 +19,6 @@
 || ----------------------------------------------------------------------------
 */
 
-
-#ifndef _HETLIB_C_
-#ifndef _HTAPE_DLL_
-#define HET_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define HET_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define HET_DLL_IMPORT DLL_EXPORT
-#endif
-
-
 #if !defined( TRUE )
 #define TRUE                    (1L)
 #endif

@@ -440,7 +440,6 @@
     <ClCompile Include="vm.c" />
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vmfplc2.c" />
-    <ClCompile Include="vstore.c" />
     <ClCompile Include="w32ctca.c" />
     <ClCompile Include="w32stape.c" />
     <ClCompile Include="w32util.c" />
@@ -1024,6 +1023,7 @@
     <ClInclude Include="hthreads.h" />
     <ClInclude Include="httpmisc.h" />
     <ClInclude Include="htypes.h" />
+    <ClInclude Include="impexp.h" />
     <ClInclude Include="inline.h" />
     <ClInclude Include="linklist.h" />
     <ClInclude Include="logger.h" />

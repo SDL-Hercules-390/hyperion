@@ -1671,7 +1671,7 @@ RADR   bufend;    /* Last byte read or written                 */
 /*-------------------------------------------------------------------*/
 static U16 ARCH_DEP(d250_addrck)
             (RADR beg, RADR end, int acctype, BYTE key, REGS *regs)
-/* Note: inline.h and vstore.c functions are not used because they      */
+/* Note: inline.h and vstore.h functions are not used because they      */
 /* will generate program exceptions automatically.  DIAGNOSE X'250' in  */
 /* the asynchronous case, must not do that, but rather reflect the      */
 /* error in the interrupt status code or BIOE status field.  So this    */

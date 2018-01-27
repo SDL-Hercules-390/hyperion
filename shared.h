@@ -324,17 +324,6 @@
 
 #include "hercules.h"
 
-
-#ifndef _SHARED_C_
-#ifndef _HDASD_DLL_
-#define SHR_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define SHR_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define SHR_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*
  * Differing version levels are not compatible
  * Differing release levels are compatible

@@ -11,16 +11,6 @@
 
 #include "hercules.h"
 
-#ifndef _CODEPAGE_C_
-#ifndef _HUTIL_DLL_
-#define COD_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define COD_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else   /* _LOGGER_C_ */
-#define COD_DLL_IMPORT DLL_EXPORT
-#endif /* _LOGGER_C_ */
-
 COD_DLL_IMPORT char* query_codepage(void);
 COD_DLL_IMPORT void set_codepage(char *name);
 COD_DLL_IMPORT int update_codepage(int argc, char *argv[], char *table );

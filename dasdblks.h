@@ -14,15 +14,6 @@
 
 #include "hercules.h"
 
-#ifndef _DASDUTIL_C_
-#ifndef _HDASD_DLL_
-#define DUT_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define DUT_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define DUT_DLL_IMPORT DLL_EXPORT
-#endif
 //  Forward references...
 
 typedef  struct  FORMAT1_DSCB   FORMAT1_DSCB;   // DSCB1: Dataset descriptor

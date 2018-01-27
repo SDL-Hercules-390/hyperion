@@ -560,6 +560,17 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+
+#undef  _VSTORE_C_STATIC
+#define _VSTORE_C_STATIC            static inline
+
+#undef  _VFETCH_C_STATIC
+#define _VFETCH_C_STATIC            static inline
+
+#undef  _VSTORE_FULL_C_STATIC
+#define _VSTORE_FULL_C_STATIC       static
+
+/*-------------------------------------------------------------------*/
 /*        Memory accessing and dynamic translation #defines          */
 /*-------------------------------------------------------------------*/
 /* Ordinarily #defines related to DLL_IMPORT, DLL_EXPORT and extern  */
@@ -571,17 +582,9 @@
 /* declare such functions 'static inline' for speed, which requires  */
 /* that they all be declared identically across all architectures),  */
 /* it's easier and more reliable to do the #defines here instead.    */
-/* (see for example source files dat.h/dat.c and vstore.h/vstore.c)  */
 /*-------------------------------------------------------------------*/
 
-#undef  _VSTORE_C_STATIC
-#undef  _VFETCH_C_STATIC
-
-#define _VSTORE_C_STATIC            static inline
-#define _VFETCH_C_STATIC            static inline
-#define _VSTORE_FULL_C_STATIC       static
-
-#undef _LOGICAL_C_STATIC
+#undef     _LOGICAL_C_STATIC
 
 #ifndef    _DAT_C
  #ifndef   _HENGINE_DLL_

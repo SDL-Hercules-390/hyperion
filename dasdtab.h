@@ -17,16 +17,6 @@
 
 #include "hercules.h"
 
-#ifndef _DASDTAB_C_
-#ifndef _HDASD_DLL_
-#define DTB_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define DTB_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define DTB_DLL_IMPORT DLL_EXPORT
-#endif
-
 #define CKD_CONFIG_DATA_SIZE 256
 #if 0
 #define myssid (dev->devnum & 0xffe0)   /* Storage subsystem identifier

@@ -1100,10 +1100,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\vstore.c"
-							>
-						</File>
-						<File
 							RelativePath=".\w32util.c"
 							>
 						</File>
@@ -1365,6 +1361,10 @@
 						</File>
 						<File
 							RelativePath=".\htypes.h"
+							>
+						</File>
+						<File
+							RelativePath=".\impexp.h"
 							>
 						</File>
 						<File

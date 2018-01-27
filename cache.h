@@ -165,17 +165,6 @@
 
 #include "hercules.h"
 
-
-#ifndef _CACHE_C_
-#ifndef _HDASD_DLL_
-#define CCH_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CCH_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define CCH_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Reserve cache indexes here                                        */
 /*-------------------------------------------------------------------*/

@@ -64,6 +64,8 @@
 #ifndef _HERCULES_H       // MUST come AFTER "feature.h" is #included
 #define _HERCULES_H       // MUST come AFTER "feature.h" is #included
 
+#include "impexp.h"       // DLL_IMPORT/DLL_EXPORT/extern control
+
 #ifdef _MSVC_
   #include "getopt.h"
 #else

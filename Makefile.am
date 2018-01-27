@@ -503,7 +503,6 @@ libherc_la_SOURCES = \
   vector.c           \
   vm.c               \
   vmd250.c           \
-  vstore.c           \
   xstore.c           \
   $(DYNSRC)
 
@@ -954,6 +953,7 @@ noinst_HEADERS =          \
   hthreads.h              \
   httpmisc.h              \
   htypes.h                \
+  impexp.h                \
   inline.h                \
   linklist.h              \
   logger.h                \

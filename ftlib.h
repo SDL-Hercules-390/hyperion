@@ -10,16 +10,6 @@
 
 #include "hercules.h"
 
-#ifndef _FTLIB_C_
-#ifndef _HTAPE_DLL_
-#define FET_DLL_IMPORT DLL_IMPORT
-#else   /* _HTAPE_DLL_ */
-#define FET_DLL_IMPORT extern
-#endif  /* _HTAPE_DLL_ */
-#else
-#define FET_DLL_IMPORT DLL_EXPORT
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Structure definition for Flex FakeTape block headers              */
 /*-------------------------------------------------------------------*/

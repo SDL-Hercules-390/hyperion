@@ -10,16 +10,6 @@
 
 #include "hercules.h"
 
-#ifndef _SLLIB_C_
-#ifndef _HTAPE_DLL_
-#define SLL_DLL_IMPORT DLL_IMPORT
-#else   /* _HUTIL_DLL_ */
-#define SLL_DLL_IMPORT extern
-#endif  /* _HUTIL_DLL_ */
-#else
-#define SLL_DLL_IMPORT DLL_EXPORT
-#endif
-
 #if !defined( TRUE )
 #define TRUE 1
 #endif

@@ -9,27 +9,6 @@
 
 #define _DEVICES_H
 
-#ifndef _FBADASD_C_
-#ifndef _HDASD_DLL_
-#define FBA_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define FBA_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define FBA_DLL_IMPORT DLL_EXPORT
-#endif
-
-#ifndef _CKDDASD_C_
-#ifndef _HDASD_DLL_
-#define CKD_DLL_IMPORT DLL_IMPORT
-#else   /* _HDASD_DLL_ */
-#define CKD_DLL_IMPORT extern
-#endif  /* _HDASD_DLL_ */
-#else
-#define CKD_DLL_IMPORT DLL_EXPORT
-#endif
-
-
 struct DEVHND {
         DEVIF  *init;                  /* Device Initialization      */
         DEVXF  *exec;                  /* Device CCW execute         */
