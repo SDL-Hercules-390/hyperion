@@ -176,12 +176,10 @@ static SInt32   Print_Block_Data        ( SInt32 );
 || Local constant data
 */
 static char sep[] = "---------------------\n";
-#ifdef EXTERNALGUI
 /* Previous reported file position */
 static off_t prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
-#endif /*EXTERNALGUI*/
 
 static UInt32   gLastFileSeqSL  = 0;    /* Last SL file number  */
 static char     gStdLblBuffer[81];
@@ -340,7 +338,6 @@ main( int argc, char *argv[] )
 
     while( TRUE )
     {
-#ifdef EXTERNALGUI
         if( extgui )
         {
             off_t curpos;
@@ -355,7 +352,6 @@ main( int argc, char *argv[] )
                 EXTGUIMSG( "IPOS=%"PRId64"\n", (U64)curpos );
             }
         }
-#endif /*EXTERNALGUI*/
 
         if ( i_faketape)
         {

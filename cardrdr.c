@@ -51,7 +51,7 @@
 /*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader                                           */
 /*-------------------------------------------------------------------*/
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
@@ -956,10 +956,8 @@ U32     num;                            /* Number of bytes to move   */
 } /* end function cardrdr_execute_ccw */
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND cardrdr_device_hndinfo = {
+static DEVHND cardrdr_device_hndinfo =
+{
         &cardrdr_init_handler,         /* Device Initialization      */
         &cardrdr_execute_ccw,          /* Device CCW execute         */
         &cardrdr_close_device,         /* Device Close               */
@@ -989,7 +987,8 @@ DEVHND cardrdr_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt3505_LTX_hdl_ddev
 #define hdl_depc hdt3505_LTX_hdl_depc
 #define hdl_reso hdt3505_LTX_hdl_reso
@@ -997,8 +996,6 @@ DEVHND cardrdr_device_hndinfo = {
 #define hdl_fini hdt3505_LTX_hdl_fini
 #endif
 
-
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -1025,7 +1022,6 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3505, cardrdr_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif
 
 #if defined( _MSVC_ ) && defined( NO_RDR_OPTIMIZE )
   #pragma optimize( "", on )   // restore previous settings

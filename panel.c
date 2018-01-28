@@ -1606,12 +1606,7 @@ REGS *copy_regs(int cpu)
 /* panel commands from the keyboard and executes them.  It samples   */
 /* the PSW periodically and displays it on the screen status line.   */
 /*-------------------------------------------------------------------*/
-
-#if defined(OPTION_DYNAMIC_LOAD)
-void panel_display_r (void)
-#else
-void panel_display (void)
-#endif // defined(OPTION_DYNAMIC_LOAD)
+DLL_EXPORT void panel_display_r()
 {
 #ifndef _MSVC_
   int     rc;                           /* Return code                */

@@ -1345,8 +1345,6 @@ int initialize_utility( int argc, char* argv[],
     setvbuf( stderr, NULL, _IONBF, 0 );
     setvbuf( stdout, NULL, _IONBF, 0 );
 
-#if defined(EXTERNALGUI)
-
     /* If the last argument is "EXTERNALGUI" it means we're running
        under the control of an external GUI. Utilities need to know
        this so they can react differently than in command-line mode. */
@@ -1358,7 +1356,6 @@ int initialize_utility( int argc, char* argv[],
         argv[argc-1] = NULL;
         argc--;
     }
-#endif // defined(EXTERNALGUI)
 
     if (argc < 1)
         exename = strdup( defpgm );

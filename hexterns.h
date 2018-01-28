@@ -43,15 +43,10 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
   #define strnfilenamecmp  strncasecmp
 #endif
 
-/* Global data areas in module config.c                              */
-HSYS_DLL_IMPORT SYSBLK   sysblk;                /* System control block      */
-CCKD_DLL_IMPORT CCKDBLK  cckdblk;               /* CCKD global block         */
-
-#ifdef EXTERNALGUI
-HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
-/* The external gui interface is now external and now uses the
-   HDC(debug_cpu_state, regs) interface */
-#endif /*EXTERNALGUI*/
+/* Global data areas in module config.c */
+HSYS_DLL_IMPORT SYSBLK   sysblk;        /* System control block      */
+CCKD_DLL_IMPORT CCKDBLK  cckdblk;       /* CCKD global block         */
+HSYS_DLL_IMPORT int      extgui;        /* true = extgui active      */
 
 /* Functions in module bldcfg.c */
 int build_config (const char *fname);
@@ -170,8 +165,6 @@ CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 void losc_set  ( int license_status );
 void losc_check( char* ostype );
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
 HSYS_DLL_IMPORT void  (*panel_display)  ();
 HPAN_DLL_IMPORT void    panel_display_r ();
 HSYS_DLL_IMPORT void* (*panel_command)  ( void* cmdline );
@@ -193,29 +186,6 @@ HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event)   (void *, void *, REGS *);
 HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
 HSYS_DLL_IMPORT void* (*debug_chsc_unknown_request) (void *, void *, REGS *);
 HSYS_DLL_IMPORT void* (*debug_sclp_event_data)      (void *, void *, REGS *);
-
-#else // !defined( OPTION_DYNAMIC_LOAD )
-
-#define system_command                  NULL
-#define daemon_task                     NULL
-
-void  panel_display ();
-void* panel_command ( void* cmdline );
-void* replace_opcode( int arch, const INSTR_FUNC inst, int opcode1, int opcode2 );
-
-#define debug_cpu_state                 NULL
-#define debug_cd_cmd                    NULL
-#define debug_device_state              NULL
-#define debug_program_interrupt         NULL
-#define debug_diagnose                  NULL
-#define debug_iucv                      NULL
-#define debug_sclp_unknown_command      NULL
-#define debug_sclp_unknown_event        NULL
-#define debug_sclp_event_data           NULL
-#define debug_chsc_unknown_request      NULL
-#define debug_watchdog_signal           NULL
-
-#endif // defined( OPTION_DYNAMIC_LOAD )
 
 /* Functions in module httpserv.c */
 int http_command(int argc, char *argv[]);
@@ -269,7 +239,6 @@ void get_mpfactors(BYTE *dest);
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT int impl(int,char **);
 int quit_cmd(int argc, char *argv[],char *cmdline);
-IMPL_DLL_IMPORT void system_cleanup(void);
 typedef void (*LOGCALLBACK)( const char*, size_t );
 typedef void *(*COMMANDHANDLER)(void *);
 IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);

@@ -103,7 +103,6 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     rc = build_extent_array (cif, dsnama, extent, &noext);
     if (rc < 0) return -1;
 
-#ifdef EXTERNALGUI
     /* Calculate ending relative track */
     if (extgui)
     {
@@ -126,7 +125,6 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 
         EXTGUIMSG( "ETRK=%d\n", trks-1 );
     }
-#endif /*EXTERNALGUI*/
 
     /* Point to the start of the directory */
     trk = 0;

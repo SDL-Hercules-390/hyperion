@@ -222,12 +222,10 @@ static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* f
 /*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader (HDL)                                     */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
-  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
-    SYSBLK *psysblk;
-    #define sysblk (*psysblk)
-  #endif
-#endif /*defined( OPTION_DYNAMIC_LOAD )*/
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -6352,10 +6350,7 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
 /* Very important things                                             */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-DEVHND qeth_device_hndinfo =
+static DEVHND qeth_device_hndinfo =
 {
         &qeth_init_handler,            /* Device Initialization      */
         &qeth_execute_ccw,             /* Device CCW execute         */
@@ -6390,15 +6385,13 @@ DEVHND qeth_device_hndinfo =
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtqeth_LTX_hdl_ddev
 #define hdl_depc hdtqeth_LTX_hdl_depc
 #define hdl_reso hdtqeth_LTX_hdl_reso
 #define hdl_init hdtqeth_LTX_hdl_init
 #define hdl_fini hdtqeth_LTX_hdl_fini
 #endif
-
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -6448,8 +6441,6 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE ( OSD,  qeth_device_hndinfo );
 }
 END_DEVICE_SECTION
-
-#endif // defined(OPTION_DYNAMIC_LOAD)
 
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings

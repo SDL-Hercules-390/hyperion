@@ -31,39 +31,28 @@
 
 static char shortopts[] =
 
-#if defined( EXTERNALGUI )
-    "e"
-#endif
-   "h::f:r:db:vt::"
-#if defined(ENABLE_BUILTIN_SYMBOLS)
+    "eh::f:r:db:vt::p:l:"
+#if defined( ENABLE_BUILTIN_SYMBOLS )
    "s:"
-#endif
-#if defined(OPTION_DYNAMIC_LOAD)
-   "p:l:"
 #endif
    ;
 
 #if defined(HAVE_GETOPT_LONG)
 static struct option longopts[] =
 {
-    { "test",     optional_argument, NULL, 't' },
+    { "externalgui",    no_argument, NULL, 'e' },
     { "help",     optional_argument, NULL, 'h' },
     { "config",   required_argument, NULL, 'f' },
     { "rcfile",   required_argument, NULL, 'r' },
-    { "daemon",   no_argument,       NULL, 'd' },
+    { "daemon",         no_argument, NULL, 'd' },
     { "herclogo", required_argument, NULL, 'b' },
-    { "verbose",  no_argument,       NULL, 'v' },
-#if defined( EXTERNALGUI )
-    { "externalgui",  no_argument,   NULL, 'e' },
-#endif
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-    { "defsym",   required_argument, NULL, 's' },
-#endif
-
-#if defined(OPTION_DYNAMIC_LOAD)
+    { "verbose",        no_argument, NULL, 'v' },
+    { "test",     optional_argument, NULL, 't' },
     { "modpath",  required_argument, NULL, 'p' },
     { "ldmod",    required_argument, NULL, 'l' },
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    { "defsym",   required_argument, NULL, 's' },
 #endif
     { NULL,       0,                 NULL,  0  }
 };
@@ -92,13 +81,9 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
    { NULL, "HERCULES_RC",  "hercules.rc",  "Run Commands",  },
 };
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
 #define                 MAX_MODS     50         /* Max mods to load  */
 static char*  modnames[ MAX_MODS ] = {0};       /* ptrs to modnames  */
 static int    modcount = 0;                     /* count of modnames */
-
-#endif
 
 /* forward define process_script_file (ISW20030220-3) */
 extern int process_script_file(char *,int);
@@ -623,13 +608,11 @@ int     rc;
     SET_THREAD_NAME( "impl" );
 
     /* Remain compatible with older external gui versions */
-#if defined( EXTERNALGUI )
     if (argc >= 1 && strncmp( argv[argc-1], "EXTERNALGUI", 11 ) == 0)
     {
         extgui = TRUE;
         argc--;
     }
-#endif
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
@@ -865,9 +848,7 @@ int     rc;
     set_codepage(NULL);
 
     /* Initialize default HDL modules load directory */
-#if defined( OPTION_DYNAMIC_LOAD )
     hdl_initpath( NULL );
-#endif
 
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)
@@ -1015,8 +996,6 @@ int     rc;
     /* Initialize runtime opcode tables */
     init_opcode_tables();
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
     /* Initialize the hercules dynamic loader */
     if ((rc = hdl_main()) != 0)
     {
@@ -1050,14 +1029,11 @@ int     rc;
             return 1;
         }
     }
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-
-#if defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD )
 
     /* Load DYNGUI module if needed */
     if (extgui)
     {
-        if (hdl_loadmod("dyngui",HDL_LOAD_DEFAULT) != 0)
+        if (hdl_loadmod( "dyngui", HDL_LOAD_DEFAULT ) != 0)
         {
             usleep( 10000 ); // (give logger time to show them the error message)
             // "Load of dyngui.dll failed, hercules terminated"
@@ -1066,7 +1042,6 @@ int     rc;
             return 1;
         }
     }
-#endif /* defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Register the SIGINT handler */
     if (signal( SIGINT, sigint_handler ) == SIG_ERR)
@@ -1242,11 +1217,9 @@ int     rc;
     else
     {
         /* We're in daemon mode... */
-#if defined(OPTION_DYNAMIC_LOAD)
         if (daemon_task)
             daemon_task();/* Returns only AFTER Hercules is shutdown */
         else
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
         {
             /* daemon mode without any daemon_task */
             process_script_file("-", 1);
@@ -1449,8 +1422,6 @@ static int process_args( int argc, char* argv[] )
             break;
 #endif
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
             case 'p':
 
                 hdl_initpath( optarg );
@@ -1476,8 +1447,6 @@ static int process_args( int argc, char* argv[] )
             }
             break;
 
-#endif // defined( OPTION_DYNAMIC_LOAD )
-
             case 'b':
 
                 sysblk.logofile = optarg;
@@ -1493,13 +1462,10 @@ static int process_args( int argc, char* argv[] )
                 sysblk.daemon_mode = 1;
                 break;
 
-#if defined( EXTERNALGUI )
-
             case 'e':
 
                 extgui = 1;
                 break;
-#endif
 
             case 't':
 
@@ -1566,13 +1532,7 @@ error:
 #else
             "";
 #endif
-        const char dlsub[] =
-
-#if defined( OPTION_DYNAMIC_LOAD )
-            " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
-#else
-            "";
-#endif
+        const char dlsub[] = " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
 
         /* Show them all of our command-line arguments... */
         STRLCPY( pgm, sysblk.hercules_pgmname );
@@ -1621,16 +1581,4 @@ error:
     fflush( stdout );
 
     return arg_error;
-}
-
-/*-------------------------------------------------------------------*/
-/* System cleanup                                                    */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void system_cleanup()
-{
-    /*
-        Currently only called by hdlmain,c's HDL_FINAL_SECTION
-        after the main 'hercules' module has been unloaded, but
-        that could change at some time in the future.
-    */
 }

@@ -183,9 +183,6 @@ HDL_DLL_IMPORT void         hdl_listmods ( int flags );                   /* lis
 HDL_DLL_IMPORT void         hdl_listdeps ();                              /* list all dependencies     */
 HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );         /* Get device-type handler   */
 HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );          /* Find next entry in chain  */
-
-#if defined( OPTION_DYNAMIC_LOAD )
-
 HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
 
 /*-------------------------------------------------------------------*/
@@ -215,7 +212,7 @@ HDL_DLL_IMPORT EQUTYP*      hdl_devequ; /* device-type equates func  */
 
 /*      NOTE:  SHLIBEXT defined by ISW in configure.ac/config.h      */
 
-#if defined( HDL_BUILD_SHARED ) && defined( LTDL_SHLIB_EXT )
+#if defined( LTDL_SHLIB_EXT )
   #define   HDL_MODULE_SUFFIX       LTDL_SHLIB_EXT
 #else
   #if defined( LT_MODULE_EXT )
@@ -466,41 +463,5 @@ HDL_DLL_IMPORT EQUTYP*      hdl_devequ; /* device-type equates func  */
                                                                     \
         return rc;                                                  \
     }
-
-
-#else /* !defined( OPTION_DYNAMIC_LOAD ) */
-
-/*-------------------------------------------------------------------*/
-/*                    HDL_DEVICE_SECTION                             */
-/*-------------------------------------------------------------------*/
-
-#define HDL_DEVICE_SECTION                                          \
-                                                                    \
-    DLL_EXPORT  DEVHND* hdl_DEVHND( const char* typname )           \
-    {
-
-/*-------------------------------------------------------------------*/
-/*                    END_DEVICE_SECTION                             */
-/*-------------------------------------------------------------------*/
-
-#define END_DEVICE_SECTION                                          \
-                                                                    \
-        return NULL;                                                \
-    }
-
-/*-------------------------------------------------------------------*/
-/*                       HDL_DEVICE                                  */
-/*-------------------------------------------------------------------*/
-
-#define HDL_DEVICE( typname, devhnd )                               \
-                                                                    \
-    do                                                              \
-    {                                                               \
-        if (strcasecmp( QSTR( typname ), devtype ) == 0)            \
-            return &devhnd;                                         \
-    }                                                               \
-    while (0)
-
-#endif /* defined( OPTION_DYNAMIC_LOAD ) */
 
 #endif /* _HDL_H */

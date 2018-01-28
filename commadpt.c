@@ -133,7 +133,7 @@
 #include "parser.h"
 #include "commadpt.h"
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -3705,10 +3705,8 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
 /* DEVICE FUNCTION POINTERS                                      */
 /*---------------------------------------------------------------*/
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND comadpt_device_hndinfo = {
+static DEVHND comadpt_device_hndinfo =
+{
         &commadpt_init_handler,        /* Device Initialization      */
         &commadpt_execute_ccw,         /* Device CCW execute         */
         &commadpt_close_device,        /* Device Close               */
@@ -3739,7 +3737,8 @@ DEVHND comadpt_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt2703_LTX_hdl_ddev
 #define hdl_depc hdt2703_LTX_hdl_depc
 #define hdl_reso hdt2703_LTX_hdl_reso
@@ -3748,7 +3747,6 @@ DEVHND comadpt_device_hndinfo = {
 #endif
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -3773,4 +3771,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(2703, comadpt_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif

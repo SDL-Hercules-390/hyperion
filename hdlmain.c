@@ -30,8 +30,6 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY( HERCULES );
@@ -113,96 +111,8 @@ END_RESOLVER_SECTION;
 
 /*-------------------------------------------------------------------*/
 
-HDL_FINAL_SECTION;
-{
-    system_cleanup();
-}
-END_FINAL_SECTION;
-
-#endif /* defined( OPTION_DYNAMIC_LOAD ) */
-
-/*-------------------------------------------------------------------*/
-
 HDL_DEVICE_SECTION;
 {
-#if !defined( OPTION_DYNAMIC_LOAD )
-
-    /*-----------------------------------------*/
-    /* TTY consoles                            */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 1052, constty_device_hndinfo );
-    HDL_DEVICE ( 3215, constty_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* 3270 consoles                           */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 3270, loc3270_device_hndinfo );
-    HDL_DEVICE ( 3287, loc3270_device_hndinfo );
-    HDL_DEVICE ( SYSG, loc3270_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* Card readers                            */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 1442, cardrdr_device_hndinfo );
-    HDL_DEVICE ( 2501, cardrdr_device_hndinfo );
-    HDL_DEVICE ( 3505, cardrdr_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* Card punches                            */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 3525, cardpch_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* Line Printers                           */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 1403, printer_device_hndinfo );
-    HDL_DEVICE ( 3203, prt3203_device_hndinfo );
-    HDL_DEVICE ( 3211, printer_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* Tape drives                             */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 3410, tape_other_devhnd      );
-    HDL_DEVICE ( 3411, tape_other_devhnd      );
-    HDL_DEVICE ( 3420, tape_other_devhnd      );
-    HDL_DEVICE ( 3422, tape_other_devhnd      );
-    HDL_DEVICE ( 3430, tape_other_devhnd      );
-    HDL_DEVICE ( 3480, tape_other_devhnd      );
-    HDL_DEVICE ( 3490, tape_other_devhnd      );
-    HDL_DEVICE ( 3590, tape_3590_devhnd       );
-    HDL_DEVICE ( 8809, tape_other_devhnd      );
-    HDL_DEVICE ( 9347, tape_other_devhnd      );
-    HDL_DEVICE ( 9348, tape_other_devhnd      );
-
-    /*-----------------------------------------*/
-    /* Communications devices                  */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( CTCI, ctci_device_hndinfo    );
-    HDL_DEVICE ( CTCE, ctce_device_hndinfo    );
-    HDL_DEVICE ( LCS,  lcs_device_hndinfo     );
-    HDL_DEVICE ( QETH, qeth_device_hndinfo    );
-    HDL_DEVICE ( ZFCP, zfcp_device_hndinfo    );
-    HDL_DEVICE ( PTP,  ptp_device_hndinfo     );
-
-    /*-----------------------------------------*/
-    /* Telecom line devices                    */
-    /*-----------------------------------------*/
-
-    HDL_DEVICE ( 2703, comadpt_device_hndinfo );
-
-#endif /* !defined( OPTION_DYNAMIC_LOAD ) */
-
-    /*-----------------------------------------*/
-    /* CKD Direct Access Storage Devices       */
-    /*-----------------------------------------*/
-
     HDL_DEVICE ( 2305, ckddasd_device_hndinfo );
     HDL_DEVICE ( 2311, ckddasd_device_hndinfo );
     HDL_DEVICE ( 2314, ckddasd_device_hndinfo );
@@ -213,10 +123,6 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE ( 3380, ckddasd_device_hndinfo );
     HDL_DEVICE ( 3390, ckddasd_device_hndinfo );
     HDL_DEVICE ( 9345, ckddasd_device_hndinfo );
-
-    /*-----------------------------------------*/
-    /* FBA Direct Access Storage Devices       */
-    /*-----------------------------------------*/
 
     HDL_DEVICE ( 0671, fbadasd_device_hndinfo );
     HDL_DEVICE ( 3310, fbadasd_device_hndinfo );

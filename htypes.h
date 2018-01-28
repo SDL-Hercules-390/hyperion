@@ -180,9 +180,7 @@ typedef struct DEVGRP    DEVGRP;    // xxxxxxxxx
 typedef struct DEVHND    DEVHND;    // xxxxxxxxx
 typedef struct SHRD      SHRD;      // xxxxxxxxx
 
-#ifdef EXTERNALGUI
 typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Secondary Device and I/O Control Related Structures               */

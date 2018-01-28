@@ -1774,13 +1774,11 @@ COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
 COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          NULL,                   NULL                )
 #endif /*defined(HAVE_MLOCKALL)*/
-#if defined( OPTION_DYNAMIC_LOAD )
 COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )
 COMMAND( "lsdep",                   lsdep_cmd,              SYSCMDNOPER,        lsdep_cmd_desc,         NULL                )
 COMMAND( "lsmod",                   lsmod_cmd,              SYSCMDNOPER,        lsmod_cmd_desc,         NULL                )
 COMMAND( "rmmod",                   rmmod_cmd,              SYSCMDNOPER,        rmmod_cmd_desc,         NULL                )
-#endif
 #if defined( OPTION_HAO )
 COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       hao_cmd_desc,           hao_cmd_help        )
 #endif

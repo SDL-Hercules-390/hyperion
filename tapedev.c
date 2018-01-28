@@ -121,7 +121,7 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -191,7 +191,7 @@ DEVHND  tape_3590_devhnd   =
 /* Note: lt_dlopen will look for symbol & modulename_LTX_symbol      */
 /*-------------------------------------------------------------------*/
 
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#if defined( HDL_USE_LIBTOOL )
 
   #define  hdl_ddev   hdt3420_LTX_hdl_ddev
   #define  hdl_depc   hdt3420_LTX_hdl_depc
@@ -202,8 +202,6 @@ DEVHND  tape_3590_devhnd   =
 #endif
 
 /*-------------------------------------------------------------------*/
-
-#if defined(OPTION_DYNAMIC_LOAD)
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -244,8 +242,6 @@ END_DEVICE_SECTION
   END_RESOLVER_SECTION
 
 #endif // defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
-
-#endif // defined(OPTION_DYNAMIC_LOAD)
 
 /*-------------------------------------------------------------------*/
 /*  (see 'tapedev.h' for layout of TAPEMEDIA_HANDLER structure)      */

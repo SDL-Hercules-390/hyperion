@@ -54,12 +54,10 @@ static FETB *s_fetb     = NULL;
 static HETB *d_hetb     = NULL;
 static FETB *d_fetb     = NULL;
 
-#ifdef EXTERNALGUI
 /* Previous reported file position */
 static off_t prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
-#endif /*EXTERNALGUI*/
 
 /*
 || Prints usage information
@@ -138,7 +136,6 @@ copytape( void )
 
     while( TRUE )
     {
-#ifdef EXTERNALGUI
         if( extgui )
         {
             off_t curpos;
@@ -153,7 +150,6 @@ copytape( void )
                 EXTGUIMSG( "IPOS=%"PRId64"\n", (U64)curpos );
             }
         }
-#endif /*EXTERNALGUI*/
 
         if ( i_faketape )
             rc = fet_read( s_fetb, buf );

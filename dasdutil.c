@@ -1321,12 +1321,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             /* Display progress message every 10 cylinders */
             if (cyl && !(cyl % 10))
             {
-#ifdef EXTERNALGUI
                 if (extgui)
                     fprintf (stderr, "CYL=%u\n", cyl);
                 else
-#endif /*EXTERNALGUI*/
-                fprintf (stderr, "Writing cylinder %u\r", cyl);
+                    fprintf (stderr, "Writing cylinder %u\r", cyl);
             }
 
             for (head = 0; head < heads; head++)
@@ -1986,14 +1984,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
             /* Display progress message every 100 sectors */
             if ((sectnum % 100) == 0)
-#ifdef EXTERNALGUI
             {
-                if (extgui) fprintf (stderr, "BLK=%u\n", sectnum);
-                else fprintf (stderr, "Writing sector %u\r", sectnum);
+                if (extgui)
+                    fprintf (stderr, "BLK=%u\n", sectnum);
+                else
+                    fprintf (stderr, "Writing sector %u\r", sectnum);
             }
-#else /*!EXTERNALGUI*/
-            fprintf (stderr, "Writing sector %u\r", sectnum);
-#endif /*EXTERNALGUI*/
 
             /* Write the sector to the file */
             rc = write (fd, buf, sectsz);

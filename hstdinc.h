@@ -178,15 +178,13 @@
 #ifdef HAVE_DIRENT_H
   #include <dirent.h>
 #endif
-#ifdef OPTION_DYNAMIC_LOAD
-  #ifdef HDL_USE_LIBTOOL
-    #include "ltdl.h"
+#ifdef HDL_USE_LIBTOOL
+  #include "ltdl.h"
+#else
+  #if defined(__MINGW__) || defined(_MSVC_)
+    #include "w32dl.h"
   #else
-    #if defined(__MINGW__) || defined(_MSVC_)
-      #include "w32dl.h"
-    #else
-      #include <dlfcn.h>
-    #endif
+    #include <dlfcn.h>
   #endif
 #endif
 #ifdef HAVE_FENV_H

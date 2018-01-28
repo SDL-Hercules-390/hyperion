@@ -27,13 +27,11 @@ static BYTE eoflbl[] = "\xC5\xD6\xC6";  /* EBCDIC characters "EOF"   */
 static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
 static BYTE buf[ MAX_BLKLEN ];
 
-#ifdef EXTERNALGUI
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 /* How many bytes we've read so far. */
 long  curpos = 0;
 long  prevpos = 0;
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* tapesplt main entry point                                        */
@@ -139,7 +137,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 exit(5);
             }
 
-#ifdef EXTERNALGUI
             if (extgui)
             {
                 curpos += len;
@@ -150,7 +147,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     EXTGUIMSG( "IPOS=%ld\n", curpos );
                 }
             }
-#endif /*EXTERNALGUI*/
 
             /* Check for end of tape. */
             if (len == 0)
@@ -226,7 +222,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     exit(9);
                 }
 
-#ifdef EXTERNALGUI
                 if (extgui)
                 {
                     curpos += len;
@@ -237,7 +232,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                         EXTGUIMSG( "IPOS=%ld\n", curpos );
                     }
                 }
-#endif /*EXTERNALGUI*/
 
                 /* Copy the header to the output file. */
                 rc = write(outfd, buf, len);

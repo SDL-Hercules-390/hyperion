@@ -387,10 +387,8 @@ BYTE            c;                      /* Output character          */
 } /* end function cardpch_execute_ccw */
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND cardpch_device_hndinfo = {
+static DEVHND cardpch_device_hndinfo =
+{
         &cardpch_init_handler,         /* Device Initialization      */
         &cardpch_execute_ccw,          /* Device CCW execute         */
         &cardpch_close_device,         /* Device Close               */
@@ -420,7 +418,8 @@ DEVHND cardpch_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt3525_LTX_hdl_ddev
 #define hdl_depc hdt3525_LTX_hdl_depc
 #define hdl_reso hdt3525_LTX_hdl_reso
@@ -428,8 +427,6 @@ DEVHND cardpch_device_hndinfo = {
 #define hdl_fini hdt3525_LTX_hdl_fini
 #endif
 
-
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -443,4 +440,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3525, cardpch_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif

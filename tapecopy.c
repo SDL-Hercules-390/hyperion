@@ -42,11 +42,9 @@ int main (int argc, char *argv[])
 /*-------------------------------------------------------------------*/
 /* External GUI flag...                                              */
 /*-------------------------------------------------------------------*/
-#if defined(EXTERNALGUI)
 time_t curr_progress_time = 0;
 time_t prev_progress_time = 0;
 #define PROGRESS_INTERVAL_SECS  (   3   )     /* (just what it says) */
-#endif /*defined(EXTERNALGUI)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -520,10 +518,8 @@ int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
 char            pathname[MAX_PATH];     /* file name in host format  */
 struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
-#if defined( EXTERNALGUI )
 struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
-#endif /*defined(EXTERNALGUI)*/
 
     INITIALIZE_UTILITY( UTILITY_NAME, "copy SCSI tape to/from AWS tape file", &pgm );
 
@@ -703,7 +699,6 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     bytes_written = 0;
     file_bytes = 0;
 
-#if defined(EXTERNALGUI)
     // Notify the GUI of the high-end of the copy-progress range...
     if ( extgui )
     {
@@ -732,13 +727,11 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // Init time of last issued progress message
         prev_progress_time = time( NULL );
     }
-#endif /*defined(EXTERNALGUI)*/
 
     /* Perform the copy... */
 
     while (1)
     {
-#if defined(EXTERNALGUI)
         /* Issue a progress message every few seconds... */
         if ( extgui )
         {
@@ -755,7 +748,6 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
                 }
             }
         }
-#endif /*defined(EXTERNALGUI)*/
 
         /* Save previous block length */
         prevlen = len;
@@ -839,9 +831,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         {
             ASSERT(blkcount);
 
-#if defined(EXTERNALGUI)
-            if ( !extgui )
-#endif
+            if (!extgui)
                 // "File No. %u: Block %u"
                 WRMSG( HHC02723, "I", fileno, blkcount );
                 printf("\r");

@@ -1006,13 +1006,12 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 
     strupper( argv[0], argv[0] );
 
-#ifdef EXTERNALGUI
     if (extgui)
     {
         WRMSG(HHC02215, "W");
         return 0;
     }
-#endif /*EXTERNALGUI*/
+
     sysblk.npquiet = !sysblk.npquiet;
     // "%-14s: %s"
     WRMSG( HHC02203, "I", argv[0], sysblk.npquiet ? "DISABLED" : "ENABLED" );
@@ -7400,7 +7399,6 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
 /*-------------------------------------------------------------------*/
 /* ldmod - load a module                                             */
 /*-------------------------------------------------------------------*/
@@ -7523,7 +7521,6 @@ int modpath_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /*defined( OPTION_DYNAMIC_LOAD )*/
 
 #ifdef FEATURE_ECPSVM
 /*-------------------------------------------------------------------*/

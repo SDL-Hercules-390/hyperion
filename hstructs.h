@@ -1204,10 +1204,8 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  Device dependent data (generic)                          */
         void    *dev_data;
 
-#ifdef EXTERNALGUI
         /*  External GUI fields                                      */
         GUISTAT* pGUIStat;              /* EXTERNALGUI Dev Stat Ctl  */
-#endif
 
 #if defined(_FEATURE_VM_BLOCKIO)
         /* VM DIAGNOSE X'250' Emulation Environment                  */
@@ -1929,7 +1927,6 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
 #define CCKD_OPEN_RD           2
 #define CCKD_OPEN_RW           3
 
-#ifdef EXTERNALGUI
 struct GUISTAT
 {
     char*   pszOldStatStr;
@@ -1938,7 +1935,6 @@ struct GUISTAT
     char    szStatStrBuff1[GUI_STATSTR_BUFSIZ];
     char    szStatStrBuff2[GUI_STATSTR_BUFSIZ];
 };
-#endif // EXTERNALGUI
 
 
 #endif // _HSTRUCTS_H

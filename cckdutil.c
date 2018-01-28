@@ -54,14 +54,7 @@ static char *spaces[] = { "none", "devhdr", "cdevhdr", "l1",  "l2",
                           "trk",  "blkgrp", "free",    "eof" };
 static char *comps[]  = { "none", "zlib",   "bzip2" };
 
-/*-------------------------------------------------------------------*/
-/* EXTERNALGUI support                                               */
-/*-------------------------------------------------------------------*/
-#ifdef EXTERNALGUI
-  #define gui_fprintf if (extgui) fprintf
-#else
-  #define gui_fprintf(...)
-#endif
+#define  gui_fprintf        if (extgui) fprintf
 
 /*-------------------------------------------------------------------*/
 /* Change the endianess of a compressed file                         */

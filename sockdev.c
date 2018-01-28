@@ -11,7 +11,7 @@
 #include "opcode.h"
 
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   extern SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif

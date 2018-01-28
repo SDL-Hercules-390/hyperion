@@ -688,8 +688,7 @@ DEVBLK**dvpp;
     dev->shrdwait = -1;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-#ifdef EXTERNALGUI
-    if ( !dev->pGUIStat )
+    if (!dev->pGUIStat)
     {
          dev->pGUIStat = malloc( sizeof(GUISTAT) );
          dev->pGUIStat->pszOldStatStr = dev->pGUIStat->szStatStrBuff1;
@@ -697,7 +696,6 @@ DEVBLK**dvpp;
         *dev->pGUIStat->pszOldStatStr = 0;
         *dev->pGUIStat->pszNewStatStr = 0;
     }
-#endif /*EXTERNALGUI*/
 
     /* Mark device valid */
     dev->pmcw.flag5 |= PMCW5_V;

@@ -337,9 +337,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Copy the files */
 
-#if defined( EXTERNALGUI )
     if (!extgui)
-#endif
         if (!quiet)
             printf ( "  %3d%% %7d of %d", 0, 0, n );
 
@@ -378,9 +376,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 memset (idev->buf, 0, FBA_BLKGRP_SIZE);
             if (!quiet)
             {
-#if defined( EXTERNALGUI )
                 if (!extgui)
-#endif
                     printf ( "  %3d%% %7d of %d", 0, 0, n );
                 status (i, n);
             }
@@ -423,9 +419,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     close_image_file(icif); close_image_file(ocif);
 
-#if defined( EXTERNALGUI )
     if (!extgui)
-#endif
         if (!quiet)
             printf (_("\r"));
 
@@ -586,7 +580,6 @@ int syntax( const char* pgm )
 /*-------------------------------------------------------------------*/
 void status (int i, int n)
 {
-#ifdef EXTERNALGUI
     if (extgui)
     {
         UNREFERENCED( n );
@@ -596,7 +589,6 @@ void status (int i, int n)
         return;
     }
     else
-#endif /*EXTERNALGUI*/
     {
         static char indic[] = "|/-\\";
 //      if (i % 101 != 1)

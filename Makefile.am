@@ -67,11 +67,7 @@ else
 HERCIFC =
 endif
 
-if BUILD_SHARED
 HERCLIN = herclin
-else
-HERCLIN =
-endif
 
 fthreads_SRC  = fthreads.c
 
@@ -145,15 +141,7 @@ dyndev_SRC =  \
 #                    to Windows DLLs
 #-----------------------------------------------------------------
 
-if BUILD_SHARED
 XSTATIC =
-else
-XSTATIC = -static
-endif
-
-#------------------------------------------------------------------------------
-if OPTION_DYNAMIC_LOAD
-
 DYNSRC  =
 LTDL    =  ltdl.c
 
@@ -178,20 +166,6 @@ LIB_LD_FLAGS =      \
    -no-undefined    \
    -avoid-version
 
-#------------------------------------------------------------------------------
-else
-
-DYNSRC           =  $(dyndev_SRC)
-LTDL             =
-DYNMOD_LD_FLAGS  =  $(extpkg_ldflags)
-DYNMOD_LD_ADD    =  $(extpkg_ldadd)
-
-LIB_LD_FLAGS =   \
-  $(XSTATIC)     \
-  -no-undefined  \
-  -avoid-version
-
-endif
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -226,12 +200,9 @@ HERCMODS =      \
   hdt3525.la    \
   s37x.la
 
-if OPTION_DYNAMIC_LOAD
 modexec_LTLIBRARIES = $(HERCMODS)
-endif
-
-noinst_LTLIBRARIES = $(HERCLIBS)
-lib_LTLIBRARIES    = $(HERCLIBS2)
+noinst_LTLIBRARIES  = $(HERCLIBS)
+lib_LTLIBRARIES     = $(HERCLIBS2)
 
 #------------------------------------------------------------------------------
 # The following causes the dynamic modules to not even get built
@@ -266,9 +237,6 @@ bin_PROGRAMS = \
   $(HERCLIN)
 
 EXTRA_PROGRAMS = hercifc
-
-#------------------------------------------------------------------------------
-if OPTION_DYNAMIC_LOAD
 
 #----------------------------------------------------------------------------
 # For each module:
@@ -346,9 +314,6 @@ hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
-
-endif
-#------------------------------------------------------------------------------
 
 #--------------------------------------------
 # Common data areas (shared) library
@@ -531,67 +496,8 @@ libherc_la_LIBADD = \
 #  retrieves the 'main' hdl symbols
 #--------------------------------------------------------
 
-#------------------------------------------------------------------------------
-if OPTION_DYNAMIC_LOAD
-
-if BUILD_SHARED
-
 HLDFLAGS = -dlopen self
 HDEPS    = $(extpkg_ldadd)
-
-else
-
-HLDFLAGS =            \
-  -dlopen self        \
-  -dlopen dyncrypt.la \
-  -dlopen dyngui.la   \
-  -dlopen s37x.la     \
-  -dlopen hdteq.la    \
-  -dlopen hdt1403.la  \
-  -dlopen hdt3420.la  \
-  -dlopen hdt2703.la  \
-  -dlopen hdt3705.la  \
-  -dlopen hdt3088.la  \
-  -dlopen hdt3270.la  \
-  -dlopen hdt3505.la  \
-  -dlopen hdt3525.la  \
-  -dlopen hdtqeth.la  \
-  -dlopen hdtzfcp.la  \
-  -dlopen hdt1052c.la \
-  -dlopen hdtptp.la
-
-HDEPS =               \
-  dyncrypt.la         \
-  dyngui.la           \
-  s37x.la             \
-  hdteq.la            \
-  hdt1403.la          \
-  hdt3420.la          \
-  hdt2703.la          \
-  hdt3705.la          \
-  hdt3088.la          \
-  hdt3270.la          \
-  hdt3505.la          \
-  hdt3525.la          \
-  hdtqeth.la          \
-  hdtzfcp.la          \
-  hdt1052c.la         \
-  hdtptp.la           \
-  libherc.la          \
-  libherct.la         \
-  libhercd.la         \
-  $(extpkg_ldadd)
-
-endif
-
-#------------------------------------------------------------------------------
-else
-
-HLDFLAGS =
-HDEPS    = $(extpkg_ldadd)
-
-endif
-#------------------------------------------------------------------------------
 
 hercules_SOURCES = \
   bootstrap.c      \
@@ -610,9 +516,6 @@ hercules_DEPENDENCIES = \
   libhercs.la           \
   $(HDEPS)
 
-#------------------------------------------------------------------------------
-if BUILD_SHARED
-
 herclin_SOURCES = \
   hdlmain.c       \
   herclin.c
@@ -630,20 +533,13 @@ herclin_DEPENDENCIES = \
   libhercs.la          \
   $(HDEPS)
 
-endif
-#------------------------------------------------------------------------------
-
 #------------------------------------------------------------------------------
 # Side binaries...  (i.e. our hercules utilities)
 #------------------------------------------------------------------------------
 
 tools_LD_FLAGS =
 
-if OPTION_DYNAMIC_LOAD
 tools_ADDLIBS = $(HERCLIBS2) $(ldadd)
-else
-tools_ADDLIBS = $(HERCLIBS2) $(ldadd) hdlmain.o
-endif
 
 if BUILD_HERCIFC
 hercifc_SOURCES    = hercifc.c
@@ -1026,13 +922,9 @@ tar: dist
 install-exec-local:
 
 install-exec-hook:
-if BUILD_SHARED
 	rm -f $(DESTDIR)$(libdir)/libherc*.a
 	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
 	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
-else
-	rm -f $(DESTDIR)$(libdir)/libherc*
-endif
 #
 # NOTE : symbolic links point to FINAL destination (not to staged install)
 #

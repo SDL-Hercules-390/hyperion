@@ -437,33 +437,18 @@ typedef int CMPFUNC(const void*, const void*);
 /*      HDL macro to call optional function override                 */
 /*-------------------------------------------------------------------*/
 
-#if defined(OPTION_DYNAMIC_LOAD)
-  #define HDC1(_func, _arg1) \
-    ((_func) ? (_func) ((_arg1)) : (NULL))
-  #define HDC2(_func, _arg1,_arg2) \
-    ((_func) ? (_func) ((_arg1),(_arg2)) : (NULL))
-  #define HDC3(_func, _arg1,_arg2,_arg3) \
-    ((_func) ? (_func) ((_arg1),(_arg2),(_arg3)) : (NULL))
-  #define HDC4(_func, _arg1,_arg2,_arg3,_arg4) \
-    ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4)) : (NULL))
-  #define HDC5(_func, _arg1,_arg2,_arg3,_arg4,_arg5) \
-    ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4),(_arg5)) : (NULL))
-  #define HDC6(_func, _arg1,_arg2,_arg3,_arg4,_arg5,_arg6) \
-    ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4),(_arg5),(_arg6)) : (NULL))
-#else
-  #define HDC1(_func, _arg1) \
-    (NULL)
-  #define HDC2(_func, _arg1,_arg2) \
-    (NULL)
-  #define HDC3(_func, _arg1,_arg2,_arg3) \
-    (NULL)
-  #define HDC4(_func, _arg1,_arg2,_arg3,_arg4) \
-    (NULL)
-  #define HDC5(_func, _arg1,_arg2,_arg3,_arg4,_arg5) \
-    (NULL)
-  #define HDC6(_func, _arg1,_arg2,_arg3,_arg4,_arg5,_arg6) \
-    (NULL)
-#endif
+#define HDC1(_func, _arg1) \
+  ((_func) ? (_func) ((_arg1)) : (NULL))
+#define HDC2(_func, _arg1,_arg2) \
+  ((_func) ? (_func) ((_arg1),(_arg2)) : (NULL))
+#define HDC3(_func, _arg1,_arg2,_arg3) \
+  ((_func) ? (_func) ((_arg1),(_arg2),(_arg3)) : (NULL))
+#define HDC4(_func, _arg1,_arg2,_arg3,_arg4) \
+  ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4)) : (NULL))
+#define HDC5(_func, _arg1,_arg2,_arg3,_arg4,_arg5) \
+  ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4),(_arg5)) : (NULL))
+#define HDC6(_func, _arg1,_arg2,_arg3,_arg4,_arg5,_arg6) \
+  ((_func) ? (_func) ((_arg1),(_arg2),(_arg3),(_arg4),(_arg5),(_arg6)) : (NULL))
 
 /*-------------------------------------------------------------------*/
 /*      Sleep for as long as we like   (whole number of seconds)     */

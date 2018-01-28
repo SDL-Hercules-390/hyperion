@@ -23,7 +23,7 @@
 #include "devtype.h"
 #include "hchan.h"
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
@@ -161,11 +161,8 @@ static void hchan_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 
 }
 
-
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND hchan_device_hndinfo = {
+static DEVHND hchan_device_hndinfo =
+{
         &hchan_init_handler,           /* Device Initialization      */
         &hchan_execute_ccw,            /* Device CCW execute         */
         &hchan_close_device,           /* Device Close               */
@@ -195,7 +192,8 @@ DEVHND hchan_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt0000_LTX_hdl_ddev
 #define hdl_depc hdt0000_LTX_hdl_depc
 #define hdl_reso hdt0000_LTX_hdl_reso
@@ -203,8 +201,6 @@ DEVHND hchan_device_hndinfo = {
 #define hdl_fini hdt0000_LTX_hdl_fini
 #endif
 
-
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -233,4 +229,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9032, hchan_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif

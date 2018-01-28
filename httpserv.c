@@ -42,6 +42,8 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
+// #define DEBUG_HTTPSERV
+
 /*-------------------------------------------------------------------*/
 /* External reference to the cgi-bin directory in cgibin.c           */
 /*-------------------------------------------------------------------*/
@@ -367,7 +369,7 @@ CGIVAR **cgivar;
 
 /*-------------------------------------------------------------------*/
 
-#if 0
+#ifdef DEBUG_HTTPSERV
 static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR* cv;
@@ -397,7 +399,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     char resolved_path[HTTP_PATH_LENGTH];
     char pathname[HTTP_PATH_LENGTH];
 
-#if 0
+#ifdef DEBUG_HTTPSERV
     int i;
 
     for (i = 0; path[i]; i++)
@@ -405,6 +407,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
 #endif
+
     if (!realpath( path, resolved_path ))
         http_error(webblk, "404 File Not Found","",
                            "Invalid pathname");
@@ -656,7 +659,7 @@ static void *http_request(void* arg)
     while(*url == '/')
         url++;
 
-#if 0
+#ifdef DEBUG_HTTPSERV
     http_dump_cgi_variables(webblk);
 #endif
 
@@ -673,7 +676,6 @@ static void *http_request(void* arg)
         }
     }
 
-#if defined(OPTION_DYNAMIC_LOAD)
     {
         cgibin_func* dyncgi;
 
@@ -687,7 +689,6 @@ static void *http_request(void* arg)
             http_exit(webblk);
         }
     }
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
     http_error(webblk, "404 File Not Found","",
                        "The requested file was not found");

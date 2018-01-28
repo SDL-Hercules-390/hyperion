@@ -55,7 +55,7 @@
 #include "parser.h"
 #include "comm3705.h"
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -2238,10 +2238,8 @@ int     llsize;
 /* DEVICE FUNCTION POINTERS                                      */
 /*---------------------------------------------------------------*/
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND com3705_device_hndinfo = {
+static DEVHND com3705_device_hndinfo =
+{
     &commadpt_init_handler,        /* Device Initialization      */
     &commadpt_execute_ccw,         /* Device CCW execute         */
     &commadpt_close_device,        /* Device Close               */
@@ -2272,16 +2270,16 @@ DEVHND com3705_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt3705_LTX_hdl_ddev
 #define hdl_depc hdt3705_LTX_hdl_depc
 #define hdl_reso hdt3705_LTX_hdl_reso
 #define hdl_init hdt3705_LTX_hdl_init
 #define hdl_fini hdt3705_LTX_hdl_fini
-#endif /* !defined(HDL_BUILD_SHARED)... */
+#endif
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
     HDL_DEPENDENCY(HERCULES);
@@ -2306,4 +2304,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3705, com3705_device_hndinfo );
 }
 END_DEVICE_SECTION;
-#endif /* defined(OPTION_DYNAMIC_LOAD) */

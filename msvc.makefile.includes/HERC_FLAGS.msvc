@@ -51,9 +51,6 @@ cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"
 # Allow version.c to display the name of the target host CPU architecture
 cflags = $(cflags) /D HOST_ARCH=$(CPU)
 
-# The following instructs the declaration of DLL export symbols
-cflags = $(cflags) /D HDL_BUILD_SHARED /D OPTION_DYNAMIC_LOAD
-
 # Suppress some deprecation warnings that aren't really deprecation warnings
 cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE

@@ -117,16 +117,15 @@ unsigned char *recptr = NULL;
 int recidx = 0;
 int reclen = 0;
 
-#ifdef EXTERNALGUI
 /*
 || Previously reported file position
 */
 static off_t prevpos = 0;
+
 /*
 || Report progress every this many bytes
 */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
-#endif /*EXTERNALGUI*/
 
 /*
 || Merge DCB information from HDR2 label
@@ -550,7 +549,6 @@ getfile( FILE *outf )
         */
         while( ( rc = getrecord( ) ) >= 0 )
         {
-#ifdef EXTERNALGUI
             if( extgui )
             {
                 off_t curpos;
@@ -565,7 +563,7 @@ getfile( FILE *outf )
                     EXTGUIMSG( "IPOS=%"PRId64"\n", (U64)curpos );
                 }
             }
-#endif /*EXTERNALGUI*/
+
             /*
             || Get working copy of record ptr
             */
@@ -620,7 +618,6 @@ getfile( FILE *outf )
         */
         while( ( rc = getblock( ) ) >= 0 )
         {
-#ifdef EXTERNALGUI
             if( extgui )
             {
                 off_t curpos;
@@ -635,7 +632,7 @@ getfile( FILE *outf )
                     EXTGUIMSG( "IPOS=%"PRId64"\n", (U64)curpos );
                 }
             }
-#endif /*EXTERNALGUI*/
+
             /*
             || Write the record out
             */

@@ -124,15 +124,6 @@ struct dirent
 
 #define OPTION_FTHREADS
 #define HAVE_STRSIGNAL
-
-#if !defined(OPTION_NO_EXTERNAL_GUI)
-#if !defined(EXTERNALGUI)
-#define EXTERNALGUI
-#endif
-#else
-#undef  EXTERNALGUI
-#endif
-
 #define NO_SETUID
 #define NO_SIGABEND_HANDLER
 

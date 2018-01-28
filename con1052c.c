@@ -25,10 +25,7 @@
 /*-------------------------------------------------------------------*/
 /*                     Forward reference                             */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-DEVHND con1052_device_hndinfo;
+static DEVHND con1052_device_hndinfo;
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -68,11 +65,9 @@ static BYTE  con1052_immed [256] =
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; /* F0 */
 
 /*-------------------------------------------------------------------*/
-/*  MinGW   OPTION_DYNAMIC_LOAD    (Windows, but *not* MSVC)         */
+/*  MinGW       (Windows, but *not* MSVC)                            */
 /*-------------------------------------------------------------------*/
-#if defined( WIN32 ) && !defined( _MSVC_ )              \
-                     &&  defined( OPTION_DYNAMIC_LOAD ) \
-                     && !defined( HDL_USE_LIBTOOL )
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
 
         SYSBLK   *psysblk;
 #define sysblk  (*psysblk)
@@ -285,7 +280,6 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
 /*-------------------------------------------------------------------*/
 /*        CONSOLE PRINTER KEYBOARD PANEL COMMAND FUNCTION            */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
 static void* con1052_panel_command( char *cmd )
 {
     DEVBLK  *dev;
@@ -351,7 +345,6 @@ static void* con1052_panel_command( char *cmd )
 
     return NULL;
 }
-#endif // defined( OPTION_DYNAMIC_LOAD )
 
 /*-------------------------------------------------------------------*/
 /*           EXECUTE A 1052/3215 CHANNEL COMMAND WORD                */
@@ -553,10 +546,7 @@ BYTE    c;                              /* Print character           */
 /*-------------------------------------------------------------------*/
 /*         HERCULES DYNAMIC LOADER (HDL) CONTROL SECTIONS            */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-DEVHND  con1052_device_hndinfo =
+static DEVHND  con1052_device_hndinfo =
 {
         &con1052_init_handler,         /* Device Initialization      */
         &con1052_execute_ccw,          /* Device CCW execute         */
@@ -590,7 +580,7 @@ DEVHND  con1052_device_hndinfo =
 /*-------------------------------------------------------------------*/
 /*   Note : lt_dlopen will look for symbol & modulename_LTX_symbol   */
 /*-------------------------------------------------------------------*/
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt1052c_LTX_hdl_ddev
 #define hdl_depc hdt1052c_LTX_hdl_depc
 #define hdl_reso hdt1052c_LTX_hdl_reso
@@ -601,7 +591,6 @@ DEVHND  con1052_device_hndinfo =
 /*-------------------------------------------------------------------*/
 /*         HERCULES DYNAMIC LOADER (HDL) CONTROL SECTIONS            */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -634,5 +623,3 @@ HDL_REGISTER_SECTION;
    HDL_REGISTER( panel_command, con1052_panel_command );
 }
 END_REGISTER_SECTION
-
-#endif // defined( OPTION_DYNAMIC_LOAD )

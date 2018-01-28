@@ -175,7 +175,7 @@
 /*-------------------------------------------------------------------*/
 #if defined(WIN32)                      /* "Windows" options         */
 
-#if defined(HDL_BUILD_SHARED) && defined(_MSVC_)
+#if defined(_MSVC_)
   #define  DLL_IMPORT   __declspec ( dllimport )
   #define  DLL_EXPORT   __declspec ( dllexport )
 #else

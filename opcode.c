@@ -6366,12 +6366,7 @@ static INSTR_FUNC replace_opcode_xx________xx(int arch, INSTR_FUNC inst, int opc
 /* Called by hdl.c for dynamic instruction modules such as dyncrypt  */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_DYNAMIC_LOAD )
-DLL_EXPORT
-void* replace_opcode_r (int arch, INSTR_FUNC inst, int opcode1, int opcode2)
-#else
-void* replace_opcode   (int arch, INSTR_FUNC inst, int opcode1, int opcode2)
-#endif
+DLL_EXPORT void* replace_opcode_r( int arch, INSTR_FUNC inst, int opcode1, int opcode2 )
 {
   switch(opcode1)
   {

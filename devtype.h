@@ -9,7 +9,8 @@
 
 #define _DEVICES_H
 
-struct DEVHND {
+struct DEVHND
+{
         DEVIF  *init;                  /* Device Initialization      */
         DEVXF  *exec;                  /* Device CCW execute         */
         DEVCF  *close;                 /* Device Close               */
@@ -42,25 +43,13 @@ struct DEVHND {
     if (!_dev || !_class || !_buflen || !_buffer) return
 
 
-#if !defined(OPTION_DYNAMIC_LOAD)
-extern DEVHND constty_device_hndinfo;
-extern DEVHND loc3270_device_hndinfo;
-extern DEVHND comadpt_device_hndinfo;
-extern DEVHND cardrdr_device_hndinfo;
-extern DEVHND cardpch_device_hndinfo;
-extern DEVHND printer_device_hndinfo;
-extern DEVHND prt3203_device_hndinfo
-extern DEVHND tape_other_devhnd;
-extern DEVHND tape_3590_devhnd;
-extern DEVHND qeth_device_hndinfo;
-extern DEVHND zfcp_device_hndinfo;
-#endif /*!defined(OPTION_DYNAMIC_LOAD)*/
-CKD_DLL_IMPORT DEVHND ckddasd_device_hndinfo;
-FBA_DLL_IMPORT DEVHND fbadasd_device_hndinfo;
-extern DEVHND ctci_device_hndinfo;
-extern DEVHND ctce_device_hndinfo;
-extern DEVHND lcs_device_hndinfo;
-extern DEVHND ptp_device_hndinfo;
+CKD_DLL_IMPORT  DEVHND  ckddasd_device_hndinfo;
+FBA_DLL_IMPORT  DEVHND  fbadasd_device_hndinfo;
+
+extern          DEVHND  ctci_device_hndinfo;
+extern          DEVHND  ctce_device_hndinfo;
+extern          DEVHND  lcs_device_hndinfo;
+extern          DEVHND  ptp_device_hndinfo;
 
 
 #endif /*!defined(_DEVICES_H)*/

@@ -30,7 +30,7 @@ int main(int ac,char *av[])
     DROP_PRIVILEGES(CAP_SYS_NICE);
     SET_THREAD_NAME("bootstrap");
 
-#if defined( OPTION_DYNAMIC_LOAD ) && defined( HDL_USE_LIBTOOL )
+#if defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
 #endif
     exit(impl(ac,av));

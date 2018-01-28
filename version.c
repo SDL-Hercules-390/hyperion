@@ -526,11 +526,7 @@ static const char *build_info[] = {
 /*                            Using:                                 */
 /*-------------------------------------------------------------------*/
 
-#if defined(HDL_BUILD_SHARED)
     "Using   shared libraries",
-#else
-    "Using   static libraries",
-#endif
 
 #if !defined(_MSVC_)
   #if !defined(NO_SETUID)
@@ -578,17 +574,8 @@ static const char *build_info[] = {
     "Without Shared Devices support",
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
     "With    Dynamic loading support",
-#else
-    "Without Dynamic loading support",
-#endif
-
-#if defined(EXTERNALGUI)
     "With    External GUI support",
-#else
-    "Without External GUI support",
-#endif
 
 // (only report when full/complete keepalive is not available)
 #if !defined( HAVE_FULL_KEEPALIVE )
@@ -735,7 +722,6 @@ DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 {
-#if defined(EXTERNALGUI)
     /* If external gui being used, set stdout & stderr streams
        to unbuffered so we don't have to flush them all the time
        in order to ensure consistent sequence of log messages.
@@ -745,7 +731,6 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
         setvbuf(stderr, NULL, _IONBF, 0);
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-#endif /*EXTERNALGUI*/
 
     /* Log version */
 

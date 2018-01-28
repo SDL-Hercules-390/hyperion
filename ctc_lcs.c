@@ -3350,7 +3350,8 @@ DEVHND lcs_device_hndinfo =
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt3088_LTX_hdl_ddev
 #define hdl_depc hdt3088_LTX_hdl_depc
 #define hdl_reso hdt3088_LTX_hdl_reso
@@ -3358,7 +3359,6 @@ DEVHND lcs_device_hndinfo =
 #define hdl_fini hdt3088_LTX_hdl_fini
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -3368,10 +3368,10 @@ END_DEPENDENCY_SECTION
 
 HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 
-//             Hercules's        Our
-//             registered        overriding
-//             entry-point       entry-point
-//             name              value
+//                 Hercules's          Our
+//                 registered          overriding
+//                 entry-point         entry-point
+//                 name                value
 
 #if defined( WIN32 )
   HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
@@ -3383,15 +3383,15 @@ END_REGISTER_SECTION
 
 HDL_DEVICE_SECTION;
 {
-    HDL_DEVICE(LCS, lcs_device_hndinfo );
+    HDL_DEVICE( LCS, lcs_device_hndinfo );
 
 // ZZ the following device types should be moved to
 // ZZ their own loadable modules
-    HDL_DEVICE(CTCI, ctci_device_hndinfo    );
-    HDL_DEVICE(CTCE, ctce_device_hndinfo    );
+
+    HDL_DEVICE( CTCI, ctci_device_hndinfo );
+    HDL_DEVICE( CTCE, ctce_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif
 
 #if defined( _MSVC_ ) && defined( NO_LCS_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings

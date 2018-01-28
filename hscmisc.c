@@ -272,11 +272,7 @@ static void do_shutdown_now()
     // logfile, so we need to do the exiting here since it obviously
     // cannot.
 
-    if ( sysblk.daemon_mode
-#if defined(OPTION_DYNAMIC_LOAD)
-         && !daemon_task
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-       )
+    if (sysblk.daemon_mode && !daemon_task)
     {
 #ifdef _MSVC_
         socket_deinit();

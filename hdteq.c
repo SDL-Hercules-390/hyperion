@@ -101,8 +101,6 @@ static EQUTAB devtyp_equtab[] =
 
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_DYNAMIC_LOAD )
-
 static char* hdt_translate_device_type( char* typname )
 {
     EQUTYP* next_devequ_func;
@@ -134,7 +132,7 @@ static char* hdt_translate_device_type( char* typname )
 /*       use in DLREOPEN case only.                                  */
 /*-------------------------------------------------------------------*/
 
-#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
+#if defined( HDL_USE_LIBTOOL )
 
 #define hdl_ddev    hdteq_LTX_hdl_ddev
 #define hdl_depc    hdteq_LTX_hdl_depc
@@ -158,7 +156,5 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( hdl_devequ, hdt_translate_device_type );
 }
 END_REGISTER_SECTION
-
-#endif // defined( OPTION_DYNAMIC_LOAD )
 
 /*-------------------------------------------------------------------*/

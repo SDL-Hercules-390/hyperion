@@ -16,7 +16,6 @@
 /*-------------------------------------------------------------------*/
 /*    List of dynamic modules to pre-load at hdl_main startup        */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDLPRE hdl_preload[] =
 {
@@ -52,11 +51,8 @@ static HDLMOD*      hdl_curmod   = NULL;    /* module being loaded   */
 static HDLDEP*      hdl_depend   = NULL;    /* hdlmain Version codes */
 static const char*  hdl_modpath  = NULL;    /* modules load path     */
 static bool         hdl_arg_p    = false;   /* -p cmdline opt given  */
-
-#endif // defined( OPTION_DYNAMIC_LOAD )
-
-static HDLSHUT* hdl_shutlist = NULL;        /* Shutdown call list    */
-static bool     hdl_shutting = false;       /* shutdown in progesss  */
+static HDLSHUT*     hdl_shutlist = NULL;    /* Shutdown call list    */
+static bool         hdl_shutting = false;   /* shutdown in progesss  */
 
 /*-------------------------------------------------------------------*/
 /*              hdl_addshut - add shutdown call                      */
@@ -160,8 +156,6 @@ DLL_EXPORT void hdl_atexit( void )
         WRMSG( HHC01504, "I" );
 }
 
-
-#if defined( OPTION_DYNAMIC_LOAD )
 
 /*-------------------------------------------------------------------*/
 /*            hdl_checkpath  --  check module path                   */
@@ -1414,5 +1408,3 @@ static void hdl_modify_opcode( bool insert, HDLINS* instr )
   }
   return;
 }
-
-#endif /*defined( OPTION_DYNAMIC_LOAD )*/

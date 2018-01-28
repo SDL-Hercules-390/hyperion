@@ -499,12 +499,8 @@ AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
 AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_INCLUDE], [Define to enable enhanced-mode 'include' file support in configuration file] )
 AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
-AH_TEMPLATE( [OPTION_DYNAMIC_LOAD],     [Define to enable Hercules Dynamic Loader feature] )
-AH_TEMPLATE( [HDL_BUILD_SHARED],        [Define to indicate shared libraries are being used] )
-AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
 AH_TEMPLATE( [BUILD_HERCIFC],           [Define if hercifc program is to be built] )
 AH_TEMPLATE( [WIN32],                   [Define when building under Win32 (MinGW or Cygwin)] )
-AH_TEMPLATE( [EXTERNALGUI],             [Define to build interface to external Windows GUI] )
 AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implementation (fthreads)] )
 AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
 AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
@@ -975,7 +971,7 @@ AC_CACHE_SAVE()
 
 #  PROGRAMMING NOTE: we require libtool (or, optionally, dlltool (a less power-
 #  ful (flexible) libtool-like tool for Windows platforms) in order to support
-#  OPTION_DYNAMIC_LOAD. This is a relatively safe requirement since we provide
+#  loadable modules. This is a relatively safe requirement since we provide
 #  a version of libtool with Hercules (and build it as part of the preliminary
 #  autoconf processing; see the 'Programs' section above). However, we need to
 #  keep the below check for 'dlopen' anyway since we prefer that libtool use it
@@ -2007,24 +2003,6 @@ AC_ARG_ENABLE( hqa,
     ]
 )
 
-AC_ARG_ENABLE( dynamic-load,
-
-    AC_HELP_STRING([--disable-dynamic-load],
-
-        [disable dynamic loader option]
-    ),
-    [
-        case "${enableval}" in
-        yes) hc_cv_opt_dynamic_load=yes                      ;;
-        no)  hc_cv_opt_dynamic_load=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'dynamic-load' option] )
-             hc_error=yes
-             ;;
-        esac
-    ],
-    [hc_cv_opt_dynamic_load=yes]
-)
-
 AC_ARG_ENABLE( object-rexx,
 
     AC_HELP_STRING( [--enable-object-rexx],
@@ -2192,24 +2170,6 @@ AC_ARG_ENABLE( automatic-operator,
         esac
     ],
     [hc_cv_opt_auto_oper=$hc_cv_have_regex_h]
-)
-
-AC_ARG_ENABLE( external-gui,
-
-    AC_HELP_STRING( [--disable-external-gui],
-
-        [disable external GUI interface]
-    ),
-    [
-        case "${enableval}" in
-        yes) hc_cv_opt_external_gui=yes                      ;;
-        no)  hc_cv_opt_external_gui=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'external-gui' option] )
-             hc_error=yes
-             ;;
-        esac
-    ],
-    [hc_cv_opt_external_gui=yes]
 )
 
 AC_ARG_ENABLE( fthreads,
@@ -2474,14 +2434,11 @@ fi
 
 #------------------------------------------------------------------------------
 
-if test "$hc_cv_opt_dynamic_load" = "yes"; then
+if test "$hc_cv_have_lt_dlopen" != "yes"  &&
+   test "$hc_cv_have_dlopen"    != "yes"; then
 
-   if test "$hc_cv_have_lt_dlopen" != "yes"  &&
-      test "$hc_cv_have_dlopen"    != "yes"; then
-
-      AC_MSG_RESULT( [ERROR: dynamic-load requires libtool or dlltool] )
-      hc_error=yes
-   fi
+   AC_MSG_RESULT( [ERROR: loadable modules requires libtool or dlltool] )
+   hc_error=yes
 fi
 
 #------------------------------------------------------------------------------
@@ -2495,10 +2452,9 @@ fi
 
 #------------------------------------------------------------------------------
 
-if test "$hc_cv_opt_external_gui"  = "yes"  &&
-   test "$hc_cv_opt_dynamic_load" != "yes"; then
+if test "$hc_cv_hdl_build_shared" != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: external-gui requires dynamic-load] )
+   AC_MSG_RESULT( [ERROR: external-gui requires loadable modules (shared libraries = --enable-shared)] )
    hc_error=yes
 fi
 
@@ -2764,12 +2720,9 @@ test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
 test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
 test "$hc_cv_opt_enhanced_configincludes" = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_INCLUDE)
 test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
-test "$hc_cv_opt_dynamic_load"            = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
 test "$hc_cv_opt_fthreads"                = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
-test "$hc_cv_hdl_build_shared"            = "yes"  &&  AC_DEFINE(HDL_BUILD_SHARED)
 test "$hc_cv_have_lt_dlopen"              = "yes"  &&  AC_DEFINE(HDL_USE_LIBTOOL)
 test "$hc_cv_is_windows"                  = "yes"  &&  AC_DEFINE(WIN32)
-test "$hc_cv_opt_external_gui"            = "yes"  &&  AC_DEFINE(EXTERNALGUI)
 test "$hc_cv_opt_cckd_bzip2"              = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
 test "$hc_cv_opt_het_bzip2"               = "yes"  &&  AC_DEFINE(HET_BZIP2)
 test "$hc_cv_timespec_in_sys_types_h"     = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
@@ -2887,9 +2840,7 @@ AC_CACHE_SAVE()
 
 # Note: Building of shared libraries is forced, and we force use of libtool too.
 
-AM_CONDITIONAL( BUILD_SHARED,        [ test "$hc_cv_hdl_build_shared" = "yes" ] )
 AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
-AM_CONDITIONAL( OPTION_DYNAMIC_LOAD, [ test "$hc_cv_opt_dynamic_load" = "yes" ] )
 AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )

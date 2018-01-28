@@ -626,11 +626,9 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
 } /* end function telnet_ev_handler */
 
 /*-------------------------------------------------------------------*/
-/*  MinGW   OPTION_DYNAMIC_LOAD    (Windows, but *not* MSVC)         */
+/*  MinGW           (Windows, but *not* MSVC)                        */
 /*-------------------------------------------------------------------*/
-#if defined( WIN32 ) && !defined( _MSVC_ )              \
-                     &&  defined( OPTION_DYNAMIC_LOAD ) \
-                     && !defined( HDL_USE_LIBTOOL )
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
 
         SYSBLK   *psysblk;
 #define sysblk  (*psysblk)
@@ -4412,7 +4410,7 @@ BYTE    stat;                           /* Unit status               */
 /*   Note : lt_dlopen will look for symbol & modulename_LTX_symbol   */
 /*-------------------------------------------------------------------*/
 
-#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
+#if defined( HDL_USE_LIBTOOL )
 #define  hdl_ddev   hdt3270_LTX_hdl_ddev
 #define  hdl_depc   hdt3270_LTX_hdl_depc
 #define  hdl_reso   hdt3270_LTX_hdl_reso
@@ -4424,11 +4422,7 @@ BYTE    stat;                           /* Unit status               */
 /*                 DEVICE HANDLER ENTRY-POINTS                       */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-
-DEVHND  constty_device_hndinfo  =
+static DEVHND  constty_device_hndinfo  =
 {
         &constty_init_handler,         /* Device Initialization      */
         &constty_execute_ccw,          /* Device CCW execute         */
@@ -4457,11 +4451,7 @@ DEVHND  constty_device_hndinfo  =
         NULL                           /* Hercules resume            */
 };
 
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-
-DEVHND  loc3270_device_hndinfo  =
+static DEVHND  loc3270_device_hndinfo  =
 {
         &loc3270_init_handler,         /* Device Initialization      */
         &loc3270_execute_ccw,          /* Device CCW execute         */
@@ -4493,7 +4483,6 @@ DEVHND  loc3270_device_hndinfo  =
 /*-------------------------------------------------------------------*/
 /*         HERCULES DYNAMIC LOADER (HDL) CONTROL SECTIONS            */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -4503,10 +4492,7 @@ HDL_DEPENDENCY_SECTION;
 }
 END_DEPENDENCY_SECTION
 
-#if 1                               \
-    &&  defined( WIN32 )            \
-    && !defined( HDL_USE_LIBTOOL )  \
-    && !defined( _MSVC_ )
+#if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL ) && !defined( _MSVC_ )
 
 #undef sysblk
 
@@ -4527,7 +4513,6 @@ HDL_DEVICE_SECTION
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
     HDL_DEVICE( SYSG, loc3270_device_hndinfo );
 #endif
+
 }
 END_DEVICE_SECTION
-
-#endif // defined( OPTION_DYNAMIC_LOAD )

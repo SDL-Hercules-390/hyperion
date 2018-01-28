@@ -430,7 +430,6 @@ int do_cat(CIFBLK *cif, char *file)
     if (rc < 0)
         return -1;
 
-#ifdef EXTERNALGUI
     /* Calculate ending relative track */
     if (extgui)
     {
@@ -451,7 +450,6 @@ int do_cat(CIFBLK *cif, char *file)
         }
         EXTGUIMSG( "ETRK=%d\n", trks-1 );
     }
-#endif /*EXTERNALGUI*/
 
     if (pdsmember)
     {

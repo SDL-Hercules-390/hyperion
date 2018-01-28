@@ -29,7 +29,7 @@
 #endif /* !defined(OPTION_W32_CTCI) */
 
 
-#if defined(WIN32) && !defined(_MSVC_) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -222,10 +222,7 @@ static BYTE ptp_immed_commands[256] =
 /* Device Handler Information Block                                   */
 /* ------------------------------------------------------------------ */
 
-// #if defined(OPTION_DYNAMIC_LOAD)
-// static
-// #endif /* defined(OPTION_DYNAMIC_LOAD) */
-DEVHND ptp_device_hndinfo =
+static DEVHND ptp_device_hndinfo =
 {
         &ptp_init,                     /* Device Initialization       */
         &ptp_execute_ccw,              /* Device CCW execute          */
@@ -9597,18 +9594,18 @@ void  calculate_icmpv6_checksum( PIP6FRM pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
 /* ------------------------------------------------------------------ */
 /* HDL stuff                                                          */
 /* ------------------------------------------------------------------ */
+
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtptp_LTX_hdl_ddev
 #define hdl_depc hdtptp_LTX_hdl_depc
 #define hdl_reso hdtptp_LTX_hdl_reso
 #define hdl_init hdtptp_LTX_hdl_init
 #define hdl_fini hdtptp_LTX_hdl_fini
-#endif /* !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL) */
+#endif
 
-
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -9628,7 +9625,7 @@ HDL_RESOLVER_SECTION;
      HDL_RESOLVE( tod_clock );
      HDL_RESOLVE( etod_clock );
      HDL_RESOLVE( device_attention );
-   #endif /* defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL) */
+   #endif
 }
 END_RESOLVER_SECTION
 
@@ -9653,6 +9650,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE( PTP, ptp_device_hndinfo );
 }
 END_DEVICE_SECTION
-
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-

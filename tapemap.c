@@ -26,13 +26,11 @@ static BYTE eoflbl[] = "\xC5\xD6\xC6";  /* EBCDIC characters "EOF"   */
 static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
 static BYTE buf[ MAX_BLKLEN ];
 
-#ifdef EXTERNALGUI
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 /* How many bytes we've read so far. */
 long  curpos = 0;
 long  prevpos = 0;
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* TAPEMAP main entry point                                          */
@@ -88,7 +86,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     while (1)
     {
-#ifdef EXTERNALGUI
         if (extgui)
         {
             /* Report progress every nnnK */
@@ -98,13 +95,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 EXTGUIMSG( "IPOS=%ld\n", curpos );
             }
         }
-#endif /*EXTERNALGUI*/
 
         /* Read a block from the tape */
         len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));
-#ifdef EXTERNALGUI
-        if (extgui) curpos += len;
-#endif /*EXTERNALGUI*/
+
+        if (extgui)
+            curpos += len;
+
         if (len < 0)
         {
             // "File %s: Error reading %s header: rc=%d, errno=%d: %s"
@@ -160,9 +157,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
             /* Read the data block. */
             len = read (infd, buf, curblkl);
-#ifdef EXTERNALGUI
-            if (extgui) curpos += len;
-#endif /*EXTERNALGUI*/
+
+            if (extgui)
+                curpos += len;
+
             if (len < 0)
             {
                 // "File %s: Error reading %s data block: rc=%d, errno=%d: %s"

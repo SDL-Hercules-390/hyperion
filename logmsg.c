@@ -244,13 +244,12 @@ static void _flog_write_pipe( FILE* f, const char* msg )
 
         if (1
             && sysblk.shutdown
-#ifdef EXTERNALGUI
+
             // PROGRAMMING NOTE: the external GUI receives messages
             // not only via its logfile stream but also via its
             // stderr stream as well, so we skip the logfile write
             // in order to prevent duplicate messages.
             && !extgui
-#endif
         )
         {
             // Note: call does nothing if no logfile exists.

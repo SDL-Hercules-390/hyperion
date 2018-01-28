@@ -2533,10 +2533,8 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 } /* end function printer_execute_ccw */
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
-DEVHND printer_device_hndinfo = {
+static DEVHND printer_device_hndinfo =
+{
         &printer_init_handler,         /* Device Initialization      */
         &printer_execute_ccw,          /* Device CCW execute         */
         &printer_close_device,         /* Device Close               */
@@ -2593,7 +2591,8 @@ DEVHND prt3203_device_hndinfo = {
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdt1403_LTX_hdl_ddev
 #define hdl_depc hdt1403_LTX_hdl_depc
 #define hdl_reso hdt1403_LTX_hdl_reso
@@ -2601,7 +2600,6 @@ DEVHND prt3203_device_hndinfo = {
 #define hdl_fini hdt1403_LTX_hdl_fini
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -2617,4 +2615,3 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE( 3211, printer_device_hndinfo );
 }
 END_DEVICE_SECTION
-#endif

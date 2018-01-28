@@ -6,12 +6,11 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
+
+#define _DYNGUI_C_
+#define _DYNGUI_DLL_
+
 #include "hercules.h"   // (#includes "config." w/#define for VERSION)
-
-#ifdef EXTERNALGUI
-
-#if defined(OPTION_DYNAMIC_LOAD)
-
 #include "devtype.h"
 #include "opcode.h"
 
@@ -2085,7 +2084,8 @@ void gui_panel_display ()
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev dyngui_LTX_hdl_ddev
 #define hdl_depc dyngui_LTX_hdl_depc
 #define hdl_reso dyngui_LTX_hdl_reso
@@ -2181,7 +2181,3 @@ HDL_FINAL_SECTION
 END_FINAL_SECTION
 
 ///////////////////////////////////////////////////////////////////////////////
-
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
-#endif // EXTERNALGUI

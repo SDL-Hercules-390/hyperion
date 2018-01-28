@@ -61,14 +61,10 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-
-
-#if defined( OPTION_DYNAMIC_LOAD )
-  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
-    SYSBLK *psysblk;
-    #define sysblk (*psysblk)
-  #endif
-#endif /*defined( OPTION_DYNAMIC_LOAD )*/
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -1433,10 +1429,7 @@ static int zfcp_initiate_output_mult(DEVBLK *dev, U32 qmask)
 }
 
 
-#if defined( OPTION_DYNAMIC_LOAD )
-static
-#endif
-DEVHND zfcp_device_hndinfo =
+static DEVHND zfcp_device_hndinfo =
 {
         &zfcp_init_handler,            /* Device Initialization      */
         &zfcp_execute_ccw,             /* Device CCW execute         */
@@ -1471,15 +1464,13 @@ DEVHND zfcp_device_hndinfo =
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined( HDL_BUILD_SHARED ) && defined( HDL_USE_LIBTOOL )
+#if defined( HDL_USE_LIBTOOL )
 #define hdl_ddev hdtzfcp_LTX_hdl_ddev
 #define hdl_depc hdtzfcp_LTX_hdl_depc
 #define hdl_reso hdtzfcp_LTX_hdl_reso
 #define hdl_init hdtzfcp_LTX_hdl_init
 #define hdl_fini hdtzfcp_LTX_hdl_fini
 #endif
-
-#if defined( OPTION_DYNAMIC_LOAD )
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -1519,8 +1510,6 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE ( ZFCP, zfcp_device_hndinfo );
 }
 END_DEVICE_SECTION
-
-#endif // defined(OPTION_DYNAMIC_LOAD)
 
 #if defined( _MSVC_ ) && defined( NO_ZFCP_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings

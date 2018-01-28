@@ -256,13 +256,11 @@ BYTE    isdiag;
     /* (sanity check) */
     ASSERT( argc && cmdline && *cmdline && argv[0] && argv[0][0] );
 
-#if defined( OPTION_DYNAMIC_LOAD )
     /* If a system command hook exists, let it try processing it first. */
     /* Only if it rejects it, will we then try processing it ourselves. */
-    if(system_command)
-        if((rc = system_command( CMDFUNC_ARGS )) != HERRINVCMD)
+    if (system_command)
+        if ((rc = system_command( CMDFUNC_ARGS )) != HERRINVCMD)
             return rc;
-#endif /* defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Check for comment command. We need to test for this separately
        rather than scanning our COMAMND table since the first token
@@ -675,11 +673,7 @@ void* FindSCRCTL( TID tid );// (external helper function; see script.c)
 /*-------------------------------------------------------------------*/
 /* panel_command entry-point:  determine if Hercules or SCP command  */
 /*-------------------------------------------------------------------*/
-#if defined( OPTION_DYNAMIC_LOAD )
-DLL_EXPORT void* panel_command_r ( void* cmdline )
-#else
-           void* panel_command   ( void* cmdline )
-#endif
+DLL_EXPORT void* panel_command_r( void* cmdline )
 {
 #define MAX_CMD_LEN (32768)
 
