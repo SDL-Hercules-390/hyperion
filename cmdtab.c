@@ -673,12 +673,12 @@ void* FindSCRCTL( TID tid );// (external helper function; see script.c)
 /*-------------------------------------------------------------------*/
 /* panel_command entry-point:  determine if Hercules or SCP command  */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void* panel_command_r( void* cmdline )
+DLL_EXPORT void* the_real_panel_command( char* cmdline )
 {
 #define MAX_CMD_LEN (32768)
 
     char  cmd[ MAX_CMD_LEN ];           /* Copy of panel command     */
-    char *pCmdLine;
+    char* pCmdLine;
     unsigned i;
     int hercecho = 1;                   /* Default echo to console   */
     int rc = 0;                         /* Return Code from command  */
@@ -687,12 +687,12 @@ DLL_EXPORT void* panel_command_r( void* cmdline )
     if (sysblk.cmdsep)
     {
         /* Does cmdline contain any separator characters? */
-        char*  firstsep  = strchr( (char*) cmdline, sysblk.cmdsep );
+        char*  firstsep  = strchr( cmdline, sysblk.cmdsep );
         if (firstsep)
         {
             /* Yes! Must process commands separately */
             void*   rc;
-            size_t  sepcharindex  = (firstsep - (char*) cmdline);
+            size_t  sepcharindex  = (firstsep - cmdline);
             char*   first_cmd     = strdup( cmdline );
 
             /* Mark end of first command */
@@ -830,4 +830,4 @@ DLL_EXPORT void* panel_command_r( void* cmdline )
 
     return (void*)((uintptr_t)rc);
 }
-/* end panel_command / panel_command_r */
+/* end the_real_panel_command */

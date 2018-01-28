@@ -6361,12 +6361,11 @@ static INSTR_FUNC replace_opcode_xx________xx(int arch, INSTR_FUNC inst, int opc
 }
 
 /*-------------------------------------------------------------------*/
-/*                       replace_opcode                              */
+/*               the_real_replace_opcode                             */
 /*-------------------------------------------------------------------*/
 /* Called by hdl.c for dynamic instruction modules such as dyncrypt  */
 /*-------------------------------------------------------------------*/
-
-DLL_EXPORT void* replace_opcode_r( int arch, INSTR_FUNC inst, int opcode1, int opcode2 )
+DLL_EXPORT void* the_real_replace_opcode( int arch, INSTR_FUNC inst, int opcode1, int opcode2 )
 {
   switch(opcode1)
   {

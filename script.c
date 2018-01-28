@@ -88,7 +88,7 @@ static int set_restart(const char * s);
 /* pargc        Pointer to number of arguments integer result.       */
 /* Returns number of arguments found. (same value as at *pargc)      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
+DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 {
     *pargc = 0;
     *pargv = NULL;

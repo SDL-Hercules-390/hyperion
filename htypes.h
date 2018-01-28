@@ -246,4 +246,30 @@ typedef int DEVRCD( DEVBLK *dev, BYTE *buffer, int bufsz );
 /*-------------------------------------------------------------------*/
 typedef void DEVSNS( const DEVBLK* dev, char* buf, size_t bufsz );
 
+/*-------------------------------------------------------------------*/
+/* typedefs for HDL overridable functions                            */
+/*-------------------------------------------------------------------*/
+
+typedef void (ATTR_REGPARM(2) *INSTR_FUNC)( BYTE inst[], REGS* regs );
+
+/* The following functions are called directly */
+
+typedef void   PANDISP      ();
+typedef void*  PANCMD       ( char* command );
+typedef int    SYSTEMCMD    ( int argc, char* argv[], char* cmdline );
+typedef void*  REPOPCODE    ( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
+typedef int    DBGT32ST     ( int fd );
+typedef void   DBGT32TR     ( int fd );
+
+/* The following are called via the "HDC1", "HDC2", etc, macros */
+
+typedef void*  HDLDBGCD     ( char* cwd );
+typedef void*  HDLDBGCPU    ( REGS* regs );
+typedef void*  HDLDBGPGMI   ( REGS* regs , int ruptcode );
+typedef void*  HDLDBGDIAG   ( U32 code, int r1, int r2, REGS* regs );
+typedef void*  HDLDBGSCLPUC ( U32 sclp_command, void* sccb, REGS* regs );
+typedef void*  HDLDBGSCLPUE ( void* evd_hdr, void* sccb, REGS* regs );
+
+/*-------------------------------------------------------------------*/
+
 #endif // _HTYPES_H_

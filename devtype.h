@@ -5,8 +5,7 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-#if !defined(_DEVICES_H)
-
+#ifndef _DEVICES_H
 #define _DEVICES_H
 
 struct DEVHND
@@ -52,4 +51,4 @@ extern          DEVHND  lcs_device_hndinfo;
 extern          DEVHND  ptp_device_hndinfo;
 
 
-#endif /*!defined(_DEVICES_H)*/
+#endif // _DEVICES_H

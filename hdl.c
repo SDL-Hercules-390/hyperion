@@ -399,15 +399,15 @@ static void* hdl_dlopen( const char* filename, int flag )
     /*
      *  Check in this order:
      *
-     *    1. filename as passed
-     *    2. filename with extension if needed
-     *    3. modpath added if basename( filename )
-     *    4. extension added to #3
+     *   1.  filename as passed
+     *   2.  filename with extension if needed
+     *   3.  modpath added if basename( filename )
+     *   4.  extension added to #3
      */
     if ((ret = dlopen( filename, flag ))) /* try filename as-is first */
         return ret;
 
-     //  2. filename with extension if needed
+     //  2.  filename with extension if needed
 
     fulllen = strlen( hdl_modpath ) + 1 + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
     fullname = calloc( 1, fulllen );
@@ -427,7 +427,7 @@ static void* hdl_dlopen( const char* filename, int flag )
     }
 #endif
 
-     //  3. modpath added if basename( filename )
+     //  3.  modpath added if basename( filename )
 
     if (hdl_modpath && *hdl_modpath)
     {
@@ -448,7 +448,7 @@ static void* hdl_dlopen( const char* filename, int flag )
         return ret;
     }
 
-    //  4. extension added to #3
+    //  4.  extension added to #3
 
 #if defined( HDL_MODULE_SUFFIX )
 
@@ -476,9 +476,6 @@ DLL_EXPORT int hdl_main()
     initialize_lock( &hdl_lock );
     hdl_shutting = false;
     dlinit();
-
-
-
 
     if (!(hdl_curmod = hdl_mods = malloc( sizeof( HDLMOD ))))
     {
@@ -522,9 +519,6 @@ DLL_EXPORT int hdl_main()
     /* No modules's loaded yet */
     hdl_curmod->next = NULL;
 
-
-
-
     obtain_lock( &hdl_lock );
     {
         if (hdl_curmod->depsec_ep) hdl_curmod->depsec_ep( &hdl_check_depends_cb    );
@@ -534,9 +528,6 @@ DLL_EXPORT int hdl_main()
         if (hdl_curmod->inssec_ep) hdl_curmod->inssec_ep( &hdl_define_instructs_cb );
     }
     release_lock( &hdl_lock );
-
-
-
 
     /* Register termination exit */
     hdl_addshut( "hdl_term", hdl_term, NULL );

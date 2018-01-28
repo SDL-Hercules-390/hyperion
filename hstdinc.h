@@ -26,14 +26,14 @@
   #include "targetver.h"        /* Minimum Windows platform          */
 #endif
 
-#if !defined(_REENTRANT)
+#if !defined( _REENTRANT )
 /* Jan should have specified -pthread for linking.  jph              */
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #endif
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
-#if defined(HAVE_STRSIGNAL) && defined(__GNUC__) && !defined(_GNU_SOURCE)
-  #define _GNU_SOURCE                 /* required by strsignal() *JJ */
+#if defined( HAVE_STRSIGNAL ) && defined( __GNUC__ ) && !defined( _GNU_SOURCE )
+  #define _GNU_SOURCE           /* required by strsignal()       *JJ */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -223,6 +223,13 @@
 #ifdef HAVE_SYS_PRCTL_H
   #include <sys/prctl.h>
 #endif
+#ifdef _MSVC_
+  #include "getopt.h"
+#else
+  #if defined( HAVE_GETOPT_LONG ) && !defined( __GETOPT_H__ )
+    #include <getopt.h>
+  #endif
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Hercules standard headers...           (common Hercules headers)  */
@@ -236,10 +243,31 @@
   #include <unistd.h>           // Unix standard definitions
 #endif
 
-#ifdef C99_FLEXIBLE_ARRAYS
+#ifdef HAVE_ASSERT_H            // (must follow "hercwind.h")
+  #include <assert.h>
+#endif
+
+#ifdef C99_FLEXIBLE_ARRAYS      // (must follow "hercwind.h")
   #define FLEXIBLE_ARRAY        // ("DEVBLK *memdev[];" syntax is supported)
 #else
   #define FLEXIBLE_ARRAY 0      // ("DEVBLK *memdev[0];" must be used instead)
+#endif
+
+#if defined( HAVE_ATTR_REGPARM )// (must follow "hercwind.h")
+  #ifdef _MSVC_
+    #define  ATTR_REGPARM(n)    __fastcall
+  #else /* GCC presumed */
+    #define  ATTR_REGPARM(n)    __attribute__ (( regparm( n )))
+  #endif
+#else
+  #define  ATTR_REGPARM(n)      /* nothing */
+#endif
+
+#if defined( HAVE_ATTR_PRINTF ) // (must follow "hercwind.h")
+  /* GCC presumed */
+  #define  ATTR_PRINTF(f,v)     __attribute__ (( format( printf, f, v )))
+#else
+  #define  ATTR_PRINTF(f,v)     /* nothing */
 #endif
 
 #include "hostopts.h"           // Must come before htypes.h

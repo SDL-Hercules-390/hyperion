@@ -54,7 +54,7 @@ BLDC_DLL_IMPORT const char* init_sysblk_netdev();
 
 /* Functions in module script.c */
 SCRI_DLL_IMPORT int process_config (const char *fname);
-SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
+SCRI_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
 /* Functions in module config.c */
 void release_config ( void* );
@@ -165,26 +165,51 @@ CMDT_DLL_IMPORT int CallHercCmd (int argc, char **argv, char *cmdline);
 void losc_set  ( int license_status );
 void losc_check( char* ostype );
 
-HSYS_DLL_IMPORT void  (*panel_display)  ();
-HPAN_DLL_IMPORT void    panel_display_r ();
-HSYS_DLL_IMPORT void* (*panel_command)  ( void* cmdline );
-CMDT_DLL_IMPORT void*   panel_command_r ( void* cmdline );
-HSYS_DLL_IMPORT void* (*replace_opcode) ( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
-OPCD_DLL_IMPORT void*   replace_opcode_r( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
-HSYS_DLL_IMPORT int   (*system_command) ( int argc, char* argv[], char* cmdline );
-HSYS_DLL_IMPORT void  (*daemon_task)    ();
+/*-------------------------------------------------------------------*/
+/* The following functions are never called directly. They instead   */
+/* are called via the function pointers in hsys.c (which point to    */
+/* the real functions or elsewhere if overridden by an HDL module).  */
+/*-------------------------------------------------------------------*/
 
-HSYS_DLL_IMPORT void* (*debug_device_state)         (DEVBLK *);
-HSYS_DLL_IMPORT void* (*debug_cpu_state)            (REGS *);
-HSYS_DLL_IMPORT void* (*debug_cd_cmd)               (char *);
-HSYS_DLL_IMPORT void* (*debug_watchdog_signal)      (REGS *);
-HSYS_DLL_IMPORT void* (*debug_program_interrupt)    (REGS *, int);
-HSYS_DLL_IMPORT void* (*debug_diagnose)             (U32, int,  int, REGS *);
-HSYS_DLL_IMPORT void* (*debug_sclp_unknown_command) (U32,    void *, REGS *);
-HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event)   (void *, void *, REGS *);
-HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
-HSYS_DLL_IMPORT void* (*debug_chsc_unknown_request) (void *, void *, REGS *);
-HSYS_DLL_IMPORT void* (*debug_sclp_event_data)      (void *, void *, REGS *);
+HPAN_DLL_IMPORT  void   the_real_panel_display  ();
+CMDT_DLL_IMPORT  void*  the_real_panel_command  ( char* cmdline );
+OPCD_DLL_IMPORT  void*  the_real_replace_opcode ( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
+
+/*-------------------------------------------------------------------*/
+/* The following functions pointers are defined in hsys.c and will   */
+/* either be NULL, point to the above real functions or else point   */
+/* somewhere else if they are overridden by an HDL module.           */
+/*-------------------------------------------------------------------*/
+
+HSYS_DLL_IMPORT  PANDISP*       panel_display;
+HSYS_DLL_IMPORT  PANDISP*       daemon_task;
+HSYS_DLL_IMPORT  PANCMD*        panel_command;
+HSYS_DLL_IMPORT  SYSTEMCMD*     system_command;
+HSYS_DLL_IMPORT  REPOPCODE*     replace_opcode;
+
+#if defined( OPTION_W32_CTCI )
+HSYS_DLL_IMPORT  DBGT32ST*      debug_tt32_stats;
+HSYS_DLL_IMPORT  DBGT32TR*      debug_tt32_tracing;
+#endif
+
+/*-------------------------------------------------------------------*/
+/* The following overridable debugging hook function pointers are    */
+/* defined in hsys.c and called via the "HDC1", "HDC2", etc, macros  */
+/*-------------------------------------------------------------------*/
+
+HSYS_DLL_IMPORT  HDLDBGCD*      debug_cd_cmd;
+HSYS_DLL_IMPORT  HDLDBGCPU*     debug_cpu_state;
+HSYS_DLL_IMPORT  HDLDBGCPU*     debug_watchdog_signal;
+HSYS_DLL_IMPORT  HDLDBGPGMI*    debug_program_interrupt;
+HSYS_DLL_IMPORT  HDLDBGDIAG*    debug_diagnose;
+
+HSYS_DLL_IMPORT  HDLDBGSCLPUC*  debug_sclp_unknown_command;
+HSYS_DLL_IMPORT  HDLDBGSCLPUE*  debug_sclp_unknown_event;
+HSYS_DLL_IMPORT  HDLDBGSCLPUE*  debug_sclp_unknown_event_mask;
+HSYS_DLL_IMPORT  HDLDBGSCLPUE*  debug_sclp_event_data;
+HSYS_DLL_IMPORT  HDLDBGSCLPUE*  debug_chsc_unknown_request;
+
+/*-------------------------------------------------------------------*/
 
 /* Functions in module httpserv.c */
 int http_command(int argc, char *argv[]);

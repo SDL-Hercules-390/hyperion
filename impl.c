@@ -996,14 +996,14 @@ int     rc;
     /* Initialize runtime opcode tables */
     init_opcode_tables();
 
-    /* Initialize the hercules dynamic loader */
+    /* Initialize the Hercules Dynamic Loader (HDL) */
     if ((rc = hdl_main()) != 0)
     {
-        usleep( 100000 );
+        usleep( 100000 );  // (give logger time to display message)
         exit( rc );
     }
 
-    /* Load modules requested at startup */
+    /* Load modules specified via command-line -l/--ldmod option */
     if (modcount)
     {
         int modnum;
@@ -1018,11 +1018,11 @@ int     rc;
             modnames[ modnum ] = NULL;
         }
 
-        modcount = 0;  // (reset back to zero now that they're all loaded)
+        modcount = 0;  // (reset to zero now that they're all loaded)
 
         if (err)
         {
-            usleep( 10000 ); // (give logger time to show them the error message)
+            usleep( 10000 ); // (give logger time to display message)
             // "Hercules terminating, see previous messages for reason"
             WRMSG( HHC01408, "S");
             delayed_exit( -1 );

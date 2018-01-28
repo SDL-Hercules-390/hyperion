@@ -42,38 +42,33 @@ END_DEPENDENCY_SECTION;
 
 /*-------------------------------------------------------------------*/
 
-static void** unresolved = NULL;
-#define UNRESOLVED *unresolved
-
-/*-------------------------------------------------------------------*/
-
 HDL_REGISTER_SECTION;
 {
-    HDL_REGISTER( panel_display,                 panel_display_r  );
-    HDL_REGISTER( panel_command,                 panel_command_r  );
-    HDL_REGISTER( replace_opcode,                replace_opcode_r );
-    HDL_REGISTER( parse_args,                    parse_args       );
+    static void**    unresolved = NULL;
+#define UNRESOLVED (*unresolved)
 
-    HDL_REGISTER( daemon_task,                   UNRESOLVED       );
-    HDL_REGISTER( system_command,                UNRESOLVED       );
-    HDL_REGISTER( hdl_devequ,                    UNRESOLVED       );
+    HDL_REGISTER( panel_display,                 the_real_panel_display  );
+    HDL_REGISTER( panel_command,                 the_real_panel_command  );
+    HDL_REGISTER( replace_opcode,                the_real_replace_opcode );
 
-    HDL_REGISTER( debug_cpu_state,               UNRESOLVED       );
-    HDL_REGISTER( debug_cd_cmd,                  UNRESOLVED       );
-    HDL_REGISTER( debug_device_state,            UNRESOLVED       );
-    HDL_REGISTER( debug_program_interrupt,       UNRESOLVED       );
-    HDL_REGISTER( debug_diagnose,                UNRESOLVED       );
-    HDL_REGISTER( debug_sclp_unknown_command,    UNRESOLVED       );
-    HDL_REGISTER( debug_sclp_unknown_event,      UNRESOLVED       );
-    HDL_REGISTER( debug_sclp_unknown_event_mask, UNRESOLVED       );
-    HDL_REGISTER( debug_sclp_event_data,         UNRESOLVED       );
-    HDL_REGISTER( debug_chsc_unknown_request,    UNRESOLVED       );
-    HDL_REGISTER( debug_watchdog_signal,         UNRESOLVED       );
+    HDL_REGISTER( daemon_task,                   UNRESOLVED );
+    HDL_REGISTER( system_command,                UNRESOLVED );
+    HDL_REGISTER( hdl_devequ,                    UNRESOLVED );
+
+    HDL_REGISTER( debug_cpu_state,               UNRESOLVED );
+    HDL_REGISTER( debug_cd_cmd,                  UNRESOLVED );
+    HDL_REGISTER( debug_program_interrupt,       UNRESOLVED );
+    HDL_REGISTER( debug_diagnose,                UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_command,    UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_event,      UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_event_mask, UNRESOLVED );
+    HDL_REGISTER( debug_sclp_event_data,         UNRESOLVED );
+    HDL_REGISTER( debug_chsc_unknown_request,    UNRESOLVED );
+    HDL_REGISTER( debug_watchdog_signal,         UNRESOLVED );
 
 #if defined( OPTION_W32_CTCI )
-
-    HDL_REGISTER( debug_tt32_stats,              UNRESOLVED       );
-    HDL_REGISTER( debug_tt32_tracing,            UNRESOLVED       );
+    HDL_REGISTER( debug_tt32_stats,              UNRESOLVED );
+    HDL_REGISTER( debug_tt32_tracing,            UNRESOLVED );
 #endif
 }
 END_REGISTER_SECTION;
@@ -83,15 +78,15 @@ END_REGISTER_SECTION;
 HDL_RESOLVER_SECTION;
 {
     HDL_RESOLVE( panel_display                 );
-    HDL_RESOLVE( daemon_task                   );
     HDL_RESOLVE( panel_command                 );
-    HDL_RESOLVE( system_command                );
     HDL_RESOLVE( replace_opcode                );
+
+    HDL_RESOLVE( daemon_task                   );
+    HDL_RESOLVE( system_command                );
     HDL_RESOLVE( hdl_devequ                    );
 
     HDL_RESOLVE( debug_cpu_state               );
     HDL_RESOLVE( debug_cd_cmd                  );
-    HDL_RESOLVE( debug_device_state            );
     HDL_RESOLVE( debug_program_interrupt       );
     HDL_RESOLVE( debug_diagnose                );
     HDL_RESOLVE( debug_sclp_unknown_command    );
@@ -99,9 +94,9 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_sclp_unknown_event_mask );
     HDL_RESOLVE( debug_sclp_event_data         );
     HDL_RESOLVE( debug_chsc_unknown_request    );
+    HDL_RESOLVE( debug_watchdog_signal         );
 
 #if defined( OPTION_W32_CTCI )
-
     HDL_RESOLVE( debug_tt32_stats              );
     HDL_RESOLVE( debug_tt32_tracing            );
 #endif

@@ -12,7 +12,7 @@
 /*-------------------------------------------------------------------*/
 
 
-#if !defined(_DASDTAB_H)
+#ifndef _DASDTAB_H
 #define _DASDTAB_H
 
 #include "hercules.h"
@@ -145,4 +145,4 @@ DTB_DLL_IMPORT int     dasd_build_ckd_subsys_status (DEVBLK *, BYTE *, int);
 int     dasd_build_fba_devid (FBADEV *, BYTE *);
 int     dasd_build_fba_devchar (FBADEV *, BYTE *, int);
 
-#endif /*!defined(_DASDTAB_H)*/
+#endif // _DASDTAB_H
