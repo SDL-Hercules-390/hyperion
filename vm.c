@@ -1699,9 +1699,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     SIE_INTERCEPT(regs);
 
-    if( HDC3(debug_iucv, b2, effective_addr2, regs) )
-        return;
-
     PTT_ERR("*IUCV",b2,effective_addr2,regs->psw.IA_L);
 
     /* Set condition code to indicate IUCV not available */

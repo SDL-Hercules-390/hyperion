@@ -31,7 +31,6 @@ DLL_EXPORT void*  (*debug_cd_cmd)                  ( char* );
 DLL_EXPORT void*  (*debug_device_state)            ( DEVBLK* );
 DLL_EXPORT void*  (*debug_program_interrupt)       ( REGS*, int );
 DLL_EXPORT void*  (*debug_diagnose)                ( U32, int, int, REGS* );
-DLL_EXPORT void*  (*debug_iucv)                    ( int,   VADR,   REGS* );
 DLL_EXPORT void*  (*debug_sclp_unknown_command)    ( U32,   void*,  REGS* );
 DLL_EXPORT void*  (*debug_sclp_unknown_event)      ( void*, void*,  REGS* );
 DLL_EXPORT void*  (*debug_sclp_unknown_event_mask) ( void*, void*,  REGS* );

@@ -180,7 +180,6 @@ HSYS_DLL_IMPORT void* (*debug_cd_cmd)               (char *);
 HSYS_DLL_IMPORT void* (*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void* (*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void* (*debug_diagnose)             (U32, int,  int, REGS *);
-HSYS_DLL_IMPORT void* (*debug_iucv)                 (int, VADR, REGS *);
 HSYS_DLL_IMPORT void* (*debug_sclp_unknown_command) (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event)   (void *, void *, REGS *);
 HSYS_DLL_IMPORT void* (*debug_sclp_unknown_event_mask) (void *, void *, REGS *);

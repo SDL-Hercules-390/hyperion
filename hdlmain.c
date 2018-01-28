@@ -63,7 +63,6 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_device_state,            UNRESOLVED       );
     HDL_REGISTER( debug_program_interrupt,       UNRESOLVED       );
     HDL_REGISTER( debug_diagnose,                UNRESOLVED       );
-    HDL_REGISTER( debug_iucv,                    UNRESOLVED       );
     HDL_REGISTER( debug_sclp_unknown_command,    UNRESOLVED       );
     HDL_REGISTER( debug_sclp_unknown_event,      UNRESOLVED       );
     HDL_REGISTER( debug_sclp_unknown_event_mask, UNRESOLVED       );
