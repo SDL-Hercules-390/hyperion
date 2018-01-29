@@ -954,7 +954,7 @@ DLL_EXPORT void hdl_listdeps()
 /*-------------------------------------------------------------------*/
 /*         hdl_build_devmod_name  --  build device module name       */
 /*-------------------------------------------------------------------*/
-static char* hdl_build_devmod_name( const char* typname )
+static const char* hdl_build_devmod_name( const char* typname )
 {
     char*   dtname;
     size_t  len, size;
@@ -966,8 +966,7 @@ static char* hdl_build_devmod_name( const char* typname )
     strlcat( dtname, typname, size );
 
     for (len = 0; len < strlen( dtname ); len++)
-        if (isupper( dtname[ len ]))
-            dtname[ len ] = tolower( dtname[ len ]);
+        dtname[ len ] = tolower( dtname[ len ]);
 
     return dtname;
 }
@@ -1004,7 +1003,6 @@ DLL_EXPORT DEVHND* hdl_DEVHND( const char* typname )
 
     DEVHND*      hnd;
     const char*  modname;
-//  EQUTYP*      devequ;
 
     /* Get the device handler for requested device-type */
     if ((hnd = hdl_get_DEVHND( typname )))
@@ -1032,7 +1030,7 @@ DLL_EXPORT DEVHND* hdl_DEVHND( const char* typname )
         */
         if (hdl_devequ)
         {
-            const char* equtyp = hdl_devequ( (char*) typname );
+            const char* equtyp = hdl_devequ( typname );
 
             if (equtyp)
             {

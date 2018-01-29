@@ -42,7 +42,6 @@ typedef void* GETSYM( const char* symname );
 typedef void  DEFDEV( const char* typname, DEVHND* devhnd );
 typedef void  DEFINS( int amask, int opcode, const char* name, void* func );
 typedef int   MODFIN();
-typedef char* EQUTYP( char* typname );
 
 /*-------------------------------------------------------------------*/
 /*                 Module entry-point functions                      */
@@ -50,19 +49,19 @@ typedef char* EQUTYP( char* typname );
 /*      These are the module functions that HDL calls into.          */
 /*-------------------------------------------------------------------*/
 
-typedef int   DEPSEC( DEPCHK* depchk );
-typedef void  REGSEC( REGSYM* regsym );
-typedef void  RESSEC( GETSYM* getsym );
-typedef void  DEVSEC( DEFDEV* defdev );
-typedef void  INSSEC( DEFINS* defins );
-typedef int   FINSEC();
+typedef int         DEPSEC( DEPCHK* depchk );
+typedef void        REGSEC( REGSYM* regsym );
+typedef void        RESSEC( GETSYM* getsym );
+typedef void        DEVSEC( DEFDEV* defdev );
+typedef const char* DEVEQU( const char* typname );
+typedef void        INSSEC( DEFINS* defins );
+typedef int         FINSEC();
 
 /*-------------------------------------------------------------------*/
 /*                HDLSHUT  --  Shutdown handling                     */
 /*-------------------------------------------------------------------*/
 
 struct HDLSHUT; typedef struct HDLSHUT HDLSHUT;
-
 struct HDLSHUT                          /* Thread shutdown control   */
 {
     HDLSHUT*     next;                  /* Next entry                */
@@ -76,7 +75,6 @@ struct HDLSHUT                          /* Thread shutdown control   */
 /*-------------------------------------------------------------------*/
 
 struct HDLPRE; typedef struct HDLPRE HDLPRE;
-
 struct HDLPRE                           /* Preload list entry        */
 {
     const char*  name;                  /* Module name               */
@@ -88,7 +86,6 @@ struct HDLPRE                           /* Preload list entry        */
 /*-------------------------------------------------------------------*/
 
 struct HDLDEP; typedef struct HDLDEP HDLDEP;
-
 struct HDLDEP                           /* Dependency entry          */
 {
     const char*  name;                  /* Dependency name           */
@@ -102,7 +99,6 @@ struct HDLDEP                           /* Dependency entry          */
 /*-------------------------------------------------------------------*/
 
 struct HDLSYM; typedef struct HDLSYM HDLSYM;
-
 struct HDLSYM                           /* External Symbol entry     */
 {
     const char*  name;                  /* Function symbol name      */
@@ -116,7 +112,6 @@ struct HDLSYM                           /* External Symbol entry     */
 /*-------------------------------------------------------------------*/
 
 struct HDLDEV; typedef struct HDLDEV HDLDEV;
-
 struct HDLDEV                           /* Device entry              */
 {
     const char*  name;                  /* Device type name          */
@@ -125,11 +120,21 @@ struct HDLDEV                           /* Device entry              */
 };
 
 /*-------------------------------------------------------------------*/
+/*                  EQUTAB  --  Device-Equate table                  */
+/*-------------------------------------------------------------------*/
+
+struct EQUTAB; typedef struct EQUTAB EQUTAB;
+struct EQUTAB                           /* Device Equate table entry */
+{
+    const char*  alias;                 /* typname from device stmt  */
+    const char*  name;                  /* hdt module typname        */
+};
+
+/*-------------------------------------------------------------------*/
 /*                  HDLINS  --  Instruction entry                    */
 /*-------------------------------------------------------------------*/
 
 struct HDLINS; typedef struct HDLINS HDLINS;
-
 struct HDLINS                           /* Instruction entry         */
 {
     const char*  instname;              /* Instruction name          */
@@ -145,7 +150,6 @@ struct HDLINS                           /* Instruction entry         */
 /*-------------------------------------------------------------------*/
 
 struct HDLMOD; typedef struct HDLMOD HDLMOD;
-
 struct HDLMOD                           /* module entry              */
 {
     const char*  name;                  /* module name               */
@@ -183,13 +187,8 @@ HDL_DLL_IMPORT void         hdl_listmods ( int flags );                   /* lis
 HDL_DLL_IMPORT void         hdl_listdeps ();                              /* list all dependencies     */
 HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );         /* Get device-type handler   */
 HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );          /* Find next entry in chain  */
-HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
-
-/*-------------------------------------------------------------------*/
-/*               publicly visiblae global variables                  */
-/*-------------------------------------------------------------------*/
-
-HDL_DLL_IMPORT EQUTYP*      hdl_devequ; /* device-type equates func  */
+HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );         /* Retrieve symbol address   */
+HDL_DLL_IMPORT DEVEQU*      hdl_devequ;                                   /* device-type equates func  */
 
 /*-------------------------------------------------------------------*/
 /*                     HDL_USE_LIBTOOL                               */
@@ -285,7 +284,7 @@ HDL_DLL_IMPORT EQUTYP*      hdl_devequ; /* device-type equates func  */
 
 #define HDL_REGISTER( epname, varname )                             \
                                                                     \
-    regsym( QSTR( epname ), &varname );
+    regsym( QSTR( epname ), (void*) &varname );
 
 /*-------------------------------------------------------------------*/
 /*                   HDL_RESOLVER_SECTION                            */

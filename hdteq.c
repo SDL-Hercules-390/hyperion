@@ -11,39 +11,26 @@
 /*-------------------------------------------------------------------*/
 /*                 device-type translation table                     */
 /*-------------------------------------------------------------------*/
-
-struct EQUTAB
-{
-    char*  alias;
-    char*  name;
-};
-typedef struct EQUTAB EQUTAB;
-
+/*                                                                   */
+/* This table provides aliases for device-types such that various    */
+/* device-types are mapped to a common device-handler module.        */
+/*                                                                   */
+/* The only purpose of this table is to associate the correct hdt    */
+/* loadable module with a specific device-type BEFORE the device-    */
+/* type in question has been registered.  This table will NOT be     */
+/* searched for registered device-types or if the specific loadable  */
+/* module already exists.                                            */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
-/*                 device-type translation table                     */
-/*-------------------------------------------------------------------*/
 
-static EQUTAB devtyp_equtab[] =
+static EQUTAB equtab[] =
 {
-/*
-    This table provides aliases for device-types, such that
-    various device-types are mapped to a common loadable module.
+//     device-type (second argument of config file device statement)
+//     |
+//     |         hdt loadable module name ("99XY" ==> "hdt99xy.dll")
+//     |         |
+//     V         V
 
-    The only purpose of this table is to associate the correct
-    loadable module with a specific device-type BEFORE the device-
-    type in question has been registered.  This table will NOT be
-    searched for registered device-types or if the specific loadable
-    module exists.
-
-       device-type requested  (second argument of device statement)
-       |
-       |         base device support  (e.g base=99XY ==> 'hdt99xy.dll')
-       |         |
-       V         V
-*/
-//  { "3390",    "3990"  },
-//  { "3380",    "3990"  },
-               
     { "1052",    "3270"  },
     { "3215",    "3270"  },
     { "3287",    "3270"  },
@@ -59,7 +46,6 @@ static EQUTAB devtyp_equtab[] =
                
     { "3410",    "3420"  },
     { "3411",    "3420"  },
-//  { "3420",    "3420"  },
     { "3480",    "3420"  },
     { "3490",    "3420"  },
     { "3590",    "3420"  },
@@ -76,7 +62,6 @@ static EQUTAB devtyp_equtab[] =
     { "DW3480",  "3590D" },
     { "DW3490",  "3590D" },
     { "DW3590",  "3590D" },
-
     { "TH3480",  "3590D" },
     { "TH3490",  "3590D" },
     { "TH3590",  "3590D" },
@@ -90,35 +75,35 @@ static EQUTAB devtyp_equtab[] =
     { "CTCI",    "3088"  },
     { "CTCT",    "3088"  },
     { "CTCE",    "3088"  },
-    { "VMNET",   "3088"  },
                
     { "HCHAN",   "2880"  },
-//  { "2880",    "2880"  },
     { "2870",    "2880"  },
     { "2860",    "2880"  },
     { "9032",    "2880"  },
 };
 
 /*-------------------------------------------------------------------*/
+/*           Our DEVEQU device-type equates function                 */
+/*-------------------------------------------------------------------*/
 
-static char* hdt_translate_device_type( char* typname )
+static const char* our_devequ_func( const char* typname )
 {
-    EQUTYP* next_devequ_func;
+    DEVEQU* next_devequ_func;
     size_t  i;
 
     /* Search device equates table for match */
-    for (i=0; i < _countof( devtyp_equtab ); i++)
+    for (i=0; i < _countof( equtab ); i++)
     {
         /* Is this the device-type they're requesting? */
-        if (strcasecmp( devtyp_equtab[i].alias, typname ) == 0)
+        if (strcasecmp( equtab[i].alias, typname ) == 0)
         {
             /* Yes, then use this device-type name instead */
-            return devtyp_equtab[i].name;
+            return equtab[i].name;
         }
     }
 
     /* Is there another device-type-equates function in the chain? */
-    if (!(next_devequ_func = (EQUTYP*) hdl_next( &hdt_translate_device_type )))
+    if (!(next_devequ_func = (DEVEQU*) hdl_next( &our_devequ_func )))
         return NULL;
 
     /* Yes, then maybe it can translate it */
@@ -143,6 +128,8 @@ static char* hdt_translate_device_type( char* typname )
 #endif
 
 /*-------------------------------------------------------------------*/
+/*       Register our device-type equates module with HDL            */
+/*-------------------------------------------------------------------*/
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -150,10 +137,11 @@ HDL_DEPENDENCY_SECTION;
 }
 END_DEPENDENCY_SECTION
 
+/*-------------------------------------------------------------------*/
 
 HDL_REGISTER_SECTION;
 {
-    HDL_REGISTER( hdl_devequ, hdt_translate_device_type );
+    HDL_REGISTER( hdl_devequ, our_devequ_func );
 }
 END_REGISTER_SECTION
 
