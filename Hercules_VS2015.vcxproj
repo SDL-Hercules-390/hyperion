@@ -357,7 +357,6 @@
     <ClCompile Include="hconsole.c" />
     <ClCompile Include="hdiagf18.c" />
     <ClCompile Include="hdl.c" />
-    <ClCompile Include="hdlmain.c" />
     <ClCompile Include="hdteq.c" />
     <ClCompile Include="hercifc.c" />
     <ClCompile Include="herclin.c" />

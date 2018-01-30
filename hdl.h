@@ -88,9 +88,9 @@ struct HDLPRE                           /* Preload list entry        */
 struct HDLDEP; typedef struct HDLDEP HDLDEP;
 struct HDLDEP                           /* Dependency entry          */
 {
-    const char*  name;                  /* Dependency name           */
-    const char*  version;               /* Version                   */
-    int          size;                  /* Structure/module size     */
+    const char*  name;                  /* Structure name            */
+    const char*  version;               /* Structure version         */
+    int          size;                  /* Structure size            */
     HDLDEP*      next;                  /* Next entry                */
 };
 

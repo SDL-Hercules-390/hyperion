@@ -543,9 +543,6 @@
     <ClCompile Include="hdl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hdlmain.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hdteq.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

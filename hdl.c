@@ -37,7 +37,7 @@ HDLPRE hdl_preload[] =
 static LOCK         hdl_lock;               /* loader lock           */
 static HDLMOD*      hdl_mods     = NULL;    /* modules chain         */
 static HDLMOD*      hdl_curmod   = NULL;    /* module being loaded   */
-static HDLDEP*      hdl_depend   = NULL;    /* hdlmain Version codes */
+static HDLDEP*      hdl_depend   = NULL;    /* struct version/size   */
 static const char*  hdl_modpath  = NULL;    /* modules load path     */
 static bool         hdl_arg_p    = false;   /* -p cmdline opt given  */
 static HDLSHUT*     hdl_shutlist = NULL;    /* Shutdown call list    */

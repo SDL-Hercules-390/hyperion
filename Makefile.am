@@ -491,17 +491,13 @@ libherc_la_LIBADD = \
 
 #--------------------------------------------------------
 #  THIS is the hercules executable.
-#
-#  hdlmain.c is required so that dlopen(self)
-#  retrieves the 'main' hdl symbols
 #--------------------------------------------------------
 
 HLDFLAGS = -dlopen self
 HDEPS    = $(extpkg_ldadd)
 
 hercules_SOURCES = \
-  bootstrap.c      \
-  hdlmain.c
+  bootstrap.c
 
 hercules_LDADD =  \
   libherc.la      \
@@ -517,7 +513,6 @@ hercules_DEPENDENCIES = \
   $(HDEPS)
 
 herclin_SOURCES = \
-  hdlmain.c       \
   herclin.c
 
 herclin_LDADD =   \

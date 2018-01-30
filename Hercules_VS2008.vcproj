@@ -864,10 +864,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\hdlmain.c"
-							>
-						</File>
-						<File
 							RelativePath=".\hdteq.c"
 							>
 						</File>

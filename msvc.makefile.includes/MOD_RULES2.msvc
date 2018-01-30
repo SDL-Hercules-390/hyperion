@@ -137,12 +137,12 @@ $(X)dyncrypt.dll: $(O)dyncrypt.obj \
 # ---------------------------------------------------------------------
 # Main product executables
 
-$(X)hercules.exe: $(O)bootstrap.obj $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
+$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
     $(MT_EXE_CMD)
 
 
-$(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
+$(X)herclin.exe:  $(O)herclin.obj   $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercprod.res
     $(linkexe)
     $(MT_EXE_CMD)
 
