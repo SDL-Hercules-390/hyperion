@@ -997,7 +997,16 @@ int     rc;
     init_opcode_tables();
 
     /* Initialize the Hercules Dynamic Loader (HDL) */
-    if ((rc = hdl_main()) != 0)
+    rc = hdl_main
+    (
+        &the_real_panel_display,
+        &the_real_panel_command,
+        &the_real_replace_opcode,
+        &ckddasd_device_hndinfo,
+        &fbadasd_device_hndinfo
+    );
+
+    if (rc != 0)
     {
         usleep( 100000 );  // (give logger time to display message)
         exit( rc );

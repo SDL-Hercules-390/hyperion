@@ -172,23 +172,44 @@ struct HDLMOD                           /* module entry              */
 /*-------------------------------------------------------------------*/
 /*                  HDL Function declarations                        */
 /*-------------------------------------------------------------------*/
+HDL_DLL_IMPORT int hdl_main             /* Main initialization func  */
+(
+    PANDISP*    real_pandisp,           /*  ->  real panel_display   */
+    PANCMD*     real_pancmd,            /*  ->  real panel_command   */
+    REPOPCODE*  real_repopcode,         /*  ->  real replace_opcode  */
+    DEVHND*     real_ckd_DEVHND,        /*  ->  CKD devices DEVHND   */
+    DEVHND*     real_fba_DEVHND         /*  ->  FBA devices DEVHND   */
 
-HDL_DLL_IMPORT void         hdl_atexit   ( void );                                                  /* Call all shutdown routines*/
-HDL_DLL_IMPORT void         hdl_addshut  ( const char* shutname, SHUTDN* shutfunc, void* shutarg ); /* Add shutdown routine      */
-HDL_DLL_IMPORT int          hdl_delshut  ( SHUTDN* shutfunc, void* shutarg );                       /* Remove shutdown routine   */
+);
+/*                          hdl_atexit:    Call all shutdown routines*/
+/*                          hdl_addshut:   Add shutdown routine      */
+/*                          hdl_delshut:   Remove shutdown routine   */
+/*                          hdl_initpath:  Initialize module path    */
+/*                          hdl_setpath:   Set module path (-1/+1/0) */
+/*                          hdl_getpath:   Return module path        */
+/*                          hdl_loadmod:   load HDL module           */
+/*                          hdl_freemod:   Unload HDL module         */
+/*                          hdl_listmods:  list all HDL modules      */
+/*                          hdl_listdeps:  list all HDL dependencies */
+/*                          hdl_DEVHND:    Get device-type handler   */
+/*                          hdl_devequ:    device-type equates func  */
+/*                          hdl_getsym:    Retrieve symbol address   */
+/*                          hdl_next:      Find next entry in chain  */
 
-HDL_DLL_IMPORT int          hdl_main     ();                              /* Main initialization rtn   */
-HDL_DLL_IMPORT void         hdl_initpath ( const char* path );            /* Initialize module path    */
-HDL_DLL_IMPORT int          hdl_setpath  ( const char* path );            /* Set module path (-1/+1/0) */
-HDL_DLL_IMPORT const char*  hdl_getpath  ();                              /* Return module path        */
-HDL_DLL_IMPORT int          hdl_loadmod  ( const char* name, int flags ); /* load module               */
-HDL_DLL_IMPORT int          hdl_freemod  ( const char* name );            /* Unload module             */
-HDL_DLL_IMPORT void         hdl_listmods ( int flags );                   /* list all loaded modules   */
-HDL_DLL_IMPORT void         hdl_listdeps ();                              /* list all dependencies     */
-HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );         /* Get device-type handler   */
-HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );          /* Find next entry in chain  */
-HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );         /* Retrieve symbol address   */
-HDL_DLL_IMPORT DEVEQU*      hdl_devequ;                                   /* device-type equates func  */
+HDL_DLL_IMPORT void         hdl_atexit   ( void );
+HDL_DLL_IMPORT void         hdl_addshut  ( const char* shutname, SHUTDN* shutfunc, void* shutarg );
+HDL_DLL_IMPORT int          hdl_delshut  ( SHUTDN* shutfunc, void* shutarg );
+HDL_DLL_IMPORT void         hdl_initpath ( const char* path );
+HDL_DLL_IMPORT int          hdl_setpath  ( const char* path );
+HDL_DLL_IMPORT const char*  hdl_getpath  ();
+HDL_DLL_IMPORT int          hdl_loadmod  ( const char* name, int flags );
+HDL_DLL_IMPORT int          hdl_freemod  ( const char* name );
+HDL_DLL_IMPORT void         hdl_listmods ( int flags );
+HDL_DLL_IMPORT void         hdl_listdeps ();
+HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );
+HDL_DLL_IMPORT DEVEQU*      hdl_devequ;
+HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
+HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
 
 /*-------------------------------------------------------------------*/
 /*                     HDL_USE_LIBTOOL                               */
@@ -284,7 +305,7 @@ HDL_DLL_IMPORT DEVEQU*      hdl_devequ;                                   /* dev
 
 #define HDL_REGISTER( epname, varname )                             \
                                                                     \
-    regsym( QSTR( epname ), (void*) &varname );
+    regsym( QSTR( epname ), (void*) &(varname) );
 
 /*-------------------------------------------------------------------*/
 /*                   HDL_RESOLVER_SECTION                            */
@@ -342,7 +363,7 @@ HDL_DLL_IMPORT DEVEQU*      hdl_devequ;                                   /* dev
 
 #define HDL_DEVICE( typname, devhnd )                               \
                                                                     \
-    defdev( QSTR( typname ), &devhnd );
+    defdev( QSTR( typname ), &(devhnd) );
 
 /*-------------------------------------------------------------------*/
 /*                  HDL_INSTRUCTION_SECTION                          */

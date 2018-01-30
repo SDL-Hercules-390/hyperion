@@ -32,17 +32,6 @@ HDLPRE hdl_preload[] =
 };
 
 /*-------------------------------------------------------------------*/
-/*                 Function forward references                       */
-/*-------------------------------------------------------------------*/
-static int   hdl_check_depends_cb    ( const char* name, const char* version, int size );
-static void  hdl_register_symbols_cb ( const char* name, void* symbol );
-static void* hdl_resolve_symbols_cb  ( const char* name );
-static void  hdl_define_devtypes_cb  ( const char* typname, DEVHND* devhnd );
-static void  hdl_define_instructs_cb ( int amask, int opcode, const char* name, void* func );
-static void  hdl_modify_opcode       ( bool insert, HDLINS* );
-static void  hdl_term                ( void* arg );
-
-/*-------------------------------------------------------------------*/
 /*                     Global variables                              */
 /*-------------------------------------------------------------------*/
 static LOCK         hdl_lock;               /* loader lock           */
@@ -55,337 +44,112 @@ static HDLSHUT*     hdl_shutlist = NULL;    /* Shutdown call list    */
 static bool         hdl_shutting = false;   /* shutdown in progesss  */
 
 /*-------------------------------------------------------------------*/
-/*              hdl_addshut - add shutdown call                      */
+/*             Pointers pass to hdl_main by impl.c                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_addshut( const char* shutname, SHUTDN* shutfunc, void* shutarg )
+static PANDISP*    hdl_real_pandisp;        /* real panel_display    */
+static PANCMD*     hdl_real_pancmd;         /* real panel_command    */
+static REPOPCODE*  hdl_real_repopcode;      /* real replace_opcode   */
+static DEVHND*     hdl_real_ckd_DEVHND;     /* CKD devices DEVHND    */
+static DEVHND*     hdl_real_fba_DEVHND;     /* FBA devices DEVHND    */
+
+/*-------------------------------------------------------------------*/
+/*         Internal entry-point functions forward references         */
+/*-------------------------------------------------------------------*/
+static void  hdl_register_symbols_ep ( REGSYM* regsym );
+static void  hdl_resolve_symbols_ep  ( GETSYM* getsym );
+static void  hdl_define_devtypes_ep  ( DEFDEV* defdev );
+
+/*-------------------------------------------------------------------*/
+/*           HDL user callback functions forward references          */
+/*-------------------------------------------------------------------*/
+static int   hdl_check_depends_cb    ( const char* name, const char* version, int size );
+static void  hdl_register_symbols_cb ( const char* name, void* symbol );
+static void* hdl_resolve_symbols_cb  ( const char* name );
+static void  hdl_define_devtypes_cb  ( const char* typname, DEVHND* devhnd );
+static void  hdl_define_instructs_cb ( int amask, int opcode, const char* name, void* func );
+static void  hdl_modify_opcode       ( bool insert, HDLINS* );
+static void  hdl_term                ( void* arg );
+
+/*-------------------------------------------------------------------*/
+/*          hdl_main  --  initialize Hercules Dynamic Loader         */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_main
+(
+    PANDISP*    real_pandisp,               /* real panel_display    */
+    PANCMD*     real_pancmd,                /* real panel_command    */
+    REPOPCODE*  real_repopcode,             /* real replace_opcode   */
+    DEVHND*     real_ckd_DEVHND,            /* CKD devices DEVHND    */
+    DEVHND*     real_fba_DEVHND             /* FBA devices DEVHND    */
+)
 {
-    HDLSHUT*   shut;
-    HDLSHUT**  pshut;
+    /* Called ONCE by impl.c during Hercules startup */
 
-    if (hdl_shutting)
-        return;
+    HDLPRE*  preload;
+    initialize_lock( &hdl_lock );
+    hdl_shutting = false;
+    dlinit();
 
-    /* avoid duplicates - keep the first one */
-    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
+    /*
+    **  Save the pointers that were passed to us by impl.c.
+    **  Our internal entry-point functions need these pointers.
+    */
+    hdl_real_pandisp    = real_pandisp;     /*  real panel_display   */
+    hdl_real_pancmd     = real_pancmd;      /*  real panel_command   */
+    hdl_real_repopcode  = real_repopcode;   /*  real replace_opcode  */
+    hdl_real_ckd_DEVHND = real_ckd_DEVHND;  /*  CKD devices DEVHND   */
+    hdl_real_fba_DEVHND = real_fba_DEVHND ; /*  FBA devices DEVHND   */
+
+    /*
+    **  Manually create the main Hercules executable HDLMOD entry
+    **  and insert it as the first entry in our HDL modules chain.
+    **  This eliminates the issue of needing to do dlopen( self ).
+    */
+    if (!(hdl_curmod = malloc( sizeof( HDLMOD ))))
     {
-        if (1
-            && (*pshut)->shutfunc == shutfunc
-            && (*pshut)->shutarg  == shutarg
-        )
-            return;
-    }
-
-    /* Add new entry to head of list (LIFO) */
-
-    shut = malloc( sizeof( HDLSHUT ));
-
-    shut->next      =  hdl_shutlist;
-    shut->shutname  =  shutname;
-    shut->shutfunc  =  shutfunc;
-    shut->shutarg   =  shutarg;
-
-    hdl_shutlist = shut;
-}
-
-
-/*-------------------------------------------------------------------*/
-/*             hdl_delshut  --  remove shutdown call                 */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_delshut( SHUTDN* shutfunc, void* shutarg )
-{
-    HDLSHUT**  pshut;
-    HDLSHUT*   shut;
-    int        rc = -1;
-
-    if (hdl_shutting)
-        return rc;
-
-    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
-    {
-        if (1
-            && (*pshut)->shutfunc == shutfunc
-            && (*pshut)->shutarg  == shutarg
-        )
-        {
-            shut = *pshut;
-            {
-                *pshut = (*pshut)->next;
-            }
-            free( shut );
-
-            rc = 0;
-        }
-    }
-    return rc;
-}
-
-
-/*-------------------------------------------------------------------*/
-/*       hdl_atexit  --  call shutdown entries in LIFO order         */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_atexit( void )
-{
-    HDLSHUT*  shut;
-
-    if (MLVL( DEBUG ))
-        // "HDL: begin shutdown sequence"
-        WRMSG( HHC01500, "I" );
-
-    hdl_shutting = true;
-
-    for (shut = hdl_shutlist; shut; shut = hdl_shutlist)
-    {
-        /* Remove shutdown call entry to ensure it is called once */
-        hdl_shutlist = shut->next;
-        {
-            if (MLVL( DEBUG ))
-                // "HDL: calling %s"
-                WRMSG( HHC01501, "I", shut->shutname );
-
-            shut->shutfunc( shut->shutarg );
-
-            if (MLVL( DEBUG ))
-                // "HDL: %s complete"
-                WRMSG( HHC01502, "I", shut->shutname );
-        }
-        free( shut );
-    }
-
-    if (MLVL( DEBUG ))
-        // "HDL: shutdown sequence complete"
-        WRMSG( HHC01504, "I" );
-}
-
-
-/*-------------------------------------------------------------------*/
-/*            hdl_checkpath  --  check module path                   */
-/*-------------------------------------------------------------------*/
-/* Returns: TRUE == path is valid, FALSE == path is invalid          */
-/*-------------------------------------------------------------------*/
-static BYTE hdl_checkpath( const char* path )
-{
-    // MAYBE issue HHC01536 warning message if directory is invalid
-
-    char workpath[ MAX_PATH ];
-    struct stat statbuf;
-    int invalid;
-
-#ifdef _MSVC_
-    int len; char c;
-#endif
-
-    STRLCPY( workpath, path );
-
-#ifdef _MSVC_
-
-    // stat: If path contains the location of a directory,
-    // it cannot contain a trailing backslash. If it does,
-    // -1 will be returned and errno will be set to ENOENT.
-    // Therefore we need to remove any trailing backslash.
-
-    c = 0;
-    len = strlen( workpath );
-
-    // Trailing path separator?
-
-    if (0
-        || workpath[ len - 1 ] == '/'
-        || workpath[ len - 1 ] == '\\'
-    )
-    {
-        // Yes, remove it and remember that we did so.
-
-        c = workpath[ len - 1 ];     // (remember)
-        workpath[ len - 1 ] = 0;     // (remove it)
-    }
-#endif // _MSVC_
-
-    // Is the directory valid? (does it exist?)
-
-    invalid =
-    (0
-        || stat( workpath, &statbuf ) != 0
-        || !S_ISDIR( statbuf.st_mode )
-    );
-
-#ifdef _MSVC_
-
-    // (restore trailing path separator if removed)
-
-    if (c)
-        workpath[ len - 1 ] = c;
-#endif
-
-    if (invalid && MLVL( VERBOSE ))
-    {
-        // "HDL: WARNING: '%s' is not a valid directory"
-        WRMSG( HHC01536, "W", path );
-    }
-
-    return !invalid ? TRUE : FALSE;     // (valid or invalid)
-}
-
-
-/*-------------------------------------------------------------------*/
-/*            hdl_initpath  --  initialize module path               */
-/*-------------------------------------------------------------------*/
-/*
-    1) -p from startup 
-    2) HERCULES_LIB environment variable 
-    3) MODULESDIR compile time define 
-    4) Hercules executable directory
-    5) "hercules"
-*/
-DLL_EXPORT void hdl_initpath( const char* path )
-{
-    free( hdl_modpath );    // (discard old value, if any)
-
-    // 1) -p from startup
-
-    if (path)
-    {
-        hdl_arg_p = true;  // (remember -p cmdline option specified)
-        hdl_modpath = strdup( path );
-    }
-    else
-    {
-        // 2) HERCULES_LIB environment variable
-
-        char* def;
-        char pathname[ MAX_PATH ];
-
-        if ((def = getenv("HERCULES_LIB")))
-        {
-            hostpath( pathname, def, sizeof( pathname ));
-            hdl_modpath = strdup( pathname );
-        }
-        else
-        {
-            // 3) MODULESDIR compile time define
-
-#if defined( MODULESDIR )
-            hostpath( pathname, MODULESDIR, sizeof( pathname ));
-            hdl_modpath = strdup( pathname );
-#else
-            // 4) Hercules executable directory
-
-            if (sysblk.hercules_pgmpath && strlen( sysblk.hercules_pgmpath ))
-            {
-                hdl_modpath = strdup( sysblk.hercules_pgmpath );
-            }
-            else
-            {
-                // 5) "hercules"
-
-                hostpath( pathname, "hercules", sizeof( pathname ));
-                hdl_modpath = strdup( pathname );
-            }
-#endif // defined( MODULESDIR )
-        }
-    }
-
-    // Check path and MAYBE issue HHC01536 warning if it's invalid
-
-    hdl_checkpath( hdl_getpath() );
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-    set_symbol( "MODPATH", hdl_getpath() );
-#endif
-}
-
-
-/*-------------------------------------------------------------------*/
-/*              hdl_getpath  --  return module path                  */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT const char* hdl_getpath()
-{
-    if (!hdl_modpath)           // (if default not set yet)
-        hdl_initpath( NULL );   // (then initilize default)
-    return hdl_modpath;         // (return current value)
-}
-
-
-/*-------------------------------------------------------------------*/
-/*           hdl_setpath  --  Set module load path                   */
-/*-------------------------------------------------------------------*/
-/* Return: -1 error (not set), +1 warning (not set), 0 okay (set)    */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_setpath( const char* path )
-{
-    char    pathname[ MAX_PATH ];       /* pathname conversion       */
-    char    abspath [ MAX_PATH ];       /* pathname conversion       */
-
-    ASSERT( path );                     /* Sanity check              */
-
-    // Reject paths that are too long
-
-    if (strlen( path ) >= MAX_PATH)
-    {
-        // "HDL: directory '%s' rejected; exceeds maximum length of %d"
-        WRMSG( HHC01505, "E", path, MAX_PATH );
-        return -1;      // (error; not set)
-    }
-
-    // Ignore 'modpath_cmd()' when -p cmdline option is specified
-
-    if (hdl_arg_p)
-    {
-        // "HDL: directory '%s' rejected; '-p' cmdline option rules"
-        WRMSG( HHC01506, "W", path );
-
-        // "HDL: directory remains '%s' from '-p' cmdline option"
-        WRMSG( HHC01507, "W", hdl_modpath );
-        return +1;      // (warning; not set)
-    }
-
-    // Convert path to host format
-
-    hostpath( pathname, path, sizeof( pathname ));
-
-    // Convert path to absolute path if it's relative
-
-    abspath[0] = 0;
-
-    if (1
-        && '.' == pathname[0]               // (relative path?)
-        && !realpath( pathname, abspath )   // (doesn't exist?)
-    )
-    {
-        char buf[ MAX_PATH + 128 ];
-
-        MSGBUF( buf,  "\"%s\": %s", pathname, strerror( errno ));
-
+        char buf[64];
+        MSGBUF( buf,  "malloc(%d)", (int) sizeof( HDLMOD ));
         // "HDL: error in function %s: %s"
-        WRMSG( HHC01511, "W", "realpath()", buf );
-        abspath[0] = 0;
+        WRMSG( HHC01511, "S", buf, strerror( errno ));
+        return -1;
     }
 
-    // Use unresolved path if unable to resolve to an absolute path
+    hdl_curmod->name       =  strdup( "*Hercules" );
+    hdl_curmod->flags      =  (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD);
 
-    if (!abspath[0])
-        STRLCPY( abspath, pathname );
+    hdl_curmod->depsec_ep  =  NULL;
+    hdl_curmod->regsec_ep  =  hdl_register_symbols_ep;
+    hdl_curmod->ressec_ep  =  hdl_resolve_symbols_ep;
+    hdl_curmod->devsec_ep  =  hdl_define_devtypes_ep;
+    hdl_curmod->inssec_ep  =  NULL;
+    hdl_curmod->finsec_ep  =  NULL;
 
-    // Set the path as requested
+    hdl_curmod->symbols    =  NULL;
+    hdl_curmod->devices    =  NULL;
+    hdl_curmod->instructs  =  NULL;
+    hdl_curmod->next       =  hdl_mods;
+    hdl_mods               =  hdl_curmod;
 
-    free( hdl_modpath );
-    hdl_modpath = strdup( abspath );
+    /*
+    **  Create an initial symbols list by manualy registering
+    **  and resolving all symbols needed for proper HDL support.
+    */
+    obtain_lock( &hdl_lock );
+    {
+        hdl_register_symbols_ep ( &hdl_register_symbols_cb );
+        hdl_resolve_symbols_ep  ( &hdl_resolve_symbols_cb  );
+        hdl_define_devtypes_ep  ( &hdl_define_devtypes_cb  );
+    }
+    release_lock( &hdl_lock );
 
-    // Update the MODPATH symbol
+    /* Register our termination routine */
+    hdl_addshut( "hdl_term", hdl_term, NULL );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-    set_symbol( "MODPATH", hdl_getpath() );
-#endif
+    /* Pre-load all HDL modules that must be loaded at startup */
+    for (preload = hdl_preload; preload->name; preload++)
+        hdl_loadmod( preload->name, preload->flag );
 
-    // "HDL: loadable module directory is '%s'"
-    WRMSG( HHC01508, "I", hdl_getpath() );
-
-    // Check path and MAYBE issue HHC01536 warning if it's invalid
-
-    hdl_checkpath( hdl_getpath() );
-
-    return 0;   // (success; set)
+    return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*           hdl_dlopen  --  ask host to open dynamic library        */
@@ -465,81 +229,6 @@ static void* hdl_dlopen( const char* filename, int flag )
 }
 
 /*-------------------------------------------------------------------*/
-/*          hdl_main  --  initialize Hercules Dynamic Loader         */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int hdl_main()
-{
-    /* Called ONCE by impl.c during Hercules startup */
-
-    HDLPRE*  preload;
-
-    initialize_lock( &hdl_lock );
-    hdl_shutting = false;
-    dlinit();
-
-    if (!(hdl_curmod = hdl_mods = malloc( sizeof( HDLMOD ))))
-    {
-        char buf[64];
-        MSGBUF( buf,  "malloc(%d)", (int) sizeof( HDLMOD ));
-        // "HDL: error in function %s: %s"
-        WRMSG( HHC01511, "S", buf, strerror( errno ));
-        return -1;
-    }
-
-    hdl_curmod->name = strdup( "*Hercules" );
-
-    if (!(hdl_curmod->handle = hdl_dlopen( NULL, RTLD_NOW )))
-    {
-        // "HDL: unable to open module %s: %s"
-        WRMSG( HHC01516, "S", "hercules", dlerror());
-        return -1;
-    }
-
-    hdl_curmod->flags = (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD);
-
-    /* Retrieve the module's HDL_DEPENDENCY_SECTION entry-point */
-    if (!(hdl_curmod->depsec_ep = dlsym( hdl_curmod->handle, "hdl_check_depends_ep" )))
-    {
-        // "HDL: no HDL_DEPENDENCY_SECTION in %s: %s"
-        WRMSG( HHC01517, "S",  hdl_curmod->name, dlerror());
-        return -1;
-    }
-
-    hdl_curmod->regsec_ep = dlsym( hdl_curmod->handle, "hdl_register_symbols_ep" );
-    hdl_curmod->ressec_ep = dlsym( hdl_curmod->handle, "hdl_resolve_symbols_ep"  );
-    hdl_curmod->devsec_ep = dlsym( hdl_curmod->handle, "hdl_define_devtypes_ep"  );
-    hdl_curmod->inssec_ep = dlsym( hdl_curmod->handle, "hdl_define_instructs_ep" );
-    hdl_curmod->finsec_ep = dlsym( hdl_curmod->handle, "hdl_on_module_unload_ep" );
-
-    /* No modules or device types registered yet */
-    hdl_curmod->symbols   = NULL;
-    hdl_curmod->devices   = NULL;
-    hdl_curmod->instructs = NULL;
-
-    /* No modules's loaded yet */
-    hdl_curmod->next = NULL;
-
-    obtain_lock( &hdl_lock );
-    {
-        if (hdl_curmod->depsec_ep) hdl_curmod->depsec_ep( &hdl_check_depends_cb    );
-        if (hdl_curmod->regsec_ep) hdl_curmod->regsec_ep( &hdl_register_symbols_cb );
-        if (hdl_curmod->ressec_ep) hdl_curmod->ressec_ep( &hdl_resolve_symbols_cb  );
-        if (hdl_curmod->devsec_ep) hdl_curmod->devsec_ep( &hdl_define_devtypes_cb  );
-        if (hdl_curmod->inssec_ep) hdl_curmod->inssec_ep( &hdl_define_instructs_cb );
-    }
-    release_lock( &hdl_lock );
-
-    /* Register termination exit */
-    hdl_addshut( "hdl_term", hdl_term, NULL );
-
-    for (preload = hdl_preload; preload->name; preload++)
-        hdl_loadmod( preload->name, preload->flag );
-
-    return 0;
-}
-
-
-/*-------------------------------------------------------------------*/
 /*           hdl_loadmod  --  load a hercules module                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_loadmod( const char* name, int flags )
@@ -571,7 +260,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
         return -1;
     }
 
-    /* LOad the module */
+    /* Load the module */
     mod->name = strdup( modname );
 
     if (!(mod->handle = hdl_dlopen( name, RTLD_NOW )))
@@ -684,7 +373,6 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*             hdl_freemod  --  unload a hercules module             */
@@ -847,6 +535,331 @@ DLL_EXPORT int hdl_freemod( const char* name )
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/*              hdl_addshut - add shutdown call                      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void hdl_addshut( const char* shutname, SHUTDN* shutfunc, void* shutarg )
+{
+    HDLSHUT*   shut;
+    HDLSHUT**  pshut;
+
+    if (hdl_shutting)
+        return;
+
+    /* avoid duplicates - keep the first one */
+    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
+    {
+        if (1
+            && (*pshut)->shutfunc == shutfunc
+            && (*pshut)->shutarg  == shutarg
+        )
+            return;
+    }
+
+    /* Add new entry to head of list (LIFO) */
+
+    shut = malloc( sizeof( HDLSHUT ));
+
+    shut->next      =  hdl_shutlist;
+    shut->shutname  =  shutname;
+    shut->shutfunc  =  shutfunc;
+    shut->shutarg   =  shutarg;
+
+    hdl_shutlist = shut;
+}
+
+/*-------------------------------------------------------------------*/
+/*             hdl_delshut  --  remove shutdown call                 */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_delshut( SHUTDN* shutfunc, void* shutarg )
+{
+    HDLSHUT**  pshut;
+    HDLSHUT*   shut;
+    int        rc = -1;
+
+    if (hdl_shutting)
+        return rc;
+
+    for (pshut = &(hdl_shutlist); *pshut; pshut = &((*pshut)->next) )
+    {
+        if (1
+            && (*pshut)->shutfunc == shutfunc
+            && (*pshut)->shutarg  == shutarg
+        )
+        {
+            shut = *pshut;
+            {
+                *pshut = (*pshut)->next;
+            }
+            free( shut );
+
+            rc = 0;
+        }
+    }
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/*       hdl_atexit  --  call shutdown entries in LIFO order         */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void hdl_atexit( void )
+{
+    HDLSHUT*  shut;
+
+    if (MLVL( DEBUG ))
+        // "HDL: begin shutdown sequence"
+        WRMSG( HHC01500, "I" );
+
+    hdl_shutting = true;
+
+    for (shut = hdl_shutlist; shut; shut = hdl_shutlist)
+    {
+        /* Remove shutdown call entry to ensure it is called once */
+        hdl_shutlist = shut->next;
+        {
+            if (MLVL( DEBUG ))
+                // "HDL: calling %s"
+                WRMSG( HHC01501, "I", shut->shutname );
+
+            shut->shutfunc( shut->shutarg );
+
+            if (MLVL( DEBUG ))
+                // "HDL: %s complete"
+                WRMSG( HHC01502, "I", shut->shutname );
+        }
+        free( shut );
+    }
+
+    if (MLVL( DEBUG ))
+        // "HDL: shutdown sequence complete"
+        WRMSG( HHC01504, "I" );
+}
+
+/*-------------------------------------------------------------------*/
+/*            hdl_checkpath  --  check module path                   */
+/*-------------------------------------------------------------------*/
+/* Returns: TRUE == path is valid, FALSE == path is invalid          */
+/*-------------------------------------------------------------------*/
+static BYTE hdl_checkpath( const char* path )
+{
+    // MAYBE issue HHC01536 warning message if directory is invalid
+
+    char workpath[ MAX_PATH ];
+    struct stat statbuf;
+    int invalid;
+
+#ifdef _MSVC_
+    int len; char c;
+#endif
+
+    STRLCPY( workpath, path );
+
+#ifdef _MSVC_
+
+    // stat: If path contains the location of a directory,
+    // it cannot contain a trailing backslash. If it does,
+    // -1 will be returned and errno will be set to ENOENT.
+    // Therefore we need to remove any trailing backslash.
+
+    c = 0;
+    len = strlen( workpath );
+
+    // Trailing path separator?
+
+    if (0
+        || workpath[ len - 1 ] == '/'
+        || workpath[ len - 1 ] == '\\'
+    )
+    {
+        // Yes, remove it and remember that we did so.
+
+        c = workpath[ len - 1 ];     // (remember)
+        workpath[ len - 1 ] = 0;     // (remove it)
+    }
+#endif // _MSVC_
+
+    // Is the directory valid? (does it exist?)
+
+    invalid =
+    (0
+        || stat( workpath, &statbuf ) != 0
+        || !S_ISDIR( statbuf.st_mode )
+    );
+
+#ifdef _MSVC_
+
+    // (restore trailing path separator if removed)
+
+    if (c)
+        workpath[ len - 1 ] = c;
+#endif
+
+    if (invalid && MLVL( VERBOSE ))
+    {
+        // "HDL: WARNING: '%s' is not a valid directory"
+        WRMSG( HHC01536, "W", path );
+    }
+
+    return !invalid ? TRUE : FALSE;     // (valid or invalid)
+}
+
+/*-------------------------------------------------------------------*/
+/*            hdl_initpath  --  initialize module path               */
+/*-------------------------------------------------------------------*/
+/*
+    1) -p from startup 
+    2) HERCULES_LIB environment variable 
+    3) MODULESDIR compile time define 
+    4) Hercules executable directory
+    5) "hercules"
+*/
+DLL_EXPORT void hdl_initpath( const char* path )
+{
+    free( hdl_modpath );    // (discard old value, if any)
+
+    // 1) -p from startup
+
+    if (path)
+    {
+        hdl_arg_p = true;  // (remember -p cmdline option specified)
+        hdl_modpath = strdup( path );
+    }
+    else
+    {
+        // 2) HERCULES_LIB environment variable
+
+        char* def;
+        char pathname[ MAX_PATH ];
+
+        if ((def = getenv("HERCULES_LIB")))
+        {
+            hostpath( pathname, def, sizeof( pathname ));
+            hdl_modpath = strdup( pathname );
+        }
+        else
+        {
+            // 3) MODULESDIR compile time define
+
+#if defined( MODULESDIR )
+            hostpath( pathname, MODULESDIR, sizeof( pathname ));
+            hdl_modpath = strdup( pathname );
+#else
+            // 4) Hercules executable directory
+
+            if (sysblk.hercules_pgmpath && strlen( sysblk.hercules_pgmpath ))
+            {
+                hdl_modpath = strdup( sysblk.hercules_pgmpath );
+            }
+            else
+            {
+                // 5) "hercules"
+
+                hostpath( pathname, "hercules", sizeof( pathname ));
+                hdl_modpath = strdup( pathname );
+            }
+#endif // defined( MODULESDIR )
+        }
+    }
+
+    // Check path and MAYBE issue HHC01536 warning if it's invalid
+
+    hdl_checkpath( hdl_getpath() );
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "MODPATH", hdl_getpath() );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*              hdl_getpath  --  return module path                  */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* hdl_getpath()
+{
+    if (!hdl_modpath)           // (if default not set yet)
+        hdl_initpath( NULL );   // (then initilize default)
+    return hdl_modpath;         // (return current value)
+}
+
+/*-------------------------------------------------------------------*/
+/*           hdl_setpath  --  Set module load path                   */
+/*-------------------------------------------------------------------*/
+/* Return: -1 error (not set), +1 warning (not set), 0 okay (set)    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_setpath( const char* path )
+{
+    char    pathname[ MAX_PATH ];       /* pathname conversion       */
+    char    abspath [ MAX_PATH ];       /* pathname conversion       */
+
+    ASSERT( path );                     /* Sanity check              */
+
+    // Reject paths that are too long
+
+    if (strlen( path ) >= MAX_PATH)
+    {
+        // "HDL: directory '%s' rejected; exceeds maximum length of %d"
+        WRMSG( HHC01505, "E", path, MAX_PATH );
+        return -1;      // (error; not set)
+    }
+
+    // Ignore 'modpath_cmd()' when -p cmdline option is specified
+
+    if (hdl_arg_p)
+    {
+        // "HDL: directory '%s' rejected; '-p' cmdline option rules"
+        WRMSG( HHC01506, "W", path );
+
+        // "HDL: directory remains '%s' from '-p' cmdline option"
+        WRMSG( HHC01507, "W", hdl_modpath );
+        return +1;      // (warning; not set)
+    }
+
+    // Convert path to host format
+
+    hostpath( pathname, path, sizeof( pathname ));
+
+    // Convert path to absolute path if it's relative
+
+    abspath[0] = 0;
+
+    if (1
+        && '.' == pathname[0]               // (relative path?)
+        && !realpath( pathname, abspath )   // (doesn't exist?)
+    )
+    {
+        char buf[ MAX_PATH + 128 ];
+
+        MSGBUF( buf,  "\"%s\": %s", pathname, strerror( errno ));
+
+        // "HDL: error in function %s: %s"
+        WRMSG( HHC01511, "W", "realpath()", buf );
+        abspath[0] = 0;
+    }
+
+    // Use unresolved path if unable to resolve to an absolute path
+
+    if (!abspath[0])
+        STRLCPY( abspath, pathname );
+
+    // Set the path as requested
+
+    free( hdl_modpath );
+    hdl_modpath = strdup( abspath );
+
+    // Update the MODPATH symbol
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    set_symbol( "MODPATH", hdl_getpath() );
+#endif
+
+    // "HDL: loadable module directory is '%s'"
+    WRMSG( HHC01508, "I", hdl_getpath() );
+
+    // Check path and MAYBE issue HHC01536 warning if it's invalid
+
+    hdl_checkpath( hdl_getpath() );
+
+    return 0;   // (success; set)
+}
 
 /*-------------------------------------------------------------------*/
 /*              hdl_listmods  --  list hercules modules              */
@@ -935,7 +948,6 @@ DLL_EXPORT void hdl_listmods( int flags )
     }
 }
 
-
 /*-------------------------------------------------------------------*/
 /*              hdl_listdeps  --  list module dependencies           */
 /*-------------------------------------------------------------------*/
@@ -949,7 +961,6 @@ DLL_EXPORT void hdl_listdeps()
         // "HDL: dependency %s version %s size %d"
         WRMSG( HHC01535, "I", depent->name, depent->version, depent->size );
 }
-
 
 /*-------------------------------------------------------------------*/
 /*         hdl_build_devmod_name  --  build device module name       */
@@ -971,7 +982,6 @@ static const char* hdl_build_devmod_name( const char* typname )
     return dtname;
 }
 
-
 /*-------------------------------------------------------------------*/
 /*               ( hdl_DEVHND helper function )                       */
 /*-------------------------------------------------------------------*/
@@ -992,7 +1002,6 @@ static DEVHND* hdl_get_DEVHND( const char* typname )
 
     return NULL;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*     hdl_DEVHND  --  get device handler for given device-type      */
@@ -1057,7 +1066,6 @@ DLL_EXPORT DEVHND* hdl_DEVHND( const char* typname )
     return hdl_get_DEVHND( typname );
 }
 
-
 /*-------------------------------------------------------------------*/
 /*          hdl_term  --  process all "HDL_FINAL_SECTION"s           */
 /*-------------------------------------------------------------------*/
@@ -1093,7 +1101,6 @@ static void hdl_term( void* arg )
         // "HDL: termination sequence complete"
         WRMSG( HHC01515, "I" );
 }
-
 
 /*-------------------------------------------------------------------*/
 /*            hdl_next  --  find next entry-point in chain           */
@@ -1164,6 +1171,108 @@ DLL_EXPORT void* hdl_next( const void* symbol )
     return NULL;
 }
 
+/*-------------------------------------------------------------------*/
+/*               HDL INTERNAL ENTRY-POINT FUNCTIONS                  */
+/*-------------------------------------------------------------------*/
+/* The following functions are hard-coded equivalents of the hdl.h   */
+/* HDL_REGISTER_SECTION, HDL_RESOLVER_SECTION and HDL_DEVICE_SECTION */
+/* functions that allows hdl.c to initialize required and optional   */
+/* symbol values (mostly in hsys.c = hsys.dll) that are needed for   */
+/* HDL to function properly. The "hdl_main" initialization function  */
+/* calls into these functions as part of its initialization logic.   */
+/*                                                                   */
+/* By doing things this way it eliminates the need for the previous  */
+/* Hercules executable "hdlmain.c" source member and the subsequent  */
+/* hdl_main "dlopen(self)" call which some systems do not support.   */
+/*-------------------------------------------------------------------*/
+
+static void**  UNRESOLVED  = NULL;
+
+// HDL_REGISTER_SECTION
+static void hdl_register_symbols_ep( REGSYM* regsym )
+{
+    HDL_REGISTER( panel_display,                 *hdl_real_pandisp   );
+    HDL_REGISTER( panel_command,                 *hdl_real_pancmd    );
+    HDL_REGISTER( replace_opcode,                *hdl_real_repopcode );
+
+    HDL_REGISTER( daemon_task,                   *UNRESOLVED );
+    HDL_REGISTER( system_command,                *UNRESOLVED );
+    HDL_REGISTER( hdl_devequ,                    *UNRESOLVED );
+
+    HDL_REGISTER( debug_cpu_state,               *UNRESOLVED );
+    HDL_REGISTER( debug_cd_cmd,                  *UNRESOLVED );
+    HDL_REGISTER( debug_program_interrupt,       *UNRESOLVED );
+    HDL_REGISTER( debug_diagnose,                *UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_command,    *UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_event,      *UNRESOLVED );
+    HDL_REGISTER( debug_sclp_unknown_event_mask, *UNRESOLVED );
+    HDL_REGISTER( debug_sclp_event_data,         *UNRESOLVED );
+    HDL_REGISTER( debug_chsc_unknown_request,    *UNRESOLVED );
+    HDL_REGISTER( debug_watchdog_signal,         *UNRESOLVED );
+
+#if defined( OPTION_W32_CTCI )
+    HDL_REGISTER( debug_tt32_stats,              *UNRESOLVED );
+    HDL_REGISTER( debug_tt32_tracing,            *UNRESOLVED );
+#endif
+}
+// END_REGISTER_SECTION
+
+/*-------------------------------------------------------------------*/
+
+// HDL_RESOLVER_SECTION
+static void hdl_resolve_symbols_ep( GETSYM* getsym )
+{
+    HDL_RESOLVE( panel_display                 );
+    HDL_RESOLVE( panel_command                 );
+    HDL_RESOLVE( replace_opcode                );
+
+    HDL_RESOLVE( daemon_task                   );
+    HDL_RESOLVE( system_command                );
+    HDL_RESOLVE( hdl_devequ                    );
+
+    HDL_RESOLVE( debug_cpu_state               );
+    HDL_RESOLVE( debug_cd_cmd                  );
+    HDL_RESOLVE( debug_program_interrupt       );
+    HDL_RESOLVE( debug_diagnose                );
+    HDL_RESOLVE( debug_sclp_unknown_command    );
+    HDL_RESOLVE( debug_sclp_unknown_event      );
+    HDL_RESOLVE( debug_sclp_unknown_event_mask );
+    HDL_RESOLVE( debug_sclp_event_data         );
+    HDL_RESOLVE( debug_chsc_unknown_request    );
+    HDL_RESOLVE( debug_watchdog_signal         );
+
+#if defined( OPTION_W32_CTCI )
+    HDL_RESOLVE( debug_tt32_stats              );
+    HDL_RESOLVE( debug_tt32_tracing            );
+#endif
+}
+// END_RESOLVER_SECTION
+
+/*-------------------------------------------------------------------*/
+
+// HDL_DEVICE_SECTION
+static void hdl_define_devtypes_ep( DEFDEV* defdev )
+{
+    HDL_DEVICE (  2305,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  2311,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  2314,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3330,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3340,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3350,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3375,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3380,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  3390,  *hdl_real_ckd_DEVHND  );
+    HDL_DEVICE (  9345,  *hdl_real_ckd_DEVHND  );
+
+    HDL_DEVICE (  0671,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  3310,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  3370,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  9313,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  9332,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  9335,  *hdl_real_fba_DEVHND  );
+    HDL_DEVICE (  9336,  *hdl_real_fba_DEVHND  );
+}
+// END_DEVICE_SECTION
 
 /*-------------------------------------------------------------------*/
 /*             HDL 'SECTION' MACROS CALLBACK FUNCTIONS               */
@@ -1183,7 +1292,6 @@ DLL_EXPORT void* hdl_next( const void* symbol )
 /* the caller back again, hence the term "callback") in order to     */
 /* pass its (the module's) information back to the caller (HDL).     */
 /*-------------------------------------------------------------------*/
-
 
 /*-------------------------------------------------------------------*/
 /*       hdl_check_depends_cb  --  dependency check callback         */
@@ -1231,7 +1339,6 @@ static int hdl_check_depends_cb( const char* name, const char* version, int size
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /*    hdl_register_symbols_cb  --  register entry-point callback     */
 /*-------------------------------------------------------------------*/
@@ -1246,7 +1353,6 @@ static void hdl_register_symbols_cb( const char* name, void* symbol )
 
     hdl_curmod->symbols = newsym;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*       hdl_resolve_symbols_cb  --  find entry-point callback       */
@@ -1304,7 +1410,6 @@ static void* hdl_resolve_symbols_cb( const char* name )
     return NULL;
 }
 
-
 /*-------------------------------------------------------------------*/
 /*               hdl_getsym  --  find symbol                (public) */
 /*-------------------------------------------------------------------*/
@@ -1316,7 +1421,6 @@ DLL_EXPORT void* hdl_getsym( const char* symname )
     */
     return hdl_resolve_symbols_cb( symname );
 }
-
 
 /*-------------------------------------------------------------------*/
 /*     hdl_define_devtypes_cb  --  register device-type callback     */
@@ -1350,7 +1454,6 @@ static void hdl_define_instructs_cb( int amask, int opcode, const char* name, vo
     /* (call helper function to do the grunt work) */
     hdl_modify_opcode( true, newins );
 }
-
 
 /*-------------------------------------------------------------------*/
 /*           ( hdl_define_instructs_cb helper function )             */
@@ -1397,3 +1500,5 @@ static void hdl_modify_opcode( bool insert, HDLINS* instr )
   }
   return;
 }
+
+/*-------------------------------------------------------------------*/
