@@ -160,6 +160,10 @@ static void* hdl_dlopen( const char* filename, int flag )
     void*   ret;
     size_t  fulllen = 0;
 
+#if defined( HDL_USE_LIBTOOL )
+    UNREFERENCED( flag );   /* stupid libtool doesn't support flags! */
+#endif
+
     /*
      *  Check in this order:
      *

@@ -1494,15 +1494,11 @@ HDL_RESOLVER_SECTION;
   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
     #undef sysblk
     HDL_RESOLVE_SYMPTR( psysblk, sysblk );
+  #else
+    UNREFERENCED( getsym );     // (HDL_RESOLVER_SECTION parameter)
   #endif
 }
 END_RESOLVER_SECTION
-
-
-HDL_REGISTER_SECTION;
-{
-}
-END_REGISTER_SECTION
 
 
 HDL_DEVICE_SECTION;

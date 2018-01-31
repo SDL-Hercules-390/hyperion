@@ -26,6 +26,7 @@ DLL_IMPORT void s37x_replace_opcode_scan( int set );
 
 HDL_REGISTER_SECTION;
 {
+    UNREFERENCED( regsym );     // (HDL_REGISTER_SECTION parameter)
     s37x_replace_opcode_scan( TRUE );
 }
 END_REGISTER_SECTION

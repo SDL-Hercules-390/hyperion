@@ -6415,6 +6415,8 @@ HDL_RESOLVER_SECTION;
   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
     #undef sysblk
     HDL_RESOLVE_SYMPTR( psysblk, sysblk );
+  #else
+    UNREFERENCED( getsym );     // (HDL_RESOLVER_SECTION parameter)
   #endif
 }
 END_RESOLVER_SECTION
@@ -6429,6 +6431,8 @@ HDL_REGISTER_SECTION;
 #if defined( WIN32 )
   HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
   HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
+#else
+  UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 #endif
 }
 END_REGISTER_SECTION

@@ -52,8 +52,9 @@ static int IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
 static int ifc_fd[2] = { -1, -1 };
 static pid_t ifc_pid = 0;
 
-static void tuntap_term(void)
+static void tuntap_term( void* arg )
 {
+    UNREFERENCED( arg );
     close(ifc_fd[0]);
     close(ifc_fd[1]);
     ifc_fd[0] = ifc_fd[1] = -1;
@@ -1090,7 +1091,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         }
 
         /* Terminate TunTap on shutdown */
-        hdl_addshut("tuntap_term", tuntap_term, NULL);
+        hdl_addshut( "tuntap_term", tuntap_term, NULL );
     }
 
     // Populate some common fields

@@ -3376,6 +3376,8 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 #if defined( WIN32 )
   HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
   HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
+#else
+  UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 #endif
 
 END_REGISTER_SECTION
