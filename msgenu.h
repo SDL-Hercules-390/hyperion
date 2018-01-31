@@ -1092,7 +1092,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01500 "HDL: begin shutdown sequence"
 #define HHC01501 "HDL: calling %s"
 #define HHC01502 "HDL: %s complete"
-//efine HHC01503 (available)
+#define HHC01503 "HDL: Invalid architecture passed to %s"
 #define HHC01504 "HDL: shutdown sequence complete"
 #define HHC01505 "HDL: directory '%s' rejected; exceeds maximum length of %d"
 #define HHC01506 "HDL: directory '%s' rejected; '-p' cmdline option rules"

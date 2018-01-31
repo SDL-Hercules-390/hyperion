@@ -66,8 +66,8 @@ static int   hdl_check_depends_cb    ( const char* name, const char* version, in
 static void  hdl_register_symbols_cb ( const char* name, void* symbol );
 static void* hdl_resolve_symbols_cb  ( const char* name );
 static void  hdl_define_devtypes_cb  ( const char* typname, DEVHND* devhnd );
-static void  hdl_define_instructs_cb ( int amask, int opcode, const char* name, void* func );
-static void  hdl_modify_opcode       ( bool insert, HDLINS* );
+static void  hdl_define_instructs_cb ( int hdl_arch, int opcode, const char* name, void* func );
+static void  hdl_replace_opcode      ( bool insert, HDLINS* );
 static void  hdl_term                ( void* arg );
 
 /*-------------------------------------------------------------------*/
@@ -503,7 +503,7 @@ DLL_EXPORT int hdl_freemod( const char* name )
         for (ins = mod->instructs; ins;)
         {
             /* Revert this instruction override */
-            hdl_modify_opcode( false, ins );
+            hdl_replace_opcode( false, ins );
 
             /* Free resources for this instruction override */
             free( ins->instname );  // (free name string)
@@ -924,17 +924,17 @@ DLL_EXPORT void hdl_listmods( int flags )
             {
                 len = 0;
 #if defined(                                                                             _370 )
-                if (ins->amask &                                             HDL_INSTARCH_370)
+                if (ins->hdl_arch ==                                         HDL_INSTARCH_370)
                     len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_370_NAME );
 #endif
 
 #if defined(                                                                             _390 )
-                if (ins->amask &                                             HDL_INSTARCH_390)
+                if (ins->hdl_arch ==                                         HDL_INSTARCH_390)
                     len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_390_NAME );
 #endif
 
 #if defined(                                                                             _900 )
-                if (ins->amask &                                             HDL_INSTARCH_900)
+                if (ins->hdl_arch ==                                         HDL_INSTARCH_900)
                     len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_900_NAME );
 #endif
                 // (no blank between %4.4X and %s since string starts with ", ")
@@ -1440,66 +1440,96 @@ static void hdl_define_devtypes_cb( const char* typname, DEVHND* devhnd )
 /*-------------------------------------------------------------------*/
 /*     hdl_define_instructs_cb  --  Define instruction callback      */
 /*-------------------------------------------------------------------*/
-static void hdl_define_instructs_cb( int amask, int opcode, const char* name, void* func )
+static void hdl_define_instructs_cb( int hdl_arch, int opcode, const char* name, void* func )
 {
-    HDLINS*  newins  = malloc( sizeof( HDLINS ));
+    /*
+    **  Verify caller sanity: caller only allowed to replace one
+    **  instruction for one HDL architecture at a time since that
+    **  is all an HDLINS struct has room for. (HDL_DEF_INST calls
+    **  us separately for each HDL architecture.)
+    */
+    if (0
+        || hdl_arch == HDL_INSTARCH_370         //  S/370
+        || hdl_arch == HDL_INSTARCH_390         //  ESA/390
+        || hdl_arch == HDL_INSTARCH_900         //  z/Arch
+    )
+    {
+        /* Allocate a new HDLINS entry for this instruction */
+        HDLINS*  newins  = malloc( sizeof( HDLINS ));
 
-    newins->instname   =  strdup( name );
-    newins->amask      =  amask;
-    newins->opcode     =  opcode > 0xff ? opcode : (opcode << 8) ;
-    newins->instfunc   =  func;
-    newins->next       =  hdl_curmod->instructs;
+        /* Initialize the entry for this instruction */
+        newins->instname   =  strdup( name );
+        newins->hdl_arch   =  hdl_arch;
+        newins->opcode     =  opcode > 0xff ? opcode : (opcode << 8) ;
+        newins->instfunc   =  func;
 
-    hdl_curmod->instructs = newins;
+        /* Add it to the current module's chain */
+        newins->next =  hdl_curmod->instructs;
+        hdl_curmod->instructs = newins;
 
-    /* (call helper function to do the grunt work) */
-    hdl_modify_opcode( true, newins );
+        /* Call replace_opcode via helper to do the grunt wotk */
+        hdl_replace_opcode( true, newins );
+    }
+    else
+    {
+        // "HDL: Invalid architecture passed to %s"
+        WRMSG( HHC01503, "E", "hdl_define_instructs_cb" );
+    }
 }
 
 /*-------------------------------------------------------------------*/
 /*           ( hdl_define_instructs_cb helper function )             */
 /*-------------------------------------------------------------------*/
-static void hdl_modify_opcode( bool insert, HDLINS* instr )
+static void hdl_replace_opcode( bool insert, HDLINS* instr )
 {
+  void* original = NULL;  // (for error check)
+
   if (insert)  // (insert == define replacement)
   {
+    instr->original = NULL;
 
 #ifdef                                      _370
-    if (instr->amask     &      HDL_INSTARCH_370)
+    if (instr->hdl_arch   ==    HDL_INSTARCH_370)
       instr->original = replace_opcode( ARCH_370_IDX, instr->instfunc, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
 #ifdef                                      _390
-    if (instr->amask     &      HDL_INSTARCH_390)
+    if (instr->hdl_arch   ==    HDL_INSTARCH_390)
       instr->original = replace_opcode( ARCH_390_IDX, instr->instfunc, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
 #ifdef                                      _900
-    if (instr->amask     &      HDL_INSTARCH_900)
+    if (instr->hdl_arch   ==    HDL_INSTARCH_900)
       instr->original = replace_opcode( ARCH_900_IDX, instr->instfunc, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
+    original = instr->original;
   }
   else // (!insert == restore previous)
   {
 
 #ifdef                                 _370
-    if (instr->amask   &   HDL_INSTARCH_370)
-      replace_opcode(              ARCH_370_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
+    if (instr->hdl_arch == HDL_INSTARCH_370)
+      original = replace_opcode(   ARCH_370_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
 #ifdef                                 _390
-    if (instr->amask   &   HDL_INSTARCH_390)
-      replace_opcode(              ARCH_390_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
+    if (instr->hdl_arch == HDL_INSTARCH_390)
+      original = replace_opcode(   ARCH_390_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
 #ifdef                                 _900
-    if (instr->amask   &   HDL_INSTARCH_900)
-      replace_opcode(              ARCH_900_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
+    if (instr->hdl_arch == HDL_INSTARCH_900)
+      original = replace_opcode(   ARCH_900_IDX, instr->original, instr->opcode >> 8, instr->opcode & 0x00ff );
 #endif
 
   }
-  return;
+
+  if (!original)
+  {
+    // "HDL: Invalid architecture passed to %s"
+    WRMSG( HHC01503, "E", "hdl_replace_opcode" );
+  }
 }
 
 /*-------------------------------------------------------------------*/

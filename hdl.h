@@ -141,7 +141,7 @@ struct HDLINS                           /* Instruction entry         */
     void*        instfunc;              /* Instruction function      */
     void*        original;              /* Original instruction      */
     int          opcode;                /* Opcode                    */
-    int          amask;                 /* Architectures mask        */
+    int          hdl_arch;              /* HDL architecture          */
     HDLINS*      next;                  /* Next entry                */
 };
 
@@ -399,15 +399,15 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
 /*-------------------------------------------------------------------*/
 
 #if defined(_370)
- #define HDL_370_DEF_INST( arch, opcode, instrfunc )                \
+ #define HDL_370_DEF_INST( hdl_arch, opcode, instrfunc )            \
                                                                     \
     do                                                              \
-        if (arch &  HDL_INSTARCH_370) defins( arch, opcode,         \
-            QSTR( instrfunc ), &s370_ ## instrfunc );               \
+        if (hdl_arch == HDL_INSTARCH_370) defins( hdl_arch, opcode, \
+            QSTR( instrfunc ),     &s370_ ## instrfunc );           \
     while (0)
 
 #else
- #define HDL_370_DEF_INST( arch, opcode, instrfunc)
+ #define HDL_370_DEF_INST( hdl_arch, opcode, instrfunc)
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -415,15 +415,15 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
 /*-------------------------------------------------------------------*/
 
 #if defined(_390)
- #define HDL_390_DEF_INST( arch, opcode, instrfunc )                \
+ #define HDL_390_DEF_INST( hdl_arch, opcode, instrfunc )            \
                                                                     \
     do                                                              \
-        if (arch &  HDL_INSTARCH_390) defins( arch, opcode,         \
-            QSTR( instrfunc ), &s390_ ## instrfunc );               \
+        if (hdl_arch == HDL_INSTARCH_390) defins( hdl_arch, opcode, \
+            QSTR( instrfunc ),     &s390_ ## instrfunc );           \
     while (0)
 
 #else
- #define HDL_390_DEF_INST( arch, opcode, instrfunc)
+ #define HDL_390_DEF_INST( hdl_arch, opcode, instrfunc)
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -431,29 +431,29 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
 /*-------------------------------------------------------------------*/
 
 #if defined(_900)
- #define HDL_900_DEF_INST( arch, opcode, instrfunc)                 \
+ #define HDL_900_DEF_INST( hdl_arch, opcode, instrfunc)             \
                                                                     \
     do                                                              \
-        if (arch &  HDL_INSTARCH_900) defins( arch, opcode,         \
-            QSTR( instrfunc ), &z900_ ## instrfunc );               \
+        if (hdl_arch == HDL_INSTARCH_900) defins( hdl_arch, opcode, \
+            QSTR( instrfunc ),     &z900_ ## instrfunc );           \
     while (0)
 
 #else
- #define HDL_900_DEF_INST( arch, opcode, instrfunc)
+ #define HDL_900_DEF_INST( hdl_arch, opcode, instrfunc)
 #endif
 
 /*-------------------------------------------------------------------*/
 /*                       HDL_DEF_INST                                */
 /*-------------------------------------------------------------------*/
 
-#define HDL_DEF_INST( arch, opcode, instrfunc )                              \
-                                                                             \
-    do                                                                       \
-    {                                                                        \
-        HDL_370_DEF_INST( ((arch) & HDL_INSTARCH_370), opcode, instrfunc );  \
-        HDL_390_DEF_INST( ((arch) & HDL_INSTARCH_390), opcode, instrfunc );  \
-        HDL_900_DEF_INST( ((arch) & HDL_INSTARCH_900), opcode, instrfunc );  \
-    }                                                                        \
+#define HDL_DEF_INST( hdl_arch, opcode, instrfunc )                             \
+                                                                                \
+    do                                                                          \
+    {                                                                           \
+        HDL_370_DEF_INST( ((hdl_arch) & HDL_INSTARCH_370), opcode, instrfunc ); \
+        HDL_390_DEF_INST( ((hdl_arch) & HDL_INSTARCH_390), opcode, instrfunc ); \
+        HDL_900_DEF_INST( ((hdl_arch) & HDL_INSTARCH_900), opcode, instrfunc ); \
+    }                                                                           \
     while (0)
 
 /*-------------------------------------------------------------------*/
