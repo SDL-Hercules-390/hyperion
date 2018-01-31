@@ -21,28 +21,28 @@
 /*                      (CANNOT BE ARCH_DEP!!)                       */
 /*-------------------------------------------------------------------*/
 
-#ifndef did_static_helpers
-#define did_static_helpers
+#if !defined( COMPILE_THIS_ONLY_ONCE )
+#define       COMPILE_THIS_ONLY_ONCE
 
 /*-------------------------------------------------------------------*/
 /* static helper function 1 ...                                      */
 /*-------------------------------------------------------------------*/
-static void static_helper_1()
-{
-    // TODO...
-}
+//static void static_helper_1()
+//{
+//    // TODO...
+//}
 
 /*-------------------------------------------------------------------*/
 /* static helper function 2 ...                                      */
 /*-------------------------------------------------------------------*/
-static int static_helper_2()
-{
-    // TODO...
-    return 0;
-}
+//static int static_helper_2()
+//{
+//    // TODO...
+//    return 0;
+//}
 
 /*-------------------------------------------------------------------*/
-#endif /*                (END static helpers)                        */
+#endif /*            (end COMPILE_THIS_ONLY_ONCE)                    */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -52,19 +52,19 @@ static int static_helper_2()
 /*-------------------------------------------------------------------*/
 /* ARCH_DEP helper function 1 ...                                    */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP( arch_helper_1 )()
-{
-    // TODO...
-}
+//static void ARCH_DEP( arch_helper_1 )()
+//{
+//    // TODO...
+//}
 
 /*-------------------------------------------------------------------*/
 /* ARCH_DEP helper function 2 ...                                    */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP( arch_helper_2 )()
-{
-    // TODO...
-    return 0;
-}
+//static int ARCH_DEP( arch_helper_2 )()
+//{
+//    // TODO...
+//    return 0;
+//}
 
 /*-------------------------------------------------------------------*/
 /*                   (end ARCH_DEP static helpers)                   */

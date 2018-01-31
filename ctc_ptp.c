@@ -222,7 +222,7 @@ static BYTE ptp_immed_commands[256] =
 /* Device Handler Information Block                                   */
 /* ------------------------------------------------------------------ */
 
-static DEVHND ptp_device_hndinfo =
+DEVHND ptp_device_hndinfo =
 {
         &ptp_init,                     /* Device Initialization       */
         &ptp_execute_ccw,              /* Device CCW execute          */
@@ -9619,12 +9619,14 @@ END_DEPENDENCY_SECTION
 
 HDL_RESOLVER_SECTION;
 {
-   #if defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL)
+   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
      #undef sysblk
      HDL_RESOLVE_SYMPTR( psysblk, sysblk );
      HDL_RESOLVE( tod_clock );
      HDL_RESOLVE( etod_clock );
      HDL_RESOLVE( device_attention );
+   #else
+     UNREFERENCED( getsym );    // (HDL_RESOLVER_SECTION parameter)
    #endif
 }
 END_RESOLVER_SECTION
@@ -9637,10 +9639,12 @@ HDL_REGISTER_SECTION;
     //              entry-point         entry-point
     //              name                value
 
-  #if defined(OPTION_W32_CTCI)
+  #if defined( OPTION_W32_CTCI )
     HDL_REGISTER ( debug_tt32_stats,   display_tt32_stats        );
     HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
-  #endif /* defined(OPTION_W32_CTCI) */
+  #else
+    UNREFERENCED( regsym );     // (HDL_REGISTER_SECTION parameter)
+  #endif
 }
 END_REGISTER_SECTION
 
