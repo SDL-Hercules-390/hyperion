@@ -1467,7 +1467,7 @@ static void hdl_define_instructs_cb( int hdl_arch, int opcode, const char* name,
         newins->next =  hdl_curmod->instructs;
         hdl_curmod->instructs = newins;
 
-        /* Call replace_opcode via helper to do the grunt wotk */
+        /* Call replace_opcode via helper to do the grunt work */
         hdl_replace_opcode( true, newins );
     }
     else
