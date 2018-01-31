@@ -18,6 +18,8 @@
 #include "hercules.h"
 #include "opcode.h"
 
+DISABLE_GCC_UNUSED_FUNCTION_WARNING;
+
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
 /*-------------------------------------------------------------------*/

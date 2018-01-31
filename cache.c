@@ -14,7 +14,7 @@
 
 #include "hercules.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
+DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 /*-------------------------------------------------------------------*/
 /* The master cache blocks array controlled by sysblk.dasdcache_lock */

@@ -10,7 +10,7 @@
 
 #include "hstdinc.h"
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
+DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #include "hercules.h"
 #include "opcode.h"

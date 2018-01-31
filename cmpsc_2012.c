@@ -42,7 +42,7 @@
 
 #include "hstdinc.h"    // (MUST be first #include in EVERY source file)
 
-DISABLE_GCC_WARNING( "-Wunused-function" )
+DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #define _CMPSC_C_
 #define _HENGINE_DLL_
@@ -163,7 +163,7 @@ static CMPSC_INLINE void (CMPSC_FASTCALL ARCH_DEP( ZeroPadOp1 ))( CMPSCBLK* pCMP
 #define CMPSC_RETFUNCS              // (one time if Utility, each time if Herc)
 
 PUSH_GCC_WARNINGS()
-DISABLE_GCC_WARNING( "-Wunused-function" )
+DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 static CMPSC_INLINE U8 (CMPSC_FASTCALL ARCH_DEP( ERR ))( CMPSCBLK* pCMPSCBLK, MEMBLK* pOp1MemBlk )
 {
