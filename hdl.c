@@ -516,6 +516,7 @@ DLL_EXPORT int hdl_freemod( const char* name )
 
         /* Free the module's HDLMOD struct */
         free( mod->name );
+        dlclose( mod->handle );
         free( mod );
 
         /* Reset symbol loadcounts for all remaining modules */
