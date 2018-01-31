@@ -4978,23 +4978,23 @@ DEF_INST(perform_cryptographic_key_management_operation)
 /*----------------------------------------------------------------------------*/
 
 #if !defined( FEATURE_017_MSA_FACILITY )
- HDL_UNDEF_INST(cipher_message)
- HDL_UNDEF_INST(cipher_message_with_chaining)
- HDL_UNDEF_INST(compute_intermediate_message_digest)
- HDL_UNDEF_INST(compute_last_message_digest)
- HDL_UNDEF_INST(compute_message_authentication_code)
-#endif /* !defined( FEATURE_017_MSA_FACILITY ) */
+ HDL_UNDEF_INST( cipher_message                      )
+ HDL_UNDEF_INST( cipher_message_with_chaining        )
+ HDL_UNDEF_INST( compute_intermediate_message_digest )
+ HDL_UNDEF_INST( compute_last_message_digest         )
+ HDL_UNDEF_INST( compute_message_authentication_code )
+#endif
 
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
- HDL_UNDEF_INST(perform_cryptographic_key_management_operation)
-#endif /* !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
+ HDL_UNDEF_INST( perform_cryptographic_key_management_operation )
+#endif
 
 #if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
- HDL_UNDEF_INST(perform_cryptographic_computation)
- HDL_UNDEF_INST(cipher_message_with_cipher_feedback)
- HDL_UNDEF_INST(cipher_message_with_output_feedback)
- HDL_UNDEF_INST(cipher_message_with_counter)
-#endif /* !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) */
+ HDL_UNDEF_INST( perform_cryptographic_computation   )
+ HDL_UNDEF_INST( cipher_message_with_cipher_feedback )
+ HDL_UNDEF_INST( cipher_message_with_output_feedback )
+ HDL_UNDEF_INST( cipher_message_with_counter         )
+#endif
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
@@ -5038,7 +5038,7 @@ HDL_INSTRUCTION_SECTION;
 
   /* Install our instructions for the architectures we support */
 
-#ifdef _FEATURE_017_MSA_FACILITY // (_FEATURE_MSA_EXTENSION_FACILITY_1 and 2)
+#if defined( _FEATURE_017_MSA_FACILITY )
   HDL_INST( ARCH_390_900, OPCODE( B93E ), compute_intermediate_message_digest );
   HDL_INST( ARCH_390_900, OPCODE( B93F ), compute_last_message_digest         );
   HDL_INST( ARCH_390_900, OPCODE( B92E ), cipher_message                      );
@@ -5046,11 +5046,11 @@ HDL_INSTRUCTION_SECTION;
   HDL_INST( ARCH_390_900, OPCODE( B92F ), cipher_message_with_chaining        );
 #endif
 
-#ifdef _FEATURE_076_MSA_EXTENSION_FACILITY_3
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
   HDL_INST( ARCH_____900, OPCODE( B928 ), perform_cryptographic_key_management_operation );
 #endif
 
-#ifdef _FEATURE_077_MSA_EXTENSION_FACILITY_4
+#if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
   HDL_INST( ARCH_____900, OPCODE( B92D ), cipher_message_with_counter         );
   HDL_INST( ARCH_____900, OPCODE( B92A ), cipher_message_with_cipher_feedback );
   HDL_INST( ARCH_____900, OPCODE( B92B ), cipher_message_with_output_feedback );

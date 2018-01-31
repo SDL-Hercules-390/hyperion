@@ -366,6 +366,18 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
     defdev( QSTR( typname ), &(devhnd) );
 
 /*-------------------------------------------------------------------*/
+/*                       HDL_UNDEF_INST                              */
+/*-------------------------------------------------------------------*/
+
+#define HDL_UNDEF_INST( instrfunc )                                 \
+                                                                    \
+    DEF_INST( instrfunc )                                           \
+    {                                                               \
+        INST_UPDATE_PSW( regs, ILC( inst[0] ), ILC( inst[0] ));     \
+        regs->program_interrupt( regs, PGM_OPERATION_EXCEPTION );   \
+    }
+
+/*-------------------------------------------------------------------*/
 /*                  HDL_INSTRUCTION_SECTION                          */
 /*-------------------------------------------------------------------*/
 
@@ -390,11 +402,8 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
  #define HDL_370_DEF_INST( arch, opcode, instrfunc )                \
                                                                     \
     do                                                              \
-    {                                                               \
-        if (arch &      HDL_INSTARCH_370)                           \
-            defins( arch, opcode,                                   \
-                QSTR( instrfunc ), &s370_ ## instrfunc );           \
-    }                                                               \
+        if (arch &  HDL_INSTARCH_370) defins( arch, opcode,         \
+            QSTR( instrfunc ), &s370_ ## instrfunc );               \
     while (0)
 
 #else
@@ -409,11 +418,8 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
  #define HDL_390_DEF_INST( arch, opcode, instrfunc )                \
                                                                     \
     do                                                              \
-    {                                                               \
-        if (arch &      HDL_INSTARCH_390)                           \
-            defins( arch, opcode,                                   \
-                QSTR( instrfunc ), &s390_ ## instrfunc );           \
-    }                                                               \
+        if (arch &  HDL_INSTARCH_390) defins( arch, opcode,         \
+            QSTR( instrfunc ), &s390_ ## instrfunc );               \
     while (0)
 
 #else
@@ -428,11 +434,8 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
  #define HDL_900_DEF_INST( arch, opcode, instrfunc)                 \
                                                                     \
     do                                                              \
-    {                                                               \
-        if (arch &      HDL_INSTARCH_900)                           \
-            defins( arch, opcode,                                   \
-                QSTR( instrfunc ), &z900_ ## instrfunc );           \
-    }                                                               \
+        if (arch &  HDL_INSTARCH_900) defins( arch, opcode,         \
+            QSTR( instrfunc ), &z900_ ## instrfunc );               \
     while (0)
 
 #else
@@ -452,18 +455,6 @@ HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
         HDL_900_DEF_INST( ((arch) & HDL_INSTARCH_900), opcode, instrfunc );  \
     }                                                                        \
     while (0)
-
-/*-------------------------------------------------------------------*/
-/*                       HDL_UNDEF_INST                              */
-/*-------------------------------------------------------------------*/
-
-#define HDL_UNDEF_INST( instrfunc )                                 \
-                                                                    \
-    DEF_INST( instrfunc )                                           \
-    {                                                               \
-        INST_UPDATE_PSW( regs, ILC( inst[0] ), ILC( inst[0] ));     \
-        regs->program_interrupt( regs, PGM_OPERATION_EXCEPTION );   \
-    }
 
 /*-------------------------------------------------------------------*/
 /*                       FINAL_SECTION                               */
