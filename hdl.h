@@ -40,7 +40,7 @@ typedef int   DEPCHK( const char* depname, const char* depvers, int depsize );
 typedef void  REGSYM( const char* symname, void* symaddr );
 typedef void* GETSYM( const char* symname );
 typedef void  DEFDEV( const char* typname, DEVHND* devhnd );
-typedef void  DEFINS( int amask, int opcode, const char* name, void* func );
+typedef void  DEFINS( U32 hdl_arch, int opcode, const char* name, void* func );
 typedef int   MODFIN();
 
 /*-------------------------------------------------------------------*/
@@ -141,7 +141,7 @@ struct HDLINS                           /* Instruction entry         */
     void*        instfunc;              /* Instruction function      */
     void*        original;              /* Original instruction      */
     int          opcode;                /* Opcode                    */
-    int          hdl_arch;              /* HDL architecture          */
+    U32          hdl_arch;              /* HDL architecture          */
     HDLINS*      next;                  /* Next entry                */
 };
 

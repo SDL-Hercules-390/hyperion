@@ -264,7 +264,7 @@ void get_mpfactors(BYTE *dest);
 IMPL_DLL_IMPORT int impl(int,char **);
 int quit_cmd(int argc, char *argv[],char *cmdline);
 typedef void (*LOGCALLBACK)( const char*, size_t );
-typedef void *(*COMMANDHANDLER)(void *);
+typedef void *(*COMMANDHANDLER)(char *);
 IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);
 IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 

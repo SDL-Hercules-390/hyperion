@@ -1164,7 +1164,7 @@ DEF_INST( dummy_instruction )
 /*  Note: the last architecture has been built so the normal non-    */
 /*  underscore FEATURE values are now #defined according to the      */
 /*  LAST built architecture just built (usually zarch = 900). This   */
-/*  means from this point onward (to the end of file) you should     *
+/*  means from this point onward (to the end of file) you should     */
 /*  ONLY be testing the underscore _FEATURE values to see if the     */
 /*  given feature was defined for *ANY* of the build architectures.  */
 /*                                                                   */

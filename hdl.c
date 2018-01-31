@@ -66,7 +66,7 @@ static int   hdl_check_depends_cb    ( const char* name, const char* version, in
 static void  hdl_register_symbols_cb ( const char* name, void* symbol );
 static void* hdl_resolve_symbols_cb  ( const char* name );
 static void  hdl_define_devtypes_cb  ( const char* typname, DEVHND* devhnd );
-static void  hdl_define_instructs_cb ( int hdl_arch, int opcode, const char* name, void* func );
+static void  hdl_define_instructs_cb ( U32 hdl_arch, int opcode, const char* name, void* func );
 static void  hdl_replace_opcode      ( bool insert, HDLINS* );
 static void  hdl_term                ( void* arg );
 
@@ -235,10 +235,10 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 {
     /* Called by hsccmd.c's "ldmod_cmd" function */
 
-    char*    modname;
-    HDLMOD*  mod;
-    HDLMOD*  wrkmod;
-    HDLSYM*  sym;
+    const char*  modname;
+    HDLMOD*      mod;
+    HDLMOD*      wrkmod;
+    HDLSYM*      sym;
 
     /* Search module chain to see if module is already loaded */
     modname = (modname = strrchr( name, '/' )) ? modname+1 : name;
@@ -381,20 +381,20 @@ DLL_EXPORT int hdl_freemod( const char* name )
 {
     /* Called by hsccmd.c's "rmmod_cmd" function */
 
-    char*     modname;
-    DEVBLK*   dev;
+    const char*  modname;
+    DEVBLK*      dev;
 
-    HDLMOD*   mod;
-    HDLMOD**  ppmod;
+    HDLMOD*      mod;
+    HDLMOD**     ppmod;
 
-    HDLSYM*   sym;
-    HDLSYM*   cursym;
+    HDLSYM*      sym;
+    HDLSYM*      cursym;
 
-    HDLDEV*   device;
-    HDLDEV*   savedev;
+    HDLDEV*      device;
+    HDLDEV*      savedev;
 
-    HDLINS*   ins;
-    HDLINS*   saveins;
+    HDLINS*      ins;
+    HDLINS*      saveins;
 
     modname = (modname = strrchr( name, '/' )) ? modname+1 : name;
 
@@ -1440,7 +1440,7 @@ static void hdl_define_devtypes_cb( const char* typname, DEVHND* devhnd )
 /*-------------------------------------------------------------------*/
 /*     hdl_define_instructs_cb  --  Define instruction callback      */
 /*-------------------------------------------------------------------*/
-static void hdl_define_instructs_cb( int hdl_arch, int opcode, const char* name, void* func )
+static void hdl_define_instructs_cb( U32 hdl_arch, int opcode, const char* name, void* func )
 {
     /*
     **  Verify caller sanity: caller only allowed to replace one

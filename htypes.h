@@ -7,8 +7,8 @@
 
 /*-------------------------------------------------------------------*/
 /* Fixed size integer, boolean and Hercules types (int32_t, bool,    */
-/* U32, U64, FWORD, DBLWRD, etc). Try to pull in as many of the      */
-/* values as possible from the available system headers.             */
+/* BOOL, U32, U64, FWORD, DBLWRD, etc). Try to pull in as many of    */
+/* the values as possible from the available system headers.         */
 /*-------------------------------------------------------------------*/
 
 #ifndef _HTYPES_H_
@@ -114,6 +114,10 @@ typedef  uint8_t    HWORD[2];   // unsigned halfword   (2 bytes)
 typedef  uint8_t    FWORD[4];   // unsigned fullword   (4 bytes)
 typedef  uint8_t    DBLWRD[8];  // unsigned doubleword (8 bytes)
 typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
+
+#ifndef  BOOL
+#define  BOOL       int         // (same as Windows)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Socket stuff                                                      */

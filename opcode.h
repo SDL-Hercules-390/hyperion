@@ -3418,6 +3418,8 @@ DEF_INST( convert_utf16_to_utf32 );
 DEF_INST( convert_utf32_to_utf16 );
 DEF_INST( convert_utf32_to_utf8 );
 DEF_INST( convert_utf8_to_utf32 );
+DEF_INST( search_string_unicode );
+DEF_INST( translate_and_test_reverse );
 #endif
 
 #if defined( FEATURE_023_HFP_UNNORM_EXT_FACILITY )
@@ -4474,7 +4476,6 @@ DEF_INST( purge_translation_lookaside_buffer );
 DEF_INST( release_cms_lock );
 DEF_INST( release_local_lock );
 DEF_INST( rotate_left_single_logical_long );
-DEF_INST( search_string_unicode );
 DEF_INST( set_addressing_mode_24 );
 DEF_INST( set_addressing_mode_31 );
 DEF_INST( set_addressing_mode_64 );
@@ -4558,7 +4559,6 @@ DEF_INST( trace_svc_return );
 DEF_INST( trace_task_dispatch );
 DEF_INST( translate );
 DEF_INST( translate_and_test );
-DEF_INST( translate_and_test_reverse );
 DEF_INST( unpack );
 DEF_INST( update_tree );
 DEF_INST( zero_and_add );

@@ -949,15 +949,6 @@ static const char* get_arch_name_by_arch( int archnum )
 }
 
 /*-------------------------------------------------------------------*/
-/*                   get_arch_mask_by_arch                           */
-/*-------------------------------------------------------------------*/
-static int get_arch_mask_by_arch( int archnum )
-{
-    const ARCHTAB* at = get_archtab_by_arch( archnum );
-    return at ? at->amask : 0;
-}
-
-/*-------------------------------------------------------------------*/
 /*                      get_arch_name                       (public) */
 /*-------------------------------------------------------------------*/
 const char* get_arch_name( REGS* regs )
@@ -1317,7 +1308,7 @@ static void archlvl_query_raw( const ARCHTAB* at )
 {
     char buf[ 128 ] = {0};
     char wrk[  20 ];
-    int  i;
+    size_t i;
 
     for (i=0; i < STFL_IBM_DW_SIZE; i++)
     {
