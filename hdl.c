@@ -1114,6 +1114,37 @@ static void hdl_term( void* arg )
 }
 
 /*-------------------------------------------------------------------*/
+/*               get_HDLSYM  --  find HDLSYM entry                   */
+/*-------------------------------------------------------------------*/
+static HDLSYM* get_HDLSYM( const char* symname )
+{
+    HDLMOD*  mod;
+    HDLSYM*  sym;
+
+    /* Search all modules for the desired symbol entry */
+    for (mod = hdl_mods; mod; mod = mod->next)
+        for (sym = mod->symbols; sym; sym = sym->next)
+            if (strcmp( sym->name, symname ) == 0)
+                return sym;
+
+    /* Symbol not found */
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
+/*               hdl_getsym  --  find symbol                (public) */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void* hdl_getsym( const char* symname )
+{
+    /* This function is mostly for the benefit of the httpserv.c's
+       'http_request' function to locate any cgibin functions that
+       may have been overridden/added by a hercules dynamic module.
+    */
+    HDLSYM* sym = get_HDLSYM( symname );
+    return sym ? sym->symbol : NULL;
+}
+
+/*-------------------------------------------------------------------*/
 /*            hdl_next  --  find next entry-point in chain           */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void* hdl_next( const void* symbol )
@@ -1389,17 +1420,11 @@ static void* hdl_resolve_symbols_cb( const char* name )
     HDLSYM*  sym;
     void*    symbol;
 
-    /* Find entry-point and increase reference */
-    for (mod = hdl_mods; mod; mod = mod->next)
+    /* Resolve symbol address and increase reference count if found */
+    if ((sym = get_HDLSYM( name )))
     {
-        for (sym = mod->symbols; sym; sym = sym->next)
-        {
-            if (strcmp( sym->name, name ) == 0)
-            {
-                sym->refcnt++;
-                return sym->symbol;
-            }
-        }
+        sym->refcnt++;
+        return sym->symbol;
     }
 
     /* If not found, then lookup as regular symbol (i.e. for each
@@ -1434,18 +1459,6 @@ static void* hdl_resolve_symbols_cb( const char* name )
 
     /* Symbol not found */
     return NULL;
-}
-
-/*-------------------------------------------------------------------*/
-/*               hdl_getsym  --  find symbol                (public) */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void* hdl_getsym( const char* symname )
-{
-    /* This function is mostly for the benefit of the httpserv.c's
-       'http_request' function to locate any cgibin functions that
-       may have been overridden/added by a hercules dynamic module.
-    */
-    return hdl_resolve_symbols_cb( symname );
 }
 
 /*-------------------------------------------------------------------*/
