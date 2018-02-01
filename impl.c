@@ -1012,6 +1012,19 @@ int     rc;
         exit( rc );
     }
 
+    /* Load DYNGUI module if needed */
+    if (extgui)
+    {
+        if (hdl_loadmod( "dyngui", HDL_LOAD_NOUNLOAD ) != 0)
+        {
+            usleep( 10000 ); // (give logger time to show them the error message)
+            // "Load of dyngui.dll failed, hercules terminated"
+            WRMSG( HHC01409, "S" );
+            delayed_exit( -1 );
+            return 1;
+        }
+    }
+
     /* Load modules specified via command-line -l/--ldmod option */
     if (modcount)
     {
@@ -1034,19 +1047,6 @@ int     rc;
             usleep( 10000 ); // (give logger time to display message)
             // "Hercules terminating, see previous messages for reason"
             WRMSG( HHC01408, "S");
-            delayed_exit( -1 );
-            return 1;
-        }
-    }
-
-    /* Load DYNGUI module if needed */
-    if (extgui)
-    {
-        if (hdl_loadmod( "dyngui", HDL_LOAD_DEFAULT ) != 0)
-        {
-            usleep( 10000 ); // (give logger time to show them the error message)
-            // "Load of dyngui.dll failed, hercules terminated"
-            WRMSG( HHC01409, "S" );
             delayed_exit( -1 );
             return 1;
         }
