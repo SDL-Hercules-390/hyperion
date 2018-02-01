@@ -2172,11 +2172,14 @@ END_RESOLVER_SECTION
 
 HDL_FINAL_SECTION
 {
-    bDoneProcessing = TRUE;     // (tell main loop to stop processing)
+    rc = gui_nounload;              // (reject unloads once activated)
 
-    usleep(100000);             // (brief delay to give GUI time
-                                //  to display ALL shutdown msgs)
-    rc = gui_nounload;          // (reject unloads when activated)
+    if (sysblk.shutdown)
+    {
+        bDoneProcessing = TRUE;     // (tell main loop to stop processing)
+        usleep(100000);             // (brief delay to give GUI time
+                                    //  to display ALL shutdown msgs)
+    }
 }
 END_FINAL_SECTION
 
