@@ -880,12 +880,13 @@ DLL_EXPORT void hdl_listmods( int flags )
 
     for (mod = hdl_mods; mod; mod = mod->next)
     {
-        // "HDL: module type = %s, name = %s, flags = (%sunloadable, %sforced)"
+        // "HDL: name = %s, type = %s, flags = (%sunloadable, %sforced)"
         WRMSG( HHC01531, "I"
-            , (mod->flags & HDL_LOAD_MAIN)       ? "main" : "load"
             ,  mod->name
-            , (mod->flags & HDL_LOAD_NOUNLOAD)   ? "not " : ""
-            , (mod->flags & HDL_LOAD_WAS_FORCED) ? ""     : "not "
+            , (mod->flags & HDL_LOAD_MAIN)       ?  "EXE"    :
+              (mod->flags & HDL_LOAD_PSEUDOMOD)  ?  "pseudo" :  "hdl"
+            , (mod->flags & HDL_LOAD_NOUNLOAD)   ?  "NOT "   :   ""
+            , (mod->flags & HDL_LOAD_WAS_FORCED) ?   ""      :  "not "
         );
 
         for (sym = mod->symbols; sym; sym = sym->next)
@@ -901,7 +902,7 @@ DLL_EXPORT void hdl_listmods( int flags )
                 // "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
                 WRMSG( HHC01532, "I"
                     , sym->name
-                    , sym->refcnt, sym->symbol ? "" : ", unresolved"
+                    , sym->refcnt, sym->symbol ? "" : ", UNRESOLVED"
                     , mod->name
                 );
             }

@@ -20,6 +20,7 @@
 #define HDL_LOAD_FORCE       0x20000000 /* Override dependency check */
 #define HDL_LOAD_NOMSG       0x10000000 /* Do not issue not found msg*/
 #define HDL_LOAD_WAS_FORCED  0x08000000 /* Module load was forced    */
+#define HDL_LOAD_PSEUDOMOD   0x04000000 /* Pseudo-module             */
 
 #define HDL_INSTARCH_370     0x80000000
 #define HDL_INSTARCH_390     0x40000000
