@@ -872,6 +872,24 @@ DLL_EXPORT int hdl_setpath( const char* path )
 }
 
 /*-------------------------------------------------------------------*/
+/*               get_HDLSYM  --  find HDLSYM entry                   */
+/*-------------------------------------------------------------------*/
+static HDLSYM* get_HDLSYM( const char* symname )
+{
+    HDLMOD*  mod;
+    HDLSYM*  sym;
+
+    /* Search all modules for the desired symbol entry */
+    for (mod = hdl_mods; mod; mod = mod->next)
+        for (sym = mod->symbols; sym; sym = sym->next)
+            if (strcmp( sym->name, symname ) == 0)
+                return sym;
+
+    /* Symbol not found */
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
 /*              hdl_listmods  --  list hercules modules              */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_listmods( int flags )
@@ -881,7 +899,6 @@ DLL_EXPORT void hdl_listmods( int flags )
     HDLMOD*  mod;
     HDLSYM*  sym;
     char     buf[ 256 ];
-    int      len;
 
     for (mod = hdl_mods; mod; mod = mod->next)
     {
@@ -908,7 +925,7 @@ DLL_EXPORT void hdl_listmods( int flags )
                 WRMSG( HHC01532, "I"
                     , sym->name
                     , sym->refcnt, sym->symbol ? "" : ", UNRESOLVED"
-                    , mod->name
+                    , get_HDLSYM( sym->name )->owner
                 );
             }
         }
@@ -916,45 +933,66 @@ DLL_EXPORT void hdl_listmods( int flags )
         if (mod->devices)
         {
             HDLDEV*  device;
-            len = 0;
+            int      len = 0;
 
             for (device = mod->devices; device; device = device->next)
-                len += snprintf( buf + len, sizeof( buf ) - len, " %s", device->name );
+            {
+                if ((len += snprintf( buf + len, sizeof( buf ) - len, ", %s", device->name )) >= 50)
+                {
+                    // "HDL:  devtypes = %s"
+                    WRMSG( HHC01533, "I", trim( buf, ", " ));
+                    len = 0;
+                }
+            }
 
-            // (no blank before %s since string starts with it)
-            // "HDL:  devtype(s) =%s"
-            WRMSG( HHC01533, "I", buf );
+            if (len)
+            {
+                // "HDL:  devtypes = %s"
+                WRMSG( HHC01533, "I", trim( buf, ", " ));
+            }
         }
 
         if (mod->instructs)
         {
             HDLINS*  ins;
+            HDLINS*  prev_ins;
 
-            for (ins = mod->instructs; ins; ins = ins->next)
+            buf[0] = 0;
+
+            for (ins = prev_ins = mod->instructs; ins; ins = ins->next)
             {
-                len = 0;
-#if defined(                                                                             _370 )
-                if (ins->hdl_arch ==                                         HDL_INSTARCH_370)
-                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_370_NAME );
-#endif
+                if (strcmp( ins->instname, prev_ins->instname ) != 0)
+                {
+                    // "HDL:  opcode %4.4X: %s, %s"
+                    WRMSG( HHC01534, "I"
+                        , prev_ins->opcode
+                        , prev_ins->instname
+                        , trim( buf, ", " )
+                    );
 
-#if defined(                                                                             _390 )
-                if (ins->hdl_arch ==                                         HDL_INSTARCH_390)
-                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_390_NAME );
+                    prev_ins = ins;
+                    buf[0] = 0;
+                }
+#if defined(                                     _370 )
+                if (ins->hdl_arch == HDL_INSTARCH_370)
+                    STRLCAT( buf,           _ARCH_370_NAME ", " );
 #endif
-
-#if defined(                                                                             _900 )
-                if (ins->hdl_arch ==                                         HDL_INSTARCH_900)
-                    len += snprintf( buf + len, sizeof( buf ) - len, ", archlvl = " _ARCH_900_NAME );
+#if defined(                                     _390 )
+                if (ins->hdl_arch == HDL_INSTARCH_390)
+                    STRLCAT( buf,           _ARCH_390_NAME ", " );
 #endif
-                // (no blank between %4.4X and %s since string starts with ", ")
-                // "HDL:  instruction = %s, opcode = %4.4X%s"
-                WRMSG( HHC01534, "I"
-                    , ins->instname
-                    , ins->opcode
-                    , buf
-                );
+#if defined(                                     _900 )
+                if (ins->hdl_arch == HDL_INSTARCH_900)
+                    STRLCAT( buf,           _ARCH_900_NAME ", " );
+#endif
             }
+
+            // "HDL:  opcode %4.4X: %s, %s"
+            WRMSG( HHC01534, "I"
+                , prev_ins->opcode
+                , prev_ins->instname
+                , trim( buf, ", " )
+            );
         }
     }
 }
@@ -1111,24 +1149,6 @@ static void hdl_term( void* arg )
     if (MLVL( DEBUG ))
         // "HDL: termination sequence complete"
         WRMSG( HHC01515, "I" );
-}
-
-/*-------------------------------------------------------------------*/
-/*               get_HDLSYM  --  find HDLSYM entry                   */
-/*-------------------------------------------------------------------*/
-static HDLSYM* get_HDLSYM( const char* symname )
-{
-    HDLMOD*  mod;
-    HDLSYM*  sym;
-
-    /* Search all modules for the desired symbol entry */
-    for (mod = hdl_mods; mod; mod = mod->next)
-        for (sym = mod->symbols; sym; sym = sym->next)
-            if (strcmp( sym->name, symname ) == 0)
-                return sym;
-
-    /* Symbol not found */
-    return NULL;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1404,6 +1424,7 @@ static void hdl_register_symbols_cb( const char* name, void* symbol )
     HDLSYM*  newsym  = malloc( sizeof( HDLSYM ));
 
     newsym->name    =  strdup( name );
+    newsym->owner   =  hdl_curmod->name;
     newsym->symbol  =  symbol;
     newsym->refcnt  =  0;
     newsym->next    =  hdl_curmod->symbols;

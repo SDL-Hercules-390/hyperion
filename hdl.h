@@ -102,8 +102,9 @@ struct HDLDEP                           /* Dependency entry          */
 struct HDLSYM; typedef struct HDLSYM HDLSYM;
 struct HDLSYM                           /* External Symbol entry     */
 {
-    const char*  name;                  /* Function symbol name      */
-    void*        symbol;                /* symbol/function address   */
+    const char*  name;                  /* Symbol name               */
+    const char*  owner;                 /* Owning module             */
+    void*        symbol;                /* Symbol address            */
     int          refcnt;                /* Symbol reference count    */
     HDLSYM*      next;                  /* Next entry in chain       */
 };
