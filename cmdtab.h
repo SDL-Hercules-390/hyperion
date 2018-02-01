@@ -730,6 +730,14 @@
 
 #define lsdep_cmd_desc          "List module dependencies"
 #define lsmod_cmd_desc          "List dynamic modules"
+#define lsmod_cmd_help          \
+                                \
+  "Format:  lsmod  [ALL]\n"                                                      \
+  "\n"                                                                           \
+  "Lists all dynamically loaded modules and their registered symbols,\n"         \
+  "device-types and instruction overrides. If 'ALL' is specified then\n"         \
+  "registered symbols which are currently unresolved are also listed.\n"
+
 #define mainsize_cmd_desc       "Define/Display mainsize parameter"
 #define mainsize_cmd_help       \
                                 \
@@ -1777,7 +1785,7 @@ COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          
 COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )
 COMMAND( "lsdep",                   lsdep_cmd,              SYSCMDNOPER,        lsdep_cmd_desc,         NULL                )
-COMMAND( "lsmod",                   lsmod_cmd,              SYSCMDNOPER,        lsmod_cmd_desc,         NULL                )
+COMMAND( "lsmod",                   lsmod_cmd,              SYSCMDNOPER,        lsmod_cmd_desc,         lsmod_cmd_help      )
 COMMAND( "rmmod",                   rmmod_cmd,              SYSCMDNOPER,        rmmod_cmd_desc,         NULL                )
 #if defined( OPTION_HAO )
 COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       hao_cmd_desc,           hao_cmd_help        )

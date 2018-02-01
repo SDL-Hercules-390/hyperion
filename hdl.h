@@ -188,12 +188,12 @@ HDL_DLL_IMPORT int hdl_main             /* Main initialization func  */
 /*                          hdl_initpath:  Initialize module path    */
 /*                          hdl_setpath:   Set module path (-1/+1/0) */
 /*                          hdl_getpath:   Return module path        */
-/*                          hdl_loadmod:   load HDL module           */
+/*                          hdl_loadmod:   Load HDL module           */
 /*                          hdl_freemod:   Unload HDL module         */
-/*                          hdl_listmods:  list all HDL modules      */
-/*                          hdl_listdeps:  list all HDL dependencies */
+/*                          hdl_listmods:  List all HDL modules      */
+/*                          hdl_listdeps:  List all HDL dependencies */
 /*                          hdl_DEVHND:    Get device-type handler   */
-/*                          hdl_devequ:    device-type equates func  */
+/*                          hdl_devequ:    Device-type equates func  */
 /*                          hdl_getsym:    Retrieve symbol address   */
 /*                          hdl_next:      Find next entry in chain  */
 

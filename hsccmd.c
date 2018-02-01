@@ -7466,11 +7466,28 @@ int rmmod_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int lsmod_cmd(int argc, char *argv[], char *cmdline)
 {
-    UNREFERENCED( cmdline );
-    UNREFERENCED( argc    );
-    UNREFERENCED( argv    );
+    int flags = HDL_LIST_DEFAULT;
 
-    hdl_listmods( HDL_LIST_DEFAULT );
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
+    if (argc > 1)
+    {
+        if (0
+            || argc > 2
+            || !CMD( argv[1], ALL, 3 )
+        )
+        {
+            // "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+
+        flags = HDL_LIST_ALL;
+    }
+
+    hdl_listmods( flags );
     return 0;
 }
 
