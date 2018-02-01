@@ -12,6 +12,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#include "httpmisc.h"
 
 /*-------------------------------------------------------------------*/
 /*    List of dynamic modules to pre-load at hdl_main startup        */
@@ -55,6 +56,7 @@ static DEVHND*     hdl_real_fba_DEVHND;     /* FBA devices DEVHND    */
 /*-------------------------------------------------------------------*/
 /*         Internal entry-point functions forward references         */
 /*-------------------------------------------------------------------*/
+static int   hdl_check_depends_ep    ( DEPCHK* depchk );
 static void  hdl_register_symbols_ep ( REGSYM* regsym );
 static void  hdl_resolve_symbols_ep  ( GETSYM* getsym );
 static void  hdl_define_devtypes_ep  ( DEFDEV* defdev );
@@ -116,7 +118,7 @@ DLL_EXPORT int hdl_main
     hdl_curmod->name       =  strdup( "*Hercules" );
     hdl_curmod->flags      =  (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD);
 
-    hdl_curmod->depsec_ep  =  NULL;
+    hdl_curmod->depsec_ep  =  hdl_check_depends_ep;
     hdl_curmod->regsec_ep  =  hdl_register_symbols_ep;
     hdl_curmod->ressec_ep  =  hdl_resolve_symbols_ep;
     hdl_curmod->devsec_ep  =  hdl_define_devtypes_ep;
@@ -128,6 +130,9 @@ DLL_EXPORT int hdl_main
     hdl_curmod->instructs  =  NULL;
     hdl_curmod->next       =  hdl_mods;
     hdl_mods               =  hdl_curmod;
+
+    /* Create default dependency chain */
+    VERIFY( hdl_check_depends_ep( &hdl_check_depends_cb ) == 0);
 
     /*
     **  Create an initial symbols list by manualy registering
@@ -510,9 +515,9 @@ DLL_EXPORT int hdl_freemod( const char* name )
             hdl_replace_opcode( false, ins );
 
             /* Free resources for this instruction override */
-            free( ins->instname );  // (free name string)
-            saveins = ins->next;    // (save before freeing struct)
-            free( ins );            // (free HDLINS struct)
+            free( ins->instname );   // (free name string)
+            saveins = ins->next;     // (save before freeing)
+            free( ins );             // (free HDLINS struct)
 
             /* Do for all overrides in this module's chain */
             ins = saveins;
@@ -1181,7 +1186,7 @@ DLL_EXPORT void* hdl_next( const void* symbol )
 /*               HDL INTERNAL ENTRY-POINT FUNCTIONS                  */
 /*-------------------------------------------------------------------*/
 /* The following functions are hard-coded equivalents of the hdl.h   */
-/* HDL_REGISTER_SECTION, HDL_RESOLVER_SECTION and HDL_DEVICE_SECTION */
+/* HDL_DEPENDENCY, HDL_REGISTER, HDL_RESOLVER and HDL_DEVICE_SECTION */
 /* functions that allows hdl.c to initialize required and optional   */
 /* symbol values (mostly in hsys.c = hsys.dll) that are needed for   */
 /* HDL to function properly. The "hdl_main" initialization function  */
@@ -1191,6 +1196,21 @@ DLL_EXPORT void* hdl_next( const void* symbol )
 /* Hercules executable "hdlmain.c" source member and the subsequent  */
 /* hdl_main "dlopen(self)" call which some systems do not support.   */
 /*-------------------------------------------------------------------*/
+
+// HDL_DEPENDENCY_SECTION
+static int hdl_check_depends_ep( DEPCHK* depchk )
+{
+    int depchk_rc = 0;
+
+    HDL_DEPENDENCY( WEBBLK   );
+    HDL_DEPENDENCY( DEVBLK   );
+    HDL_DEPENDENCY( REGS     );
+    HDL_DEPENDENCY( SYSBLK   );
+    HDL_DEPENDENCY( HERCULES );
+
+    return depchk_rc;
+}
+// END_DEPENDENCY_SECTION
 
 static void**  UNRESOLVED  = NULL;
 
