@@ -21,7 +21,7 @@
 
   // Due to autotool's insistance of defining 'VERSION' for us
   // via a #define within the 'config.h' header (the value of
-  // which is derives from the 'configure.ac's "AM_INIT_AUTOMAKE"
+  // which it derives from the 'configure.ac's "AM_INIT_AUTOMAKE"
   // statement) instead of letting us define it ourselves, we
   // must undefine it to the value that our '_dynamic_version'
   // script determied it should be (which it saved for us in the
@@ -55,8 +55,15 @@
   #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"
 #endif
 
-#define HDL_VERS_HERCULES          VERSION
-#define HDL_SIZE_HERCULES   sizeof(VERSION)
+/* To be more compatible with HDL's "HDL_DEPENDENCY" macro we prefer
+   to define a value containing ONLY the major, intermediate, minor
+   components and not the full version string (which also contains
+   the git hash and other unwanted information).
+*/
+#undef  VER
+#define VER                 VERS_MAJ##.##VERS_INT##VERS_MIN
+#define HDL_VERS_HERCULES   QSTR( VER )
+#define HDL_SIZE_HERCULES   sizeof( HDL_VERS_HERCULES ) - 1
 
 VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );
 VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
