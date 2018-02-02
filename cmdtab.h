@@ -729,6 +729,7 @@
    "number is 1.\n"
 
 #define lsdep_cmd_desc          "List module dependencies"
+#define lsequ_cmd_desc          "List device equates"
 #define lsmod_cmd_desc          "List dynamic modules"
 #define lsmod_cmd_help          \
                                 \
@@ -1785,6 +1786,7 @@ COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          
 COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )
 COMMAND( "lsdep",                   lsdep_cmd,              SYSCMDNOPER,        lsdep_cmd_desc,         NULL                )
+COMMAND( "lsequ",                   lsequ_cmd,              SYSCMDNOPER,        lsequ_cmd_desc,         NULL                )
 COMMAND( "lsmod",                   lsmod_cmd,              SYSCMDNOPER,        lsmod_cmd_desc,         lsmod_cmd_help      )
 COMMAND( "rmmod",                   rmmod_cmd,              SYSCMDNOPER,        rmmod_cmd_desc,         NULL                )
 #if defined( OPTION_HAO )

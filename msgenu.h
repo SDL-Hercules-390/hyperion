@@ -222,7 +222,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00005 "The configuration has been placed into a system check-stop state because of an incompatible service call"
 #define HHC00006 "SCLP console interface %s"
 #define HHC00007 "Previous message from function '%s' at %s(%d)"
-#define HHC00008 "%s%s"
+//efine HHC00008 (available)
 #define HHC00009 "RRR...RING...GGG!\a"
 #define HHC00010 "Enter input for console %1d:%04X"
 #define HHC00011 "Function %s failed; cache %d size %d: [%02d] %s"
@@ -242,11 +242,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00023 "Invalid/unsupported option: %s"
 #define HHC00024 "Unrecognized option: %s"
 #define HHC00025 "Invalid help option argument: %s"
+//efine HHC00026 - HHC00069 (available)
 
-// range 00040 - 00068 available
-
-#define HHC00069 "There %s %d CPU%s still active; confirmation required"
-// HHC0007xx, HHC0008xx and HHC0009xx reserved for hao.c. (to recognize own messages)
+// HHC0007x, HHC0008x and HHC0009x reserved for hao.c. (to recognize own messages)
 #define HHC00070 "Unknown hao command, valid commands are:\n" \
        "HHC00070I hao tgt <tgt> : define target rule (pattern) to react on\n" \
        "HHC00070I hao cmd <cmd> : define command for previously defined rule\n" \
@@ -274,8 +272,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00089 "The are no HAO rules defined"
 #define HHC00090 "HAO thread waiting for logger facility to become active"
 #define HHC00091 "Logger facility now active; HAO thread proceeding"
-// reserve 92-99 for hao.c
+//efine HHC00092 - HHC00099 (available)
 
+// reserve 100-129 thread related
 #define HHC00100 "Thread id "TIDPAT", prio %2d, name %s started"
 #define HHC00101 "Thread id "TIDPAT", prio %2d, name %s ended"
 #define HHC00102 "Error in function create_thread(): %s"
@@ -284,10 +283,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
-// reserve 102-129 thread related
+//efine HHC00109 - HHC00129 (available)
+
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
-
+//efine HHC00132 (available)
+//efine HHC00133 (available)
+//efine HHC00134 (available)
 #define HHC00135 "Timeout for module %s, possible older version"
 #define HHC00136 "Error in function %s: %s"
 #define HHC00137 "Error opening TUN/TAP device %s: %s"
@@ -309,7 +311,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00153 "Net device %s: Invalid prefix length %s"
 #define HHC00154 "Preconfigured interface %s does not exist or is not accessible by Hercules (EPERM)"
 #define HHC00155 "Net device %s: Invalid broadcast address %s"
-// 00156 - 00159 unused
+//efine HHC00156 (available)
+//efine HHC00157 (available)
+//efine HHC00158 (available)
+//efine HHC00159 (available)
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
 #define HHC00162 "%s: Must be called from within Hercules."
@@ -319,6 +324,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00166 "%s: ioctl error doing %s on %s: %d %s"
 #define HHC00167 "%s: Doing %s on %s"
 #define HHC00168 "%s: Hercules disappeared!! .. exiting"
+//efine HHC00169 - HHC00199 (available)
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file %s, type %s: tape closed"
@@ -364,6 +370,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC00241 (available)
 //efine HHC00242 (available)
 #define HHC00243 "%1d:%04X Tape status retrieval timeout"
+//efine HHC00243 - HHC00299 (available)
 
 // reserve 003xx for compressed dasd device related
 #define HHC00300 "%1d:%04X CCKD file: error initializing shadow files"
@@ -411,16 +418,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00342 "%1d:%04X CCKD file[%d] %s: offset 0x%16.16"PRIx64" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] %s: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] %s: compression %s not supported"
-/* HHC00345 cckd help output */
-#define HHC00345 "%s"
-/* HHC00346 cckd opts output */
-#define HHC00346 "%s"
-/* HHC00347 cckd stats output */
-#define HHC00347 "%s"
+#define HHC00345 "%s" /* cckd help output */
+#define HHC00346 "%s" /* cckd opts output */
+#define HHC00347 "%s" /* cckd stats output */
 #define HHC00348 "CCKD file: invalid value %d for %s"
 #define HHC00349 "CCKD file: invalid cckd keyword: %s"
 #define HHC00350 "CCKD file: invalid numeric value %s"
-
+//efine HHC00351 (available)
 #define HHC00352 "%1d:%04X CCKD file %s: opened bit is on, use -f"
 #define HHC00353 "%1d:%04X CCKD file %s: check disk errors"
 #define HHC00354 "%1d:%04X CCKD file %s: error in function %s: %s"
@@ -448,7 +452,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00376 "%1d:%04X CCKD file %s: free space not rebuilt, file opened read-only"
 #define HHC00377 "%1d:%04X CCKD file %s: free space rebuilt"
 #define HHC00378 "%1d:%04X CCKD file %s: error during swap"
-
+//efine HHC00379 - HHC00395 (available)
 #define HHC00396 "%1d:%04X %s"
 #define HHC00397 "CCKD file: internal cckd trace table is empty"
 #define HHC00398 "%s"
@@ -500,8 +504,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00442 "%1d:%04X CKD file %s: set file mask %02X"
 //efine HHC00443 (available)
 //efine HHC00444 (available)
-
-/* dasdutil.c */
 #define HHC00445 "%1d:%04X CKD file %s: updating cyl %d head %d"
 #define HHC00446 "%1d:%04X CKD file %s: write track error: stat %2.2X"
 #define HHC00447 "%1d:%04X CKD file %s: reading cyl %d head %d"
@@ -526,6 +528,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
+//efine HHC00469 - HHC00499 (available)
 
 // reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"
@@ -550,6 +553,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
 #define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
+//efine HHC00522 - HHC00599 (available)
 
 // reserve 006xx for sce dasd device related messages
 #define HHC00600 "SCE file %s: error in function %s: %s"
@@ -558,6 +562,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00603 "SCE file %s: load main terminated at end of mainstor"
 #define HHC00604 "SCE file %s: access error on image %s: %s"
 #define HHC00605 "SCE file %s: access error: %s"
+//efine HHC00606 - HHC00699 (available)
 
 // reserve 007xx for shared device related messages
 #define HHC00700 "Shared: parameter %s in argument %d is invalid"
@@ -605,6 +610,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00742 "Shared: OPTION_SHARED_DEVICES not defined"
 #define HHC00743 "Shared: %s"
 #define HHC00744 "Shared: Server already active"
+//efine HHC00745 - HHC00799 (available)
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
@@ -646,8 +652,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC00837 (available)
 //efine HHC00838 (available)
 #define HHC00839 "Processor %s%02X: ipl failed: %s"
-
-/* external.c */
 #define HHC00840 "External interrupt: interrupt key"
 #define HHC00841 "External interrupt: clock comparator"
 #define HHC00842 "External interrupt: CPU timer=%16.16"PRIX64
@@ -656,7 +660,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00845 "External interrupt: block I/O %s"
 #define HHC00846 "External interrupt: service signal %8.8X"
 //efine HHC00847 - HHC00849 (available)
-
 #define HHC00850 "Processor %s%02X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)"
 #define HHC00851 "Processor %s%02X: interrupt %spending"
 #define HHC00852 "Processor %s%02X: I/O interrupt %spending"
@@ -687,7 +690,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC00877 (available)
 //efine HHC00878 (available)
 //efine HHC00879 (available)
-
 #define HHC00880 "device %1d:%04X: status %s"
 #define HHC00881 "I/O interrupt queue:%s"
 #define HHC00882 "device %1d:%04X: %s%s%s%s pri ISC %02X CSS %02X CU %02X"
@@ -696,7 +698,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00885 "Channel Report queue:"
 #define HHC00886 "CRW 0x%8.8X: %s"
 //efine HHC00887 - HHC00889 (available)
-
 #define HHC00890 "Cannot %s facility %s without first %s facility %s"
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
 #define HHC00892 "Facility( %s ) does not exist for %s"
@@ -730,8 +731,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00917 "%1d:%04X %s: Required parameter '%s' missing"
 #define HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
 //efine HHC00919 (available)
-
-/* ctc_lcs.c */
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
 #define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
@@ -772,9 +771,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
 #define HHC00968 "CTC: lcs device port %2.2X: read thread: port started"
 #define HHC00969 "CTC: lcs device port %2.2X: read thread: port stopped"
-
-/*ctcadpt.c */
-// Note: CTCE messages are in the 050xx range
 //efine HHC00970 (available)
 //efine HHC00971 (available)
 //efine HHC00972 (available)
@@ -785,8 +781,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == LGW)"
 #define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
 #define HHC00979 "%s: %s: %s %s %s"
-
-/* ctc_ctci.c, ctc_lcs.c, ctc_ptp.c */
 #define HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
 #define HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
 #define HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
@@ -797,7 +791,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC00987 - HHC00999 (available)
 
 // reserve 010xx for communication adapter specific component messages
-/* comm3705.c, commadpt.c, console.c, con1052c.c */
 #define HHC01000 "%1d:%04X COMM: error in function %s: %s"
 #define HHC01001 "%1d:%04X COMM: connect out to %s:%d failed during initial status: %s"
 #define HHC01002 "%1d:%04X COMM: cannot obtain socket for incoming calls: %s"
@@ -934,10 +927,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // reserve 01250 - 01299 for Generic device messages
 #define HHC01250 "%1d:%04X %s: error in function %s: %s"
 #define HHC01251 "%1d:%04X %s: option '%s' has been deprecated"
-//efine HHC01252 - HHC01251 (available)
+//efine HHC01252 - HHC01299 (available)
 
 // reserve 013xx for channel related messages
-/* channel.c */
 #define HHC01300 "%1d:%04X CHAN: halt subchannel: cc=%d"
 #define HHC01301 "%1d:%04X CHAN: midaw %2.2X %4.4"PRIX16" %16.16"PRIX64": %s"
 #define HHC01302 "%1d:%04X CHAN: idaw %8.8"PRIX32", len %3.3"PRIX16": %s"
@@ -968,8 +960,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01335 (available)
 #define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
 //efine HHC01337 - HHC01349 (available)
-
-/* hchan.c */
 #define HHC01350 "%1d:%04X CHAN: missing generic channel method"
 #define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"
 #define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"
@@ -977,7 +967,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01354 - HHC01399 (available)
 
 // reserve 014xx for initialization and shutdown
-/* impl.c */
 #define HHC01400 "CTRL_BREAK_EVENT received: %s"
 #define HHC01401 "CTRL_C_EVENT received: %s"
 #define HHC01402 "CTRL_CLOSE_EVENT received: %s"
@@ -991,18 +980,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01410 "Cannot register %s handler: %s"
 #define HHC01411 "Cannot suppress SIGPIPE signal: %s"
 #define HHC01412 "Hercules terminated"
-
-/* version.c */
 #define HHC01413 "%s version %s (%u.%u.%u.%u)"
 #define HHC01414 "%s"
 #define HHC01415 "Build date: %s at %s"
 //efine HHC01416 (available)
 #define HHC01417 "%s"
-
 #define HHC01418 "Symbol expansion will result in buffer overflow; ignored"
 #define HHC01419 "Symbol and/or Value is invalid; ignored"
-
-/* hscmisc.c */
 #define HHC01420 "Begin Hercules shutdown"
 //efine HHC01421 (available)
 #define HHC01422 "Configuration released"
@@ -1011,12 +995,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01425 "Hercules shutdown complete"
 #define HHC01426 "Shutdown initiated"
 #define HHC01427 "%s storage %sreleased"
-
-/* config.c */
 //efine HHC01428 (available)
 //efine HHC01429 (available)
-
-/* bldcfg.c */
 #define HHC01430 "Error in function %s: %s"
 #define HHC01431 "Expanded storage support not installed"
 #define HHC01432 "Config file[%d] %s: error in function %s: %s"
@@ -1045,8 +1025,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01455 "Invalid number of arguments for %s"
 #define HHC01456 "Invalid syntax %s for %s"
 #define HHC01457 "Valid years for %s are %s; other values no longer supported"
-
-/* config.c */
 #define HHC01458 "%1d:%04X: only devices on CSS 0 are usable in S/370 mode"
 #define HHC01459 "Device %1d:%04X defined as %1d:%04X"
 #define HHC01460 "%1d:%04X error in function %s: %s"
@@ -1063,8 +1041,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01471 "Incorrect device address range %04X < %04X"
 #define HHC01472 "%1d:%04X is on wrong channel, 1st device defined on channel %02X"
 #define HHC01473 "Some or all devices in %04X-%04X duplicate already defined devices"
-
-/* codepage.c c */
 #define HHC01474 "Using %s codepage conversion table %s"
 #define HHC01475 "Codepage conversion table %s is not defined"
 #define HHC01476 "Codepage is %s"
@@ -1088,7 +1064,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01494 - HHC01499 (available)
 
 // reserve 015xx for Hercules dynamic loader
-/* hdl.c */
 #define HHC01500 "HDL: begin shutdown sequence"
 #define HHC01501 "HDL: calling %s"
 #define HHC01502 "HDL: %s complete"
@@ -1126,20 +1101,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01534 "HDL:  opcode %4.4X: %s, %s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
 #define HHC01536 "HDL: WARNING: '%s' is not a valid directory"
-//efine HHC01537 (available)
-//efine HHC01538 (available)
-//efine HHC01539 (available)
-
-/* dyngui.c */
+#define HHC01537 "HDL: module %s is not a pseudo-module"
+#define HHC01538 "HDL: pseudo-modules cannot be manually unloaded"
+#define HHC01539 "HDL: devtyp/hdlmod: %s"
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
 #define HHC01541 "HDL: dyngui.dll initiated"
 #define HHC01542 "HDL: dyngui.dll terminated"
-//efine HHC01543 - HHC01549 (available)
-
-/* hdl.c */
-//efine HHC01550 (available)
-//efine HHC01551 (available)
-//efine HHC01552 - HHC01599 (available)
+#define HHC01543 "HDL: no devequ module has been loaded"
+//efine HHC01544 - HHC01599 (available)
 
 // reserve 016xx for panel communication
 #define HHC01600 "Unknown command %s, enter 'help' for a list of valid commands"
@@ -1152,11 +1121,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01608 "PF KEY SUBSTitution results would exceed command line maximum size of %d; truncation occurred"
 #define HHC01609 "No help available for mask %s"
 #define HHC01610 " (*)  Enter \"help <command>\" for more info."
-//efine HHC01611 - HHC01649 (available)
+//efine HHC01611 - HHC01699 (available)
 
-//efine HHC01650 - HHC01699 (available)
-
-/* ecpsvm.c */
 // reserve 017xx for ecps:vm support
 #define HHC01700 "Abend condition detected in DISP2 instruction"
 #define HHC01701 "| %-9s | %10"PRIu64" | %10"PRIu64" |  %3"PRIu64"%% |"
@@ -1184,9 +1150,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01723 "Invalid ECPS:VM level value : %s. Default of 20 used"
 #define HHC01724 "ECPS:VM Operating with CP FREE/FRET trap in effect"
 #define HHC01725 "ECPS:VM Code version %.02f"
-//efine HHC01726 - HHC01749 (available)
-
-//efine HHC01750 - HHC01799 (available)
+//efine HHC01726 - HHC01799 (available)
 
 // reserve 018xx for http server
 #define HHC01800 "HTTP server: error in function %s: %s"
@@ -1205,19 +1169,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01813 "HTTP server waiting for bind to complete; port in use by another server"
 #define HHC01814 "HTTP server: auth requires valid userid and password operands"
 #define HHC01815 "HTTP server port is %s"
-//efine HHC01816 - HHC01849 (available)
-
-//efine HHC01850 - HHC01899 (available)
+//efine HHC01816 - HHC01899 (available)
 
 // reserve 019xx for diagnose calls
-/* diagnose.c */
 #define HHC01900 "Diagnose 0x308 called: System is re-ipled"
 #define HHC01901 "Checking processor %s%02X"
 #define HHC01902 "Waiting 1 second for cpu's to stop"
 //efine HHC01903 (available)
 //efine HHC01904 (available)
-
-/* vmd250.c */
 #define HHC01905 "%04X triggered block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
 #define HHC01906 "%04X d250_init32 s %i o %"PRIi64" b %"PRIi64" e %"PRIi64
 #define HHC01907 "%04X d250_init BLKTAB: type %4.4X arch %i 512 %i 1024 %i 2048 %i 4096 %i"
@@ -1253,8 +1212,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC01947 (available)
 //efine HHC01948 (available)
 //efine HHC01949 (available)
-
-/* vm.c */
 #define HHC01950 "%s guest issued panel command: %s"
 //efine HHC01951 (available)
 #define HHC01952 "%1d:%04X:Diagnose X\'0A4\':%s blk=%8.8X adr=%8.8X len=%8.8X"
@@ -1286,9 +1243,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02020 "SR: value error, incorrect length"
 #define HHC02021 "SR: string error, incorrect length"
 #define HHC02022 "SR: error loading CRW queue: not enough memory for %d CRWs"
-//efine HHC02023 - HHC02049 (available)
-
-//efine HHC02050 - HHC02099 (available)
+//efine HHC02023 - HHC02099 (available)
 
 // reserve 021xx for logger.c
 #define HHC02100 "Logger: log not active"
@@ -1298,15 +1253,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02104 "Logger: log switched to %s"
 #define HHC02105 "Logger: log to %s"
 #define HHC02106 "Logger: log switched off"
-//efine HHC02107 - HHC02149 (available)
-
-//efine HHC02150 - HHC02196 (available)
+//efine HHC02107 - HHC02196 (available)
 #define HHC02197 "Symbol name %s is reserved"
 // Note HHC02198  is actually in config.c
 #define HHC02198 "Device %04X type %04X subchannel %d:%04X attached"
 #define HHC02199 "Symbol %-12s %s"
 
-// reserve 02200 - 02369 for command processing; script.c
+// reserve 022xx - 023xx for command processing
 #define HHC02200 "%1d:%04X device not found"
 #define HHC02201 "Device number missing"
 #define HHC02202 "Missing argument(s). Type 'help %s' for assistance."
@@ -1373,7 +1326,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02263 "Script %d: processing resumed..."
 #define HHC02264 "Script %d: file %s processing ended"
 #define HHC02265 "Script %d: file %s aborted due to previous conditions"
-#define HHC02266 "Confirm command by entering %s again within %d seconds"
+//efine HHC02266 (available)
 #define HHC02267 "%s" // (trace instr: Real address is not valid)
 //efine HHC02268 (available)
 #define HHC02269 "%s" // General purpose registers
@@ -1457,10 +1410,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02347 "No %s devices found"
 //efine HHC02348 (available)
 //efine HHC02349 (available)
-
-// range 02350 - 02359 available
-// range 02360 - 02369 available
-
+//efine HHC02350 - HHC02359 (available)
+//efine HHC02360 - HHC02369 (available)
 #define HHC02370 "Automatic tracing started at instrcount %"PRIu64" (BEG+%"PRIu64")"
 #define HHC02371 "Automatic tracing stopped at instrcount %"PRIu64" (AMT+%"PRIu64")"
 #define HHC02372 "Automatic tracing not enabled"
@@ -1471,17 +1422,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC02377 (available)
 //efine HHC02378 (available)
 //efine HHC02379 (available)
-
-//efine HHC02380 - HHC02385 (available)
+//efine HHC02380 (available)
+//efine HHC02381 (available)
+//efine HHC02382 (available)
+//efine HHC02383 (available)
+//efine HHC02384 (available)
+//efine HHC02385 (available)
 #define HHC02386 "Configure CPU error %d"
 #define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"
 #define HHC02389 "CPUs must be offline or stopped"
+//efine HHC02390 - HHC02399 (available)
 
-// range 02390 - 02399 available
-
-// reserve 024xx for dasd* utilities
-//dasdcat.c
+// reserve 024xx for dasd utilities
+// dasdcat.c
 #define HHC02400 "Directory block byte count is invalid"
 #define HHC02401 "Non-PDS-members not yet supported"
 #define HHC02402 "Unknown 'member:flags' formatting option %s"
@@ -1527,16 +1481,16 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02405I Return code is 0 if successful or 1 if any errors."
 #define HHC02406 "Member '%s' not found in dataset '%s' on volume '%s'"
 #define HHC02407 "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
-//efine HHC02408 - HHC02409 (available)
+//efine HHC02408 (available)
+//efine HHC02409 (available)
 
-//dasdconv.c
+// dasdconv.c
 #define HHC02410 "Usage: %s [options] infile outfile\n" \
        "HHC02410I   infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \
        "HHC02410I   outfile: name of AWSCKD image file to be created\n" \
        "HHC02410I options:\n" \
        "HHC02410I   -r     replace existing output file\n" \
        "HHC02410I   -q     suppress progress messages%s"
-
 #define HHC02411 "Usage: %s [-f] [-level] [-ro] file1 [file2 ...]\n" \
        "HHC02410I   file    name of DASD image file\n" \
        "HHC02411I options:\n" \
@@ -1547,7 +1501,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02411I   -2      extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n" \
        "HHC02411I   -3      maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n" \
        "HHC02411I   -4      recover everything without using meta-data"
-
 #define HHC02412 "Error in function %s: %s"
 #define HHC02413 "Dasdconv is compiled without compress support and input is compressed"
 #define HHC02414 "Input file is already in CKD format, use dasdcopy"
@@ -1562,7 +1515,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02423 "DASD operation completed"
 //efine HHC02424 - HHC02429 (available)
 
-//dasdcopy.c
+// dasdcopy.c
 #define HHC02430 "CKD lookup failed: device type %04X cyls %d"
 #define HHC02431 "FBA lookup failed: blks %d"
 #define HHC02432 "Failed creating %s"
@@ -1633,7 +1586,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02439I   -a       output ckd file will have alt cyls\n" \
        "%s" \
        "HHC02439I   -o type  output file type (CKD, CCKD, FBA, CFBA)"
-//dasdinit.c
+
+// dasdinit.c
+//efine HHC02440 (available)
+//efine HHC02441 (available)
+//efine HHC02442 (available)
+//efine HHC02443 (available)
 #define HHC02444 "Member %s is not a single text record"
 #define HHC02445 "Invalid, unsupported or missing %s: %s"
 #define HHC02446 "Invalid number of arguments"
@@ -1694,7 +1652,6 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02463I Note:\n" \
        "HHC02463I   Multiple images can be processed in the same run,\n" \
        "HHC02463I   but options must be specified ahead of each image."
-
 #define HHC02464 "End of directory, %d members selected"
 #define HHC02465 "Invalid argument: %s"
 #define HHC02466 "Reading directory block at CCHHR %04X%04X%02X"
@@ -1758,7 +1715,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC02498 (available)
 #define HHC02499 "Hercules utility %s - %s;"
 
-// reserve 025xx for dasd* utilities
+// reserve 025xx for dasd utilities
 #define HHC02500 "Volume serial statement missing from %s"
 #define HHC02501 "Volume serial %s is invalid; %s line %d"
 #define HHC02502 "Device type %s is not recognized; %s line %d"
@@ -1854,6 +1811,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02591 "File %s: total cylinders written was %d"
 #define HHC02592 "VTOC pointer [%02X%02X%02X%02X%02X] updated"
 #define HHC02593 "VOL1 record not readable or locatable"
+//efine HHC02594 (available)
+//efine HHC02595 (available)
+//efine HHC02596 (available)
+//efine HHC02597 (available)
+//efine HHC02598 (available)
+//efine HHC02599 (available)
 
 // reserve 026xx for utilites
 // cckddiag
@@ -2039,7 +2002,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02731 "          (tapemark)"
 #define HHC02732 "Bytes read:    %"PRId64" (%3.1f MB), Blocks=%u, avg=%u"
 #define HHC02733 "Bytes written: %"PRId64" (%3.1f MB)"
-
+//efine HHC02734 (available)
+//efine HHC02735 (available)
+//efine HHC02736 (available)
+//efine HHC02737 (available)
 //efine HHC02738 (available)
 //efine HHC02739 (available)
 #define HHC02740 "File %s: writing output file"
@@ -2048,7 +2014,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02743 "File %s: Error, %s header block without data"
 #define HHC02744 "File %s: Error renaming file to %s - manual intervention required"
 #define HHC02745 "File %s: Error removing file - manual intervention required"
-
+//efine HHC02746 (available)
+//efine HHC02747 (available)
+//efine HHC02748 (available)
+//efine HHC02749 (available)
 #define HHC02750 "DCB attributes required for NL tape"
 #define HHC02751 "Valid record formats are:"
 #define HHC02752 "%s"
@@ -2072,6 +2041,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
     "Usage: %s filename\n"
 #define HHC02760 "%s"
 #define HHC02761 "DCB Attributes used:  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d"
+//efine HHC02762 - HHC02799 (available)
 
 // mt_cmd
 #define HHC02800 "%1d:%04X %s complete"
@@ -2081,6 +2051,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02804 "%1d:%04X File protect enabled"
 #define HHC02805 "%1d:%04X Volser = %s"
 #define HHC02806 "%1d:%04X Unlabeled tape"
+//efine HHC02806 - HHC02899 (available)
 
 // range 029nn - 02949 console.c
 #define HHC02900 "%s COMM: Send() failed: %s"
@@ -2166,8 +2137,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC03996 "%1d:%04X %s: %s: %s"
 #define HHC03997 "%1d:%04X %s: %s: %susing %s %s"
 #define HHC03998 "%1d:%04X %s: %s inconsistent with %s"
+//efine HHC03999 (available)
 
-// reserve 04xxx for host os specific component messages
+// range 04000 - 04099 available
 
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"
@@ -2183,6 +2155,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC04110 "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
 //efine HHC04111 (available)
 #define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
+//efine HHC04113 - HHC04199 (available)
 
 // range 04200 - 04299 available
 // range 04300 - 04399 available
@@ -2224,6 +2197,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC05077 "%1d:%04X CTCE: Error reading from %s: %s"
 #define HHC05078 "%1d:%04X CTCE: -| %s%s%s%s x=%s y=%s cmd=%s"
 #define HHC05079 "%1d:%04X CTCE: %s %.6s #%04X cmd=%s=%02X xy=%.2s%s%.2s l=%04X k=%08X %s%s%s%s%s%s"
+//efine HHC05080 - HHC05099 (available)
 
 // range 05100 - 05199 available
 // range 05200 - 05299 available
@@ -2267,10 +2241,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17015 "%s support not included in this engine build"
 //efine HHC17016 - HHC17099 (available)
 
-#define HHC17100 "Timeout value for 'quit' and 'ssd' is %d seconds"
-//efine HHC17101 - HHC17198 (available)
+//efine HHC17100 - HHC17198 (available)
 #define HHC17199 "%.4s %s"
-//efine HHC17200 - HHC17499 (available)
+
+// range 17200 - 17299 available
+// range 17300 - 17399 available
+// range 17400 - 17499 available
 
 // Reserve 17500-17549 for Hercules Rexx messages
 #define HHC17500 "REXX(%s) %s" // DisplayOptions
@@ -2332,6 +2308,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // reserve 90000 messages for debugging
 #define HHC90000 "DBG: %s"
 //efine HHC90001 (available)
+//efine HHC90002 (available)
+//efine HHC90003 (available)
+//efine HHC90004 (available)
+//efine HHC90005 (available)
+//efine HHC90006 (available)
+//efine HHC90007 (available)
+//efine HHC90008 (available)
+//efine HHC90009 (available)
 
 /* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"
@@ -2346,7 +2330,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90019 "No locks found for thread "TIDPAT"."
 #define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
 #define HHC90021 "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
-
+//efine HHC90022 - HHC90099 (available)
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
@@ -2362,13 +2346,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90110 "      %s"
 #define HHC90111 "Wrapping Verification Pattern does not match, return with cc1"
 #define HHC90112 "    lcfb    : %d"
+//efine HHC90112 - HHC90189 (available)
 
 /* from crypto.c when compiled with debug on */
 #define HHC90190 "%s"
+//efine HHC90191 - HHC90199 (available)
 
-/* from scsitape.c */
-// (same as HHC00205 but 9xxxx debugging range)
+// scsitape.c
+//efine HHC90200 (available)
+//efine HHC90201 (available)
+//efine HHC90202 (available)
+//efine HHC90203 (available)
+//efine HHC90204 (available)
 #define HHC90205 "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+//efine HHC90206 - HHC90299 (available)
 
 // range 90300 - 90399 available
 
@@ -2381,6 +2372,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90405 "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90406 "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90407 "%s device has %d heads/cylinder"
+//efine HHC90408 - HHC90499 (available)
 
 // range 90500 - 90549 console.c DEBUGGING messages
 #define HHC90500 "%s COMM: Sending %d bytes"
@@ -2396,26 +2388,28 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90510 "%s COMM: setsockopt() failed: %s"
 #define HHC90511 "%s COMM: Negotiating %-14s %s"
 #define HHC90512 "%s COMM: Received IAC %s"
-//efine HHC90513            (available)
-//efine HHC90514            (available)
-//efine HHC90515            (available)
-//efine HHC90516 - HHC90549 (available)
+//efine HHC90513 - HHC90549 (available)
+//efine HHC90550 - HHC90599 (available)
 
-// range 90550 - 90599 available
 // range 90600 - 90699 available
 // range 90700 - 90799 available
 // range 90800 - 90899 available
 
-// range 90900 - 90998 available
-//               90999 dbgtrace.h
+//efine HHC90900 - HHC90998 (available)
+//efine HHC90999 (dbgtrace.h)
 
-// range 91000 - 91999 available
+//efine HHC91900 - HHC91998 (available)
+//efine HHC91999  (dbgtrace.h)
 
-// range 92000 - 92701 available
-/* from scsitape.c */
-// (same as HHC02702 but 9xxxx debugging range)
-#define HHC92702 "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s"
-// range 92703 - 92999 available
+//efine HHC92000 - HHC91998 (available)
+
+//efine HHC92700 (available)
+//efine HHC92701 (available)
+#define HHC92702 "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s" // scsitape.c
+//efine HHC92703 - HHC92799 (available)
+
+// range 92800 - 92899 available
+// range 92900 - 92999 available
 
 // range 93000 - 93999 available
 // range 94000 - 94999 available

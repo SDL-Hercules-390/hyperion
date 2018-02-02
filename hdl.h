@@ -174,7 +174,7 @@ struct HDLMOD                           /* module entry              */
 /*-------------------------------------------------------------------*/
 /*                  HDL Function declarations                        */
 /*-------------------------------------------------------------------*/
-HDL_DLL_IMPORT int hdl_main             /* Main initialization func  */
+HDL_DLL_IMPORT int hdl_main             /* Main HDL init function    */
 (
     PANDISP*    real_pandisp,           /*  ->  real panel_display   */
     PANCMD*     real_pancmd,            /*  ->  real panel_command   */
@@ -193,6 +193,7 @@ HDL_DLL_IMPORT int hdl_main             /* Main initialization func  */
 /*                          hdl_freemod:   Unload HDL module         */
 /*                          hdl_listmods:  List all HDL modules      */
 /*                          hdl_listdeps:  List all HDL dependencies */
+/*                          hdl_listequs:  List device equates       */
 /*                          hdl_DEVHND:    Get device-type handler   */
 /*                          hdl_devequ:    Device-type equates func  */
 /*                          hdl_getsym:    Retrieve symbol address   */
@@ -208,6 +209,7 @@ HDL_DLL_IMPORT int          hdl_loadmod  ( const char* name, int flags );
 HDL_DLL_IMPORT int          hdl_freemod  ( const char* name );
 HDL_DLL_IMPORT void         hdl_listmods ( int flags );
 HDL_DLL_IMPORT void         hdl_listdeps ();
+HDL_DLL_IMPORT int          hdl_listequs ();
 HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );
 HDL_DLL_IMPORT DEVEQU*      hdl_devequ;
 HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );

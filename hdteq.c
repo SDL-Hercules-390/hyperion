@@ -25,9 +25,9 @@
 
 static EQUTAB equtab[] =
 {
-//     device-type (second argument of config file device statement)
+//     alias = device-type (2nd arg of config file device statement)
 //     |
-//     |         hdt loadable module name ("99XY" ==> "hdt99xy.dll")
+//     |         name = hdt loadable module ("99XY" ==> "hdt99xy.dll")
 //     |         |
 //     V         V
 
@@ -83,30 +83,65 @@ static EQUTAB equtab[] =
 };
 
 /*-------------------------------------------------------------------*/
-/*           Our DEVEQU device-type equates function                 */
+/*          List all of our DEVEQU device-type equates               */
 /*-------------------------------------------------------------------*/
+static void list_devequs()
+{
+    char buf[ 80 ] = {0};
+    char wrk[ 32 ] = {0};
 
-static const char* our_devequ_func( const char* typname )
+    size_t  i, n;
+
+    LOGMSG( "HHC01539I HDL:                 typ      mod      typ      mod      typ      mod\n" );
+    LOGMSG( "HHC01539I HDL:                ------   -----    ------   -----    ------   -----\n" );
+
+    for (i=0, n=1; i < _countof( equtab ); i++, n++)
+    {
+        if (n >= 4)
+        {
+            // "HDL: devtyp/hdlmod: %s"
+            WRMSG( HHC01539, "I", RTRIM( buf ));
+            n = 1;
+            buf[0] = 0;
+        }
+
+        MSGBUF( wrk, "%-6s = %-5s    ", equtab[i].alias,
+                                        equtab[i].name );
+        STRLCAT( buf, wrk );
+    }
+
+    // "HDL: devtyp/hdlmod: %s"
+    WRMSG( HHC01539, "I", RTRIM( buf ));
+}
+
+/*-------------------------------------------------------------------*/
+/*             Our DEVEQU device-type equates function               */
+/*-------------------------------------------------------------------*/
+static const char* devequ_func( const char* typname )
 {
     DEVEQU* next_devequ_func;
     size_t  i;
 
-    /* Search device equates table for match */
-    for (i=0; i < _countof( equtab ); i++)
+    /* Request to list equates? */
+    if (!typname)
+        list_devequs();
+    else /* Request to translate device-type */
     {
-        /* Is this the device-type they're requesting? */
-        if (strcasecmp( equtab[i].alias, typname ) == 0)
+        /* Search device equates table for match */
+        for (i=0; i < _countof( equtab ); i++)
         {
-            /* Yes, then use this device-type name instead */
-            return equtab[i].name;
+            /* Is this the device-type they're requesting? */
+            if (strcasecmp( equtab[i].alias, typname ) == 0)
+            {
+                /* Yes, then use this device-type name instead */
+                return equtab[i].name;
+            }
         }
     }
 
-    /* Is there another device-type-equates function in the chain? */
-    if (!(next_devequ_func = (DEVEQU*) hdl_next( &our_devequ_func )))
+    /* Call next device-type-equates function, if any */
+    if (!(next_devequ_func = (DEVEQU*) hdl_next( &devequ_func )))
         return NULL;
-
-    /* Yes, then maybe it can translate it */
     return next_devequ_func( typname );
 }
 
@@ -141,7 +176,7 @@ END_DEPENDENCY_SECTION
 
 HDL_REGISTER_SECTION;
 {
-    HDL_REGISTER( hdl_devequ, our_devequ_func );
+    HDL_REGISTER( hdl_devequ, devequ_func );
 }
 END_REGISTER_SECTION
 

@@ -73,7 +73,7 @@ static void  hdl_replace_opcode      ( bool insert, HDLINS* );
 static void  hdl_term                ( void* arg );
 
 /*-------------------------------------------------------------------*/
-/*          hdl_main  --  initialize Hercules Dynamic Loader         */
+/*          hdl_main  --  Main HDL initialization function           */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_main
 (
@@ -238,7 +238,7 @@ static void* hdl_dlopen( const char* filename, int flag )
 }
 
 /*-------------------------------------------------------------------*/
-/*           hdl_loadmod  --  load a hercules module                 */
+/*             hdl_loadmod  --  Load HDL module                      */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 {
@@ -384,7 +384,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 }
 
 /*-------------------------------------------------------------------*/
-/*             hdl_freemod  --  unload a hercules module             */
+/*             hdl_freemod  --  Unload HDL module                    */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_freemod( const char* name )
 {
@@ -546,7 +546,7 @@ DLL_EXPORT int hdl_freemod( const char* name )
 }
 
 /*-------------------------------------------------------------------*/
-/*              hdl_addshut - add shutdown call                      */
+/*              hdl_addshut  --  Add shutdown routine                */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_addshut( const char* shutname, SHUTDN* shutfunc, void* shutarg )
 {
@@ -579,7 +579,7 @@ DLL_EXPORT void hdl_addshut( const char* shutname, SHUTDN* shutfunc, void* shuta
 }
 
 /*-------------------------------------------------------------------*/
-/*             hdl_delshut  --  remove shutdown call                 */
+/*             hdl_delshut  --  Remove shutdown routine              */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hdl_delshut( SHUTDN* shutfunc, void* shutarg )
 {
@@ -610,7 +610,7 @@ DLL_EXPORT int hdl_delshut( SHUTDN* shutfunc, void* shutarg )
 }
 
 /*-------------------------------------------------------------------*/
-/*       hdl_atexit  --  call shutdown entries in LIFO order         */
+/*              hdl_atexit  --  Call all shutdown routines           */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_atexit( void )
 {
@@ -714,7 +714,7 @@ static BYTE hdl_checkpath( const char* path )
 }
 
 /*-------------------------------------------------------------------*/
-/*            hdl_initpath  --  initialize module path               */
+/*            hdl_initpath  --  Initialize module path               */
 /*-------------------------------------------------------------------*/
 /*
     1) -p from startup 
@@ -781,7 +781,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
 }
 
 /*-------------------------------------------------------------------*/
-/*              hdl_getpath  --  return module path                  */
+/*              hdl_getpath  --  Return module path                  */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* hdl_getpath()
 {
@@ -791,7 +791,7 @@ DLL_EXPORT const char* hdl_getpath()
 }
 
 /*-------------------------------------------------------------------*/
-/*           hdl_setpath  --  Set module load path                   */
+/*             hdl_setpath  --  Set module path                      */
 /*-------------------------------------------------------------------*/
 /* Return: -1 error (not set), +1 warning (not set), 0 okay (set)    */
 /*-------------------------------------------------------------------*/
@@ -872,7 +872,7 @@ DLL_EXPORT int hdl_setpath( const char* path )
 }
 
 /*-------------------------------------------------------------------*/
-/*               get_HDLSYM  --  find HDLSYM entry                   */
+/*             get_HDLSYM  --  find HDLSYM entry                     */
 /*-------------------------------------------------------------------*/
 static HDLSYM* get_HDLSYM( const char* symname )
 {
@@ -890,7 +890,7 @@ static HDLSYM* get_HDLSYM( const char* symname )
 }
 
 /*-------------------------------------------------------------------*/
-/*              hdl_listmods  --  list hercules modules              */
+/*              hdl_listmods  --  List all HDL modules               */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_listmods( int flags )
 {
@@ -998,7 +998,7 @@ DLL_EXPORT void hdl_listmods( int flags )
 }
 
 /*-------------------------------------------------------------------*/
-/*              hdl_listdeps  --  list module dependencies           */
+/*              hdl_listdeps  --  List all HDL dependencies          */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void hdl_listdeps()
 {
@@ -1009,6 +1009,25 @@ DLL_EXPORT void hdl_listdeps()
     for (depent = hdl_depend; depent; depent = depent->next)
         // "HDL: dependency %s version %s size %d"
         WRMSG( HHC01535, "I", depent->name, depent->version, depent->size );
+}
+
+/*-------------------------------------------------------------------*/
+/*              hdl_listequs  --  List device equates                */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hdl_listequs()
+{
+    /* Called by hsccmd.c "lsequ_cmd" */
+
+    if (!hdl_devequ)
+    {
+        // "HDL: no devequ module has been loaded"
+        WRMSG( HHC01543, "E" );
+        return -1;
+    }
+
+    /* List all device equates */
+    hdl_devequ( NULL );
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1053,7 +1072,7 @@ static DEVHND* hdl_get_DEVHND( const char* typname )
 }
 
 /*-------------------------------------------------------------------*/
-/*     hdl_DEVHND  --  get device handler for given device-type      */
+/*                 hdl_DEVHND  --  Get device-type handler           */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT DEVHND* hdl_DEVHND( const char* typname )
 {
@@ -1152,7 +1171,7 @@ static void hdl_term( void* arg )
 }
 
 /*-------------------------------------------------------------------*/
-/*               hdl_getsym  --  find symbol                (public) */
+/*               hdl_getsym  --  Retrieve symbol address             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void* hdl_getsym( const char* symname )
 {
@@ -1165,7 +1184,7 @@ DLL_EXPORT void* hdl_getsym( const char* symname )
 }
 
 /*-------------------------------------------------------------------*/
-/*            hdl_next  --  find next entry-point in chain           */
+/*               hdl_next  --  Find next entry in chain              */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void* hdl_next( const void* symbol )
 {

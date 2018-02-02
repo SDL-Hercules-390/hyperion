@@ -7464,7 +7464,7 @@ int rmmod_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* lsmod - list dynamic modules                                      */
 /*-------------------------------------------------------------------*/
-int lsmod_cmd(int argc, char *argv[], char *cmdline)
+int lsmod_cmd( int argc, char* argv[], char* cmdline )
 {
     int flags = HDL_LIST_DEFAULT;
 
@@ -7494,14 +7494,40 @@ int lsmod_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* lsdep - list module dependencies                                  */
 /*-------------------------------------------------------------------*/
-int lsdep_cmd(int argc, char *argv[], char *cmdline)
+int lsdep_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
-    UNREFERENCED( argc    );
-    UNREFERENCED( argv    );
+
+    strupper( argv[0], argv[0] );
+
+    if (argc != 1)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
 
     hdl_listdeps();
     return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* lsequ - list device equates                                       */
+/*-------------------------------------------------------------------*/
+int lsequ_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
+    if (argc != 1)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    return hdl_listequs();
 }
 
 /*-------------------------------------------------------------------*/
