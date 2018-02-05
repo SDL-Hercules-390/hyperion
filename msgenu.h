@@ -1101,8 +1101,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01534 "HDL:  opcode %4.4X: %s, %s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
 #define HHC01536 "HDL: WARNING: '%s' is not a valid directory"
-#define HHC01537 "HDL: module %s is not a pseudo-module"
-#define HHC01538 "HDL: pseudo-modules cannot be manually unloaded"
+//efine HHC01537 (available)
+//efine HHC01538 (available)
 #define HHC01539 "HDL: devtyp/hdlmod: %s"
 #define HHC01540 "HDL: query buffer overflow for device %1d:%04X"
 #define HHC01541 "HDL: dyngui.dll initiated"

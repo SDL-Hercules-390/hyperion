@@ -905,8 +905,7 @@ DLL_EXPORT void hdl_listmods( int flags )
         // "HDL: name = %s, type = %s, flags = (%sunloadable, %sforced)"
         WRMSG( HHC01531, "I"
             ,  mod->name
-            , (mod->flags & HDL_LOAD_MAIN)       ?  "EXE"    :
-              (mod->flags & HDL_LOAD_PSEUDOMOD)  ?  "pseudo" :  "hdl"
+            , (mod->flags & HDL_LOAD_MAIN)       ?  "EXE"    :  "hdl"
             , (mod->flags & HDL_LOAD_NOUNLOAD)   ?  "NOT "   :   ""
             , (mod->flags & HDL_LOAD_WAS_FORCED) ?   ""      :  "not "
         );
