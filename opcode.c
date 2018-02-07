@@ -379,10 +379,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_program_parameter )
 #endif
 
-#if !defined( FEATURE_044_PFPO_FACILITY )
- UNDEF_INST( perform_floating_point_operation )
-#endif
-
 #if !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
 #if !defined( FEATURE_041_DFP_ROUNDING_FACILITY )
@@ -464,6 +460,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( test_data_group_dfp_long )
  UNDEF_INST( test_data_group_dfp_short )
 #endif /*!defined( FEATURE_042_DFP_FACILITY )*/
+
+#if !defined( FEATURE_044_PFPO_FACILITY )
+ UNDEF_INST( perform_floating_point_operation )
+#endif
 
 #if !defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )
  UNDEF_INST( add_distinct_register )                              /*810*/
