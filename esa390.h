@@ -1802,7 +1802,9 @@ typedef struct MBK  MBK;
 #define STFL_067_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
                                                facility installed z/Arch */
 #define STFL_068_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
-                                               facility installed z/Arch */
+                                               facility installed z/Arch.
+                                               Bit 68 requires bit 40.   */
+
 #define STFL_069_IBM_INTERNAL         69    /* IBM internal use          */
 
 #define STFL_070_IBM_INTERNAL         70    /* IBM internal use          */

@@ -1,4 +1,5 @@
 /* ARCHLVL.C    (C) Copyright Jan Jaeger,   2010-2012                */
+/*              (C) Copyright "Fish" (David B. Trout), 2018          */
 /*                  Architecture Mode and Facilities                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -78,6 +79,9 @@
 typedef bool FACMODCHK( bool enable, int bitno, int archnum,
                         const char* action, const char* actioning,
                         const char* target_facname );
+
+/*-------------------------------------------------------------------*/
+
 struct FACTAB
 {
     FACMODCHK*   modokfunc;         /* Modification Check function   */
@@ -90,6 +94,8 @@ struct FACTAB
 };
 typedef struct FACTAB   FACTAB;
 
+/*-------------------------------------------------------------------*/
+
 #define FT( _sup, _def, _req, _name )                               \
 {                                                                   \
     NULL,                                                           \
@@ -100,6 +106,8 @@ typedef struct FACTAB   FACTAB;
     _def,                                                           \
     _req                                                            \
 },
+
+/*-------------------------------------------------------------------*/
 
 #define FT2( _modokfunc, _name, _desc )                             \
 {                                                                   \
@@ -771,7 +779,7 @@ static  bool  modlong   ( bool enable, int bitno, int archnum, const char* actio
 static  bool  modtrans  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modvec    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modtod    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
-static  bool  modcpu    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modsamp   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modmsa    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modbit42  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  moddfphi  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
@@ -827,7 +835,7 @@ FT2( NULL,      035_EXECUTE_EXTN,           "Execute-Extensions Facility" )
 FT2( NULL,      036_ENH_MONITOR,            "Enhanced-Monitor Facility" )
 FT2( modfpx,    037_FP_EXTENSION,           "Floating-Point-Extension Facility" )
 FT2( NULL,      038_OP_CMPSC,               "Order-Preserving-Compression Facility" )
-FT2( NULL,      040_LOAD_PROG_PARAM,        "Load-Program-Parameter Facility" )
+FT2( modsamp,   040_LOAD_PROG_PARAM,        "Load-Program-Parameter Facility" )
 FT2( NULL,      041_FPS_ENHANCEMENT,        "Floating-Point-Support-Enhancement Facility" )
 FT2( NULL,      041_DFP_ROUNDING,           "Decimal-Floating-Point-Rounding Facility" )
 FT2( NULL,      041_FPR_GR_TRANSFER,        "FPR-GR-Transfer Facility" )
@@ -857,8 +865,8 @@ FT2( NULL,      054_EE_CMPSC,               "Entropy-Encoding-Compression Facili
 FT2( NULL,      057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
 FT2( NULL,      058_MISC_INSTR_EXT_2,       "Miscellaneous-Instruction-Extensions Facility 2" )
 FT2( NULL,      066_RES_REF_BITS_MULT,      "Reset-Reference-Bits-Multiple Facility" )
-FT2( modcpu,    067_CPU_MEAS_COUNTER,       "CPU-Measurement Counter Facility" )
-FT2( NULL,      068_CPU_MEAS_SAMPLNG,       "CPU-Measurement Sampling Facility" )
+FT2( modsamp,   067_CPU_MEAS_COUNTER,       "CPU-Measurement Counter Facility" )
+FT2( modsamp,   068_CPU_MEAS_SAMPLNG,       "CPU-Measurement Sampling Facility" )
 FT2( modtrans,  073_TRANSACT_EXEC,          "Transactional-Execution Facility" )
 FT2( NULL,      074_STORE_HYPER_INFO,       "Store-Hypervisor-Information Facility" )
 FT2( NULL,      075_ACC_EX_FS_INDIC,        "Access-Exception-Fetch/Store-Indication Facility" )
@@ -874,7 +882,7 @@ FT2( modvec,    134_ZVECTOR_PACK_DEC,       "Vector Packed-Decimal Facility" )
 FT2( modvec,    135_ZVECTOR_ENH_1,          "Vector-Enhancements Facility 1" )
 FT2( NULL,      138_CONFIG_ZARCH_MODE,      "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
 FT2( modtod,    139_MULTIPLE_EPOCH,         "Multiple-Epoch Facility" )
-FT2( modcpu,    142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multiple Facility" )
+FT2( modsamp,   142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multiple Facility" )
 FT2( NULL,      144_TEST_PEND_EXTERNAL,     "Test-Pending-External-Interruption Facility" )
 FT2( NULL,      145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Multiple Facility" )
 FT2( modmsa,    146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
@@ -1499,14 +1507,31 @@ static bool _hhc00890e( int target_bit, const char* target_facname,
         __FILE__, __LINE__, __FUNCTION__ ))
 
 /*-------------------------------------------------------------------*/
+/*               Facility Modification Check functions               */
+/*-------------------------------------------------------------------*/
+/* The following series of functions are optionally defined in the   */
+/* primary 'FT2' facilities table and check whether that facility    */
+/* can be disabled or enabled depending on whether another facility  */
+/* is enabled or disabled. The Long-Displacement Facility (bit 18)   */
+/* cannot be disabled for example if the Long-Displacement Facility  */
+/* Has High Performance facility (bit 19) is still enabled. Rather,  */
+/* the Long-Displacement Facility Has High Performance bit 19 must   */
+/* be disabled first. The below functions enforce such restrictions. */
+/*-------------------------------------------------------------------*/
+
+#define FAC_MOD_OK_FUNC( name )                                     \
+                                                                    \
+static bool name( bool enable, int bitno, int archnum,              \
+                  const char* action, const char* actioning,        \
+                  const char* target_facname )                      \
+
+/*-------------------------------------------------------------------*/
 /*                          mod0or7                                  */
 /*-------------------------------------------------------------------*/
 /*  STFLE implies STFL so 7 implies 0. Therefore if 7 is on, then    */
 /* you can't disable 0, and can't enable 7 without also enabling 0.  */
 /*-------------------------------------------------------------------*/
-static bool mod0or7( bool enable, int bitno, int archnum,
-                     const char* action, const char* actioning,
-                     const char* target_facname )
+FAC_MOD_OK_FUNC           ( mod0or7 )
 {
     if (enable)
     {
@@ -1533,9 +1558,7 @@ static bool mod0or7( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*         bit 4 implies bit 3, and bit 5 implies bit 4.             */
 /*-------------------------------------------------------------------*/
-static bool modidte( bool enable, int bitno, int archnum,
-                     const char* action, const char* actioning,
-                     const char* target_facname )
+FAC_MOD_OK_FUNC           ( modidte )
 {
     if (enable)
     {
@@ -1567,9 +1590,7 @@ static bool modidte( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*                   bit 19 implies bit 18                           */
 /*-------------------------------------------------------------------*/
-static bool modlong( bool enable, int bitno, int archnum,
-                     const char* action, const char* actioning,
-                     const char* target_facname )
+FAC_MOD_OK_FUNC           ( modlong )
 {
     if (enable)
     {
@@ -1596,9 +1617,7 @@ static bool modlong( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*         bit 73 implies bit 49, bit 50 implies bit 73              */
 /*-------------------------------------------------------------------*/
-static bool modtrans( bool enable, int bitno, int archnum,
-                      const char* action, const char* actioning,
-                      const char* target_facname )
+FAC_MOD_OK_FUNC           ( modtrans )
 {
     if (enable)
     {
@@ -1635,9 +1654,7 @@ static bool modtrans( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*              bits 134 and 135 each imply bit 129                  */
 /*-------------------------------------------------------------------*/
-static bool modvec( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC            ( modvec )
 {
     if (enable)
     {
@@ -1670,9 +1687,7 @@ static bool modvec( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*             bit 139 implies both bits 25 and bit 28               */
 /*-------------------------------------------------------------------*/
-static bool modtod( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC            ( modtod )
 {
     if (enable)
     {
@@ -1701,17 +1716,21 @@ static bool modtod( bool enable, int bitno, int archnum,
 }
 
 /*-------------------------------------------------------------------*/
-/*                           modcpu                                  */
+/*                           modsamp                                 */
 /*-------------------------------------------------------------------*/
-/*                    bit 142 implies bit 67                         */
+/*            bit 68 requires bit 40, bit 40 implies bit 68.         */
+/*            bit 142 implies bit 67.                                */
 /*-------------------------------------------------------------------*/
-static bool modcpu( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC            ( modsamp )
 {
     if (enable)
     {
-        if (bitno == STFL_142_ST_CPU_COUNTER_MULT)
+        if (bitno == STFL_068_CPU_MEAS_SAMPLNG)
+        {
+            if (!FACILITY_ENABLED_ARCH( 040_LOAD_PROG_PARAM, archnum ))
+                return HHC00890E(  STFL_040_LOAD_PROG_PARAM );
+        }
+        else if (bitno == STFL_142_ST_CPU_COUNTER_MULT)
         {
             if (!FACILITY_ENABLED_ARCH( 067_CPU_MEAS_COUNTER, archnum ))
                 return HHC00890E(  STFL_067_CPU_MEAS_COUNTER );
@@ -1719,7 +1738,12 @@ static bool modcpu( bool enable, int bitno, int archnum,
     }
     else // disabling
     {
-        if (bitno == STFL_067_CPU_MEAS_COUNTER)
+        if (bitno == STFL_040_LOAD_PROG_PARAM)
+        {
+            if (FACILITY_ENABLED_ARCH( 068_CPU_MEAS_SAMPLNG, archnum ))
+                return HHC00890E( STFL_068_CPU_MEAS_SAMPLNG );
+        }
+        else if (bitno == STFL_067_CPU_MEAS_COUNTER)
         {
             if (FACILITY_ENABLED_ARCH( 142_ST_CPU_COUNTER_MULT, archnum ))
                 return HHC00890E( STFL_142_ST_CPU_COUNTER_MULT );
@@ -1734,9 +1758,7 @@ static bool modcpu( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*                    bit 146 implies bit 76                         */
 /*-------------------------------------------------------------------*/
-static bool modmsa( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC            ( modmsa )
 {
     if (enable)
     {
@@ -1763,9 +1785,7 @@ static bool modmsa( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /* bit 42 requires special handling as it interacts with many bits   */
 /*-------------------------------------------------------------------*/
-static bool modbit42( bool enable, int bitno, int archnum,
-                      const char* action, const char* actioning,
-                      const char* target_facname )
+FAC_MOD_OK_FUNC            ( modbit42 )
 {
     return
     (1
@@ -1780,9 +1800,7 @@ static bool modbit42( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*                    bit 43 implies bit 42                          */
 /*-------------------------------------------------------------------*/
-static bool moddfphi( bool enable, int bitno, int archnum,
-                      const char* action, const char* actioning,
-                      const char* target_facname )
+FAC_MOD_OK_FUNC            ( moddfphi )
 {
     if (enable)
     {
@@ -1809,9 +1827,7 @@ static bool moddfphi( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*                    bit 37 implies bit 42                          */
 /*-------------------------------------------------------------------*/
-static bool modfpx( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC             ( modfpx )
 {
     if (enable)
     {
@@ -1838,9 +1854,7 @@ static bool modfpx( bool enable, int bitno, int archnum,
 /*-------------------------------------------------------------------*/
 /*                 bit 80 and bit 48 each imply bit 42               */
 /*-------------------------------------------------------------------*/
-static bool moddfp( bool enable, int bitno, int archnum,
-                    const char* action, const char* actioning,
-                    const char* target_facname )
+FAC_MOD_OK_FUNC             ( moddfp )
 {
     if (enable)
     {
