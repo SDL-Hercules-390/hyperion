@@ -213,6 +213,7 @@ HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );
 HDL_DLL_IMPORT DEVEQU*      hdl_devequ;
 HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
 HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
+HDL_DLL_IMPORT void         hdl_repins   ( bool insert, HDLINS* ins );
 
 /*-------------------------------------------------------------------*/
 /*                     HDL_USE_LIBTOOL                               */
