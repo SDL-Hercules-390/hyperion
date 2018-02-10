@@ -92,7 +92,7 @@ int build_config (const char *hercules_cnf)
     init_default_archmode();
 
     if (!init_facilities_lists())
-        return -1;
+        return -1; // (error message already issued)
 
     ptt_trace_init( 0, TRUE );
 
@@ -116,7 +116,7 @@ int build_config (const char *hercules_cnf)
     configure_numcpu(1);
 
     if (hercules_cnf && (process_config( hercules_cnf )))
-        return -1;
+        return -1; // (error message already issued)
 
     /* Connect each channel set to its home cpu */
     for (i=0; i < sysblk.maxcpu; i++)
