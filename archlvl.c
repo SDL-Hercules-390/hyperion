@@ -12,9 +12,7 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
-#include "devtype.h"
-#include "opcode.h"
-#include "hostinfo.h"
+#include "opcode.h"             // Need DEF_INST
 
 /*-------------------------------------------------------------------*/
 /*                   Architecture bit-masks                          */

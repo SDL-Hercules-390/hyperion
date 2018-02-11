@@ -19,7 +19,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Standard fixed size integer and boolean types                     */
+/*         Standard fixed size integer and boolean types             */
 /*-------------------------------------------------------------------*/
 
 #if defined( HAVE_INTTYPES_H )
@@ -94,7 +94,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Hercules fixed size integer types                                 */
+/*              Hercules fixed size integer types                    */
 /*-------------------------------------------------------------------*/
 
 typedef  int8_t     S8;         // signed 8-bits
@@ -120,7 +120,7 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Socket stuff                                                      */
+/*                       Socket stuff                                */
 /*-------------------------------------------------------------------*/
 
 #ifndef HAVE_SOCKLEN_T
@@ -152,7 +152,7 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Magnetic Tape stuff                                               */
+/*                   Magnetic Tape stuff                             */
 /*-------------------------------------------------------------------*/
 
 #if defined( OPTION_SCSI_TAPE ) && !defined( HAVE_SYS_MTIO_H )
@@ -165,7 +165,7 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Primary Hercules Control Structures                               */
+/*            Primary Hercules Control Structures                    */
 /*-------------------------------------------------------------------*/
 
 typedef struct SYSBLK    SYSBLK;    // System configuration block
@@ -187,7 +187,7 @@ typedef struct SHRD      SHRD;      // xxxxxxxxx
 typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
 /*-------------------------------------------------------------------*/
-/* Secondary Device and I/O Control Related Structures               */
+/*      Secondary Device and I/O Control Related Structures          */
 /*-------------------------------------------------------------------*/
 
 typedef struct CKDDASD_DEVHDR   CKDDASD_DEVHDR;   // Device header
@@ -211,7 +211,7 @@ typedef struct TAPEAUTOLOADENTRY  TAPEAUTOLOADENTRY;  // (see tapedev.h)
 typedef struct TAMDIR             TAMDIR;             // (see tapedev.h)
 
 /*-------------------------------------------------------------------*/
-/* Device handler function prototypes                                */
+/*             Device handler function prototypes                    */
 /*-------------------------------------------------------------------*/
 
 typedef int   DEVIF  (DEVBLK *dev, int argc, char *argv[]);
@@ -236,22 +236,22 @@ typedef int   DEVQD  (DEVBLK *dev, void *desc);
 typedef int   DEVSR  (DEVBLK *dev, void *file);
 
 /*-------------------------------------------------------------------*/
-/* Device handler description structures                             */
+/*           Device handler description structures                   */
 /*-------------------------------------------------------------------*/
 typedef BYTE *DEVIM;                    /* Immediate CCW Codes Table */
 
 /*-------------------------------------------------------------------*/
-/* Read Configuration Data function                                  */
+/*              Read Configuration Data function                     */
 /*-------------------------------------------------------------------*/
 typedef int DEVRCD( DEVBLK *dev, BYTE *buffer, int bufsz );
 
 /*-------------------------------------------------------------------*/
-/* Format Sense bytes function                                       */
+/*                Format Sense bytes function                        */
 /*-------------------------------------------------------------------*/
 typedef void DEVSNS( const DEVBLK* dev, char* buf, size_t bufsz );
 
 /*-------------------------------------------------------------------*/
-/* typedefs for HDL overridable functions                            */
+/*            typedefs for HDL overridable functions                 */
 /*-------------------------------------------------------------------*/
 
 typedef void (ATTR_REGPARM(2) *INSTR_FUNC)( BYTE inst[], REGS* regs );
