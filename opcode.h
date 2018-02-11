@@ -3728,9 +3728,6 @@ DEF_INST( load_and_and );                                         /*810*/
 DEF_INST( load_and_exclusive_or );                                /*810*/
 DEF_INST( load_and_or );                                          /*810*/
 DEF_INST( load_pair_disjoint );                                   /*810*/
-#endif
-
-#if defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 DEF_INST( load_and_add_long );                                    /*810*/
 DEF_INST( load_and_add_logical_long );                            /*810*/
 DEF_INST( load_and_and_long );                                    /*810*/
