@@ -5184,52 +5184,53 @@ BYTE    *d, *s;
 /*-------------------------------------------------------------------*/
 /* E8   MVCIN - Move Inverse                                    [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(move_inverse)
+DEF_INST( move_inverse )
 {
-BYTE    l;                              /* Lenght byte               */
+BYTE    len;                            /* Amount to move minus 1    */
 int     b1, b2;                         /* Base registers            */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-VADR    n;                              /* 32-bit operand values     */
-BYTE    tbyte;                          /* Byte work areas           */
+VADR    op2end;                         /* Where operand-2 ends      */
+BYTE    byt;                            /* Byte being copied         */
 int     i;                              /* Integer work areas        */
 
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( HERC_MOVE_INVERSE, regs );
-
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
 
     /* If operand 1 crosses a page, make sure both pages are accessable */
-    if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
-        ((effective_addr1 + l) & PAGEFRAME_PAGEMASK))
-        ARCH_DEP(validate_operand) (effective_addr1, b1, l, ACCTYPE_WRITE_SKP, regs);
+    if ((effective_addr1        & PAGEFRAME_PAGEMASK) !=
+       ((effective_addr1 + len) & PAGEFRAME_PAGEMASK))
+    {
+        ARCH_DEP( validate_operand )( effective_addr1, b1, len, ACCTYPE_WRITE_SKP, regs );
+    }
 
     /* If operand 2 crosses a page, make sure both pages are accessable */
-    n = (effective_addr2 - l) & ADDRESS_MAXWRAP(regs);
-    if((n & PAGEFRAME_PAGEMASK) !=
-        ((n + l) & PAGEFRAME_PAGEMASK))
-        ARCH_DEP(validate_operand) (n, b2, l, ACCTYPE_READ, regs);
+    op2end = (effective_addr2 - len) & ADDRESS_MAXWRAP( regs );
+
+    if ((op2end        & PAGEFRAME_PAGEMASK) !=
+       ((op2end + len) & PAGEFRAME_PAGEMASK))
+    {
+        ARCH_DEP( validate_operand )( op2end, b2, len, ACCTYPE_READ, regs );
+    }
 
     /* Process the destination operand from left to right,
        and the source operand from right to left */
-    for ( i = 0; i <= l; i++ )
+    for (i=0; i <= len; i++ )   // (use <= and not < since len from
+                                // instruction is desired length-1)
     {
         /* Fetch a byte from the source operand */
-        tbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+        byt = ARCH_DEP( vfetchb )( effective_addr2, b2, regs );
 
         /* Store the byte in the destination operand */
-        ARCH_DEP(vstoreb) ( tbyte, effective_addr1, b1, regs );
+        ARCH_DEP( vstoreb )( byt, effective_addr1, b1, regs );
 
         /* Increment destination operand address */
         effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
+        effective_addr1 &= ADDRESS_MAXWRAP( regs );
 
         /* Decrement source operand address */
         effective_addr2--;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-
-    } /* end for(i) */
+        effective_addr2 &= ADDRESS_MAXWRAP( regs );
+    }
 }
 
 

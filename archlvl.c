@@ -814,53 +814,55 @@ static  bool  moddfp    ( bool enable, int bitno, int archnum, const char* actio
 /*   Facility Update Opcode Table Functions forward references       */
 /*-------------------------------------------------------------------*/
 
-static void instr0  ( int arch, bool enable );
-static void instr3  ( int arch, bool enable );
-static void instr6  ( int arch, bool enable );
-static void instr7  ( int arch, bool enable );
-static void instr8  ( int arch, bool enable );
-static void instr11 ( int arch, bool enable );
-static void instr16 ( int arch, bool enable );
-static void instr17 ( int arch, bool enable );
-static void instr18 ( int arch, bool enable );
-static void instr20 ( int arch, bool enable );
-static void instr21 ( int arch, bool enable );
-static void instr22 ( int arch, bool enable );
-static void instr23 ( int arch, bool enable );
-static void instr25 ( int arch, bool enable );
-static void instr26 ( int arch, bool enable );
-static void instr27 ( int arch, bool enable );
-static void instr28 ( int arch, bool enable );
-static void instr31 ( int arch, bool enable );
-static void instr32 ( int arch, bool enable );
-static void instr34 ( int arch, bool enable );
-static void instr35 ( int arch, bool enable );
-static void instr37 ( int arch, bool enable );
-static void instr40 ( int arch, bool enable );
-static void instr41 ( int arch, bool enable );
-static void instr42 ( int arch, bool enable );
-static void instr44 ( int arch, bool enable );
-static void instr45 ( int arch, bool enable );
-static void instr48 ( int arch, bool enable );
-static void instr49 ( int arch, bool enable );
-static void instr50 ( int arch, bool enable );
-static void instr53 ( int arch, bool enable );
-static void instr57 ( int arch, bool enable );
-static void instr58 ( int arch, bool enable );
-static void instr66 ( int arch, bool enable );
-static void instr67 ( int arch, bool enable );
-static void instr68 ( int arch, bool enable );
-static void instr73 ( int arch, bool enable );
-static void instr76 ( int arch, bool enable );
-static void instr77 ( int arch, bool enable );
-static void instr78 ( int arch, bool enable );
-static void instr80 ( int arch, bool enable );
-static void instr129( int arch, bool enable );
-static void instr133( int arch, bool enable );
-static void instr134( int arch, bool enable );
-static void instr142( int arch, bool enable );
-static void instr144( int arch, bool enable );
-static void instr145( int arch, bool enable );
+static void instr0   ( int arch, bool enable );
+static void instr3   ( int arch, bool enable );
+static void instr6   ( int arch, bool enable );
+static void instr7   ( int arch, bool enable );
+static void instr8   ( int arch, bool enable );
+static void instr11  ( int arch, bool enable );
+static void instr16  ( int arch, bool enable );
+static void instr17  ( int arch, bool enable );
+static void instr18  ( int arch, bool enable );
+static void instr20  ( int arch, bool enable );
+static void instr21  ( int arch, bool enable );
+static void instr22  ( int arch, bool enable );
+static void instr23  ( int arch, bool enable );
+static void instr25  ( int arch, bool enable );
+static void instr26  ( int arch, bool enable );
+static void instr27  ( int arch, bool enable );
+static void instr28  ( int arch, bool enable );
+static void instr31  ( int arch, bool enable );
+static void instr32  ( int arch, bool enable );
+static void instr34  ( int arch, bool enable );
+static void instr35  ( int arch, bool enable );
+static void instr37  ( int arch, bool enable );
+static void instr40  ( int arch, bool enable );
+static void instr41  ( int arch, bool enable );
+static void instr42  ( int arch, bool enable );
+static void instr44  ( int arch, bool enable );
+static void instr45  ( int arch, bool enable );
+static void instr48  ( int arch, bool enable );
+static void instr49  ( int arch, bool enable );
+static void instr50  ( int arch, bool enable );
+static void instr53  ( int arch, bool enable );
+static void instr57  ( int arch, bool enable );
+static void instr58  ( int arch, bool enable );
+static void instr66  ( int arch, bool enable );
+static void instr67  ( int arch, bool enable );
+static void instr68  ( int arch, bool enable );
+static void instr73  ( int arch, bool enable );
+static void instr76  ( int arch, bool enable );
+static void instr77  ( int arch, bool enable );
+static void instr78  ( int arch, bool enable );
+static void instr80  ( int arch, bool enable );
+static void instr129 ( int arch, bool enable );
+static void instr133 ( int arch, bool enable );
+static void instr134 ( int arch, bool enable );
+static void instr142 ( int arch, bool enable );
+static void instr144 ( int arch, bool enable );
+static void instr145 ( int arch, bool enable );
+static void hercmvcin( int arch, bool enable );
+static void hercsvs  ( int arch, bool enable );
 
 /*-------------------------------------------------------------------*/
 /* The ACTUAL facilities table, initialized by init_facilities_lists */
@@ -964,7 +966,7 @@ FT2( NULL,      instr145,  145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Mu
 FT2( modmsa,    NULL,      146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
 FT2( NULL,      NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
 
-FT2( NULL,      NULL,      HERC_MOVE_INVERSE,          "Hercules MVCIN Move Inverse Instruction Support" )
+FT2( NULL,      hercmvcin, HERC_MOVE_INVERSE,          "Hercules MVCIN Move Inverse Instruction Support" )
 FT2( NULL,      NULL,      HERC_MSA_EXTENSION_1,       "Hercules Message-Security-Assist Extension 1 Support" )
 FT2( NULL,      NULL,      HERC_MSA_EXTENSION_2,       "Hercules Message-Security-Assist Extension 2 Support" )
 FT2( NULL,      NULL,      HERC_PROBSTATE_DIAGF08,     "Hercules Problem-State Diagnose X'F08' Support" )
@@ -973,7 +975,7 @@ FT2( NULL,      NULL,      HERC_HOST_RESOURCE_ACCESS,  "Hercules Host Resource A
 FT2( NULL,      NULL,      HERC_QEBSM,                 "Hercules QDIO Enhanced Buffer-State Management Support" )
 FT2( NULL,      NULL,      HERC_QDIO_THININT,          "Hercules QDIO Thin-Interrupts Support" )
 FT2( NULL,      NULL,      HERC_QDIO_TDD,              "Hercules QDIO Time-Delayed-Dispatching Support" )
-FT2( NULL,      NULL,      HERC_SVS,                   "Hercules SVS Set Vector Summary Instruction Support" )
+FT2( NULL,      hercsvs,   HERC_SVS,                   "Hercules SVS Set Vector Summary Instruction Support" )
 FT2( NULL,      NULL,      HERC_LOGICAL_PARTITION,     "Hercules Logical Partition (LPAR) Support" )
 FT2( NULL,      NULL,      HERC_VIRTUAL_MACHINE,       "Hercules Emulate Virtual Machine Support" )
 FT2( NULL,      NULL,      HERC_QDIO_ASSIST,           "Hercules QDIO-Assist Support" )
@@ -3027,6 +3029,22 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( instr145 )
 {
     DIS_FAC_INS( B9AC, "IRBM B9AC INSERT REFERENCE BITS MULTIPLE" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( hercmvcin )
+{
+    DIS_FAC_INS( E8, "MVCIN E8 MOVE INVERSE" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( hercsvs )
+{
+    DIS_FAC_INS( B265, "SVS B265 Set Vector Summary" );
 }
 END_DIS_FAC_INS_FUNC()
 

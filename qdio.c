@@ -368,9 +368,6 @@ DEF_INST(set_vector_summary)
 int     r1, unused;            /* Register numbers                   */
 
     RRE0(inst, regs, r1, unused);
-
-//  ARCH_DEP(display_inst) (regs, inst);
-    FACILITY_CHECK( HERC_SVS, regs );
     PRIV_CHECK(regs);
     SIE_INTERCEPT(regs);
     ODD_CHECK(r1, regs);
