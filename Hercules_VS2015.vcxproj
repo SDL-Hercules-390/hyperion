@@ -1049,6 +1049,7 @@
     <ClInclude Include="SoftFloat\include\softfloat_version.h" />
     <ClInclude Include="SoftFloat\include\softfloat_types.h" />
     <ClInclude Include="sr.h" />
+    <ClInclude Include="stfl.h" />
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tt32api.h" />

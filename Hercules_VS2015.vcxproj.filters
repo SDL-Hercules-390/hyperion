@@ -2515,6 +2515,9 @@
     <ClInclude Include="sr.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stfl.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

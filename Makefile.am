@@ -868,6 +868,7 @@ noinst_HEADERS =          \
   sllib.h                 \
   sockdev.h               \
   sr.h                    \
+  stfl.h                  \
   tapedev.h               \
   targetver.h             \
   tt32api.h               \
