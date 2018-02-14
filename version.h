@@ -60,8 +60,10 @@
    components and not the full version string (which also contains
    the git hash and other unwanted information).
 */
+#define VER_DOT      .      /* (stupid clang complains about pasting dots!) */
 #undef  VER
-#define VER                 VERS_MAJ##.##VERS_INT##VERS_MIN
+//efine VER                 VERS_MAJ ##     .   ## VERS_INT ## VERS_MIN
+#define VER                 VERS_MAJ ## VER_DOT ## VERS_INT ## VERS_MIN
 #define HDL_VERS_HERCULES   QSTR( VER )
 #define HDL_SIZE_HERCULES   sizeof( HDL_VERS_HERCULES ) - 1
 
