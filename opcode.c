@@ -6473,25 +6473,30 @@ static INSTR_FUNC replace_opcode_xx________xx(int arch, INSTR_FUNC inst, int opc
     {
       oldinst = runtime_opcode_e3________xx[arch][opcode2];
       runtime_opcode_e3________xx[arch][opcode2] = inst;
+      break;
     }
     case 0xeb:
     {
       oldinst = runtime_opcode_eb________xx[arch][opcode2];
       runtime_opcode_eb________xx[arch][opcode2] = inst;
+      break;
     }
     case 0xec:
     {
       oldinst = runtime_opcode_ec________xx[arch][opcode2];
       runtime_opcode_ec________xx[arch][opcode2] = inst;
+      break;
     }
     case 0xed:
     {
       oldinst = runtime_opcode_ed________xx[arch][opcode2];
       runtime_opcode_ed________xx[arch][opcode2] = inst;
+      break;
     }
     default:
     {
       oldinst = NULL;
+      break;
     }
   }
   return(oldinst);
