@@ -38,7 +38,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 /*-------------------------------------------------------------------*/
 
 #if !defined( FEATURE_000_N3_INSTR_FACILITY )
-
  UNDEF_INST( add_logical_carry )
  UNDEF_INST( add_logical_carry_register )
  UNDEF_INST( branch_relative_and_save_long )
@@ -61,14 +60,146 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( subtract_logical_borrow )
  UNDEF_INST( subtract_logical_borrow_register )
  UNDEF_INST( test_addressing_mode )
-
- #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-
-  UNDEF_INST( load_reversed_long_register )
-  UNDEF_INST( store_reversed_long )
-
- #endif
 #endif /* !defined( FEATURE_000_N3_INSTR_FACILITY ) */
+
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+ UNDEF_INST( add_logical_carry_long )
+ UNDEF_INST( add_logical_carry_long_register )
+ UNDEF_INST( add_logical_long )
+ UNDEF_INST( add_logical_long_fullword )
+ UNDEF_INST( add_logical_long_fullword_register )
+ UNDEF_INST( add_logical_long_register )
+ UNDEF_INST( add_long )
+ UNDEF_INST( add_long_fullword )
+ UNDEF_INST( add_long_fullword_register )
+ UNDEF_INST( add_long_halfword_immediate )
+ UNDEF_INST( add_long_register )
+ UNDEF_INST( and_immediate_high_high )
+ UNDEF_INST( and_immediate_high_low )
+ UNDEF_INST( and_immediate_low_high )
+ UNDEF_INST( and_immediate_low_low )
+ UNDEF_INST( and_long )
+ UNDEF_INST( and_long_register )
+ UNDEF_INST( branch_on_count_long )
+ UNDEF_INST( branch_on_count_long_register )
+ UNDEF_INST( branch_on_index_high_long )
+ UNDEF_INST( branch_on_index_low_or_equal_long )
+ UNDEF_INST( branch_relative_on_count_long )
+ UNDEF_INST( branch_relative_on_index_high_long )
+ UNDEF_INST( branch_relative_on_index_low_or_equal_long )
+ UNDEF_INST( compare_and_swap_long )
+ UNDEF_INST( compare_double_and_swap_long )
+ UNDEF_INST( compare_logical_characters_under_mask_high )
+ UNDEF_INST( compare_logical_long )
+ UNDEF_INST( compare_logical_long_fullword )
+ UNDEF_INST( compare_logical_long_fullword_register )
+ UNDEF_INST( compare_logical_long_register )
+ UNDEF_INST( compare_long )
+ UNDEF_INST( compare_long_fullword )
+ UNDEF_INST( compare_long_fullword_register )
+ UNDEF_INST( compare_long_halfword_immediate )
+ UNDEF_INST( compare_long_register )
+ UNDEF_INST( convert_fix64_to_float_ext_reg )
+ UNDEF_INST( convert_fix64_to_float_long_reg )
+ UNDEF_INST( convert_fix64_to_float_short_reg )
+ UNDEF_INST( convert_float_ext_to_fix64_reg )
+ UNDEF_INST( convert_float_long_to_fix64_reg )
+ UNDEF_INST( convert_float_short_to_fix64_reg )
+ UNDEF_INST( convert_to_binary_long )
+ UNDEF_INST( convert_to_decimal_long )
+ UNDEF_INST( divide_logical_long )
+ UNDEF_INST( divide_logical_long_register )
+ UNDEF_INST( divide_single_long )
+ UNDEF_INST( divide_single_long_fullword )
+ UNDEF_INST( divide_single_long_fullword_register )
+ UNDEF_INST( divide_single_long_register )
+ UNDEF_INST( exclusive_or_long )
+ UNDEF_INST( exclusive_or_long_register )
+ UNDEF_INST( extract_and_set_extended_authority )
+ UNDEF_INST( extract_stacked_registers_long )
+ UNDEF_INST( insert_characters_under_mask_high )
+ UNDEF_INST( insert_immediate_high_high )
+ UNDEF_INST( insert_immediate_high_low )
+ UNDEF_INST( insert_immediate_low_high )
+ UNDEF_INST( insert_immediate_low_low )
+ UNDEF_INST( load_and_test_long_fullword_register )
+ UNDEF_INST( load_and_test_long_register )
+ UNDEF_INST( load_complement_long_fullword_register )
+ UNDEF_INST( load_complement_long_register )
+ UNDEF_INST( load_control_long )
+ UNDEF_INST( load_logical_immediate_high_high )
+ UNDEF_INST( load_logical_immediate_high_low )
+ UNDEF_INST( load_logical_immediate_low_high )
+ UNDEF_INST( load_logical_immediate_low_low )
+ UNDEF_INST( load_logical_long_character )
+ UNDEF_INST( load_logical_long_fullword )
+ UNDEF_INST( load_logical_long_fullword_register )
+ UNDEF_INST( load_logical_long_halfword )
+ UNDEF_INST( load_logical_long_thirtyone )
+ UNDEF_INST( load_logical_long_thirtyone_register )
+ UNDEF_INST( load_long )
+ UNDEF_INST( load_long_fullword )
+ UNDEF_INST( load_long_fullword_register )
+ UNDEF_INST( load_long_halfword )
+ UNDEF_INST( load_long_halfword_immediate )
+ UNDEF_INST( load_long_register )
+ UNDEF_INST( load_multiple_disjoint )
+ UNDEF_INST( load_multiple_high )
+ UNDEF_INST( load_multiple_long )
+ UNDEF_INST( load_negative_long_fullword_register )
+ UNDEF_INST( load_negative_long_register )
+ UNDEF_INST( load_pair_from_quadword )
+ UNDEF_INST( load_positive_long_fullword_register )
+ UNDEF_INST( load_positive_long_register )
+ UNDEF_INST( load_program_status_word_extended )
+ UNDEF_INST( load_real_address_long )
+ UNDEF_INST( load_reversed_long )
+ UNDEF_INST( load_reversed_long_register )
+ UNDEF_INST( load_using_real_address_long )
+ UNDEF_INST( multiply_logical_long )
+ UNDEF_INST( multiply_logical_long_register )
+ UNDEF_INST( multiply_long_halfword_immediate )
+ UNDEF_INST( multiply_single_long )
+ UNDEF_INST( multiply_single_long_fullword )
+ UNDEF_INST( multiply_single_long_fullword_register )
+ UNDEF_INST( multiply_single_long_register )
+ UNDEF_INST( or_immediate_high_high )
+ UNDEF_INST( or_immediate_high_low )
+ UNDEF_INST( or_immediate_low_high )
+ UNDEF_INST( or_immediate_low_low )
+ UNDEF_INST( or_long )
+ UNDEF_INST( or_long_register )
+ UNDEF_INST( rotate_left_single_logical_long )
+ UNDEF_INST( set_addressing_mode_64 )
+ UNDEF_INST( shift_left_single_logical_long )
+ UNDEF_INST( shift_left_single_long )
+ UNDEF_INST( shift_right_single_logical_long )
+ UNDEF_INST( shift_right_single_long )
+ UNDEF_INST( store_characters_under_mask_high )
+ UNDEF_INST( store_control_long )
+ UNDEF_INST( store_long )
+ UNDEF_INST( store_multiple_high )
+ UNDEF_INST( store_multiple_long )
+ UNDEF_INST( store_pair_to_quadword )
+ UNDEF_INST( store_real_address )
+ UNDEF_INST( store_reversed_long )
+ UNDEF_INST( store_using_real_address_long )
+ UNDEF_INST( subtract_logical_borrow_long )
+ UNDEF_INST( subtract_logical_borrow_long_register )
+ UNDEF_INST( subtract_logical_long )
+ UNDEF_INST( subtract_logical_long_fullword )
+ UNDEF_INST( subtract_logical_long_fullword_register )
+ UNDEF_INST( subtract_logical_long_register )
+ UNDEF_INST( subtract_long )
+ UNDEF_INST( subtract_long_fullword )
+ UNDEF_INST( subtract_long_fullword_register )
+ UNDEF_INST( subtract_long_register )
+ UNDEF_INST( test_under_mask_high )
+ UNDEF_INST( test_under_mask_high_high )
+ UNDEF_INST( test_under_mask_high_low )
+ UNDEF_INST( test_under_mask_low )
+ UNDEF_INST( trace_long )
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #if !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  UNDEF_INST( compare_and_swap_and_purge_long )
@@ -180,7 +311,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( multiply_subtract_float_long )
 #endif
 
-#if !defined( FEATURE_021_EXTENDED_IMMED_FACILITY )               /*@Z9*/
+#if !defined( FEATURE_021_EXTENDED_IMMED_FACILITY )
  UNDEF_INST( add_fullword_immediate )                             /*@Z9*/
  UNDEF_INST( add_logical_fullword_immediate )                     /*@Z9*/
  UNDEF_INST( add_logical_long_fullword_immediate )                /*@Z9*/
@@ -379,6 +510,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_program_parameter )
 #endif
 
+/*-------------------------------------------------------------------*/
+
 #if !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
 #if !defined( FEATURE_041_DFP_ROUNDING_FACILITY )
@@ -403,6 +536,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #endif /* !defined( FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
 
 #if !defined( FEATURE_042_DFP_FACILITY )
  UNDEF_INST( add_dfp_ext_reg )
@@ -536,7 +671,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_and_exclusive_or_long )                         /*810*/
  UNDEF_INST( load_and_or_long )                                   /*810*/
  UNDEF_INST( load_pair_disjoint_long )                            /*810*/
-#endif /*!defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
+#endif
 
 #if !defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )
  UNDEF_INST( load_on_condition_register )                         /*810*/
@@ -634,16 +769,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #if !defined( FEATURE_BIMODAL_ADDRESSING )
- UNDEF_INST( branch_and_set_mode )
  UNDEF_INST( branch_and_save_and_set_mode )
-#endif
-
-#if !defined( FEATURE_BINARY_FLOATING_POINT )
- UNDEF_INST( extract_fpc )
- UNDEF_INST( load_fpc )
- UNDEF_INST( set_bfp_rounding_mode_2bit )
- UNDEF_INST( set_fpc )
- UNDEF_INST( store_fpc )
+ UNDEF_INST( branch_and_set_mode )
 #endif
 
 #if !defined( FEATURE_BINARY_FLOATING_POINT )
@@ -663,17 +790,17 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( compare_bfp_short )
  UNDEF_INST( compare_bfp_short_reg )
  UNDEF_INST( convert_bfp_ext_to_fix32_reg )
+ UNDEF_INST( convert_bfp_ext_to_fix64_reg )
  UNDEF_INST( convert_bfp_long_to_fix32_reg )
+ UNDEF_INST( convert_bfp_long_to_fix64_reg )
  UNDEF_INST( convert_bfp_short_to_fix32_reg )
+ UNDEF_INST( convert_bfp_short_to_fix64_reg )
  UNDEF_INST( convert_fix32_to_bfp_ext_reg )
  UNDEF_INST( convert_fix32_to_bfp_long_reg )
  UNDEF_INST( convert_fix32_to_bfp_short_reg )
  UNDEF_INST( convert_fix64_to_bfp_ext_reg )
  UNDEF_INST( convert_fix64_to_bfp_long_reg )
  UNDEF_INST( convert_fix64_to_bfp_short_reg )
- UNDEF_INST( convert_bfp_ext_to_fix64_reg )
- UNDEF_INST( convert_bfp_long_to_fix64_reg )
- UNDEF_INST( convert_bfp_short_to_fix64_reg )
  UNDEF_INST( divide_bfp_ext_reg )
  UNDEF_INST( divide_bfp_long )
  UNDEF_INST( divide_bfp_long_reg )
@@ -681,16 +808,18 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( divide_bfp_short_reg )
  UNDEF_INST( divide_integer_bfp_long_reg )
  UNDEF_INST( divide_integer_bfp_short_reg )
+ UNDEF_INST( extract_fpc )
  UNDEF_INST( load_and_test_bfp_ext_reg )
  UNDEF_INST( load_and_test_bfp_long_reg )
  UNDEF_INST( load_and_test_bfp_short_reg )
- UNDEF_INST( load_fp_int_bfp_ext_reg )
- UNDEF_INST( load_fp_int_bfp_long_reg )
- UNDEF_INST( load_fp_int_bfp_short_reg )
  UNDEF_INST( load_complement_bfp_ext_reg )
  UNDEF_INST( load_complement_bfp_long_reg )
  UNDEF_INST( load_complement_bfp_short_reg )
- UNDEF_INST( load_negative_bfp_ext_reg )
+ UNDEF_INST( load_fp_int_bfp_ext_reg )
+ UNDEF_INST( load_fp_int_bfp_long_reg )
+ UNDEF_INST( load_fp_int_bfp_short_reg )
+ UNDEF_INST( load_fpc )
+  UNDEF_INST( load_negative_bfp_ext_reg )
  UNDEF_INST( load_negative_bfp_long_reg )
  UNDEF_INST( load_negative_bfp_short_reg )
  UNDEF_INST( load_positive_bfp_ext_reg )
@@ -705,36 +834,39 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_rounded_bfp_long_to_short_reg )
  UNDEF_INST( load_rounded_bfp_ext_to_long_reg )
  UNDEF_INST( load_rounded_bfp_ext_to_short_reg )
+ UNDEF_INST( multiply_add_bfp_long )
+ UNDEF_INST( multiply_add_bfp_long_reg )
+ UNDEF_INST( multiply_add_bfp_short )
+ UNDEF_INST( multiply_add_bfp_short_reg )
  UNDEF_INST( multiply_bfp_ext_reg )
- UNDEF_INST( multiply_bfp_long_to_ext_reg )
- UNDEF_INST( multiply_bfp_long_to_ext )
  UNDEF_INST( multiply_bfp_long )
  UNDEF_INST( multiply_bfp_long_reg )
- UNDEF_INST( multiply_bfp_short_to_long_reg )
- UNDEF_INST( multiply_bfp_short_to_long )
+ UNDEF_INST( multiply_bfp_long_to_ext )
+ UNDEF_INST( multiply_bfp_long_to_ext_reg )
  UNDEF_INST( multiply_bfp_short )
  UNDEF_INST( multiply_bfp_short_reg )
- UNDEF_INST( multiply_add_bfp_long_reg )
- UNDEF_INST( multiply_add_bfp_long )
- UNDEF_INST( multiply_add_bfp_short_reg )
- UNDEF_INST( multiply_add_bfp_short )
- UNDEF_INST( multiply_subtract_bfp_long_reg )
+ UNDEF_INST( multiply_bfp_short_to_long )
+ UNDEF_INST( multiply_bfp_short_to_long_reg )
  UNDEF_INST( multiply_subtract_bfp_long )
- UNDEF_INST( multiply_subtract_bfp_short_reg )
+ UNDEF_INST( multiply_subtract_bfp_long_reg )
  UNDEF_INST( multiply_subtract_bfp_short )
+ UNDEF_INST( multiply_subtract_bfp_short_reg )
+ UNDEF_INST( set_bfp_rounding_mode_2bit )
+ UNDEF_INST( set_fpc )
  UNDEF_INST( squareroot_bfp_ext_reg )
  UNDEF_INST( squareroot_bfp_long )
  UNDEF_INST( squareroot_bfp_long_reg )
  UNDEF_INST( squareroot_bfp_short )
  UNDEF_INST( squareroot_bfp_short_reg )
+ UNDEF_INST( store_fpc )
  UNDEF_INST( subtract_bfp_ext_reg )
  UNDEF_INST( subtract_bfp_long )
  UNDEF_INST( subtract_bfp_long_reg )
  UNDEF_INST( subtract_bfp_short )
  UNDEF_INST( subtract_bfp_short_reg )
- UNDEF_INST( test_data_class_bfp_short )
- UNDEF_INST( test_data_class_bfp_long )
  UNDEF_INST( test_data_class_bfp_ext )
+ UNDEF_INST( test_data_class_bfp_long )
+ UNDEF_INST( test_data_class_bfp_short )
 #endif /*!defined( FEATURE_BINARY_FLOATING_POINT )*/
 
 #if !defined( FEATURE_BRANCH_AND_SET_AUTHORITY )
@@ -778,13 +910,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( channel_subsystem_call )
 #endif
 
+#if !defined( FEATURE_CMPSC )
+ UNDEF_INST( cmpsc_2012 )
+#endif
+
 #if !defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )
  UNDEF_INST( compare_logical_long_extended )
  UNDEF_INST( move_long_extended )
-#endif
-
-#if !defined( FEATURE_CMPSC )
- UNDEF_INST( cmpsc_2012 )
 #endif
 
 #if !defined( FEATURE_DAT_ENHANCEMENT_FACILITY_2 )                /*@Z9*/
@@ -804,7 +936,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( program_transfer )
  UNDEF_INST( set_address_space_control )
  UNDEF_INST( set_secondary_asn )
-#endif /*!defined( FEATURE_DUAL_ADDRESS_SPACE )*/
+#endif
 
 #if !defined( FEATURE_ECPSVM )
  UNDEF_INST( ecpsvm_basic_freex )
@@ -853,8 +985,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #if !defined( FEATURE_EXTENDED_TRANSLATION_FACILITY_1 )
- UNDEF_INST( convert_utf8_to_utf16 )
  UNDEF_INST( convert_utf16_to_utf8 )
+ UNDEF_INST( convert_utf8_to_utf16 )
  UNDEF_INST( translate_extended )
 #endif
 
@@ -867,7 +999,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( load_zero_float_ext_reg )
  UNDEF_INST( load_zero_float_long_reg )
  UNDEF_INST( load_zero_float_short_reg )
-#endif /*!defined( FEATURE_FPS_EXTENSIONS )*/
+#endif
 
 #if !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
  UNDEF_INST( add_float_ext_reg )
@@ -965,9 +1097,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( multiply_halfword_immediate )
  UNDEF_INST( multiply_single )
  UNDEF_INST( multiply_single_register )
- UNDEF_INST( test_under_mask_high )
- UNDEF_INST( test_under_mask_low )
-#endif /*!defined( FEATURE_IMMEDIATE_AND_RELATIVE )*/
+#endif
 
 #if !defined( FEATURE_INTERPRETIVE_EXECUTION )
  UNDEF_INST( start_interpretive_execution )
@@ -1008,6 +1138,11 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #if !defined( FEATURE_QUEUED_DIRECT_IO )
  UNDEF_INST( signal_adapter )
 #endif
+
+
+
+
+
 
 #if !defined( FEATURE_REGION_RELOCATE )
  UNDEF_INST( store_zone_parameter )

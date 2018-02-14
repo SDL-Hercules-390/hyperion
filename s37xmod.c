@@ -49,7 +49,7 @@ END_DEPENDENCY_SECTION
 HDL_DEPENDENCY_SECTION;
 {
     LOGMSG("The S/370 Extension module requires the OPTION_370_EXTENSION build option\n");
-    hdl_depc_rc = -1;
+    depchk_rc = -1;
 }
 END_DEPENDENCY_SECTION
 

@@ -115,8 +115,6 @@ INST37X_TABLE_START(00)
 INST37X_TABLE_END(00)
 
 INST37X_TABLE_START(a7)
- /*A7x0*/ INST37X (test_under_mask_high,0)
- /*A7x1*/ INST37X (test_under_mask_low,1)
  /*A7x4*/ INST37X (branch_relative_on_condition,4)
  /*A7x5*/ INST37X (branch_relative_and_save,5)
  /*A7x6*/ INST37X (branch_relative_on_count,6)
