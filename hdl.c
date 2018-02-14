@@ -955,42 +955,43 @@ DLL_EXPORT void hdl_listmods( int flags )
         {
             HDLINS*  ins;
             HDLINS*  prev_ins;
+            char     s370, s390, z900;
 
-            buf[0] = 0;
+            s370 = s390 = z900 = '.';
 
             for (ins = prev_ins = mod->instructs; ins; ins = ins->next)
             {
                 if (strcmp( ins->instname, prev_ins->instname ) != 0)
                 {
-                    // "HDL:  opcode %4.4X: %s, %s"
+                    // "HDL:  opcode %4.4X (%c%c%c) %s"
                     WRMSG( HHC01534, "I"
                         , prev_ins->opcode
+                        , s370, s390, z900
                         , prev_ins->instname
-                        , trim( buf, ", " )
                     );
 
+                    s370 = s390 = z900 = '.';
                     prev_ins = ins;
-                    buf[0] = 0;
                 }
-#if defined(                                     _370 )
-                if (ins->hdl_arch == HDL_INSTARCH_370)
-                    STRLCAT( buf,           _ARCH_370_NAME ", " );
+#if defined(                    _370 )
+                if (HDL_INSTARCH_370 == ins->hdl_arch)
+                                s370 = '7';
 #endif
-#if defined(                                     _390 )
-                if (ins->hdl_arch == HDL_INSTARCH_390)
-                    STRLCAT( buf,           _ARCH_390_NAME ", " );
+#if defined(                    _390 )
+                if (HDL_INSTARCH_390 == ins->hdl_arch)
+                                s390 = '9';
 #endif
-#if defined(                                     _900 )
-                if (ins->hdl_arch == HDL_INSTARCH_900)
-                    STRLCAT( buf,           _ARCH_900_NAME ", " );
+#if defined(                    _900 )
+                if (HDL_INSTARCH_900 == ins->hdl_arch)
+                                z900 = 'Z';
 #endif
             }
 
-            // "HDL:  opcode %4.4X: %s, %s"
+            // "HDL:  opcode %4.4X (%c%c%c) %s"
             WRMSG( HHC01534, "I"
                 , prev_ins->opcode
+                , s370, s390, z900
                 , prev_ins->instname
-                , trim( buf, ", " )
             );
         }
     }

@@ -1098,7 +1098,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01531 "HDL: name = %s, type = %s, flags = (%sunloadable, %sforced)"
 #define HHC01532 "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
 #define HHC01533 "HDL:  devtypes = %s"
-#define HHC01534 "HDL:  opcode %4.4X: %s, %s"
+#define HHC01534 "HDL:  opcode %4.4X (%c%c%c) %s"
 #define HHC01535 "HDL: dependency %s version %s size %d"
 #define HHC01536 "HDL: WARNING: '%s' is not a valid directory"
 //efine HHC01537 (available)
