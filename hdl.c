@@ -1,5 +1,7 @@
 /* HDL.C        (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
+/*              (C) Copyright "Fish" (David B. Trout), 2018          */
+/*                  Architecture Mode and Facilities                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -1556,54 +1558,142 @@ static void hdl_define_instructs_cb( U32 hdl_arch, int opcode, const char* name,
 }
 
 /*-------------------------------------------------------------------*/
+/*   Helper function to retrieve the current opcode table pointer    */
+/*-------------------------------------------------------------------*/
+static void* curr_opcode_ptr( int hdl_arch, int opcode )
+{
+    void*  current = NULL;
+    void*  dummy   = (void*) 1;
+
+    int    opcode1   = opcode >> 8;
+    int    opcode2   = opcode & 0x00ff;
+
+#ifdef                                _370
+    if (hdl_arch    ==    HDL_INSTARCH_370) {
+        current = replace_opcode( ARCH_370_IDX, dummy,   opcode1, opcode2 );
+        replace_opcode(           ARCH_370_IDX, current, opcode1, opcode2 );
+    }
+#endif
+#ifdef                                _390
+    if (hdl_arch    ==    HDL_INSTARCH_390) {
+        current = replace_opcode( ARCH_390_IDX, dummy,   opcode1, opcode2 );
+        replace_opcode(           ARCH_390_IDX, current, opcode1, opcode2 );
+    }
+#endif
+#ifdef                                _900
+    if (hdl_arch    ==    HDL_INSTARCH_900) {
+        current = replace_opcode( ARCH_900_IDX, dummy,   opcode1, opcode2 );
+        replace_opcode(           ARCH_900_IDX, current, opcode1, opcode2 );
+    }
+#endif
+
+    ASSERT( current );   // (verify hdl_arch was valid)
+    return  current;
+}
+
+/*-------------------------------------------------------------------*/
 /*   Helper function to call opcode.c's "replace_opcode" function    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hdl_repins( bool insert, HDLINS* ins )
+DLL_EXPORT void hdl_repins( bool replace, HDLINS* ins )
 {
-  void* original = NULL;  // (for error check)
+    void* current;
 
-  if (insert)  // (insert == define replacement)
-  {
-    ins->original = NULL;
+    int  opcode1  = ins->opcode >> 8;
+    int  opcode2  = ins->opcode & 0x00ff;
 
-#ifdef                                    _370
-    if (ins->hdl_arch   ==    HDL_INSTARCH_370)
-      ins->original = replace_opcode( ARCH_370_IDX, ins->instfunc, ins->opcode >> 8, ins->opcode & 0x00ff );
-#endif
-#ifdef                                    _390
-    if (ins->hdl_arch   ==    HDL_INSTARCH_390)
-      ins->original = replace_opcode( ARCH_390_IDX, ins->instfunc, ins->opcode >> 8, ins->opcode & 0x00ff );
-#endif
-#ifdef                                    _900
-    if (ins->hdl_arch   ==    HDL_INSTARCH_900)
-      ins->original = replace_opcode( ARCH_900_IDX, ins->instfunc, ins->opcode >> 8, ins->opcode & 0x00ff );
-#endif
+    /* Replace == install override? */
 
-    original = ins->original;
-  }
-  else // (!insert == restore original)
-  {
-
-#ifdef                               _370
-    if (ins->hdl_arch == HDL_INSTARCH_370)
-      original = replace_opcode( ARCH_370_IDX, ins->original, ins->opcode >> 8, ins->opcode & 0x00ff );
+    if (replace)
+    {
+        ins->previous = NULL;
+#ifdef                                          _370
+        if (ins->hdl_arch    ==     HDL_INSTARCH_370)
+            ins->previous = replace_opcode( ARCH_370_IDX, ins->instfunc, opcode1, opcode2 );
 #endif
-#ifdef                               _390
-    if (ins->hdl_arch == HDL_INSTARCH_390)
-      original = replace_opcode( ARCH_390_IDX, ins->original, ins->opcode >> 8, ins->opcode & 0x00ff );
+#ifdef                                          _390
+        if (ins->hdl_arch    ==     HDL_INSTARCH_390)
+            ins->previous = replace_opcode( ARCH_390_IDX, ins->instfunc, opcode1, opcode2 );
 #endif
-#ifdef                               _900
-    if (ins->hdl_arch == HDL_INSTARCH_900)
-      original = replace_opcode( ARCH_900_IDX, ins->original, ins->opcode >> 8, ins->opcode & 0x00ff );
+#ifdef                                          _900
+        if (ins->hdl_arch    ==     HDL_INSTARCH_900)
+            ins->previous = replace_opcode( ARCH_900_IDX, ins->instfunc, opcode1, opcode2 );
 #endif
+        if (!ins->previous)
+        {
+            // "HDL: Invalid architecture passed to %s"
+            WRMSG( HHC01503, "E", "hdl_repins" );
+        }
+        return;   // (it either worked or it didn't)
+    }
 
-  }
+    /* NOT replace == restore previous... */
 
-  if (!original)
-  {
-    // "HDL: Invalid architecture passed to %s"
-    WRMSG( HHC01503, "E", "hdl_repins" );
-  }
+    /* Is the opcode table still pointing to OUR override?
+       Or is it pointing to some other module's override?
+    */
+    current = curr_opcode_ptr( ins->hdl_arch, ins->opcode );
+
+    if (current == ins->instfunc)
+    {
+        void* previous = NULL;
+
+        /* We still "own" this instruction override.  Uninstall
+           our override by updating the opcode table pointer to
+           point to the function it was pointing to before.
+        */
+#ifdef                                     _370
+        if (ins->hdl_arch  ==  HDL_INSTARCH_370)
+            previous = replace_opcode( ARCH_370_IDX, ins->previous, opcode1, opcode2 );
+#endif
+#ifdef                                     _390
+        if (ins->hdl_arch  ==  HDL_INSTARCH_390)
+            previous = replace_opcode( ARCH_390_IDX, ins->previous, opcode1, opcode2 );
+#endif
+#ifdef                                     _900
+        if (ins->hdl_arch  ==  HDL_INSTARCH_900)
+            previous = replace_opcode( ARCH_900_IDX, ins->previous, opcode1, opcode2 );
+#endif
+        if (!previous)
+        {
+            // "HDL: Invalid architecture passed to %s"
+            WRMSG( HHC01503, "E", "hdl_repins" );
+        }
+    }
+    else /* (we don't "own" the override, some other module does) */
+    {
+        /*
+        **  Some other module has overridden our override.  We need
+        **  to FIX their "previous" instr function pointer to point
+        **  to OUR "previous" instr function pointer instead.
+        **
+        **  Procedure: For each module that has overrides defined,
+        **  chase their overrides to find one whose previous pointer
+        **  matches our override (which is going away), and replace
+        **  it instead with OUR previous value instead.
+        **
+        **  Doing this thereby fixes the "current/previous chain" by
+        **  re-chaining the current override to our previous override
+        **  thereby effectively removing ourselves from the middle of
+        **  the current/previous chain.
+        */
+        HDLMOD*  mod;
+        HDLINS*  ins2;
+
+        for (mod = hdl_mods; mod; mod = mod->next)
+        {
+            for (ins2 = mod->instructs; ins2; ins2 = ins2->next)
+            {
+                if (1
+                    && ins2->opcode   == ins->opcode
+                    && ins2->hdl_arch == ins->hdl_arch
+                    && ins2->previous == ins->instfunc
+                )
+                {
+                    ins2->previous = ins->previous;
+                }
+            }
+        }
+    }
 }
 
 /*-------------------------------------------------------------------*/

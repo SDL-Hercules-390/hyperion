@@ -140,7 +140,7 @@ struct HDLINS                           /* Instruction entry         */
 {
     const char*  instname;              /* Instruction name          */
     void*        instfunc;              /* Instruction function      */
-    void*        original;              /* Original instruction      */
+    void*        previous;              /* Previous function         */
     int          opcode;                /* Opcode                    */
     U32          hdl_arch;              /* HDL architecture          */
     HDLINS*      next;                  /* Next entry                */
@@ -213,7 +213,7 @@ HDL_DLL_IMPORT DEVHND*      hdl_DEVHND   ( const char* typname );
 HDL_DLL_IMPORT DEVEQU*      hdl_devequ;
 HDL_DLL_IMPORT void*        hdl_getsym   ( const char* symname );
 HDL_DLL_IMPORT void*        hdl_next     ( const void* symbol );
-HDL_DLL_IMPORT void         hdl_repins   ( bool insert, HDLINS* ins );
+HDL_DLL_IMPORT void         hdl_repins   ( bool replace, HDLINS* ins );
 
 /*-------------------------------------------------------------------*/
 /*                     HDL_USE_LIBTOOL                               */
