@@ -697,7 +697,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00884 "Channel Report queue: (empty)"
 #define HHC00885 "Channel Report queue:"
 #define HHC00886 "CRW 0x%8.8X: %s"
-//efine HHC00887 - HHC00889 (available)
+//efine HHC00887 (available)
+//efine HHC00888 (available)
+#define HHC00889 "Available facilities cannot be changed once system is IPLed"
 #define HHC00890 "Cannot %s facility %s without first %s facility %s"
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s %s"
 #define HHC00892 "Facility( %s ) does not exist for %s"

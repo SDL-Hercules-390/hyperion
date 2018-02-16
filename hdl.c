@@ -323,6 +323,25 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 
     obtain_lock( &hdl_lock );
     {
+        /* Disallow loading of instruction override modules
+           if the system is currently executing instructions */
+        if (mod->inssec_ep)
+        {
+            /* Prevent stopped CPUs from being started */
+            OBTAIN_INTLOCK( NULL );
+
+            if (are_any_cpus_started_intlock_held())
+            {
+                RELEASE_INTLOCK( NULL );
+                release_lock( &hdl_lock );
+                // "All CPU's must be stopped %s"
+                WRMSG( HHC02253, "E", "to load an instruction module" );
+                dlclose( mod->handle );
+                free( mod );
+                return -1;
+            }
+        }
+
         /* Call module's HDL_DEPENDENCY_SECTION */
         if (mod->depsec_ep( &hdl_check_depends_cb ) != 0)
         {
@@ -339,9 +358,11 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
             }
             else /* Abort the module load */
             {
+                if (mod->inssec_ep)
+                    RELEASE_INTLOCK( NULL );
+                release_lock( &hdl_lock );
                 dlclose( mod->handle );
                 free( mod );
-                release_lock( &hdl_lock );
                 return -1;
             }
         }
@@ -378,7 +399,10 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 
         /* Call the module's HDL_INSTRUCTION_SECTION, if it has one */
         if (mod->inssec_ep)
+        {
             mod->inssec_ep( &hdl_define_instructs_cb );
+            RELEASE_INTLOCK( NULL );
+        }
     }
     release_lock( &hdl_lock );
 
@@ -403,9 +427,6 @@ DLL_EXPORT int hdl_freemod( const char* name )
 
     HDLDEV*      device;
     HDLDEV*      savedev;
-
-    HDLINS*      ins;
-    HDLINS*      saveins;
 
     modname = (modname = strrchr( name, '/' )) ? modname+1 : name;
 
@@ -468,13 +489,32 @@ DLL_EXPORT int hdl_freemod( const char* name )
             }
         }
 
+        /* Disallow unloading of instruction override modules
+           if the system is currently executing instructions */
+        if ((*ppmod)->inssec_ep)
+        {
+            /* Prevent stopped CPUs from being started */
+            OBTAIN_INTLOCK( NULL );
+
+            if (are_any_cpus_started_intlock_held())
+            {
+                RELEASE_INTLOCK( NULL );
+                release_lock( &hdl_lock );
+                // "All CPU's must be stopped %s"
+                WRMSG( HHC02253, "E", "to unload an instruction module" );
+                return -1;
+            }
+        }
+
         /* Call module's HDL_FINAL_SECTION, if it has one */
         if ((*ppmod)->finsec_ep)
         {
             int rc;
 
-            if ((rc = ((*ppmod)->finsec_ep)()))
+            if ((rc = (*ppmod)->finsec_ep()) != 0)
             {
+                if ((*ppmod)->inssec_ep)
+                    RELEASE_INTLOCK( NULL );
                 release_lock( &hdl_lock );
                 // "HDL: unload of module %s rejected by final section"
                 WRMSG( HHC01523, "E", (*ppmod)->name );
@@ -498,8 +538,8 @@ DLL_EXPORT int hdl_freemod( const char* name )
         }
 
         /* Remove the module from our chain */
-        mod  = *ppmod;
-        *ppmod = (*ppmod)->next;
+        mod    = *ppmod;
+        *ppmod = mod->next;
 
         /* Free all device registrations */
         for (device = mod->devices; device;)
@@ -511,18 +551,25 @@ DLL_EXPORT int hdl_freemod( const char* name )
         }
 
         /* Revert and free all instruction overrides for this module */
-        for (ins = mod->instructs; ins;)
+        if (mod->inssec_ep)
         {
-            /* Revert this instruction override */
-            hdl_repins( false, ins );
+            HDLINS*  ins;
+            HDLINS*  saveins;
 
-            /* Free resources for this instruction override */
-            free( ins->instname );   // (free name string)
-            saveins = ins->next;     // (save before freeing)
-            free( ins );             // (free HDLINS struct)
+            for (ins = mod->instructs; ins;)
+            {
+                /* Revert this instruction override */
+                hdl_repins( false, ins );
 
-            /* Do for all overrides in this module's chain */
-            ins = saveins;
+                /* Free resources for this instruction override */
+                free( ins->instname );   // (free name string)
+                saveins = ins->next;     // (save before freeing)
+                free( ins );             // (free HDLINS struct)
+
+                /* Do for all overrides in this module's chain */
+                ins = saveins;
+            }
+            RELEASE_INTLOCK( NULL );
         }
 
         /* Free the module's HDLMOD struct */

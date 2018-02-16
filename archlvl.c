@@ -3092,6 +3092,14 @@ static int archlvl_enable_disable( int argc, char* argv[] )
         return -1;
     }
 
+    /* The facility list cannot be updated once system is IPLed */
+    if (sysblk.ipled)
+    {
+        // "Available facilities cannot be changed once system is IPLed"
+        WRMSG( HHC00889, "E" );
+        return -1;
+    }
+
     /* Make sure all CPUs are deconfigured or stopped */
     if (are_any_cpus_started())
     {
