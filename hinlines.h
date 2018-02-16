@@ -419,9 +419,104 @@ static inline void Release_Interrupt_Lock( REGS* regs )
     release_lock( &sysblk.intlock );
 }
 
+/*-------------------------------------------------------------------*/
+/* Stop ALL CPUs                                      (INTLOCK held) */
+/*-------------------------------------------------------------------*/
+static inline void stop_all_cpus_intlock_held()
+{
+    CPU_BITMAP  mask;
+    REGS*       regs;
+    int         i;
 
-#undef asm
+    for (i=0, mask = sysblk.started_mask; mask; i++, mask >>= 1)
+    {
+        if (mask & 1)
+        {
+            regs = sysblk.regs[i];
+
+            regs->opinterv = 1;
+            regs->cpustate = CPUSTATE_STOPPING;
+
+            ON_IC_INTERRUPT( regs );
+
+            signal_condition( &regs->intcond );
+        }
+    }
+}
 
 /*-------------------------------------------------------------------*/
+/* Test if any CPUs are in started state              (INTLOCK held) */
+/*-------------------------------------------------------------------*/
+static inline bool are_any_cpus_started_intlock_held()
+{
+    int cpu;
+
+    if (sysblk.cpus)
+        for (cpu = 0; cpu < sysblk.hicpu; cpu++)
+            if (IS_CPU_ONLINE( cpu ))
+                if (sysblk.regs[ cpu ]->cpustate == CPUSTATE_STARTED)
+                    return true;
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/* Test if all CPUs are in stopped state              (INTLOCK held) */
+/*-------------------------------------------------------------------*/
+static inline bool are_all_cpus_stopped_intlock_held()
+{
+    int cpu;
+
+    if (sysblk.cpus)
+        for (cpu = 0; cpu < sysblk.hicpu; cpu++)
+            if (IS_CPU_ONLINE( cpu ))
+                if (sysblk.regs[ cpu ]->cpustate != CPUSTATE_STOPPED)
+                    return false;
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/* Test if any CPUs are in started state          (INTLOCK not held) */
+/*-------------------------------------------------------------------*/
+static inline bool are_any_cpus_started()
+{
+    bool any_started;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        any_started = are_any_cpus_started_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+    return any_started;
+}
+
+/*-------------------------------------------------------------------*/
+/* Test if all CPUs are in stopped state          (INTLOCK not held) */
+/*-------------------------------------------------------------------*/
+static inline bool are_all_cpus_stopped()
+{
+    bool all_stopped;
+
+    OBTAIN_INTLOCK( NULL );
+    {
+        all_stopped = are_all_cpus_stopped_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+    return all_stopped;
+}
+
+/*-------------------------------------------------------------------*/
+/* Stop ALL CPUs                                  (INTLOCK not held) */
+/*-------------------------------------------------------------------*/
+static inline void stop_all_cpus()
+{
+    OBTAIN_INTLOCK( NULL );
+    {
+        stop_all_cpus_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+}
+
+/*-------------------------------------------------------------------*/
+#undef asm
 
 #endif // _HINLINES_H

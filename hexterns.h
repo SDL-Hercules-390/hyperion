@@ -351,12 +351,15 @@ CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...) ATTR_PRINTF(3,4);
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
 void do_shutdown();
+
+#if 0 /* (moved to hinlines.h) */
 void stop_all_cpus();
 void stop_all_cpus_intlock_held();
 bool are_all_cpus_stopped();
 bool are_all_cpus_stopped_intlock_held();
 bool are_any_cpus_started();
 bool are_any_cpus_started_intlock_held();
+#endif /* (moved to hinlines.h) */
 
 int display_gregs (REGS *regs, char *buf, int buflen, char *hdr);
 int display_fregs (REGS *regs, char *buf, int buflen,char *hdr);
