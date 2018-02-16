@@ -3017,6 +3017,7 @@ void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 int display_psw (REGS *regs, char *buf, int buflen);
 char *str_psw (REGS *regs, char *buf);
+void do_automatic_tracing();
 
 
 /* Functions in module vm.c */

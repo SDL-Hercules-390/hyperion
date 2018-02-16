@@ -420,6 +420,44 @@ static inline void Release_Interrupt_Lock( REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
+/*              Update SYSBLK Instruction Count                      */
+/*-------------------------------------------------------------------*/
+
+#define UPDATE_SYSBLK_INSTCOUNT( _count ) \
+    Update_SYSBLK_instcount(     _count )
+
+static inline void Update_SYSBLK_instcount( int count )
+{
+    /* Update system-wide sysblk.instcount instruction counter */
+
+    /* PROGRAMMING NOTE: the value returned by each of the below
+       atomic add intrinsics differ between Microsoft's compiler
+       and GCC's compiler. Microsoft's API returns the RESULTS
+       of the addition, whereas GCC's API returns the value BEFORE
+       it was added to. This difference does not impact us in this
+       particular case, but it's important to keep in mind should
+       you decide to use similar logic elsewhere.
+    */
+#if defined( _MSVC_ )
+
+    /* Note: Microsoft's API returns the RESULTS of the addition */
+    InterlockedExchangeAdd64( &sysblk.instcount, count );
+
+#else // GCC (and CLANG?)
+
+  #if defined( HAVE_SYNC_BUILTINS )
+
+    /* Note: GCC's API returns the value BEFORE it was added to */
+    __sync_fetch_and_add( &sysblk.instcount, count );
+  #else
+
+    /* Otherwise we'll just have to do it non-atomically */
+    sysblk.instcount += count;
+  #endif
+#endif
+}
+
+/*-------------------------------------------------------------------*/
 /* Stop ALL CPUs                                      (INTLOCK held) */
 /*-------------------------------------------------------------------*/
 static inline void stop_all_cpus_intlock_held()

@@ -1033,7 +1033,6 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     longjmp (regs->progjmp, SIE_INTERCEPT_RESTART);
 } /* end function restart_interrupt */
 
-
 /*-------------------------------------------------------------------*/
 /* Perform I/O interrupt if pending                                  */
 /* Note: The caller MUST hold the interrupt lock (sysblk.intlock)    */
@@ -1236,7 +1235,6 @@ static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
 #endif
 };
 
-
 /*-------------------------------------------------------------------*/
 /* CPU instruction execution thread                                  */
 /*-------------------------------------------------------------------*/
@@ -1305,7 +1303,6 @@ int   rc;
 
     return NULL;
 } /* end function cpu_thread */
-
 
 /*-------------------------------------------------------------------*/
 /* Initialize a CPU                                                  */
@@ -1409,7 +1406,6 @@ int i;
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Uninitialize a CPU                                                */
 /*-------------------------------------------------------------------*/
@@ -1454,7 +1450,6 @@ void *cpu_uninit (int cpu, REGS *regs)
 
     return NULL;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* CPU Wait - Core wait routine for both CPU Wait and Stopped States */
@@ -1508,7 +1503,6 @@ CPU_Wait (REGS* regs)
 }
 
 #endif /*!defined(_GEN_ARCH)*/
-
 
 /*-------------------------------------------------------------------*/
 /* Process interrupt                                                 */
@@ -1702,7 +1696,6 @@ cpustate_stopping:
 
 } /* process_interrupt */
 
-static void do_automatic_tracing();         /*  (forward reference)  */
 /*-------------------------------------------------------------------*/
 /* Run CPU                                                           */
 /*-------------------------------------------------------------------*/
@@ -1811,8 +1804,6 @@ int     aswitch;
     regs->execflag = 0;
 
     do {
-        U64 instcount; // (auto-tracing)
-
         if (INTERRUPT_PENDING( regs ))
             ARCH_DEP( process_interrupt )( regs );
 
@@ -1836,25 +1827,9 @@ int     aswitch;
         regs->instcount += 1 + (i * 2);
 
         /* Update system-wide sysblk.instcount instruction counter */
-#if defined( _MSVC_ )
+        UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
 
-        /* Microsoft's API returns the RESULTS of the addition */
-        instcount = InterlockedExchangeAdd64( &sysblk.instcount, 1 + (i * 2) );
-
-#else // GCC
-
-    #if defined( HAVE_SYNC_BUILTINS )
-
-        /* GCC's API returns the value BEFORE it was added to */
-        instcount = __sync_fetch_and_add( &sysblk.instcount, 1 + (i * 2) )
-            + 1 + (i * 2);
-    #else
-
-        /* Otherwise we'll just have to do it non-atomically */
-        instcount = sysblk.instcount += 1 + (i * 2);
-    #endif
-#endif
-
+        /* Perform automatic instruction tracing if it's enabled */
         do_automatic_tracing();
     }
     while (1);
@@ -2057,7 +2032,7 @@ QWORD   qword;                            /* quadword work area      */
 /*-------------------------------------------------------------------*/
 /*                      Automatic Tracing                            */
 /*-------------------------------------------------------------------*/
-static void do_automatic_tracing()
+void do_automatic_tracing()
 {
     static U64  inst_count;         // (current sysblk.instcount)
     static U64  missed_by;          // (how far past trigger we went)

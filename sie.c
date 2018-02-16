@@ -1134,7 +1134,13 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                regs->instcount += (i * 2);
+                regs->instcount += 1 + (i * 2);
+
+                /* Update system-wide sysblk.instcount instruction counter */
+                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+
+                /* Perform automatic instruction tracing if it's enabled */
+                do_automatic_tracing();
             }
             /******************************************/
             /* Remain in SIE (above loop) until ...   */
