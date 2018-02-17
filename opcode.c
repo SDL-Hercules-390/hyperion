@@ -38,7 +38,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 /*-------------------------------------------------------------------*/
 
 #if !defined( FEATURE_000_N3_INSTR_FACILITY )
-
  UNDEF_INST( add_logical_carry )
  UNDEF_INST( add_logical_carry_register )
  UNDEF_INST( branch_relative_and_save_long )
@@ -61,14 +60,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( subtract_logical_borrow )
  UNDEF_INST( subtract_logical_borrow_register )
  UNDEF_INST( test_addressing_mode )
+#endif
 
- #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-
-  UNDEF_INST( load_reversed_long_register )
-  UNDEF_INST( store_reversed_long )
-
- #endif
-#endif /* !defined( FEATURE_000_N3_INSTR_FACILITY ) */
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+ UNDEF_INST( load_reversed_long )
+ UNDEF_INST( load_reversed_long_register )
+ UNDEF_INST( store_reversed_long )
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #if !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  UNDEF_INST( compare_and_swap_and_purge_long )

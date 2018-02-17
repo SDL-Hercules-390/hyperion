@@ -1641,7 +1641,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 /*-------------------------------------------------------------------*/
 /* B98D EPSW  - Extract PSW                                    [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(extract_psw)
+DEF_INST( extract_psw )
 {
 int     r1, r2;                         /* Values of R fields        */
 QWORD   currpsw;                        /* Work area for PSW         */
@@ -1650,28 +1650,28 @@ QWORD   currpsw;                        /* Work area for PSW         */
 
     RRE(inst, regs, r1, r2);
 
-#if defined(_FEATURE_ZSIE)
-    if(SIE_STATB(regs, IC1, LPSW))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_ZSIE)*/
+#if defined( _FEATURE_ZSIE )
+    if (SIE_STATB( regs, IC1, LPSW ))
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
 
     /* Store the current PSW in work area */
-    ARCH_DEP(store_psw) (regs, currpsw);
+    ARCH_DEP( store_psw )( regs, currpsw );
 
     /* Load PSW bits 0-31 into bits 32-63 of the R1 register */
-    FETCH_FW(regs->GR_L(r1), currpsw);
+    FETCH_FW( regs->GR_L(r1), currpsw );
 
     /* If R2 specifies a register other than register zero,
        load PSW bits 32-63 into bits 32-63 of the R2 register */
-    if(r2 != 0)
+    if (r2 != 0)
     {
-        FETCH_FW(regs->GR_L(r2), currpsw+4);
+        FETCH_FW( regs->GR_L(r2), currpsw+4 );
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* The Ninth Edition of ESA/390 POP (SA22-7201-08) requires
            the low 31 bits to be set to zeroes in ESA/390 mode */
         regs->GR_L(r2) &= 0x80000000;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     }
 
 } /* end DEF_INST(extract_psw) */
@@ -4542,33 +4542,31 @@ DEF_INST(test_addressing_mode)
 /*-------------------------------------------------------------------*/
 /* 010C SAM24 - Set Addressing Mode 24                           [E] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_addressing_mode_24)
+DEF_INST( set_addressing_mode_24 )
 {
-VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
+VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 
     FACILITY_CHECK( 000_N3_INSTR, regs );
 
-    E(inst, regs);
+    E( inst, regs );
 
-    UNREFERENCED(inst);
+    UNREFERENCED( inst );
 
     /* Set the bear register */
-    SET_BEAR_REG(regs, regs->bear_ip);
+    SET_BEAR_REG( regs, regs->bear_ip );
 
     /* Program check if instruction is located above 16MB */
     if (ia > 0xFFFFFFULL)
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+    if ((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
+        regs->CR(12) = ARCH_DEP( trace_ms )( 0, 0, regs );
+    regs->psw.amode64 = 0;
+#endif
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    regs->psw.amode64 =
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-                        regs->psw.amode = 0;
+    regs->psw.amode = 0;
     regs->psw.AMASK = AMASK24;
 
 } /* end DEF_INST(set_addressing_mode_24) */
@@ -4579,33 +4577,30 @@ VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 /* 010D SAM31 - Set Addressing Mode 31                           [E] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_addressing_mode_31)
+DEF_INST( set_addressing_mode_31 )
 {
-VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
+VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 
     FACILITY_CHECK( 000_N3_INSTR, regs );
 
-    E(inst, regs);
+    E( inst, regs );
 
-    UNREFERENCED(inst);
+    UNREFERENCED( inst );
 
 
     /* Set the bear register */
-    SET_BEAR_REG(regs, regs->bear_ip);
+    SET_BEAR_REG( regs, regs->bear_ip );
 
     /* Program check if instruction is located above 2GB */
     if (ia > 0x7FFFFFFFULL)
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+        regs->CR(12) = ARCH_DEP( trace_ms )( 0, 0, regs );
     regs->psw.amode64 = 0;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
 
@@ -5669,7 +5664,7 @@ int     cc;                             /* Condition code            */
 #endif /*defined(FEATURE_007_STFL_EXTENDED_FACILITY)*/
 
 
-#if defined( FEATURE_000_N3_INSTR_FACILITY ) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B90F LRVGR - Load Reversed Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5677,7 +5672,6 @@ DEF_INST(load_reversed_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    FACILITY_CHECK( 000_N3_INSTR,        regs );
     FACILITY_CHECK( 001_ZARCH_INSTALLED, regs );
 
     RRE0(inst, regs, r1, r2);
@@ -5768,7 +5762,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined( FEATURE_000_N3_INSTR_FACILITY ) && defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E32F STRVG - Store Reversed Long                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5778,7 +5772,6 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    FACILITY_CHECK( 000_N3_INSTR,        regs );
     FACILITY_CHECK( 001_ZARCH_INSTALLED, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
@@ -5787,7 +5780,7 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore8) ( bswap_64(regs->GR_G(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed_long) */
-#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
@@ -7946,7 +7939,7 @@ BYTE    tbyte;                          /* Work byte                 */
 #endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
 
 
-#if defined(FEATURE_021_EXTENDED_IMMED_FACILITY)                /*@Z9*/
+#if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )              /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* C2x9 AFI   - Add Fullword Immediate                         [RIL] */
 /*-------------------------------------------------------------------*/
@@ -8389,10 +8382,8 @@ U32     i2;                             /* 32-bit operand value      */
                                       i2);
 
 } /* end DEF_INST(subtract_logical_long_fullword_immediate) */
-#endif /*defined(FEATURE_021_EXTENDED_IMMED_FACILITY)*/         /*@Z9*/
 
 
-#if defined(FEATURE_021_EXTENDED_IMMED_FACILITY)                /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* E312 LT    - Load and Test                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -8655,9 +8646,9 @@ int     n;                              /* Position of leftmost one  */
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
-#endif /*defined(FEATURE_021_EXTENDED_IMMED_FACILITY)*/         /*@Z9*/
+#endif /* defined( FEATURE_021_EXTENDED_IMMED_FACILITY ) */     /*@Z9*/
 
-#if defined(FEATURE_040_LOAD_PROG_PARAM_FACILITY)            /*810*/
+#if defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )             /*810*/
 /*-------------------------------------------------------------------*/
 /* B280 LPP - LOAD PROGRAM PARAMETER                             [S] */
 /*-------------------------------------------------------------------*/

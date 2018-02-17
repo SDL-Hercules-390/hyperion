@@ -3257,16 +3257,14 @@ DEF_INST( store_reversed );
 DEF_INST( store_reversed_half );
 DEF_INST( subtract_logical_borrow );
 DEF_INST( subtract_logical_borrow_register );
+DEF_INST( test_addressing_mode );
+#endif
 
- #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-
-  DEF_INST( load_reversed_long_register );
-  DEF_INST( store_reversed_long );
-
- #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
-#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
-
-/*-------------------------------------------------------------------*/
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+DEF_INST( load_reversed_long );
+DEF_INST( load_reversed_long_register );
+DEF_INST( store_reversed_long );
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #if defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
 DEF_INST( compare_and_swap_and_purge_long );
@@ -3783,6 +3781,22 @@ DEF_INST( perform_processor_assist );
 
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 DEF_INST( reset_reference_bits_multiple );                        /*810*/
+#endif
+
+#if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY )
+DEF_INST( extract_coprocessor_group_address );
+DEF_INST( extract_cpu_counter );
+DEF_INST( extract_peripheral_counter );
+DEF_INST( load_cpu_counter_set_controls );
+DEF_INST( load_peripheral_counter_set_controls );
+DEF_INST( query_counter_information );
+DEF_INST( set_cpu_counter );
+DEF_INST( set_peripheral_counter );
+#endif
+
+#if defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
+DEF_INST( load_sampling_controls );
+DEF_INST( query_sampling_information );
 #endif
 
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
@@ -4317,8 +4331,6 @@ DEF_INST( branch_on_index_high );
 DEF_INST( branch_on_index_high_long );
 DEF_INST( branch_on_index_low_or_equal );
 DEF_INST( branch_on_index_low_or_equal_long );
-DEF_INST( branch_relative_and_save_long );
-DEF_INST( branch_relative_on_condition_long );
 DEF_INST( branch_relative_on_count_long );
 DEF_INST( branch_relative_on_index_high_long );
 DEF_INST( branch_relative_on_index_low_or_equal_long );
@@ -4474,8 +4486,6 @@ DEF_INST( purge_translation_lookaside_buffer );
 DEF_INST( release_cms_lock );
 DEF_INST( release_local_lock );
 DEF_INST( rotate_left_single_logical_long );
-DEF_INST( set_addressing_mode_24 );
-DEF_INST( set_addressing_mode_31 );
 DEF_INST( set_addressing_mode_64 );
 DEF_INST( set_clock );
 DEF_INST( set_clock_comparator );
