@@ -3236,17 +3236,17 @@ int ARCH_DEP( plo_cststx ) (int r1, int r3, VADR effective_addr2, int b2,
 /*-------------------------------------------------------------------*/
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
-
 DEF_INST( add_logical_carry );
 DEF_INST( add_logical_carry_register );
+DEF_INST( branch_relative_and_save_long );
+DEF_INST( branch_relative_on_condition_long );
 DEF_INST( divide_logical );
 DEF_INST( divide_logical_register );
 DEF_INST( extract_psw );
 DEF_INST( load_address_relative_long );
-DEF_INST( load_reversed_register );
-DEF_INST( load_reversed_long );
 DEF_INST( load_reversed );
 DEF_INST( load_reversed_half );
+DEF_INST( load_reversed_register );
 DEF_INST( multiply_logical );
 DEF_INST( multiply_logical_register );
 DEF_INST( rotate_left_single_logical );
@@ -3259,12 +3259,6 @@ DEF_INST( subtract_logical_borrow );
 DEF_INST( subtract_logical_borrow_register );
 DEF_INST( test_addressing_mode );
 #endif
-
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-DEF_INST( load_reversed_long );
-DEF_INST( load_reversed_long_register );
-DEF_INST( store_reversed_long );
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #if defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
 DEF_INST( compare_and_swap_and_purge_long );
@@ -4189,6 +4183,12 @@ DEF_INST( lock_page );
 DEF_INST( move_page );
 DEF_INST( invalidate_expanded_storage_block_entry );
 #endif
+
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+DEF_INST( load_reversed_long );
+DEF_INST( load_reversed_long_register );
+DEF_INST( store_reversed_long );
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 #if defined( FEATURE_PERFORM_LOCKED_OPERATION )
 DEF_INST( perform_locked_operation );

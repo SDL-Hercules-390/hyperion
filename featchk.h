@@ -483,6 +483,10 @@
  #define    _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
 #endif
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+ #define    _FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS
+#endif
+
 #if defined( FEATURE_PER )
  #define    _FEATURE_PER
 #endif
@@ -740,7 +744,11 @@
 #endif
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_000_N3_INSTR_FACILITY )
- #error z/Architecture requires the N3 instruction set
+ #error z/Architecture requires the 'N3' instruction set (new to z/Arch and added to ESA/390)
+#endif
+
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+ #error z/Architecture requires the 'N' instruction set (new to z/Architecture only)
 #endif
 
 #if defined( FEATURE_004_IDTE_SC_SEGTAB_FACILITY ) \

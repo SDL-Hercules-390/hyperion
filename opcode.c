@@ -62,12 +62,6 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( test_addressing_mode )
 #endif
 
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
- UNDEF_INST( load_reversed_long )
- UNDEF_INST( load_reversed_long_register )
- UNDEF_INST( store_reversed_long )
-#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
-
 #if !defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
  UNDEF_INST( compare_and_swap_and_purge_long )
  UNDEF_INST( invalidate_dat_table_entry )
@@ -993,6 +987,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( move_page )
  UNDEF_INST( invalidate_expanded_storage_block_entry )
 #endif
+
+#if !defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+ UNDEF_INST( load_reversed_long )
+ UNDEF_INST( load_reversed_long_register )
+ UNDEF_INST( store_reversed_long )
+#endif /* !defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 #if !defined( FEATURE_PERFORM_LOCKED_OPERATION )
  UNDEF_INST( perform_locked_operation )
