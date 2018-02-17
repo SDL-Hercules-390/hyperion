@@ -7064,8 +7064,6 @@ int     i1;                             /* Index of R1 in fpr array  */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
-
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -7102,8 +7100,6 @@ int     r1, r2, r3;                     /* Values of R fields        */
 int     i1;                             /* Index of R1 in fpr array  */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
-
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
 
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
@@ -7145,8 +7141,6 @@ int     i1;                             /* Index of R1 in fpr array  */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
-
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -7183,8 +7177,6 @@ int     r1, r2, r3;                     /* Values of R fields        */
 int     i1;                             /* Index of R1 in fpr array  */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
-
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
 
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
@@ -7228,8 +7220,6 @@ VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
-
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -7267,8 +7257,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
-
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
@@ -7311,8 +7299,6 @@ VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
-
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -7350,8 +7336,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
-
-    FACILITY_CHECK( 020_HFP_MULT_ADD_SUB, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
@@ -7398,8 +7382,6 @@ EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RRF_R(inst, regs, r1, r2, r3)
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
@@ -7435,8 +7417,6 @@ int          r1, r2, r3;                /* Values of R fields        */
 LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
@@ -7465,8 +7445,6 @@ LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
-
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
 
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
@@ -7503,8 +7481,6 @@ int            r1, r2, r3;              /* Values of R fields        */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RRF_R(inst, regs, r1, r2, r3);
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
@@ -7534,8 +7510,6 @@ LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
-
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
 
     RRF_R(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
@@ -7571,8 +7545,6 @@ int          r1, r2, r3;                /* Values of R fields        */
 LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RRF_R(inst, regs, r1, r2, r3);
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
@@ -7604,8 +7576,6 @@ LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
-
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
@@ -7643,8 +7613,6 @@ VADR           effective_addr2;         /* Effective address         */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
 
@@ -7674,8 +7642,6 @@ LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
-
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
@@ -7713,8 +7679,6 @@ VADR           effective_addr2;         /* Effective address         */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPODD_CHECK(r1, regs);
     HFPREG_CHECK(r3, regs);
@@ -7746,8 +7710,6 @@ LONG_FLOAT     fl1;                     /* Addend                    */
 EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
-
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
@@ -7784,8 +7746,6 @@ VADR         effective_addr2;           /* Effective address         */
 LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    FACILITY_CHECK( 023_HFP_UNNORM_EXT, regs );
-
     RXF(inst, regs, r1, r3, b2, effective_addr2);
     HFPREG2_CHECK(r1, r3, regs);
 
@@ -7814,8 +7774,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    FACILITY_CHECK( 018_LONG_DISPL_INST, regs );
-
     RXY(inst, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
 
@@ -7834,8 +7792,6 @@ int     i1;                             /* Index of r1 in fpr array  */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word workarea      */
-
-    FACILITY_CHECK( 018_LONG_DISPL_INST, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
@@ -7859,8 +7815,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    FACILITY_CHECK( 018_LONG_DISPL_INST, regs );
-
     RXY(inst, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
 
@@ -7879,8 +7833,6 @@ int     i1;                             /* Index of r1 in fpr array  */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word workarea      */
-
-    FACILITY_CHECK( 018_LONG_DISPL_INST, regs );
 
     RXY(inst, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);

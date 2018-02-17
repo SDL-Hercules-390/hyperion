@@ -2206,8 +2206,6 @@ BYTE    stv1=0;                         /* 1-byte store value        */
 BYTE    fc;                             /* Function code             */
 BYTE    sc;                             /* Store characteristic      */
 
-    FACILITY_CHECK( 032_CSSF, regs );
-
     SSF(inst, regs, b1, addr1, b2, addr2, r3);
 
     /* Extract function code from register 0 bits 56-63 */
@@ -4436,8 +4434,6 @@ DEF_INST(execute_relative_long)
 {
 int     r1;                             /* Register number           */
 BYTE   *ip;                             /* -> executed instruction   */
-
-    FACILITY_CHECK( 035_EXECUTE_EXTN, regs );
 
     RIL_A(inst, regs, r1, regs->ET);
 

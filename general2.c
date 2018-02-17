@@ -958,13 +958,6 @@ VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word work area     */
 ETOD    ETOD;                           /* Extended TOD clock        */
 
-#if defined( FEATURE_025_STORE_CLOCK_FAST_FACILITY )
-    if (inst[1] == 0x7C) // STCKF only
-    {
-        FACILITY_CHECK( 025_STORE_CLOCK_FAST, regs );
-    }
-#endif
-
     S( inst, regs, b2, effective_addr2 );
 
 #if defined( _FEATURE_SIE )
@@ -2037,8 +2030,6 @@ DEF_INST(convert_utf8_to_utf32)
 #endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
-  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
-
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
 
@@ -2283,8 +2274,6 @@ DEF_INST(convert_utf16_to_utf32)
 #endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
   int xlated;                      /* characters translated          */
 
-  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
-
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
 
@@ -2397,8 +2386,6 @@ DEF_INST(convert_utf32_to_utf8)
   BYTE utf8[4];                    /* utf8 character(s)              */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
-
-  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
 
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
@@ -2536,8 +2523,6 @@ DEF_INST(convert_utf32_to_utf16)
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   BYTE zabcd;                      /* Work value                     */
-
-  FACILITY_CHECK( 022_EXT_TRANSL_3, regs );
 
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
@@ -2765,8 +2750,6 @@ DEF_INST(translate_and_test_extended)
   int r1;
   int r2;
 
-  FACILITY_CHECK( 026_PARSING_ENHANCE, regs );
-
   RRF_M(inst, regs, r1, r2, m3);
 
   a_bit = ((m3 & 0x08) ? 1 : 0);
@@ -2860,8 +2843,6 @@ DEF_INST(translate_and_test_reverse_extended)
   int processed;              /* # bytes processed                   */
   int r1;
   int r2;
-
-  FACILITY_CHECK( 026_PARSING_ENHANCE, regs );
 
   RRF_M(inst, regs, r1, r2, m3);
 

@@ -850,8 +850,6 @@ DEF_INST(extract_primary_asn_and_instance)
 {
 int r1, r2;                             /* Values of R fields        */
 
-    FACILITY_CHECK( 006_ASN_LX_REUSE, regs );
-
     RRE(inst, regs, r1, r2);
 
     SIE_XC_INTERCEPT(regs);
@@ -914,8 +912,6 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(extract_secondary_asn_and_instance)
 {
 int r1, r2;                             /* Values of R fields        */
-
-    FACILITY_CHECK( 006_ASN_LX_REUSE, regs );
 
     RRE(inst, regs, r1, r2);
 
@@ -2502,8 +2498,6 @@ int     cc;                             /* Condition code            */
 GREG    len;                            /* Effective length          */
 int     space1, space2;                 /* Address space modifiers   */
 
-    FACILITY_CHECK( 027_MVCOS, regs );
-
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
     SIE_XC_INTERCEPT(regs);
@@ -3920,7 +3914,6 @@ DEF_INST(program_transfer_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    FACILITY_CHECK( 006_ASN_LX_REUSE, regs );
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
@@ -4882,7 +4875,6 @@ DEF_INST(set_secondary_asn_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    FACILITY_CHECK( 006_ASN_LX_REUSE, regs );
     RRE(inst, regs, r1, r2);
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
 

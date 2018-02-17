@@ -558,8 +558,6 @@ void HFPextGet(FLOAT *f, U64 h, U64 l)
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_floating_point_operation)
 {
-  FACILITY_CHECK( 044_PFPO, regs );
-
   E(inst, regs);
 
   ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);

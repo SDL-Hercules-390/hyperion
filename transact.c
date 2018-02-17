@@ -85,8 +85,6 @@ int     r1, r2;                         /* Operand register numbers  */
 int     m3;                             /* M3 Mask value             */
 U32     abort_count;                    /* Transaction Abort count   */
 
-    FACILITY_CHECK( 049_PROCESSOR_ASSIST, regs );
-
     RRF_M( inst, regs, r1, r2, m3 );
 
     /* Retrieve abort count */
@@ -139,9 +137,6 @@ DEF_INST( extract_transaction_nesting_depth )
 {
 int     r1, r2;                         /* Operand register numbers  */
 
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 073_TRANSACT_EXEC, regs );
-
     RRE( inst, regs, r1, r2 );
 
     // TODO....
@@ -157,9 +152,6 @@ DEF_INST( transaction_end )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 073_TRANSACT_EXEC, regs );
-
     S( inst, regs, b2, effective_addr2 );
 
     // TODO....
@@ -174,9 +166,6 @@ DEF_INST( transaction_abort )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 073_TRANSACT_EXEC, regs );
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -194,9 +183,6 @@ int     r1;                             /* Value of R1 field         */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 073_TRANSACT_EXEC, regs );
-
     RXY( inst, regs, r1, b2, effective_addr2 );
 
     // TODO....
@@ -212,9 +198,6 @@ DEF_INST( transaction_begin )
 S16     i2;                             /* 16-bit immediate value    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 073_TRANSACT_EXEC, regs );
 
     SIL( inst, regs, i2, b1, effective_addr1 );
 
@@ -232,9 +215,6 @@ DEF_INST( transaction_begin_constrained )
 S16     i2;                             /* 16-bit immediate value    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-
-    /* Operation Exception if facility is not installed */
-    FACILITY_CHECK( 050_CONSTR_TRANSACT, regs );
 
     SIL( inst, regs, i2, b1, effective_addr1 );
 
