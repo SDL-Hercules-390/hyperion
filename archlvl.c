@@ -3287,6 +3287,13 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         || CMD( argv[1], DISABLE, 3 )
     )
     {
+        if (sysblk.ipled)
+        {
+            // "Available facilities cannot be changed once system is IPLed"
+            WRMSG( HHC00889, "E" );
+            return -1;
+        }
+
         if (any_started)
         {
             // "All CPU's must be stopped %s"
