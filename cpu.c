@@ -1314,24 +1314,11 @@ int i;
     obtain_lock (&sysblk.cpulock[cpu]);
 
     /* initialize eye-catchers */
-    memset(&regs->blknam,SPACE,sizeof(regs->blknam));
-    memset(&regs->blkver,SPACE,sizeof(regs->blkver));
-    memset(&regs->blkend,SPACE,sizeof(regs->blkend));
-    regs->blkloc = swap_byte_U64((U64)((uintptr_t)regs));
-    regs->blksiz = swap_byte_U32((U32)sizeof(REGS));
     {
-        char cputyp[32];
-        char buf[32];
-
-        MSGBUF( cputyp, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
-
-        memcpy(regs->blknam,cputyp,strlen(cputyp)>sizeof(regs->blknam) ? sizeof(regs->blknam) : strlen(cputyp) );
-        memcpy(regs->blkver,HDL_VERS_REGS,strlen(HDL_VERS_REGS));
-
-        MSGBUF( buf, "END%13.13s", cputyp );
-        memcpy(regs->blkend, buf, strlen(buf)>sizeof(regs->blkend) ? sizeof(regs->blkend): strlen(buf) );
+        char    blknam[ sizeof( regs->blknam )];
+        MSGBUF( blknam, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
+        INIT_BLOCK_HEADER_TRAILER_WITH_CUSTOM_NAME( regs, REGS, blknam );
     }
-
 
     regs->cpuad = cpu;
     regs->cpubit = CPU_BIT(cpu);
@@ -1718,7 +1705,7 @@ int     aswitch;
         {
             memcpy (regs, oldregs, sizeof(REGS));
             free_aligned(oldregs);
-            regs->blkloc = swap_byte_U64((U64)((uintptr_t)regs));
+            regs->blkloc = CSWAP64((U64)((uintptr_t)regs));
             regs->hostregs = regs;
             if (regs->guestregs)
                 regs->guestregs->hostregs = regs;

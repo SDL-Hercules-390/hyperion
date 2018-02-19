@@ -77,21 +77,56 @@
 /*       within blocks without adding another naming layer.          */
 /*-------------------------------------------------------------------*/
 
-#define BLOCK_HEADER struct                                            \
-{                                                                      \
-/*000*/ BYTE    blknam[16];             /* Name of block   REGS_CP00 */\
-/*010*/ BYTE    blkver[8];              /* Version Number            */\
-/*018*/ BYTE    _blkhdr_reserved1[8];                                  \
-                                        /* --- 32-byte cache line -- */\
-/*020*/ U64     blkloc;                 /* Address of block    big-e */\
-/*028*/ U32     blksiz;                 /* size of block       big-e */\
-/*02C*/ BYTE    _blkhdr_reserved2[4];   /* size of block       big-e */\
+#define BLOCK_HEADER struct                                             \
+{                                                                       \
+/*000*/ BYTE    blknam[16];             /* Name of block   REGS_CP00 */ \
+/*010*/ BYTE    blkver[16];             /* Version Number            */ \
+                                        /* --- 32-byte cache line -- */ \
+/*020*/ U64     blkloc;                 /* Address of block    big-e */ \
+/*028*/ U32     blksiz;                 /* size of block       big-e */ \
+/*02C*/ BYTE    _blkhdr_reserved2[4];                                   \
 }
 
-#define BLOCK_TRAILER struct                                           \
-{                                                                      \
-ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
+#define BLOCK_TRAILER struct                                            \
+{                                                                       \
+ALIGN_16 BYTE   blkend[16];             /* eye-end                   */ \
 }
+
+#define _INIT_BLOCK_HEADER_TRAILER_NAME( pBlock, pszName )              \
+                                                                        \
+    do                                                                  \
+    {                                                                   \
+        memset( pBlock->blkend, SPACE, sizeof( pBlock->blkend ));       \
+        memset( pBlock->blknam, SPACE, sizeof( pBlock->blknam ));       \
+        STRLCPY( pBlock->blkend, "END " );                              \
+        STRLCAT( pBlock->blkend, pszName );                             \
+        STRLCPY( pBlock->blknam, pszName );                             \
+    }                                                                   \
+    while (0)
+
+#define INIT_BLOCK_HEADER_TRAILER( pBlock, BLOCK )                      \
+                                                                        \
+    do                                                                  \
+    {                                                                   \
+        _INIT_BLOCK_HEADER_TRAILER_NAME( pBlock, HDL_NAME_ ## BLOCK );  \
+        memset( pBlock->blkver, SPACE, sizeof( pBlock->blkver ));       \
+        STRLCPY( pBlock->blkver, HDL_VERS_ ## BLOCK );                  \
+        pBlock->blkloc = CSWAP64( (U64) ((uintptr_t) pBlock ));         \
+        pBlock->blksiz = CSWAP32( (U32) HDL_SIZE_ ## BLOCK );           \
+    }                                                                   \
+    while (0)
+
+#define INIT_BLOCK_HEADER_TRAILER_WITH_CUSTOM_NAME( pBlock, BLOCK, pszName ) \
+                                                                        \
+    do                                                                  \
+    {                                                                   \
+        _INIT_BLOCK_HEADER_TRAILER_NAME( pBlock, pszName );             \
+        memset( pBlock->blkver, SPACE, sizeof( pBlock->blkver ));       \
+        STRLCPY( pBlock->blkver, HDL_VERS_ ## BLOCK );                  \
+        pBlock->blkloc = CSWAP64( (U64) ((uintptr_t) pBlock ));         \
+        pBlock->blksiz = CSWAP32( (U32) HDL_SIZE_ ## BLOCK );           \
+    }                                                                   \
+    while (0)
 
 /*-------------------------------------------------------------------*/
 /*   Hercules  malloc_aligned / calloc_aligned / free_aligned        */

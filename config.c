@@ -535,55 +535,6 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
     sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
 }
 
-#ifdef NEED_FND_CHPBLK
-/*-------------------------------------------------------------------*/
-/*                        fnd_chpblk                                 */
-/*-------------------------------------------------------------------*/
-static CHPBLK *fnd_chpblk(U16 css, BYTE chpid)
-{
-CHPBLK *chp;
-
-    for (chp = sysblk.firstchp; chp != NULL; chp = chp->nextchp)
-        if (chp->chpid == chpid && chp->css == css)
-            return chp;
-    return NULL;
-}
-#endif
-
-#ifdef NEED_GET_CHPBLK
-/*-------------------------------------------------------------------*/
-/*                        get_chpblk                                 */
-/*-------------------------------------------------------------------*/
-static CHPBLK *get_chpblk(U16 css, BYTE chpid, BYTE chptype)
-{
-CHPBLK *chp;
-CHPBLK**chpp;
-
-    if((chp = fnd_chpblk(css, chpid)))
-        return chp;
-    else
-    {
-        if (!(chp = (CHPBLK*)malloc(sizeof(CHPBLK))))
-        {
-            logmsg("malloc(chpblk) failed: %s\n",strerror(errno));
-            return NULL;
-        }
-        memset (chp, 0, sizeof(CHPBLK));
-
-        chp->css = css;
-        chp->chpid = chpid;
-        chp->chptype = chptype;
-
-        /* Search for the last channel path block on the chain */
-        for (chpp = &(sysblk.firstchp); *chpp != NULL;
-            chpp = &((*chpp)->nextchp));
-
-        /* Add the new channel path block to the end of the chain */
-        *chpp = chp;
-    }
-}
-#endif
-
 /*-------------------------------------------------------------------*/
 /*                        get_devblk                                 */
 /*-------------------------------------------------------------------*/
@@ -611,12 +562,7 @@ DEVBLK**dvpp;
             return NULL;
         }
 
-        /* Clear device block and initialize header */
-        strncpy((char*)dev->blknam, HDL_NAME_DEVBLK, sizeof(dev->blknam));
-        strncpy((char*)dev->blkver, HDL_VERS_DEVBLK, sizeof(dev->blkver));
-        dev->blkloc = (U64)(size_t)dev;
-        dev->blksiz = HDL_SIZE_DEVBLK;
-        strncpy((char*)dev->blkend, HDL_NAME_DEVBLK, sizeof(dev->blknam));
+        INIT_BLOCK_HEADER_TRAILER( dev, DEVBLK );
 
         /* Initialize the device lock and conditions */
 

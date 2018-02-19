@@ -211,21 +211,6 @@ HUT_DLL_IMPORT int drop_privileges(int c);
 HUT_DLL_IMPORT int drop_all_caps(void);
 #endif
 
-/* inline functions for byte swaps */
-
-static __inline__ U16 swap_byte_U16(U16 s)
-{
-    return( (U16)bswap_16( (uint16_t) s ) );
-}
-static __inline__ U32 swap_byte_U32(U32 i)
-{
-    return( (U32)bswap_32( (uint32_t) i ) );
-}
-static __inline__ U64 swap_byte_U64(U64 ll )
-{
-    return( (U64)bswap_64( (uint64_t) ll ) );
-}
-
 /* Hercules page-aligned calloc/free */
 HUT_DLL_IMPORT  void*  hpcalloc ( BYTE type, size_t size );
 HUT_DLL_IMPORT  void   hpcfree  ( BYTE type, void*  ptr  );

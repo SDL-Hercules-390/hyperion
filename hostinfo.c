@@ -34,20 +34,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 
     if ( !pHostInfo ) pHostInfo = &hostinfo;
 
-    /* Initialize EYE-CATCHERS for HOSTSYS       */
-    memset(&pHostInfo->blknam,SPACE,sizeof(pHostInfo->blknam));
-    memset(&pHostInfo->blkver,SPACE,sizeof(pHostInfo->blkver));
-    memset(&pHostInfo->blkend,SPACE,sizeof(pHostInfo->blkend));
-    pHostInfo->blkloc = swap_byte_U64((U64)((uintptr_t)pHostInfo));
-    memcpy(pHostInfo->blknam,HDL_NAME_HOST_INFO,strlen(HDL_NAME_HOST_INFO));
-    memcpy(pHostInfo->blkver,HDL_VERS_HOST_INFO,strlen(HDL_VERS_HOST_INFO));
-    pHostInfo->blksiz = swap_byte_U32((U32)sizeof(HOST_INFO));
-    {
-        char buf[32];
-        MSGBUF( buf, "END%13.13s", HDL_NAME_HOST_INFO );
-
-        memcpy(pHostInfo->blkend, buf, sizeof(pHostInfo->blkend));
-    }
+    INIT_BLOCK_HEADER_TRAILER( pHostInfo, HOST_INFO );
 
     pHostInfo->valid_cache_nums = TRUE;     /* assume the cache size numbers are good */
 

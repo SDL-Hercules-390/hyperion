@@ -108,87 +108,81 @@ void fmt_line( unsigned char *tbl, char *name, int start, int length)
 /*-------------------------------------------------------------------*/
 /* locate - display sysblk [offset [ length ] ]                      */
 /*-------------------------------------------------------------------*/
-int locate_sysblk(int argc, char *argv[], char *cmdline)
+int locate_sysblk( int argc, char* argv[], char* cmdline )
 {
-    int         rc = 0;
-    char        msgbuf[256];
-    int         start = 0;
-    int         start_adj = 0;
-    int         length = 512;
-    u_char     *tbl = (u_char *)&sysblk;
+    int      rc             = 0;
+    char     msgbuf[256];
+    int      start          = 0;
+    int      start_adj      = 0;
+    int      length         = 512;
+    u_char*  tbl            = (u_char *)&sysblk;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
         int ok = TRUE;
-        U64 loc = swap_byte_U64(sysblk.blkloc);
+        U64 loc = CSWAP64( sysblk.blkloc );
 
         /* verify head, tail, length and address */
-        if ( loc != (U64)((uintptr_t)&sysblk) )
+
+        if (loc != (U64)((uintptr_t) &sysblk ))
         {
-            MSGBUF( msgbuf, "SYSBLK moved; was 0x%16.16"PRIX64", is 0x%p", loc, &sysblk );
+            MSGBUF( msgbuf, "SYSBLK moved; was 0x%16.16"PRIX64", is 0x%p",
+                loc, &sysblk );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        if ( swap_byte_U32(sysblk.blksiz) != (U32)sizeof(SYSBLK) )
+
+        if (CSWAP32( sysblk.blksiz ) != (U32) sizeof( SYSBLK ))
         {
-            MSGBUF( msgbuf, "SYSBLK size wrong; is %u, should be %u", swap_byte_U32(sysblk.blksiz), (U32)sizeof(SYSBLK));
+            MSGBUF( msgbuf, "SYSBLK size wrong; is %u, should be %u",
+                CSWAP32( sysblk.blksiz ), (U32) sizeof( SYSBLK ));
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        { /* verify header */
-            char str[32];
 
-            memset( str, SPACE, sizeof(str) );
+        /* verify header */
+        {
+            char     header[32];
+            memset(  header, SPACE, sizeof( header ));
+            STRLCPY( header, HDL_NAME_SYSBLK );
 
-            memcpy( str, HDL_NAME_SYSBLK, strlen(HDL_NAME_SYSBLK) );
-
-            if ( memcmp( sysblk.blknam, str, sizeof(sysblk.blknam) ) != 0 )
+            if (strcmp( sysblk.blknam, header ) != 0)
             {
-                char sstr[32];
-
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, sysblk.blknam, sizeof(sysblk.blknam) );
-
-                MSGBUF( msgbuf, "SYSBLK header wrong; is %s, should be %s", sstr, str);
+                MSGBUF( msgbuf, "SYSBLK header wrong; is \"%s\", should be \"%s\"",
+                    sysblk.blknam, header );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
         }
-        {   /* verify version */
-            char str[32];
 
-            memset( str, SPACE, sizeof(str) );
-            memcpy( str, HDL_VERS_SYSBLK, strlen(HDL_VERS_SYSBLK) );
+        /* verify version */
+        {
+            char     version[32];
+            memset(  version, SPACE, sizeof( version ));
+            STRLCPY( version, HDL_VERS_SYSBLK );
 
-            if ( memcmp( sysblk.blkver, str, sizeof(sysblk.blkver) ) != 0 )
+            if (strcmp( sysblk.blkver, version ) != 0)
             {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, sysblk.blkver, sizeof(sysblk.blkver) );
-
-                MSGBUF( msgbuf, "SYSBLK version wrong; is %s, should be %s", sstr, str);
+                MSGBUF( msgbuf, "SYSBLK version wrong; is \"%s\", should be \"%s\"",
+                    sysblk.blkver, version );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
         }
-        {   /* verify trailer */
-            char str[32];
-            char trailer[32];
 
-            MSGBUF( trailer, "END%13.13s", HDL_NAME_SYSBLK );
-            memset( str, SPACE, sizeof(str) );
-            memcpy( str, trailer, strlen(trailer) );
+        /* verify trailer */
+        {
+            char     trailer[32];
+            memset(  trailer, SPACE, sizeof( trailer ));
+            STRLCPY( trailer, "END " );
+            STRLCAT( trailer, HDL_NAME_SYSBLK );
 
-            if ( memcmp(sysblk.blkend, str, sizeof(sysblk.blkend)) != 0 )
+            if (strcmp( sysblk.blkend, trailer ) != 0)
             {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-
-                memcpy( sstr, sysblk.blkend, sizeof(sysblk.blkend) );
-
-                MSGBUF( msgbuf, "SYSBLK trailer wrong; is %s, should be %s", sstr, trailer);
+                MSGBUF( msgbuf, "SYSBLK trailer wrong; is \"%s\", should be \"%s\"",
+                    sysblk.blkend, trailer);
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
@@ -248,102 +242,92 @@ int locate_sysblk(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* locate - display regs engine [offset [ length ] ] ]              */
 /*-------------------------------------------------------------------*/
-int locate_regs(int argc, char *argv[], char *cmdline)
+int locate_regs( int argc, char* argv[], char* cmdline )
 {
-    int         rc = 0;
-    int         cpu = sysblk.pcpu;
-    char        msgbuf[256];
-    int         start = 0;
-    int         start_adj = 0;
-    int         length = 512;
-    REGS       *regs = sysblk.regs[cpu];
-    u_char     *tbl = (u_char *)regs;
+    int      rc             = 0;
+    int      cpu            = sysblk.pcpu;
+    char     msgbuf[256];
+    int      start          = 0;
+    int      start_adj      = 0;
+    int      length         = 512;
+    REGS*    regs           = sysblk.regs[ cpu ];
+    u_char*  tbl            = (u_char*) regs;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
         int ok = TRUE;
-        U64 loc;
-        char hdr[32];
-        char tlr[32];
-        char blknam[32];
+        U64 loc = CSWAP64( regs->blkloc );
 
-        if(!regs)
+        char    blknam[ sizeof( regs->blknam )];
+        MSGBUF( blknam, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
+
+        if (!regs)
         {
             WRMSG( HHC90000, "D", "REGS not assigned" );
             return -1;
         }
 
-        loc = swap_byte_U64(regs->blkloc);
-
-        MSGBUF( blknam, "%-4.4s_%2.2s%2.2X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
-        MSGBUF( hdr, "%-16.16s", blknam );
-        MSGBUF( tlr, "END%13.13s", blknam );
-
         /* verify head, tail, length and address */
-        if ( loc != (U64)((uintptr_t)regs) )
+
+        if (loc != (U64)((uintptr_t) regs ))
         {
             MSGBUF( msgbuf, "REGS[%2.2X] moved; was 0x%16.16"PRIX64", is 0x%p",
-                            cpu, loc, regs );
+                cpu, loc, regs );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        if ( swap_byte_U32(regs->blksiz) != (U32)sizeof(REGS) )
+
+        if (CSWAP32( regs->blksiz ) != (U32) sizeof( REGS ))
         {
             MSGBUF( msgbuf, "REGS[%2.2X] size wrong; is %u, should be %u",
-                            cpu,
-                            swap_byte_U32(regs->blksiz),
-                            (U32)sizeof(REGS));
+                cpu, CSWAP32( regs->blksiz ), (U32) sizeof( REGS ));
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        { /* verify header */
-            if ( memcmp( regs->blknam,
-                         hdr,
-                         sizeof(regs->blknam) ) != 0 )
+
+        /* verify header */
+        {
+            char     header[32];
+            memset(  header, SPACE, sizeof( header ));
+            STRLCPY( header, blknam );
+
+            if (strcmp( regs->blknam, header ) != 0)
             {
-                char sstr[32];
-
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, regs->blknam, sizeof(regs->blknam) );
-
-                MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is %s, should be %s",
-                                cpu, sstr, hdr);
+                MSGBUF( msgbuf, "REGS[%2.2X] header wrong; is \"%s\", should be \"%s\"",
+                    cpu, regs->blknam, header );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
         }
-        {   /* verify version */
-            char str[32];
 
-            memset( str, SPACE, sizeof(str) );
-            memcpy( str, HDL_VERS_REGS, strlen(HDL_VERS_REGS) );
+        /* verify version */
+        {
+            char     version[32];
+            memset(  version, SPACE, sizeof( version ));
+            STRLCPY( version, HDL_VERS_REGS );
 
-            if ( memcmp( regs->blkver,
-                         str,
-                         sizeof(regs->blkver) ) != 0 )
+            if (strcmp( regs->blkver, version ) != 0)
             {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, regs->blkver, sizeof(regs->blkver) );
-
-                MSGBUF( msgbuf, "REGS[%2.2X] version wrong; is %s, should be %s", cpu, sstr, str);
+                MSGBUF( msgbuf, "REGS[%2.2X] version wrong; is \"%s\", should be \"%s\"",
+                    cpu, regs->blkver, version );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
         }
-        {   /* verify trailer */
 
-            if ( memcmp(regs->blkend, tlr, sizeof(regs->blkend)) != 0 )
+        /* verify trailer */
+        {
+            char     trailer[32];
+            memset(  trailer, SPACE, sizeof( trailer ));
+            STRLCPY( trailer, "END " );
+            STRLCAT( trailer, blknam );
+
+            if (strcmp( regs->blkend, trailer ) != 0)
             {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-
-                memcpy( sstr, regs->blkend, sizeof(regs->blkend) );
-
-                MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is %s, should be %s",
-                                cpu, sstr, tlr);
+                MSGBUF( msgbuf, "REGS[%2.2X] trailer wrong; is \"%s\", should be \"%s\"",
+                    cpu, regs->blkend, trailer );
                 WRMSG( HHC90000, "D", msgbuf );
                 ok = FALSE;
             }
@@ -402,208 +386,203 @@ int locate_regs(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* locate - display hostinfo block                                   */
 /*-------------------------------------------------------------------*/
-int locate_hostinfo(int argc, char *argv[], char *cmdline)
+int locate_hostinfo( int argc, char* argv[], char* cmdline )
 {
-    int         rc = 0;
+    int         rc              = 0;
     char        msgbuf[256];
-    HOST_INFO  *pHostInfo = &hostinfo;
-    int         ok = TRUE;
-    U64         loc = swap_byte_U64(hostinfo.blkloc);
+    HOST_INFO*  pHostInfo       = &hostinfo;
+    int         ok              = TRUE;
+    U64         loc             = CSWAP64( hostinfo.blkloc );
     char        fmt_mem[8];
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-    init_hostinfo(NULL);                    // refresh information
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
+    init_hostinfo( NULL );      // refresh information
 
     /* verify head, tail, length and address */
-        if ( loc != (U64)((uintptr_t)&hostinfo) )
+
+    if (loc != (U64)((uintptr_t) &hostinfo ))
+    {
+        MSGBUF( msgbuf, "HOSTINFO moved; was 0x%16.16"PRIX64", is 0x%p",
+            loc, &hostinfo );
+        WRMSG( HHC90000, "D", msgbuf );
+        ok = FALSE;
+    }
+
+    if (CSWAP32( hostinfo.blksiz ) != (U32) sizeof( HOST_INFO ))
+    {
+        MSGBUF( msgbuf, "HOSTINFO size wrong; is %u, should be %u",
+            CSWAP32( hostinfo.blksiz ), (U32) sizeof( HOST_INFO ));
+        WRMSG( HHC90000, "D", msgbuf );
+        ok = FALSE;
+    }
+
+    /* verify header */
+    {
+        char     header[32];
+        memset(  header, SPACE, sizeof( header ));
+        STRLCPY( header, HDL_NAME_HOST_INFO );
+
+        if (strcmp( hostinfo.blknam, header ) != 0)
         {
-            MSGBUF( msgbuf, "HOSTINFO moved; was 0x%16.16"PRIX64", is 0x%p", loc, &hostinfo );
+            MSGBUF( msgbuf, "HOSTINFO header wrong; is \"%s\", should be \"%s\"",
+                hostinfo.blknam, header );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        if ( swap_byte_U32(hostinfo.blksiz) != (U32)sizeof(HOST_INFO) )
+    }
+
+    /* verify version */
+    {
+        char     version[32];
+        memset(  version, SPACE, sizeof( version ));
+        STRLCPY( version, HDL_VERS_HOST_INFO );
+
+        if (strcmp( hostinfo.blkver, version ) != 0)
         {
-            MSGBUF( msgbuf, "HOSTINFO size wrong; is %u, should be %u", swap_byte_U32(hostinfo.blksiz), (U32)sizeof(HOST_INFO));
+            MSGBUF( msgbuf, "HOSTINFO version wrong; is %s, should be %s",
+                hostinfo.blkver, version );
             WRMSG( HHC90000, "D", msgbuf );
             ok = FALSE;
         }
-        { /* verify header */
-            char str[32];
+    }
 
-            memset( str, SPACE, sizeof(str) );
+    /* verify trailer */
+    {
+        char     trailer[32];
+        memset(  trailer, SPACE, sizeof( trailer ));
+        STRLCPY( trailer, "END " );
+        STRLCAT( trailer, HDL_NAME_HOST_INFO );
 
-            memcpy( str, HDL_NAME_HOST_INFO, strlen(HDL_NAME_HOST_INFO) );
-
-            if ( memcmp( hostinfo.blknam, str, sizeof(hostinfo.blknam) ) != 0 )
-            {
-                char sstr[32];
-
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, hostinfo.blknam, sizeof(hostinfo.blknam) );
-
-                MSGBUF( msgbuf, "HOSTINFO header wrong; is %s, should be %s", sstr, str);
-                WRMSG( HHC90000, "D", msgbuf );
-                ok = FALSE;
-            }
-        }
-        {   /* verify version */
-            char str[32];
-
-            memset( str, SPACE, sizeof(str) );
-            memcpy( str, HDL_VERS_HOST_INFO, strlen(HDL_VERS_HOST_INFO) );
-
-            if ( memcmp( hostinfo.blkver, str, sizeof(hostinfo.blkver) ) != 0 )
-            {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-                memcpy( sstr, hostinfo.blkver, sizeof(hostinfo.blkver) );
-
-                MSGBUF( msgbuf, "HOSTINFO version wrong; is %s, should be %s", sstr, str);
-                WRMSG( HHC90000, "D", msgbuf );
-                ok = FALSE;
-            }
-        }
-        {   /* verify trailer */
-            char str[32];
-            char trailer[32];
-
-            MSGBUF( trailer, "END%13.13s", HDL_NAME_HOST_INFO );
-            memset( str, SPACE, sizeof(str) );
-            memcpy( str, trailer, strlen(trailer) );
-
-            if ( memcmp(hostinfo.blkend, str, sizeof(hostinfo.blkend)) != 0 )
-            {
-                char sstr[32];
-                memset( sstr, 0, sizeof(sstr) );
-
-                memcpy( sstr, hostinfo.blkend, sizeof(hostinfo.blkend) );
-
-                MSGBUF( msgbuf, "HOSTINFO trailer wrong; is %s, should be %s", sstr, trailer);
-                WRMSG( HHC90000, "D", msgbuf );
-                ok = FALSE;
-            }
-        }
-
-        MSGBUF( msgbuf, "HOSTINFO @ 0x%p - %sVerified", &hostinfo, ok ? "" : "Not " );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "sysname", pHostInfo->sysname );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "nodename", pHostInfo->nodename );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "machine", pHostInfo->machine );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "cpu_brand", pHostInfo->cpu_brand );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %d", "maxfilesopen", pHostInfo->maxfilesopen );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %3d", "num_procs", pHostInfo->num_procs );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %3d", "num_packages", pHostInfo->num_packages );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %3d", "num_physical_cpu", pHostInfo->num_physical_cpu );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %3d", "num_logical_cpu", pHostInfo->num_logical_cpu );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %sHz", "bus_speed", fmt_decimal(pHostInfo->bus_speed) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %sHz", "cpu_speed", fmt_decimal(pHostInfo->cpu_speed) );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "vector_unit", pHostInfo->vector_unit ? "YES" : " NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "fp_unit", pHostInfo->fp_unit ? "YES" : " NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "cpu_64bits", pHostInfo->cpu_64bits ? "YES" : " NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %s", "cpu_aes_extns", pHostInfo->cpu_aes_extns ? "YES" : " NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : " NO" );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        MSGBUF( msgbuf, "%-17s = %5"PRIu64" B", "cachelinesz", pHostInfo->cachelinesz );
-        WRMSG( HHC90000, "D", msgbuf );
-
-        if ( pHostInfo->L1Dcachesz != 0 )
+        if (strcmp( hostinfo.blkend, trailer ) != 0)
         {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize(pHostInfo->L1Dcachesz,fmt_mem,sizeof(fmt_mem)) );
+            MSGBUF( msgbuf, "HOSTINFO trailer wrong; is %s, should be %s",
+                hostinfo.blkend, trailer );
             WRMSG( HHC90000, "D", msgbuf );
+            ok = FALSE;
         }
+    }
 
-        if ( pHostInfo->L1Icachesz != 0 )
-        {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize(pHostInfo->L1Icachesz,fmt_mem,sizeof(fmt_mem)) );
-            WRMSG( HHC90000, "D", msgbuf );
-        }
+    MSGBUF( msgbuf, "HOSTINFO @ 0x%p - %sVerified", &hostinfo, ok ? "" : "Not " );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        if ( pHostInfo->L1Ucachesz != 0 )
-        {
-            MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize(pHostInfo->L1Ucachesz,fmt_mem,sizeof(fmt_mem)) );
-            WRMSG( HHC90000, "D", msgbuf );
-        }
+    MSGBUF( msgbuf, "%-17s = %s", "sysname", pHostInfo->sysname );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize(pHostInfo->L2cachesz,fmt_mem,sizeof(fmt_mem)) );
+    MSGBUF( msgbuf, "%-17s = %s", "nodename", pHostInfo->nodename );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "release", pHostInfo->release );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "version", pHostInfo->version );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "machine", pHostInfo->machine );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "cpu_brand", pHostInfo->cpu_brand );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "trycritsec_avail", pHostInfo->trycritsec_avail ? "YES" : "NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %d", "maxfilesopen", pHostInfo->maxfilesopen );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    WRMSG( HHC90000, "D", "" );
+
+    MSGBUF( msgbuf, "%-17s = %3d", "num_procs", pHostInfo->num_procs );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %3d", "num_packages", pHostInfo->num_packages );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %3d", "num_physical_cpu", pHostInfo->num_physical_cpu );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %3d", "num_logical_cpu", pHostInfo->num_logical_cpu );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %sHz", "bus_speed", fmt_decimal(pHostInfo->bus_speed) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %sHz", "cpu_speed", fmt_decimal(pHostInfo->cpu_speed) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "vector_unit", pHostInfo->vector_unit ? "YES" : " NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "fp_unit", pHostInfo->fp_unit ? "YES" : " NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "cpu_64bits", pHostInfo->cpu_64bits ? "YES" : " NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %s", "cpu_aes_extns", pHostInfo->cpu_aes_extns ? "YES" : " NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    WRMSG( HHC90000, "D", "" );
+
+    MSGBUF( msgbuf, "%-17s = %s", "valid_cache_nums", pHostInfo->valid_cache_nums ? "YES" : " NO" );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %5"PRIu64" B", "cachelinesz", pHostInfo->cachelinesz );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    if ( pHostInfo->L1Dcachesz != 0 )
+    {
+        MSGBUF( msgbuf, "%-17s = %siB", "L1Dcachesz", fmt_memsize(pHostInfo->L1Dcachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
+    }
 
-        MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize(pHostInfo->L3cachesz,fmt_mem,sizeof(fmt_mem)) );
+    if ( pHostInfo->L1Icachesz != 0 )
+    {
+        MSGBUF( msgbuf, "%-17s = %siB", "L1Icachesz", fmt_memsize(pHostInfo->L1Icachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
+    }
 
-        WRMSG( HHC90000, "D", "" );
-
-        MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize(pHostInfo->hostpagesz,fmt_mem,sizeof(fmt_mem)) );
+    if ( pHostInfo->L1Ucachesz != 0 )
+    {
+        MSGBUF( msgbuf, "%-17s = %siB", "L1Ucachesz", fmt_memsize(pHostInfo->L1Ucachesz,fmt_mem,sizeof(fmt_mem)) );
         WRMSG( HHC90000, "D", msgbuf );
+    }
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize(pHostInfo->AllocationGranularity,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    MSGBUF( msgbuf, "%-17s = %siB", "L2cachesz", fmt_memsize(pHostInfo->L2cachesz,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        WRMSG( HHC90000, "D", "" );
+    MSGBUF( msgbuf, "%-17s = %siB", "L3cachesz", fmt_memsize(pHostInfo->L3cachesz,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize(pHostInfo->TotalPhys,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize(pHostInfo->AvailPhys,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    MSGBUF( msgbuf, "%-17s = %siB", "hostpagesz", fmt_memsize(pHostInfo->hostpagesz,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize(pHostInfo->TotalPageFile,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    MSGBUF( msgbuf, "%-17s = %siB", "AllocGran", fmt_memsize(pHostInfo->AllocationGranularity,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize(pHostInfo->AvailPageFile,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    WRMSG( HHC90000, "D", "" );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize(pHostInfo->TotalVirtual,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    MSGBUF( msgbuf, "%-17s = %siB", "TotalPhys", fmt_memsize(pHostInfo->TotalPhys,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
-        MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize(pHostInfo->AvailVirtual,fmt_mem,sizeof(fmt_mem)) );
-        WRMSG( HHC90000, "D", msgbuf );
+    MSGBUF( msgbuf, "%-17s = %siB", "AvailPhys", fmt_memsize(pHostInfo->AvailPhys,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %siB", "TotalPageFile", fmt_memsize(pHostInfo->TotalPageFile,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %siB", "AvailPageFile", fmt_memsize(pHostInfo->AvailPageFile,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %siB", "TotalVirtual", fmt_memsize(pHostInfo->TotalVirtual,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
+
+    MSGBUF( msgbuf, "%-17s = %siB", "AvailVirtual", fmt_memsize(pHostInfo->AvailVirtual,fmt_mem,sizeof(fmt_mem)) );
+    WRMSG( HHC90000, "D", msgbuf );
 
     return rc;
 }
