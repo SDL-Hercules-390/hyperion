@@ -64,7 +64,8 @@
 #undef  VER
 //efine VER                 VERS_MAJ ##     .   ## VERS_INT ## VERS_MIN
 #define VER                 VERS_MAJ ## VER_DOT ## VERS_INT ## VERS_MIN
-#define HDL_VERS_HERCULES   QSTR( VER )
+#define HDL_NAME_HERCULES   "HERCULES"
+#define HDL_VERS_HERCULES   "SDL " QSTR( VER )
 #define HDL_SIZE_HERCULES   sizeof( HDL_VERS_HERCULES ) - 1
 
 VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );

@@ -17,7 +17,7 @@
 typedef struct HOST_INFO
 {
 #define HDL_NAME_HOST_INFO  "HOST_INFO"
-#define HDL_VERS_HOST_INFO  "4.00"      /* Internal Version Number   */
+#define HDL_VERS_HOST_INFO  "SDL 4.00"  /* Internal Version Number   */
 #define HDL_SIZE_HOST_INFO  sizeof(HOST_INFO)
         BLOCK_HEADER;                   /* Name of block             */
 /*-------------------- HDR /\ ---------------------------------------*/

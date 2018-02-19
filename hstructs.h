@@ -71,7 +71,7 @@
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
 #define HDL_NAME_REGS   "REGS"          /* Eye-Catch NAME            */
-#define HDL_VERS_REGS   "4.00"          /* Internal Version Number   */
+#define HDL_VERS_REGS   "SDL 4.00"      /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
 /*000*/ BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
 /*030*/ U64     cpuid;                  /* Formatted CPU ID          */
@@ -463,7 +463,7 @@ enum OPERATION_MODE
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
 #define HDL_NAME_SYSBLK   "SYSBLK"
-#define HDL_VERS_SYSBLK   "4.00"        /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "SDL 4.00"    /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         BLOCK_HEADER;                   /* Name of block - SYSBLK    */
         char   *hercules_pgmname;       /* Starting program name     */
@@ -954,8 +954,8 @@ typedef struct _SSBLK {                 /* Subsystem ID block        */
 /* Channel Path config block                                         */
 /*-------------------------------------------------------------------*/
 struct CHPBLK {
-#define HDL_NAME_CHPBLK   "DEVBLK"
-#define HDL_VERS_CHPBLK   "3.08"
+#define HDL_NAME_CHPBLK   "CHPBLK"
+#define HDL_VERS_CHPBLK   "SDL 4.00"
 #define HDL_SIZE_CHPBLK   sizeof(CHPBLK)
         CHPBLK *nextchp;
         BYTE    css;
@@ -1004,7 +1004,7 @@ struct TELNET {
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
 #define HDL_NAME_DEVBLK   "DEVBLK"      /* Internal Version Number   */
-#define HDL_VERS_DEVBLK   "4.00"        /* Internal Version Number   */
+#define HDL_VERS_DEVBLK   "SDL 4.00"    /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         BLOCK_HEADER;                   /* Name of block - DEVBLK    */
 
