@@ -510,7 +510,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_RESUME_PROGRAM)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_TRACING)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB0F TRACG - Trace Long                                     [RSY] */
 /*-------------------------------------------------------------------*/
@@ -551,10 +551,10 @@ U32     op;                             /* Operand                   */
     PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(trace_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30E CVBG  - Convert to Binary Long                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -591,10 +591,10 @@ BYTE    dec[16];                        /* Packed decimal operand    */
     regs->GR_G(r1) = dreg;
 
 } /* end DEF_INST(convert_to_binary_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E32E CVDG  - Convert to Decimal Long                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -618,7 +618,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
     ARCH_DEP(vstorec) ( dec, 16-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(convert_to_decimal_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -651,7 +651,7 @@ U64     p;
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E386 MLG   - Multiply Logical Long                          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -677,7 +677,7 @@ U64     m, ph, pl;
     regs->GR_G(r1 + 1) = pl;
 
 } /* end DEF_INST(multiply_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -704,7 +704,7 @@ U64     p;
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B986 MLGR  - Multiply Logical Long Register                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -725,7 +725,7 @@ U64     ph, pl;
     regs->GR_G(r1 + 1) = pl;
 
 } /* end DEF_INST(multiply_logical_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -761,7 +761,7 @@ U64     n;
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E387 DLG   - Divide Logical Long                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -800,7 +800,7 @@ U64     d, r, q;
 
     }
 } /* end DEF_INST(divide_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -833,7 +833,7 @@ U32     d;
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B987 DLGR  - Divide Logical Long Register                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -868,10 +868,10 @@ U64     r, q, d;
       }
     }
 } /* end DEF_INST(divide_logical_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B988 ALCGR - Add Logical with Carry Long Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -896,10 +896,10 @@ U64     n;
                                       regs->GR_G(r1),
                                       n) | carry;
 } /* end DEF_INST(add_logical_carry_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B989 SLBGR - Subtract Logical with Borrow Long Register     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -925,7 +925,7 @@ U64     n;
                                       n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)
@@ -1191,7 +1191,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
 #endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E388 ALCG  - Add Logical with Carry Long                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1219,10 +1219,10 @@ int     carry = 0;
                                       regs->GR_G(r1),
                                       n) | carry;
 } /* end DEF_INST(add_logical_carry_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E389 SLBG  - Subtract Logical with Borrow Long              [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1251,7 +1251,7 @@ int     borrow = 2;
                                       n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1374,7 +1374,7 @@ int     borrow = 2;
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30D DSG   - Divide Single Long                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1401,10 +1401,10 @@ U64     n;                              /* 64-bit operand values     */
     regs->GR_G(r1 + 1) = (S64)regs->GR_G(r1 + 1) / (S64)n;
 
 } /* end DEF_INST(divide_single_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E31D DSGF  - Divide Single Long Fullword                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1431,10 +1431,10 @@ U32     n;                              /* 64-bit operand values     */
     regs->GR_G(r1 + 1) = (S64)regs->GR_G(r1 + 1) / (S32)n;
 
 } /* end DEF_INST(divide_single_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90D DSGR  - Divide Single Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1459,10 +1459,10 @@ U64     n;
     regs->GR_G(r1 + 1) = (S64)regs->GR_G(r1 + 1) / (S64)n;
 
 } /* end DEF_INST(divide_single_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B91D DSGFR - Divide Single Long Fullword Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1487,10 +1487,10 @@ U32     n;
     regs->GR_G(r1 + 1) = (S64)regs->GR_G(r1 + 1) / (S32)n;
 
 } /* end DEF_INST(divide_single_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E390 LLGC  - Load Logical Long Character                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1505,10 +1505,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_logical_long_character) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E391 LLGH  - Load Logical Long Halfword                     [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1523,10 +1523,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_logical_long_halfword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E38E STPQ  - Store Pair to Quadword                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1555,10 +1555,10 @@ QWORD   qwork;                          /* Quadword work area        */
     RELEASE_MAINLOCK(regs);
 
 } /* end DEF_INST(store_pair_to_quadword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E38F LPQ   - Load Pair from Quadword                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -1587,10 +1587,10 @@ QWORD   qwork;                          /* Quadword work area        */
     FETCH_DW(regs->GR_G(r1+1), qwork+8);
 
 } /* end DEF_INST(load_pair_from_quadword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90E EREGG - Extract Stacked Registers Long                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1612,7 +1612,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     ARCH_DEP(unstack_registers) (1, lsea, r1, r2, regs);
 
 } /* end DEF_INST(extract_stacked_registers_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1654,7 +1654,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B99D ESEA  - Extract and Set Extended Authority             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1677,7 +1677,7 @@ int     r1, unused;                     /* Value of R field          */
     regs->CR_LHH(8) = regs->GR_LHL(r1);
 
 } /* end DEF_INST(extract_and_set_extended_authority) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1700,7 +1700,7 @@ U32     i2;                             /* 32-bit operand values     */
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x0 IIHH  - Insert Immediate High High                      [RI] */
 /*-------------------------------------------------------------------*/
@@ -1715,10 +1715,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHH(r1) = i2;
 
 } /* end DEF_INST(insert_immediate_high_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x1 IIHL  - Insert Immediate High Low                       [RI] */
 /*-------------------------------------------------------------------*/
@@ -1733,10 +1733,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHL(r1) = i2;
 
 } /* end DEF_INST(insert_immediate_high_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x2 IILH  - Insert Immediate Low High                       [RI] */
 /*-------------------------------------------------------------------*/
@@ -1751,10 +1751,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHH(r1) = i2;
 
 } /* end DEF_INST(insert_immediate_low_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x3 IILL  - Insert Immediate Low Low                        [RI] */
 /*-------------------------------------------------------------------*/
@@ -1769,10 +1769,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHL(r1) = i2;
 
 } /* end DEF_INST(insert_immediate_low_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x4 NIHH  - And Immediate High High                         [RI] */
 /*-------------------------------------------------------------------*/
@@ -1790,10 +1790,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_HHH(r1) ? 1 : 0;
 
 } /* end DEF_INST(and_immediate_high_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x5 NIHL  - And Immediate High Low                          [RI] */
 /*-------------------------------------------------------------------*/
@@ -1811,10 +1811,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_HHL(r1) ? 1 : 0;
 
 } /* end DEF_INST(and_immediate_high_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x6 NILH  - And Immediate Low High                          [RI] */
 /*-------------------------------------------------------------------*/
@@ -1832,10 +1832,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_LHH(r1) ? 1 : 0;
 
 } /* end DEF_INST(and_immediate_low_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x7 NILL  - And Immediate Low Low                           [RI] */
 /*-------------------------------------------------------------------*/
@@ -1853,10 +1853,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_LHL(r1) ? 1 : 0;
 
 } /* end DEF_INST(and_immediate_low_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x8 OIHH  - Or Immediate High High                          [RI] */
 /*-------------------------------------------------------------------*/
@@ -1874,10 +1874,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_HHH(r1) ? 1 : 0;
 
 } /* end DEF_INST(or_immediate_high_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5x9 OIHL  - Or Immediate High Low                           [RI] */
 /*-------------------------------------------------------------------*/
@@ -1895,10 +1895,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_HHL(r1) ? 1 : 0;
 
 } /* end DEF_INST(or_immediate_high_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xA OILH  - Or Immediate Low High                           [RI] */
 /*-------------------------------------------------------------------*/
@@ -1916,10 +1916,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_LHH(r1) ? 1 : 0;
 
 } /* end DEF_INST(or_immediate_low_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xB OILL  - Or Immediate Low Low                            [RI] */
 /*-------------------------------------------------------------------*/
@@ -1937,10 +1937,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.cc = regs->GR_LHL(r1) ? 1 : 0;
 
 } /* end DEF_INST(or_immediate_low_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xC LLIHH - Load Logical Immediate High High                [RI] */
 /*-------------------------------------------------------------------*/
@@ -1955,10 +1955,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_G(r1) = (U64)i2 << 48;
 
 } /* end DEF_INST(load_logical_immediate_high_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xD LLIHL - Load Logical Immediate High Low                 [RI] */
 /*-------------------------------------------------------------------*/
@@ -1973,10 +1973,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_G(r1) = (U64)i2 << 32;
 
 } /* end DEF_INST(load_logical_immediate_high_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xE LLILH - Load Logical Immediate Low High                 [RI] */
 /*-------------------------------------------------------------------*/
@@ -1991,10 +1991,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_G(r1) = (U64)i2 << 16;
 
 } /* end DEF_INST(load_logical_immediate_low_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A5xF LLILL - Load Logical Immediate Low Low                  [RI] */
 /*-------------------------------------------------------------------*/
@@ -2009,7 +2009,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_G(r1) = (U64)i2;
 
 } /* end DEF_INST(load_logical_immediate_low_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
@@ -2062,7 +2062,7 @@ U32     i2;                             /* 32-bit operand values     */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB20 CLMH  - Compare Logical Characters under Mask High     [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2100,10 +2100,10 @@ BYTE    rbyte[4],                       /* Register bytes            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(compare_logical_characters_under_mask_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB2C STCMH - Store Characters under Mask High               [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2147,7 +2147,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     } /* switch (r3) */
 
 } /* end DEF_INST(store_characters_under_mask_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_031_EXTRACT_CPU_TIME_FACILITY)
@@ -2216,7 +2216,7 @@ U64     gr0, gr1;                       /* Result register workareas */
 #endif /*defined(FEATURE_031_EXTRACT_CPU_TIME_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB80 ICMH  - Insert Characters under Mask High              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2273,10 +2273,10 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 } /* end DEF_INST(insert_characters_under_mask_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EC44 BRXHG - Branch Relative on Index High Long             [RIE] */
 /*-------------------------------------------------------------------*/
@@ -2304,10 +2304,10 @@ S64     i,j;                            /* Integer workareas         */
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_relative_on_index_high_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EC45 BRXLG - Branch Relative on Index Low or Equal Long     [RIE] */
 /*-------------------------------------------------------------------*/
@@ -2335,10 +2335,10 @@ S64     i,j;                            /* Integer workareas         */
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB44 BXHG  - Branch on Index High Long                      [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2367,10 +2367,10 @@ S64     i, j;                           /* Integer work areas        */
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_on_index_high_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB45 BXLEG - Branch on Index Low or Equal Long              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2399,10 +2399,10 @@ S64     i, j;                           /* Integer work areas        */
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_on_index_low_or_equal_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB30 CSG   - Compare and Swap Long                          [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2457,10 +2457,10 @@ U64     old;                            /* old value                 */
     }
 
 } /* end DEF_INST(compare_and_swap_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB3E CDSG  - Compare Double and Swap Long                   [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2521,10 +2521,10 @@ U64     old1, old2;                     /* old value                 */
     }
 
 } /* end DEF_INST(compare_double_and_swap_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E346 BCTG  - Branch on Count Long                           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2543,10 +2543,10 @@ VADR    effective_addr2;                /* Effective address         */
         INST_UPDATE_PSW(regs, 6, 0);
 
 } /* end DEF_INST(branch_on_count_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B946 BCTGR - Branch on Count Long Register                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2568,10 +2568,10 @@ VADR    newia;                          /* New instruction address   */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_on_count_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B920 CGR   - Compare Long Register                          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2587,10 +2587,10 @@ register int     r1, r2;                /* Values of R fields        */
                 (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
 
 } /* end DEF_INST(compare_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B930 CGFR  - Compare Long Fullword Register                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2606,10 +2606,10 @@ int     r1, r2;                         /* Values of R fields        */
                 (S64)regs->GR_G(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
 
 } /* end DEF_INST(compare_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E320 CG    - Compare Long                                   [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2631,10 +2631,10 @@ U64     n;                              /* 64-bit operand values     */
             (S64)regs->GR_G(r1) > (S64)n ? 2 : 0;
 
 } /* end DEF_INST(compare_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E330 CGF   - Compare Long Fullword                          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2656,10 +2656,10 @@ U32     n;                              /* 32-bit operand values     */
             (S64)regs->GR_G(r1) > (S32)n ? 2 : 0;
 
 } /* end DEF_INST(compare_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30A ALG   - Add Logical Long                               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2681,10 +2681,10 @@ U64     n;                              /* 64-bit operand values     */
                                       n);
 
 } /* end DEF_INST(add_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E31A ALGF  - Add Logical Long Fullword                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2706,10 +2706,10 @@ U32     n;                              /* 32-bit operand values     */
                                       n);
 
 } /* end DEF_INST(add_logical_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E318 AGF   - Add Long Fullword                              [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2735,10 +2735,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E308 AG    - Add Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2764,10 +2764,10 @@ U64     n;                              /* 64-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30B SLG   - Subtract Logical Long                          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2789,10 +2789,10 @@ U64     n;                              /* 64-bit operand values     */
                                       n);
 
 } /* end DEF_INST(subtract_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E31B SLGF  - Subtract Logical Long Fullword                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2814,10 +2814,10 @@ U32     n;                              /* 32-bit operand values     */
                                       n);
 
 } /* end DEF_INST(subtract_logical_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E319 SGF   - Subtract Long Fullword                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2843,10 +2843,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E309 SG    - Subtract Long                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -2872,10 +2872,10 @@ U64     n;                              /* 64-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B909 SGR   - Subtract Long Register                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2895,10 +2895,10 @@ int     r1, r2;                         /* Values of R fields        */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B919 SGFR  - Subtract Long Fullword Register                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2918,10 +2918,10 @@ int     r1, r2;                         /* Values of R fields        */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B908 AGR   - Add Long Register                              [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2941,10 +2941,10 @@ int     r1, r2;                         /* Values of R fields        */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B918 AGFR  - Add Long Fullword Register                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2964,10 +2964,10 @@ int     r1, r2;                         /* Values of R fields        */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B900 LPGR  - Load Positive Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2995,10 +2995,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
 
 } /* end DEF_INST(load_positive_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B910 LPGFR - Load Positive Long Fullword Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3017,10 +3017,10 @@ S64     gpr2l;
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
 
 } /* end DEF_INST(load_positive_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B901 LNGR  - Load Negative Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3038,10 +3038,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
 
 } /* end DEF_INST(load_negative_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B911 LNGFR - Load Negative Long Fullword Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3060,10 +3060,10 @@ S64     gpr2l;
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
 
 } /* end DEF_INST(load_negative_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B902 LTGR  - Load and Test Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3080,10 +3080,10 @@ int     r1, r2;                         /* Values of R fields        */
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
 
 } /* end DEF_INST(load_and_test_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B912 LTGFR - Load and Test Long Fullword Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3100,10 +3100,10 @@ int     r1, r2;                         /* Values of R fields        */
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
 
 } /* end DEF_INST(load_and_test_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B903 LCGR  - Load Complement Long Register                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3130,10 +3130,10 @@ int     r1, r2;                         /* Values of R fields        */
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
 
 } /* end DEF_INST(load_complement_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B913 LCGFR - Load Complement Long Fullword Register         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3153,10 +3153,10 @@ S64     gpr2l;
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
 
 } /* end DEF_INST(load_complement_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7x2 TMHH  - Test under Mask High High                       [RI] */
 /*-------------------------------------------------------------------*/
@@ -3184,10 +3184,10 @@ U16     h2;                             /* 16-bit operand values     */
             2;                          /* leftmost bit one  */
 
 } /* end DEF_INST(test_under_mask_high_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7x3 TMHL  - Test under Mask High Low                        [RI] */
 /*-------------------------------------------------------------------*/
@@ -3215,10 +3215,10 @@ U16     h2;                             /* 16-bit operand values     */
             2;                          /* leftmost bit one  */
 
 } /* end DEF_INST(test_under_mask_high_low) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7x7 BRCTG - Branch Relative on Count Long                   [RI] */
 /*-------------------------------------------------------------------*/
@@ -3236,10 +3236,10 @@ U16     i2;                             /* 16-bit operand values     */
     else
         INST_UPDATE_PSW(regs, 4, 0);
 } /* end DEF_INST(branch_relative_on_count_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E321 CLG   - Compare Logical long                           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3260,10 +3260,10 @@ U64     n;                              /* 64-bit operand values     */
                    regs->GR_G(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E331 CLGF  - Compare Logical long fullword                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3284,10 +3284,10 @@ U32     n;                              /* 32-bit operand values     */
                    regs->GR_G(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B931 CLGFR - Compare Logical Long Fullword Register         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3302,10 +3302,10 @@ int     r1, r2;                         /* Values of R fields        */
                    regs->GR_G(r1) > regs->GR_L(r2) ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B917 LLGTR - Load Logical Long Thirtyone Register           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3318,10 +3318,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = regs->GR_L(r2) & 0x7FFFFFFF;
 
 } /* end DEF_INST(load_logical_long_thirtyone_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B921 CLGR  - Compare Logical Long Register                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3336,10 +3336,10 @@ int     r1, r2;                         /* Values of R fields        */
                    regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB1C RLLG  - Rotate Left Single Logical Long                [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3360,7 +3360,7 @@ U64     n;                              /* Integer work areas        */
                    | ((n == 0) ? 0 : (regs->GR_G(r3) >> (64 - n)));
 
 } /* end DEF_INST(rotate_left_single_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -3387,7 +3387,7 @@ U64     n;                              /* Integer work areas        */
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB0D SLLG  - Shift Left Single Logical Long                 [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3407,10 +3407,10 @@ U64     n;                              /* Integer work areas        */
     regs->GR_G(r1) = regs->GR_G(r3) << n;
 
 } /* end DEF_INST(shift_left_single_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB0C SRLG  - Shift Right Single Logical Long                [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3430,10 +3430,10 @@ U64     n;                              /* Integer work areas        */
     regs->GR_G(r1) = regs->GR_G(r3) >> n;
 
 } /* end DEF_INST(shift_right_single_logical_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB0B SLAG  - Shift Left Single Long                         [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3482,10 +3482,10 @@ U32     i, j;                           /* Integer work areas        */
                    (S64)regs->GR_G(r1) < 0 ? 1 : 0;
 
 } /* end DEF_INST(shift_left_single_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB0A SRAG  - Shift Right Single Long                        [RSY] */
 /*-------------------------------------------------------------------*/
@@ -3511,10 +3511,10 @@ U64     n;                              /* Integer work areas        */
                    (S64)regs->GR_G(r1) < 0 ? 1 : 0;
 
 } /* end DEF_INST(shift_right_single_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E31C MSGF  - Multiply Single Long Fullword                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3534,10 +3534,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)n;
 
 } /* end DEF_INST(multiply_single_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30C MSG   - Multiply Single Long                           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3557,10 +3557,10 @@ U64     n;                              /* 64-bit operand values     */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S64)n;
 
 } /* end DEF_INST(multiply_single_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B91C MSGFR - Multiply Single Long Fullword Register         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3574,10 +3574,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)regs->GR_L(r2);
 
 } /* end DEF_INST(multiply_single_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90C MSGR  - Multiply Single Long Register                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3591,10 +3591,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S64)regs->GR_G(r2);
 
 } /* end DEF_INST(multiply_single_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7x9 LGHI  - Load Long Halfword Immediate                    [RI] */
 /*-------------------------------------------------------------------*/
@@ -3610,10 +3610,10 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_G(r1) = (S16)i2;
 
 } /* end DEF_INST(load_long_halfword_immediate) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7xB AGHI  - Add Long Halfword Immediate                     [RI] */
 /*-------------------------------------------------------------------*/
@@ -3635,10 +3635,10 @@ U16     i2;                             /* 16-bit immediate op       */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_halfword_immediate) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7xD MGHI  - Multiply Long Halfword Immediate                [RI] */
 /*-------------------------------------------------------------------*/
@@ -3654,10 +3654,10 @@ U16     i2;                             /* 16-bit operand            */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S16)i2;
 
 } /* end DEF_INST(multiply_long_halfword_immediate) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* A7xF CGHI  - Compare Long Halfword Immediate                 [RI] */
 /*-------------------------------------------------------------------*/
@@ -3675,10 +3675,10 @@ U16     i2;                             /* 16-bit operand            */
             (S64)regs->GR_G(r1) > (S16)i2 ? 2 : 0;
 
 } /* end DEF_INST(compare_long_halfword_immediate) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B980 NGR   - And Register Long                              [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3692,10 +3692,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = ( regs->GR_G(r1) &= regs->GR_G(r2) ) ? 1 : 0;
 
 } /* end DEF_INST(and_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B981 OGR   - Or Register Long                               [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3709,10 +3709,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = ( regs->GR_G(r1) |= regs->GR_G(r2) ) ? 1 : 0;
 
 } /* end DEF_INST(or_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B982 XGR   - Exclusive Or Register Long                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3726,10 +3726,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->psw.cc = ( regs->GR_G(r1) ^= regs->GR_G(r2) ) ? 1 : 0;
 
 } /* end DEF_INST(exclusive_or_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E380 NG    - And Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3749,10 +3749,10 @@ U64     n;                              /* 64-bit operand values     */
     regs->psw.cc = ( regs->GR_G(r1) &= n ) ? 1 : 0;
 
 } /* end DEF_INST(and_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E381 OG    - Or Long                                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3772,10 +3772,10 @@ U64     n;                              /* 64-bit operand values     */
     regs->psw.cc = ( regs->GR_G(r1) |= n ) ? 1 : 0;
 
 } /* end DEF_INST(or_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E382 XG    - Exclusive Or Long                              [RXY] */
 /*-------------------------------------------------------------------*/
@@ -3795,10 +3795,10 @@ U64     n;                              /* 64-bit operand values     */
     regs->psw.cc = ( regs->GR_G(r1) ^= n ) ? 1 : 0;
 
 } /* end DEF_INST(exclusive_or_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B904 LGR   - Load Long Register                             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3812,10 +3812,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = regs->GR_G(r2);
 
 } /* end DEF_INST(load_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B916 LLGFR - Load Logical Long Fullword Register            [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3829,10 +3829,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = regs->GR_L(r2);
 
 } /* end DEF_INST(load_logical_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B914 LGFR  - Load Long Fullword Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3846,10 +3846,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = (S32)regs->GR_L(r2);
 
 } /* end DEF_INST(load_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90A ALGR  - Add Logical Register Long                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3865,10 +3865,10 @@ int     r1, r2;                         /* Values of R fields        */
                                       regs->GR_G(r2));
 
 } /* end DEF_INST(add_logical_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B91A ALGFR - Add Logical Long Fullword Register             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3884,10 +3884,10 @@ int     r1, r2;                         /* Values of R fields        */
                                       regs->GR_L(r2));
 
 } /* end DEF_INST(add_logical_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B91B SLGFR - Subtract Logical Long Fullword Register        [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3903,10 +3903,10 @@ int     r1, r2;                         /* Values of R fields        */
                                       regs->GR_L(r2));
 
 } /* end DEF_INST(subtract_logical_long_fullword_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90B SLGR  - Subtract Logical Register Long                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3922,10 +3922,10 @@ int     r1, r2;                         /* Values of R fields        */
                                       regs->GR_G(r2));
 
 } /* end DEF_INST(subtract_logical_long_register) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EF   LMD   - Load Multiple Disjoint                          [SS] */
 /*-------------------------------------------------------------------*/
@@ -3953,10 +3953,10 @@ U32     rwork1[16], rwork2[16];         /* Intermediate work areas   */
     }
 
 } /* end DEF_INST(load_multiple_disjoint) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB96 LMH   - Load Multiple High                             [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4024,10 +4024,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(load_multiple_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB04 LMG   - Load Multiple Long                             [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4122,10 +4122,10 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     }
 
 } /* end DEF_INST(load_multiple_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB25 STCTG - Store Control Long                             [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4172,10 +4172,10 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         store_dw(p2++, regs->CR_G((r1 + i) & 0xF));
 
 } /* end DEF_INST(store_control_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB2F LCTLG - Load Control Long                              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4251,10 +4251,10 @@ U16     updated = 0;                    /* Updated control regs      */
     RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(load_control_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB24 STMG  - Store Multiple Long                            [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4347,10 +4347,10 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     }
 
 } /* end DEF_INST(store_multiple_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* EB26 STMH  - Store Multiple High                            [RSY] */
 /*-------------------------------------------------------------------*/
@@ -4418,10 +4418,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(store_multiple_high) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B905 LURAG - Load Using Real Address Long                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4444,10 +4444,10 @@ RADR    n;                              /* Unsigned work             */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( n, USE_REAL_ADDR, regs );
 
 } /* end DEF_INST(load_using_real_address_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B925 STURG - Store Using Real Address Long                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4479,7 +4479,7 @@ RADR    n;                              /* Unsigned work             */
 #endif /*defined(FEATURE_PER2)*/
 
 } /* end DEF_INST(store_using_real_address_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -4568,7 +4568,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 #endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* 010E SAM64 - Set Addressing Mode 64                           [E] */
 /*-------------------------------------------------------------------*/
@@ -4591,10 +4591,10 @@ DEF_INST(set_addressing_mode_64)
     regs->psw.AMASK = AMASK64;
 
 } /* end DEF_INST(set_addressing_mode_64) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E324 STG   - Store Long                                     [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4629,10 +4629,10 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store_long) */
 
 #endif /* #ifdef OPTION_OPTINST */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E502 STRAG - Store Real Address                             [SSE] */
 /*-------------------------------------------------------------------*/
@@ -4656,10 +4656,10 @@ VADR    effective_addr1,
     ARCH_DEP(vstore8) (regs->dat.raddr, effective_addr1, b1, regs );
 
 } /* end DEF_INST(store_real_address) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E304 LG    - Load Long                                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4694,10 +4694,10 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load_long) */
 
 #endif /* #ifdef OPTION_OPTINST */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E314 LGF   - Load Long Fullword                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4713,10 +4713,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E315 LGH   - Load Long Halfword                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4732,10 +4732,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_long_halfword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E316 LLGF  - Load Logical Long Fullword                     [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4751,10 +4751,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_logical_long_fullword) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E317 LLGT  - Load Logical Long Thirtyone                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4771,10 +4771,10 @@ VADR    effective_addr2;                /* Effective address         */
                                                         & 0x7FFFFFFF;
 
 } /* end DEF_INST(load_logical_long_thirtyone) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B2B2 LPSWE - Load PSW Extended                                [S] */
 /*-------------------------------------------------------------------*/
@@ -4817,10 +4817,10 @@ int     rc;
     RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(load_program_status_word_extended) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E303 LRAG  - Load Real Address Long                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4867,7 +4867,7 @@ int     cc;                             /* Condition code            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(load_real_address_long) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)
@@ -5612,7 +5612,7 @@ int     cc;                             /* Condition code            */
 #endif /*defined(FEATURE_007_STFL_EXTENDED_FACILITY)*/
 
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B90F LRVGR - Load Reversed Long Register                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5626,7 +5626,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_G(r1) = bswap_64(regs->GR_G(r2));
 
 } /* end DEF_INST(load_reversed_long_register) */
-#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
@@ -5646,7 +5646,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E30F LRVG  - Load Reversed Long                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5662,7 +5662,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = bswap_64(ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ));
 
 } /* end DEF_INST(load_reversed_long) */
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
@@ -5702,7 +5702,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E32F STRVG - Store Reversed Long                            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5718,7 +5718,7 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore8) ( bswap_64(regs->GR_G(r1)), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_reversed_long) */
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )

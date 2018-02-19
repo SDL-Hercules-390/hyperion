@@ -5830,6 +5830,7 @@ S64     fix;
 }
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3C4 CEGR - Convert from Fix64 to Float. Short Register     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5873,8 +5874,10 @@ U64     fix;
         regs->fpr[i1] = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3C5 CDGR - Convert from Fix64 to Float. Long Register      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5919,8 +5922,10 @@ U64     fix;
         regs->fpr[i1+1] = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3C6 CXGR - Convert from Fix64 to Float. Extended Register  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5961,6 +5966,7 @@ U64     fix;
         regs->fpr[i1+FPREX+1] = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6366,6 +6372,7 @@ U64     lsfract;
 }
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3C8 CGER  - Convert from Float. Short to Fix64 Register    [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6505,8 +6512,10 @@ U32     lsfract;
         regs->psw.cc = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3C9 CGDR  - Convert from Float. Long to Fix64 Register     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6642,8 +6651,10 @@ U64     lsfract;
         regs->psw.cc = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B3CA CGXR  - Convert from Float. Extended to Fix64 Register [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6783,6 +6794,7 @@ U64     lsfract;
         regs->psw.cc = 0;
     }
 }
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
 /*-------------------------------------------------------------------*/
