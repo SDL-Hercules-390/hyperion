@@ -631,26 +631,30 @@
 #define ipl_cmd_desc            "IPL from device or file"
 #define ipl_cmd_help            \
                                 \
-  "Format: \"ipl xxxx | cccc [loadparm xxxxnnnn | parm xxxxxxxxxxxxxx] [clear]\""\
+  "Format: \"IPL {xxxx | cccc} [CLEAR] [LOADPARM xxxxxxxx] [PARM xxx [xxx ...]]\""\
   "\n\n"                                                                         \
-  "Performs the Initial Program Load manual control function. If the\n"          \
-  "first operand 'xxxx' is a 1- to 4-digit hexadecimal number, a\n"              \
-  "CCW-type IPL is initiated from the indicated device number, and\n"            \
-  "SCLP disk I/O is disabled. Otherwise a list-directed IPL is performed\n"      \
-  "from the .ins file named 'cccc', and SCLP disk I/O is enabled for the\n"      \
-  "directory path where the .ins file is located.\n"                             \
+  "Performs the Initial Program Load manual control function. If the first\n"    \
+  "operand 'xxxx' is a valid device number then a CCW-type IPL is initiated\n"   \
+  "from the specified device and SCLP disk I/O is disabled.  Otherwise a \n"     \
+  "list-directed IPL is performed from the .ins file named 'cccc', and SCLP\n"   \
+  "disk I/O is enabled for the directory path where the .ins file is located.\n" \
   "\n"                                                                           \
-  "An optional 'loadparm' keyword followed by a 1-8 character string can\n"      \
-  "be used to set the LOADPARM prior to the IPL.\n"                              \
+  "The optional 'CLEAR' keyword will initiate a Load Clear manual control\n"     \
+  "function prior to starting an IPL.\n"                                         \
   "\n"                                                                           \
-  "An optional 'parm' keyword followed by a string can also be passed to\n"      \
-  "the IPL command processor. The string will be loaded into the\n"              \
-  "low-order 32 bits of the general purpose registers (4 characters per\n"       \
-  "register for up to 64 bytes). The PARM option behaves similarly to\n"         \
-  "the VM IPL command.\n"                                                        \
+  "The optional 'LOADPARM' keyword followed by a 1-8 character string can be\n"  \
+  "used to set the LOADPARM prior to the IPL.\n"                                 \
   "\n"                                                                           \
-  "An optional 'clear' keyword will initiate a Load Clear manual control\n"      \
-  "function, prior to starting an IPL.\n"
+  "An optional 'PARM' keyword followed by string data can also be used to\n"     \
+  "pass data to the IPL command processor. If specified the string data is\n"    \
+  "loaded into the low-order 32 bits of General Purpose registers R0 - R15\n"    \
+  "(4 characters per register for a maximum of 64 bytes total; any excess\n"     \
+  "is ignored). The PARM option behaves similarly to the VM IPL command.\n"      \
+  "\n"                                                                           \
+  "PLEASE NOTE that because the 'PARM' option supports multiple arguments,\n"    \
+  "if specified, it MUST be the LAST option on the command line since ALL\n"     \
+  "remaining command line arguments following the 'PARM' keyword will be\n"      \
+  "treated as being part of a single blank-separated parameter string.\n"
 
 #define iplc_cmd_desc           "Command deprecated - use IPL with clear option"
 #define iplc_cmd_help           \
@@ -676,11 +680,11 @@
   "'savecore' command. The default for 'address' is 0 (beginning of\n"           \
   "storage).\n"
 
-#define loadparm_cmd_desc       "Set IPL parameter"
+#define loadparm_cmd_desc       "Set the IPL 'LOADPARM' parameter"
 #define loadparm_cmd_help       \
                                 \
-  "Specifies the eight-character IPL parameter which is used by\n"               \
-  "some operating systems to select system parameters."
+  "Specifies the eight-character IPL 'LOADPARM' parameter which is used\n"       \
+  "by some operating systems to select certain initialization options.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
 #define loadtext_cmd_help       \

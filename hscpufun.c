@@ -102,6 +102,8 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     int rc = 0;
     CPU_BITMAP mask;
 
+    strupper( argv[0], argv[0] );
+
     UNREFERENCED(cmdline);
 
     if ( argc == 1 )
@@ -137,6 +139,8 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
+    strupper( argv[0], argv[0] );
+
     if (argc != 1)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
@@ -156,6 +160,8 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
 int cf_cmd(int argc, char *argv[], char *cmdline)
 {
     int on = -1;
+
+    strupper( argv[0], argv[0] );
 
     UNREFERENCED(cmdline);
 
@@ -203,6 +209,8 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
 static char *qproc[] = { "qproc", NULL };
 int rc = 0;
 int on = -1;
+
+    strupper( argv[0], argv[0] );
 
     UNREFERENCED(cmdline);
 
@@ -347,24 +355,14 @@ int sysclear_cmd( int ac, char* av[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* ipl2 : IPL/IPLC command helper.                                   */
 /*                                                                   */
-/*   IPL xxxx | cccc [LOADPARM xxxxnnnn | PARM xxxxxxx] [CLEAR]      */
+/* IPL {xxx | ccc} [CLEAR] [LOADPARM xxxxxxxx] [PARM xxx [xxx ...]]  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static int ipl_cmd2( int argc, char* argv[], char* cmdline, bool clear_opt )
 {
-BYTE    c;                              /* Character work area       */
 int     rc;                             /* Return code               */
-int     i, j;
-bool    clear = clear_opt;              /* Called with clear option  */
-size_t  maxb;
-U16     lcss;
-U16     devnum;
-char*   cdev;
-char*   clcss;
-char    save_loadparm[16];
-bool    reset_loadparm = false;
-
-    save_loadparm[0] = '\0';
+bool    clear        = clear_opt;       /* Called with clear option  */
+char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
 
     UNREFERENCED( cmdline );
 
@@ -394,51 +392,105 @@ bool    reset_loadparm = false;
         return -1;
     }
 
-#define MAXPARMSTRING   sizeof( sysblk.iplparmstring )
-
-    sysblk.haveiplparm = 0;
-    maxb = 0;
+    sysblk.haveiplparm = false;
 
     if (argc > 2)
     {
-        if (CMD( argv[2], CLEAR, 2 ))
-        {
-            clear = true;
-        }
-        else if (CMD( argv[2], LOADPARM, 4 ))
-        {
-            STRLCPY( save_loadparm, str_loadparm() );
-            reset_loadparm = true;
+        int  argnum;
 
-            if (argc == 4)
-                set_loadparm( argv[3] );
-        }
-        else if (CMD( argv[2], PARM, 4 ))
+        /* Parse optional command-line arguments... */
+        for (argnum=2; argnum < argc; argnum++)
         {
-            memset( sysblk.iplparmstring, 0, MAXPARMSTRING );
-            sysblk.haveiplparm = TRUE;
-
-            for (i=3; i < argc && maxb < MAXPARMSTRING; i++)
+            /* Check if 'CLEAR' option */
+            if (CMD( argv[ argnum ], CLEAR, 2 ))
             {
-                if (i != 3)
+                clear = true;
+            }
+
+            /* Check if 'LOADPARM' option */
+            else if (CMD( argv[ argnum ], LOADPARM, 4 ))
+            {
+                /* It's silly to specify 'LOADPARM' and not provide one */
+                if (argc < (argnum+2))
                 {
-                    sysblk.iplparmstring[ maxb++ ] = 0x40;
+                    // "Missing argument(s). Type 'help %s' for assistance."
+                    WRMSG( HHC02202, "E", argv[0] );
+                    return -1;
+                }
+                loadparm = argv[ ++argnum ];
+            }
+
+            /* LASTLY, check if start of 'PARM' data */
+            else if (CMD( argv[ argnum ], PARM, 4 ))
+            {
+                /* PROGRAMMING NOTE: the 'PARM' option, if specified,
+                   must be the last option specified on the command line
+                   as all remaining arguments are interpretted as being
+                   the actual parm data to be loaded into the registers.
+                */
+                int i, j, psi, len;
+
+                /* It's silly to specify 'PARM' and not provide one */
+                if (argc < (argnum+2))
+                {
+                    // "Missing argument(s). Type 'help %s' for assistance."
+                    WRMSG( HHC02202, "E", argv[0] );
+                    return -1;
                 }
 
-                for (j=0; j < (int) strlen( argv[i] ) && maxb < MAXPARMSTRING; j++)
-                {
-                    if (islower( argv[i][j] ))
-                        argv[i][j] = toupper( argv[i][j] );
+#define  SIZEOF_IPLPARM     sizeof( sysblk.iplparmstring )
 
-                    sysblk.iplparmstring[ maxb ] = host_to_guest( argv[i][j] );
-                    maxb++;
+                sysblk.haveiplparm = true;
+                memset( sysblk.iplparmstring, 0, SIZEOF_IPLPARM );
+
+                /* Each remaining argument is IPL 'PARM' data... */
+                for (i = (argnum+1), psi=0; i < argc && psi < SIZEOF_IPLPARM; i++)
+                {
+                    /* Leave a blank between each PARM argument */
+                    if (i != (argnum+1))
+                        sysblk.iplparmstring[ psi++ ] = host_to_guest(' ');
+
+                    /* Convert argument to uppercase EBCDIC and
+                       save it in the SYSBLK iplparmstring field
+                    */
+                    for (j=0, len = (int) strlen( argv[i] ); j < len && psi < SIZEOF_IPLPARM; j++)
+                    {
+                        if (islower( argv[i][j] ))
+                            argv[i][j] = toupper( argv[i][j] );
+
+                        sysblk.iplparmstring[ psi++ ] = host_to_guest( argv[i][j] );
+                    }
                 }
+
+                /* No more arguments remain. (See PROGRAMMING NOTE) */
+                break;
+            }
+            else
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[ argnum ], ": unrecognized option" );
+                return -1;
             }
         }
     }
 
+    /* Attempt the IPL... (first argument determines how we do it) */
+
     OBTAIN_INTLOCK( NULL );
     {
+        char*  cdev;
+        char*  clcss;
+        char*  orig_loadparm;
+        U16    devnum;
+        BYTE   c;
+
+        /* Save the LOADPARM in case of error */
+        orig_loadparm = strdup( str_loadparm() );
+
+        /* Set the LOADPARM if specified */
+        if (loadparm)
+            set_loadparm( loadparm );
+
         /* The ipl device number might be in format lcss:devnum */
         if ((cdev = strchr( argv[1], ':' )))
         {
@@ -451,35 +503,45 @@ bool    reset_loadparm = false;
             cdev = argv[1];
         }
 
-        /* If the ipl device is not a valid hex number, then   */
-        /* we assume this is a load from the service processor */
+        /* If the ipl device is not a valid hex number, then
+           we assume this is a load from the service processor */
         if (sscanf( cdev, "%hx%c", &devnum, &c ) != 1)
+        {
+            free( orig_loadparm );
             rc = load_hmc( argv[1], sysblk.pcpu, clear );
+        }
         else
         {
+            U16 lcss;
 #if defined( _FEATURE_SCSI_IPL )
             DEVBLK* dev;
 #endif
             *--cdev = '\0';
 
+            /* Parse the LCSS value if one was specified */
+            lcss = 0;
             if (clcss)
             {
                 if (sscanf( clcss, "%hd%c", &lcss, &c ) != 1)
                 {
-                    // Invalid argument %s%s"
+                    // "Invalid argument %s%s"
                     WRMSG( HHC02205, "E", clcss, ": LCSS id is invalid" );
 
-                    if (reset_loadparm)
-                        set_loadparm( save_loadparm );
-
+                    /* Restore original LOADPARM and exit */
+                    set_loadparm( orig_loadparm );
+                    sysblk.haveiplparm = false;
+                    free( orig_loadparm );
                     return -1;
                 }
             }
-            else
-                lcss = 0;
+
+            /*-------------------*/
+            /*   Start the IPL   */
+            /*-------------------*/
+
+            free( orig_loadparm );      /* (no longer needed) */
 
 #if defined( _FEATURE_SCSI_IPL )
-
             if (1
                 && (dev = find_device_by_devnum( lcss, devnum ))
                 && support_boot( dev ) >= 0
@@ -736,6 +798,8 @@ char arch370_flag = 0;
 char buf[64];
 int rc = 0;
 
+    strupper( argv[0], argv[0] );
+
     UNREFERENCED(cmdline);
 
     if ( argc == 1 ) for (;;)
@@ -871,6 +935,8 @@ int store_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 
+    strupper( argv[0], argv[0] );
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -913,6 +979,8 @@ int start_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
 
+    strupper( argv[0], argv[0] );
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
@@ -953,6 +1021,8 @@ int start_cmd_cpu( int argc, char* argv[], char* cmdline )
 int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
+
+    strupper( argv[0], argv[0] );
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -996,6 +1066,8 @@ int alrf_cmd(int argc, char *argv[], char *cmdline)
 {
 char    buffer[128] = {0};
 char   *archlvl_func;
+
+    strupper( argv[0], argv[0] );
 
     UNREFERENCED(cmdline);
 

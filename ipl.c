@@ -397,6 +397,7 @@ int rc;
     {
         char buf[80];
         MSGBUF(buf, "CP%2.2X Offline", devnum);
+        // "Processor %s%02X: ipl failed: %s"
         WRMSG (HHC00810, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
         return -1;
     }
@@ -409,8 +410,9 @@ int rc;
     if (dev == NULL)
     {
         char buf[80];
-        MSGBUF(buf, "device %4.4X not found", devnum);
-        WRMSG (HHC00810, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu, buf);
+        MSGBUF( buf, "device %1d:%04X not found", lcss, devnum );
+        // "Processor %s%02X: ipl failed: %s"
+        WRMSG( HHC00810, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, buf );
 
         /* HercGUI hook so it can update its LEDs */
         HDC1( debug_cpu_state, regs );
