@@ -495,7 +495,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         if ((cdev = strchr( argv[1], ':' )))
         {
             clcss = argv[1];
-            *-cdev = '\0';
+            *cdev = '\0';
             cdev++;
         }
         else
