@@ -531,6 +531,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
                     set_loadparm( orig_loadparm );
                     sysblk.haveiplparm = false;
                     free( orig_loadparm );
+                    RELEASE_INTLOCK( NULL );
                     return -1;
                 }
             }
