@@ -495,6 +495,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         if ((cdev = strchr( argv[1], ':' )))
         {
             clcss = argv[1];
+            *-cdev = '\0';
             cdev++;
         }
         else
@@ -516,8 +517,6 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
 #if defined( _FEATURE_SCSI_IPL )
             DEVBLK* dev;
 #endif
-            *--cdev = '\0';
-
             /* Parse the LCSS value if one was specified */
             lcss = 0;
             if (clcss)
