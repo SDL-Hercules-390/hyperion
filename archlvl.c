@@ -599,9 +599,23 @@ FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE )
 /*  Sup   Def   Req   Short Name...                                  */
 /*-------------------------------------------------------------------*/
 
-FT( MALL, MALL, Z900, HERC_MOVE_INVERSE )
+FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP )
 
-/*-------------------------------------------------------------------*/
+#if defined( FEATURE_HERCULES_DIAGCALLS )
+#if defined(       FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
+FT( MALL, NONE, NONE, HERC_HOST_RESOURCE_ACCESS )
+#endif
+#endif
+
+#if defined(       FEATURE_INTERVAL_TIMER )
+FT( MALL, MALL, Z390, HERC_INTERVAL_TIMER )
+#endif
+
+#if defined( FEATURE_HYPERVISOR )
+FT( MALL, MALL, NONE, HERC_LOGICAL_PARTITION )
+#endif
+
+FT( MALL, MALL, Z900, HERC_MOVE_INVERSE )
 
 #if defined(       FEATURE_MSA_EXTENSION_FACILITY_1 )
 FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1 )
@@ -611,52 +625,35 @@ FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1 )
 FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_2 )
 #endif
 
-/*-------------------------------------------------------------------*/
-
-#if defined(  FEATURE_HERCULES_DIAGCALLS )
-
+#if defined( FEATURE_HERCULES_DIAGCALLS )
 FT( MALL, NONE, NONE, HERC_PROBSTATE_DIAGF08 )
-FT( MALL, NONE, NONE, HERC_SIGP_SETARCH_S370 )
-
-#if defined(       FEATURE_HOST_RESOURCE_ACCESS_FACILITY )
-FT( MALL, NONE, NONE, HERC_HOST_RESOURCE_ACCESS )
 #endif
 
-#endif
+FT( Z390, NONE, NONE, HERC_QDIO_ASSIST )
 
-/*-------------------------------------------------------------------*/
-
-#if defined(       FEATURE_QEBSM )
-FT( Z390, Z390, NONE, HERC_QEBSM )
+#if defined(       FEATURE_QDIO_TDD )
+FT( Z390, NONE, NONE, HERC_QDIO_TDD )
 #endif
 
 #if defined(       FEATURE_QDIO_THININT )
 FT( Z390, Z390, NONE, HERC_QDIO_THININT )
 #endif
 
-#if defined(       FEATURE_QDIO_TDD )
-FT( Z390, NONE, NONE, HERC_QDIO_TDD )
+#if defined(       FEATURE_QEBSM )
+FT( Z390, Z390, NONE, HERC_QEBSM )
+#endif
+
+#if defined( FEATURE_HERCULES_DIAGCALLS )
+FT( MALL, NONE, NONE, HERC_SIGP_SETARCH_S370 )
 #endif
 
 #if defined(       FEATURE_SVS )
 FT( Z390, Z390, NONE, HERC_SVS )
 #endif
 
-#if defined(          FEATURE_HYPERVISOR )
-FT( MALL, MALL, NONE, HERC_LOGICAL_PARTITION )
-#endif
-
-#if defined(         FEATURE_EMULATE_VM )
+#if defined( FEATURE_EMULATE_VM )
 FT( MALL, NONE, NONE, HERC_VIRTUAL_MACHINE )
 #endif
-
-FT( Z390, NONE, NONE, HERC_QDIO_ASSIST )
-
-#if defined(       FEATURE_INTERVAL_TIMER )
-FT( MALL, MALL, Z390, HERC_INTERVAL_TIMER )
-#endif
-
-FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP )
 
 };
 
