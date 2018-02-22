@@ -856,6 +856,7 @@ static void instr134 ( int arch, bool enable );
 static void instr142 ( int arch, bool enable );
 static void instr144 ( int arch, bool enable );
 static void instr145 ( int arch, bool enable );
+static void instr146 ( int arch, bool enable );
 static void hercmvcin( int arch, bool enable );
 static void hercsvs  ( int arch, bool enable );
 
