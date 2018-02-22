@@ -961,7 +961,7 @@ FT2( modtod,    NULL,      139_MULTIPLE_EPOCH,         "Multiple-Epoch Facility"
 FT2( modsamp,   instr142,  142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multiple Facility" )
 FT2( NULL,      instr144,  144_TEST_PEND_EXTERNAL,     "Test-Pending-External-Interruption Facility" )
 FT2( NULL,      instr145,  145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Multiple Facility" )
-FT2( modmsa,    NULL,      146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
+FT2( modmsa,    instr146,  146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
 FT2( NULL,      NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
 
 FT2( NULL,      hercmvcin, HERC_MOVE_INVERSE,          "Hercules MVCIN Move Inverse Instruction Support" )
@@ -3038,6 +3038,14 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( instr145 )
 {
     DIS_FAC_INS( B9AC, "IRBM    B9AC  INSERT REFERENCE BITS MULTIPLE" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr146 )
+{
+    DIS_FAC_INS( B929, "KMA     B929  CIPHER MESSAGE WITH AUTHENTICATION" );
 }
 END_DIS_FAC_INS_FUNC()
 
