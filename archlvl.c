@@ -1217,13 +1217,12 @@ bool init_facilities_lists()
 
     for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
     {
-        archname = get_arch_name_by_arch( arch );
-
         for (bitno = 0; bitno <= STFL_HERC_LAST_BIT; bitno++)
         {
             /* Are there instructions associated with this facility? */
             if (1
                 && (ft = get_factab_by_bitno( bitno ))
+                && (ft->supmask & at->amask) // (applies to this arch?)
                 && (ft->updinstrs)
             )
             {
