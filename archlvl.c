@@ -1109,11 +1109,11 @@ static const size_t num_arch_ft_entries[ NUM_GEN_ARCHS ] =
 #endif
 };
 
+static const FACTAB* get_factab_by_bitno( int bitno );  /* (fwd ref) */
+
 /*-------------------------------------------------------------------*/
 /*                   init_facilities_lists                  (public) */
 /*-------------------------------------------------------------------*/
-static const FACTAB* get_factab_by_bitno( int bitno );  /* (fwd ref) */
-
 bool init_facilities_lists()
 {
     /* Called ONCE by bldcfg.c 'build_config' during system startup. */
@@ -1186,6 +1186,7 @@ bool init_facilities_lists()
 
         for (bitno = 0; bitno <= STFL_HERC_LAST_BIT; bitno++)
         {
+            /* Does a sanity check function exist for this facility? */
             if (1
                 && (ft = get_factab_by_bitno( bitno ))
                 && (ft->modokfunc)
@@ -1204,10 +1205,36 @@ bool init_facilities_lists()
                     WRMSG( HHC00899, "S", archname, ft->name );
                     rc = false;
                 }
+            }
+        }
+    }
 
-                /* Enable/disable the facility instruction as needed */
-                if (ft->updinstrs)
-                    ft->updinstrs( arch, enable );
+    /* Exit immediately if any sanity/consistency checks failed */
+    if (!rc)
+        return rc;
+
+    /* Enable or disable each facility's instructions as needed */
+
+    for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
+    {
+        archname = get_arch_name_by_arch( arch );
+
+        for (bitno = 0; bitno <= STFL_HERC_LAST_BIT; bitno++)
+        {
+            /* Are there instructions associated with this facility? */
+            if (1
+                && (ft = get_factab_by_bitno( bitno ))
+                && (ft->updinstrs)
+            )
+            {
+                fbyte =         (bitno / 8);
+                fbit  = 0x80 >> (bitno % 8);
+
+                enable = (sysblk.facility_list[ arch ][ fbyte ] & fbit) ?
+                    true : false;
+
+                /* Enable or disable this facility's instructions */
+                ft->updinstrs( arch, enable );
             }
         }
     }
