@@ -599,6 +599,7 @@ FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE )
 /*  Sup   Def   Req   Short Name...                                  */
 /*-------------------------------------------------------------------*/
 
+FT( S370, NONE, NONE, HERC_370_EXTENSION )
 FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP )
 
 #if defined( FEATURE_HERCULES_DIAGCALLS )
@@ -859,6 +860,7 @@ static void instr145 ( int arch, bool enable );
 static void instr146 ( int arch, bool enable );
 static void hercmvcin( int arch, bool enable );
 static void hercsvs  ( int arch, bool enable );
+static void herc37X  ( int arch, bool enable );
 
 /*-------------------------------------------------------------------*/
 /* The ACTUAL facilities table, initialized by init_facilities_lists */
@@ -962,6 +964,7 @@ FT2( NULL,      instr145,  145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Mu
 FT2( modmsa,    instr146,  146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
 FT2( NULL,      NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
 
+FT2( NULL,      herc37X,   HERC_370_EXTENSION,         "Hercules S/370 Instruction Extension Facility" )
 FT2( NULL,      NULL,      HERC_DETECT_PGMINTLOOP,     "Hercules Detect-Program-Interrupt-Loop Support" )
 FT2( NULL,      NULL,      HERC_HOST_RESOURCE_ACCESS,  "Hercules Host Resource Access Support" )
 FT2( NULL,      NULL,      HERC_INTERVAL_TIMER,        "Hercules Interval Timer Support" )
@@ -3086,6 +3089,315 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( hercsvs )
 {
     DIS_FAC_INS( B265, "SVS B265 Set Vector Summary" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( herc37X )
+{
+    DIS_FAC_INS( 71,   "multiply_single" );
+    DIS_FAC_INS( 84,   "branch_relative_on_index_high" );
+    DIS_FAC_INS( 85,   "branch_relative_on_index_low_or_equal" );
+    DIS_FAC_INS( A8,   "move_long_extended" );
+    DIS_FAC_INS( A9,   "compare_logical_long_extended" );
+    DIS_FAC_INS( D0,   "translate_and_test_reverse" );
+    DIS_FAC_INS( E1,   "pack_unicode" );
+    DIS_FAC_INS( E2,   "unpack_unicode" );
+    DIS_FAC_INS( E9,   "pack_ascii" );
+    DIS_FAC_INS( EA,   "unpack_ascii" );
+
+    DIS_FAC_INS( A700, "test_under_mask_high" );
+    DIS_FAC_INS( A701, "test_under_mask_low" );
+    DIS_FAC_INS( A704, "branch_relative_on_condition" );
+    DIS_FAC_INS( A705, "branch_relative_and_save" );
+    DIS_FAC_INS( A706, "branch_relative_on_count" );
+    DIS_FAC_INS( A708, "load_halfword_immediate" );
+    DIS_FAC_INS( A70A, "add_halfword_immediate" );
+    DIS_FAC_INS( A70C, "multiply_halfword_immediate" );
+    DIS_FAC_INS( A70E, "compare_halfword_immediate" );
+
+    DIS_FAC_INS( B241, "checksum" );
+    DIS_FAC_INS( B244, "squareroot_float_long_reg" );
+    DIS_FAC_INS( B245, "squareroot_float_short_reg" );
+    DIS_FAC_INS( B252, "multiply_single_register" );
+    DIS_FAC_INS( B255, "move_string" );
+    DIS_FAC_INS( B257, "compare_until_substring_equal" );
+    DIS_FAC_INS( B25D, "compare_logical_string" );
+    DIS_FAC_INS( B25E, "search_string" );
+    DIS_FAC_INS( B263, "cmpsc_2012" );
+    DIS_FAC_INS( B299, "set_bfp_rounding_mode_2bit" );
+    DIS_FAC_INS( B29C, "store_fpc" );
+    DIS_FAC_INS( B29D, "load_fpc" );
+    DIS_FAC_INS( B2A5, "translate_extended" );
+    DIS_FAC_INS( B2A6, "convert_utf16_to_utf8" );
+    DIS_FAC_INS( B2A7, "convert_utf8_to_utf16" );
+    DIS_FAC_INS( B2B8, "set_bfp_rounding_mode_3bit" );
+    DIS_FAC_INS( B2BD, "load_fpc_and_signal" );
+    DIS_FAC_INS( B300, "load_positive_bfp_short_reg" );
+    DIS_FAC_INS( B301, "load_negative_bfp_short_reg" );
+    DIS_FAC_INS( B302, "load_and_test_bfp_short_reg" );
+    DIS_FAC_INS( B303, "load_complement_bfp_short_reg" );
+    DIS_FAC_INS( B304, "load_lengthened_bfp_short_to_long_reg" );
+    DIS_FAC_INS( B305, "load_lengthened_bfp_long_to_ext_reg" );
+    DIS_FAC_INS( B306, "load_lengthened_bfp_short_to_ext_reg" );
+    DIS_FAC_INS( B307, "multiply_bfp_long_to_ext_reg" );
+    DIS_FAC_INS( B308, "compare_and_signal_bfp_short_reg" );
+    DIS_FAC_INS( B309, "compare_bfp_short_reg" );
+    DIS_FAC_INS( B30A, "add_bfp_short_reg" );
+    DIS_FAC_INS( B30B, "subtract_bfp_short_reg" );
+    DIS_FAC_INS( B30C, "multiply_bfp_short_to_long_reg" );
+    DIS_FAC_INS( B30D, "divide_bfp_short_reg" );
+    DIS_FAC_INS( B30E, "multiply_add_bfp_short_reg" );
+    DIS_FAC_INS( B30F, "multiply_subtract_bfp_short_reg" );
+    DIS_FAC_INS( B310, "load_positive_bfp_long_reg" );
+    DIS_FAC_INS( B311, "load_negative_bfp_long_reg" );
+    DIS_FAC_INS( B312, "load_and_test_bfp_long_reg" );
+    DIS_FAC_INS( B313, "load_complement_bfp_long_reg" );
+    DIS_FAC_INS( B314, "squareroot_bfp_short_reg" );
+    DIS_FAC_INS( B315, "squareroot_bfp_long_reg" );
+    DIS_FAC_INS( B316, "squareroot_bfp_ext_reg" );
+    DIS_FAC_INS( B317, "multiply_bfp_short_reg" );
+    DIS_FAC_INS( B318, "compare_and_signal_bfp_long_reg" );
+    DIS_FAC_INS( B319, "compare_bfp_long_reg" );
+    DIS_FAC_INS( B31A, "add_bfp_long_reg" );
+    DIS_FAC_INS( B31B, "subtract_bfp_long_reg" );
+    DIS_FAC_INS( B31C, "multiply_bfp_long_reg" );
+    DIS_FAC_INS( B31D, "divide_bfp_long_reg" );
+    DIS_FAC_INS( B31E, "multiply_add_bfp_long_reg" );
+    DIS_FAC_INS( B31F, "multiply_subtract_bfp_long_reg" );
+    DIS_FAC_INS( B324, "load_lengthened_float_short_to_long_reg" );
+    DIS_FAC_INS( B325, "load_lengthened_float_long_to_ext_reg" );
+    DIS_FAC_INS( B326, "load_lengthened_float_short_to_ext_reg" );
+    DIS_FAC_INS( B32E, "multiply_add_float_short_reg" );
+    DIS_FAC_INS( B32F, "multiply_subtract_float_short_reg" );
+    DIS_FAC_INS( B336, "squareroot_float_ext_reg" );
+    DIS_FAC_INS( B337, "multiply_float_short_reg" );
+    DIS_FAC_INS( B338, "multiply_add_unnormal_float_long_to_ext_low_reg" );
+    DIS_FAC_INS( B339, "multiply_unnormal_float_long_to_ext_low_reg" );
+    DIS_FAC_INS( B33A, "multiply_add_unnormal_float_long_to_ext_reg" );
+    DIS_FAC_INS( B33B, "multiply_unnormal_float_long_to_ext_reg" );
+    DIS_FAC_INS( B33C, "multiply_add_unnormal_float_long_to_ext_high_reg" );
+    DIS_FAC_INS( B33D, "multiply_unnormal_float_long_to_ext_high_reg" );
+    DIS_FAC_INS( B33E, "multiply_add_float_long_reg" );
+    DIS_FAC_INS( B33F, "multiply_subtract_float_long_reg" );
+    DIS_FAC_INS( B340, "load_positive_bfp_ext_reg" );
+    DIS_FAC_INS( B341, "load_negative_bfp_ext_reg" );
+    DIS_FAC_INS( B342, "load_and_test_bfp_ext_reg" );
+    DIS_FAC_INS( B343, "load_complement_bfp_ext_reg" );
+    DIS_FAC_INS( B344, "load_rounded_bfp_long_to_short_reg" );
+    DIS_FAC_INS( B345, "load_rounded_bfp_ext_to_long_reg" );
+    DIS_FAC_INS( B346, "load_rounded_bfp_ext_to_short_reg" );
+    DIS_FAC_INS( B347, "load_fp_int_bfp_ext_reg" );
+    DIS_FAC_INS( B348, "compare_and_signal_bfp_ext_reg" );
+    DIS_FAC_INS( B349, "compare_bfp_ext_reg" );
+    DIS_FAC_INS( B34A, "add_bfp_ext_reg" );
+    DIS_FAC_INS( B34B, "subtract_bfp_ext_reg" );
+    DIS_FAC_INS( B34C, "multiply_bfp_ext_reg" );
+    DIS_FAC_INS( B34D, "divide_bfp_ext_reg" );
+    DIS_FAC_INS( B350, "convert_float_long_to_bfp_short_reg" );
+    DIS_FAC_INS( B351, "convert_float_long_to_bfp_long_reg" );
+    DIS_FAC_INS( B353, "divide_integer_bfp_short_reg" );
+    DIS_FAC_INS( B357, "load_fp_int_bfp_short_reg" );
+    DIS_FAC_INS( B358, "convert_bfp_short_to_float_long_reg" );
+    DIS_FAC_INS( B359, "convert_bfp_long_to_float_long_reg" );
+    DIS_FAC_INS( B35B, "divide_integer_bfp_long_reg" );
+    DIS_FAC_INS( B35F, "load_fp_int_bfp_long_reg" );
+    DIS_FAC_INS( B360, "load_positive_float_ext_reg" );
+    DIS_FAC_INS( B361, "load_negative_float_ext_reg" );
+    DIS_FAC_INS( B362, "load_and_test_float_ext_reg" );
+    DIS_FAC_INS( B363, "load_complement_float_ext_reg" );
+    DIS_FAC_INS( B365, "load_float_ext_reg" );
+    DIS_FAC_INS( B366, "load_rounded_float_ext_to_short_reg" );
+    DIS_FAC_INS( B367, "load_fp_int_float_ext_reg" );
+    DIS_FAC_INS( B369, "compare_float_ext_reg" );
+    DIS_FAC_INS( B370, "load_positive_fpr_long_reg" );
+    DIS_FAC_INS( B371, "load_negative_fpr_long_reg" );
+    DIS_FAC_INS( B372, "copy_sign_fpr_long_reg" );
+    DIS_FAC_INS( B373, "load_complement_fpr_long_reg" );
+    DIS_FAC_INS( B374, "load_zero_float_short_reg" );
+    DIS_FAC_INS( B375, "load_zero_float_long_reg" );
+    DIS_FAC_INS( B376, "load_zero_float_ext_reg" );
+    DIS_FAC_INS( B377, "load_fp_int_float_short_reg" );
+    DIS_FAC_INS( B37F, "load_fp_int_float_long_reg" );
+    DIS_FAC_INS( B384, "set_fpc" );
+    DIS_FAC_INS( B385, "set_fpc_and_signal" );
+    DIS_FAC_INS( B38C, "extract_fpc" );
+    DIS_FAC_INS( B390, "convert_u32_to_bfp_short_reg" );
+    DIS_FAC_INS( B391, "convert_u32_to_bfp_long_reg" );
+    DIS_FAC_INS( B392, "convert_u32_to_bfp_ext_reg" );
+    DIS_FAC_INS( B394, "convert_fix32_to_bfp_short_reg" );
+    DIS_FAC_INS( B395, "convert_fix32_to_bfp_long_reg" );
+    DIS_FAC_INS( B396, "convert_fix32_to_bfp_ext_reg" );
+    DIS_FAC_INS( B398, "convert_bfp_short_to_fix32_reg" );
+    DIS_FAC_INS( B399, "convert_bfp_long_to_fix32_reg" );
+    DIS_FAC_INS( B39A, "convert_bfp_ext_to_fix32_reg" );
+    DIS_FAC_INS( B39C, "convert_bfp_short_to_u32_reg" );
+    DIS_FAC_INS( B39D, "convert_bfp_long_to_u32_reg" );
+    DIS_FAC_INS( B39E, "convert_bfp_ext_to_u32_reg" );
+    DIS_FAC_INS( B3B4, "convert_fixed_to_float_short_reg" );
+    DIS_FAC_INS( B3B5, "convert_fixed_to_float_long_reg" );
+    DIS_FAC_INS( B3B6, "convert_fixed_to_float_ext_reg" );
+    DIS_FAC_INS( B3B8, "convert_float_short_to_fixed_reg" );
+    DIS_FAC_INS( B3B9, "convert_float_long_to_fixed_reg" );
+    DIS_FAC_INS( B3BA, "convert_float_ext_to_fixed_reg" );
+    DIS_FAC_INS( B91E, "compute_message_authentication_code" );
+    DIS_FAC_INS( B926, "load_byte_register" );
+    DIS_FAC_INS( B927, "load_halfword_register" );
+    DIS_FAC_INS( B928, "perform_cryptographic_key_management_operation" );
+    DIS_FAC_INS( B92A, "cipher_message_with_cipher_feedback" );
+    DIS_FAC_INS( B92B, "cipher_message_with_output_feedback" );
+    DIS_FAC_INS( B92C, "perform_cryptographic_computation" );
+    DIS_FAC_INS( B92D, "cipher_message_with_counter" );
+    DIS_FAC_INS( B92E, "cipher_message" );
+    DIS_FAC_INS( B92F, "cipher_message_with_chaining" );
+    DIS_FAC_INS( B93E, "compute_intermediate_message_digest" );
+    DIS_FAC_INS( B93F, "compute_last_message_digest" );
+    DIS_FAC_INS( B972, "compare_and_trap_register" );
+    DIS_FAC_INS( B973, "compare_logical_and_trap_register" );
+    DIS_FAC_INS( B98D, "extract_psw" );
+    DIS_FAC_INS( B990, "translate_two_to_two" );
+    DIS_FAC_INS( B991, "translate_two_to_one" );
+    DIS_FAC_INS( B992, "translate_one_to_two" );
+    DIS_FAC_INS( B993, "translate_one_to_one" );
+    DIS_FAC_INS( B994, "load_logical_character_register" );
+    DIS_FAC_INS( B995, "load_logical_halfword_register" );
+    DIS_FAC_INS( B996, "multiply_logical_register" );
+    DIS_FAC_INS( B997, "divide_logical_register" );
+    DIS_FAC_INS( B998, "add_logical_carry_register" );
+    DIS_FAC_INS( B999, "subtract_logical_borrow_register" );
+    DIS_FAC_INS( B9B0, "convert_utf8_to_utf32" );
+    DIS_FAC_INS( B9B1, "convert_utf16_to_utf32" );
+    DIS_FAC_INS( B9B2, "convert_utf32_to_utf8" );
+    DIS_FAC_INS( B9B3, "convert_utf32_to_utf16" );
+    DIS_FAC_INS( B9BD, "translate_and_test_reverse_extended" );
+    DIS_FAC_INS( B9BE, "search_string_unicode" );
+    DIS_FAC_INS( B9BF, "translate_and_test_extended" );
+    DIS_FAC_INS( B9F2, "load_on_condition_register" );
+    DIS_FAC_INS( B9F4, "and_distinct_register" );
+    DIS_FAC_INS( B9F6, "or_distinct_register" );
+    DIS_FAC_INS( B9F7, "exclusive_or_distinct_register" );
+    DIS_FAC_INS( B9F8, "add_distinct_register" );
+    DIS_FAC_INS( B9F9, "subtract_distinct_register" );
+    DIS_FAC_INS( B9FA, "add_logical_distinct_register" );
+    DIS_FAC_INS( B9FB, "subtract_logical_distinct_register" );
+
+    DIS_FAC_INS( C000, "load_address_relative_long" );
+    DIS_FAC_INS( C004, "branch_relative_on_condition_long" );
+    DIS_FAC_INS( C005, "branch_relative_and_save_long" );
+
+    DIS_FAC_INS( C201, "multiply_single_immediate_fullword" );
+    DIS_FAC_INS( C205, "subtract_logical_fullword_immediate" );
+    DIS_FAC_INS( C209, "add_fullword_immediate" );
+    DIS_FAC_INS( C20B, "add_logical_fullword_immediate" );
+    DIS_FAC_INS( C20D, "compare_fullword_immediate" );
+    DIS_FAC_INS( C20F, "compare_logical_fullword_immediate" );
+
+    DIS_FAC_INS( C402, "load_logical_halfword_relative_long" );
+    DIS_FAC_INS( C405, "load_halfword_relative_long" );
+    DIS_FAC_INS( C407, "store_halfword_relative_long" );
+    DIS_FAC_INS( C40D, "load_relative_long" );
+    DIS_FAC_INS( C40F, "store_relative_long" );
+
+    DIS_FAC_INS( C600, "execute_relative_long" );
+    DIS_FAC_INS( C602, "prefetch_data_relative_long" );
+    DIS_FAC_INS( C605, "compare_halfword_relative_long" );
+    DIS_FAC_INS( C607, "compare_logical_relative_long_halfword" );
+    DIS_FAC_INS( C60D, "compare_relative_long" );
+    DIS_FAC_INS( C60F, "compare_logical_relative_long" );
+
+    DIS_FAC_INS( C804, "load_pair_disjoint" );
+
+    DIS_FAC_INS( E312, "load_and_test" );
+    DIS_FAC_INS( E336, "prefetch_data" );
+    DIS_FAC_INS( E394, "load_logical_character" );
+    DIS_FAC_INS( E395, "load_logical_halfword" );
+    DIS_FAC_INS( E396, "multiply_logical" );
+    DIS_FAC_INS( E397, "divide_logical" );
+    DIS_FAC_INS( E398, "add_logical_carry" );
+    DIS_FAC_INS( E399, "subtract_logical_borrow" );
+    DIS_FAC_INS( E544, "move_halfword_from_halfword_immediate" );
+    DIS_FAC_INS( E548, "move_long_from_halfword_immediate" );
+    DIS_FAC_INS( E54C, "move_fullword_from_halfword_immediate" );
+    DIS_FAC_INS( E554, "compare_halfword_immediate_halfword_storage" );
+    DIS_FAC_INS( E555, "compare_logical_immediate_halfword_storage" );
+    DIS_FAC_INS( E558, "compare_halfword_immediate_long_storage" );
+    DIS_FAC_INS( E559, "compare_logical_immediate_long_storage" );
+    DIS_FAC_INS( E55C, "compare_halfword_immediate_storage" );
+    DIS_FAC_INS( E55D, "compare_logical_immediate_fullword_storage" );
+    DIS_FAC_INS( EB1D, "rotate_left_single_logical" );
+    DIS_FAC_INS( EB6A, "add_immediate_storage" );
+    DIS_FAC_INS( EB6E, "add_logical_with_signed_immediate" );
+    DIS_FAC_INS( EB7A, "add_immediate_long_storage" );
+    DIS_FAC_INS( EB7E, "add_logical_with_signed_immediate_long" );
+    DIS_FAC_INS( EB8E, "move_long_unicode" );
+    DIS_FAC_INS( EB8F, "compare_logical_long_unicode" );
+    DIS_FAC_INS( EBC0, "test_decimal" );
+    DIS_FAC_INS( EBDC, "shift_right_single_distinct" );
+    DIS_FAC_INS( EBDD, "shift_left_single_distinct" );
+    DIS_FAC_INS( EBDE, "shift_right_single_logical_distinct" );
+    DIS_FAC_INS( EBDF, "shift_left_single_logical_distinct" );
+    DIS_FAC_INS( EBF2, "load_on_condition" );
+    DIS_FAC_INS( EBF3, "store_on_condition" );
+    DIS_FAC_INS( EBF4, "load_and_and" );
+    DIS_FAC_INS( EBF6, "load_and_or" );
+    DIS_FAC_INS( EBF7, "load_and_exclusive_or" );
+    DIS_FAC_INS( EBF8, "load_and_add" );
+    DIS_FAC_INS( EBFA, "load_and_add_logical" );
+    DIS_FAC_INS( EC72, "compare_immediate_and_trap" );
+    DIS_FAC_INS( EC73, "compare_logical_immediate_and_trap_fullword" );
+    DIS_FAC_INS( EC76, "compare_and_branch_relative_register" );
+    DIS_FAC_INS( EC77, "compare_logical_and_branch_relative_register" );
+    DIS_FAC_INS( EC7E, "compare_immediate_and_branch_relative" );
+    DIS_FAC_INS( EC7F, "compare_logical_immediate_and_branch_relative" );
+    DIS_FAC_INS( ECD8, "add_distinct_halfword_immediate" );
+    DIS_FAC_INS( ECDA, "add_logical_distinct_signed_halfword_immediate" );
+    DIS_FAC_INS( ECF6, "compare_and_branch_register" );
+    DIS_FAC_INS( ECF7, "compare_logical_and_branch_register" );
+    DIS_FAC_INS( ECFE, "compare_immediate_and_branch" );
+    DIS_FAC_INS( ECFF, "compare_logical_immediate_and_branch" );
+    DIS_FAC_INS( ED04, "load_lengthened_bfp_short_to_long" );
+    DIS_FAC_INS( ED05, "load_lengthened_bfp_long_to_ext" );
+    DIS_FAC_INS( ED06, "load_lengthened_bfp_short_to_ext" );
+    DIS_FAC_INS( ED07, "multiply_bfp_long_to_ext" );
+    DIS_FAC_INS( ED08, "compare_and_signal_bfp_short" );
+    DIS_FAC_INS( ED09, "compare_bfp_short" );
+    DIS_FAC_INS( ED0A, "add_bfp_short" );
+    DIS_FAC_INS( ED0B, "subtract_bfp_short" );
+    DIS_FAC_INS( ED0C, "multiply_bfp_short_to_long" );
+    DIS_FAC_INS( ED0D, "divide_bfp_short" );
+    DIS_FAC_INS( ED0E, "multiply_add_bfp_short" );
+    DIS_FAC_INS( ED0F, "multiply_subtract_bfp_short" );
+    DIS_FAC_INS( ED10, "test_data_class_bfp_short" );
+    DIS_FAC_INS( ED11, "test_data_class_bfp_long" );
+    DIS_FAC_INS( ED12, "test_data_class_bfp_ext" );
+    DIS_FAC_INS( ED14, "squareroot_bfp_short" );
+    DIS_FAC_INS( ED15, "squareroot_bfp_long" );
+    DIS_FAC_INS( ED17, "multiply_bfp_short" );
+    DIS_FAC_INS( ED18, "compare_and_signal_bfp_long" );
+    DIS_FAC_INS( ED19, "compare_bfp_long" );
+    DIS_FAC_INS( ED1A, "add_bfp_long" );
+    DIS_FAC_INS( ED1B, "subtract_bfp_long" );
+    DIS_FAC_INS( ED1C, "multiply_bfp_long" );
+    DIS_FAC_INS( ED1D, "divide_bfp_long" );
+    DIS_FAC_INS( ED1E, "multiply_add_bfp_long" );
+    DIS_FAC_INS( ED1F, "multiply_subtract_bfp_long" );
+    DIS_FAC_INS( ED24, "load_lengthened_float_short_to_long" );
+    DIS_FAC_INS( ED25, "load_lengthened_float_long_to_ext" );
+    DIS_FAC_INS( ED26, "load_lengthened_float_short_to_ext" );
+    DIS_FAC_INS( ED2E, "multiply_add_float_short" );
+    DIS_FAC_INS( ED2F, "multiply_subtract_float_short" );
+    DIS_FAC_INS( ED34, "squareroot_float_short" );
+    DIS_FAC_INS( ED35, "squareroot_float_long" );
+    DIS_FAC_INS( ED37, "multiply_float_short" );
+    DIS_FAC_INS( ED38, "multiply_add_unnormal_float_long_to_ext_low" );
+    DIS_FAC_INS( ED39, "multiply_unnormal_float_long_to_ext_low" );
+    DIS_FAC_INS( ED3A, "multiply_add_unnormal_float_long_to_ext" );
+    DIS_FAC_INS( ED3B, "multiply_unnormal_float_long_to_ext" );
+    DIS_FAC_INS( ED3C, "multiply_add_unnormal_float_long_to_ext_high" );
+    DIS_FAC_INS( ED3D, "multiply_unnormal_float_long_to_ext_high" );
+    DIS_FAC_INS( ED3E, "multiply_add_float_long" );
+    DIS_FAC_INS( ED3F, "multiply_subtract_float_long" );
 }
 END_DIS_FAC_INS_FUNC()
 

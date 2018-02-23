@@ -119,10 +119,29 @@
     }
 
 /*-------------------------------------------------------------------*/
+/*                       PROGRAMMING NOTE                            */
+/*-------------------------------------------------------------------*/
+/* The following set of macros identifies those instructions which   */
+/* are a part of the OPTION_370_EXTENSION backport of certain S/390  */
+/* and z/Architecture instructions to System/370 mode (refer to the  */
+/* the feat370.h header).  All instructions so identified will have  */
+/* their instruction generated also for the S/370 architecture mode  */
+/* as well, even though such instruction are not formally a part of  */
+/* the System/370 architecture.                                      */
+/*                                                                   */
+/* Whether or not such instructions cause a Program Check Operation  */
+/* Exception to occur when executed in S/370 mode is controlled via  */
+/* enabling or disabling the 'HERC_370_EXTENSION' archlvl facility.  */
+/*                                                                   */
+/* When the facility is disabled (default), all such instructions    */
+/* will properly Program Check (Operation Exception) when attempted  */
+/* to be executed in S/370 mode.  When the facility enabled however, */
+/* then all such 37X instructions are instead allowed to execute.    */
+/*-------------------------------------------------------------------*/
 
-#define GENx37Xx390x___   GENx___x390x___
-#define GENx37Xx___x900   GENx___x___x900
-#define GENx37Xx390x900   GENx___x390x900
+#define GENx37Xx390x___     GENx370x390x___
+#define GENx37Xx___x900     GENx370x___x900
+#define GENx37Xx390x900     GENx370x390x900
 
 /*-------------------------------------------------------------------*/
 

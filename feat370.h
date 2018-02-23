@@ -48,7 +48,7 @@
 /*  compatible and backported to the S/370 architecture.             */
 /*                                                                   */
 /*  The availability of the relevant instructions are enabled by     */
-/*  the s37x loadable module                                         */
+/*  using the command "archlvl enable HERC_370_EXTENSION"            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
