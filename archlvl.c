@@ -599,7 +599,10 @@ FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE )
 /*  Sup   Def   Req   Short Name...                                  */
 /*-------------------------------------------------------------------*/
 
+#if defined(       FEATURE_370_EXTENSION )
 FT( S370, NONE, NONE, HERC_370_EXTENSION )
+#endif
+
 FT( MALL, MALL, NONE, HERC_DETECT_PGMINTLOOP )
 
 #if defined( FEATURE_HERCULES_DIAGCALLS )

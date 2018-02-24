@@ -411,6 +411,10 @@
  #define    _FEATURE_2K_STORAGE_KEYS
 #endif
 
+#if defined( FEATURE_370_EXTENSION )
+ #define    _FEATURE_370_EXTENSION
+#endif
+
 #if defined( FEATURE_CHANNEL_SUBSYSTEM )
  #define    _FEATURE_CHANNEL_SUBSYSTEM
 #endif
@@ -876,6 +880,14 @@
 #if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
  || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
  #error Storage Keys must be either 2K or 4K
+#endif
+
+#if defined( FEATURE_370_EXTENSION ) && !defined( OPTION_370_MODE )
+ #error S/370 Extensions feature requires OPTION_370_MODE
+#endif
+
+#if defined( FEATURE_370_EXTENSION ) && ( __GEN_ARCH != 370 )
+ #error S/370 Extensions feature only applies to OPTION_370_MODE
 #endif
 
 #if defined( FEATURE_BASIC_FP_EXTENSIONS ) && !defined( FEATURE_HEXADECIMAL_FLOATING_POINT )

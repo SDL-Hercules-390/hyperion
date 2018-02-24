@@ -14,10 +14,6 @@
 #define OPTION_370_MODE                 /* Generate S/370 support    */
 #endif
 
-#if !defined(OPTION_370_EXTENSION) && !defined(NO_370_EXTENSION)
-#define OPTION_370_EXTENSION            /* S/370 backport of S/390 & z/arch */
-#endif
-
 #if !defined(OPTION_390_MODE) && !defined(NO_390_MODE)
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
 #endif
@@ -247,6 +243,7 @@
 /*-------------------------------------------------------------------*/
 
 #undef  FEATURE_2K_STORAGE_KEYS
+#undef  FEATURE_370_EXTENSION
 #undef  FEATURE_4K_STORAGE_KEYS
 #undef  FEATURE_ACCESS_REGISTERS
 #undef  FEATURE_ADDRESS_LIMIT_CHECKING

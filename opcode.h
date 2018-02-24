@@ -122,7 +122,7 @@
 /*                       PROGRAMMING NOTE                            */
 /*-------------------------------------------------------------------*/
 /* The following set of macros identifies those instructions which   */
-/* are a part of the OPTION_370_EXTENSION backport of certain S/390  */
+/* are a part of the FEATURE_370_EXTENSION backport of some S/390    */
 /* and z/Architecture instructions to System/370 mode (refer to the  */
 /* the feat370.h header).  All instructions so identified will have  */
 /* their instruction generated also for the S/370 architecture mode  */

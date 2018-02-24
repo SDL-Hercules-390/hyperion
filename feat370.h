@@ -28,6 +28,7 @@
 #define _ARCH_370_NAME      "S/370"
 
 #define FEATURE_2K_STORAGE_KEYS
+#define FEATURE_370_EXTENSION           /* (see further below) */
 #define FEATURE_BASIC_STORAGE_KEYS
 #define FEATURE_BCMODE
 #define FEATURE_CHANNEL_SWITCHING
@@ -68,7 +69,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#if defined( OPTION_370_EXTENSION )
+#if defined( FEATURE_370_EXTENSION )
 
     // (facility-bit features needed by S/390 and z/Architetcure)
 
@@ -103,7 +104,7 @@
     #define FEATURE_SQUARE_ROOT
     #define FEATURE_STRING_INSTRUCTION
 
-#endif /* defined( OPTION_370_EXTENSION ) */
+#endif /* defined( FEATURE_370_EXTENSION ) */
 
 #endif /*defined(OPTION_370_MODE)*/
 
