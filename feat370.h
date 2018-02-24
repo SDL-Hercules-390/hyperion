@@ -10,10 +10,17 @@
 /* at compilation time for S/370 mode                                */
 /*-------------------------------------------------------------------*/
 
+
 /*********************************************************************/
-/*                      PROGRAMMING NOTE!                            */
-/*        This file MUST *NOT* contain any #undef statements!        */
 /*********************************************************************/
+/**                                                                 **/
+/**                     PROGRAMMING NOTE!                           **/
+/**                                                                 **/
+/**       This file MUST *NOT* contain any #undef statements!       **/
+/**                                                                 **/
+/*********************************************************************/
+/*********************************************************************/
+
 
 #if !defined( OPTION_370_MODE )
 #define _ARCH_370_NAME      ""
@@ -40,23 +47,30 @@
 #define FEATURE_VM_BLOCKIO
 
 /*-------------------------------------------------------------------*/
+/*          "Hercules S/370 Instruction Extension Facility"          */
 /*              S/370 backport of S/390 & z/arch                     */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*  The following section defines the ESA/390 and z/Architecture     */
-/*  defined features (and their related instructions) that are       */
-/*  compatible and backported to the S/370 architecture.             */
+/*  features needed to allow certain ESA/390 and z/Architecture      */
+/*  instructions to be backported to the S/370 architecture.         */
 /*                                                                   */
-/*  The availability of the relevant instructions are enabled by     */
-/*  using the command "archlvl enable HERC_370_EXTENSION"            */
+/*  The backported instructions are made available to the S/370      */
+/*  architectural mode by enabling the "Hercules S/370 Instruction   */
+/*  Extension Facility" at runtime, which is disabled by default:    */
+/*                                                                   */
+/*          archlvl  S/370                                           */
+/*          archlvl  enable  HERC_370_EXTENSION                      */
+/*                                                                   */
+/*  The above commands can either be entered manually at Hercules    */
+/*  startup or added to your configuration file to have them run     */
+/*  automatically whenever Hercules is first started/initialized.    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #if defined( OPTION_370_EXTENSION )
 
-    // ESA/390 & z/Architecture backported features
-
-    // (facility-bit features)
+    // (facility-bit features needed by S/390 and z/Architetcure)
 
     #define FEATURE_000_N3_INSTR_FACILITY
     #define FEATURE_016_EXT_TRANSL_FACILITY_2
@@ -74,7 +88,7 @@
     #define FEATURE_076_MSA_EXTENSION_FACILITY_3
     #define FEATURE_077_MSA_EXTENSION_FACILITY_4
 
-    // (non-facility-bit features)
+    // (non-facility-bit features needed by S/390 and z/Architetcure)
 
     #define FEATURE_BASIC_FP_EXTENSIONS
     #define FEATURE_BINARY_FLOATING_POINT

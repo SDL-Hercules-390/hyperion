@@ -121,11 +121,6 @@ $(X)dyngui.dll:   $(O)dyngui.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)s37x.dll:     $(O)s37xmod.obj \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
-    $(linkdll)
-    $(MT_DLL_CMD)
-
 # ---------------------------------------------------------------------
 # Additional loadable modules
 

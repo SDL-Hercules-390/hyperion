@@ -678,7 +678,7 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
     What architectural features are implemented?
 </H4>
 
-<P>The following features of ESA/390 have been implemented: </P>
+<P>The following features of ESA/390 <i><u>have</u></i> been implemented: </P>
 
 <UL>
 <li>24-bit and 31-bit addressing
@@ -703,26 +703,30 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Compression
 <li>Concurrent Sense
 <li>Conditional Swapping
+<li>DAT-Enhancement Facility 1
 <li>Decimal Instructions
 <li>Dual Address Space
 <li>Dynamic Address Translation
 <li>Dynamic Reconfiguration
 <li>Expanded Storage
 <li>Extended TOD clock
-<li>Extended Translation
-<li>Extended Translation Facility 2
+<li>Extended Translation Facility 1
+<li>Extended-Translation Facility 2
 <li>Fast Synchronous Data Mover Facility
 <li>Floating-Point-Support Extensions
 <li>Guest PER enhancement
 <li>Halfword-Immediate instructions
 <li>Hexadecimal Floating-Point Instructions
+<li>HFP-Multiply-and-Add/Subtract Facility
 <li>Home Space Mode
 <li>Incorrect-Length-Indication Suppression
 <li>Interpretive Execution (SIE)
 <li>Key-Controlled Protection
 <li>Linkage Stack
+<li>Long-Displacement Facility
 <li>Low-Address Protection
 <li>LURA/STURA instructions
+<li>Message-Security Assist
 <li>Move Inverse
 <li>Move Page (Facility 2)
 <li>Multiple Controlled Data Space (VM dataspaces)
@@ -747,29 +751,25 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>TB/TPROT instructions
 <li>TOD Clock, Clock Comparator, and CPU Timer
 <li>Vector Facility
+<li>z/Architecture architectural mode is installed
 </UL>
 
-<P>The following features of z/Architecture have been implemented:</P>
+<P>The following features of z/Architecture <i><u>have</u></i> been implemented:</P>
 
 <UL>
 <li>Access-Exception-Fetch/Store-Indication Facility
 <li>ASN-and-LX-Reuse Facility
 <li>CMPSC-Enhancement Facility
-<li>Compare-and-Swap-and-Store Facility
+<li>Compare-and-Swap-and-Store Facility 1
 <li>Compare-and-Swap-and-Store Facility 2
 <li>Conditional-Emergency-Signal and Sense-Running-Status Facility
 <li>Conditional-SSKE Facility
 <li>Configuration-Topology Facility
 <li>DAT-Enhancement Facility 1
 <li>DAT-Enhancement Facility 2
-
-
 <li>Decimal-Floating-Point Facility
-<li>Decimal-Floating-Point Facility Has High Performance
 <li>Decimal-Floating-Point-Packed-Conversion Facility
 <li>Decimal-Floating-Point-Rounding Facility
-
-
 <li>Distinct-Operands Facility
 <li>Enhanced-DAT Facility 1
 <li>Enhanced-Monitor Facility
@@ -801,7 +801,6 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Load-Program-Parameter Facility
 <li>Load/Store-on-Condition Facility 1
 <li>Long-Displacement Facility
-<li>Long-Displacement Facility Has High Performance
 <li>Message-Security Assist
 <li>Message-Security-Assist Extension 1
 <li>Message-Security-Assist Extension 2
@@ -811,6 +810,7 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Modified CCW Indirect Data Addressing (MIDAW) Facility
 <li>Move-with-Optional-Specifications Facility
 <li>Multiple-Subchannel-Set Facility
+<li>N3 Instructions are installed
 <li>Parsing-Enhancement Facility
 <li>PER-3 Facility
 <li>Population-Count Facility
@@ -821,17 +821,16 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Store-Clock-Fast Facility
 <li>Store-Facility-List-Extended Facility
 <li>TOD-Clock-Steering Facility
-<li>z/Architecture architectural mode is active
 <li>z/Architecture architectural mode is installed
 </UL>
 
-<P>The following features of z/Architecture have <i><u>not</u></i> been implemented:</P>
+<P>The following features of z/Architecture have <i><u>not</u></i> yet been implemented:</P>
 
 <UL>
-<li>Configuration-z/Architecture-Architectural-Mode Facility
 <li>Constrained-Transactional-Execution Facility
 <li>CPU-Measurement Counter Facility
 <li>CPU-Measurement Sampling Facility
+<li>CZAM Facility (Configuration-z/Architecture-Architectural-Mode)
 <li>Decimal-Floating-Point-Packed-Conversion Facility
 <li>Enhanced-DAT Facility 2
 <li>Entropy-Encoding-Compression Facility
@@ -859,7 +858,7 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Nonquiescing Key-Setting Facility
 <li>Order-Preserving-Compression Facility
 <li>PER Zero-Address-Detection Facility
-<li>PFPO Facility
+<li>PFPO (Perform Floating-Point Operation) Facility
 <li>Program-Directed IPL (<i>proper</i> Diagnose x'308' support)
 <li>Restore-Subchannel Facility
 <li>Server-Time-Protocol Facility
@@ -868,27 +867,27 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
 <li>Store-Hypervisor-Information Facility
 <li>Test-Pending-External-Interruption Facility
 <li>Transactional-Execution Facility
-<li>Vector-Enhancements Facility 1
 <li>Vector Facility for z/Architecture
 <li>Vector Packed-Decimal Facility
+<li>Vector-Enhancements Facility 1
 <li>Warning-Track-Interruption Facility
 </UL>
 
-<P>The following standard feature has not yet been implemented:</P>
+<P>The following standard feature has <i><u>not</u></i> yet been implemented:</P>
 
 <UL>
 <LI>Clear I/O (full functionality for S/370)
 </UL>
 
-<P>The following optional features have been partially implemented:</P>
+<P>The following optional features have been <i><u>partially</u></i> implemented:</P>
 
 <UL>
 <LI>Channel-Subsystem Call
 <LI>VM/370 Assists (most but not all)
 </UL>
 
-<P>The following features are not yet implemented, either due to lack
-of documentation, limited host system capability, or lack of
+<P>The following features are <i><u>not</u></i> yet implemented, either due to
+lack of documentation, limited host system capability, or lack of
 supporting hardware:</P>
 
 <UL>

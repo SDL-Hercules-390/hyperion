@@ -95,9 +95,7 @@ endif
 dynamic_SRC = \
   dyncrypt.c  \
   dyngui.c    \
-  hdteq.c     \
-  s37x.c      \
-  s37xmod.c
+  hdteq.c
 
 dyndev_SRC =  \
   awstape.c   \
@@ -197,8 +195,7 @@ HERCMODS =      \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
-  hdt3525.la    \
-  s37x.la
+  hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
 noinst_LTLIBRARIES  = $(HERCLIBS)
@@ -254,10 +251,6 @@ dyncrypt_la_LIBADD  = $(DYNMOD_LD_ADD)
 dyngui_la_SOURCES   = dyngui.c
 dyngui_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 dyngui_la_LIBADD    = $(DYNMOD_LD_ADD)
-
-s37x_la_SOURCES     = s37x.c s37xmod.c
-s37x_la_LDFLAGS     = $(DYNMOD_LD_FLAGS)
-s37x_la_LIBADD      = $(DYNMOD_LD_ADD)
 
 hdteq_la_SOURCES    = hdteq.c
 hdteq_la_LDFLAGS    = $(DYNMOD_LD_FLAGS)

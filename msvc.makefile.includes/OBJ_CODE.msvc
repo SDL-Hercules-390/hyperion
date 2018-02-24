@@ -140,5 +140,4 @@ hengine_OBJ = \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \
-    $(O)xstore.obj   \
-    $(O)s37x.obj
+    $(O)xstore.obj

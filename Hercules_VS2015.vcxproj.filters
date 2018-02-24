@@ -666,12 +666,6 @@
     <ClCompile Include="rexx.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="s37x.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="s37xmod.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scedasd.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

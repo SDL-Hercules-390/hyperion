@@ -410,8 +410,6 @@
     <ClCompile Include="qeth.c" />
     <ClCompile Include="resolve.c" />
     <ClCompile Include="rexx.c" />
-    <ClCompile Include="s37x.c" />
-    <ClCompile Include="s37xmod.c" />
     <ClCompile Include="scedasd.c" />
     <ClCompile Include="scescsi.c" />
     <ClCompile Include="script.c" />

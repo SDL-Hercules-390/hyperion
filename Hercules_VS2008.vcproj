@@ -1028,14 +1028,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\s37x.c"
-							>
-						</File>
-						<File
-							RelativePath=".\s37xmod.c"
-							>
-						</File>
-						<File
 							RelativePath=".\scedasd.c"
 							>
 						</File>

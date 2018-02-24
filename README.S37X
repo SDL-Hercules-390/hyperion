@@ -1,108 +1,56 @@
-S/370 Backport of select ESA/390 and z/Architecture instructions
-Runtime control of the backport
+-------------------------------------------------------------------------------
 
-I. Introduction
+    S/370 Backport of select ESA/390 and z/Architecture instructions
+
+                   Runtime control of the backport
+
+-------------------------------------------------------------------------------
+
+                             Introduction
 
 Some ESA/390 and z/Architecture features and their instructions are
-architecturally compatible with the S/370 architecture. Although they
-are not present in the S/370 Principle of Operations (GA22-7000), they
-are not in contradiction with the reference manual.
+architecturally compatible with the S/370 architecture.  Although they are
+not present in the S/370 Principle of Operations (GA22-7000), they are not
+in contradiction with the reference manual.
 
-For example, there is no contradication for an instruction such as
-LHI (Load Halfword Immediate) to be included as part of the S/370
-architecture presented by hercules.
+For example, there is no contradication for an instruction such as LHI (Load
+Halfword Immediate) to be included as part of the S/370 architecture presented
+by hercules.
 
-However, since these instruction are not part of the original
-architecture, it is necessary that these extensions to the architecture
-be controlled at runtime.
+However, since these instruction are not part of the original architecture,
+it is necessary that these extensions to the architecture be controlled at
+runtime.
 
-In hercules, the fact that such or such facility or feature is
-built for such or such architecture is controlled by a series
-of C preprocessor macros in the feat370.h, feat390.h and feat900.h
-files. 
+In hercules, the fact that such and such facility or feature is built for
+such and such architecture is controlled by a series of C preprocessor macros
+in the feat370.h, feat390.h and feat900.h header files. 
 
-Furthermore, the availability of the instructions is controlled
-by Operation code tables in opcode.c.
+Furthermore, the availability of the instructions is controlled by Operation
+code tables in opcode.c.
 
-Before runtime control was available, a select number of features
-were made available in feat370.h and then commented out. Removing
-the comment and rebuilding hercules made it possible to access
-those features in the S/370 architectural mode.
+Before runtime control was available, a select number of features were made
+available in feat370.h and then commented out.  Removing the comment and
+rebuilding hercules then made it possible to access those features in the
+S/370 architectural mode.
 
-However, requiring a rebuild seemed a little too stringent for
-the casual user of hercules, meaning that designers of programs
-requiring those additional instructions would have required the
-users of those programs to have custom built version of hercules.
+However, requiring a rebuild seemed a little too much to ask of the casual
+hercules user since it would mean they would have to manually build a custom
+version of hercules for themselves, which is not something a casual user of
+Hercules is necessarily prepared to do.
 
-II. Enabling the additional instructions
+-------------------------------------------------------------------------------
 
-From the configuration file statement or the panel issue :
+                  Enabling the additional instructions
 
-ldmod s37x
+From the configuration file statement or the panel, simply issue the
+commands:
 
-III. Implementing conditional instructions (for hercules developpers)
+            archlvl  370
+            archlvl  enable  herc_370_extension
 
-The general steps that are taken when new instructions are implemented
-are :
+This will enable all currently defined backported instructions to then be
+available in System/370 mode.  For the current list of affected instructions
+refer to the "BEG_DIS_FAC_INS_FUNC( herc37X )" section of the 'archlvl.c'
+source file.
 
-- Define a FEATURE_XXX which describes the feature to which the
-  new instructions are a part of
-- Include the FEATURE_XXX macro in featall.h and #undef it
-- Include the FEATURE_XXX macro in the feat370.h, feat390.h and feat900.h
-  as appropriate. These control for which architectures the instruction
-  functions will actually be compiled.
-- If the instruction is part of an already existing MULTI BYTE opcode,
-  the function for the instruction is included in the opcode_XXxx table
-  in opcode.c. The macro used to indicate which architecture will be
-  made available is GENxAAAxBBBxCCC where AAA is either '370' or '___',
-  BBB is either '390' or '___' and CCC is either '900' or '___'. When 
-  '___' is used, it means the instruction is not made available.
-  Additionally, AAA may also be '37X' to indicate its use is conditional.
-- If the instruction is NOT part of an already existing MULTI BYTE
-  opcode, a new table is created. A new execute_XXxx is also added
-  to allow instruction routing. The format of all these depend
-  on the placement and mask of the 2nd part of the multi byte
-  operation code.
-  The new opcode table must also be copied into the relevant operational
-  opcode tables (named s370_opcode_xxx, s390_opcode_xxx and z900_opcode_xxx)
-  Finaly, the new opcode table pointer must also be added in the REGS
-  structure in hstruct.h.
-  It also must be added to the opcode_replace_instruction so that it
-  may be dynamically updated.
-
-If the instruction is to be made conditionally available in S/370 mode,
-the instruction should be added in the s37x.c module. Also, in feat370.h
-the feature should be included in the section bounded by OPTION_370_EXTENSION.
-
-IV New features enabled (provisional list)
-
-The following ESA/390 features are made available in S/370 mode :
-
-BASIC FP EXTENSIONS
-BINARY FLOATING POINT
-CHECKSUM INSTRUCTION
-COMPARE AND MOVE EXTENDED
-COMPRESSION
-EXTENDED TRANSLATION
-EXTENDED TRANSLATION FACILITY 2
-HFP EXTENSIONS
-HFP MULTIPLY ADD SUBTRACT
-HFP UNNORMALIZED EXTENSION
-IMMEDIATE AND RELATIVE
-SQUARE ROOT
-STRING INSTRUCTION
-
-The following z/Architecture features are made available in S/370 mode :
-
-N3 INSTRUCTIONS
-ETF2 ENHANCEMENT
-ETF3 ENHANCEMENT
-EXECUTE EXTENSIONS FACILITY
-EXTENDED IMMEDIATE
-EXTENDED TRANSLATION FACILITY_3
-GENERAL INSTRUCTIONS EXTENSION FACILITY
-LONG DISPLACEMENT
-MESSAGE SECURITY ASSIST
-MESSAGE SECURITY ASSIST EXTENSION_1
-MESSAGE SECURITY ASSIST EXTENSION_2
-PARSING ENHANCEMENT FACILITY
+-------------------------------------------------------------------------------
