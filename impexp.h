@@ -367,6 +367,18 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+
+#ifndef    _VECTOR_C_
+  #ifndef  _HENGINE_DLL_
+    #define VECT_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define VECT_DLL_IMPORT         extern
+  #endif
+#else
+  #define   VECT_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
 /*                          _HTAPE_DLL_                              */
 /*-------------------------------------------------------------------*/
 

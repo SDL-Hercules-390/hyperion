@@ -21,10 +21,11 @@
 
 #include "hstdinc.h"
 
+#define _VECTOR_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )

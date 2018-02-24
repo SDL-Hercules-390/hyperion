@@ -995,12 +995,8 @@
  #error S/370 Channel and Channel Subsystem cannot both be defined
 #endif
 
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined(_900)
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && ( __GEN_ARCH == 900 )
  #error S370/S390 Vector Facility not supported on z/Arch capable processors
-#endif
-
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
- #error S370/S390 Vector Facility not supported in z/Arch mode
 #endif
 
 #if defined( FEATURE_SCSI_IPL ) && !defined( FEATURE_HARDWARE_LOADER )
