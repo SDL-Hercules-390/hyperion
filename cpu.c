@@ -1604,7 +1604,7 @@ cpustate_stopping:
     /* This is where a stopped CPU will wait */
     if (unlikely(regs->cpustate == CPUSTATE_STOPPED))
     {
-        TOD saved_timer = cpu_timer(regs);
+        S64 saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
 
@@ -1634,7 +1634,6 @@ cpustate_stopping:
     if (WAITSTATE(&regs->psw))
     {
         regs->waittod = host_tod();
-        set_cpu_timer_mode(regs);
 
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
@@ -1665,8 +1664,6 @@ cpustate_stopping:
         /* Calculate the time we waited */
         regs->waittime += host_tod() - regs->waittod;
         regs->waittod = 0;
-
-        set_cpu_timer_mode(regs);
 
         /* If late state change to stopping, go reprocess */
         if (unlikely(regs->cpustate == CPUSTATE_STOPPING))
@@ -1851,18 +1848,16 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
     if (shouldstep)
     {
         REGS *hostregs = regs->hostregs;
-        TOD saved_timer[2];
+        S64 saved_timer[2];
 
         OBTAIN_INTLOCK(hostregs);
 
         hostregs->waittod = host_tod();
 
         /* The CPU timer is not decremented for a CPU that is in
-           the manual state (e.g. stopped in single step mode)
-        */
-        save_cpu_timers(hostregs, &saved_timer[0],
-                        regs,     &saved_timer[1]);
-
+           the manual state (e.g. stopped in single step mode) */
+        saved_timer[0] = cpu_timer(regs);
+        saved_timer[1] = cpu_timer(hostregs);
         hostregs->cpustate = CPUSTATE_STOPPED;
         sysblk.started_mask &= ~hostregs->cpubit;
         hostregs->stepwait = 1;
@@ -1877,8 +1872,8 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
         hostregs->stepwait = 0;
         sysblk.started_mask |= hostregs->cpubit;
 
-        set_cpu_timers(hostregs, saved_timer[0],
-                       regs,     saved_timer[1]);
+        set_cpu_timer(regs,saved_timer[0]);
+        set_cpu_timer(hostregs,saved_timer[1]);
 
         hostregs->waittime += host_tod() - hostregs->waittod;
         hostregs->waittod = 0;

@@ -821,14 +821,14 @@ int rc = 0;
         hw_now.low  = hw_tod.low;
         epoch_now = regs->tod_epoch;
         clkc_now = regs->clkc;
-        cpt_now = cpu_timer(regs);
+        cpt_now = CPU_TIMER(regs);
 #if defined(_FEATURE_SIE)
         if ( regs->sie_active )
         {
             vtod_now = TOD_CLOCK(regs->guestregs);
             vepoch_now = regs->guestregs->tod_epoch;
             vclkc_now = regs->guestregs->clkc;
-            vcpt_now = cpu_timer_SIE(regs->guestregs);
+            vcpt_now = CPU_TIMER(regs->guestregs);
             sie_flag = 1;
         }
 #endif

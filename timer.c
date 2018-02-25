@@ -89,31 +89,24 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
          * [2] Decrement the CPU timer for each CPU  *
          *-------------------------------------------*/
 
-        /*  If LPAR mode and not waiting, or in BASIC mode, decrement
-         *  the CPU timer and update the CPU timer interrupt state, if.
-         *  necessary.
-         */
-        if (!WAITSTATE(&regs->psw) || !sysblk.lparmode)
+        /* Set interrupt flag if the CPU timer is negative */
+        if (CPU_TIMER(regs) < 0)
         {
-            /* Set interrupt flag if the CPU timer is negative */
-            if (cpu_timer(regs) < 0)
+            if (!IS_IC_PTIMER(regs))
             {
-                if (!IS_IC_PTIMER(regs))
-                {
-                    ON_IC_PTIMER(regs);
-                    intmask |= regs->cpubit;
-                }
+                ON_IC_PTIMER(regs);
+                intmask |= regs->cpubit;
             }
-            else if(IS_IC_PTIMER(regs))
-                OFF_IC_PTIMER(regs);
         }
+        else if(IS_IC_PTIMER(regs))
+            OFF_IC_PTIMER(regs);
 
 #if defined(_FEATURE_SIE)
         /* When running under SIE also update the SIE copy */
         if(regs->sie_active)
         {
             /* Set interrupt flag if the CPU timer is negative */
-            if (cpu_timer_SIE(regs) < 0)
+            if (CPU_TIMER(regs->guestregs) < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
                 intmask |= regs->cpubit;
@@ -173,23 +166,22 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 void* timer_update_thread ( void* argp )
 {
 int     i;                              /* Loop index                */
-
-REGS*   regs;                           /* -> REGS                   */
-U64     curr_mips;                      /* Calculated MIPS rate      */
-U64     curr_sios;                      /* Calculated SIO rate       */
+REGS   *regs;                           /* -> REGS                   */
+U64     mipsrate;                       /* Calculated MIPS rate      */
+U64     siosrate;                       /* Calculated SIO rate       */
 U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
 
 /* Clock times use the top 64-bits of the ETOD clock                 */
 U64     now;                            /* Current time of day       */
 U64     then;                           /* Previous time of day      */
-U64     interval;                       /* Interval                  */
-U64     half_intrv;                     /* One-half interval         */
+U64     diff;                           /* Interval                  */
+U64     halfdiff;                       /* One-half interval         */
 U64     waittime;                       /* Wait time                 */
 const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
-#define curr_rate( _count, _interval ) \
-        ((((_count) * (_interval)) + half_intrv) / interval)
+#define diffrate(_x,_y) \
+        ((((_x) * (_y)) + halfdiff) / diff)
 
     UNREFERENCED( argp );
 
@@ -208,18 +200,13 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
         /* Update TOD clock and save TOD clock value */
         now = update_tod_clock();
 
-        /* Calculate the elpased interval */
-        interval = (now - then);
+        diff = now - then;
 
-        /* Is it time to recalcluate our rates? */
-        if (interval >= period)
+        if (diff >= period)             /* Period expired? */
         {
-            half_intrv = interval / 2;  // (for rounding)
-            then = now;                 // (for next time)
-
-            /* Zero all counters */
-            total_mips = 0;
-            total_sios = 0;
+            halfdiff = diff / 2;        /* One-half interval for rounding */
+            then = now;
+            total_mips = total_sios = 0;
 
 #if defined( OPTION_SHARED_DEVICES )
             total_sios = sysblk.shrdcount;
@@ -240,30 +227,26 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
                     /* 0% if CPU is STOPPED */
                     if (regs->cpustate == CPUSTATE_STOPPED)
                     {
-                        regs->mipsrate = 0;
-                        regs->siosrate = 0;
-                        regs->cpupct   = 0;
+                    regs->mipsrate = regs->siosrate = regs->cpupct = 0;
                         release_lock( &sysblk.cpulock[ i ]);
                         continue;
                     }
 
                     /* Calculate instructions per second */
-                    curr_mips         =  regs->instcount;
+                    mipsrate = regs->instcount;
                     regs->instcount   =  0;
-                    regs->prevcount  +=  curr_mips;
-
-                    curr_mips         =  curr_rate( curr_mips, period );
-                    regs->mipsrate    =  curr_mips;
-                    total_mips       +=  curr_mips;
+                    regs->prevcount += mipsrate;
+                    mipsrate = diffrate(mipsrate, period);
+                    regs->mipsrate = mipsrate;
+                    total_mips += mipsrate;
 
                     /* Calculate SIOs per second */
-                    curr_sios        =  regs->siocount;
-                    regs->siocount   =  0;
-                    regs->siototal  +=  curr_sios;
-
-                    curr_sios        =  curr_rate( curr_sios, period );
-                    regs->siosrate   =  curr_sios;
-                    total_sios      +=  curr_sios;
+                    siosrate = regs->siocount;
+                    regs->siocount = 0;
+                    regs->siototal += siosrate;
+                    siosrate = diffrate(siosrate, period);
+                    regs->siosrate = siosrate;
+                    total_sios += siosrate;
 
                     /* Calculate CPU busy percentage */
                     waittime = regs->waittime;
@@ -276,9 +259,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
                         regs->waittod = now;
                     }
 
-                    regs->cpupct = min( (interval > waittime) ?
-                                         curr_rate( interval - waittime, 100 ) : 0,
-                                         100 );
+                    regs->cpupct = min( (diff > waittime) ?
+                        diffrate(diff - waittime, 100) : 0, 100 );
 
                 }
                 release_lock( &sysblk.cpulock[ i ]);
@@ -291,7 +273,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
             update_maxrates_hwm(); // (update high-water-mark values)
 
-        } /* end if(interval >= period) */
+        } /* end if (diff >= period) */
 
         /* Sleep for another timer update interval... */
         usleep ( sysblk.timerint );

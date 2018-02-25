@@ -676,8 +676,8 @@ U64     dreg;
         OBTAIN_INTLOCK(regs);
 
         /* CPU timer */
-        if(cpu_timer(GUESTREGS) < 0)
-            ON_IC_PTIMER(GUESTREGS);
+        if (CPU_TIMER( GUESTREGS ) < 0)
+            ON_IC_PTIMER( GUESTREGS );
 
         /* Clock comparator */
         if( TOD_CLOCK(GUESTREGS) > GUESTREGS->clkc )
