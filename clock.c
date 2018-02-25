@@ -72,8 +72,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 /* host_ETOD - Primary high-resolution clock fetch and conversion             */
 /*----------------------------------------------------------------------------*/
 
-ETOD*
-host_ETOD (ETOD* ETOD)
+ETOD* host_ETOD (ETOD* ETOD)
 {
     struct timespec time;
 
@@ -110,29 +109,18 @@ static TOD universal_clock(void) /* really: any clock used as a base */
     return (universal_tod.high);
 }
 
-#if 0
-dead code
-static TOD universal_clock_extended(ETOD* ETOD)
-{
-    host_ETOD(ETOD);
-    return (ETOD->high);
-}
-#endif
-
-
 /* The hercules hardware clock, based on the universal clock, but    */
 /* running at its own speed as optionally set by set_tod_steering()  */
 /* The hardware clock returns a unique value                         */
-static double hw_steering = 0.0;  /* Current TOD clock steering rate */
-static TOD hw_episode;           /* TOD of start of steering episode */
-static S64 hw_offset = 0;       /* Current offset between TOD and HW */
-// static ETOD hw_tod = {0, 0};       /* Globally defined in clock.h */
-static ETOD hw_unique_clock_tick = {0, 0};
 
+static double hw_steering = 0.0; /* Current TOD clock steering rate  */
+static TOD hw_episode;           /* TOD of start of steering episode */
+static S64 hw_offset = 0;        /* Current offset between TOD - HW  */
+//atic ETOD hw_tod = {0, 0};     /* Globally defined in clock.h      */
+static ETOD hw_unique_clock_tick = {0, 0};
 static TOD hw_adjust(TOD base_tod);
 
-static TOD
-hw_calculate_unique_tick (void)
+static TOD hw_calculate_unique_tick (void)
 {
     static const ETOD     m1  = ETOD_init(0,65536);
 
@@ -388,8 +376,7 @@ thread_cputime(const REGS *regs)
 }
 
 
-U64
-thread_cputime_us(const REGS *regs)
+U64 thread_cputime_us(const REGS *regs)
 {
     U64 result;
     int             rc = -1;
@@ -560,8 +547,7 @@ S64 cpu_timer_SIE(REGS *regs)
 }
 
 
-DLL_EXPORT
-TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
+DLL_EXPORT TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 {
     /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
      * order for comparison. Consequently, swap delays for a subsequent
@@ -674,8 +660,7 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 }
 
 
-TOD
-tod_clock (REGS* regs)
+TOD tod_clock (REGS* regs)
 {
     ETOD    ETOD;
     return ( etod_clock(regs, &ETOD, ETOD_fast) );
@@ -796,8 +781,7 @@ int pending = 0;
  *
  */
 
-static INLINE unsigned int
-is_leapyear ( const unsigned int year )
+static INLINE unsigned int is_leapyear ( const unsigned int year )
 {
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
@@ -1111,8 +1095,7 @@ S32 vtimer=0;
 }
 
 
-DLL_EXPORT
-void ARCH_DEP(store_int_timer) (REGS *regs)
+DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,1);
 }
@@ -1124,8 +1107,7 @@ void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
 }
 
 
-DLL_EXPORT
-void ARCH_DEP(fetch_int_timer) (REGS *regs)
+DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);

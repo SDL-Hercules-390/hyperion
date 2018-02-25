@@ -2046,11 +2046,11 @@ U32     i2;                             /* 32-bit operand values     */
 
     RIL_B(inst, regs, r1, opcd, i2);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if(regs->psw.amode64)
         regs->GR_G(r1) = PSW_IA64(regs, 6);
     else
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     if ( regs->psw.amode )
         regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 6);
     else
@@ -4482,7 +4482,7 @@ RADR    n;                              /* Unsigned work             */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* 010B TAM   - Test Addressing Mode                             [E] */
 /*-------------------------------------------------------------------*/
@@ -4493,16 +4493,16 @@ DEF_INST(test_addressing_mode)
     UNREFERENCED(inst);
 
     regs->psw.cc =
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                    (regs->psw.amode64 << 1) |
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
                                               regs->psw.amode;
 
 } /* end DEF_INST(test_addressing_mode) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* 010C SAM24 - Set Addressing Mode 24                           [E] */
 /*-------------------------------------------------------------------*/
@@ -4532,10 +4532,10 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
     regs->psw.AMASK = AMASK24;
 
 } /* end DEF_INST(set_addressing_mode_24) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
-#if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* 010D SAM31 - Set Addressing Mode 31                           [E] */
 /*-------------------------------------------------------------------*/
@@ -4565,7 +4565,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
     regs->psw.AMASK = AMASK31;
 
 } /* end DEF_INST(set_addressing_mode_31) */
-#endif /*defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -4581,11 +4581,11 @@ DEF_INST(set_addressing_mode_64)
     /* Set the bear register */
     SET_BEAR_REG(regs, regs->bear_ip);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && !regs->psw.amode64)
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     regs->psw.amode = regs->psw.amode64 = 1;
     regs->psw.AMASK = AMASK64;
@@ -4870,7 +4870,7 @@ int     cc;                             /* Condition code            */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)
+#if defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY )
 /*-------------------------------------------------------------------*/
 /* 0104 PTFF  - Perform Timing Facility Function                 [E] */
 /*-------------------------------------------------------------------*/
@@ -4926,10 +4926,10 @@ DEF_INST(perform_timing_facility_function)
             regs->psw.cc = 3;
     }
 }
-#endif /*defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)*/
+#endif /* defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY ) */
 
 
-#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B9A2 PTF   - Perform Topology Function                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5005,10 +5005,10 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     if (regs->psw.cc != 0)
         PTT_ERR("*PTF",regs->GR_G(r1),rc,regs->psw.IA_L);
 }
-#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
+#endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
 
 
-#if defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)
+#if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5208,10 +5208,10 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
     regs->GR_G(r1) = bitmap;
 
 } /* end DEF_INST(reset_reference_bits_multiple) */
-#endif /*defined(FEATURE_066_RES_REF_BITS_MULT_FACILITY)*/
+#endif /* defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY ) */
 
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL KEY PROCESSING is deleted       */
 /*                                                                   */
@@ -5507,7 +5507,7 @@ int     page_offset;                    /* Low order bits of R2      */
     }
 
 } /* end DEF_INST(perform_frame_management_function) */
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
 
 
 #if defined( FEATURE_000_N3_INSTR_FACILITY )
@@ -5545,7 +5545,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_007_STFL_EXTENDED_FACILITY)
+#if defined( FEATURE_007_STFL_EXTENDED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B2B0 STFLE - Store Facility List Extended                     [S] */
 /*-------------------------------------------------------------------*/
@@ -5609,7 +5609,7 @@ int     cc;                             /* Condition code            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(store_facility_list_extended) */
-#endif /*defined(FEATURE_007_STFL_EXTENDED_FACILITY)*/
+#endif /* defined( FEATURE_007_STFL_EXTENDED_FACILITY ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -5759,7 +5759,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* E9   PKA   - Pack ASCII                                      [SS] */
 /*-------------------------------------------------------------------*/
@@ -5795,10 +5795,10 @@ int     i, j;                           /* Array subscripts          */
     ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
 
 } /* end DEF_INST(pack_ascii) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* E1   PKU   - Pack Unicode                                    [SS] */
 /*-------------------------------------------------------------------*/
@@ -5835,10 +5835,10 @@ int     i, j;                           /* Array subscripts          */
     ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
 
 } /* end DEF_INST(pack_unicode) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* EA   UNPKA - Unpack ASCII                                    [SS] */
 /*-------------------------------------------------------------------*/
@@ -5887,10 +5887,10 @@ int     cc;                             /* Condition code            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(unpack_ascii) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* E2   UNPKU - Unpack Unicode                                  [SS] */
 /*-------------------------------------------------------------------*/
@@ -5942,10 +5942,10 @@ int     cc;                             /* Condition code            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(unpack_unicode) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* B993 TROO  - Translate One to One                           [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6036,10 +6036,10 @@ int     tccc;                   /* Test-Character-Comparison Control */
     } /* end while */
 
 } /* end DEF_INST(translate_one_to_one) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* B992 TROT  - Translate One to Two                           [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6131,10 +6131,10 @@ int     tccc;                   /* Test-Character-Comparison Control */
     } /* end while */
 
 } /* end DEF_INST(translate_one_to_two) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* B991 TRTO  - Translate Two to One                           [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6232,10 +6232,10 @@ int     tccc;                   /* Test-Character-Comparison Control */
     } /* end while */
 
 } /* end DEF_INST(translate_two_to_one) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* B990 TRTT  - Translate Two to Two                           [RRF] */
 /*-------------------------------------------------------------------*/
@@ -6332,10 +6332,10 @@ int     tccc;                   /* Test-Character-Comparison Control */
     } /* end while */
 
 } /* end DEF_INST(translate_two_to_two) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* EB8E MVCLU - Move Long Unicode                              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6416,10 +6416,10 @@ int     cpu_length;                     /* cpu determined length     */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(move_long_unicode) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
+#if defined( FEATURE_016_EXT_TRANSL_FACILITY_2 )
 /*-------------------------------------------------------------------*/
 /* EB8F CLCLU - Compare Logical Long Unicode                   [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6507,10 +6507,10 @@ int     cpu_length;                     /* cpu determined length     */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(compare_logical_long_unicode) */
-#endif /*defined(FEATURE_016_EXT_TRANSL_FACILITY_2)*/
+#endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E376 LB    - Load Byte                                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6526,10 +6526,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E377 LGB   - Load Byte Long                                 [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6545,10 +6545,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte_long) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E35A AY    - Add (Long Displacement)                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6575,10 +6575,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E37A AHY   - Add Halfword (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6605,10 +6605,10 @@ S32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_halfword_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E35E ALY   - Add Logical (Long Displacement)                [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6631,10 +6631,10 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
 } /* end DEF_INST(add_logical_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB54 NIY   - And Immediate (Long Displacement)              [SIY] */
 /*-------------------------------------------------------------------*/
@@ -6658,10 +6658,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
     ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(and_immediate_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E354 NY    - And (Long Displacement)                        [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6681,10 +6681,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
 
 } /* end DEF_INST(and_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E359 CY    - Compare (Long Displacement)                    [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6706,10 +6706,10 @@ U32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
 
 } /* end DEF_INST(compare_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E379 CHY   - Compare Halfword (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6731,10 +6731,10 @@ S32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_halfword_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E355 CLY   - Compare Logical (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6755,10 +6755,10 @@ U32     n;                              /* 32-bit operand values     */
                    regs->GR_L(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB55 CLIY  - Compare Logical Immediate (Long Displacement)  [SIY] */
 /*-------------------------------------------------------------------*/
@@ -6779,10 +6779,10 @@ BYTE    cbyte;                          /* Compare byte              */
                    (cbyte > i2) ? 2 : 0;
 
 } /* end DEF_INST(compare_logical_immediate_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB21 CLMY  - Compare Logical Characters under Mask Long Disp[RSY] */
 /*-------------------------------------------------------------------*/
@@ -6820,10 +6820,10 @@ BYTE    rbyte[4],                       /* Register bytes            */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(compare_logical_characters_under_mask_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB14 CSY   - Compare and Swap (Long Displacement)           [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6878,10 +6878,10 @@ U32     old;                            /* old value                 */
     }
 
 } /* end DEF_INST(compare_and_swap_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB31 CDSY  - Compare Double and Swap (Long Displacement)    [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6940,10 +6940,10 @@ U64     old, new;                       /* old, new values           */
     }
 
 } /* end DEF_INST(compare_double_and_swap_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E306 CVBY  - Convert to Binary (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -6984,10 +6984,10 @@ BYTE    dec[8];                         /* Packed decimal operand    */
         regs->program_interrupt (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
 }
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E326 CVDY  - Convert to Decimal (Long Displacement)         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7011,10 +7011,10 @@ BYTE    dec[16];                        /* Packed decimal result     */
     ARCH_DEP(vstorec) ( dec+8, 8-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(convert_to_decimal_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7038,10 +7038,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
     ITIMER_UPDATE(effective_addr1,0,regs);
 
 } /* end DEF_INST(exclusive_or_immediate_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E357 XY    - Exclusive Or (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7061,10 +7061,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
 
 } /* end DEF_INST(exclusive_or_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E373 ICY   - Insert Character (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7080,10 +7080,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(insert_character_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB81 ICMY  - Insert Characters under Mask Long Displacement [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7140,10 +7140,10 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 } /* end DEF_INST(insert_characters_under_mask_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E358 LY    - Load (Long Displacement)                       [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7159,11 +7159,11 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* EB9A LAMY  - Load Access Multiple (Long Displacement)       [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7209,11 +7209,11 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(load_access_multiple_y) */
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E371 LAY   - Load Address (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7229,10 +7229,10 @@ VADR    effective_addr2;                /* Effective address         */
     SET_GR_A(r1, regs, effective_addr2);
 
 } /* end DEF_INST(load_address_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E378 LHY   - Load Halfword (Long Displacement)              [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7248,10 +7248,10 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_halfword_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB98 LMY   - Load Multiple (Long Displacement)              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7319,10 +7319,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(load_multiple_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E313 LRAY  - Load Real Address (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7337,10 +7337,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
 } /* end DEF_INST(load_real_address_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB52 MVIY  - Move Immediate (Long Displacement)             [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7356,10 +7356,10 @@ VADR    effective_addr1;                /* Effective address         */
     ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
 
 } /* end DEF_INST(move_immediate_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E351 MSY   - Multiply Single (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7379,10 +7379,10 @@ S32     n;                              /* 32-bit operand values     */
     regs->GR_L(r1) = (S32)regs->GR_L(r1) * n;
 
 } /* end DEF_INST(multiply_single) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB56 OIY   - Or Immediate (Long Displacement)               [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7407,10 +7407,10 @@ BYTE   *dest;                         /* Pointer to target byte      */
 
 
 } /* end DEF_INST(or_immediate_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E356 OY    - Or (Long Displacement)                         [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7430,10 +7430,10 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
 
 } /* end DEF_INST(or_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E350 STY   - Store (Long Displacement)                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7449,11 +7449,11 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* EB9B STAMY - Store Access Multiple (Long Displacement)      [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7500,11 +7500,11 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 
 } /* end DEF_INST(store_access_multiple_y) */
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E372 STCY  - Store Character (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7520,10 +7520,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_character_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB2D STCMY - Store Characters under Mask (Long Displacement)[RSY] */
 /*-------------------------------------------------------------------*/
@@ -7567,10 +7567,10 @@ BYTE    rbyte[4];                       /* Byte work area            */
     } /* switch (r3) */
 
 } /* end DEF_INST(store_characters_under_mask_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E370 STHY  - Store Halfword (Long Displacement)             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7586,10 +7586,10 @@ VADR    effective_addr2;                /* Effective address         */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_halfword_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB90 STMY  - Store Multiple (Long Displacement)             [RSY] */
 /*-------------------------------------------------------------------*/
@@ -7657,10 +7657,10 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     }
 
 } /* end DEF_INST(store_multiple_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E35B SY    - Subtract (Long Displacement)                   [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7687,10 +7687,10 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E37B SHY   - Subtract Halfword (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7717,10 +7717,10 @@ S32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_halfword_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E35F SLY   - Subtract Logical (Long Displacement)           [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7743,10 +7743,10 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
 } /* end DEF_INST(subtract_logical_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
+#if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EB51 TMY   - Test under Mask (Long Displacement)            [SIY] */
 /*-------------------------------------------------------------------*/
@@ -7772,7 +7772,7 @@ BYTE    tbyte;                          /* Work byte                 */
             1 ;                             /* result mixed      */
 
 } /* end DEF_INST(test_under_mask_y) */
-#endif /*defined(FEATURE_018_LONG_DISPL_INST_FACILITY)*/
+#endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
 #if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )              /*@Z9*/
@@ -8435,19 +8435,19 @@ U64     effective_addr2;                /* Effective address         */
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
 } /* end DEF_INST(load_program_parameter) */
-#endif /* defined(FEATURE_040_LOAD_PROG_PARAM_FACILITY) */   /*810*/
+#endif /* defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY ) */   /*810*/
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "esame.c"
-#endif
+  #if defined           ( _ARCH_NUM_1 )
+    #define   _GEN_ARCH   _ARCH_NUM_1
+    #include  "esame.c"
+  #endif
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "esame.c"
-#endif
+  #if defined           ( _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH   _ARCH_NUM_2
+    #include  "esame.c"
+  #endif
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */

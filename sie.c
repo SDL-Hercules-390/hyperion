@@ -237,19 +237,19 @@ U64     dreg;
 
     SIE_PERFMON(SIE_PERF_ENTER);
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && !defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     if(!regs->psw.amode || !PRIMARY_SPACE_MODE(&(regs->psw)))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif
 
     if((effective_addr2 & (sizeof(SIEBK)-1)) != 0
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
       || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == 0
       || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == regs->PX)
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else
       || (effective_addr2 & 0x7FFFF000) == 0
       || (effective_addr2 & 0x7FFFF000) == regs->PX)
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Perform serialization and checkpoint synchronization */
@@ -294,7 +294,7 @@ U64     dreg;
     /* Direct pointer to state descriptor block */
     GUESTREGS->siebk = (void*)(regs->mainstor + effective_addr2);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (STATEBK->mx & SIE_MX_ESAME)
     {
         GUESTREGS->arch_mode = ARCH_900_IDX;
@@ -302,7 +302,7 @@ U64     dreg;
         GUESTREGS->trace_br = (func)&z900_trace_br;
         icode = z900_load_psw(GUESTREGS, STATEBK->psw);
     }
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     if (STATEBK->m & SIE_M_370)
     {
 #if defined(_370)
@@ -317,18 +317,18 @@ U64     dreg;
         return;
 #endif
     }
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     else
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (STATEBK->m & SIE_M_XA)
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     {
         GUESTREGS->arch_mode = ARCH_390_IDX;
         GUESTREGS->program_interrupt = &s390_program_interrupt;
         GUESTREGS->trace_br = (func)&s390_trace_br;
         icode = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     else
     {
         /* Validity intercept for invalid mode */
@@ -337,7 +337,7 @@ U64     dreg;
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     /* Prefered guest indication */
     GUESTREGS->sie_pref = (STATEBK->m & SIE_M_VR) ? 1 : 0;
@@ -345,13 +345,13 @@ U64     dreg;
     /* Load prefix from state descriptor */
     FETCH_FW(GUESTREGS->PX, STATEBK->prefix);
     GUESTREGS->PX &=
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                      PX_MASK;
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else
                      (GUESTREGS->arch_mode == ARCH_900_IDX) ? PX_MASK : 0x7FFFF000;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
-#if defined(FEATURE_REGION_RELOCATE)
+#if defined( FEATURE_REGION_RELOCATE )
     if(STATEBK->mx & SIE_MX_RRF)
     {
     RADR mso, msl, eso = 0, esl = 0;
@@ -384,7 +384,7 @@ U64     dreg;
             mso = msl = 0;
 
 
-#if defined(SIE_DEBUG)
+#if defined( SIE_DEBUG )
         logmsg(_("SIE: zone %d: mso=" F_RADR " msl=" F_RADR "\n"),
             STATEBK->zone, mso, msl);
 #endif /*defined(SIE_DEBUG)*/
@@ -400,7 +400,7 @@ U64     dreg;
         GUESTREGS->sie_xsl *= (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
     }
     else
-#endif /*defined(FEATURE_REGION_RELOCATE)*/
+#endif /* defined( FEATURE_REGION_RELOCATE ) */
     {
         GUESTREGS->mainstor = sysblk.mainstor;
         GUESTREGS->storkeys = sysblk.storkeys;
@@ -414,7 +414,7 @@ U64     dreg;
             return;
         }
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Load main storage origin */
         FETCH_DW(GUESTREGS->sie_mso,STATEBK->mso);
         GUESTREGS->sie_mso &= SIE2_MS_MASK;
@@ -434,7 +434,7 @@ U64     dreg;
         /* Calculate main storage size */
         GUESTREGS->mainlim -= GUESTREGS->sie_mso;
 
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         /* Load main storage origin */
         FETCH_HW(GUESTREGS->sie_mso,STATEBK->mso);
         GUESTREGS->sie_mso <<= 16;
@@ -442,7 +442,7 @@ U64     dreg;
         /* Load main storage extend */
         FETCH_HW(GUESTREGS->mainlim,STATEBK->mse);
         GUESTREGS->mainlim = ((GUESTREGS->mainlim + 1) << 16) - 1;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         /* Load expanded storage origin */
         GUESTREGS->sie_xso = STATEBK->xso[0] << 16
@@ -468,14 +468,14 @@ U64     dreg;
 
     /* System Control Area Origin */
     FETCH_FW(GUESTREGS->sie_scao, STATEBK->scao);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     {
     U32 sie_scaoh;
         /* For ESAME insert the high word of the address */
         FETCH_FW(sie_scaoh, STATEBK->scaoh);
         GUESTREGS->sie_scao |= (RADR)sie_scaoh << 32;
     }
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     if(GUESTREGS->sie_scao > regs->mainlim)
     {
@@ -507,7 +507,7 @@ U64     dreg;
         }
     }
 
-#if defined(FEATURE_VIRTUAL_ARCHITECTURE_LEVEL)
+#if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL )
     /* Set Virtual Architecture Level (Facility List) */
     {
     U32 fld;
@@ -539,9 +539,9 @@ U64     dreg;
                GUESTREGS->facility_list[i] &= facility_mask[i];
         }
     }
-#endif /*defined(FEATURE_VIRTUAL_ARCHITECTURE_LEVEL)*/
+#endif /* defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) */
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Reference and Change Preservation Origin */
     FETCH_FW(GUESTREGS->sie_rcpo, STATEBK->rcpo);
     if (!GUESTREGS->sie_rcpo && !GUESTREGS->sie_pref)
@@ -551,7 +551,7 @@ U64     dreg;
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     /* Load the CPU timer */
     FETCH_DW(dreg, STATEBK->cputimer);
@@ -572,9 +572,9 @@ U64     dreg;
     memcpy(GUESTREGS->gr, regs->gr, 14 * sizeof(regs->gr[0]));
     memcpy(GUESTREGS->ar, regs->ar, 16 * sizeof(regs->ar[0]));
     memcpy(GUESTREGS->fpr, regs->fpr, 32 * sizeof(regs->fpr[0]));
-#if defined(FEATURE_BINARY_FLOATING_POINT)
+#if defined( FEATURE_BINARY_FLOATING_POINT )
     GUESTREGS->fpc =  regs->fpc;
-#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+#endif
 
     /* Load GR14 */
     FETCH_W(GUESTREGS->GR(14), STATEBK->gr14);
@@ -683,7 +683,7 @@ U64     dreg;
         if( TOD_CLOCK(GUESTREGS) > GUESTREGS->clkc )
             ON_IC_CLKC(GUESTREGS);
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Interval timer if S/370 and timer is enabled */
         if((STATEBK->m & SIE_M_370) && !(STATEBK->m & SIE_M_ITMOF))
         {
@@ -715,7 +715,7 @@ U64     dreg;
                 ON_IC_ITIMER(GUESTREGS);
         }
 
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         RELEASE_INTLOCK(regs);
 
@@ -750,9 +750,9 @@ int     n;
         if(!GUESTREGS->instinvalid)
         {
             if(GUESTREGS->ip[0] == 0x44
-#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
                || (GUESTREGS->ip[0] == 0xc6 && !(GUESTREGS->ip[1] & 0x0f))
-#endif /*defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/
+#endif
                                                                            )
             {
                 ip = GUESTREGS->exinst;
@@ -770,11 +770,11 @@ int     n;
         PTT_SIE("*SIE", nt1, nt2, code);
     }
 
-#if defined(SIE_DEBUG)
+#if defined( SIE_DEBUG )
     logmsg(_("SIE: interception code %d\n"),code);
     ARCH_DEP(display_inst) (GUESTREGS,
                             GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
-#endif /*defined(SIE_DEBUG)*/
+#endif
 
     SIE_PERFMON(SIE_PERF_EXIT);
     SIE_PERFMON(SIE_PERF_PGMINT);
@@ -845,7 +845,7 @@ int     n;
     /* Save clock comparator */
     STORE_DW(STATEBK->clockcomp, etod2tod(GUESTREGS->clkc));
 
-#if defined(_FEATURE_INTERVAL_TIMER) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( _FEATURE_INTERVAL_TIMER ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* If this is a S/370 guest, and the interval timer is enabled
        then save the timer state control bit */
     if( (STATEBK->m & SIE_M_370)
@@ -859,7 +859,7 @@ int     n;
         else
             STATEBK->s &= ~SIE_S_T;
     }
-#endif /*defined(_FEATURE_INTERVAL_TIMER) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( _FEATURE_INTERVAL_TIMER ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Save TOD Programmable Field */
     STORE_HW(STATEBK->todpf, GUESTREGS->todpr);
@@ -873,16 +873,16 @@ int     n;
     /* Store the PSW */
     if(GUESTREGS->arch_mode == ARCH_390_IDX)
         s390_store_psw (GUESTREGS, STATEBK->psw);
-#if defined(_370) || defined(_900)
+#if defined( _370 ) || defined( _900 )
     else
 #endif
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         z900_store_psw (GUESTREGS, STATEBK->psw);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#if defined(_370)
+#else
+#if defined( _370 )
         s370_store_psw (GUESTREGS, STATEBK->psw);
 #endif
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     /* save control registers */
     for(n = 0;n < 16; n++)
@@ -892,9 +892,9 @@ int     n;
     memcpy(regs->gr, GUESTREGS->gr, 14 * sizeof(regs->gr[0]));
     memcpy(regs->ar, GUESTREGS->ar, 16 * sizeof(regs->ar[0]));
     memcpy(regs->fpr, GUESTREGS->fpr, 32 * sizeof(regs->fpr[0]));
-#if defined(FEATURE_BINARY_FLOATING_POINT)
+#if defined( FEATURE_BINARY_FLOATING_POINT )
     regs->fpc =  GUESTREGS->fpc;
-#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+#endif
     INVALIDATE_AIA(regs);
     SET_AEA_MODE(regs);
 
@@ -909,14 +909,14 @@ int     n;
         /* Indicate interception format 2 */
         STATEBK->f |= SIE_F_IN;
 
-#if defined(_FEATURE_PER)
+#if defined( _FEATURE_PER )
         /* Handle PER or concurrent PER event */
         if( OPEN_IC_PER(GUESTREGS)
           && ECMODE(&GUESTREGS->psw)
           && (GUESTREGS->psw.sysmask & PSW_PERMODE) )
         {
         PSA *psa;
-#if defined(_FEATURE_PER2)
+#if defined( _FEATURE_PER2 )
             GUESTREGS->perc |= OPEN_IC_PER(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
             /* Positions 14 and 15 contain zeros if a storage alteration
                event was not indicated */
@@ -924,7 +924,7 @@ int     n;
               || (OPEN_IC_PER_STURA(GUESTREGS)) )
                 GUESTREGS->perc &= 0xFFFC;
 
-#endif /*defined(_FEATURE_PER2)*/
+#endif /* defined( _FEATURE_PER2 ) */
             /* Point to PSA fields in state descriptor */
             psa = (void*)(regs->mainstor + SIE_STATE(GUESTREGS) + SIE_IP_PSA_OFFSET);
             STORE_HW(psa->perint, GUESTREGS->perc);
@@ -936,7 +936,7 @@ int     n;
 
         /* Reset any pending PER indication */
         OFF_IC_PER(GUESTREGS);
-#endif /*defined(_FEATURE_PER)*/
+#endif /* defined( _FEATURE_PER ) */
 
         /* Backup to the previous instruction */
         GUESTREGS->ip -= REAL_ILC(GUESTREGS);
@@ -945,9 +945,9 @@ int     n;
 
         /* Update interception parameters in the state descriptor */
         if(GUESTREGS->ip[0] == 0x44
-#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
            || (GUESTREGS->ip[0] == 0xc6 && !(GUESTREGS->ip[1] & 0x0f))
-#endif /*defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/
+#endif
                                                                        )
         {
         int exilc;
@@ -1269,13 +1269,13 @@ RADR    mso,                            /* Main Storage Origin       */
     FETCH_W(eso,zpb.eso);
     FETCH_W(esl,zpb.esl);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if(  (mso & ~ZPB2_MS_VALID)
       || (msl & ~ZPB2_MS_VALID)
       || (eso & ~ZPB2_ES_VALID)
       || (esl & ~ZPB2_ES_VALID) )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     sysblk.zpb[zone].mso = mso;
     sysblk.zpb[zone].msl = msl;

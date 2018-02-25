@@ -155,12 +155,12 @@ void ARCH_DEP(perform_external_interrupt) (REGS *regs)
 PSA    *psa;                            /* -> Prefixed storage area  */
 U16     cpuad;                          /* Originating CPU address   */
 S64     dreg;                           /* Double word workarea      */
-#if defined(FEATURE_VM_BLOCKIO)
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_VM_BLOCKIO )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 RADR    servpadr;      /* Address of 64-bit block I/O interrupt */
 #endif
 U16     servcode;      /* Service Signal or Block I/O Interrupt code */
-#endif /* defined(FEATURE_VM_BLOCKIO) */
+#endif /* defined( FEATURE_VM_BLOCKIO ) */
 
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
@@ -344,9 +344,9 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
            servcode = EXT_BLOCKIO_INTERRUPT;
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /* Real address used to store the 64-bit interrupt parameter */
-#define VM_BLOCKIO_INT_PARM 0x11B8
+#define VM_BLOCKIO_INT_PARM   0x11B8
            if (sysblk.biosubcd == 0x07)
            {
            /* 8-byte interrupt parm */
@@ -384,10 +384,9 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                psa = (void*)(regs->mainstor + regs->PX);
            }
            else
+#endif  /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
            {
-#endif  /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
-
-           /* 4-byte interrupt parm */
+              /* 4-byte interrupt parm */
 
               if (CPU_STEPPING_OR_TRACING_ALL)
               {
@@ -399,10 +398,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
               /* Store Block I/O parameter at PSA+X'80' */
               psa = (void*)(regs->mainstor + regs->PX);
               STORE_FW(psa->extparm,(U32)sysblk.bioparm);
-
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
            }
-#endif
 
            /* Store sub-interruption code and status at PSA+X'84' */
            STORE_HW(psa->extcpad,(sysblk.biosubcd<<8)|sysblk.biostat);
@@ -495,13 +491,13 @@ PSA     *sspsa;                         /* -> Store status area      */
 
     /* Set reference and change bits */
     STORAGE_KEY(aaddr, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
     /* The ESAME PSA is two pages in size */
     if(!aaddr)
         STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* For store status at address, we must adjust the PSA offset */
     /* ZZ THIS TEST IS NOT CONCLUSIVE */
     if(aaddr != 0 && aaddr != ssreg->PX)
@@ -517,11 +513,11 @@ PSA     *sspsa;                         /* -> Store status area      */
     STORE_DW(sspsa->storeptmr, cpu_timer(ssreg));
 
     /* Store clock comparator in bytes 224-231 */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    STORE_DW(sspsa->storeclkc, ssreg->clkc);
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    STORE_DW(sspsa->storeclkc, ssreg->clkc << 8);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+    STORE_DW( sspsa->storeclkc, ssreg->clkc );
+#else
+    STORE_DW( sspsa->storeclkc, ssreg->clkc << 8 );
+#endif
 
     /* Store PSW in bytes 256-263 */
     ARCH_DEP(store_psw) (ssreg, sspsa->storepsw);
@@ -529,34 +525,34 @@ PSA     *sspsa;                         /* -> Store status area      */
     /* Store prefix register in bytes 264-267 */
     STORE_FW(sspsa->storepfx,ssreg->PX);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Store Floating Point Control Register */
     STORE_FW(sspsa->storefpc,ssreg->fpc);
 
     /* Store TOD Programable register */
     STORE_FW(sspsa->storetpr,ssreg->todpr);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
-#if defined(_900)
+#if defined( _900 )
     /* Only store the arch mode indicator for a PSA type store status */
-    if(!aaddr)
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+    if (!aaddr)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         sspsa->arch = 1;
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #else
         sspsa->arch = 0;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*defined(_900)*/
+  #endif
+#endif /* defined( _900 ) */
 
     /* Store access registers in bytes 288-351 */
     for (i = 0; i < 16; i++)
         STORE_FW(sspsa->storear[i],ssreg->AR(i));
 
     /* Store floating-point registers in bytes 352-383 */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     for (i = 0; i < 32; i++)
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else
     for (i = 0; i < 8; i++)
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
         STORE_FW(sspsa->storefpr[i],ssreg->fpr[i]);
 
     /* Store general-purpose registers in bytes 384-447 */

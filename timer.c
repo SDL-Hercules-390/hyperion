@@ -225,7 +225,6 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
             total_sios = sysblk.shrdcount;
             sysblk.shrdcount = 0;
 #endif
-            /* Do for each defined/online CPU... */
             for (i=0; i < sysblk.hicpu; i++)
             {
                 obtain_lock( &sysblk.cpulock[ i ]);
@@ -286,7 +285,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
 
             } /* end for(cpu) */
 
-            /* Update SYSBLK values for entire system */
+            /* Total for ALL CPUs together */
             sysblk.mipsrate = total_mips;
             sysblk.siosrate = total_sios;
 
