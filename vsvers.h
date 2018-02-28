@@ -18,6 +18,12 @@
 /*    Don't forget to update the 'makefile.bat' file too!            */
 /*-------------------------------------------------------------------*/
 
+#define VS2017_5    1912                /* Visual Studio 2017 */
+#define VS2017_4    1911                /* Visual Studio 2017 */
+#define VS2017_3    1911                /* Visual Studio 2017 */
+#define VS2017_2    1910                /* Visual Studio 2017 */
+#define VS2017_1    1910                /* Visual Studio 2017 */
+#define VS2017      1910                /* Visual Studio 2017 */
 #define VS2015      1900                /* Visual Studio 2015 */
 #define VS2013      1800                /* Visual Studio 2013 */
 #define VS2012      1700                /* Visual Studio 2012 */
@@ -27,6 +33,12 @@
 #define VS2003      1310                /* Visual Studio 2003 */
 #define VS2002      1300                /* Visual Studio 2002 */
 
+#define MSVC15_5    1912                /* Visual Studio 2017 */
+#define MSVC15_4    1911                /* Visual Studio 2017 */
+#define MSVC15_3    1911                /* Visual Studio 2017 */
+#define MSVC15_2    1910                /* Visual Studio 2017 */
+#define MSVC15_1    1910                /* Visual Studio 2017 */
+#define MSVC15      1910                /* Visual Studio 2017 */
 #define MSVC14      1900                /* Visual Studio 2015 */
 #define MSVC12      1800                /* Visual Studio 2013 */
 #define MSVC11      1700                /* Visual Studio 2012 */

@@ -321,6 +321,7 @@
 ::
 ::-----------------------------------------------------------------------------
 
+:vs150
 :vs140
 :vs120
 :vs110
@@ -397,12 +398,25 @@
 ::
 :: -------------------------------------------------------------------
 
+  set "vs2017=150"
   set "vs2015=140"
   set "vs2013=120"
   set "vs2012=110"
   set "vs2010=100"
   set "vs2008=90"
   set "vs2005=80"
+
+:try_vs150
+
+  if "%VS150COMNTOOLS%" == "" goto :try_vs140
+  if exist "%VS150COMNTOOLS%..\..\VC\vcvarsall.bat"  (
+     set "VSTOOLSDIR=%VS150COMNTOOLS%"
+     set "vsname=2017"
+     set "vsver=%vs2017%"
+     goto :got_vstudio
+  )
+
+  set "VS150COMNTOOLS="
 
 :try_vs140
 
@@ -901,8 +915,8 @@
 
   if %vsver% GEQ %vs2015% (
     echo %~nx0^(1^) : warning C9999 : .
-    echo %~nx0^(1^) : warning C9999 : When you install Visual Studio 2015 Community Edition Update 1 or 2,
-    echo %~nx0^(1^) : warning C9999 : you must also select the "Windows XP Support for C++" option in the
+    echo %~nx0^(1^) : warning C9999 : When you install Visual Studio %vsname% Community Edition, you
+    echo %~nx0^(1^) : warning C9999 : must also select the "Windows XP Support for C++" option in the
     echo %~nx0^(1^) : warning C9999 : "Visual C++" section of the "Programming Languages" feature, which is
     echo %~nx0^(1^) : warning C9999 : the option that installs the Windows 7.1 SDK containing ^<win32.mak^>.
   )

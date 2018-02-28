@@ -23,6 +23,7 @@
 #                                                                   
 #-------------------------------------------------------------------
 
+vers_vs2017=15
 vers_vs2015=14
 vers_vs2013=12
 vers_vs2012=11
@@ -30,7 +31,10 @@ vers_vs2010=10
 vers_vs2008=9
 vers_vs2005=8
 
-!IFDEF VS140COMNTOOLS
+!IFDEF VS150COMNTOOLS
+!MESSAGE Makefile presuming VS2017 (VS15 = _MSC_VER 1910 - 1912)
+vsversion=$(vers_vs2017)
+!ELSEIFDEF VS140COMNTOOLS
 !MESSAGE Makefile presuming VS2015 (VS14 = _MSC_VER 1900)
 vsversion=$(vers_vs2015)
 !ELSEIFDEF VS120COMNTOOLS
