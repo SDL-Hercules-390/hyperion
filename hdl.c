@@ -1056,7 +1056,7 @@ DLL_EXPORT void hdl_listdeps()
     HDLDEP*  depent;
 
     for (depent = hdl_depend; depent; depent = depent->next)
-        // "HDL: dependency %s version %s size %d"
+        // "HDL: dependency %s: version \"%s\", size %d"
         WRMSG( HHC01535, "I", depent->name, depent->version, depent->size );
 }
 
@@ -1607,7 +1607,7 @@ static void hdl_define_instructs_cb( U32 hdl_arch, int opcode, const char* name,
 /*-------------------------------------------------------------------*/
 /*   Helper function to retrieve the current opcode table pointer    */
 /*-------------------------------------------------------------------*/
-static void* curr_opcode_ptr( int hdl_arch, int opcode )
+static void* curr_opcode_ptr( U32 hdl_arch, int opcode )
 {
     void*  current = NULL;
     void*  dummy   = (void*) 1;

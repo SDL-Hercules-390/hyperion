@@ -17,6 +17,9 @@
 
 #include "hercules.h"
 
+#define HERCULES_COPYRIGHT \
+       "(C) Copyright 1999-2018 by Roger Bowler, Jan Jaeger, and others"
+
 #if !defined( _MSVC_ )
 
   // Due to autotool's insistance of defining 'VERSION' for us
@@ -56,16 +59,12 @@
 #endif
 
 /* To be more compatible with HDL's "HDL_DEPENDENCY" macro we prefer
-   to define a value containing ONLY the major, intermediate, minor
-   components and not the full version string (which also contains
-   the git hash and other unwanted information).
+   to define a HDL_VERS_HERCULES value that contains ONLY the major,
+   intermediate, and minor components and NOT the full version string
+   (which also contains the git hash and other unwanted information).
 */
-#define VER_DOT      .      /* (stupid clang complains about pasting dots!) */
-#undef  VER
-//efine VER                 VERS_MAJ ##     .   ## VERS_INT ## VERS_MIN
-#define VER                 VERS_MAJ ## VER_DOT ## VERS_INT ## VERS_MIN
 #define HDL_NAME_HERCULES   "HERCULES"
-#define HDL_VERS_HERCULES   "SDL " QSTR( VER )
+#define HDL_VERS_HERCULES   "SDL " QSTR( VERS_MAJ ) "." QSTR( VERS_INT ) QSTR( VERS_MIN )
 #define HDL_SIZE_HERCULES   sizeof( HDL_VERS_HERCULES ) - 1
 
 VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );
@@ -73,6 +72,4 @@ VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
 VER_DLL_IMPORT void display_extpkg_vers   ( FILE* f, int httpfd );
 VER_DLL_IMPORT int  get_buildinfo_strings ( const char*** pppszBldInfoStr );
 
-#define HERCULES_COPYRIGHT \
-       "(C) Copyright 1999-2018 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_

@@ -837,8 +837,10 @@ U32     n;
     VOP_CHECK(regs);
 
     regs->psw.cc = ((S32)effective_addr2 == 0) ? 0 :
-                   ((S32)effective_addr2 < 0) ? 1 :
-                   ((S32)effective_addr2 < VECTOR_COUNT(regs)) ? 2 : 3;
+                   ((S32)effective_addr2 <  0) ? 1 :
+                   ((S32)effective_addr2 <  (S32)VECTOR_COUNT(regs))
+                                               ? 2
+                                               : 3;
 
     n = (S32)effective_addr2 < 0 ? 0 :
         (S32)effective_addr2 > VECTOR_SECTION_SIZE ?

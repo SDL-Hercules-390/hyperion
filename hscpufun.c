@@ -428,7 +428,8 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
                    as all remaining arguments are interpretted as being
                    the actual parm data to be loaded into the registers.
                 */
-                int i, j, psi, len;
+                int i, j, len;
+                size_t psi;
 
                 /* It's silly to specify 'PARM' and not provide one */
                 if (argc < (argnum+2))

@@ -79,8 +79,8 @@
 
 #define BLOCK_HEADER struct                                             \
 {                                                                       \
-/*000*/ BYTE    blknam[16];             /* Name of block   REGS_CP00 */ \
-/*010*/ BYTE    blkver[16];             /* Version Number            */ \
+/*000*/ char    blknam[16];             /* Name of block   REGS_CP00 */ \
+/*010*/ char    blkver[16];             /* Version Number            */ \
                                         /* --- 32-byte cache line -- */ \
 /*020*/ U64     blkloc;                 /* Address of block    big-e */ \
 /*028*/ U32     blksiz;                 /* size of block       big-e */ \
@@ -89,7 +89,7 @@
 
 #define BLOCK_TRAILER struct                                            \
 {                                                                       \
-ALIGN_16 BYTE   blkend[16];             /* eye-end                   */ \
+ALIGN_16 char   blkend[16];             /* eye-end                   */ \
 }
 
 #define _INIT_BLOCK_HEADER_TRAILER_NAME( pBlock, pszName )              \
