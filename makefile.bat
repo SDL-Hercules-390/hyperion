@@ -14,84 +14,13 @@
   set "nx0_cmdline=%0 %*"     && @REM (save original cmdline used)
 
   echo %nx0% begun on %date% at %time: =0%
-  echo %nx0_cmdline%
+  echo cmdline: %nx0_cmdline%
   goto :parse_args
 
-::*****************************************************************************
-::*****************************************************************************
-::*****************************************************************************
-::***                                                                       ***
-::***                         MAKEFILE.BAT                                  ***
-::***                                                                       ***
-::*****************************************************************************
-::*****************************************************************************
-::*****************************************************************************
-::*                                                                           *
-::*      Designed to be called either from the command line or by a           *
-::*      Visual Studio makefile project with the "Build command line"         *
-::*      set to: "makefile.bat <arguments...>". See 'HELP' section            *
-::*      further below for details regarding use.                             *
-::*                                                                           *
-::*      If this batch file works okay then it was written by Fish.           *
-::*      If it doesn't work then I don't know who the heck wrote it.          *
-::*                                                                           *
-::*****************************************************************************
-::*                                                                           *
-::*      31-March-2012                                                        *
-::*      Couldn't get it to work with new SDK as it uses different            *
-::*      arguments to its "setenv.bat" file so added various hacks to fix     *
-::*                                                                           *
-::*****************************************************************************
-::*                                                                           *
-::*                          PROGRAMMING NOTE                                 *
-::*                                                                           *
-::*  All error messages *MUST* be issued in the following strict format:      *
-::*                                                                           *
-::*         echo %~nx0^(1^) : error C9999 : error-message-text...             *
-::*                                                                           *
-::*  in order for the Visual Studio IDE to detect it as a build error since   *
-::*  exiting with a non-zero return code doesn't do the trick. Visual Studio  *
-::*  apparently examines the message-text looking for error/warning strings.  *
-::*                                                                           *
-::*****************************************************************************
-::*                                                                           *
-::*                         PROGRAMMING NOTE                                  *
-::*                                                                           *
-::*  It's important to use 'setlocal' before calling the Microsoft batch      *
-::*  file that sets up the build environment and to call 'endlocal' before    *
-::*  exiting.                                                                 *
-::*                                                                           *
-::*  Doing this ensures the build environment is freshly initialized each     *
-::*  time this batch file is invoked, thus ensuing a valid build environment  *
-::*  is created each time a build is performed. Failure to do so runs the     *
-::*  risk of not only causing an incompatible (invalid) build environment     *
-::*  being constructed as a result of subsequent build setting being created  *
-::*  on top of the previous build settings, but also risks overflowing the    *
-::*  environment area since the PATH and LIB variables would keep growing     *
-::*  ever longer and longer.                                                  *
-::*                                                                           *
-::*  Therefore to ensure that never happens and that we always start with a   *
-::*  freshly initialized and (hopefully!) valid build environment each time,  *
-::*  we use 'setlocal' and 'endlocal' to push/pop the local environment pool  *
-::*  each time we are called.                                                 *
-::*                                                                           *
-::*  Also note that while it would be simpler to just create a "front end"    *
-::*  batch file to issue the setlocal before invoking this batch file (and    *
-::*  then do the endlocal once we return), doing it that way leaves open      *
-::*  the possibility that someone who doesn't know better from bypassing      *
-::*  the font-end batch file altogether and invoking us directly and then     *
-::*  asking for help when they have problems because their Hercules builds    *
-::*  or Hercules itself is not working properly.                              *
-::*                                                                           *
-::*  Yes, it's more effort to do it this way but as long as you're careful    *
-::*  it's well worth it in my personal opinion.                               *
-::*                                                                           *
-::*                                               -- Fish, March 2009         *
-::*                                                                           *
-::*****************************************************************************
-
-
-:help
+::-----------------------------------------------------------------------------
+::                                  HELP
+::-----------------------------------------------------------------------------
+:HELP
 
   echo.
   echo %~nx0^(1^) : error C9999 : Help information is as follows:
@@ -159,23 +88,91 @@
   set "rc=1"
   %exit%
 
+::*****************************************************************************
+::*****************************************************************************
+::*****************************************************************************
+::***                                                                       ***
+::***                         MAKEFILE.BAT                                  ***
+::***                                                                       ***
+::*****************************************************************************
+::*****************************************************************************
+::*****************************************************************************
+::*                                                                           *
+::*      Designed to be called either from the command line or by a           *
+::*      Visual Studio makefile project with the "Build command line"         *
+::*      set to: "makefile.bat <arguments...>". See 'HELP' section            *
+::*      just above for details regarding use.                                *
+::*                                                                           *
+::*      If this batch file works okay then it was written by Fish.           *
+::*      If it doesn't work then I don't know who the heck wrote it.          *
+::*                                                                           *
+::*****************************************************************************
+::*                                                                           *
+::*                          PROGRAMMING NOTE                                 *
+::*                                                                           *
+::*  All error messages *MUST* be issued in the following strict format:      *
+::*                                                                           *
+::*         echo %~nx0^(1^) : error C9999 : error-message-text...             *
+::*                                                                           *
+::*  in order for the Visual Studio IDE to detect it as a build error since   *
+::*  exiting with a non-zero return code doesn't do the trick. Visual Studio  *
+::*  apparently examines the message-text looking for error/warning strings.  *
+::*                                                                           *
+::*****************************************************************************
+::*                                                                           *
+::*                          PROGRAMMING NOTE                                 *
+::*                                                                           *
+::*  It's important to use 'setlocal' before calling the Microsoft batch      *
+::*  file that sets up the build environment and to call 'endlocal' before    *
+::*  exiting.                                                                 *
+::*                                                                           *
+::*  Doing this ensures the build environment is freshly initialized each     *
+::*  time this batch file is invoked, thus ensuing a valid build environment  *
+::*  is created each time a build is performed. Failure to do so runs the     *
+::*  risk of not only causing an incompatible (invalid) build environment     *
+::*  being constructed as a result of subsequent build setting being created  *
+::*  on top of the previous build settings, but also risks overflowing the    *
+::*  environment area since the PATH and LIB variables would keep growing     *
+::*  ever longer and longer.                                                  *
+::*                                                                           *
+::*  Therefore to ensure that never happens and that we always start with a   *
+::*  freshly initialized and (hopefully!) valid build environment each time,  *
+::*  we use 'setlocal' and 'endlocal' to push/pop the local environment pool  *
+::*  each time we are called.                                                 *
+::*                                                                           *
+::*  Also note that while it would be simpler to just create a "front end"    *
+::*  batch file to issue the setlocal before invoking this batch file (and    *
+::*  then do the endlocal once we return), doing it that way leaves open      *
+::*  the possibility that someone who doesn't know better from bypassing      *
+::*  the font-end batch file altogether and invoking us directly and then     *
+::*  asking for help when they have problems resultimg from their build       *
+::*  environment from being screwed up.                                       *
+::*                                                                           *
+::*  Yes, it's more effort to do it this way but as long as you're careful    *
+::*  it's well worth it in my personal opinion.                               *
+::*                                                                           *
+::*                                               -- Fish, March 2009         *
+::*                                                                           *
+::*****************************************************************************
+
 
 ::-----------------------------------------------------------------------------
 ::                                PARSE ARGUMENTS
 ::-----------------------------------------------------------------------------
 :parse_args
 
-  if "%~1" == ""        goto :help
-  if "%~1" == "?"       goto :help
-  if "%~1" == "/?"      goto :help
-  if "%~1" == "-?"      goto :help
-  if "%~1" == "--help"  goto :help
+  if "%~1" == ""        goto :HELP
+  if "%~1" == "?"       goto :HELP
+  if "%~1" == "/?"      goto :HELP
+  if "%~1" == "-?"      goto :HELP
+  if "%~1" == "--help"  goto :HELP
 
   set "build_type="
   set "makefile_name="
   set "num_cpus="
   set "extra_nmake_args="
   set "SolutionDir="
+  set "ProjectFileName="
 
   call :parse_args_loop %*
   if not "%rc%" == "0" %exit%
@@ -222,6 +219,11 @@
 
   if not defined SolutionDir (
     call :re_set SolutionDir "%opt%"
+    %return%
+  )
+
+  if not defined ProjectFileName (
+    call :re_set ProjectFileName "%opt%"
     %return%
   )
 
@@ -287,244 +289,471 @@
 ::-----------------------------------------------------------------------------
 :begin
 
-  call :set_build_env
+  call :validate_vstudio
+
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
+
 
   call :validate_makefile
+
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
+
 
   call :validate_num_cpus
+
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
 
-  call :set_cfg
+
+  call :determine_cfg
+
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
 
-  call :set_targ_arch
+
+  call :determine_targ_arch
+
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
 
-  goto :%build_env%
 
-::-----------------------------------------------------------------------------
-::                           Visual Studio
-::-----------------------------------------------------------------------------
-::
-::
-::        Add support for new Visual Studio versions here...
-::
-::        Don't forget to update the 'VSVERS.msvc' file too!
-::        Don't forget to update the 'targetver.h' header too!
-::
-::-----------------------------------------------------------------------------
+  call :set_build_env
 
-:vs150
-:vs140
-:vs120
-:vs110
-:vs100
-:vs90
-:vs80
-
-  if /i "%targ_arch%" == "all" goto :multi_build
-
-  call :set_host_arch
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
 
-  call "%VSTOOLSDIR%..\..\VC\vcvarsall.bat"  %host_arch%%targ_arch%
-  goto :nmake
+
+  ::-------------------------
+  ::    Do the build...
+  ::-------------------------
+
+  if defined is_multi_build (
+    goto :multi_build
+  ) else (
+    goto :nmake
+  )
 
 
 ::-----------------------------------------------------------------------------
-::                     Platform SDK  or  VCToolkit
-::-----------------------------------------------------------------------------
-
-:sdk
-:toolkit
-
-  if /i "%build_env%"   == "toolkit" call "%bat_dir%vcvars32.bat"
-  if /i     "%new_sdk%" == "NEW"     call "%bat_dir%\bin\setenv" /%BLD%  /%CFG%
-  if /i not "%new_sdk%" == "NEW"     call "%bat_dir%\setenv"     /%BLD%  /%CFG%
-  goto :nmake
-
-
-::-----------------------------------------------------------------------------
-::                        CALLED SUBROUTINES
+::                            set_build_env
 ::-----------------------------------------------------------------------------
 :set_build_env
 
-  set "rc=0"
-  set "build_env="
-  set "new_sdk="
+  if /i "%targ_arch%" == "all"   set "vstools_arch=32"
+  if /i "%targ_arch%" == "x86"   set "vstools_arch=32"
+  if /i "%targ_arch%" == "amd64" set "vstools_arch=64"
 
-:try_sdk
-
-  if "%MSSdk%" == "" goto :try_vstudio
-
-  set "build_env=sdk"
-  set "bat_dir=%MSSdk%"
-
-  ::  This is a fiddle by g4ugm (Dave Wade)
-  ::  I couldn't find a way to check the SDK versions
-  ::  however the V7 sdk has the "setenv.cmd" file in the "bin" directory
-  ::  so using that for now
-
-  if NOT exist "%MSSdk%\bin\setenv.cmd" %return%
-  set "new_sdk=NEW"
-  echo Windows Platform SDK detected
+  call "%~dp0vstools.cmd"  %vstools_arch%
+  set "rc=%errorlevel%"
   %return%
 
-:try_vstudio
 
-:: -------------------------------------------------------------------
-::
-::        Add support for new Visual Studio versions here...
-::
-::        Don't forget to update the 'VSVERS.msvc' file too!
-::        Don't forget to update the 'targetver.h' header too!
-::
-::        Note: Additional sanity checks are required to deal with
-::              leftover SET commands from temporary installations
-::              of newer VS versions. Consequently, both the
-::              environment variable and vcvarsall.bat must exist to
-::              properly determine the latest installed version.
-::
-::              Unsetting of the level environment variable only
-::              occurs for any given compilation.
-::
-:: -------------------------------------------------------------------
+::-----------------------------------------------------------------------------
+::                                nmake
+::-----------------------------------------------------------------------------
+:nmake
 
-  set "vs2017=150"
-  set "vs2015=140"
-  set "vs2013=120"
-  set "vs2012=110"
-  set "vs2010=100"
-  set "vs2008=90"
-  set "vs2005=80"
+  set  "MAX_CPU_ENGINES=%num_cpus%"
 
-:try_vs150
+  call :set_herc_VERSION
 
-  if "%VS150COMNTOOLS%" == "" goto :try_vs140
-  if exist "%VS150COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-     set "VSTOOLSDIR=%VS150COMNTOOLS%"
-     set "vsname=2017"
-     set "vsver=%vs2017%"
-     goto :got_vstudio
+  if %rc% NEQ 0 (
+    set "rc=1"
+    %exit%
   )
 
-  set "VS150COMNTOOLS="
-
-:try_vs140
-
-  if "%VS140COMNTOOLS%" == "" goto :try_vs120
-  if exist "%VS140COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-     set "VSTOOLSDIR=%VS140COMNTOOLS%"
-     set "vsname=2015"
-     set "vsver=%vs2015%"
-     goto :got_vstudio
-  )
-
-  set "VS140COMNTOOLS="
-
-:try_vs120
-
-  if "%VS120COMNTOOLS%" == "" goto :try_vs110
-  if exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-     set "VSTOOLSDIR=%VS120COMNTOOLS%"
-     set "vsname=2013"
-     set "vsver=%vs2013%"
-     goto :got_vstudio
-  )
-
-  set "VS120COMNTOOLS="
-
-:try_vs110
-
-  if "%VS110COMNTOOLS%" == "" goto :try_vs100
-  if exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "VSTOOLSDIR=%VS110COMNTOOLS%"
-     set "vsname=2012"
-     set "vsver=%vs2012%"
-     goto :got_vstudio
-  )
-
-  set "VS110COMNTOOLS="
-
-:try_vs100
-
-  if "%VS100COMNTOOLS%" == "" goto :try_vs90
-  if exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "VSTOOLSDIR=%VS100COMNTOOLS%"
-     set "vsname=2010"
-     set "vsver=%vs2010%"
-     goto :got_vstudio
-  )
-
-  set "VS100COMNTOOLS="
-
-:try_vs90
-
-  if "%VS90COMNTOOLS%" == "" goto :try_vs80
-  if exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "VSTOOLSDIR=%VS90COMNTOOLS%"
-     set "vsname=2008"
-     set "vsver=%vs2008%"
-     goto :got_vstudio
-  )
-
-  set "VS90COMNTOOLS="
-
-:try_vs80
-
-  if "%VS80COMNTOOLS%" == "" goto :try_toolkit
-  if exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "VSTOOLSDIR=%VS80COMNTOOLS%"
-     set "vsname=2005"
-     set "vsver=%vs2005%"
-     goto :got_vstudio
-  )
-
-  set "VS80COMNTOOLS="
-
-:try_toolkit
-
-  if "%VCToolkitInstallDir%" == "" goto :bad_build_env
-
-  set "build_env=toolkit"
-  set "bat_dir=%VCToolkitInstallDir%"
-  echo Visual Studio 2003 ToolKit detected
-  %return%
-
-:got_vstudio
-
-   set "build_env=vs%vsver%"
-   echo Visual Studio %vsname% detected
-   %return%
-
-:bad_build_env
+  ::  Dump all environment variables...
 
   echo.
-  echo %~nx0^(1^) : error C9999 : No suitable Windows development product is installed
+  echo --------------------------- ENVIRONMENT POOL ---------------------------
+  echo.
+  set
+
+  ::  Format the PATH, LIB and INCLUDE variables for easier reading
+
+  echo.
+  echo -------------------------- PATH, LIB, INCLUDE --------------------------
+  call :fxxx PATH
+  call :fxxx LIB
+  call :fxxx INCLUDE
+
+  echo.
+  echo ------------------------------ WIN32.MAK -------------------------------
+  echo.
+  echo  ^<win32.mak^> will be !INCLUDEd from "%win32_mak_path%"...
+  echo.
+  echo --------------------------------- MAKE ---------------------------------
+  echo.
+
+  ::  Additional nmake arguments (for reference):
+  ::
+  ::   -nologo   suppress copyright banner
+  ::   -s        silent (suppress commands echoing)
+  ::   -k        keep going if error(s)
+  ::   -g        display !INCLUDEd files (VS2005 or greater only)
+
+  nmake -nologo -s -f "%makefile_name%"  %extra_nmake_args%
+  set "rc=%errorlevel%"
+  %exit%
+
+
+::-----------------------------------------------------------------------------
+::                            multi_build
+::-----------------------------------------------------------------------------
+::
+::  Visual Studio multi-config multi-platform parallel build.
+::
+::  The following is special logic to leverage Fish's "RunJobs" tool
+::  that allows us to build multiple different project configurations
+::  in parallel with one another which Microsoft does not yet support.
+::
+::  Refer to the CodeProject article entitled "RunJobs" at the following
+::  URL for more details: http://www.codeproject.com/KB/cpp/runjobs.aspx
+::
+::-----------------------------------------------------------------------------
+:multi_build
+
+  :: Make sure the "runjobs.exe" program exists...
+
+  set "runjobs_exe=runjobs.exe"
+  call :fullpath "%runjobs_exe%"
+  if "%fullpath%" == "" goto :no_runjobs
+  set "runjobs_exe=%fullpath%"
+
+  :: Make sure ProjectFileName got set properly...
+
+  if not defined ProjectFileName (
+    echo.
+    echo %~nx0^(1^) : error C9999 : 'ProjectFileName' is undefined!
+    set "rc=1"
+    %exit%
+  )
+
+  ::  Both VCBUILD and MSBUILD requires that both $(SolutionDir)
+  ::  and $(SolutionPath) be defined. Note however that while
+  ::  SolutionDir MUST be accurate (so that VCBUILD and MSBUILD
+  ::  can each find the Solution and Projects you wish to build),
+  ::  the actual Solution file defined in the SolutionPath variable
+  ::  does NOT actually need to exist (since it is not ever used).
+  ::  The DIRECTORY component of its path however, MUST match the
+  ::  SolutionDir variable value.
+
+  if not defined SolutionDir call :re_set SolutionDir "%cd%\"
+  call :re_set SolutionPath "%SolutionDir%notused.sln"
+
+  :: Set '@' if rebuild, set '#' if clean.
+  call :ifallorclean  %extra_nmake_args%
+
+  :: Determine the proper runjobs jobs file to use
+  :: containing either the MSBUILD or VCBUILD command
+
+  if %vsver% GEQ %vs2010% (
+
+    @REM  VS2010 and greater: use MSBUILD...
+
+    if defined # (
+      set "MSBUILDOPT=/target:Clean /nologo"
+    ) else if defined @ (
+      set "MSBUILDOPT=/target:Rebuild /nologo"
+    ) else (
+      set "MSBUILDOPT=/target:Build /nologo"
+    )
+
+    set "runjobs_file=%CFG%-%targ_arch%.msbuild.jobs"
+
+  ) else (
+
+    @REM  VS2008 and earlier: use VCBUILD...
+
+    if defined # (
+      set "VCBUILDOPT=/clean /nologo"
+    ) else if defined @ (
+      set "VCBUILDOPT=/rebuild /nologo"
+    ) else (
+      set "VCBUILDOPT=/nologo"
+    )
+
+    set "runjobs_file=%CFG%-%targ_arch%.jobs"
+  )
+
+  :: Now invoke runjobs to build each individual target in parallel...
+
+  "%runjobs_exe%" %runjobs_file%
+  set "rc=%errorlevel%"
+  %exit%
+
+
+:no_runjobs
+
+  echo.
+  echo %~nx0^(1^) : error C9999 : "%runjobs_exe%" not found
   set "rc=1"
+  %exit%
+
+
+::-----------------------------------------------------------------------------
+::                           ifallorclean
+::-----------------------------------------------------------------------------
+:ifallorclean
+
+  set @=
+  set #=
+
+:ifallorclean_loop
+
+  if    "%1" == ""      %return%
+  if /i "%1" == "-a"    set @=1
+  if /i "%1" == "/a"    set @=1
+  if /i "%1" == "all"   set @=1
+  if /i "%1" == "clean" set #=1
+
+  shift /1
+
+  goto :ifallorclean_loop
+
+
+::-----------------------------------------------------------------------------
+::                        set_herc_VERSION
+::-----------------------------------------------------------------------------
+:set_herc_VERSION
+
+  :: All Hercules version logic moved to "_dynamic_version.cmd" script
+
+  call "%~dp0_dynamic_version.cmd"
+  set "rc=%errorlevel%"
+
+  echo VERSION = %VERSION%  (%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%)
+
+  if defined CUSTOM_BUILD_STRING (
+    echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%
+  )
+
   %return%
 
 
+::-----------------------------------------------------------------------------
+::                         validate_vstudio
+::-----------------------------------------------------------------------------
+:validate_vstudio
+
+  :: Call the "vstools.cmd" helper script to detect which version of
+  :: Visual Studio we'll be using.  Note that it also sets some helpful
+  :: variables for us too.  Refer to the vstools script for details.
+
+  call "%~dp0vstools.cmd"  detect
+  set "rc=%errorlevel%"
+  if %rc% EQU 0 (
+   echo Visual Studio %vsname% detected
+  )
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                         validate_makefile
 ::-----------------------------------------------------------------------------
 :validate_makefile
 
   set "rc=0"
-  if exist "%makefile_name%" %return%
+
+  if not exist "%makefile_name%" (
+    goto :missing_herc_makefile
+  )
+  
+  set "opath=%path%"
+  set "path=%opath%;%include%"
+  call :fullpath "win32.mak"
+  set "path=%opath%"
+  set "opath="
+
+  if not defined fullpath (
+    goto :missing_win32_makefile
+  )
+
+  set "win32_mak_path=%fullpath%"
+
+  %return%
+
+:missing_herc_makefile
 
   echo.
   echo %~nx0^(1^) : error C9999 : makefile "%makefile_name%" not found
   set "rc=1"
   %return%
 
+:missing_win32_makefile
 
+  echo.
+  echo %~nx0^(1^) : error C9999 : .
+  echo %~nx0^(1^) : error C9999 : ^<win32.mak^> not found!
+
+  echo %~nx0^(1^) : warning C9999 : .
+  echo %~nx0^(1^) : warning C9999 : You need to have the Windows 7.1 SDK installed which has ^<win32.mak^>.
+  echo %~nx0^(1^) : warning C9999 : Neither the Windows 8 SDK nor the Windows 10 SDK has ^<win32.mak^>.
+  echo %~nx0^(1^) : warning C9999 : Only the Windows 7.1 or older SDK will have ^<win32.mak^>.
+
+  if %vsver% GEQ %vs2015% (
+
+  echo %~nx0^(1^) : warning C9999 : .
+  echo %~nx0^(1^) : warning C9999 : When you install Visual Studio %vsname% Community Edition, you
+  echo %~nx0^(1^) : warning C9999 : must also select the "Windows XP Support for C++" option in the
+  echo %~nx0^(1^) : warning C9999 : "Visual C++" section of the "Programming Languages" feature,
+  echo %~nx0^(1^) : warning C9999 : which is the option that installs the Windows 7.1 SDK.
+
+  )
+
+  echo %~nx0^(1^) : warning C9999 : .
+  echo %~nx0^(1^) : warning C9999 : You need to add the 7.1A SDK "Include" directory to the "INCLUDE"
+  echo %~nx0^(1^) : warning C9999 : environment variable and retry your build of Hercules.
+  echo %~nx0^(1^) : warning C9999 : .
+
+  set "rc=1"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                         validate_num_cpus
+::-----------------------------------------------------------------------------
+:validate_num_cpus
+
+  call :isnumeric "%num_cpus%"
+
+  if not defined #     goto :bad_num_cpus
+  if %num_cpus% LSS 1  goto :bad_num_cpus
+  if %num_cpus% GTR 64 goto :bad_num_cpus
+  %return%
+
+:bad_num_cpus
+
+  echo.
+  echo %~nx0^(1^) : error C9999 : "%num_cpus%": Invalid number of cpu engines
+  set "rc=1"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                          determine_cfg
+::-----------------------------------------------------------------------------
+:determine_cfg
+
+  set "rc=0"
+  set "CFG="
+  set "is_multi_build="
+
+  if /i "%build_type%" == "DEBUG"       set "CFG=DEBUG"
+  if /i "%build_type%" == "DEBUG-X64"   set "CFG=DEBUG"
+
+  if /i "%build_type%" == "RETAIL"      set "CFG=RETAIL"
+  if /i "%build_type%" == "RETAIL-X64"  set "CFG=RETAIL"
+
+  if not "%CFG%" == "" (
+    %return%
+  )
+
+  set "is_multi_build=1"
+
+  if /i "%build_type%" == "DEBUG-ALL"   set "CFG=debug"
+  if /i "%build_type%" == "RETAIL-ALL"  set "CFG=retail"
+  if /i "%build_type%" == "ALL-ALL"     set "CFG=all"
+
+  if not "%CFG%" == "" (
+    %return%
+  )
+
+:bad_cfg
+
+  set "is_multi_build="
+  echo.
+  echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
+  set "rc=1"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                        determine_targ_arch
+::-----------------------------------------------------------------------------
+:determine_targ_arch
+
+  set "rc=0"
+  set "targ_arch="
+  set "CPU="
+  set "_WIN64="
+
+  if /i "%build_type%" == "DEBUG"       set "targ_arch=x86"
+  if /i "%build_type%" == "RETAIL"      set "targ_arch=x86"
+
+  if /i "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
+  if /i "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
+
+  if /i "%build_type%" == "DEBUG-ALL"   set "targ_arch=all"
+  if /i "%build_type%" == "RETAIL-ALL"  set "targ_arch=all"
+  if /i "%build_type%" == "ALL-ALL"     set "targ_arch=all"
+
+  if /i "%targ_arch%"  == "x86"         set "CPU=i386"
+  if /i "%targ_arch%"  == "amd64"       set "CPU=AMD64"
+  if /i "%targ_arch%"  == "amd64"       set "_WIN64=1"
+
+  if not "%targ_arch%" == "" (
+    %return%
+  )
+
+:bad_targ_arch
+
+  echo.
+  echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
+  set "rc=1"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                            fullpath
+::-----------------------------------------------------------------------------
+:fullpath
+
+  ::  Search the Windows PATH for the file in question and return its
+  ::  fully qualified path if found. Otherwise return an empty string.
+  ::  Note: the below does not work for directories, only files.
+
+  set "save_path=%path%"
+  set "path=.;%path%"
+  set "fullpath=%~dpnx$PATH:1"
+  set "path=%save_path%"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                            isnumeric
+::-----------------------------------------------------------------------------
+:isnumeric
+
+  set "@=%~1"
+  set "#="
+  for /f "delims=0123456789" %%a in ("%@%/") do if "%%a" == "/" set "#=1"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                             tempfn
+::-----------------------------------------------------------------------------
+:tempfn
+
+  setlocal
+  set "var_name=%~1"
+  set "file_ext=%~2"
+  set "%var_name%="
+  set "@="
+  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
+    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
+      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%file_ext%"
+    )
+  )
+  endlocal && set "%var_name%=%@%"
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                             remlead0
 ::-----------------------------------------------------------------------------
 :remlead0
 
@@ -551,227 +780,7 @@
 
 
 ::-----------------------------------------------------------------------------
-:isnumeric
-
-  set "@=%~1"
-  set "#="
-  for /f "delims=0123456789" %%a in ("%@%/") do if "%%a" == "/" set "#=1"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:tempfn
-
-  setlocal
-  set "var_name=%~1"
-  set "file_ext=%~2"
-  set "%var_name%="
-  set "@="
-  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
-    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
-      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%file_ext%"
-    )
-  )
-  endlocal && set "%var_name%=%@%"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:validate_num_cpus
-
-  call :isnumeric "%num_cpus%"
-
-  if not defined #     goto :bad_num_cpus
-  if %num_cpus% LSS 1  goto :bad_num_cpus
-  if %num_cpus% GTR 64 goto :bad_num_cpus
-  %return%
-
-:bad_num_cpus
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : "%num_cpus%": Invalid number of cpu engines
-  set "rc=1"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:set_cfg
-
-  set "rc=0"
-  set "CFG="
-
-  if /i     "%build_type%" == "DEBUG"       set "CFG=DEBUG"
-  if /i     "%build_type%" == "DEBUG-X64"   set "CFG=DEBUG"
-
-  if /i     "%build_type%" == "RETAIL"      set "CFG=RETAIL"
-  if /i     "%build_type%" == "RETAIL-X64"  set "CFG=RETAIL"
-
-:: the latest SDk uses different arguments to the "setenv" batch file
-:: we need "release" not "retail"...
-
-  if /i not "%new_sdk%" == "NEW" goto :cfg_sdk_env
-  if /i "%CFG%" == "RETAIL" set "CFG=RELEASE"
-
-:cfg_sdk_env
-
-
-  :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
-
-  if    not "%CFG%"        == ""            %return%
-  if /i     "%build_env%"  == "vs140"       goto :multi_cfg
-  if /i     "%build_env%"  == "vs120"       goto :multi_cfg
-  if /i     "%build_env%"  == "vs110"       goto :multi_cfg
-  if /i     "%build_env%"  == "vs100"       goto :multi_cfg
-  if /i not "%build_env%"  == "vs90"        goto :bad_cfg
-
-:multi_cfg
-
-  if /i     "%build_type%" == "DEBUG-ALL"   set "CFG=debug"
-  if /i     "%build_type%" == "RETAIL-ALL"  set "CFG=retail"
-  if /i     "%build_type%" == "ALL-ALL"     set "CFG=all"
-  if    not "%CFG%"        == ""            %return%
-
-:bad_cfg
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
-  set "rc=1"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:set_targ_arch
-
-  set "rc=0"
-  set "targ_arch="
-
-  if /i     "%build_type%" == "DEBUG"       set "targ_arch=x86"
-  if /i     "%build_type%" == "RETAIL"      set "targ_arch=x86"
-
-  if /i     "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
-  if /i     "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
-
-  :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
-
-  if    not "%targ_arch%"  == ""            goto :set_CPU_etc
-  if /i     "%build_env%"  == "vs140"       goto :multi_targ_arch
-  if /i     "%build_env%"  == "vs120"       goto :multi_targ_arch
-  if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
-  if /i     "%build_env%"  == "vs100"       goto :multi_targ_arch
-  if /i not "%build_env%"  == "vs90"        goto :bad_targ_arch
-
-:multi_targ_arch
-
-  if /i     "%build_type%" == "DEBUG-ALL"   set "targ_arch=all"
-  if /i     "%build_type%" == "RETAIL-ALL"  set "targ_arch=all"
-  if /i     "%build_type%" == "ALL-ALL"     set "targ_arch=all"
-  if    not "%targ_arch%"  == ""            %return%
-
-:bad_targ_arch
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : "%build_type%": Invalid build-type
-  set "rc=1"
-  %return%
-
-:set_CPU_etc
-
-  set "CPU="
-
-  if /i "%targ_arch%" == "x86"   set "CPU=i386"
-  if /i "%targ_arch%" == "amd64" set "CPU=AMD64"
-
-  set "_WIN64="
-
-  if /i "%targ_arch%" == "amd64" set "_WIN64=1"
-
-  set "BLD="
-
-  :: the latest SDk uses different arguments to the "setenv" batch file
-
-  if /i "%new_sdk%" == "NEW" goto :bld_sdk_env
-
-  if /i "%targ_arch%" == "x86"   set "BLD=XP32"
-  if /i "%targ_arch%" == "amd64" set "BLD=XP64"
-
-  %return%
-
-:bld_sdk_env
-
-  if /i "%targ_arch%" == "x86"   set "BLD=XP /X86"
-  if /i "%targ_arch%" == "amd64" set "BLD=XP /X64"
-
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:set_host_arch
-
-  set "rc=0"
-  set "host_arch="
-
-  if /i "%PROCESSOR_ARCHITECTURE%" == "x86"   set "host_arch=x86"
-  if /i "%PROCESSOR_ARCHITECTURE%" == "AMD64" set "host_arch=amd64"
-
-  ::  PROGRAMMING NOTE: there MUST NOT be any spaces before the ')'!!!
-
-  :: Since there isn't an X64 version of the x86 compiler when
-  :: building x86 builds, we use the "x86" compiler under WOW64.
-
-  if /i "%targ_arch%" == "x86" set "host_arch=x86"
-
-  if /i not "%host_arch%" == "%targ_arch%" goto :cross
-
-  set "host_arch="
-  if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" %return%
-  goto :missing
-
-:cross
-
-  set "host_arch=x86_"
-
-  if exist "%VSTOOLSDIR%..\..\VC\bin\%host_arch%%targ_arch%\vcvars%host_arch%%targ_arch%.bat" %return%
-  goto :missing
-
-:missing
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : Build support for target architecture %targ_arch% is not installed
-  set "rc=1"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:set_VERSION
-
-  :: All Hercules version logic moved to "_dynamic_version.cmd" script
-
-  call _dynamic_version.cmd
-  set "rc=%errorlevel%"
-
-  echo VERSION = %VERSION%  (%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%)
-
-  if defined CUSTOM_BUILD_STRING (
-    echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%
-  )
-
-  %return%
-
-
-::-----------------------------------------------------------------------------
-:fullpath
-
-  ::  Search the Windows PATH for the file in question and return its
-  ::  fully qualified path if found. Otherwise return an empty string.
-  ::  Note: the below does not work for directories, only files.
-
-  set "save_path=%path%"
-  set "path=.;%path%"
-  set "fullpath=%~dpnx$PATH:1"
-  set "path=%save_path%"
-  %return%
-
-
+::                              re_set
 ::-----------------------------------------------------------------------------
 :re_set
 
@@ -782,24 +791,7 @@
 
 
 ::-----------------------------------------------------------------------------
-:ifallorclean
-
-  set @=
-  set #=
-
-:ifallorclean_loop
-
-  if    "%1" == ""      %return%
-  if /i "%1" == "-a"    set @=1
-  if /i "%1" == "/a"    set @=1
-  if /i "%1" == "all"   set @=1
-  if /i "%1" == "clean" set #=1
-
-  shift /1
-
-  goto :ifallorclean_loop
-
-
+::                                fxxx
 ::-----------------------------------------------------------------------------
 :fxxx
 
@@ -829,189 +821,6 @@
 
   endlocal
   %return%
-
-
-::-----------------------------------------------------------------------------
-::                            CALL NMAKE
-::-----------------------------------------------------------------------------
-:nmake
-
-  set  "MAX_CPU_ENGINES=%num_cpus%"
-
-  if defined vsver (
-    if %vsver% GTR %vs2008% (
-
-      @REM  Dump all environment variables...
-      echo.
-      echo --------------------------- ENVIRONMENT POOL ---------------------------
-      echo.
-      set
-    )
-  )
-
-  @REM  Format the PATH, LIB and INCLUDE variables for easier reading
-  echo.
-  echo -------------------------- PATH, LIB, INCLUDE --------------------------
-  call :fxxx PATH
-  call :fxxx LIB
-  call :fxxx INCLUDE
-
-
-  @REM  Check for existence of required win32.mak file.
-
-  set "opath=%path%"
-  set "path=%opath%;%include%"
-
-  call :fullpath "win32.mak"
-
-  set "path=%opath%"
-  set "opath="
-
-  if not defined fullpath goto :win32_mak_missing
-
-  echo.
-  echo ------------------------------ WIN32.MAK -------------------------------
-  echo.
-  echo  ^<win32.mak^> will be !INCLUDEd from "%fullpath%"...
-  echo.
-  echo --------------------------------- MAKE ---------------------------------
-  echo.
-
-  @REM  Only set VERSION if we're actually building something
-
-  call :ifallorclean  %extra_nmake_args%
-  if not defined # (
-    call :set_VERSION
-    if %rc% NEQ 0 (
-      set "rc=1"
-      %exit%
-    )
-  )
-
-  ::  Additional nmake arguments (for reference):
-  ::
-  ::   -nologo   suppress copyright banner
-  ::   -s        silent (suppress commands echoing)
-  ::   -k        keep going if error(s)
-  ::   -g        display !INCLUDEd files (VS2005 or greater only)
-
-  nmake -nologo -s -f "%makefile_name%"  %extra_nmake_args%
-  set "rc=%errorlevel%"
-  %exit%
-
-::-----------------------------------------------------------------------------
-::                     Required win32.mak not found
-::-----------------------------------------------------------------------------
-:win32_mak_missing
-
-  echo %~nx0^(1^) : error C9999 : .
-  echo %~nx0^(1^) : error C9999 : ^<win32.mak^> not found!
-  set "rc=1"
-
-  echo %~nx0^(1^) : warning C9999 : .
-  echo %~nx0^(1^) : warning C9999 : You need to have the Windows 7.1 SDK installed which has ^<win32.mak^>.
-  echo %~nx0^(1^) : warning C9999 : Neither the Windows 8 SDK nor the Windows 10 SDK has ^<win32.mak^>.
-  echo %~nx0^(1^) : warning C9999 : Only the Windows 7.1 or older SDK will have ^<win32.mak^>.
-
-  if %vsver% GEQ %vs2015% (
-    echo %~nx0^(1^) : warning C9999 : .
-    echo %~nx0^(1^) : warning C9999 : When you install Visual Studio %vsname% Community Edition, you
-    echo %~nx0^(1^) : warning C9999 : must also select the "Windows XP Support for C++" option in the
-    echo %~nx0^(1^) : warning C9999 : "Visual C++" section of the "Programming Languages" feature, which is
-    echo %~nx0^(1^) : warning C9999 : the option that installs the Windows 7.1 SDK containing ^<win32.mak^>.
-  )
-
-  echo %~nx0^(1^) : warning C9999 : .
-  echo %~nx0^(1^) : warning C9999 : Then add the 7.1A SDK "Include" directory to the "INCLUDE" environment
-  echo %~nx0^(1^) : warning C9999 : variable and build Hercules from the command line using makefile.bat.
-  echo %~nx0^(1^) : warning C9999 : .
-
-  %exit%
-
-
-::-----------------------------------------------------------------------------
-::      Visual Studio multi-config multi-platform parallel build
-::-----------------------------------------------------------------------------
-::
-::  The following is special logic to leverage Fish's "RunJobs" tool
-::  that allows us to build multiple different project configurations
-::  in parallel with one another which Microsoft does not yet support.
-::
-::  Refer to the CodeProject article entitled "RunJobs" at the following
-::  URL for more details: http://www.codeproject.com/KB/cpp/runjobs.aspx
-::
-::-----------------------------------------------------------------------------
-:multi_build
-
-  ::-------------------------------------------------
-  ::  Make sure the below defined command exists...
-  ::-------------------------------------------------
-
-  set "runjobs_cmd=runjobs.exe"
-
-  call :fullpath "%runjobs_cmd%"
-  if "%fullpath%" == "" goto :no_runjobs
-  set "runjobs_cmd=%fullpath%"
-
-
-  ::-------------------------------------------------------------------
-  ::  VCBUILD requires that both $(SolutionDir) and $(SolutionPath)
-  ::  are defined properly. Note however that while $(SolutionDir)
-  ::  *must* be accurate (so that VCBUILD can find the Solution and
-  ::  Projects you wish to build), the actual Solution file defined
-  ::  in the $(SolutionPath) variable does not need to exist since
-  ::  it is never used. (But the directory portion of its path must
-  ::  match $(SolutionDir) of course). Also note that we must call
-  ::  vsvars32.bat in order to setup the proper environment so that
-  ::  VCBUILD can work properly (and so that RunJobs can find it!)
-  ::-------------------------------------------------------------------
-
-  if not defined SolutionDir call :re_set SolutionDir "%cd%\"
-  call :re_set SolutionPath "%SolutionDir%notused.sln"
-  call "%VSTOOLSDIR%vsvars32.bat"
-
-  call :ifallorclean %extra_nmake_args%
-
-  if %vsver% LEQ %vs2008% (
-
-    @REM  VS2008 and earlier: use VCBUILD
-
-    if defined # (
-      set "VCBUILDOPT=/clean"
-    ) else if defined @ (
-      set "VCBUILDOPT=/rebuild"
-    ) else (
-      set "VCBUILDOPT=/nocolor"
-    )
-
-    set "runjobs_file=%CFG%-%targ_arch%.jobs"
-
-  ) else (
-
-    @REM  VS2010 and greater: use MSBUILD
-
-    if defined # (
-      set "MSBUILDOPT=/target:Clean"
-    ) else if defined @ (
-      set "MSBUILDOPT=/target:Rebuild"
-    ) else (
-      set "MSBUILDOPT=/target:Build"
-    )
-
-    set "runjobs_file=%CFG%-%targ_arch%.msbuild.jobs"
-  )
-
-  "%runjobs_cmd%" %runjobs_file%
-  set "rc=%errorlevel%"
-  %exit%
-
-
-:no_runjobs
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : Could not find "%runjobs_cmd%" anywhere on your system
-  set "rc=1"
-  %exit%
 
 
 ::-----------------------------------------------------------------------------

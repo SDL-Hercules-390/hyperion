@@ -2183,6 +2183,9 @@
     <None Include="Hercules_VS2017.vcxproj.filters">
       <Filter>Other Files\Build\msvc\VS2017</Filter>
     </None>
+    <None Include="vstools.cmd">
+      <Filter>Other Files\Build\msvc</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto\include\crypto.h">
@@ -2580,6 +2583,9 @@
     </ClInclude>
     <ClInclude Include="SoftFloat\include\softfloat_types.h">
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat\include</Filter>
+    </ClInclude>
+    <ClInclude Include="vsvers.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
