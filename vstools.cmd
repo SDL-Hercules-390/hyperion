@@ -54,7 +54,7 @@
   echo                              (e.g. "vs2017", "vs2008", etc)
   echo.
   echo              vsver           Visual Studio's numeric version
-  echo                              (e.g. "150", "80", etc)
+  echo                              (e.g. "150", "90", etc)
   echo.
   echo              vshost          The detected host architecture
   echo                              (either "x86" or "amd64")
@@ -64,7 +64,7 @@
   echo.
   echo              vs2017..vs2005  The Visual Studio version numbers
   echo                              for each supported version of it
-  echo                              (vs2017 = %vs2017%, vs2008 = %vs2008%, etc)
+  echo                              (vs2017=150, vs2008=90, etc)
   echo.
   echo     EXIT STATUS
   echo.
