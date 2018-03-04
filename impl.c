@@ -578,7 +578,11 @@ int     rc;
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );
 
-    VERIFY( MLOCK( &sysblk, sizeof( SYSBLK )) == 0);
+    /* Lock SYSBLK into memory since it's referenced so frequently.
+       Note that the call could fail when the working set is small
+       but that's okay. We did our best. Locking it isn't critical.
+    */
+    MLOCK( &sysblk, sizeof( SYSBLK ));
 
 #if defined (_MSVC_)
     _setmaxstdio(2048);
