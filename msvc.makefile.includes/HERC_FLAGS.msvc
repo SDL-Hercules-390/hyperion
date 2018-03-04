@@ -97,7 +97,12 @@ cdebug  = $(cdebug:/Gm=)
 
 # Specify module base address directly via linker option
 # so we don't have to rely on user having rebase utility.
-ldebug = $(ldebug) /base:0x400000
+!IFDEF _WIN64
+# Using a value greater than 4GB prevents LNK4281 in later versions of MSVC
+ldebug = $(ldebug) /base:0x100400000
+!ELSE
+ldebug = $(ldebug) /base:0x000400000
+!ENDIF
 
 !IF "$(CPU)" == "AMD64"
 !IF $(vsversion) >= $(vers_vs2015)
