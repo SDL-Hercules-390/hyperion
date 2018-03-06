@@ -148,14 +148,36 @@ static const char *build_info[] = {
     "MetaWare High C",
 #elif defined(__MWERKS__)
     "Metrowerks CodeWarrior",
-#elif defined(_MSC_VER)
+#elif defined( _MSC_VER )
+
    /* && !defined(__clang__) by definition due to prior test     */
    /*     __clang__ with _MSC_VER indicates MSC build with Clang */
    /*     and the intent here is to only identify the compiler.  */
-    "Microsoft Visual C " value(_MSC_FULL_VER)
-    #if defined(_MSC_BUILD)
-        " " value(_MSC_BUILD)
+
+    "Microsoft "
+
+#if   _MSC_VER == VS2008
+     "Visual Studio 2008"
+#elif _MSC_VER == VS2010
+     "Visual Studio 2010"
+#elif _MSC_VER == VS2012
+     "Visual Studio 2012"
+#elif _MSC_VER == VS2013
+     "Visual Studio 2013"
+#elif _MSC_VER == VS2015
+     "Visual Studio 2015"
+#elif _MSC_VER >= VS2017  && _MSC_VER <= VS2017_5
+     "Visual Studio 2017"
+#else
+     "Visual C"
+#endif
+        " (MSVC " value( _MSC_FULL_VER )
+    #if defined(   _MSC_BUILD )
+        " " value( _MSC_BUILD )
     #endif
+
+        ")"
+
     ,   /* Don't forget the comma to keep the compiler happy! */
 #elif defined(_MRI)
     "Microtec C",
