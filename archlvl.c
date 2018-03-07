@@ -1397,7 +1397,7 @@ static bool facility_query_all( const ARCHTAB* at, bool sort_by_long )
               (def == '0' && cur == '1')    ? '*' : ' ';
         sev = (mod == '*')                  ? "W" : "I";
 
-        // "%3d %02X %02X %c%c%c%c%c %-27s %s"
+        // "%3d %02X %02X %c%c%c%c%c %-27s%c%s"
         WRMSG( HHC00891, sev,
             ft->bitno,
             fbyte,
@@ -1408,6 +1408,7 @@ static bool facility_query_all( const ARCHTAB* at, bool sort_by_long )
             cur,
             mod,
             ft->name,
+            mod,
             ft->long_name
         );
     }
