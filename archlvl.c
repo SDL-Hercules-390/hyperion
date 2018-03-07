@@ -1321,22 +1321,22 @@ static const char* get_facname_by_bitno( int bitno, const char** name )
 /*-------------------------------------------------------------------*/
 static int sort_ftpp_by_bit_number( const void* p1, const void* p2 )
 {
-    const FACTAB* f1 = *( (const FACTAB**) p1 );
-    const FACTAB* f2 = *( (const FACTAB**) p2 );
+    const FACTAB* f1 = *((const FACTAB**) p1);
+    const FACTAB* f2 = *((const FACTAB**) p2);
     int rc = (f1->bitno - f2->bitno);
     return rc ? rc : strcasecmp( f1->name, f2->name );
 }
 static int sort_ftpp_by_long_name( const void* p1, const void* p2 )
 {
-    const FACTAB* f1 = *( (const FACTAB**) p1 );
-    const FACTAB* f2 = *( (const FACTAB**) p2 );
+    const FACTAB* f1 = *((const FACTAB**) p1);
+    const FACTAB* f2 = *((const FACTAB**) p2);
     return strcasecmp( f1->long_name, f2->long_name );
 }
 
 /*-------------------------------------------------------------------*/
-/*                     archlvl_query_all                             */
+/*                     facility_query_all                            */
 /*-------------------------------------------------------------------*/
-static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
+static bool facility_query_all( const ARCHTAB* at, bool sort_by_long )
 {
     const FACTAB*   ft;         // ptr to FACTAB entry
     const FACTAB**  ftpp;       // ptr to ptr to FACTAB entry
@@ -1421,9 +1421,9 @@ static bool archlvl_query_all( const ARCHTAB* at, bool sort_by_long )
 }
 
 /*-------------------------------------------------------------------*/
-/*                     archlvl_query_raw                             */
+/*                     facility_query_raw                            */
 /*-------------------------------------------------------------------*/
-static void archlvl_query_raw( const ARCHTAB* at )
+static void facility_query_raw( const ARCHTAB* at )
 {
     char buf[ 128 ] = {0};
     char wrk[  20 ];
@@ -1471,13 +1471,13 @@ static void archlvl_query_raw( const ARCHTAB* at )
 }
 
 /*-------------------------------------------------------------------*/
-/*                        archlvl_query                    (boolean) */
+/*                       facility_query                    (boolean) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*   ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static bool archlvl_query( int argc, char* argv[] )
+static bool facility_query( int argc, char* argv[] )
 {
     const ARCHTAB*  at;
     const FACTAB*   ft;
@@ -1510,14 +1510,14 @@ static bool archlvl_query( int argc, char* argv[] )
     ))
     {
         const bool sort_by_long = argc < 3 ? false : CMD( argv[2], LONG, 1 );
-        return archlvl_query_all( at, sort_by_long );
+        return facility_query_all( at, sort_by_long );
     }
 
     /* Query RAW? */
 
     if (argc == 3 && CMD( argv[2], RAW, 1 ))
     {
-        archlvl_query_raw( at );
+        facility_query_raw( at );
         return true;
     }
 
@@ -2106,7 +2106,7 @@ static void name( int arch, bool enable )                               \
 /* itself is disabled, or re-enable the instructions again whenever  */
 /* the facility is enabled. This is controlled by optional function  */
 /* pointers defined in the above 'FT2' facilities table which the    */
-/* 'archlvl_enable_disable' function calls when a facility is either */
+/* facility_enable_disable function calls when a facility is either  */
 /* enabled or disabled.                                              */
 /*-------------------------------------------------------------------*/
 
@@ -3405,13 +3405,13 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
 END_DIS_FAC_INS_FUNC()
 
 /*-------------------------------------------------------------------*/
-/*                     archlvl_enable_disable              (boolean) */
+/*                    facility_enable_disable              (boolean) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* ARCHLVL ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH]  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static int archlvl_enable_disable( int argc, char* argv[] )
+static int facility_enable_disable( int argc, char* argv[] )
 {
     const ARCHTAB*  at;
     const FACTAB*   ft;
@@ -3573,12 +3573,73 @@ static int archlvl_enable_disable( int argc, char* argv[] )
 }
 
 /*-------------------------------------------------------------------*/
+/*                        facility_cmd                      (public) */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH] */
+/* ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int facility_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+
+    strupper( argv[0], argv[0] );
+
+    /* Correct number of arguments? */
+
+    if (argc < 3 || argc > 4)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    /*-----------------------------------------------------*/
+    /*                Query Facility?                      */
+    /*-----------------------------------------------------*/
+
+    if (CMD( argv[1], QUERY, 1 ))
+    {
+        int rc = facility_query( argc, argv ) ? 0 : -1;
+        return rc;
+    }
+
+    /*-----------------------------------------------------*/
+    /*             Enable/Disable Facility?                */
+    /*-----------------------------------------------------*/
+
+    if (0
+        || CMD( argv[1], ENABLE,  3 )
+        || CMD( argv[1], DISABLE, 3 )
+    )
+    {
+        if (sysblk.ipled)
+        {
+            // "Available facilities cannot be changed once system is IPLed"
+            WRMSG( HHC00889, "E" );
+            return -1;
+        }
+
+        if (are_any_cpus_started())
+        {
+            // "All CPU's must be stopped %s"
+            WRMSG( HHC02253, "E", "to modify a facility" );
+            return HERRCPUONL;
+        }
+        return facility_enable_disable( argc, argv );
+    }
+
+    // "Invalid command usage. Type 'help %s' for assistance."
+    WRMSG( HHC02299, "E", argv[0] );
+    return -1;
+}
+
+/*-------------------------------------------------------------------*/
 /*                        archlvl_cmd                       (public) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* ARCHLVL S/370 | ESA/390 | z/ARCH                                  */
-/* ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH] */
-/* ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int archlvl_cmd( int argc, char* argv[], char* cmdline )
@@ -3600,6 +3661,25 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
+#if 0 // Enable the below on/after 2019-12-31
+
+    /* Too many arguments? */
+
+    if (argc > 2)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    /*-----------------------------------------------------*/
+    /*    Make sure all CPUs are deconfigured or stopped   */
+    /*-----------------------------------------------------*/
+
+    any_started = are_any_cpus_started();
+
+#else // Below is DEPRECATED; replace with above on/after 2019-12-31
+
     /* Too many arguments? */
 
     if (argc > 4)
@@ -3615,7 +3695,11 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     if (CMD( argv[1], QUERY, 1 ))
     {
-        int rc = archlvl_query( argc, argv ) ? 0 : -1;
+        int rc = facility_query( argc, argv ) ? 0 : -1;
+        // "Note: Enabling/Disabling/Querying facilities via 'ARCHLVL' is deprecated."
+        // "      Please use the new FACILITY command instead."
+        WRMSG( HHC00887, "W" );
+        WRMSG( HHC00888, "W" );
         return rc;
     }
 
@@ -3634,6 +3718,8 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         || CMD( argv[1], DISABLE, 3 )
     )
     {
+        int rc;
+
         if (sysblk.ipled)
         {
             // "Available facilities cannot be changed once system is IPLed"
@@ -3647,8 +3733,16 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
             WRMSG( HHC02253, "E", "to modify a facility" );
             return HERRCPUONL;
         }
-        return archlvl_enable_disable( argc, argv );
+
+        rc = facility_enable_disable( argc, argv );
+        // "Note: Enabling/Disabling/Querying facilities via 'ARCHLVL' is deprecated."
+        // "      Please use the new FACILITY command instead."
+        WRMSG( HHC00887, "W" );
+        WRMSG( HHC00888, "W" );
+        return rc;
     }
+
+#endif // Delete the above on/after 2019-12-31
 
     /*-----------------------------------------------------*/
     /*                Set Architecture                     */

@@ -100,19 +100,15 @@
 #define aia_cmd_desc            "Display AIA fields"
 #define alrf_cmd_desc           "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
 #define ar_cmd_desc             "Display access registers"
-#define archlvl_cmd_desc        "Set Arch Mode or Enable/Disable/Query Facility"
+
+#define archlvl_cmd_desc        "Set or Query current Architecture Mode"
 #define archlvl_cmd_help        \
                                 \
-  "Format: ARCHLVL S/370 | ESA/390 | z/ARCH\n"                                  \
-  "        ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH]\n" \
-  "        ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]\n"     \
+  "Format: ARCHLVL  S/370 | ESA/390 | z/ARCH\n"                                 \
   "\n"                                                                          \
   "Entering the command without arguments displays the current architecture\n"  \
-  "mode. Entering the command with an argument sets the architecture mode\n"    \
-  "to the given value, or enables, disables or queries the given facility.\n"   \
-  "\n"                                                                          \
-  "Use the ARCHLVL QUERY command to obtain the list of facility names that\n"   \
-  "can then be used in a ARCHLVL ENABLE/DISABLE <facility> command.\n"
+  "mode. Entering the command with an argument sets the architecture mode.\n"   \
+  "To enable/disable/query facilities please use the new FACILITY command.\n"
 
 #define archmode_cmd_desc       "Deprecated. Use the archlvl command instead"
 #define asnlx_cmd_desc          "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
@@ -184,6 +180,8 @@
   "options and statistics, and to set new cckd options.\n"                      \
   "Type \"cckd help\" for additional information.\n"
 
+#define cctape_cmd_desc         "Display a printer's current cctape"
+#define cctape_cmd_help         "Format: \"cctape <devnum>\""
 #define cf_cmd_desc             "Configure current CPU online or offline"
 #define cf_cmd_help             \
                                 \
@@ -519,11 +517,14 @@
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
 #define f_cmd_desc              "Mark frames unusable/usable"
+#define facility_cmd_desc       "Enable, Disable or Query Facilities"
+#define facility_cmd_help       \
+                                \
+  "Format: FACILITY  ENABLE | DISABLE   <facility> | bit          [ archlvl ]\n"  \
+  "        FACILITY  QUERY    [ ALL | SHORT | LONG | <facility> | bit | RAW ]\n"
+
 #define fcb_cmd_desc            "Display a printer's current FCB"
 #define fcb_cmd_help            "Format: \"fcb <devnum>\""
-#define cctape_cmd_desc         "Display a printer's current cctape"
-#define cctape_cmd_help         "Format: \"cctape <devnum>\""
-
 #define fpc_cmd_desc            "Display or alter floating point control register"
 #define fpc_cmd_help            \
                                 \
@@ -1582,7 +1583,7 @@ COMMAND( "cmdlvl",                  cmdlvl_cmd,             SYSALL,             
 COMMAND( "cmdsep",                  cmdsep_cmd,             SYSALL,             cmdsep_cmd_desc,        cmdsep_cmd_help     )
 COMMAND( "help",                    HelpCommand,            SYSALL,             help_cmd_desc,          help_cmd_help       )
 COMMAND( "hst",                     History,                SYSALL,             hst_cmd_desc,           hst_cmd_help        )
-CMDABBR( "message",  1,             msg_cmd,                SYSALL,             message_cmd_desc,       message_cmd_help    )
+CMDABBR( "message",         1,     msg_cmd,                SYSALL,             message_cmd_desc,       message_cmd_help    )
 COMMAND( "msg",                     msg_cmd,                SYSALL,             msg_cmd_desc,           NULL                )
 COMMAND( "msglevel",                msglevel_cmd,           SYSALL,             msglevel_cmd_desc,      msglevel_cmd_help   )
 COMMAND( "msglvl",                  msglevel_cmd,           SYSALL,             msglvl_cmd_desc,        NULL                )
@@ -1603,9 +1604,9 @@ COMMAND( "log",                     log_cmd,                SYSCMD,             
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
 COMMAND( "mt",                      mt_cmd,                 SYSCMD,             mt_cmd_desc,            mt_cmd_help         )
 COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      pantitle_cmd_help   )
-CMDABBR( "qcpuid",  5,              qcpuid_cmd,             SYSCMD,             qcpuid_cmd_desc,        qcpuid_cmd_help     )
+CMDABBR( "qcpuid",          5,      qcpuid_cmd,             SYSCMD,             qcpuid_cmd_desc,        qcpuid_cmd_help     )
 COMMAND( "qpid",                    qpid_cmd,               SYSCMD,             qpid_cmd_desc,          NULL                )
-CMDABBR( "qports",  5,              qports_cmd,             SYSCMD,             qports_cmd_desc,        NULL                )
+CMDABBR( "qports",          5,      qports_cmd,             SYSCMD,             qports_cmd_desc,        NULL                )
 COMMAND( "qproc",                   qproc_cmd,              SYSCMD,             qproc_cmd_desc,         NULL                )
 COMMAND( "qstor",                   qstor_cmd,              SYSCMD,             qstor_cmd_desc,         NULL                )
 COMMAND( "start",                   start_cmd,              SYSCMD,             start_cmd_desc,         start_cmd_help      )
@@ -1693,7 +1694,7 @@ COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       
 COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       cpuprio_cmd_desc,       NULL                )
 COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       cpuserial_cmd_desc,     NULL                )
 COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
-CMDABBR( "defstore",  7,            defstore_cmd,           SYSCFGNDIAG8,       defstore_cmd_desc,      defstore_cmd_help   )
+CMDABBR( "defstore",        7,      defstore_cmd,           SYSCFGNDIAG8,       defstore_cmd_desc,      defstore_cmd_help   )
 COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       NULL                )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
@@ -1701,7 +1702,7 @@ COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
 COMMAND( "lparnum",                 lparnum_cmd,            SYSCFGNDIAG8,       lparnum_cmd_desc,       lparnum_cmd_help    )
 COMMAND( "mainsize",                mainsize_cmd,           SYSCFGNDIAG8,       mainsize_cmd_desc,      mainsize_cmd_help   )
-CMDABBR( "manufacturer",  8,        stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
+CMDABBR( "manufacturer",    8,      stsi_manufacturer_cmd,  SYSCFGNDIAG8,       manuf_cmd_desc,         NULL                )
 COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
 COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
@@ -1713,6 +1714,7 @@ COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )
 
 COMMAND( "archlvl",                 archlvl_cmd,            SYSCMDNOPERNDIAG8,  archlvl_cmd_desc,       archlvl_cmd_help    )
+CMDABBR( "facility",        3,      facility_cmd,           SYSCMDNOPERNDIAG8,  facility_cmd_desc,      facility_cmd_help   )
 COMMAND( "archmode",                archlvl_cmd,            SYSCMDNOPERNDIAG8,  archmode_cmd_desc,      NULL                )
 
 COMMAND( "exit",                    quit_cmd,               SYSALLNDIAG8,       exit_cmd_desc,          NULL                )
@@ -1778,7 +1780,7 @@ COMMAND( "exec",                    exec_cmd,               SYSCMD,             
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
-CMDABBR( "qpfkeys",  3,             qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
+CMDABBR( "qpfkeys",         3,      qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
 COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        delsym_cmd_desc,        delsym_cmd_help     )
 #endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
