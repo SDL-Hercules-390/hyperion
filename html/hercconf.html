@@ -1192,16 +1192,17 @@ a real System/390.  The configuration file is an ASCII text file.
     The default for Linux (except Apple and FreeBSD) is <code>/dev/net/tun</code>.
     The default for Apple and FreeBSD is <code>/dev/tun</code>.
     <p>
-    The default for Windows is the whichever host adapter that SoftDevLab's
+    The default for Windows is whichever host adapter that SoftDevLab's
     <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
-    returns as its "default host network adapter" which for older versions of CTCI-WIN
+    returns as its "default host network adapter", which for older versions of CTCI-WIN
     (3.5.0 and earlier) is the first network adapter in the Windows host's binding
-    order, which may not be desirable for some users.
+    order (which may not be desirable for some users). The <code>NETDEV</code> statement
+    allows you to override this.
     <p>
     Refer to the 'Help' file included in newer versions of
     <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> (version 3.6.0 or greater)
-    for information regarding modifying Windows's adapter binding order and/or defining
-    a preferred CTCI-WIN default host network adapter (for Windows 10 for example).
+    for information regarding modifying Windows's "Adapter Binding Order" and/or defining
+    a preferred CTCI-WIN default host network adapter.
     <p>
 
 <a name="NUMCPU"></a>

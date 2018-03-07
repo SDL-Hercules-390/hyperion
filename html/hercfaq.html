@@ -535,21 +535,38 @@ is <A HREF="http://www.linuxvm.org/">http://www.linuxvm.org/</A>
     What software do I need to build Hercules on Windows?
 </H4>
 <P>
-    To build Hercules for the Windows native environment (without Cygwin),
-    you need to use the Microsoft C/C++ compiler (MSVC)
-    version 14.x or later.
-    The 32-bit compiler and SDK are packaged as
-    Microsoft Visual C++ 2008 Express (Version 15.x)
-    available for download from Microsoft.
-    Although no longer available for download,
-    Microsoft Visual C++ 2005 Express (Version 14.x)
-    may also be used.
-    For further information, see Fish's MSVC Hercules Build page at
+
+    To build Hercules for the Windows native environment (without
+    Cygwin), you need to use the Microsoft C/C++ compiler (MSVC)
+    version 15.x or later (i.e. Visual Studio 2008 or greater).
+
+    The 32-bit compiler and SDK were packaged as Microsoft Visual
+    C++ 2008 Express Edition at one point in the past, but unfortunately
+    Microsoft no longer offers it for download from their web site.
+
+<p>
+
+    Fish's <a href="http://www.softdevlabs.com">"Software Development
+    Laboratories"</a> web site however, has a
     <a href="http://www.softdevlabs.com/hercules-msvc-build.html">
-    http://www.softdevlabs.com/hercules-msvc-build.html</a>
-    Alternatively, the Microsoft Visual Studio 8.0 or 9.0 products may be used.
-    To build Hercules for 64-bit Windows platforms you will need
-    Microsoft Visual Studio 9.0 Professional.
+    "Hercules Windows Build Instructions"</a> web page that contains
+    download links that are still working should you wish to use Visual
+    Studio 2008 Express Edition.
+
+<p>
+
+    The good news is Microsoft's latest offering of their
+    <b><a href="https://www.visualstudio.com/downloads/">Visual Studio</a></b>
+    product comes with a free "<b>Community Edition</b>" which <i>should</i>
+    be able to successfully build Hercules.
+
+<p>
+
+    Which version of Visual Studio (Microsoft Visual C++) you use to build
+    Hercules with is largely unimportant as long as it works. More recent
+    versions may or may not provide better performance and may or may not
+    successfully build Hercules. The only way to know is to try.
+
 </P>
 <H4><A NAME="3.06">3.06</A>
     Can Hercules be ported to run on other platforms?

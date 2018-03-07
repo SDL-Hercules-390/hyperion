@@ -308,6 +308,112 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>ARCHLVL facility names have changed
+  <dd>
+  <p>
+    The <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL</a></code> command was completely redesigned and rewritten in
+    order to more properly support and enforce the concept of prerequisite facilities
+    (i.e. a facility presuming/requiring some other facility). As part of this
+    rewrite the facility names used in the <code>ARCHLVL </code> command to enable,
+    disable or query a facility have been changed.
+  <p>
+    All defined facilities now begin with a 3-digit facility bit number in addition
+    to their abbreviated facility name. This was done to ensure the correct facility
+    was being enabled or disabled due to the similarity of some facility names.
+    For example, the previously named "ASN_LX_REUSE" facility is now named
+    "006_ASN_LX_REUSE".  Similarly, the previously named "PFPO" facility is now
+    named "044_PFPO". 
+  <p>
+    For a detailed list of the new abbreviated (short) facility
+    names, use the "<code>ARCHLVL QUERY [ ALL &#124; LONG ]</code>" command.
+  </p>
+
+
+  <dt>3088, CTCI-W32, CTCT and VMNET support dropped
+  <dd>
+  <p>
+    Support for 3088, CTCI-W32, CTCT and VMNET devices has been dropped.
+    3088 Channel-To-Channel Adapter support (which was the original intent
+    of CTCT) has instead been replaced with Peter Jansen's vastly improved
+    Enhanced Channel-To-Channel (<a href="hercconf.html#CTCE">CTCE</a>) device
+    support, which provides true Extended mode Channel-To-Channel Adapter
+    capabilities, allowing you to use
+    <a href="https://en.wikipedia.org/wiki/Global_Resource_Serialization">GRS</a>
+    to connect multiple Hercules instances together in a type of
+    <a href="https://en.wikipedia.org/wiki/IBM_Parallel_Sysplex">Sysplex</a>.
+  </p>
+
+
+  <dt>CAPPING support removed
+  <dd>
+  <p>
+    Previous versions of Hercules supported a "CAPPING" configuration statement
+    designed to purposely reduce performance to ensure that your MIPS rate never
+    exceeded the specified value. This functionality has now been removed.
+  </p>
+
+
+  <dt>New NETDEV configuration file statement
+  <dd>
+  <p>
+    A new <code>NETDEV</code> configuration file statement is now supported
+    to allow you to specify which host network adpter should be used for all
+    Hercules communications device emulation. Refer to the documentation for
+    the "<code><a href="hercconf.html#NETDEV">NETDEV</a></code>" statement for
+    more information.
+  </p>
+
+
+  <dt>New "t+-" Automatic Tracing command
+  <dd>
+  <p>
+    A new "<code>t+-</code>" (tee-plus-minus) Automatic Tracing command has been
+    created that may prove to be helpful in capturing capture guest issues that
+    occur very early in the guest's IPL sequence. Refer to the "<code>help t+-</code>"
+    help display for more information.
+  </p>
+
+
+  <dt>Default tape AUTOINIT option is now ON (enabled)
+  <dd>
+  <p>
+    The <code><a href="hercconf.html#AUTOINIT">AUTOINIT</a></code> option
+    controls whether device files for emulated tape volumes should be
+    automatically created or not if they do not exist. The previous default
+    was <code>OFF</code>. The new default is <code><u>ON</u></code>.
+  </p>
+
+
+  <dt>Diagnose X'F14' support removed
+  <dd>
+  <p>
+    Hercules's Diagnose X'F14' functionality was designed to allow
+    a Hercules guest to call into any host system DLL (Dynamic Link
+    Library). Since its use (dubius to begin with) was determined to be
+    a potential security risk (and the code didn't appear to be used
+    anywhere anyway), support for it was removed.
+  </p>
+
+
+  <dt>System/370/390 Vector Facility instructions are now enabled by default
+  <dd>
+  <p>
+    Hercules has always supported the System/370 and System/390 Vector Facility
+    set of instructions but support for them was never enabled by default. This
+    has now been corrected.
+  </p>
+
+
+  <dt>Hercules S/370 Instruction Extension Facility
+  <dd>
+  <p>
+    A new Hercules S/370 Instruction Extension Facility has been implemented to
+    replace the functionality previously provided by the "s37x.dll" dynamically
+    loadable module. Please refer to the
+    <a href="https://github.com/fish-git/hyperion/blob/master/README.S37X">README.S37X</a>
+    document for more information.
+  </p>
+
 </dl>
 
 <hr>

@@ -15,13 +15,13 @@ in contradiction with the reference manual.
 
 For example, there is no contradication for an instruction such as LHI (Load
 Halfword Immediate) to be included as part of the S/370 architecture presented
-by hercules.
+by Hercules.
 
 However, since these instruction are not part of the original architecture,
 it is necessary that these extensions to the architecture be controlled at
 runtime.
 
-In hercules, the fact that such and such facility or feature is built for
+In Hercules, the fact that such and such facility or feature is built for
 such and such architecture is controlled by a series of C preprocessor macros
 in the feat370.h, feat390.h and feat900.h header files. 
 
@@ -30,19 +30,19 @@ code tables in opcode.c.
 
 Before runtime control was available, a select number of features were made
 available in feat370.h and then commented out.  Removing the comment and
-rebuilding hercules then made it possible to access those features in the
+rebuilding Hercules then made it possible to access those features in the
 S/370 architectural mode.
 
 However, requiring a rebuild seemed a little too much to ask of the casual
-hercules user since it would mean they would have to manually build a custom
-version of hercules for themselves, which is not something a casual user of
+Hercules user since it would mean they would have to manually build a custom
+version of Hercules for themselves, which is not something a casual user of
 Hercules is necessarily prepared to do.
 
 -------------------------------------------------------------------------------
 
                   Enabling the additional instructions
 
-From the configuration file statement or the panel, simply issue the
+From the configuration file or hardware control panel, simply issue the
 commands:
 
             archlvl  370
