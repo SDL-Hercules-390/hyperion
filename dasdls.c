@@ -42,7 +42,6 @@ int  do_ls               (char *file, char *sfile);
 /* globals */
 static CIFBLK *cifx  = NULL;    /* distinct CIF instance for F3 DSCB processing
                                    else screw up the F1 processing   */
-static int needsep   = 0;       /* Write newline separator next time */
 static int yroffs    = 0;       /* year offset                       */
 static int dsnlen    = 44;      /* dsname length (default value)     */
 static int runflgs   = 0;       /* run flags set from command line   */
@@ -147,6 +146,7 @@ char           *fn, *sfn;
             rc = 1;
     }
 
+    printf("\nEnd of %s; rc=%d\n", UTILITY_NAME, rc );
     return rc;
 }
 
@@ -345,6 +345,16 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
         break;
 
     } /* end of while loop */
+
+    /* if necessary, close the CIFBLK used for F3 DSCBs */
+    if (cifx)
+    {
+        int rc2 = close_ckd_image( cifx );
+        cifx = NULL;
+        if (rc2)
+            return rc2;
+    }
+
     return rc;
 }
 
@@ -360,8 +370,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
     EXTGUIMSG( "ETRK=%d\n", (ecyl * cif->heads) + ehead );
 
-    printf("%s%s: VOLSER=%s\n", needsep ? "\n" : "", cif->fname, volser);
-    needsep = 1;
+    printf( "\nVOLSER:  %-6s    \"%s\"\n\n", volser, cif->fname );
 
     if (runflgs & rf_header)
     {
@@ -627,17 +636,17 @@ int do_ls_cif( CIFBLK *cif, char *fname, char *sfname )
 
 int do_ls( char *file, char *sfile )
 {
-    CIFBLK *cif = open_ckd_image( file, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL );
+    CIFBLK* cif;
+
+    printf("\n");
+
+    cif = open_ckd_image( file, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL );
 
     if (0
         || !cif
         || do_ls_cif( cif, file, sfile )
         || close_ckd_image( cif )
     )
-        return -1;
-
-    /* if necessary, close the CIFBLK used for F3 DSCBs */
-    if (cifx && close_ckd_image( cifx ))
         return -1;
 
     return 0;
