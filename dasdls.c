@@ -43,7 +43,8 @@ int  do_ls               (char *file, char *sfile);
 static CIFBLK *cifx  = NULL;    /* distinct CIF instance for F3 DSCB processing
                                    else screw up the F1 processing   */
 static int yroffs    = 0;       /* year offset                       */
-static int dsnlen    = 44;      /* dsname length (default value)     */
+#define                DEFAULT_DSNLEN   44
+static int dsnlen    = DEFAULT_DSNLEN;
 static int runflgs   = 0;       /* run flags set from command line   */
                                 /* run flags:                        */
 #define rf_caldate   0x01       /*     dates in yyyymmmdd format     */
@@ -422,147 +423,154 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
             if (valid_dsname( dsname ))
             {
-                printf("%*s", -dsnlen, dsname);
-
-                if (runflgs & rf_info)
+                if (runflgs == 0 && dsnlen == DEFAULT_DSNLEN)
                 {
-                    /* CREDT */
+                    printf("%s\n", dsname);
+                }
+                else
+                {
+                    printf("%*s", -dsnlen, dsname);
 
-                    pdate( f1dscb->ds1credt, runflgs );
-
-                    /* REFDT */
-
-#define ds1refdt    resv2
-
-                    if (runflgs & rf_refdate)
-                        pdatex( f1dscb->ds1refdt, runflgs );
-
-                    /* EXPDT */
-
-                    if (runflgs & rf_expdate)
-                        pdatex( f1dscb->ds1expdt, runflgs );
-
-                    /* DSORG */
-
-                    tmpstr = "??";
-
-                    if (f1dscb->ds1dsorg[0] == 0 ||
-                        f1dscb->ds1dsorg[0] == DSORG_U)
+                    if (runflgs & rf_info)
                     {
-                        if (f1dscb->ds1dsorg[1] == DSORG_AM)
-                            tmpstr = "VS";
-                    }
+                        /* CREDT */
 
-                    if (f1dscb->ds1dsorg[1] == 0)
-                    {
-                        switch (f1dscb->ds1dsorg[0] & (DSORG_PS | DSORG_DA | DSORG_PO))
+                        pdate( f1dscb->ds1credt, runflgs );
+
+                        /* REFDT */
+
+    #define ds1refdt    resv2
+
+                        if (runflgs & rf_refdate)
+                            pdatex( f1dscb->ds1refdt, runflgs );
+
+                        /* EXPDT */
+
+                        if (runflgs & rf_expdate)
+                            pdatex( f1dscb->ds1expdt, runflgs );
+
+                        /* DSORG */
+
+                        tmpstr = "??";
+
+                        if (f1dscb->ds1dsorg[0] == 0 ||
+                            f1dscb->ds1dsorg[0] == DSORG_U)
                         {
-                            case DSORG_PS: tmpstr = "PS"; break;
-                            case DSORG_DA: tmpstr = "DA"; break;
-                            case DSORG_PO: tmpstr = "PO"; break;
-                            case 0:        tmpstr = "  "; break; /* none of the above */
-                            default: /* don't change? */  break; /* multiple bits set */
+                            if (f1dscb->ds1dsorg[1] == DSORG_AM)
+                                tmpstr = "VS";
                         }
-                    }
-                    printf(" %s%s", tmpstr, f1dscb->ds1dsorg[0] & DSORG_U ? "U" : " ");
 
-                    /* RECFM */
-
-                    switch (f1dscb->ds1recfm & RECFM_FORMAT)
-                    {
-                        case RECFM_FORMAT_F: tmpstr = "F"; break;
-                        case RECFM_FORMAT_V: tmpstr = "V"; break;
-                        default:             tmpstr = "U"; break;
-                    }
-                    STRLCPY( txtrecfm, tmpstr );
-
-                    if (f1dscb->ds1recfm & RECFM_BLOCKED)  STRLCAT( txtrecfm, "B" );
-                    if (f1dscb->ds1recfm & RECFM_SPANNED)  STRLCAT( txtrecfm, "S" );
-
-                    switch (f1dscb->ds1recfm & RECFM_CTLCHAR)
-                    {
-                        case RECFM_CTLCHAR_A:                   tmpstr = "A"; break;
-                        case RECFM_CTLCHAR_M:                   tmpstr = "M"; break;
-                        case RECFM_CTLCHAR_A | RECFM_CTLCHAR_M: tmpstr = "?"; break; /* both ?! */
-                        default:                                tmpstr = "";  break; /* neither */
-                    }
-                    STRLCAT( txtrecfm, tmpstr );
-
-                    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  STRLCAT( txtrecfm, "T" );
-
-                    printf(" %-5s", txtrecfm);
-
-                    /* LRECL */
-
-                    lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
-
-                    if (lrecl) printf(" %5d", lrecl);
-                    else       printf("      ");
-
-                    /* BLKSZ, KEYLN */
-
-                    phword( f1dscb->ds1blkl );     /* BLKSZ */
-                    pbyte( &f1dscb->ds1keyl );     /* KEYLN */
-
-                    /* space allocated */
-
-                    numext = f1dscb->ds1noepv;
-//*debug*/           printf("NUMEXT = %5d", numext);
-
-                    space = extents_array( &f1dscb->ds1ext1, 3, &numext, cif->heads );
-//*debug*/           printf("SPACE nach extents_array = %d", space);
-
-                    chainf3( &space, &f1dscb->ds1ptrds[0], &numext, fname, sfname );
-//*debug*/           printf("SPACE nach chainf3 = %d", space);
-
-                    printf(" %5d", space);
-
-                    /* % of allocated spaced used */
-
-                    /* fraction of last track used = 1 - ds1trbal / trkzize */
-                    value = 1.0 - (double)hword( &f1dscb->ds1trbal[0] ) / (cif->trksz);
-
-                    /* add in the number of full tracks used */
-                    value += hword( &f1dscb->ds1lstar[0] );
-
-                    if (!space)
-                        printf("    ");
-                    else
-                    {
-                        value = value * 100 / space; /* % space used */
-                        printf(" %3.0f", value);
-                    }
-
-                    /* Number of extents */
-
-                    pbyte( &f1dscb->ds1noepv );  /* #EXT */
-
-                    /* SCALO */
-
-                    if (DS1SCALO_UNITS_ABSTR
-                        == (f1dscb->ds1scalo[0] & DS1SCALO_UNITS))
-                    {
-                        printf(" %-11s", "ABSTR");
-                    }
-                    else
-                    {
-                        tmpstr = "CYL";
-
-                        switch (f1dscb->ds1scalo[0] & DS1SCALO_UNITS)
+                        if (f1dscb->ds1dsorg[1] == 0)
                         {
-                            case DS1SCALO_UNITS_BLK: tmpstr = "BLK"; break;
-                            case DS1SCALO_UNITS_TRK: tmpstr = "TRK"; break;
-                            case DS1SCALO_UNITS_CYL:                 break;
+                            switch (f1dscb->ds1dsorg[0] & (DSORG_PS | DSORG_DA | DSORG_PO))
+                            {
+                                case DSORG_PS: tmpstr = "PS"; break;
+                                case DSORG_DA: tmpstr = "DA"; break;
+                                case DSORG_PO: tmpstr = "PO"; break;
+                                case 0:        tmpstr = "  "; break; /* none of the above */
+                                default: /* don't change? */  break; /* multiple bits set */
+                            }
                         }
-                        printf(" %3s%8d", tmpstr,
-                            (((f1dscb->ds1scalo[1]  << 8) +
-                               f1dscb->ds1scalo[2]) << 8) +
-                               f1dscb->ds1scalo[3]);
-                    }
+                        printf(" %s%s", tmpstr, f1dscb->ds1dsorg[0] & DSORG_U ? "U" : " ");
 
-                } /* end if (runflgs & rf_info) */
+                        /* RECFM */
 
-                printf("\n");
+                        switch (f1dscb->ds1recfm & RECFM_FORMAT)
+                        {
+                            case RECFM_FORMAT_F: tmpstr = "F"; break;
+                            case RECFM_FORMAT_V: tmpstr = "V"; break;
+                            default:             tmpstr = "U"; break;
+                        }
+                        STRLCPY( txtrecfm, tmpstr );
+
+                        if (f1dscb->ds1recfm & RECFM_BLOCKED)  STRLCAT( txtrecfm, "B" );
+                        if (f1dscb->ds1recfm & RECFM_SPANNED)  STRLCAT( txtrecfm, "S" );
+
+                        switch (f1dscb->ds1recfm & RECFM_CTLCHAR)
+                        {
+                            case RECFM_CTLCHAR_A:                   tmpstr = "A"; break;
+                            case RECFM_CTLCHAR_M:                   tmpstr = "M"; break;
+                            case RECFM_CTLCHAR_A | RECFM_CTLCHAR_M: tmpstr = "?"; break; /* both ?! */
+                            default:                                tmpstr = "";  break; /* neither */
+                        }
+                        STRLCAT( txtrecfm, tmpstr );
+
+                        if (f1dscb->ds1recfm & RECFM_TRKOFLOW)  STRLCAT( txtrecfm, "T" );
+
+                        printf(" %-5s", txtrecfm);
+
+                        /* LRECL */
+
+                        lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
+
+                        if (lrecl) printf(" %5d", lrecl);
+                        else       printf("      ");
+
+                        /* BLKSZ, KEYLN */
+
+                        phword( f1dscb->ds1blkl );     /* BLKSZ */
+                        pbyte( &f1dscb->ds1keyl );     /* KEYLN */
+
+                        /* space allocated */
+
+                        numext = f1dscb->ds1noepv;
+    //*debug*/           printf("NUMEXT = %5d", numext);
+
+                        space = extents_array( &f1dscb->ds1ext1, 3, &numext, cif->heads );
+    //*debug*/           printf("SPACE nach extents_array = %d", space);
+
+                        chainf3( &space, &f1dscb->ds1ptrds[0], &numext, fname, sfname );
+    //*debug*/           printf("SPACE nach chainf3 = %d", space);
+
+                        printf(" %5d", space);
+
+                        /* % of allocated spaced used */
+
+                        /* fraction of last track used = 1 - ds1trbal / trkzize */
+                        value = 1.0 - (double)hword( &f1dscb->ds1trbal[0] ) / (cif->trksz);
+
+                        /* add in the number of full tracks used */
+                        value += hword( &f1dscb->ds1lstar[0] );
+
+                        if (!space)
+                            printf("    ");
+                        else
+                        {
+                            value = value * 100 / space; /* % space used */
+                            printf(" %3.0f", value);
+                        }
+
+                        /* Number of extents */
+
+                        pbyte( &f1dscb->ds1noepv );  /* #EXT */
+
+                        /* SCALO */
+
+                        if (DS1SCALO_UNITS_ABSTR
+                            == (f1dscb->ds1scalo[0] & DS1SCALO_UNITS))
+                        {
+                            printf(" %-11s", "ABSTR");
+                        }
+                        else
+                        {
+                            tmpstr = "CYL";
+
+                            switch (f1dscb->ds1scalo[0] & DS1SCALO_UNITS)
+                            {
+                                case DS1SCALO_UNITS_BLK: tmpstr = "BLK"; break;
+                                case DS1SCALO_UNITS_TRK: tmpstr = "TRK"; break;
+                                case DS1SCALO_UNITS_CYL:                 break;
+                            }
+                            printf(" %3s%8d", tmpstr,
+                                (((f1dscb->ds1scalo[1]  << 8) +
+                                   f1dscb->ds1scalo[2]) << 8) +
+                                   f1dscb->ds1scalo[3]);
+                        }
+
+                    } /* end if (runflgs & rf_info) */
+
+                    printf("\n");
+                }
 
             } /* end if (valid_dsname( dsname )) */
 
