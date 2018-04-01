@@ -1893,13 +1893,15 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     resu = regs->GR_G(r1) & mask;
 
     /* Perform operation on selected bits */
-    switch (opcode) {
+    switch (opcode)
+    {
     case 0x54: /* And */
         resu &= rota;
         break;
     case 0x51: /* Insert Low */                                 /*810*/
     case 0x55: /* Insert */
     case 0x5D: /* Insert High */                                /*810*/
+    case 0x59: /* Insert - no CC change */                      /*912*/
         resu = rota;
         break;
     case 0x56: /* Or */
@@ -1908,7 +1910,15 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     case 0x57: /* Exclusive Or */
         resu ^= rota;
         break;
-    } /* end switch(opcode) */
+    default:
+        // "MACHINE CHECK: Instruction Processing Damage: %2.2x R[x]SBG"
+        WRMSG( HHC90550, "E", opcode );
+#if !defined( NO_SIGABEND_HANDLER )
+        signal_thread( sysblk.cputid[ regs->cpuad ], SIGUSR1 );
+#else
+        CRASH();
+#endif
+    }
 
     /* And/Or/Xor set condition code according to result bits*/ /*810*/
     if ((opcode & 0x03) != 0x01 /*Insert*/ )                    /*810*/
