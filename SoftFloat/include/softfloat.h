@@ -193,7 +193,7 @@ enum {
 typedef struct {                /* fields needed to return a scaled result  */
     uint_fast64_t Sig64;        /* Rounded significand bits 1-63    */
     uint_fast64_t Sig0;         /* Rounded significand bits 64-128  */
-    int_fast16_t  Exp;          /* signed unbiased exponent         */
+    int_fast32_t  Exp;          /* signed unbiased exponent         */
     bool          Sign;         /* sign of result                   */
     bool          Inexact;      /* Is raw result inexact            */
     bool          Incre;        /* Was rounded result incremented   */
