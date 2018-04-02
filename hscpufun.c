@@ -102,7 +102,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     int rc = 0;
     CPU_BITMAP mask;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -139,7 +139,7 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc != 1)
     {
@@ -161,7 +161,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 {
     int on = -1;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -210,7 +210,7 @@ static char *qproc[] = { "qproc", NULL };
 int rc = 0;
 int on = -1;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -662,7 +662,7 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
     int rc = 0;
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc == 2)  /* Define a new value? */
     {
@@ -799,7 +799,7 @@ char arch370_flag = 0;
 char buf[64];
 int rc = 0;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -936,7 +936,7 @@ int store_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -980,7 +980,7 @@ int start_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1023,7 +1023,7 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 {
     int rc = 0;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1068,7 +1068,7 @@ int alrf_cmd(int argc, char *argv[], char *cmdline)
 char    buffer[128] = {0};
 char   *archlvl_func;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -1106,7 +1106,7 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
     char* nxt;
     char buf[8];
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED( cmdline );
 

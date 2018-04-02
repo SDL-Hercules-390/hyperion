@@ -206,7 +206,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 {
     char buf[128];
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     UNREFERENCED(cmdline);
 
@@ -581,7 +581,7 @@ int logopt_cmd(int argc, char *argv[], char *cmdline)
     int rc = 0;
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc < 2 )
     {
@@ -1004,7 +1004,7 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (extgui)
     {
@@ -1026,7 +1026,7 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
         WRMSG( HHC01455, "E", argv[0] );
@@ -1062,7 +1062,7 @@ int autoinit_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc == 2)
     {
@@ -1256,7 +1256,7 @@ int rc;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 2)
     {
@@ -1640,7 +1640,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -1837,7 +1837,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     // Format:  "ctc  debug  { on | off }  [ <devnum> | ALL ]"
 
@@ -1980,7 +1980,7 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     // Format:  "ptp  debug  on  [ [ <devnum>|ALL ] [ mask ] ]"
     // Format:  "ptp  debug  off [ [ <devnum>|ALL ] ]"
@@ -2166,7 +2166,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     // Format:  "QETH  DEBUG  {ON|OFF}  [ [<devnum>|ALL] [mask ...] ]"
     // Format:  "QETH  ADDR             [ [<devnum>|ALL]            ]"
@@ -2529,7 +2529,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 2)
     {
@@ -2634,7 +2634,7 @@ char *basedir;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 1)
         if ( CMD(argv[1],none,4) )
@@ -2851,7 +2851,7 @@ BYTE    c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse year offset operand */
     if ( argc == 2 )
@@ -2894,7 +2894,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse timezone offset operand */
     if ( argc == 2 )
@@ -3376,7 +3376,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 1 )
     {
@@ -3426,7 +3426,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 1 )
     {
@@ -3471,7 +3471,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 1 )
     {
@@ -3515,7 +3515,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 1 )
     {
@@ -3560,7 +3560,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse priority value */
     if ( argc == 2 )
@@ -3603,7 +3603,7 @@ BYTE c;
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse maximum number of Vector processors operand */
     if ( argc == 2 )
@@ -3662,7 +3662,7 @@ int netdev_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 2)
     {
@@ -3699,7 +3699,7 @@ int numcpu_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Ensure only two arguments passed */
     if (argc > 2)
@@ -3784,7 +3784,7 @@ int maxcpu_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Ensure only two arguments passed */
     if (argc > 2)
@@ -3982,7 +3982,7 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -4028,7 +4028,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -4091,7 +4091,7 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -4145,7 +4145,7 @@ int pgmprdos_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse program product OS allowed */
     if (argc == 2)
@@ -4188,7 +4188,7 @@ int diag8_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 3)
     {
@@ -4260,7 +4260,7 @@ int shcmdopt_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 1)
     {
@@ -4315,7 +4315,7 @@ int legacysenseid_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Parse Legacy SenseID option */
     if ( argc > 2 )
@@ -4480,7 +4480,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Update model name if operand is specified */
 
@@ -4574,7 +4574,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Update plant name if operand is specified */
     if ( argc > 2 )
@@ -4624,7 +4624,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Update manufacturer name if operand is specified */
     if ( argc > 2 )
@@ -4720,7 +4720,7 @@ int lparname_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -4763,7 +4763,7 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -4886,7 +4886,7 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -4946,7 +4946,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -5007,7 +5007,7 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -5071,7 +5071,7 @@ int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 1 || argc > 2)
     {
@@ -5217,7 +5217,7 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Update IPL parameter if operand is specified */
     if ( argc > 2 )
@@ -5864,7 +5864,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -6250,7 +6250,7 @@ int mounted_tape_reinit_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 2 )
     {
@@ -7235,7 +7235,7 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     // Display current setting if requested
 
@@ -7336,7 +7336,7 @@ int scpecho_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 2 )
     {
@@ -7371,7 +7371,7 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc == 2 )
     {
@@ -7408,7 +7408,7 @@ int ldmod_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc <= 1)
     {
@@ -7439,7 +7439,7 @@ int rmmod_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc <= 1)
     {
@@ -7470,7 +7470,7 @@ int lsmod_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 1)
     {
@@ -7498,7 +7498,7 @@ int lsdep_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc != 1)
     {
@@ -7518,7 +7518,7 @@ int lsequ_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc != 1)
     {
@@ -7537,7 +7537,7 @@ int modpath_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 2)
     {
@@ -7576,7 +7576,7 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     // EVM      ...     (deprecated)
     // ECPS:VM  ...     (deprecated)
@@ -7803,7 +7803,7 @@ int conkpalv_cmd( int argc, char *argv[], char *cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
   #if !defined( HAVE_FULL_KEEPALIVE ) && !defined( HAVE_PARTIAL_KEEPALIVE )
 

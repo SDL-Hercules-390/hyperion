@@ -3422,7 +3422,7 @@ static int facility_enable_disable( int argc, char* argv[] )
     bool  enable, forced = false;
     bool  enabled, modified;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc < 3 || argc > 4)
     {
@@ -3585,7 +3585,7 @@ int facility_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /* Correct number of arguments? */
 
@@ -3649,7 +3649,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     /*-----------------------------------------------------*/
     /*             Display Architecture Mode?              */

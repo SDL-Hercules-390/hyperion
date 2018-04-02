@@ -253,7 +253,7 @@ int traceopt_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if (argc > 3)
     {
@@ -1770,7 +1770,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
     UNREFERENCED(cmdline);
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( argc > 1 && CMD(argv[1],clear,5) )
     {

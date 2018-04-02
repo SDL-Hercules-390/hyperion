@@ -1066,7 +1066,7 @@ int http_command(int argc, char *argv[])
 {
     int rc = 0;
 
-    strupper( argv[0], argv[0] );
+    UPPER_ARGV_0( argv );
 
     if ( !http_struct_init )
     {

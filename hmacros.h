@@ -283,6 +283,8 @@
 #define str_caseless_eq_n(_a,_b,_n) (!strncasecmp(_a,_b,_n))
 #define str_caseless_ne_n(_a,_b,_n) ( strncasecmp(_a,_b,_n))
 
+#define UPPER_ARGV_0( _argv ) do {if (_argv && _argv[0]) strupper( _argv[0], _argv[0] );} while (0)
+
 /*-------------------------------------------------------------------*/
 /*      Large File Support portability                               */
 /*-------------------------------------------------------------------*/
