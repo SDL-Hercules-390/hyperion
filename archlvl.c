@@ -1223,6 +1223,8 @@ bool init_facilities_lists()
 
     for (arch = 0; arch < NUM_GEN_ARCHS; arch++)
     {
+        at = get_archtab_by_arch( arch );
+
         for (bitno = 0; bitno <= STFL_HERC_LAST_BIT; bitno++)
         {
             /* Are there instructions associated with this facility? */
