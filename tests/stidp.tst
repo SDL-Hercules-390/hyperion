@@ -540,3 +540,14 @@ script "$(testpath)/stidp-zarch.subtst"
 *Fi
 
 #----------------------------------------------------------------------
+# Workaround for unresolved timing issue/bug that only occurs on Linux
+# but never on Windows. For some as-yet unknown reason something this
+# .tst script seems to cause whichever .tst script follows this one to
+# always crash (segfault). Introducing a short delay seems to resolve
+# the issue but the reasons why are as-yet unknown.
+
+*If $platform \= "Windows"
+  pause 1
+*Fi
+
+#----------------------------------------------------------------------
