@@ -1298,6 +1298,7 @@ U16   i2;                               /* 16-bit operand values     */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_relative_on_condition) */
+#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
@@ -1538,7 +1539,6 @@ U16   i2;                               /* 16-bit operand values     */
 
 } /* end DEF_INST(branch_relative_on_condition) */
 #endif /* #ifdef OPTION_OPTINST */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
 
 /*-------------------------------------------------------------------*/
