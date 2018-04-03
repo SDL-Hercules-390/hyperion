@@ -31,7 +31,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #undef  UNDEF_INST
 #define UNDEF_INST( _x ) \
-  static  DEF_INST(_x) { ARCH_DEP( operation_exception )( inst, regs ); }
+    DEF_INST( _x ) { ARCH_DEP( operation_exception )( inst, regs ); }
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs with STFL/STFLE facility bits defined               */
