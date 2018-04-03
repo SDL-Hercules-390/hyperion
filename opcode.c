@@ -100,7 +100,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( unpack_unicode )
 #endif
 
-#if !defined( FEATURE_017_MSA_FACILITY )
+#if !defined( FEATURE_017_MSA_FACILITY ) || defined( DYNINST_017_MSA_FACILITY )
  UNDEF_INST( cipher_message )
  UNDEF_INST( cipher_message_with_chaining )
  UNDEF_INST( compute_intermediate_message_digest )
@@ -594,15 +594,15 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( query_sampling_information )
 #endif
 
-#if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
- UNDEF_INST( perform_cryptographic_key_management_operation )     /*810*/
+#if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
+ UNDEF_INST( perform_cryptographic_key_management_operation )
 #endif
 
-#if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
- UNDEF_INST( cipher_message_with_cipher_feedback )                /*810*/
- UNDEF_INST( cipher_message_with_output_feedback )                /*810*/
- UNDEF_INST( cipher_message_with_counter )                        /*810*/
- UNDEF_INST( perform_cryptographic_computation )                  /*810*/
+#if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ) || defined( DYNINST_077_MSA_EXTENSION_FACILITY_4 )
+ UNDEF_INST( cipher_message_with_cipher_feedback )
+ UNDEF_INST( cipher_message_with_output_feedback )
+ UNDEF_INST( cipher_message_with_counter )
+ UNDEF_INST( perform_cryptographic_computation )
 #endif
 
 /*-------------------------------------------------------------------*/

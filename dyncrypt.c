@@ -3986,7 +3986,7 @@ static void ARCH_DEP(pckmo_aes)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_intermediate_message_digest)
+DEF_INST(dyn_compute_intermediate_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4089,7 +4089,7 @@ DEF_INST(compute_intermediate_message_digest)
 /*----------------------------------------------------------------------------*/
 /* B93F KLMD  - Compute last message digest                             [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_last_message_digest)
+DEF_INST(dyn_compute_last_message_digest)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4180,7 +4180,7 @@ DEF_INST(compute_last_message_digest)
 /*----------------------------------------------------------------------------*/
 /* B92E KM    - Cipher message                                          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message)
+DEF_INST(dyn_cipher_message)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4315,7 +4315,7 @@ DEF_INST(cipher_message)
 /*----------------------------------------------------------------------------*/
 /* B91E KMAC  - Compute message authentication code                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(compute_message_authentication_code)
+DEF_INST(dyn_compute_message_authentication_code)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4414,7 +4414,7 @@ DEF_INST(compute_message_authentication_code)
 /*----------------------------------------------------------------------------*/
 /* B92F KMC   - Cipher message with chaining                            [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_chaining)
+DEF_INST(dyn_cipher_message_with_chaining)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4547,7 +4547,7 @@ DEF_INST(cipher_message_with_chaining)
 /*----------------------------------------------------------------------------*/
 /* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_counter)
+DEF_INST(dyn_cipher_message_with_counter)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4639,7 +4639,7 @@ DEF_INST(cipher_message_with_counter)
 /*----------------------------------------------------------------------------*/
 /* B92A KMF   - Cipher message with cipher feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_cipher_feedback)
+DEF_INST(dyn_cipher_message_with_cipher_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4731,7 +4731,7 @@ DEF_INST(cipher_message_with_cipher_feedback)
 /*----------------------------------------------------------------------------*/
 /* B92B KMO   - Cipher message with output feedback                     [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_output_feedback)
+DEF_INST(dyn_cipher_message_with_output_feedback)
 {
   int msa;
   BYTE query_bits[][16] =
@@ -4820,7 +4820,7 @@ DEF_INST(cipher_message_with_output_feedback)
 /*----------------------------------------------------------------------------*/
 /* B92C PCC   - Perform cryptographic computation                       [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_computation)
+DEF_INST(dyn_perform_cryptographic_computation)
 {
   int msa = get_msa(regs);
   static const BYTE query_bits[][16] =
@@ -4890,7 +4890,7 @@ DEF_INST(perform_cryptographic_computation)
 /*----------------------------------------------------------------------------*/
 /* B928 PCKMO - Perform cryptographic key management operation          [RRE] */
 /*----------------------------------------------------------------------------*/
-DEF_INST(perform_cryptographic_key_management_operation)
+DEF_INST(dyn_perform_cryptographic_key_management_operation)
 {
   int fc;
   int msa;
@@ -4974,26 +4974,26 @@ DEF_INST(perform_cryptographic_key_management_operation)
 #endif /* defined( FEATURE_017_MSA_FACILITY ) */
 
 /*----------------------------------------------------------------------------*/
-/* Force Program Check Operation Exception if instruction not for this arch.  */
+/*   Program Check Operation Exception if facility not enabled for arch       */
 /*----------------------------------------------------------------------------*/
 
 #if !defined( FEATURE_017_MSA_FACILITY )
- HDL_UNDEF_INST( cipher_message                      )
- HDL_UNDEF_INST( cipher_message_with_chaining        )
- HDL_UNDEF_INST( compute_intermediate_message_digest )
- HDL_UNDEF_INST( compute_last_message_digest         )
- HDL_UNDEF_INST( compute_message_authentication_code )
+ HDL_UNDEF_INST( dyn_cipher_message                      )
+ HDL_UNDEF_INST( dyn_cipher_message_with_chaining        )
+ HDL_UNDEF_INST( dyn_compute_intermediate_message_digest )
+ HDL_UNDEF_INST( dyn_compute_last_message_digest         )
+ HDL_UNDEF_INST( dyn_compute_message_authentication_code )
 #endif
 
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
- HDL_UNDEF_INST( perform_cryptographic_key_management_operation )
+ HDL_UNDEF_INST( dyn_perform_cryptographic_key_management_operation )
 #endif
 
 #if !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
- HDL_UNDEF_INST( perform_cryptographic_computation   )
- HDL_UNDEF_INST( cipher_message_with_cipher_feedback )
- HDL_UNDEF_INST( cipher_message_with_output_feedback )
- HDL_UNDEF_INST( cipher_message_with_counter         )
+ HDL_UNDEF_INST( dyn_perform_cryptographic_computation   )
+ HDL_UNDEF_INST( dyn_cipher_message_with_cipher_feedback )
+ HDL_UNDEF_INST( dyn_cipher_message_with_output_feedback )
+ HDL_UNDEF_INST( dyn_cipher_message_with_counter         )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -5039,22 +5039,22 @@ HDL_INSTRUCTION_SECTION;
   /* Install our instructions for the architectures we support */
 
 #if defined( _FEATURE_017_MSA_FACILITY )
-  HDL_INST( ARCH_390_900, OPCODE( B93E ), compute_intermediate_message_digest );
-  HDL_INST( ARCH_390_900, OPCODE( B93F ), compute_last_message_digest         );
-  HDL_INST( ARCH_390_900, OPCODE( B92E ), cipher_message                      );
-  HDL_INST( ARCH_390_900, OPCODE( B91E ), compute_message_authentication_code );
-  HDL_INST( ARCH_390_900, OPCODE( B92F ), cipher_message_with_chaining        );
+  HDL_INST( ARCH_390_900, OPCODE( B93E ), dyn_compute_intermediate_message_digest );
+  HDL_INST( ARCH_390_900, OPCODE( B93F ), dyn_compute_last_message_digest         );
+  HDL_INST( ARCH_390_900, OPCODE( B92E ), dyn_cipher_message                      );
+  HDL_INST( ARCH_390_900, OPCODE( B91E ), dyn_compute_message_authentication_code );
+  HDL_INST( ARCH_390_900, OPCODE( B92F ), dyn_cipher_message_with_chaining        );
 #endif
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-  HDL_INST( ARCH_____900, OPCODE( B928 ), perform_cryptographic_key_management_operation );
+  HDL_INST( ARCH_____900, OPCODE( B928 ), dyn_perform_cryptographic_key_management_operation );
 #endif
 
 #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-  HDL_INST( ARCH_____900, OPCODE( B92D ), cipher_message_with_counter         );
-  HDL_INST( ARCH_____900, OPCODE( B92A ), cipher_message_with_cipher_feedback );
-  HDL_INST( ARCH_____900, OPCODE( B92B ), cipher_message_with_output_feedback );
-  HDL_INST( ARCH_____900, OPCODE( B92C ), perform_cryptographic_computation   );
+  HDL_INST( ARCH_____900, OPCODE( B92D ), dyn_cipher_message_with_counter         );
+  HDL_INST( ARCH_____900, OPCODE( B92A ), dyn_cipher_message_with_cipher_feedback );
+  HDL_INST( ARCH_____900, OPCODE( B92B ), dyn_cipher_message_with_output_feedback );
+  HDL_INST( ARCH_____900, OPCODE( B92C ), dyn_perform_cryptographic_computation   );
 #endif
 }
 END_INSTRUCTION_SECTION;

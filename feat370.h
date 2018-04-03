@@ -77,6 +77,7 @@
     #define FEATURE_000_N3_INSTR_FACILITY
     #define FEATURE_016_EXT_TRANSL_FACILITY_2
     #define FEATURE_017_MSA_FACILITY
+    #define DYNINST_017_MSA_FACILITY                     /* dyncrypt */
     #define FEATURE_018_LONG_DISPL_INST_FACILITY
     #define FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
     #define FEATURE_021_EXTENDED_IMMED_FACILITY
@@ -88,7 +89,9 @@
     #define FEATURE_034_GEN_INST_EXTN_FACILITY
     #define FEATURE_035_EXECUTE_EXTN_FACILITY
     #define FEATURE_076_MSA_EXTENSION_FACILITY_3
+    #define DYNINST_076_MSA_EXTENSION_FACILITY_3         /* dyncrypt */
     #define FEATURE_077_MSA_EXTENSION_FACILITY_4
+    #define DYNINST_077_MSA_EXTENSION_FACILITY_4         /* dyncrypt */
 
     // (non-facility-bit features needed by S/390 and z/Architetcure)
 

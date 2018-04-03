@@ -16,45 +16,6 @@
 //efine    WRAPPINGKEYS_DEBUG       // (#define for debugging)
 
 /*-------------------------------------------------------------------*/
-/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
-/*-------------------------------------------------------------------*/
-/*  The dyncrypt.dll (dyncrypt.c) HDL module is automatically        */
-/*  pre-loaded by 'hdl_main' during impl/startup and redirects       */
-/*  all crypto instructions in the opcode table to itself rather     */
-/*  than here. The below dummy instructions are simply to prevent    */
-/*  unresolved externs from occuring when 'hengine.dll' is linked.   */
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_017_MSA_FACILITY )
-
-  HDL_UNDEF_INST( cipher_message                      )
-  HDL_UNDEF_INST( cipher_message_with_chaining        )
-  HDL_UNDEF_INST( compute_intermediate_message_digest )
-  HDL_UNDEF_INST( compute_last_message_digest         )
-  HDL_UNDEF_INST( compute_message_authentication_code )
-
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-
-  HDL_UNDEF_INST( perform_cryptographic_key_management_operation )
-
-#endif
-
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-
-  HDL_UNDEF_INST( perform_cryptographic_computation   )
-  HDL_UNDEF_INST( cipher_message_with_cipher_feedback )
-  HDL_UNDEF_INST( cipher_message_with_output_feedback )
-  HDL_UNDEF_INST( cipher_message_with_counter         )
-
-#endif
-
-/*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
