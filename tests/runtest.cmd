@@ -27,10 +27,10 @@
   echo.
   echo     SYNOPSIS
   echo.
-  echo         %~n0     [ -d tdir ]  [-n tname]  [-f ftype]  [-t factor]
+  echo         %~n0     [-d tdir]  [-n tname]  [-f ftype]  [-t factor]
   echo                     [-64 ^| -32 ]  [-b build]  [-r [rpts[:fails]]]
   echo                     [{-v QUIET ^| name=value} ... ]  [--noexit]
-  echo                     [-w wfn ]
+  echo                     [-w wfn]  [-z]
   echo.
   echo     EXAMPLE
   echo.
@@ -83,6 +83,10 @@
   echo         -w wfn      Base name of work file ^(i.e. just the file name
   echo                     without the extension^).  The default is %defwfn%.
   echo.
+  echo         -z          Lists the names of the selected test file(s) and
+  echo                     all of the *Testcases contained within each one,
+  echo                     but does NOT otherwise run any tests.
+  echo.
   echo     NOTES
   echo.
   echo         %~nx0 requires OORexx or Regina Rexx to be installed,
@@ -94,6 +98,11 @@
   echo         option is presumed to be the Hercules source code directory
   echo         where the "msvc..." subdirectories containing the binaries
   echo         used by the -64/-32/-b options are expected to exist.
+  echo.
+  echo         Note that when the '-z' option is used, some files might be
+  echo         listed as containing no test cases. This is typically caused
+  echo         by the primary test file calling a helper script to perform
+  echo         the actual test.
   echo.
   echo         Use a test timeout factor value greater than 1.0 on slower
   echo         systems to give each test a slightly longer period of time
@@ -128,7 +137,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.2         (May 9, 2017)
+  echo         3.3         (April 3, 2018)
   echo.
 
   set "hlp=1"
@@ -158,6 +167,7 @@
   set "ttof="
   call :calc_mttof
   set "wfn="
+  set "listonly="
 
   set "deftdir=..\hyperion\tests"
   set "deftname=*"
@@ -573,17 +583,18 @@
     goto :parse_positional_opts
   )
 
-  if /i "%optname%" == "d" goto :parse_d_opt
-  if /i "%optname%" == "n" goto :parse_n_opt
-  if /i "%optname%" == "f" goto :parse_f_opt
-  if /i "%optname%" == "t" goto :parse_t_opt
-  if /i "%optname%" == "b" goto :parse_b_opt
-  if /i "%optname%" == "r" goto :parse_r_opt
-  if /i "%optname%" == "v" goto :parse_v_opt
-  if /i "%optname%" == "w" goto :parse_w_opt
-
   if /i "%optname%" == "32" goto :parse_3264_opt
   if /i "%optname%" == "64" goto :parse_3264_opt
+
+  if /i "%optname%" == "b"  goto :parse_b_opt
+  if /i "%optname%" == "d"  goto :parse_d_opt
+  if /i "%optname%" == "f"  goto :parse_f_opt
+  if /i "%optname%" == "n"  goto :parse_n_opt
+  if /i "%optname%" == "r"  goto :parse_r_opt
+  if /i "%optname%" == "t"  goto :parse_t_opt
+  if /i "%optname%" == "v"  goto :parse_v_opt
+  if /i "%optname%" == "w"  goto :parse_w_opt
+  if /i "%optname%" == "z"  goto :parse_z_opt
 
   @REM  Determine if --xxxx option
 
@@ -600,17 +611,22 @@
 
   goto :parse_unknown_opt
 
+:parse_3264_opt
+
+  set "bitness=%optname%"
+  goto :parse_options_loop
+
+:parse_b_opt
+
+  if not defined optval goto :parse_missing_argument
+  set "build=%optval%"
+  shift /1
+  goto :parse_options_loop
+
 :parse_d_opt
 
   if not defined optval goto :parse_missing_argument
   set "tdir=%optval%"
-  shift /1
-  goto :parse_options_loop
-
-:parse_n_opt
-
-  if not defined optval goto :parse_missing_argument
-  set "tname=%optval%"
   shift /1
   goto :parse_options_loop
 
@@ -621,10 +637,21 @@
   shift /1
   goto :parse_options_loop
 
-:parse_b_opt
+:parse_n_opt
 
   if not defined optval goto :parse_missing_argument
-  set "build=%optval%"
+  set "tname=%optval%"
+  shift /1
+  goto :parse_options_loop
+
+:parse_r_opt
+
+  set "repeat=1"
+  if not defined optval goto :parse_options_loop
+  for /f "tokens=1,2* delims=:" %%a in ("%optval%") do (
+    set "maxruns=%%a"
+    set "maxfail=%%b"
+  )
   shift /1
   goto :parse_options_loop
 
@@ -632,13 +659,6 @@
 
   if not defined optval goto :parse_missing_argument
   set "ttof=%optval%"
-  shift /1
-  goto :parse_options_loop
-
-:parse_w_opt
-
-  if not defined optval goto :parse_missing_argument
-  set "wfn=%optval%"
   shift /1
   goto :parse_options_loop
 
@@ -657,20 +677,16 @@
   shift /1
   goto :parse_options_loop
 
-:parse_r_opt
+:parse_w_opt
 
-  set "repeat=1"
-  if not defined optval goto :parse_options_loop
-  for /f "tokens=1,2* delims=:" %%a in ("%optval%") do (
-    set "maxruns=%%a"
-    set "maxfail=%%b"
-  )
+  if not defined optval goto :parse_missing_argument
+  set "wfn=%optval%"
   shift /1
   goto :parse_options_loop
 
-:parse_3264_opt
+:parse_z_opt
 
-  set "bitness=%optname%"
+  set "listonly=1"
   goto :parse_options_loop
 
 :parse_noexit_opt
@@ -903,6 +919,13 @@
 ::                              BEGIN
 ::-----------------------------------------------------------------------------
 :begin
+
+  if defined listonly (
+    pushd "%tdir%"
+    find "*Testcase" *.%ftype%
+    popd
+    goto :exitnow
+  )
 
   set "begin=1"
 
