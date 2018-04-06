@@ -1828,16 +1828,16 @@ VADR    addr2;                          /* Relative operand address  */
 
 #endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
 
-#if defined(FEATURE_034_GEN_INST_EXTN_FACILITY)                         \
- || defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)              /*912*/ \
- || defined(FEATURE_045_HIGH_WORD_FACILITY)                     /*810*/
+#if defined( FEATURE_034_GEN_INST_EXTN_FACILITY    )    \
+ || defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )    \
+ || defined( FEATURE_045_HIGH_WORD_FACILITY        )
 /*-------------------------------------------------------------------*/
 /* Rotate Then Perform Operation On Selected Bits Long Register      */
-/* Subroutine is called by RNSBG,RISBG,ROSBG,RXSBG instructions      */
-/* and also by the RISBHG,RISBLG instructions */                /*810*/
-/* and by the RISBGN instruction */                             /*912*/
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_xxx_selected_bits_long_reg)
+/* Subroutine is called by RNSBG, RISBG, ROSBG, RXSBG instructions   */
+/* as well as by the RISBHG, RISBLG and RISBGN instructions.         */
+/*-------------------------------------------------------------------*/
+DEF_INST( rotate_then_xxx_selected_bits_long_reg )
 {
 int     r1, r2;                         /* Register numbers          */
 int     start, end;                     /* Start and end bit number  */
@@ -1845,72 +1845,108 @@ U64     mask, rota, resu;               /* 64-bit work areas         */
 int     n;                              /* Number of bits to shift   */
 int     t_bit = 0;                      /* Test-results indicator    */
 int     z_bit = 0;                      /* Zero-remaining indicator  */
-int     i;                              /* Loop counter              */
 BYTE    i3, i4, i5;                     /* Immediate values          */
 BYTE    opcode;                         /* 2nd byte of opcode        */
 
-    RIE_RRIII(inst, regs, r1, r2, i3, i4, i5);
+    RIE_RRIII( inst, regs, r1, r2, i3, i4, i5 );
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
 
     /* Extract parameters from immediate fields */
     start = i3 & 0x3F;
-    end = i4 & 0x3F;
+    end   = i4 & 0x3F;
+
     n = i5 & 0x3F;
-    if ((opcode & 0xFC) == 0x50 /*Low*/ ) {                     /*810*/
-        start |= 0x20;                                          /*810*/
-        end |= 0x20;                                            /*810*/
-    }                                                           /*810*/
-    if ((opcode & 0xFC) == 0x5C /*High*/ ) {                    /*810*/
-        start &= 0x1F;                                          /*810*/
-        end &= 0x1F;                                            /*810*/
-    }                                                           /*810*/
-    if ((opcode & 0x03) == 0x01 /*Insert*/ )                    /*810*/
+
+    if ((opcode & 0xFC) == 0x50 /*Low*/ ) {
+        start |= 0x20;
+        end   |= 0x20;
+    }
+    if ((opcode & 0xFC) == 0x5C /*High*/ ) {
+        start &= 0x1F;
+        end   &= 0x1F;
+    }
+    if ((opcode & 0x03) == 0x01 /*Insert*/ )
         z_bit = i4 >> 7;
     else
         t_bit = i3 >> 7;
 
     /* Copy value from R2 register and rotate left n bits */
-    rota = (regs->GR_G(r2) << n)
-            | ((n == 0) ? 0 : (regs->GR_G(r2) >> (64 - n)));
+    rota = (regs->GR_G( r2 ) << n)
+            | ((n == 0) ? 0 : (regs->GR_G( r2 ) >> (64 - n)));
+
+#if 0 // (old way; TEMPORARILY retained for reference)
 
     /* Construct mask for selected bits */
-    for (i=0, mask=0; i < 64; i++)
     {
-        mask <<= 1;
-        if (start <= end) {
-            if (i >= start && i <= end) mask |= 1;
-        } else {
-            if (i <= end || i >= start) mask |= 1;
+        int i;
+
+        for (i=0, mask=0; i < 64; i++)
+        {
+            mask <<= 1;
+            if (start <= end) {
+                if (i >= start && i <= end) mask |= 1;
+            } else {
+                if (i <= end || i >= start) mask |= 1;
+            }
         }
-    } /* end for(i) */
+    }
+
+#else // (Ivan Warren performance enhancement)
+
+    /* Construct mask for selected bits */
+    if (start <= end)
+    {
+        // (clear high-order bits)
+        mask   = 0xffffffffffffffffll << start;
+        mask >>=                         start;
+
+        // (clear low-order bits)
+        mask >>= (63 - end);
+        mask <<= (63 - end);
+    }
+    else // (start > end)
+    {
+        // (clear high-order bits)
+        mask   = 0xffffffffffffffffll << (end + 1);
+        mask >>=                         (end + 1);
+
+        // (clear low-order bits)
+        mask >>= (64 - start);
+        mask <<= (64 - start);
+
+        // (invert mask to select opposite bits)
+        mask ^= 0xffffffffffffffffll;
+    }
+
+#endif
 
     /* Isolate selected bits of rotated second operand */
     rota &= mask;
 
     /* Isolate selected bits of first operand */
-    resu = regs->GR_G(r1) & mask;
+    resu = regs->GR_G( r1 ) & mask;
 
     /* Perform operation on selected bits */
     switch (opcode)
     {
-    case 0x54: /* And */
+    case 0x54:  /* And */
         resu &= rota;
         break;
-    case 0x51: /* Insert Low */                                 /*810*/
-    case 0x55: /* Insert */
-    case 0x5D: /* Insert High */                                /*810*/
-    case 0x59: /* Insert - no CC change */                      /*912*/
+    case 0x51:  /* Insert Low            */
+    case 0x55:  /* Insert                */
+    case 0x5D:  /* Insert High           */
+    case 0x59:  /* Insert - no CC change */
         resu = rota;
         break;
-    case 0x56: /* Or */
+    case 0x56:  /* Or */
         resu |= rota;
         break;
-    case 0x57: /* Exclusive Or */
+    case 0x57:  /* Exclusive Or */
         resu ^= rota;
         break;
-    default:
+    default:    /* Should not EVER occur! */
         // "MACHINE CHECK: Instruction Processing Damage: %2.2x R[x]SBG"
         WRMSG( HHC90550, "E", opcode );
 #if !defined( NO_SIGABEND_HANDLER )
@@ -1920,75 +1956,77 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 #endif
     }
 
-    /* And/Or/Xor set condition code according to result bits*/ /*810*/
-    if ((opcode & 0x03) != 0x01 /*Insert*/ )                    /*810*/
+    /* And/Or/Xor set condition code according to result bits */
+    if ((opcode & 0x03) != 0x01 /*Insert*/ )
         regs->psw.cc = (resu == 0) ? 0 : 1;
 
     /* Insert result bits into R1 register */
     if (t_bit == 0)
     {
         if (z_bit == 0)
-            regs->GR_G(r1) = (regs->GR_G(r1) & ~mask) | resu;
-        else if ((opcode & 0xFC) == 0x50 /*Low*/ )              /*810*/
-            regs->GR_L(r1) = (U32)resu;                         /*810*/
-        else if ((opcode & 0xFC) == 0x5C /*High*/ )             /*810*/
-            regs->GR_H(r1) = (U32)(resu >> 32);                 /*810*/
+        {
+            regs->GR_G( r1 ) = (regs->GR_G( r1 ) & ~mask) | resu;
+        }
+        else if ((opcode & 0xFC) == 0x50 /*Low*/ )
+        {
+            regs->GR_L( r1 ) = (U32) resu;
+        }
+        else if ((opcode & 0xFC) == 0x5C /*High*/ )
+        {
+            regs->GR_H( r1 ) = (U32) (resu >> 32);
+        }
         else
-            regs->GR_G(r1) = resu;
-    } /* end if(t_bit==0) */
+            regs->GR_G( r1 ) = resu;
+    }
 
-    /* For RISBG set condition code according to signed result */
-    if (opcode == 0x55)
+    /* For RISBHG, RISBLG the condition code remains unchanged.
+       For RISBGN the condition code remains unchanged.
+       For RISBG set condition code according to signed result.
+    */
+    if (opcode == 0x55) // (RISBG?)
         regs->psw.cc =
-                (S64)regs->GR_G(r1) < 0 ? 1 :
-                (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+                (((S64) regs->GR_G( r1 )) < 0) ? 1 :
+                (((S64) regs->GR_G( r1 )) > 0) ? 2 : 0;
 
-    /* For RISBHG,RISBLG the condition code remains unchanged*/ /*810*/
-    /* For RISBGN the condition code remains unchanged */       /*912*/
+} /* end DEF_INST( rotate_then_xxx_selected_bits_long_reg ) */
 
-} /* end DEF_INST(rotate_then_xxx_selected_bits_long_reg) */
-#endif /*defined(FEATURE_034_GEN_INST_EXTN_FACILITY)*/
-       /*|| defined(FEATURE_049_MISC_INSTR_EXT_FACILITY_1)*/    /*912*/
-       /*|| defined(FEATURE_045_HIGH_WORD_FACILITY)*/           /*810*/
+#endif /*    defined( FEATURE_034_GEN_INST_EXTN_FACILITY    )
+          || defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
+          || defined( FEATURE_045_HIGH_WORD_FACILITY        ) */
 
-#if defined(FEATURE_034_GEN_INST_EXTN_FACILITY)
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_034_GEN_INST_EXTN_FACILITY )
+
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EC54 RNSBG - Rotate Then And Selected Bits                  [RIE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_then_and_selected_bits_long_reg)
 {
-    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
-} /* end DEF_INST(rotate_then_and_selected_bits_long_reg) */
-
-
+    ARCH_DEP( rotate_then_xxx_selected_bits_long_reg )( inst, regs );
+}
 /*-------------------------------------------------------------------*/
 /* EC55 RISBG - Rotate Then Insert Selected Bits               [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_insert_selected_bits_long_reg)
+DEF_INST( rotate_then_insert_selected_bits_long_reg )
 {
-    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
-} /* end DEF_INST(rotate_then_insert_selected_bits_long_reg) */
-
-
+    ARCH_DEP( rotate_then_xxx_selected_bits_long_reg )( inst, regs );
+}
 /*-------------------------------------------------------------------*/
 /* EC56 ROSBG - Rotate Then Or Selected Bits                   [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_or_selected_bits_long_reg)
+DEF_INST( rotate_then_or_selected_bits_long_reg )
 {
-    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
-} /* end DEF_INST(rotate_then_or_selected_bits_long_reg) */
-
-
+    ARCH_DEP( rotate_then_xxx_selected_bits_long_reg )( inst, regs );
+}
 /*-------------------------------------------------------------------*/
 /* EC57 RXSBG - Rotate Then Exclusive Or Selected Bits         [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
+DEF_INST( rotate_then_exclusive_or_selected_bits_long_reg )
 {
-    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
-} /* end DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg) */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+    ARCH_DEP( rotate_then_xxx_selected_bits_long_reg )( inst, regs );
+}
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
