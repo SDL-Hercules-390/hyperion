@@ -1333,7 +1333,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     chan9line;              /* Line number of channel 9  */
         int     chan12line;             /* Line number of channel 12 */
         int     currline;               /* curr line number          */
-#define UCBSIZE_OTHER       304         /* UCS Buffer size 1403/3203 */
+#define UCBSIZE_1403        240         /* UCS Buffer size 1403      */
+#define UCBSIZE_3203        304         /* UCS Buffer size 3203      */
 #define UCBSIZE_3211        432         /* UCS Buffer size 3211      */
 #define MAX_UCBSIZE         432
         BYTE    ucb    [ MAX_UCBSIZE ]; /* UCS Buffer itself         */
