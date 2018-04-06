@@ -696,6 +696,7 @@
     <None Include="SoftFloat\doc\SoftFloat-source.html" />
     <None Include="SoftFloat\doc\SoftFloat.html" />
     <None Include="SoftFloat\README.html" />
+    <None Include="tests\1403.tst" />
     <None Include="tests\3211.asm" />
     <None Include="tests\3211.core" />
     <None Include="tests\3211.list" />

@@ -1652,6 +1652,9 @@
     <None Include="tests\sske.listing">
       <Filter>Other Files\tests\scripts\assemble\listing</Filter>
     </None>
+    <None Include="tests\1403.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\3211.rexx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

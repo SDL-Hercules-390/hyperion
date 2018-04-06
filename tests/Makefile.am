@@ -1,4 +1,5 @@
 EXTRA_DIST =                    \
+     1403.tst                   \
      3211.asm                   \
      3211.core                  \
      3211.list                  \

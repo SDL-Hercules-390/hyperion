@@ -3934,6 +3934,10 @@
 						Name="tst"
 						>
 						<File
+							RelativePath=".\tests\1403.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\3211.rexx"
 							>
 						</File>
