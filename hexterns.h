@@ -72,7 +72,7 @@ int  configure_numcpu (int numcpu);
 int  configure_maxcpu (int maxcpu);
 int  configure_memlock(int);
 int  configure_memfree(int);
-int  configure_storage(U64);
+int  configure_storage( U64 /* number of 4K pages */ );
 int  configure_xstorage(U64);
 
 int  configure_herc_priority(int prio);

@@ -112,8 +112,8 @@ int build_config (const char *hercules_cnf)
         sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Default main storage to 2M with one CPU */
-    configure_storage( 2 << ( SHIFT_MEBIBYTE - 12 ));
-    configure_numcpu(1);
+    configure_storage( DEF_MAINSIZE_PAGES );
+    configure_numcpu( 1 );
 
     if (hercules_cnf && (process_config( hercules_cnf )))
         return -1; // (error message already issued)

@@ -123,7 +123,7 @@ DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
 static U64    config_allocmsize  = 0;
 static BYTE*  config_allocmaddr  = NULL;
 
-int configure_storage( U64 mainsize )
+int configure_storage( U64 mainsize /* number of 4K pages */ )
 {
 BYTE *mainstor;
 BYTE *storkeys;
@@ -219,11 +219,10 @@ int cpu;
      */
 
     if (storsize > config_allocmsize ||
-        (mainsize <= (2 * ONE_MEGABYTE) &&
+        (mainsize <= DEF_MAINSIZE_BYTES &&
          storsize < config_allocmsize))
     {
-        if (config_mfree &&
-            mainsize > (2* ONE_MEGABYTE))
+        if (config_mfree && mainsize > DEF_MAINSIZE_BYTES)
             mfree = malloc(config_mfree);
 
         /* Obtain storage with hint to page size for cleanest allocation

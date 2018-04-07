@@ -324,7 +324,6 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
 /*  in phase three, the IPL PSW is loaded and the CPU is started.    */
 /*-------------------------------------------------------------------*/
 
-int     orig_arch_mode;                 /* Saved architecture mode   */
 PSW     captured_zpsw;                  /* Captured z/Arch PSW       */
 
 /*-------------------------------------------------------------------*/
@@ -337,8 +336,8 @@ int ARCH_DEP( common_load_begin )( int cpu, int clear )
     int capture;
     int rc;
 
-    /* Save the original architecture mode for later */
-    orig_arch_mode = sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+    /* Ensure dummyregs archmode matches SYSBLK archmode */
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     capture = TRUE
         && !clear

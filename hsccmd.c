@@ -3201,7 +3201,7 @@ BYTE    f = ' ', c = '\0';
         sysblk.lock_mainstor = locktype;
 
     /* Update main storage size */
-    rc = configure_storage( mainsize );
+    rc = configure_storage( mainsize ); /* number of 4K pages */
     if (rc >= 0)
     {
         if (MLVL( VERBOSE ))

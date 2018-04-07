@@ -100,6 +100,10 @@
 #define  _4K       4096     // (just a much shorter name)
 #define  _1M    1048576     // (just a much shorter name)
 
+/* Hercules default MAINSIZE value */
+#define DEF_MAINSIZE_BYTES      (2 << SHIFT_MEGABYTE)
+#define DEF_MAINSIZE_PAGES      (DEF_MAINSIZE_BYTES >> SHIFT_4K)
+
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
 /*-------------------------------------------------------------------*/
