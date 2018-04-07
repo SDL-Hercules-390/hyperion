@@ -1160,6 +1160,7 @@
     ) else (
       echo End: ** FAILURE! **
     )
+    set /a "maxrc=%rc%"
     goto :exitnow
   )
 
