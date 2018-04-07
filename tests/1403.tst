@@ -27,8 +27,6 @@ r 408=000A000000EEEEEE      # SIO failure PSW
 r 500=EB00000060000001      # UCS Gate Load
 r 508=FB000000200000F0      # Load UCS Buffer
 
-traceopt regsfirst          # (makes more sense!)
-t+                          # (trace instructions)
 t+00E                       # (trace device I/O)
 runtest   0.05              # (PLENTY of time)
 
