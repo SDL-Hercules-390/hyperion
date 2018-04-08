@@ -540,14 +540,24 @@ script "$(testpath)/stidp-zarch.subtst"
 *Fi
 
 #----------------------------------------------------------------------
-# Workaround for unresolved timing issue/bug that only occurs on Linux
-# but never on Windows. For some as-yet unknown reason something this
-# .tst script seems to cause whichever .tst script follows this one to
-# always crash (segfault). Introducing a short delay seems to resolve
-# the issue but the reasons why are as-yet unknown.
+# PROGRAMMING NOTE: because this particular test script involves
+# configuring CPUs online and offline, it introduces a potential
+# race condition between script processing and CPU threads being
+# created and starting up and CPU threads being asked to end and
+# exit. As a result of this, some test scripts which follow this
+# one can potentially crash (segfault) depending on the timing.
+#
+# This usually occurs (WHEN it does occur; it doesn't always) on
+# my Linux VMware virtual machine (which makes sense, since it's
+# not running at native host speed and its kernel thread creation
+# and destruction logic is completely different from Windows's)
+# but has never occurred (yet!) on my Windows host (which again,
+# makes sense since it's running at native speed).
+#
+# So to be safe we introduce a slight pause to give any internal
+# processing a chance to complete before we continue on with the
+# next test script.
 
-*If $platform \= "Windows"
-  pause 1
-*Fi
+pause 0.75      # (should HOPEFULLY be PLENTY long enough!)
 
 #----------------------------------------------------------------------
