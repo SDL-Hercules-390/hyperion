@@ -2036,7 +2036,8 @@ struct SIE2BK
 typedef struct SIE2BK   SIE2BK;
 
 /*-------------------------------------------------------------------*/
-
+/*                            WHO                                    */
+/*-------------------------------------------------------------------*/
 #define SIE_VI_WHO_LVLM   0xF0     /* Mask for "source level" field:
                                       If non-zero, this is the inter-
                                       pretive-execution depth at which
@@ -2056,6 +2057,10 @@ typedef struct SIE2BK   SIE2BK;
                                       that detected the problem.     */
 #define SIE_VI_WHO_CPU    0x01     /* Initiator was a CPU            */
 #define SIE_VI_WHO_VSIE   0x08     /* Initiator was vSIE software    */
+
+/*-------------------------------------------------------------------*/
+/*                            WHEN                                   */
+/*-------------------------------------------------------------------*/
 #define SIE_VI_WHEN_RECPM 0xF0     /* Mask for "recognition point" field
                                       the normal processing that
                                       recognized the condition
@@ -2069,6 +2074,10 @@ typedef struct SIE2BK   SIE2BK;
                                       interruption interpretation    */
 #define SIE_VI_WHEN_SIEXT 0x40     /* Condition recognized during SIE
                                       exit                           */
+
+/*-------------------------------------------------------------------*/
+/*                            WHY                                    */
+/*-------------------------------------------------------------------*/
 #define SIE_VI_WHY_MODE  0x0001    /* Invalid guest mode or invalid
                                       combination of modes           */
 #define SIE_VI_WHY_ARCHM 0x0002    /* Invalid architecture mode specified

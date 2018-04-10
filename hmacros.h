@@ -28,7 +28,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*      Define INLINE attributes by compiler                         */
+/*              Define INLINE attributes by compiler                 */
 /*-------------------------------------------------------------------*/
 #if !defined(INLINE)
   #if defined(__GNUC__)
@@ -39,7 +39,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*      Round a value up to the next boundary                        */
+/*             Round a value up to the next boundary                 */
 /*-------------------------------------------------------------------*/
 #define ROUND_UP(x,y)       ((((x)+((y)-1))/(y))*(y))
 
@@ -67,7 +67,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*      some handy array/struct macros...                            */
+/*              some handy array/struct macros...                    */
 /*-------------------------------------------------------------------*/
 #ifndef   _countof
   #define _countof(x)       ( sizeof(x) / sizeof(x[0]) )
@@ -81,6 +81,15 @@
 #ifndef   offsetof
   #define offsetof(_struct,_member)   (size_t)&(((_struct*)0)->_member)
 #endif
+
+#define BIT_ARRAY_BYT( _b )         (        (_b / 8))
+#define BIT_ARRAY_MSK( _b )         (0x80 >> (_b % 8))
+
+#define BIT_ARRAY_SET( _a, _b )     (_a[BIT_ARRAY_BYT(_b)] |=  BIT_ARRAY_MSK(_b))
+#define BIT_ARRAY_CLR( _a, _b )     (_a[BIT_ARRAY_BYT(_b)] &= ~BIT_ARRAY_MSK(_b))
+
+#define IS_BIT_ARRAY_SET( _a, _b )  (_a[BIT_ARRAY_BYT(_b)] & BIT_ARRAY_MSK(_b))
+#define IS_BIT_ARRAY_CLR( _a, _b )  (!IS_BIT_ARRAY_SET(_a,_b))
 
 /*-------------------------------------------------------------------*/
 /*      CASSERT macro       a compile time assertion check           */

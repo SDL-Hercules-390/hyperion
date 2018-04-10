@@ -218,7 +218,7 @@ static char *dbg_name[] = {
 /*-------------------------------------------------------------------*/
 /* B214 SIE   - Start Interpretive Execution                     [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(start_interpretive_execution)
+DEF_INST( start_interpretive_execution )
 {
 int     b2;                             /* Values of R fields        */
 RADR    effective_addr2;                /* address of state desc.    */
@@ -227,42 +227,46 @@ U16     lhcpu;                          /* Last Host CPU address     */
 volatile int icode;                     /* Interception code         */
 U64     dreg;
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    SIE_INTERCEPT(regs);
+    SIE_INTERCEPT( regs );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    PTT_SIE("SIE", regs->GR_L(14), regs->GR_L(15), (U32)(effective_addr2 & 0xffffffff));
+    PTT_SIE( "SIE", regs->GR_L(14), regs->GR_L(15), (U32)(effective_addr2 & 0xffffffff));
 
-    SIE_PERFMON(SIE_PERF_ENTER);
+    SIE_PERFMON( SIE_PERF_ENTER );
 
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
-    if(!regs->psw.amode || !PRIMARY_SPACE_MODE(&(regs->psw)))
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+    if (!regs->psw.amode || !PRIMARY_SPACE_MODE(&(regs->psw)))
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 #endif
 
-    if((effective_addr2 & (sizeof(SIEBK)-1)) != 0
+    if (0
+        || (effective_addr2 & (sizeof(SIEBK)-1)) != 0
+
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-      || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == 0
-      || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == regs->PX)
+
+        || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == 0
+        || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == regs->PX
 #else
-      || (effective_addr2 & 0x7FFFF000) == 0
-      || (effective_addr2 & 0x7FFFF000) == regs->PX)
+        || (effective_addr2 & 0x7FFFF000) == 0
+        || (effective_addr2 & 0x7FFFF000) == regs->PX
 #endif
+    )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Perform serialization and checkpoint synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
-#if defined(SIE_DEBUG)
-    logmsg(_("SIE: state descriptor " F_RADR "\n"),effective_addr2);
-    ARCH_DEP(display_inst) (regs, regs->instinvalid ? NULL : regs->ip);
-#endif /*defined(SIE_DEBUG)*/
+#if defined( SIE_DEBUG )
+    LOGMSG( "SIE: state descriptor " F_RADR "\n", effective_addr2 );
+    ARCH_DEP( display_inst )( regs, regs->instinvalid ? NULL : regs->ip );
+#endif
 
-    if(effective_addr2 > regs->mainlim - (sizeof(SIEBK)-1))
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    if (effective_addr2 > regs->mainlim - (sizeof(SIEBK)-1))
+        ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
     /*
      * As long as regs->sie_active is off, no serialization is
@@ -271,15 +275,15 @@ U64     dreg;
      */
     if (regs->sie_active)
     {
-        OBTAIN_INTLOCK(regs);
+        OBTAIN_INTLOCK( regs );
         regs->sie_active = 0;
-        RELEASE_INTLOCK(regs);
+        RELEASE_INTLOCK( regs );
     }
 
-     /* Initialize guestregs if first time */
-     if (GUESTREGS == NULL)
+    /* Initialize guestregs if first time */
+    if (GUESTREGS == NULL)
     {
-        GUESTREGS = calloc_aligned(sizeof(REGS), 4096);
+        GUESTREGS = calloc_aligned( sizeof( REGS ), 4096 );
         if (GUESTREGS == NULL)
         {
             WRMSG( HHC00813, "E", PTYPSTR(regs->cpuad), regs->cpuad, "calloc()", strerror(errno) );
@@ -289,7 +293,7 @@ U64     dreg;
             return;
         }
         cpu_init (regs->cpuad, GUESTREGS, regs);
-     }
+    }
 
     /* Direct pointer to state descriptor block */
     GUESTREGS->siebk = (void*)(regs->mainstor + effective_addr2);
@@ -297,10 +301,11 @@ U64     dreg;
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (STATEBK->mx & SIE_MX_ESAME)
     {
-        GUESTREGS->arch_mode = ARCH_900_IDX;
+        GUESTREGS->arch_mode         = ARCH_900_IDX;
         GUESTREGS->program_interrupt = &z900_program_interrupt;
-        GUESTREGS->trace_br = (func)&z900_trace_br;
-        icode = z900_load_psw(GUESTREGS, STATEBK->psw);
+        GUESTREGS->trace_br          = (func) &z900_trace_br;
+
+        icode = z900_load_psw( GUESTREGS, STATEBK->psw );
     }
 #else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     if (STATEBK->m & SIE_M_370)
@@ -385,9 +390,8 @@ U64     dreg;
 
 
 #if defined( SIE_DEBUG )
-        logmsg(_("SIE: zone %d: mso=" F_RADR " msl=" F_RADR "\n"),
-            STATEBK->zone, mso, msl);
-#endif /*defined(SIE_DEBUG)*/
+        LOGMSG( "SIE: zone %d: mso=" F_RADR " msl=" F_RADR "\n", STATEBK->zone, mso, msl );
+#endif
 
         GUESTREGS->sie_pref = 1;
         GUESTREGS->sie_mso = 0;
@@ -510,44 +514,53 @@ U64     dreg;
 #if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL )
     /* Set Virtual Architecture Level (Facility List) */
     {
-    U32 fld;
-    int i;
-    BYTE *facility_mask;
+        U32    fld;     /* SIE Facility List Designator */
 
-        for (i=0; i < (int) STFL_HERC_BY_SIZE; i++)
-            GUESTREGS->facility_list[i] = regs->facility_list[i];
+        /* SIE guest facilities by default start out same as host's */
+        memcpy( GUESTREGS->facility_list, regs->facility_list, STFL_HERC_BY_SIZE );
 
-        FETCH_FW(fld,STATEBK->fld);
+        /* Fetch address of optional SIE guest facility list mask */
+        FETCH_FW( fld, STATEBK->fld );
 
-        if(fld > regs->mainlim)
+        if (0
+            || (U64)fld > regs->mainlim /* (beyond end of main storage?)  */
+            || (fld & ~0x7ffffff8)      /* (above 2GB or not DW aligned?) */
+        )
         {
-//          SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
-// ZZ: FIXME           SIE_VI_WHY_??ADR, GUESTREGS);
+            /* ZZ: FIXME
+            SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_??ADR, GUESTREGS );
+            */
             STATEBK->c = SIE_C_VALIDITY;
             return;
         }
 
-        if(fld & 0x7ffffff8)
+        /* If a facility list mask was provided then use it to
+           clear SIE guest facility bits which shouldn't be on */
+        if (fld)
         {
-            facility_mask = &(regs->mainstor[fld]);
-            GUESTREGS->facility_list[0] &= (facility_mask[0]
+            int    i;
+            BYTE   facilities_mask[ STFL_HERC_BY_SIZE ];
+
+            /* Copy mask bits to work area */
+            memcpy( facilities_mask, &regs->mainstor[ fld ], STFL_HERC_BY_SIZE );
+
+            /* Prevent certain facility bits from being masked */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        /* Prevent current architecture mode being masked */ | 0x40
+            BIT_ARRAY_SET( facilities_mask, STFL_001_ZARCH_INSTALLED );
 #endif
-                                                                   );
-            for (i=1; i < (int) STFL_IBM_BY_SIZE; i++)
-               GUESTREGS->facility_list[i] &= facility_mask[i];
+            /* Mask SIE guest facility bits as requested */
+            for (i=0; i < (int) STFL_IBM_BY_SIZE; i++)
+               GUESTREGS->facility_list[i] &= facilities_mask[i];
         }
     }
 #endif /* defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) */
 
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Reference and Change Preservation Origin */
-    FETCH_FW(GUESTREGS->sie_rcpo, STATEBK->rcpo);
+    FETCH_FW( GUESTREGS->sie_rcpo, STATEBK->rcpo );
     if (!GUESTREGS->sie_rcpo && !GUESTREGS->sie_pref)
     {
-        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
-                   SIE_VI_WHY_RCZER, GUESTREGS);
+        SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_RCZER, GUESTREGS );
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
@@ -771,9 +784,8 @@ int     n;
     }
 
 #if defined( SIE_DEBUG )
-    logmsg(_("SIE: interception code %d\n"),code);
-    ARCH_DEP(display_inst) (GUESTREGS,
-                            GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
+    LOGMSG( "SIE: interception code %d\n", code );
+    ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : GUESTREGS->ip );
 #endif
 
     SIE_PERFMON(SIE_PERF_EXIT);
@@ -1107,11 +1119,9 @@ static int ARCH_DEP(run_sie) (REGS *regs)
                 ip = INSTRUCTION_FETCH(GUESTREGS, 0);
                 current_opcode_table=GUESTREGS->ARCH_DEP(runtime_opcode_xxxx);
 
-#if defined(SIE_DEBUG)
-                /* Display the instruction */
-                ARCH_DEP(display_inst) (GUESTREGS,
-                         GUESTREGS->instinvalid ? NULL : ip);
-#endif /*defined(SIE_DEBUG)*/
+#if defined( SIE_DEBUG )
+                ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : ip );
+#endif
 
                 SIE_PERFMON( SIE_PERF_EXEC );
 

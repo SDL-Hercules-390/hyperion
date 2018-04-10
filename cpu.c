@@ -34,6 +34,8 @@
 
 #include "hstdinc.h"
 
+// #define SIE_DEBUG
+
 #define _CPU_C_
 #define _HENGINE_DLL_
 
@@ -496,9 +498,9 @@ static char *pgmintname[] = {
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         ) )
     {
-#if defined(SIE_DEBUG)
-        logmsg(_("program_int() passing to guest code=%4.4X\n"),pcode);
-#endif /*defined(SIE_DEBUG)*/
+#if defined( SIE_DEBUG )
+        LOGMSG( "program_int() passing to guest code=%4.4X\n", pcode );
+#endif
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;
         realregs->guestregs->opndrid = realregs->opndrid;
@@ -590,14 +592,16 @@ static char *pgmintname[] = {
                         (&sysblk.footprregs[realregs->cpuad][n],
                         sysblk.footprregs[realregs->cpuad][n].inst);
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
+
 #if defined(_FEATURE_SIE)
         if (SIE_MODE(realregs))
           STRLCPY( buf1, "SIE: " );
 #endif /*defined(_FEATURE_SIE)*/
-#if defined(SIE_DEBUG)
-        STRLCPY( buf2, QSTR(_GEN_ARCH) );
+
+#if defined( SIE_DEBUG )
+        STRLCPY( buf2, QSTR( _GEN_ARCH ));
         STRLCAT( buf2, " " );
-#endif /*defined(SIE_DEBUG)*/
+#endif
         if (code == PGM_DATA_EXCEPTION)
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
         dxcstr[sizeof(dxcstr)-1] = '\0';
