@@ -31,19 +31,14 @@
 /*          FEATUREs with STFL facility bits defined                 */
 /*-------------------------------------------------------------------*/
 
-// Note that ESA/390 only supports STFL, not STFLE. Thus there are
-// only 32 facility bits that pertain to ESA/390 (bits 0-31). Also
-// not that only bits 0-5, 16-20 are currently defined for ESA/390.
-// Bits 6-15, 21-31 are reserved and currently stored as zeros.
-
 #define FEATURE_000_N3_INSTR_FACILITY
 //efine FEATURE_001_ZARCH_INSTALLED_FACILITY
 //efine FEATURE_002_ZARCH_ACTIVE_FACILITY
-#define FEATURE_003_DAT_ENHANCE_FACILITY_1
+//efine FEATURE_003_DAT_ENHANCE_FACILITY_1
 //efine FEATURE_004_IDTE_SC_SEGTAB_FACILITY
 //efine FEATURE_005_IDTE_SC_REGTAB_FACILITY
 //efine FEATURE_006_ASN_LX_REUSE_FACILITY
-//efine FEATURE_007_STFL_EXTENDED_FACILITY
+#define FEATURE_007_STFL_EXTENDED_FACILITY
 //efine FEATURE_008_ENHANCED_DAT_FACILITY_1                     /*208*/
 //efine FEATURE_009_SENSE_RUN_STATUS_FACILITY                   /*@Z9*/
 //efine FEATURE_010_CONDITIONAL_SSKE_FACILITY                   /*407*/
@@ -53,19 +48,44 @@
 #define FEATURE_016_EXT_TRANSL_FACILITY_2
 #define FEATURE_017_MSA_FACILITY
 #define DYNINST_017_MSA_FACILITY                         /* dyncrypt */
-#define FEATURE_018_LONG_DISPL_INST_FACILITY
-#define FEATURE_019_LONG_DISPL_HPERF_FACILITY
+//efine FEATURE_018_LONG_DISPL_INST_FACILITY
+//efine FEATURE_019_LONG_DISPL_HPERF_FACILITY
 #define FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
 //efine FEATURE_021_EXTENDED_IMMED_FACILITY                     /*@Z9*/
 //efine FEATURE_022_EXT_TRANSL_FACILITY_3                       /*@ZA*/
 //efine FEATURE_023_HFP_UNNORM_EXT_FACILITY                     /*@Z9*/
-//efine FEATURE_024_ETF2_ENHANCEMENT_FACILITY                   /*@ZA*/
+#define FEATURE_024_ETF2_ENHANCEMENT_FACILITY
 //efine FEATURE_025_STORE_CLOCK_FAST_FACILITY                   /*@Z9*/
 //efine FEATURE_026_PARSING_ENHANCE_FACILITY                    /*208*/
 //efine FEATURE_027_MVCOS_FACILITY                              /*208*/
 //efine FEATURE_028_TOD_CLOCK_STEER_FACILITY                    /*@Z9*/
 //efine FEATURE_030_ETF3_ENHANCEMENT_FACILITY                   /*@ZA*/
 //efine FEATURE_031_EXTRACT_CPU_TIME_FACILITY                   /*407*/
+
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                      PROGRAMMING NOTE                             */
+/*                                                                   */
+/*  The Principles of Operation (for both z/Arch as well as for      */
+/*  ESA/390) both state quite clearly regarding facility bits:       */
+/*                                                                   */
+/*   "A bit is set to one REGARDLESS of the current architectural    */
+/*    mode (emphasis mine) if its meaning is true. A meaning applies */
+/*    to the current architectural mode unless it is said to apply   */
+/*    to a specific architectural mode."                             */
+/*                                                                   */
+/*  Thus since bit 52 is described as follows:                       */
+/*                                                                   */
+/*       52  "The interlocked-access facility 2 is installed."       */
+/*                                                                   */
+/*  it DOES apply to the ESA/390 architecture too, since it lacks    */
+/*  the key phrase "...in the z/Architecture architectural mode."    */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
+#define FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2
+#endif
 
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */

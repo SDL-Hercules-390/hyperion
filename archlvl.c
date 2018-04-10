@@ -139,7 +139,7 @@ typedef struct FACTAB   FACTAB;
 /* the given architectures.  Def (Default) indicates the facility    */
 /* defaults to enabled for the specified architectures.  The Req     */
 /* (Required) field indicates the facility is a REQUIRED facility    */
-/* for the architecture and enabling/disabling it isn't allowed.     */
+/* for the architecture and enabling or disabling is NOT allowed.    */
 /*                                                                   */
 /* ALL known facilities should ALWAYS be defined in the below table  */
 /* REGARDLESS of whether or not it has been implemented yet within   */
@@ -192,7 +192,7 @@ FT( Z390, Z390, NONE, 000_N3_INSTR )
 /*-------------------------------------------------------------------*/
 
 #if defined(    _FEATURE_001_ZARCH_INSTALLED_FACILITY )
-FT( _Z390, _Z390, _Z900, 001_ZARCH_INSTALLED )
+FT( _Z390, _Z390, _Z390, 001_ZARCH_INSTALLED )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -202,7 +202,7 @@ FT( Z900, Z900, Z900, 002_ZARCH_ACTIVE )
 #endif
 
 #if defined(  FEATURE_003_DAT_ENHANCE_FACILITY_1 )
-FT( Z390, Z390, NONE, 003_DAT_ENHANCE_1 )
+FT( Z900, Z900, NONE, 003_DAT_ENHANCE_1 )
 #endif
 
 #if defined(  FEATURE_004_IDTE_SC_SEGTAB_FACILITY )
@@ -218,7 +218,7 @@ FT( Z900, Z900, NONE, 006_ASN_LX_REUSE )
 #endif
 
 #if defined(  FEATURE_007_STFL_EXTENDED_FACILITY )
-FT( Z900, Z900, NONE, 007_STFL_EXTENDED )
+FT( Z390, Z390, NONE, 007_STFL_EXTENDED )
 #endif
 
 #if defined(  FEATURE_008_ENHANCED_DAT_FACILITY_1 )
@@ -254,11 +254,11 @@ FT( Z390, Z390, NONE, 017_MSA )
 #endif
 
 #if defined(  FEATURE_018_LONG_DISPL_INST_FACILITY )
-FT( Z390, Z390, NONE, 018_LONG_DISPL_INST )
+FT( Z900, Z900, NONE, 018_LONG_DISPL_INST )
 #endif
 
 #if defined(  FEATURE_019_LONG_DISPL_HPERF_FACILITY )
-FT( Z390, Z390, NONE, 019_LONG_DISPL_HPERF )
+FT( Z900, Z900, NONE, 019_LONG_DISPL_HPERF )
 #endif
 
 #if defined(  FEATURE_020_HFP_MULT_ADD_SUB_FACILITY )
@@ -278,7 +278,7 @@ FT( Z900, Z900, NONE, 023_HFP_UNNORM_EXT )
 #endif
 
 #if defined(  FEATURE_024_ETF2_ENHANCEMENT_FACILITY )
-FT( Z900, Z900, NONE, 024_ETF2_ENHANCEMENT )
+FT( Z390, Z390, NONE, 024_ETF2_ENHANCEMENT )
 #endif
 
 #if defined(  FEATURE_025_STORE_CLOCK_FAST_FACILITY )
@@ -451,7 +451,7 @@ FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING )
 #if IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
 FT( NONE, NONE, NONE, 052_INTERLOCKED_ACCESS_2 )
 #else
-FT( Z900, Z900, NONE, 052_INTERLOCKED_ACCESS_2 )
+FT( Z390, Z390, NONE, 052_INTERLOCKED_ACCESS_2 )
 #endif
 #endif /* defined(  FEATURE_052_INTERLOCKED_ACCESS_FACILITY_2 ) */
 
