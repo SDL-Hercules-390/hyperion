@@ -103,5 +103,7 @@
 #include "hexterns.h"     /* Hercules-wide function declarations     */
 #include "msgenu.h"       /* Hercules messages                       */
 #include "hinlines.h"     /* Hercules-wide inline functions          */
+#include "archlvl.h"      /* Architecture Level   functions          */
+#include "facility.h"     /* Facility Bit         functions          */
 
 #endif // _HERCULES_H

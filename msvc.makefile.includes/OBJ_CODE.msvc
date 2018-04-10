@@ -77,12 +77,12 @@ hengine_OBJ = \
     $(O)chsc.obj     \
     $(O)clock.obj    \
     $(O)cmdtab.obj   \
-    $(O)cmpsc_2012.obj  \
-    $(O)cmpscdbg.obj    \
-    $(O)cmpscdct.obj    \
-    $(O)cmpscget.obj    \
-    $(O)cmpscmem.obj    \
-    $(O)cmpscput.obj    \
+    $(O)cmpsc_2012.obj \
+    $(O)cmpscdbg.obj \
+    $(O)cmpscdct.obj \
+    $(O)cmpscget.obj \
+    $(O)cmpscmem.obj \
+    $(O)cmpscput.obj \
     $(O)config.obj   \
     $(O)control.obj  \
     $(O)cpu.obj      \
@@ -92,10 +92,11 @@ hengine_OBJ = \
     $(O)dfp.obj      \
     $(O)diagmssf.obj \
     $(O)diagnose.obj \
-    $(O)dyn76.obj \
+    $(O)dyn76.obj    \
     $(O)ecpsvm.obj   \
     $(O)esame.obj    \
     $(O)external.obj \
+    $(O)facility.obj \
     $(O)fillfnam.obj \
     $(O)float.obj    \
     $(O)general1.obj \

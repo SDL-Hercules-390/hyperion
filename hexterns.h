@@ -105,12 +105,6 @@ CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
 CONF_DLL_IMPORT BYTE is_diag_instr();
 CONF_DLL_IMPORT BYTE are_cpu_thread( int* cpunum );
 
-/* Functions in module archlvl.c */
-extern void init_default_archmode();
-extern bool init_facilities_lists();
-extern void init_cpu_facilities( REGS* regs );
-extern const char* get_arch_name( REGS* regs );
-
 /* Functions in module panel.c */
 void expire_kept_msgs(int unconditional);
 void set_console_title(char * status);

@@ -416,6 +416,7 @@ libherc_la_SOURCES = \
   ecpsvm.c           \
   esame.c            \
   external.c         \
+  facility.c         \
   fillfnam.c         \
   float.c            \
   general1.c         \
@@ -762,6 +763,7 @@ EXTRA_DIST =                  \
 #------------------------------------------------------------------------------
 
 noinst_HEADERS =          \
+  archlvl.h               \
   cache.h                 \
   ccfixme.h               \
   ccnowarn.h              \
@@ -792,6 +794,7 @@ noinst_HEADERS =          \
   esa390.h                \
   esa390io.h              \
   extstring.h             \
+  facility.h              \
   feat370.h               \
   feat390.h               \
   feat900.h               \

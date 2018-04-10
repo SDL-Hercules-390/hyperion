@@ -342,6 +342,7 @@
     <ClCompile Include="ecpsvm.c" />
     <ClCompile Include="esame.c" />
     <ClCompile Include="external.c" />
+    <ClCompile Include="facility.c" />
     <ClCompile Include="faketape.c" />
     <ClCompile Include="fbadasd.c" />
     <ClCompile Include="fillfnam.c" />
@@ -935,6 +936,7 @@
     <None Include="_dynamic_version.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="archlvl.h" />
     <ClInclude Include="cache.h" />
     <ClInclude Include="ccfixme.h" />
     <ClInclude Include="ccnowarn.h" />
@@ -981,6 +983,7 @@
     <ClInclude Include="esa390.h" />
     <ClInclude Include="esa390io.h" />
     <ClInclude Include="extstring.h" />
+    <ClInclude Include="facility.h" />
     <ClInclude Include="feat370.h" />
     <ClInclude Include="feat390.h" />
     <ClInclude Include="feat900.h" />

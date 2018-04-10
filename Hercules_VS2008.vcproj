@@ -816,6 +816,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\facility.c"
+							>
+						</File>
+						<File
 							RelativePath=".\fillfnam.c"
 							>
 						</File>
@@ -1100,6 +1104,10 @@
 						Name="Header Files"
 						>
 						<File
+							RelativePath=".\archlvl.h"
+							>
+						</File>
+						<File
 							RelativePath=".\cache.h"
 							>
 						</File>
@@ -1189,6 +1197,10 @@
 						</File>
 						<File
 							RelativePath=".\extstring.h"
+							>
+						</File>
+						<File
+							RelativePath=".\facility.h"
 							>
 						</File>
 						<File
