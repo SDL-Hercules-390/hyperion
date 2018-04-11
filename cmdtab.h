@@ -520,8 +520,15 @@
 #define facility_cmd_desc       "Enable, Disable or Query Facilities"
 #define facility_cmd_help       \
                                 \
-  "Format: FACILITY  ENABLE | DISABLE   <facility> | bit          [ archlvl ]\n"  \
-  "        FACILITY  QUERY    [ ALL | SHORT | LONG | <facility> | bit | RAW ]\n"
+  "Format: FACILITY  ENABLE | DISABLE <facility> | bit  [ archlvl ]\n"           \
+  "        FACILITY  QUERY SHORT | LONG | RAW\n"                                 \
+  "        FACILITY  QUERY <facility> | bit | ENABLED | DISABLED | ALL\n"        \
+  "\n"                                                                           \
+  "ALL is a synonym for SHORT. RAW displays the hex string. ENABLED displays\n"  \
+  "only facilities which are enabled. DISABLED shows only disabled failities.\n" \
+  "LONG sorts the display by Long Description. SHORT is the default. <facility>\n" \
+  "is the SHORT facility name to be enabled or disabled. bit may be entered\n"   \
+  "as either a numeric bit number or as 'BITnnn'.\n"
 
 #define fcb_cmd_desc            "Display a printer's current FCB"
 #define fcb_cmd_help            "Format: \"fcb <devnum>\""

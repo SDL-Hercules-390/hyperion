@@ -647,25 +647,6 @@ static DEF_INST( facility_not_enabled ) {
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*                ACTUAL Architecture bit-masks                      */
-/*-------------------------------------------------------------------*/
-
-#undef  NONE
-#undef  S370
-#undef  E390
-#undef  Z900
-#undef  Z390
-#undef  MALL
-
-#define NONE     0x00               /* NO architectures or disabled  */
-#define S370     0x80               /* S/370 architecture            */
-#define E390     0x40               /* ESA/390 architecture          */
-#define Z900     0x20               /* z/Arch architecture           */
-
-#define Z390     (E390|Z900)        /* BOTH ESA/390 and z/Arch       */
-#define MALL     (S370|Z390)        /* All architectures             */
-
-/*-------------------------------------------------------------------*/
 /*   Facility Bit Modification Check Functions forward references    */
 /*-------------------------------------------------------------------*/
 
@@ -1137,9 +1118,26 @@ static int sort_ftpp_by_long_name( const void* p1, const void* p2 )
 }
 
 /*-------------------------------------------------------------------*/
+/*                          Query Type                               */
+/*-------------------------------------------------------------------*/
+
+enum eQueryType
+{
+    eQueryAll       = 0,
+    eQueryEnabled   = 1,
+    eQueryDisabled  = 2
+};
+typedef enum eQuery EQUERY;
+
+#define QUERY_ENABLED( e )      (e == eQueryEnabled )
+#define QUERY_DISABLED( e )     (e == eQueryDisabled)
+
+/*-------------------------------------------------------------------*/
 /*                     facility_query_all                            */
 /*-------------------------------------------------------------------*/
-static bool facility_query_all( const ARCHTAB* at, bool sort_by_long )
+
+static bool facility_query_all( const ARCHTAB* at, const EQUERY eQType,
+                                const bool sort_by_long )
 {
     const FACTAB*   ft;         // ptr to FACTAB entry
     const FACTAB**  ftpp;       // ptr to ptr to FACTAB entry
@@ -1191,6 +1189,9 @@ static bool facility_query_all( const ARCHTAB* at, bool sort_by_long )
         fbit  = 0x80 >> (ft->bitno % 8);
 
         enabled = sysblk.facility_list[ at->num ][ fbyte ] & fbit;
+
+        if (QUERY_ENABLED ( eQType ) && !enabled) continue;
+        if (QUERY_DISABLED( eQType ) &&  enabled) continue;
 
         sup = (ft->supmask & at->amask)     ? 'Y' : '-';
         req = (ft->reqmask & at->amask)     ? 'Y' : '-';
@@ -1278,7 +1279,10 @@ static void facility_query_raw( const ARCHTAB* at )
 /*                       facility_query                    (boolean) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*   ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]   */
+/*  ARCHLVL QUERY ENABLED | DISABLED                                 */
+/*  ARCHLVL QUERY SHORT | LONG | ALL                                 */
+/*  ARCHLVL QUERY <facility> | bit                                   */
+/*  ARCHLVL QUERY RAW                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 bool facility_query( int argc, char* argv[] )
@@ -1303,18 +1307,26 @@ bool facility_query( int argc, char* argv[] )
     /* Get pointer to ARCHTAB entry for current architecture */
     at = get_archtab_by_arch( sysblk.arch_mode );
 
-    /* Query ALL? */
+    /* Query ALL/SHORT/LONG/ENABLED/DISABLED? */
 
-    if (argc == 2 ||                               // (implicit ALL)
+    if (argc == 2 ||                                  // (implicit ALL)
        (argc == 3 && (0
-                      || CMD( argv[2], ALL,   1 )  // (explicit ALL)
-                      || CMD( argv[2], SHORT, 1 )  // (default sort)
-                      || CMD( argv[2], LONG,  1 )  // (by long name)
+                      || CMD( argv[2], ALL,      1 )  // (explicit ALL)
+                      || CMD( argv[2], SHORT,    1 )  // (default sort)
+                      || CMD( argv[2], LONG,     1 )  // (by long name)
+                      || CMD( argv[2], ENABLED,  1 )  // (only enabled)
+                      || CMD( argv[2], DISABLED, 1 )  // (only disabled)
                      )
     ))
     {
-        const bool sort_by_long = argc < 3 ? false : CMD( argv[2], LONG, 1 );
-        return facility_query_all( at, sort_by_long );
+        const bool sort_by_long  = argc < 3                ? false
+                                 : CMD( argv[2], LONG, 1 ) ? true : false;
+
+        const EQUERY eQType      = argc < 3                    ? eQueryAll
+                                 : CMD( argv[2], ENABLED,  1 ) ? eQueryEnabled
+                                 : CMD( argv[2], DISABLED, 1 ) ? eQueryDisabled : eQueryAll;
+
+        return facility_query_all( at, eQType, sort_by_long );
     }
 
     /* Query RAW? */
@@ -3381,7 +3393,10 @@ int facility_enable_disable( int argc, char* argv[] )
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH] */
-/* ARCHLVL QUERY [ ALL | SHORT | LONG | <facility> | bit | RAW ]     */
+/* ARCHLVL QUERY ENABLED | DISABLED                                  */
+/* ARCHLVL QUERY SHORT | LONG | ALL                                  */
+/* ARCHLVL QUERY <facility> | bit                                    */
+/* ARCHLVL QUERY RAW                                                 */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int facility_cmd( int argc, char* argv[], char* cmdline )
