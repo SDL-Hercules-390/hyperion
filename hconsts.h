@@ -97,12 +97,16 @@
 #define ONE_SEXTILLION  ((U64)ONE_QUINTILLION * (U64)(1000))    /* zeros = 21 */
 #define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))    /* zeros = 24 */
 
-#define  _4K       4096     // (just a much shorter name)
-#define  _1M    1048576     // (just a much shorter name)
+#define  _4K       4096         // (just a much shorter name)
+#define  _1M    1048576         // (just a much shorter name)
 
-/* Hercules default MAINSIZE value */
-#define DEF_MAINSIZE_BYTES      (2 << SHIFT_MEGABYTE)
-#define DEF_MAINSIZE_PAGES      (DEF_MAINSIZE_BYTES >> SHIFT_4K)
+/* Hercules default MAINSIZE value... */
+
+#define DEF_MAINSIZE_BYTES          (2 << SHIFT_MEGABYTE)
+#define MIN_Z390_MAINSIZE_BYTES     (1 << SHIFT_MEGABYTE)
+
+#define DEF_MAINSIZE_PAGES          (DEF_MAINSIZE_BYTES      >> SHIFT_4K)
+#define MIN_Z390_MAINSIZE_PAGES     (MIN_Z390_MAINSIZE_BYTES >> SHIFT_4K)
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */

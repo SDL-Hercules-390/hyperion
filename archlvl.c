@@ -318,11 +318,11 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     if (1
         && sysblk.arch_mode > ARCH_370_IDX
         && sysblk.mainsize  > 0
-        && sysblk.mainsize  < (1 << SHIFT_MEBIBYTE)
+        && sysblk.mainsize  < MIN_Z390_MAINSIZE_BYTES
     )
     {
         /* Default main storage to 1M and do initial system reset */
-        storage_reset = (configure_storage( 1 << (SHIFT_MEBIBYTE - 12) ) == 0);
+        storage_reset = configure_storage( MIN_Z390_MAINSIZE_PAGES ) == 0 ? true : false;
     }
     else
     {
