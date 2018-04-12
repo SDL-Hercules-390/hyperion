@@ -19,7 +19,7 @@
 /*                                                                   */
 /* Their names (minus the 'STFL_' prefix) are used by the FT macro   */
 /* macro and FACILITY_ENABLED macro.  The FT macro is used within    */
-/* archlvl.c to define the entries in the FACTAB facilities table    */
+/* facility.c to define the entries in the FACTAB facilities table   */
 /* that indicates which individual facilities are available in each  */
 /* architecture.                                                     */
 /*                                                                   */
@@ -28,7 +28,7 @@
 /* the facility is currently supported/enabled or not.  Also define  */
 /* multiple names for a given facility bit if the bit is documented  */
 /* as pertaining to more than one facility.  This make maintaining   */
-/* the archlvl.c FACTAB facility table easier and allows using the   */
+/* the facility.c FACTAB facility table easier and allows using the  */
 /* actual facility name in your FACILITY_ENABLED macros throughout   */
 /* Hercules code making the code easier to understand and maintain   */
 /* (see e.g. bits 41, 45, 49 and 53).                                */
@@ -310,7 +310,7 @@
 /* the IBM defined bits, and are inaccessible to the guest. Both of  */
 /* the STFLE and SIE instruction functions only reference/use the    */
 /* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
-/* to Hercules's facility bits. Only the archlvl command functions   */
+/* to Hercules's facility bits. Only the facility command functions  */
 /* can access the Hercules facility bits and only Hercules itself    */
 /* uses them internally.                                             */
 /*                                                                   */

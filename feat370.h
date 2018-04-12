@@ -62,7 +62,7 @@
 /*  Extension Facility" at runtime, which is disabled by default:    */
 /*                                                                   */
 /*          archlvl  S/370                                           */
-/*          archlvl  enable  HERC_370_EXTENSION                      */
+/*          facility enable  HERC_370_EXTENSION                      */
 /*                                                                   */
 /*  The above commands can either be entered manually at Hercules    */
 /*  startup or added to your configuration file to have them run     */

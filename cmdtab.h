@@ -98,7 +98,7 @@
 
 #define aea_cmd_desc            "Display AEA tables"
 #define aia_cmd_desc            "Display AIA fields"
-#define alrf_cmd_desc           "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
+#define alrf_cmd_desc           "Command deprecated. Use facility command instead"
 #define ar_cmd_desc             "Display access registers"
 
 #define archlvl_cmd_desc        "Set or Query current Architecture Mode"
@@ -111,7 +111,7 @@
   "To enable/disable/query facilities please use the new FACILITY command.\n"
 
 #define archmode_cmd_desc       "Deprecated. Use the archlvl command instead"
-#define asnlx_cmd_desc          "Command deprecated: Use \"archlvl enable|disable|query asn_lx_reuse\" instead"
+#define asnlx_cmd_desc          "Command deprecated. Use facility command instead"
 #define attach_cmd_desc         "Configure device"
 #define attach_cmd_help         \
                                 \
@@ -517,18 +517,19 @@
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
 #define f_cmd_desc              "Mark frames unusable/usable"
-#define facility_cmd_desc       "Enable, Disable or Query Facilities"
+#define facility_cmd_desc       "Enable/Disable/Query z/Arch STFLE Facility bits"
 #define facility_cmd_help       \
                                 \
-  "Format: FACILITY  ENABLE | DISABLE <facility> | bit  [ archlvl ]\n"           \
-  "        FACILITY  QUERY SHORT | LONG | RAW\n"                                 \
-  "        FACILITY  QUERY <facility> | bit | ENABLED | DISABLED | ALL\n"        \
+  "Format: FACILITY  ENABLE | DISABLE   <facility> | bit   [ archlvl ]\n"        \
+  "        FACILITY  QUERY  SHORT | LONG | RAW\n"                                \
+  "        FACILITY  QUERY  <facility> | bit | ALL\n"                            \
+  "        FACILITY  QUERY  ENABLED | DISABLED   [ LONG ]\n"                     \
   "\n"                                                                           \
   "ALL is a synonym for SHORT. RAW displays the hex string. ENABLED displays\n"  \
   "only facilities which are enabled. DISABLED shows only disabled failities.\n" \
   "LONG sorts the display by Long Description. SHORT is the default. <facility>\n" \
   "is the SHORT facility name to be enabled or disabled. bit may be entered\n"   \
-  "as either a numeric bit number or as 'BITnnn'.\n"
+  "as either a numeric bit number or 'BITnnn'.\n"
 
 #define fcb_cmd_desc            "Display a printer's current FCB"
 #define fcb_cmd_help            "Format: \"fcb <devnum>\""

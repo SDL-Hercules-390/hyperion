@@ -717,25 +717,25 @@ panel commands:
     abs                  *Display or alter absolute storage
     aea                   Display AEA tables
     aia                   Display AIA fields
-    alrf                  Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    alrf                  Command deprecated. Use facility command instead
     ar                    Display access registers
-    archlvl              *Set Architecture Level
-    archmode              Alias for archlvl
-    asn_and_lx_reuse      Command deprecated: Use "archlvl enable|disable|query asn_lx_reuse" instead
+    archlvl              *Set or Query current Architecture Mode
+    archmode              Deprecated. Use the archlvl command instead
+    asn_and_lx_reuse      Command deprecated. Use facility command instead
     attach               *Configure device
     auto_scsi_mount      *Command deprecated - Use "SCSIMOUNT"
-    autoinit             *Display/Set automatic create empty tape file switch
+    autoinit             *Display/Set auto-create-empty-tape-file option
     automount            *Display/Update allowable tape automount directories
     b                    *Set breakpoint
     b+                    Set breakpoint
     b-                   *Delete breakpoint
     cachestats            Cache stats command
     cckd                 *cckd command
+    cctape               *Display a printer's current cctape
     cf                   *Configure current CPU online or offline
     cfall                 Configure all CPU's online or offline
     clocks                Display tod clkc and cpu timer
-    cmdlevel             *Display/Set current command group
-    cmdlvl                (alias for cmdlevel)
+    cmdlvl               *Display/Set current command group
     cmdsep               *Display/Set command line separator
     cmpscpad             *Set/display the CMPSC zero padding value.
     cnslport              Set console port
@@ -760,7 +760,7 @@ panel commands:
     devlist              *List device, device class, or all devices
     devprio               Set/Display devprio parameter
     devtmax              *Display or set max device threads
-    diag8cmd              Set diag8 command option
+    diag8cmd             *Set DIAG 8 instruction options
     ds                    Display subchannel
     dumpdev              *Specify bootstrap loader DUMP parameters
     ecps:vm              *Command deprecated - Use "ECPSVM"
@@ -770,7 +770,8 @@ panel commands:
     exec                 *Execute a Rexx script
     exit                  (Synonym for 'quit')
     ext                   Generate external interrupt
-    fcb                  *Display the current FCB (if only the printer is given)
+    facility             *Enable/Disable/Query z/Arch STFLE Facility bits
+    fcb                  *Display a printer's current FCB
     fpc                  *Display or alter floating point control register
     fpr                  *Display or alter floating point registers
     f{+/-}adr             Mark frames unusable/usable
@@ -793,7 +794,7 @@ panel commands:
     legacysenseid         Set legacysenseid setting
     loadcore             *Load a core image file
     loaddev              *Specify bootstrap loader IPL parameters
-    loadparm             *Set IPL parameter
+    loadparm             *Set the IPL 'LOADPARM' parameter
     loadtext             *Load a text deck file
     locks                *Display internal locks list
     log                  *Direct logger output
@@ -801,7 +802,8 @@ panel commands:
     lparname             *Set LPAR name
     lparnum              *Set LPAR identification number
     lsdep                 List module dependencies
-    lsmod                 List dynamic modules
+    lsequ                 List device equates
+    lsmod                *List dynamic modules
     mainsize             *Define/Display mainsize parameter
     manufacturer          Set STSI manufacturer code
     maxcpu                Set maxcpu parameter
@@ -815,9 +817,12 @@ panel commands:
     msglvl                Alias for msglevel
     msgnoh                Similar to "message" but no header
     mt                   *Control magnetic tape operation
+    netdev               *Set default host networking device
     numcpu                Set numcpu parameter
     numvec                Set numvec parameter
+    osa                  *(Synonym for 'qeth')
     ostailor             *Tailor trace information for specific OS
+    o{+/-}dev             Turn ORB tracing on/off
     panrate              *Display or set rate at which console refreshes
     pantitle             *Display or set console title
     pgmprdos             *Set LPP license setting
@@ -827,7 +832,7 @@ panel commands:
     psw                  *Display or alter program status word
     ptp                  *Enable/Disable PTP debugging
     ptt                  *Activate or display internal trace table
-    qcpuid               *Display cpuid
+    qcpuid               *Display cpuid(s)
     qd                   *Query device information
     qeth                 *Enable/Disable QETH debugging
     qpfkeys               Display the current PF Key settings
@@ -840,7 +845,7 @@ panel commands:
     r                    *Display or alter real storage
     restart               Generate restart interrupt
     resume                Resume hercules
-    rexx                 *display Rexx interpreter settings
+    rexx                 *Modify/Display Hercules's Rexx settings
     rmmod                 Delete a module
     s                    *Instruction stepping
     s+                   *Instruction stepping on
@@ -858,7 +863,7 @@ panel commands:
     sfd                   Display shadow file stats
     sfk                  *Check shadow files
     sh                   *Shell command
-    shcmdopt              Set diag8 sh option
+    shcmdopt             *Set shell command options
     shrd                  shrd command
     shrdport              Set shrdport value
     sizeof                Display size of structures
@@ -875,15 +880,16 @@ panel commands:
     sysepoch              Set sysepoch parameter
     sysreset             *System Reset manual operation
     s{+/-}dev             Turn CCW stepping on/off
-    t                    *Instruction trace
-    t+                   *Instruction trace on
+    t                    *Set instruction tracing address range
+    t+                   *Turn on instruction tracing
+    t+-                  *Automatic instruction tracing
     t-                    Turn off instruction tracing
-    t?                   *Instruction trace query
+    t?                   *Query instruction tracing values
     timerint             *Display or set timers update interval
     tlb                   Display TLB tables
     toddrag               Display or set TOD clock drag factor
     todprio               Set/Display todprio parameter
-    traceopt             *Instruction trace display options
+    traceopt             *Instruction and/or CCW trace display option
     tt32                 *Control/query CTCI-WIN functionality
     tzoffset              Set tzoffset parameter
     t{+/-}CKD             Turn CKD_KEY tracing on/off
@@ -893,7 +899,6 @@ panel commands:
     v                    *Display or alter virtual storage
     version               Display version information
     xpndsize             *Define/Display xpndsize parameter
-    yroffset              Set yroffset parameter
 
      (*)  Enter "help &lt;command&gt;" for more info.
 

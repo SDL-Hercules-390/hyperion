@@ -526,7 +526,7 @@ FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE )
 /* the IBM defined bits, and are inaccessible to the guest. Both of  */
 /* the STFLE and SIE instruction functions only reference/use the    */
 /* STFL_IBM_BY_SIZE value in their code thus preventing guest access */
-/* to Hercules's facility bits. Only the archlvl command functions   */
+/* to Hercules's facility bits. Only the facility command functions  */
 /* can access the Hercules facility bits and only Hercules itself    */
 /* uses them internally.                                             */
 /*-------------------------------------------------------------------*/
@@ -1279,10 +1279,10 @@ static void facility_query_raw( const ARCHTAB* at )
 /*                       facility_query                    (boolean) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*  ARCHLVL QUERY ENABLED | DISABLED                                 */
-/*  ARCHLVL QUERY SHORT | LONG | ALL                                 */
-/*  ARCHLVL QUERY <facility> | bit                                   */
-/*  ARCHLVL QUERY RAW                                                */
+/*  FACILITY QUERY ENABLED | DISABLED    [ LONG ]                    */
+/*  FACILITY QUERY SHORT | LONG | ALL                                */
+/*  FACILITY QUERY <facility> | bit                                  */
+/*  FACILITY QUERY RAW                                               */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 bool facility_query( int argc, char* argv[] )
@@ -1297,7 +1297,7 @@ bool facility_query( int argc, char* argv[] )
 
     /* Note: we know argc >= 2, otherwise why would we be called? */
 
-    if (argc > 3)
+    if (argc > 4)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
@@ -1310,7 +1310,7 @@ bool facility_query( int argc, char* argv[] )
     /* Query ALL/SHORT/LONG/ENABLED/DISABLED? */
 
     if (argc == 2 ||                                  // (implicit ALL)
-       (argc == 3 && (0
+       (argc >= 3 && (0
                       || CMD( argv[2], ALL,      1 )  // (explicit ALL)
                       || CMD( argv[2], SHORT,    1 )  // (default sort)
                       || CMD( argv[2], LONG,     1 )  // (by long name)
@@ -1319,12 +1319,14 @@ bool facility_query( int argc, char* argv[] )
                      )
     ))
     {
-        const bool sort_by_long  = argc < 3                ? false
-                                 : CMD( argv[2], LONG, 1 ) ? true : false;
+        const EQUERY eQType      = argc  <   3                   ? eQueryAll
+                                 : CMD( argv[3-1], ENABLED,  1 ) ? eQueryEnabled
+                                 : CMD( argv[3-1], DISABLED, 1 ) ? eQueryDisabled : eQueryAll;
 
-        const EQUERY eQType      = argc < 3                    ? eQueryAll
-                                 : CMD( argv[2], ENABLED,  1 ) ? eQueryEnabled
-                                 : CMD( argv[2], DISABLED, 1 ) ? eQueryDisabled : eQueryAll;
+        const bool sort_by_long  = argc  <   3               ? false
+                                 : CMD( argv[3-1], LONG, 1 ) ? true
+                                 : argc  <   4               ? false
+                                 : CMD( argv[4-1], LONG, 1 ) ? true : false;
 
         return facility_query_all( at, eQType, sort_by_long );
     }
@@ -3224,7 +3226,7 @@ END_DIS_FAC_INS_FUNC()
 /*                    facility_enable_disable              (boolean) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* ARCHLVL ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH]  */
+/* FACILITY ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH] */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int facility_enable_disable( int argc, char* argv[] )
@@ -3392,11 +3394,11 @@ int facility_enable_disable( int argc, char* argv[] )
 /*                        facility_cmd                      (public) */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* ARCHLVL ENABLE | DISABLE <facility> | bit  [S/370|ESA/390|z/ARCH] */
-/* ARCHLVL QUERY ENABLED | DISABLED                                  */
-/* ARCHLVL QUERY SHORT | LONG | ALL                                  */
-/* ARCHLVL QUERY <facility> | bit                                    */
-/* ARCHLVL QUERY RAW                                                 */
+/* FACILITY ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH] */
+/* FACILITY QUERY ENABLED | DISABLED  [LONG]                         */
+/* FACILITY QUERY SHORT | LONG | ALL                                 */
+/* FACILITY QUERY <facility> | bit                                   */
+/* FACILITY QUERY RAW                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int facility_cmd( int argc, char* argv[], char* cmdline )
