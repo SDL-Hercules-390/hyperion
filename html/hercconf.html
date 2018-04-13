@@ -45,7 +45,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
-    <a href="#ARCHLVL_FACILITY">ARCHLVL</a>    DISABLE  006_ASN_LX_REUSE
+    <a href="#FACILITY">FACILITY</a>   ENABLE 044_PFPO
 
     <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
     <a href="#ECPSVM">ECPSVM</a>     no  notrap
@@ -233,33 +233,6 @@ a real System/390.  The configuration file is an ASCII text file.
     and is treated as simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
 
-<a name="ARCHLVL_FACILITY"></a>
-<dt><code>ARCHLVL &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archlvl]</em></code>
-<dd><p>
-    Specifies a particular STFL/STFLE facility to be enabled or disabled,
-    or a request to query of the current settings. Use <code>QUERY ALL</code>
-    to obtain a list of valid <code><em>facility</em></code> &nbsp;names
-    that may be used for the given archlvl.
-   <p>
-    Alternatively, you can also specify the actual STFL/STFLE bit number
-    to be turned off or on (disabled or enabled) using the format
-    <code><em>BITnn</em></code> &nbsp;where 'nn' corresponds to the exact
-    STFL/STFLE facility bit you wish to be forced on or off. A popular
-    one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO
-    (Perform Floating-Point Operation Facility) bit on, since, at the time
-    of this writing, it is not currently supported or implemented by Hercules
-    and is thus disabled by default. Specifying <code>ENABLE BIT44</code>
-    turns the bit on anyway allowing your VM system to IPL.
-   <p>
-    The optional <code><em>archlvl</em></code> &nbsp;argument limits the enable,
-    disable or query function to a specific <a href="#ARCHLVL">architecture</a>.
-    It should be noted that attempts to enable or disable a facility that a given
-    architecture does not support are ignored without error. The default value is
-    the value that was set by a preceding <a href="#ARCHLVL">ARCHLVL</a> statement
-    or the default mode if there was no preceding ARCHLVL statement.
-   <p>
-
-
 <a name="ASN_AND_LX_REUSE"></a>
 <dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
 <dd><p>
@@ -277,7 +250,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>.
     <p>
     <b>Note:</b> The <code>ASN_AND_LX_REUSE</code> statement has been superseded
-    by "<code>ARCHLVL ENABLE/DISABLE 006_ASN_LX_REUSE</code>" and is thus deprecated.
+    by "<code>FACILITY ENABLE/DISABLE 006_ASN_LX_REUSE</code>" and is thus deprecated.
     Existing <code>ASN_AND_LX_REUSE</code> or <code>ALRF</code> statements
     should be changed to use the new <a href="#ARCHLVL_FACILITY">ARCHLVL
     facility</a> statement format instead.
@@ -862,6 +835,32 @@ a real System/390.  The configuration file is an ASCII text file.
     engines are ignored. If fewer than MAXCPU engines are specified, the
     remaining engines are set to type CP.
     <p>
+
+<a name="FACILITY"></a>
+<dt><code>FACILITY &nbsp; ENABLE &#124; DISABLE &#124; QUERY &nbsp;<em>facility</em> &nbsp;<em>[archlvl]</em></code>
+<dd><p>
+    Specifies a particular STFL/STFLE facility to be enabled or disabled,
+    or a request to query of the current settings. Use <code>QUERY ALL</code>
+    to obtain a list of valid <code><em>facility</em></code> &nbsp;names
+    that may be used for the given archlvl.
+   <p>
+    Alternatively, you can also specify the actual STFL/STFLE bit number
+    to be turned off or on (disabled or enabled) using the format
+    <code><em>BITnn</em></code> &nbsp;where 'nn' corresponds to the exact
+    STFL/STFLE facility bit you wish to be forced on or off. A popular
+    one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO
+    (Perform Floating-Point Operation Facility) bit on, since, at the time
+    of this writing, it is not currently supported or implemented by Hercules
+    and is thus disabled by default. Specifying <code>ENABLE BIT44</code>
+    turns the bit on anyway allowing your VM system to IPL.
+   <p>
+    The optional <code><em>archlvl</em></code> &nbsp;argument limits the enable,
+    disable or query function to a specific <a href="#ARCHLVL">architecture</a>.
+    It should be noted that attempts to enable or disable a facility that a given
+    architecture does not support are accepted without error. The default value is
+    the value that was set by a preceding <a href="#ARCHLVL">ARCHLVL</a> statement
+    or the default mode if there was no preceding ARCHLVL statement.
+   <p>
 
 <a name="HERCPRIO"></a>
 <dt><code>HERCPRIO &nbsp; <u>0</u> &#124; <em>nn</em></code>

@@ -39,21 +39,31 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>Facility names have changed
+  <dt>ARCHLVL and FACILITY command changes
   <dd>
   <p>
-    The name of the facilities as used by the <code>ARCHLVL enable|disable|query</code>
-    command have changed. Previous the facility name was just an abbreviated
-    name for the given facility (e.g. <code>ASN_LX_REUSE</code>). Such names have all been
-    changed to include their associated 3-digit bit number as part of their
-    name. For example, the previously named <code>ASN_LX_REUSE</code> facility has now
-    been renamed to <code>006_ASN_LX_REUSE</code> instead. This was done to ensure the
-    specifed facility was the one you actually meant since many facilities
-    are named similarly to other facilities.
+    The <code><a href="hercconf.html#FACILITY">FACILITY</a></code> command was completely
+    redesigned and rewritten in order to more properly support and enforce the concept
+    of prerequisite facilities (i.e. a facility presuming/requiring some other facility).
+    As part of this rewrite the ARCHLVL command functionality to enable/disable/query
+    facilities was moved into a new separate FACILITY command such that the ARCHLVL command
+    now only deals with aetting/querying the architecture mode. To enable/disable/query
+    facilities, use the new FACILITY command.
+    <p>
+    Additionally, the facility names used in the <code>FACILITY </code> command to
+    enable, disable or query a facility have also been changed. All defined facilities
+    now begin with a 3-digit facility bit number in addition to their abbreviated
+    facility name. This was done to ensure the correct facility was being enabled or
+    disabled due to the similarity of some facility names. For example, the previously
+    named "ASN_LX_REUSE" facility is now named "006_ASN_LX_REUSE".  Similarly, the
+    previously named "PFPO" facility is now named "044_PFPO". 
+  <p>
+    For a detailed list of the new abbreviated (short) facility names,
+    use the "<code>FACILITY QUERY ...</code>" command.
   </p>
 
 
-  <dt>"ASN and LX Reuse" now defaults to enabled
+  <dt>"ASN and LX Reuse" now defaults to enabled for z/Architecture
   <dd>
   <p>
     The "ASN and LX Reuse" facility (STFL bit 6) is now enabled by default
@@ -62,8 +72,8 @@ Hercules: Release Notes
     </p><p>
     In earlier versions of Hercules it defaulted to disabled requiring those
     running z/Architecture guest operating systems to have to manually add
-    an <code>ARCHLVL ENABLE 006_ASN_LX_REUSE</code> statement to their configuration file.
-    Such statements are now no longer necessary.
+    an <code>FACILITY ENABLE 006_ASN_LX_REUSE</code> statement to their
+    configuration file. Such statements are now no longer necessary.
   </p>
 
 
@@ -109,10 +119,10 @@ Hercules: Release Notes
     The sequence of certain configuration file system parameter statements
     may be important. Specifically, the
     <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
-    statement (previously called <code>ARCHMODE</code> and defines the
+    statement (previously called <code>ARCHMODE</code>, and defines the
     initial architectural mode of the system) should generally <i>precede</i>
-    (come before) any other <code>ARCHLVL</code> statement that enables
-    or disables a given architectural feature.
+    (come before) any <code>FACILITY</code> statements that enable
+    or disable a given architectural feature.
   </p>
   <p>
     For example: on certain IBM operating systems the z/Architecture "PFPO
@@ -120,13 +130,13 @@ Hercules: Release Notes
     of this writing Hercules does not currently support the Perform Floating-Point
     Operation (PFPO) Facility, the STFLE facility bit can nonetheless be
     forcibly enabled anyway via the
-    <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL ENABLE BIT44</a></code>
+    <code><a href="hercconf.html#FACILITY">FACILITY ENABLE BIT44</a></code>
     configuration file statement. Since the facility is a z/Architecture-only
     feature however, your initial architecture must either be set to "z/Arch"
     beforehand, or else you need to specify the optional
-    <code><em>[archlvl]</em></code> parameter on your ARCHLVL ENABLE BIT44 statement.
+    <code><em>[archlvl]</em></code> parameter on your FACILITY ENABLE BIT44 statement.
     This usually means your "<code>ARCHLVL z/Arch</code>" statement must come
-    <i>before</i> your "<code>ARCHLVL ENABLE BIT44</code>" statement in your
+    <i>before</i> your "<code>FACILITY ENABLE BIT44</code>" statement in your
     configuration file. Otherwise the PFPO Facility would not get enabled.
   </p>
   <p>
@@ -305,27 +315,6 @@ Hercules: Release Notes
     and HHC01603I audit messages to both the panel and hardcopy logfile,
     but does not otherwise impact in any way what is placed into the instruction's
     response buffer, as was the original intent for this option.
-  </p>
-
-
-  <dt>ARCHLVL facility names have changed
-  <dd>
-  <p>
-    The <code><a href="hercconf.html#ARCHLVL_FACILITY">ARCHLVL</a></code> command was completely redesigned and rewritten in
-    order to more properly support and enforce the concept of prerequisite facilities
-    (i.e. a facility presuming/requiring some other facility). As part of this
-    rewrite the facility names used in the <code>ARCHLVL </code> command to enable,
-    disable or query a facility have been changed.
-  <p>
-    All defined facilities now begin with a 3-digit facility bit number in addition
-    to their abbreviated facility name. This was done to ensure the correct facility
-    was being enabled or disabled due to the similarity of some facility names.
-    For example, the previously named "ASN_LX_REUSE" facility is now named
-    "006_ASN_LX_REUSE".  Similarly, the previously named "PFPO" facility is now
-    named "044_PFPO". 
-  <p>
-    For a detailed list of the new abbreviated (short) facility
-    names, use the "<code>ARCHLVL QUERY [ ALL &#124; LONG ]</code>" command.
   </p>
 
 
