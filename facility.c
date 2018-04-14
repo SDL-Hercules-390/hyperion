@@ -1127,7 +1127,7 @@ enum eQueryType
     eQueryEnabled   = 1,
     eQueryDisabled  = 2
 };
-typedef enum eQuery EQUERY;
+typedef enum eQueryType EQUERY;
 
 #define QUERY_ENABLED( e )      (e == eQueryEnabled )
 #define QUERY_DISABLED( e )     (e == eQueryDisabled)
