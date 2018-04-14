@@ -304,16 +304,16 @@ struct _MPC_PUS                    /*                                */
 /*00B*/      BYTE   lenportname;   /* Length of the port name        */
 /*00C*/      BYTE   portname[8];   /* Port name                      */
 /*014*/      BYTE   linktype;      /* Link type                      */
-#define PUS_LINK_TYPE_FAST_ETH      0x01   /*                        */
-// fine PUS_LINK_TYPE_HSTR          0x02   /*                        */
-#define PUS_LINK_TYPE_GBIT_ETH      0x03   /*                        */
-// fine PUS_LINK_TYPE_OSN           0x04   /*                        */
-#define PUS_LINK_TYPE_10GBIT_ETH    0x10   /*                        */
-// fine PUS_LINK_TYPE_LANE_ETH100   0x81   /*                        */
-// fine PUS_LINK_TYPE_LANE_TR       0x82   /*                        */
-// fine PUS_LINK_TYPE_LANE_ETH1000  0x83   /*                        */
-// fine PUS_LINK_TYPE_LANE          0x88   /*                        */
-// fine PUS_LINK_TYPE_ATM_NATIVE    0x90   /*                        */
+#define QETH_LINK_TYPE_FAST_ETH       0x01   /*                      */
+// fine QETH_LINK_TYPE_HSTR           0x02   /*                      */
+#define QETH_LINK_TYPE_GBIT_ETH       0x03   /*                      */
+// fine QETH_LINK_TYPE_OSN            0x04   /*                      */
+#define QETH_LINK_TYPE_10GBIT_ETH     0x10   /*                      */
+// fine QETH_LINK_TYPE_LANE_ETH100    0x81   /*                      */
+// fine QETH_LINK_TYPE_LANE_TR        0x82   /*                      */
+// fine QETH_LINK_TYPE_LANE_ETH1000   0x83   /*                      */
+// fine QETH_LINK_TYPE_LANE           0x88   /*                      */
+// fine QETH_LINK_TYPE_ATM_NATIVE     0x90   /*                      */
 /*015*/      BYTE   unknown15[3];  /* ???                            */
          } pus_0A;                 /*                                */
 #define SIZE_PUS_0A_A  0x0014      /* Size of MPC_PUS_0A             */
@@ -502,8 +502,27 @@ typedef struct _MPC_IPA {
 #define IPA_QUERY_ARP_ASSIST    0x00040000L  /*     *                */
 #define IPA_INBOUND_TSO         0x00080000L  /*                      */
 #define IPA_OUTBOUND_TSO        0x00100000L  /*                      */
+                                             /*  |  |                */
+                                             /*  |  A zPDT claims    */
+                                             /*  |  ..to support     */
+                                             /*  |  ..these assists. */
+                                             /*  |                   */
+                                             /*  Hercules claims     */
+                                             /*  ..to support        */
+                                             /*  ..these assists.    */
 
+/*  Above is an almost certainly incomplete list of assists that an  */
+/*  OSA-device can claim to support. In Hercules the use of these    */
+/*  assists has only been seen to be requested by guests using       */
+/*  layer 3. Whether any of the assists can be requested by guests   */
+/*  using layer 2 is unknown. A guest requests the use of an assist  */
+/*  with an IPA_CMD_SETADPPARMS (0xB8) command with an               */
+/*  IPA_SAS_CMD_START (0x0001) subcommand. Assist requests are       */
+/*  generally propocol dependant, e.g. IPA_ARP_PROCESSING is only    */
+/*  requested for IPv4.                                              */
 
+/*  Below is the assists that Hercules claims to support.            */
+#if defined(ENABLE_IPV6)
 #define IPA_SUPP ( 0 \
                  | IPA_ARP_PROCESSING \
                  | IPA_IPV6 \
@@ -513,9 +532,18 @@ typedef struct _MPC_IPA {
                  | IPA_INBOUND_PASSTHRU \
                  | IPA_SOURCE_MAC \
                  )
+#else
+#define IPA_SUPP ( 0 \
+                 | IPA_ARP_PROCESSING \
+                 | IPA_MULTICASTING \
+                 | IPA_SETADAPTERPARMS \
+                 | IPA_PASSTHRU \
+                 | IPA_INBOUND_PASSTHRU \
+                 | IPA_SOURCE_MAC \
+                 )
+#endif /*defined(ENABLE_IPV6)*/
 
-
-#define IPA_CMD_STARTLAN  0x01  /* Start LAN operations              */
+#define IPA_CMD_STARTLAN 0x01   /* Start LAN operations              */
 #define IPA_CMD_STOPLAN 0x02    /* Stop LAN operations               */
 #define IPA_CMD_SETVMAC 0x21    /* Set Layer-2 MAC address           */
 #define IPA_CMD_DELVMAC 0x22    /* Delete Layer-2 MAC address        */
@@ -523,6 +551,7 @@ typedef struct _MPC_IPA {
 #define IPA_CMD_DELGMAC 0x24    /* Del Layer-2 Group Multicast addr  */
 #define IPA_CMD_SETVLAN 0x25    /* Set Layer-2 VLAN                  */
 #define IPA_CMD_DELVLAN 0x26    /* Delete Layer-2 VLAN               */
+#define IPA_CMD_SETBRIDGEPORT 0x2B /*                                */
 #define IPA_CMD_SETCCID 0x41    /*                                   */
 #define IPA_CMD_DELCCID 0x42    /*                                   */
 #define IPA_CMD_MODCCID 0x43    /*                                   */
@@ -535,10 +564,12 @@ typedef struct _MPC_IPA {
 #define IPA_CMD_DELIP   0xB7    /* Delete Layer-3 IP unicast addr    */
 #define IPA_CMD_SETADPPARMS 0xB8 /* Various adapter directed sub-cmds*/
 #define IPA_CMD_SETDIAGASS 0xB9 /* Set Layer-3 diagnostic assists    */
+#define IPA_CMD_SETBRIDGEPORTIQD 0xBE /*                             */
 #define IPA_CMD_CREATEADDR 0xC3 /* Create L3 IPv6 addr from L2 MAC   */
 #define IPA_CMD_DESTROYADDR 0xC4 /* Destroy L3 IPv6 addr from L2 MAC */
 #define IPA_CMD_REGLCLADDR 0xD1 /*                                   */
 #define IPA_CMD_UNREGLCLADDR 0xD2 /*                                 */
+#define IPA_CMD_ADDRCHANGENOTIF 0xD3 /*                              */
 
 #define IPA_RC_SUCCESS                   0x0000
 #define IPA_RC_NOTSUPP                   0x0001
@@ -584,7 +615,9 @@ typedef struct _MPC_IPA {
 #define IPA_RC_INVALID_SETRTG_INDICATOR  0xe012
 #define IPA_RC_MC_ADDR_ALREADY_DEFINED   0xe013
 #define IPA_RC_LAN_OFFLINE               0xe080
+#define IPA_RC_VEPA_TO_VEB_TRANSITION    0xe090
 #define IPA_RC_INVALID_IP_VERSION2       0xf001
+#define IPA_RC_NOMEM                     0xfffe
 #define IPA_RC_FFFF                      0xffff
 
 
@@ -620,6 +653,7 @@ typedef struct _MPC_IPA_SAP {
 
 #define IPA_SAP_SUPP ( 0 \
                      | IPA_SAP_QUERY \
+                     | IPA_SAP_CARDINFO \
                      | IPA_SAP_PROMISC \
                      )
 
@@ -639,7 +673,7 @@ typedef struct _MPC_IPA_SAP {
 /*-------------------------------------------------------------------*/
 typedef struct _SAP_QRY {
 /*000*/ FWORD   nlan;           /* Number of Lan types supported     */
-/*004*/ BYTE    rsp;            /* LAN type response                 */
+/*004*/ BYTE    lan_type;       /* LAN type response                 */
 /*005*/ BYTE    resv005[3];
 /*008*/ FWORD   suppcm;         /* Supported commands bit map        */
 /*00A*/ DBLWRD  resv00a;
@@ -670,11 +704,39 @@ typedef struct _SAP_SPM {
     } SAP_SPM;
 
 /*-------------------------------------------------------------------*/
+/* SAP CARDINFO                                                      */
+/*-------------------------------------------------------------------*/
+typedef struct _SAP_SCI {
+/*000*/ BYTE    card_type;      /*                                   */
+// fine QETH_CARD_TYPE_UNKNOWN      0x00     /*                      */
+#define QETH_CARD_TYPE_OSD          0x01     /*                      */
+// fine QETH_CARD_TYPE_OSX          0x02     /*                      */
+// fine QETH_CARD_TYPE_OSM          0x03     /*                      */
+// fine QETH_CARD_TYPE_IQD          0x05     /*                      */
+// fine QETH_CARD_TYPE_OSN          0x06     /*                      */
+/*001*/ BYTE    resv001[1];     /*                                   */
+/*002*/ HWORD   port_mode;      /*                                   */
+// fine QETH_PORT_MODE_HALFDUPLEX   0x0002   /*                      */
+#define QETH_PORT_MODE_FULLDUPLEX   0x0003   /*                      */
+/*004*/ FWORD   port_speed;     /*                                   */
+#define QETH_PORT_SPEED_10M       0x00000005 /*                      */
+// fine QETH_PORT_SPEED_100M      0x00000006 /*                      */
+// fine QETH_PORT_SPEED_1G        0x00000007 /*                      */
+// fine QETH_PORT_SPEED_10G       0x00000008 /*                      */
+/*008*/ BYTE    resv008[4];     /*                                   */
+    } SAP_SCI;
+
+/*-------------------------------------------------------------------*/
 /* Set Assist Parameters                                             */
 /*-------------------------------------------------------------------*/
 struct MPC_IPA_SAS_HDR {
 /*000*/ FWORD   ano;            /* Assist number                     */
 /*004*/ HWORD   len;            /* Length                            */
+                                /* Note: The length value is the     */
+                                /* total length of the length field  */
+                                /* and the following fields. It does */
+                                /* not include the length of the     */
+                                /* preceeding assist number field.   */
 /*006*/ HWORD   cmd;            /* Command code                      */
 #define IPA_SAS_CMD_START      0x0001
 #define IPA_SAS_CMD_STOP       0x0002

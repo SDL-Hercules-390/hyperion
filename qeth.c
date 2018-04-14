@@ -25,20 +25,21 @@
 /*                 debug                                             */
 /*                                                                   */
 /* When using a bridged configuration no parameters are required     */
-/* on the QETH device statement.  The tun device will in that case   */
+/* on the QETH device statement.  The tap device will in that case   */
 /* need to be  bridged to another virtual or real ethernet adapter.  */
 /* e.g.                                                              */
 /* 0A00.3 QETH                                                       */
-/* The tun device will need to be bridged e.g.                       */
-/* brctl addif <bridge> tun0                                         */
+/* The tap device will need to be bridged e.g.                       */
+/* brctl addif <bridge> tap0                                         */
 /*                                                                   */
-/* When using a routed configuration the tun device needs to have    */
+/* When using a routed configuration the tap device needs to have    */
 /* an IP address assigned in the same subnet as the guests virtual   */
 /* eth adapter.                                                      */
 /* e.g.                                                              */
 /* 0A00.3 QETH ipaddr 192.168.10.1                                   */
 /* where the guest can then use any other IP address in the          */
 /* 192.168.10 range                                                  */
+/*                                                                   */
 /*                                                                   */
 /* zLinux defines which three devices addresses are used for what    */
 /* purpose depending on on the distribution.                         */
@@ -103,6 +104,7 @@
 /* captured trace data to TCP/IP.                                    */
 /* - Any OSE CHPID requires two devices (read and write) for each    */
 /* TCP/IP. SNA requires one device.                                  */
+/*                                                                   */
 
 #include "hstdinc.h"
 
@@ -1445,6 +1447,9 @@ U16 offph;
             U32      lendata;
 //          U32      ackseq;
 
+            U16      proto;
+            char     protoc[10];
+
             /* Allocate a buffer to which the request will be copied */
             /* and then modified, to become the response.            */
             FETCH_FW(rqsize,req_th->length);
@@ -1474,20 +1479,36 @@ U16 offph;
             rsp_rrh->proto = PROTOCOL_UNKNOWN;
             memcpy( rsp_rrh->token, grp->gtulpconn, MPC_TOKEN_LENGTH );
 
+            /* Make a note of the protocol the request relates to. */
+            FETCH_HW(proto,ipa->proto);
+            if (proto == IPA_PROTO_IPV4) {
+                strcpy( protoc, " (IPv4)" );
+            } else if (proto == IPA_PROTO_IPV6) {
+                strcpy( protoc, " (IPv6)" );
+            } else {
+                strcpy( protoc, "" );
+            }
+
             switch(ipa->cmd) {
 
             case IPA_CMD_STARTLAN:  /* 0x01 */
-                /* Note: the MPC_IPA may be 16-bytes in length, not 20-bytes. */
-                strcat( dev->dev_data, ": IPA_CMD_STARTLAN" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
+                /* Note: the request MPC_IPA may be 16 or 20-bytes in length  */
+                /* with nothing following, or may be 20-byte in length with   */
+                /* an unpredictable number of bytes following. The response   */
+                /* MPC_IPA we return is always 16-bytes in length with        */
+                /* nothing following. There was a reason for this, I just     */
+                /* wish, I could remember what it was! Something to do with   */
+                /* z/VM TCPIP I think, but...                                 */
                 {
                 U32  uLoselen;
                 U32  uLength1;
                 U32  uLength3;
+
+                    strcat( dev->dev_data, ": IPA_CMD_STARTLAN" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     if (lendata > SIZE_IPA_SHORT) {
                         uLoselen = lendata - SIZE_IPA_SHORT;
@@ -1501,121 +1522,46 @@ U16 offph;
                     }
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
-                    grp->ipae |= IPA_SETADAPTERPARMS;
+                    grp->ipae0 |= IPA_SETADAPTERPARMS;
+                    grp->ipae4 |= IPA_SETADAPTERPARMS;
+                    grp->ipae6 |= IPA_SETADAPTERPARMS;
 
                     /* Enable the TUN or TAP interface */
                     VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
+                /* end case IPA_CMD_STARTLAN:  0x01 */
                 break;
 
             case IPA_CMD_STOPLAN:  /* 0x02 */
-                strcat( dev->dev_data, ": IPA_CMD_STOPLAN" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
+                    strcat( dev->dev_data, ": IPA_CMD_STOPLAN" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     STORE_HW(ipa->rc,IPA_RC_OK);
-                    grp->ipae &= ~IPA_SETADAPTERPARMS;
+                    grp->ipae0 &= ~IPA_SETADAPTERPARMS;
+                    grp->ipae4 &= ~IPA_SETADAPTERPARMS;
+                    grp->ipae6 &= ~IPA_SETADAPTERPARMS;
 
                     /* Disable the TUN or TAP interface */
                     VERIFY( qeth_disable_interface( dev, grp ) == 0);
                 }
+                /* end case IPA_CMD_STOPLAN:  0x02 */
                 break;
 
-            case IPA_CMD_SETADPPARMS:  /* 0xB8 */
-                strcat( dev->dev_data, ": IPA_CMD_SETADPPARMS" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
-                {
-                MPC_IPA_SAP *sap = (MPC_IPA_SAP*)(ipa+1);
-                U32 cmd;
-
-                    FETCH_FW(cmd,sap->cmd);
-                    switch(cmd) {
-
-                    case IPA_SAP_QUERY:  /*0x00000001 */
-                        {
-                        SAP_QRY *qry = (SAP_QRY*)(sap+1);
-                            STORE_FW(qry->suppcm,IPA_SAP_SUPP);
-// STORE_FW(qry->suppcm, 0xFFFFFFFF); /* ZZ */
-                            STORE_HW(sap->rc,IPA_RC_OK);
-                            STORE_HW(ipa->rc,IPA_RC_OK);
-                        }
-                        break;
-
-                    case IPA_SAP_SETMAC:     /* 0x00000002 */
-                        {
-                        SAP_SMA *sma = (SAP_SMA*)(sap+1);
-                        U32 cmd;
-
-                            FETCH_FW(cmd,sma->cmd);
-                            switch(cmd) {
-
-                            case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
-                                STORE_FW(sap->resv004,0x93020000);  /* !!!! */
-                                STORE_FW(sma->asize,IFHWADDRLEN);
-                                STORE_FW(sma->nomacs,1);
-                                memcpy(sma->addr, grp->iMAC, IFHWADDRLEN);
-                                STORE_HW(sap->rc,IPA_RC_OK);
-                                STORE_HW(ipa->rc,IPA_RC_OK);
-                                break;
-
-//                          case IPA_SAP_SMA_CMD_REPLACE:  /* 1 */
-//                          case IPA_SAP_SMA_CMD_ADD:  /* 2 */
-//                          case IPA_SAP_SMA_CMD_DEL:  /* 4 */
-//                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
-
-                            default:
-                                DBGTRC(dev, "  Unknown SET_SAP_MAC subcommand 0x%08x",cmd);
-                                STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-                                STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-                            }
-                        }
-                        break;
-
-                    case IPA_SAP_PROMISC:    /* 0x00000800 */
-                        {
-                        SAP_SPM *spm = (SAP_SPM*)(sap+1);
-                        U32 promisc;
-                            FETCH_FW(promisc,spm->promisc);
-                            grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
-                            DBGTRC(dev, "  IPA_SAP_PROMISC %s",grp->promisc ? "On" : "Off");
-                            STORE_HW(sap->rc,IPA_RC_OK);
-                            STORE_HW(ipa->rc,IPA_RC_OK);
-                        }
-                        break;
-
-                    case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        STORE_HW(sap->rc,IPA_RC_OK);
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                        break;
-
-                    default:
-                        DBGTRC(dev, "  Unknown IPA_CMD_SETADPPARMS command 0x%08x",cmd);
-                        STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-                        STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-                    }
-                }
-                /* end case IPA_CMD_SETADPPARMS: */
-                break;
-
-            case IPA_CMD_SETVMAC:  /* 0x25 */
-                strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
+            case IPA_CMD_SETVMAC:  /* 0x21 */
                 {
                     MPC_IPA_MAC*  ipa_mac  = (MPC_IPA_MAC*) (ipa+1);
                     char*         pszMAC;
                     int           rc = 0;
+
+                    strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     VERIFY( FormatMAC( &pszMAC, ipa_mac->macaddr ) == 0);
                     DBGTRC(dev, "  IPA_CMD_SETVMAC: ifname=%s hwaddr=%s\n",
@@ -1645,31 +1591,37 @@ U16 offph;
                         grp->tthwaddr = pszMAC;
                         unregister_mac( grp, dev, grp->iMAC, MAC_TYPE_UNICST, FALSE );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-#else // (Linux tuntap)
-                    free( pszMAC );  // (no longer needed)
-                    {
 
-#endif // (Windows CTCI-WIN or Linux tuntap)
+#endif // (Windows CTCI-WIN)
 
                         rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
 
                              if (rc == -1) STORE_HW( ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL );
                         else if (rc ==  1) STORE_HW( ipa->rc, IPA_RC_L2_DUP_MAC         );
                         else               STORE_HW( ipa->rc, IPA_RC_SUCCESS            );
+
+#if defined( OPTION_W32_CTCI )  // (Windows CTCI-WIN)
+
                     }
+
+#endif // (Windows CTCI-WIN)
+
+                    free( pszMAC );
                 }
+                /* end case IPA_CMD_SETVMAC:  0x21 */
                 break;
 
-            case IPA_CMD_DELVMAC:  /* 0x26 */
-                strcat( dev->dev_data, ": IPA_CMD_DELVMAC" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
+            case IPA_CMD_DELVMAC:  /* 0x22 */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
+
+                    strcat( dev->dev_data, ": IPA_CMD_DELVMAC" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     rc = unregister_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST, TRUE);
                     if (rc == 1) {           /* MAC address not in table */
                         STORE_HW(ipa->rc, IPA_RC_L2_MAC_NOT_FOUND);
@@ -1677,18 +1629,20 @@ U16 offph;
                         STORE_HW(ipa->rc, IPA_RC_SUCCESS);
                     }
                 }
+                /* end case IPA_CMD_DELVMAC:  0x22 */
                 break;
 
             case IPA_CMD_SETGMAC:  /* 0x23 */
-                strcat( dev->dev_data, ": IPA_CMD_SETGMAC" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
+
+                    strcat( dev->dev_data, ": IPA_CMD_SETGMAC" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_MLTCST);
                     if (rc == -1) {          /* MAC table full */
                         STORE_HW(ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL);
@@ -1698,18 +1652,20 @@ U16 offph;
                         STORE_HW(ipa->rc, IPA_RC_SUCCESS);
                     }
                 }
+                /* end case IPA_CMD_SETGMAC:  0x23 */
                 break;
 
             case IPA_CMD_DELGMAC:  /* 0x24 */
-                strcat( dev->dev_data, ": IPA_CMD_DELGMAC" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
+
+                    strcat( dev->dev_data, ": IPA_CMD_DELGMAC" );  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     rc = unregister_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_MLTCST, TRUE);
                     if (rc == 1) {           /* MAC address not in table */
                         STORE_HW(ipa->rc, IPA_RC_L2_GMAC_NOT_FOUND);
@@ -1717,22 +1673,51 @@ U16 offph;
                         STORE_HW(ipa->rc, IPA_RC_SUCCESS);
                     }
                 }
+                /* end case IPA_CMD_DELGMAC:  0x24 */
+                break;
+
+            case IPA_CMD_SETVLAN:  /* 0x25 */
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_SETVLAN" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );               /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_SETVLAN:  0x25 */
+                break;
+
+            case IPA_CMD_DELVLAN:  /* 0x26 */
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_DELVLAN" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );               /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_DELVLAN:  0x26 */
                 break;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
-                strcat( dev->dev_data, ": IPA_CMD_SETIP" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
-                U16  proto, retcode;
+                U16  retcode;
                 int  rc;
                 U32  flags;
 
-                    FETCH_HW(proto,ipa->proto);
+                    strcat( dev->dev_data, ": IPA_CMD_SETIP" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );             /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     retcode = IPA_RC_OK;
 
                     if (proto == IPA_PROTO_IPV4)
@@ -1754,14 +1739,15 @@ U16 offph;
                             retcode = IPA_RC_SUCCESS;
                         }
 
-                        /* Save guest IPv4 address and netmask*/
+                        /* Save guest IPv4 address and netmask. */
                         MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
                                                     ipa_sip->data.ip4.addr[1],
                                                     ipa_sip->data.ip4.addr[2],
                                                     ipa_sip->data.ip4.addr[3]);
-                        /* Note: ipa_sip->data.ip4.mask usually contains */
-                        /* 0xFFFFFF00, irrespective of the subnet mask   */
-                        /* that the guest is actually using.             */
+                        /* Note: ipa_sip->data.ip4.mask often contains */
+                        /* 0xFFFFFF00, irrespective of the subnet mask */
+                        /* the guest is actually using, particularly   */
+                        /* when the guest is Linux.                    */
                         MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
                                                     ipa_sip->data.ip4.mask[1],
                                                     ipa_sip->data.ip4.mask[2],
@@ -1798,6 +1784,7 @@ U16 offph;
 #if defined(ENABLE_IPV6)
                     else if (proto == IPA_PROTO_IPV6)
                     {
+
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
                       if (flags == IPA_SIP_DEFAULT)
                       {
@@ -1816,6 +1803,7 @@ U16 offph;
                         // for which there doesn't appear to be an IPv6 equivalent.
                         // The concept of peer IPv6 addresses doesn't seem to exist,
                         // presumably one is supposed to use routing.
+
                       }
                     }
 #endif /*defined(ENABLE_IPV6)*/
@@ -1826,26 +1814,29 @@ U16 offph;
 
                     STORE_HW(ipa->rc,retcode);
                 }
+                /* end case IPA_CMD_SETIP:  0xB1 */
                 break;
 
             case IPA_CMD_QIPASSIST:  /* 0xB2 */
-                strcat( dev->dev_data, ": IPA_CMD_QIPASSIST" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
+                {
 
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+                    strcat( dev->dev_data, ": IPA_CMD_QIPASSIST" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                 /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
 
-                grp->ipae |= IPA_SETADAPTERPARMS;
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    grp->ipae0 |= IPA_SETADAPTERPARMS;
+                    grp->ipae4 |= IPA_SETADAPTERPARMS;
+                    grp->ipae6 |= IPA_SETADAPTERPARMS;
+
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_QIPASSIST:  0xB2 */
                 break;
 
             case IPA_CMD_SETASSPARMS:  /* 0xB3 */
-                strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 MPC_IPA_SAS *sas = (MPC_IPA_SAS*)(ipa+1);
                 U32 ano;
@@ -1853,6 +1844,40 @@ U16 offph;
 
                     FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
+
+                    strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );        /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                         /* Prepare the contentstring */
+                    switch(cmd) {
+                    case IPA_SAS_CMD_START:      /* 0x0001 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_START" );      /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_STOP:       /* 0x0002 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_STOP" );       /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_CONFIGURE" );  /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_ENABLE" );     /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_0005:       /* 0x0005 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_0005" );       /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_0006:       /* 0x0006 */
+                        strcat( dev->dev_data, ": IPA_SAS_CMD_0006" );       /* Prepare the contentstring */
+                        break;
+                    default:
+                        {
+                        char subcmd_not_supp[12];
+                            snprintf( subcmd_not_supp, sizeof(subcmd_not_supp), " (0x%04X)", cmd );
+                            strcat( dev->dev_data, ": SUBCMD NOT SUPPORTED" );  /* Prepare the contentstring */
+                            strcat( dev->dev_data, subcmd_not_supp );           /* Prepare the contentstring */
+                        }
+                    }
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     if (!(ano & grp->ipas)) {
                         STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
@@ -1862,13 +1887,25 @@ U16 offph;
                     switch(cmd) {
 
                     case IPA_SAS_CMD_START:      /* 0x0001 */
-                        grp->ipae |= ano;
+                        if (proto == IPA_PROTO_IPV4) {
+                            grp->ipae4 |= ano;
+                        } else if (proto == IPA_PROTO_IPV6) {
+                            grp->ipae6 |= ano;
+                        } else {
+                            grp->ipae6 |= ano;
+                        }
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
-                        grp->ipae &= (0xFFFFFFFF - ano);
+                        if (proto == IPA_PROTO_IPV4) {
+                            grp->ipae4 &= (0xFFFFFFFF - ano);
+                        } else if (proto == IPA_PROTO_IPV6) {
+                            grp->ipae6 &= (0xFFFFFFFF - ano);
+                        } else {
+                            grp->ipae0 &= (0xFFFFFFFF - ano);
+                        }
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
@@ -1882,59 +1919,71 @@ U16 offph;
                         break;
 
                     default:
-                        DBGTRC(dev, "  Unknown IPA_CMD_SETASSPARMS command 0x%04X", cmd);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                     }
+
                 }
-                /* end case IPA_CMD_SETASSPARMS: */
+                /* end case IPA_CMD_SETASSPARMS:  0xB3 */
                 break;
 
             case IPA_CMD_SETIPM:  /* 0xB4 */
-                strcat( dev->dev_data, ": IPA_CMD_SETIPM" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_SETIPM" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
 
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_SETIPM:  0xB4 */
                 break;
 
             case IPA_CMD_DELIPM:  /* 0xB5 */
-                strcat( dev->dev_data, ": IPA_CMD_DELIPM" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_DELIPM" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
 
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_DELIPM:  0xB5 */
                 break;
 
             case IPA_CMD_SETRTG:  /* 0xB6 */
-                strcat( dev->dev_data, ": IPA_CMD_SETRTG" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_SETRTG" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
 
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_DELIPM:  0xB6 */
                 break;
 
             case IPA_CMD_DELIP:  /* 0xB7 */
-                strcat( dev->dev_data, ": IPA_CMD_DELIP" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
-                U16  proto, retcode;
+                U16  retcode;
                 int  rc;
                 U32  flags;
 
+                    strcat( dev->dev_data, ": IPA_CMD_DELIP" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );             /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                     retcode = IPA_RC_OK;
-                    FETCH_HW(proto,ipa->proto);
 
                     if (proto == IPA_PROTO_IPV4)
                     {
@@ -1966,6 +2015,7 @@ U16 offph;
                         } else {                 /* IP address removed from to table */
                           retcode = IPA_RC_SUCCESS;
                         }
+
                       }
                     }
 #endif /*defined(ENABLE_IPV6)*/
@@ -1976,17 +2026,178 @@ U16 offph;
 
                     STORE_HW(ipa->rc,retcode);
                 }
+                /* end case IPA_CMD_DELIP:  0xB7 */
+                break;
+
+            case IPA_CMD_SETADPPARMS:  /* 0xB8 */
+                {
+                MPC_IPA_SAP *sap = (MPC_IPA_SAP*)(ipa+1);
+                U32 cmd;
+
+                    strcat( dev->dev_data, ": IPA_CMD_SETADPPARMS" );    /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                     /* Prepare the contentstring */
+                    FETCH_FW(cmd,sap->cmd);
+                    switch(cmd) {
+                    case IPA_SAP_QUERY:      /* 0x00000001 */
+                        strcat( dev->dev_data, ": IPA_SAP_QUERY" );      /* Prepare the contentstring */
+                        break;
+                    case IPA_SAP_SETMAC:     /* 0x00000002 */
+                        strcat( dev->dev_data, ": IPA_SAP_SETMAC" );     /* Prepare the contentstring */
+                        break;
+//                  case IPA_SAP_SETGADR:    /* 0x00000004 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETGADR" );    /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_SETFADR:    /* 0x00000008 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETFADR" );    /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_SETAMODE:   /* 0x00000010 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETAMODE" );   /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_SETCFG:     /* 0x00000020 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETCFG" );     /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_SETCFGE:    /* 0x00000040 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETCFGE" );    /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_BRDCST:     /* 0x00000080 */
+//                      strcat( dev->dev_data, ": IPA_SAP_BRDCST" );     /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_OSAMSG:     /* 0x00000100 */
+//                      strcat( dev->dev_data, ": IPA_SAP_OSAMSG" );     /* Prepare the contentstring */
+//                      break;
+//                  case IPA_SAP_SETSNMP:    /* 0x00000200 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETSNMP" );    /* Prepare the contentstring */
+//                      break;
+                    case IPA_SAP_CARDINFO:   /* 0x00000400 */
+                        strcat( dev->dev_data, ": IPA_SAP_CARDINFO" );   /* Prepare the contentstring */
+                        break;
+                    case IPA_SAP_PROMISC:    /* 0x00000800 */
+                        strcat( dev->dev_data, ": IPA_SAP_PROMISC" );    /* Prepare the contentstring */
+                        break;
+//                  case IPA_SAP_SETDIAG:    /* 0x00002000 */
+//                      strcat( dev->dev_data, ": IPA_SAP_SETDIAG" );    /* Prepare the contentstring */
+//                      break;
+                    case IPA_SAP_SETACCESS:  /* 0x00010000 */
+                        strcat( dev->dev_data, ": IPA_SAP_SETACCESS" );  /* Prepare the contentstring */
+                        break;
+                    default:
+                        {
+                        char subcmd_not_supp[12];
+                            snprintf( subcmd_not_supp, sizeof(subcmd_not_supp), " (0x%04X)", cmd );
+                            strcat( dev->dev_data, ": SUBCMD NOT SUPPORTED" );  /* Prepare the contentstring */
+                            strcat( dev->dev_data, subcmd_not_supp );           /* Prepare the contentstring */
+                        }
+                    }
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    switch(cmd) {
+
+                    case IPA_SAP_QUERY:  /*0x00000001 */
+                        {
+                        SAP_QRY *qry = (SAP_QRY*)(sap+1);
+
+                            STORE_FW(qry->nlan,0x00000001);
+                            qry->lan_type = QETH_LINK_TYPE_FAST_ETH;
+                            STORE_FW(qry->suppcm,IPA_SAP_SUPP);
+                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa->rc,IPA_RC_OK);
+                        }
+                        break;
+
+                    case IPA_SAP_SETMAC:  /* 0x00000002 */
+                        {
+                        SAP_SMA *sma = (SAP_SMA*)(sap+1);
+                        U32 cmd;
+
+                            FETCH_FW(cmd,sma->cmd);
+                            switch(cmd) {
+
+                            case IPA_SAP_SMA_CMD_READ:  /* 0 */
+                                STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
+                                STORE_FW(sap->resv004,0x93020000);  /* !!!! */
+                                STORE_FW(sma->asize,IFHWADDRLEN);
+                                STORE_FW(sma->nomacs,1);
+                                memcpy(sma->addr, grp->iMAC, IFHWADDRLEN);
+                                STORE_HW(sap->rc,IPA_RC_OK);
+                                STORE_HW(ipa->rc,IPA_RC_OK);
+                                break;
+
+//                          case IPA_SAP_SMA_CMD_REPLACE:  /* 1 */
+//                          case IPA_SAP_SMA_CMD_ADD:  /* 2 */
+//                          case IPA_SAP_SMA_CMD_DEL:  /* 4 */
+//                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
+
+                            default:
+                                DBGTRC(dev, "  Unknown SET_SAP_MAC subcommand 0x%08x",cmd);
+                                STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                                STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                            }
+                        }
+                        break;
+
+                    case IPA_SAP_CARDINFO:  /* 0x00000400 */
+                        {
+                        SAP_SCI *sci = (SAP_SCI*)(sap+1);
+                            sci->card_type = QETH_CARD_TYPE_OSD;
+                            STORE_HW(sci->port_mode,QETH_PORT_MODE_FULLDUPLEX);
+                            STORE_FW(sci->port_speed,QETH_PORT_SPEED_10M);
+                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa->rc,IPA_RC_OK);
+                        }
+                        break;
+
+                    case IPA_SAP_PROMISC:  /* 0x00000800 */
+                        {
+                        SAP_SPM *spm = (SAP_SPM*)(sap+1);
+                        U32 promisc;
+                            FETCH_FW(promisc,spm->promisc);
+                            grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
+                            DBGTRC(dev, "  IPA_SAP_PROMISC %s",grp->promisc ? "On" : "Off");
+                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa->rc,IPA_RC_OK);
+                        }
+                        break;
+
+                    case IPA_SAP_SETACCESS:  /* 0x00010000 */
+                        STORE_HW(sap->rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        break;
+
+                    default:
+                        STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                        STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                    }
+                }
+                /* end case IPA_CMD_SETADPPARMS:  0xB8 */
+                break;
+
+            case IPA_CMD_SETDIAGASS:  /* 0xB9 */
+                {
+                    strcat( dev->dev_data, ": IPA_CMD_SETDIAGASS" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    STORE_HW(ipa->rc,IPA_RC_OK);
+                }
+                /* end case IPA_CMD_SETDIAGASS:  0xB9 */
                 break;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
-                strcat( dev->dev_data, ": IPA_CMD_CREATEADDR" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
                 {
                 BYTE *ip6 = (BYTE*)(ipa+1);
+
+                    strcat( dev->dev_data, ": IPA_CMD_CREATEADDR" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                  /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     /* Return the values that the guest wiil use to create   */
                     /* the low-order 64-bits of the IPv6 link local address. */
@@ -1997,30 +2208,45 @@ U16 offph;
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
                 }
-                break;
-
-            case IPA_CMD_SETDIAGASS:  /* 0xB9 */
-                strcat( dev->dev_data, ": IPA_CMD_SETDIAGASS" );  /* Prepare the contentstring */
-                rsp_bhr->content = strdup( dev->dev_data );
-
-                /* Display the request MPC_TH etc., maybe. */
-                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
-
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                /* end case IPA_CMD_CREATEADDR:  0xC3 */
                 break;
 
             default:
-                DBGTRC(dev, "  Unknown RRH_TYPE_IPA command 0x%02X\n",ipa->cmd);
-                STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
+                {
+                char cmd_not_supp[10];
+
+                    snprintf( cmd_not_supp, sizeof(cmd_not_supp), " (0x%02X)", ipa->cmd );
+                    strcat( dev->dev_data, ": CMD NOT SUPPORTED" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, cmd_not_supp );           /* Prepare the contentstring */
+                    rsp_bhr->content = strdup( dev->dev_data );
+
+                    /* Display the request MPC_TH etc., maybe. */
+                    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                    STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
+                }
             }
             /* end switch(ipa->cmd) */
 
 //          ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
             ipa->iid = IPA_IID_HOST;
-            grp->ipae &= grp->ipas;
             STORE_FW(ipa->ipas,grp->ipas);
-            if (lendata >= SIZE_IPA)
-                STORE_FW(ipa->ipae,grp->ipae);
+            if (proto == IPA_PROTO_IPV4) {
+                grp->ipae4 &= grp->ipas;
+                if (lendata >= SIZE_IPA) {
+                    STORE_FW(ipa->ipae,grp->ipae4);
+                }
+            } else if (proto == IPA_PROTO_IPV6) {
+                grp->ipae6 &= grp->ipas;
+                if (lendata >= SIZE_IPA) {
+                    STORE_FW(ipa->ipae,grp->ipae6);
+                }
+            } else {
+                grp->ipae0 &= grp->ipas;
+                if (lendata >= SIZE_IPA) {
+                    STORE_FW(ipa->ipae,grp->ipae0);
+                }
+            }
 
             // Add response buffer to chain.
             add_buffer_to_chain( &grp->idx, rsp_bhr );
@@ -2034,6 +2260,7 @@ U16 offph;
         WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                "Unknown RHH_TYPE_xxx" );
         net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
+
     }
     /* end switch(req_rrh->type) */
 }
@@ -2120,7 +2347,9 @@ U16 reqtype;
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
         grp->ipas = IPA_SUPP;
-        grp->ipae = 0;
+        grp->ipae0 = 0;
+        grp->ipae4 = 0;
+        grp->ipae6 = 0;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
@@ -2883,7 +3112,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
                 // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
                 WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                 cPktType, datalen, "layer 3 response" );
-                net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );
+/*              net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );    */
                 net_data_trace( dev, bufdata, datalen, TO_GUEST, 'D', "Packet", 0 );
             }
 
@@ -3026,9 +3255,9 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* the guest sends out a NS, this function sends the packet over the  */
         /* tun to the host, whereupon the host duly ignores the packet. Hence */
         /* this function, and function process_l3_icmpv6_packet, responds to  */
-        /* the NS with a NA. It seems that the NA must contain a link layer   */
+        /* the NS with a NA. It seems that the NA must contain a link local   */
         /* address, otherwise the guest ignores the packet. However, after    */
-        /* the guest has received an NA with a link layer address every IPv6  */
+        /* the guest has received an NA with a link local address every IPv6  */
         /* packet from the guest is an Ethernet frame containing the IPv6     */
         /* packet. Perhaps that's how OSD's actually work? IPv6 packets to    */
         /* the guest don't need to be Ethernet frames.                        */
@@ -3679,6 +3908,7 @@ U32 mask4;
         char    *p;
         static const BYTE zeromac[IFHWADDRLEN] = {0};
 
+#if defined( OPTION_W32_CTCI )
         /* The 'ipaddr' and 'netmask' are REQUIRED parameters */
         if (!grp->ttipaddr)
         {
@@ -3692,6 +3922,7 @@ U32 mask4;
             WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "netmask" );
             retcode = -1;
         }
+#endif /*defined( OPTION_W32_CTCI )*/
 
         /* If no tuntap device was specified use the defined default */
         if (!grp->ttdev)
@@ -5515,7 +5746,7 @@ U16 uLength4;
     memcpy( rsp_pus_0A, req_pus_0A, len_req_pus_0A );
     STORE_HW( rsp_pus_0A->length, len_rsp_pus_0A );
     STORE_HW( rsp_pus_0A->vc.pus_0A.mtu, grp->uMTU );
-    rsp_pus_0A->vc.pus_0A.linktype = PUS_LINK_TYPE_FAST_ETH;
+    rsp_pus_0A->vc.pus_0A.linktype = QETH_LINK_TYPE_FAST_ETH;
 
     return rsp_bhr;
 }
@@ -6009,7 +6240,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         iMAC[0] |= 0x02;  /* Set local assignment bit. */
         memcpy( grp->iaDriveMACAddr, iMAC, IFHWADDRLEN );
         snprintf( grp->szDriveMACAddr, sizeof(grp->szDriveMACAddr),
-                  "%02X:%02X:%02X:%02X:%02X:%02X",
+                  "%02x:%02x:%02x:%02x:%02x:%02x",
                   iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
         /* Create a Driver Link Local address from the Driver MAC address */
         addr6.s6_addr[0] = 0xFE;
@@ -6232,7 +6463,7 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
         icmpre[0] = 0x88;                    /* Neighbor Advertisment  0x88 = 136 */
         icmpre[4] = 0x60;                    /* Solicited & Override flags */
         memcpy( &icmpre[8], &icmp[8], 16 );  /* Target IP address */
-        icmpre[24] = 0x02;                   /* Target link layer option */
+        icmpre[24] = 0x02;                   /* Target link local option */
         icmpre[25] = 0x01;                   /* Length of option in 8-byte units */
         memcpy( &icmpre[26], grp->iaDriveMACAddr, IFHWADDRLEN );
 

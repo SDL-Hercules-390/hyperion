@@ -204,7 +204,7 @@ typedef struct _OSA_GRP {
     int   promisc;              /* Adapter is in promiscuous mode    */
 
     int   enabled;              /* Interface is enabled (IFF_UP)     */
-    
+
     u_int debugmask;            /* Debug mask                        */
 
 #define DBGQETHPACKET   0x00000001  /* Packet                        */
@@ -247,7 +247,9 @@ typedef struct _OSA_GRP {
     U32   seqnumcm;             /* MPC_RRH sequence number cm        */
 
     U32   ipas;                 /* Supported IP assist mask          */
-    U32   ipae;                 /* Enabled IP assist mask            */
+    U32   ipae0;                /* Enabled IP assist mask            */
+    U32   ipae4;                /* Enabled IP assist mask IPv4       */
+    U32   ipae6;                /* Enabled IP assist mask IPv6       */
     U32   iir;                  /* Interface ID record               */
 
     BYTE  iMAC[IFHWADDRLEN];    /* MAC of the interface              */
