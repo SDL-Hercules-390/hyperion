@@ -9,11 +9,19 @@
 This version of Hercules 4.0 Hyperion links with several "external package"
 static libraries.
 
-Unless you have a need to modify or debug an external package, you do *NOT*
-need to build any of the external packages in order to build Hercules. Just
-build Hercules like normal. Hercules is distributed with pre-built external
-packages as part of its source code repository eliminating the need to build
-any of the external packages yourself. Just build Hercules and you're done.
+In most situations, unless you have a need to modify or debug an external
+package or your system is "unusual" in some way, you should *NOT* need to
+build any of the external packages in order to build Hercules. Just build
+Hercules like normal. Hercules is distributed with pre-built external packages
+as part of its source code repository that ideally SHOULD (but in certain
+situations, may not) work just fine for most people as-is, thus eliminating
+the need to build any of the external packages yourself. Just build Hercules
+and you're done.
+
+In some unusual situations however, you MIGHT need to rebuild ALL existing
+external packages for your particular system. Exactly what those situations
+are and what causes them to occur is unclear, but one thing is certain: it
+will never hurt to build all of the external packages anyway just to be safe.
 
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only

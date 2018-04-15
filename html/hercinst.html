@@ -45,34 +45,6 @@ Hercules: Installation and Operation
 <p><hr><a name="install"></a>
 <h2>Building and Installing</h2>
 
-<h3>Building External Packages</h3>
-
-Hercules links with several pre-built "External Package" static link libraries
-that have been pre-built for you and come distributed with Hercules (i.e. they
-are a part of the Hercules repository).
-
-<br /><br />
-
-Currently all of the external package static link libraries for the Intel x86
-(32-bit) and x64 (64-bit) architectures for both Windows and Linux for both
-normal optimized Release builds as well as unoptimized Debug builds are already
-provided as part of the distribution.  Thus to build Hercules you should not
-need to do anything special.  Simply build Hercules just as you normally would.
-
-<br /><br />
-
-If you wish to modify or debug any of the external packages themselves (or need
-to build a non-Intel x86/x64 architecture build of Hercules such as arm, mips,
-ppc, sparc, xscale, etc) however, then you will need to manually build each of
-external packages first to create the static link libraries Hercules will need
-to link with, before you can then build Hercules.
-
-<br /><br />
-
-For more detailed External Package build information please refer to the
-<a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
-document.
-
 <a name="instsource"></a>
 <h3>Building from source - Windows</h3>
 <ol>
@@ -134,6 +106,7 @@ Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.<br />
 
 <ol>
+
 <li>Download the
 <a href="https://github.com/fish-git/hyperion/archive/master.zip">source code .ZIP file</a>
 from Github.
@@ -148,6 +121,43 @@ cd hyperion-master</pre>
 required packages installed:
 
     <p><code>./util/bldlvlck</code>
+
+<p><li>Download and build all <b>External Packages</b> if needed:
+
+<br /><br />
+
+Hercules links with several pre-built "External Package" static link libraries
+that have been pre-built for you and come distributed with Hercules (i.e. they
+are a part of the Hercules repository).
+
+<br /><br />
+
+Currently all of the external package static link libraries for the Intel x86
+(32-bit) and x64 (64-bit) architectures for both Windows and Linux for both
+normal optimized Release builds as well as unoptimized Debug builds are already
+provided as part of the distribution.  Thus to build Hercules you should not
+need to do anything special.  Simply build Hercules just as you normally would.
+
+<br /><br />
+
+In some unusual situations however, you MIGHT need to rebuild ALL existing
+external packages for your particular system. Exactly what those situations
+are and what causes them to occur is unclear, but one thing is certain: it
+will never hurt to build all of the external packages anyway just to be safe.
+
+<br /><br />
+
+If you wish to modify or debug any of the external packages themselves (or need
+to build a non-Intel x86/x64 architecture build of Hercules such as arm, mips,
+ppc, sparc, xscale, etc) however, then you will need to manually build each of
+external packages first to create the static link libraries Hercules will need
+to link with, before you can then build Hercules.
+
+<br /><br />
+
+For more detailed External Package build information please refer to the
+<a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
+document.
 
 <p><li>Build the ./configure script (recommended):
 
@@ -183,9 +193,19 @@ required packages installed:
     options, run: <code>./configure <nobr>--help=short</nobr></code>.
 
 <br />
-<li>Build the executables: <p><code>make</code>
+<li>Build the executables:
+
+    <p><code>make</code>
 
 <p><li>(Optional) Install the programs: as root: <p><code>make install</code><br />
+
+<p>
+
+This is an optional step because once Hercules is built, you should be able to
+run Hercules directly from the Hercules build directory itself without needing
+to install anything beforehand. But if you want to officially install it somewhere,
+then by all means do so.
+
 </ol>
 
 <p><hr><a name="config"></a>
