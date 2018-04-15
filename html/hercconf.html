@@ -207,15 +207,10 @@ a real System/390.  The configuration file is an ASCII text file.
     Linux/390, and ZZSA.
     <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux. This is the default.
     </ul>
-    <p><code>ESAME</code> is similar to <code>z/Arch</code>.
     When <code>z/Arch</code> or <code>ESAME</code> is specified,
     the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
-    <p>
-    The <code>ESAME</code> mode is equivalent to z/Architecture mode at Architecture Level 2.
-    The <code>z/Arch</code> mode is equivalent to z/Architecture mode at Architecture Level 3.
-    The synonyms ALS0, ALS1, ALS2 and ALS3 may be used to specify S/370, ESA/390, ESAME or Z/Arch respectively.
     <p>
     When <code>ARCHLVL S/370</code> is set, the current
     <code><a href="#LPARNUM">LPARNUM</a></code> and
@@ -226,9 +221,10 @@ a real System/390.  The configuration file is an ASCII text file.
     the <i>"Limited automatic LPARNUM updating when setting certain architecture modes"</i>
     section of the <a href="hercrnot.html">Release Notes</a> document for more information.
     <p>
-    <b>Note:</b> This statement used to be called <code>ARCHMODE</code> in previous versions of Hercules
-    but the use of <code>ARCHMODE</code> has been deprecated in favor of the new <code>ARCHLVL</code>
-    statement. Existing <code>ARCHMODE</code> statements should be changed to <code>ARCHLVL</code>
+    The <code>ARCHLVL</code> statement used to be called <code>ARCHMODE</code>
+    in previous versions of Hercules but the use of <code>ARCHMODE</code> has been
+    deprecated in favor of the new <code>ARCHLVL</code> statement.
+    Existing <code>ARCHMODE</code> statements should be changed to <code>ARCHLVL</code>
     instead. For the time being however, <code>ARCHMODE</code> is still accepted
     and is treated as simply a synonym for the <code>ARCHLVL</code> statement.
     <p>
@@ -1053,10 +1049,9 @@ a real System/390.  The configuration file is an ASCII text file.
     rounded up to the next 4K boundary. Otherwise, storage sizes not on
     a 1M boundary are rounded up to the next 1M boundary.
     <p>
-    The minimum size is 4K for archlvl als0 and als1 (S/370 and
-    ESA/390), and 8K for archlvl als2 (ESAME) and higher.  A maximum of
-    64M may be specified for archlvl als0 (S/370), 2048M (2G) for
-    archlvl als1 (ESA/390), and 16E for archlvl als2 (ESAME) and higher.
+    The minimum size is 4K for S/370 and ESA/390, and 8K for
+    z/Arch.  A maximum of 64M may be specified for S/370,
+    2048M (2G) for ESA/390, and 16E for z/Arch.
     <p>
     <b>Notes:</b>
     <ol><p><li>
@@ -1067,10 +1062,11 @@ a real System/390.  The configuration file is an ASCII text file.
     will be limited to less than 4G; host systems with a 64-bit
     architecture will be limited to less than 16E.
     </li><p><li>
-    Using minimum storage sizes, storage sizes less than or not on a 64K
-    boundary for archlvl als1 (S/370), or on a 1M boundary for archlvl
-    als2 (ESA/390) and higher, it may be possible to generate error
-    conditions not covered by the Principles of Operations.
+    <i>Caution:</i> using minimum storage sizes, storage sizes less than 64K
+    or a size that is not a multiple of 64K for S/370, or a size
+    less than 1M or is not a multiple of 1M for z/Arch is not recommended
+    as it could generate error conditions which are not covered by the
+    Principles of Operations.
     </li><p><li>
     Use of storage sizes greater than supported by the guest operating
     system may generate incorrect results or error conditions within the
