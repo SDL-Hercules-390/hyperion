@@ -533,7 +533,7 @@ struct SYSBLK {
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 
         /* Active Facility List */
-        BYTE    facility_list[ NUM_GEN_ARCHS ][ STFL_HERC_BY_SIZE ];
+        BYTE    facility_list[ NUM_GEN_ARCHS ][ STFL_HERC_DW_SIZE * sizeof( DW ) ];
 
      /* CPU Measurement Counter facility
         CPU Measurement Sampling facility
