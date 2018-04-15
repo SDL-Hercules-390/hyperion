@@ -375,7 +375,8 @@ U64 thread_cputime_us(const REGS *regs)
 
 void set_cpu_timer(REGS *regs, const S64 timer)
 {
-    U64 new_epoch_us = (sysblk.lparmode && !WAITSTATE(&regs->psw)) ? thread_cputime_us(regs) : etod2us(host_tod());
+    U64 new_epoch_us = (sysblk.lparmode && !WAITSTATE( &regs->psw )) ?
+        thread_cputime_us( regs ) : (U64) etod2us( host_tod() );
 
     if (regs->bcputime <= new_epoch_us)
     {
