@@ -27,6 +27,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #if !defined(_ASSIST_C)
 
 #define _ASSIST_C

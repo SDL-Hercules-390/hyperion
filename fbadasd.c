@@ -24,6 +24,8 @@
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "sr.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
 
 /*-------------------------------------------------------------------*/

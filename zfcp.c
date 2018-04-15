@@ -33,6 +33,7 @@
 
 #include "hstdinc.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
 DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #include "hercules.h"

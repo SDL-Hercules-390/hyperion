@@ -19,6 +19,8 @@
 #include "qdio.h"
 #include "inline.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #undef PTIO
  #define PTIO(_class, _name) \
  PTT(PTT_CL_ ## _class,_name,regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L)

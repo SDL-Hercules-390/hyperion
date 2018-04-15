@@ -16,6 +16,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "devtype.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #define FBA_BLKGRP_SIZE (120*512)
 
 /*-------------------------------------------------------------------*/

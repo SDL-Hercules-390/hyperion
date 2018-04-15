@@ -21,6 +21,8 @@
 #include "devtype.h"
 #include "opcode.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 //#define DEBUG_FREESPACE
 
 #ifdef DEBUG_FREESPACE

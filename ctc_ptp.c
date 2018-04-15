@@ -24,10 +24,11 @@
 #include "opcode.h"
 #include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
 #include <ifaddrs.h>
-#endif /* !defined(OPTION_W32_CTCI) */
+#endif
 
+DISABLE_GCC_UNUSED_SET_WARNING;
 
 #if defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL)
   SYSBLK *psysblk;

@@ -42,6 +42,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "chsc.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 /*-------------------------------------------------------------------*/
 /* Debug Switches                                                    */
 /*-------------------------------------------------------------------*/

@@ -26,6 +26,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #if defined(_FEATURE_SIE)
 
 #if !defined(_SIE_C)

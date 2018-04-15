@@ -20,12 +20,14 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined(FEATURE_042_DFP_FACILITY)
+#if defined( FEATURE_042_DFP_FACILITY )
 #include "decNumber/include/decimal128.h"
 #include "decNumber/include/decimal64.h"
 #include "decNumber/include/decimal32.h"
 #include "decNumber/include/decPacked.h"
-#endif /*defined(FEATURE_042_DFP_FACILITY)*/
+#endif
+
+DISABLE_GCC_UNUSED_SET_WARNING;
 
 #if defined(FEATURE_041_FPS_ENHANCEMENT_FACILITY)
 /*===================================================================*/

@@ -32,6 +32,8 @@
 #include "crypto/include/sha2.h"
 #include "crypto/include/sshdes.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #if defined( FEATURE_017_MSA_FACILITY )
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */

@@ -16,6 +16,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 /*-------------------------------------------------------------------*/
 /*                      (BEGIN static helpers)                       */
 /*                      (CANNOT BE ARCH_DEP!!)                       */

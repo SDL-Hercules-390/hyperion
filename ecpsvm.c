@@ -172,6 +172,8 @@
 #include "inline.h"
 #include "ecpsvm.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #ifdef FEATURE_ECPSVM
 
 #define ECPSCODEVER 1.85    //  <--------------- UPDATE CODE VERSION

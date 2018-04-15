@@ -28,6 +28,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+DISABLE_GCC_UNUSED_SET_WARNING;
+
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
 /* The vector save area must be aligned on a boundary 8 times the
