@@ -345,8 +345,16 @@
   if /i "%targ_arch%" == "x86"   set "vstools_arch=32"
   if /i "%targ_arch%" == "amd64" set "vstools_arch=64"
 
+  set "original_include=%include%"
+
   call "%~dp0vstools.cmd"  %vstools_arch%
   set "rc=%errorlevel%"
+
+  if %rc% equ 0 (
+    @REM (fix VS2017 insanity)
+    set "INCLUDE=%INCLUDE%;%original_include%"
+  )
+
   %return%
 
 
@@ -382,7 +390,7 @@
   echo.
   echo ------------------------------ WIN32.MAK -------------------------------
   echo.
-  echo  ^<win32.mak^> will be !INCLUDEd from "%win32_mak_path%"...
+  echo  ^<win32.mak^> will be !INCLUDEd from "%win32_mak_dir%"...
   echo.
   echo --------------------------------- MAKE ---------------------------------
   echo.
@@ -560,7 +568,7 @@
   if not exist "%makefile_name%" (
     goto :missing_herc_makefile
   )
-  
+
   set "opath=%path%"
   set "path=%opath%;%include%"
   call :fullpath "win32.mak"
@@ -572,7 +580,7 @@
   )
 
   set "win32_mak_path=%fullpath%"
-
+  for %%i in ("%win32_mak_path%") do (set "win32_mak_dir=%%~di%%~pi")
   %return%
 
 :missing_herc_makefile

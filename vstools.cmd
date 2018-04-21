@@ -255,14 +255,27 @@
 
   set "vsname=%~1"
   set "vsver=!%vsname%!"
+
   if "!VS%vsver%COMNTOOLS!" == "" (
     %return%
   )
-  if %vsver% GEQ %vs2017% (
-    set "VCVARSDIR=!VS%vsver%COMNTOOLS!..\..\VC\Auxiliary\Build"
-  ) else (
-    set "VCVARSDIR=!VS%vsver%COMNTOOLS!..\..\VC"
+
+  :: (remove trailing backslash if present)
+
+  set "VSCOMNTOOLS=!VS%vsver%COMNTOOLS!"
+
+  if "%VSCOMNTOOLS:~-1%" == "\" (
+    set "VSCOMNTOOLS=%VSCOMNTOOLS:~0,-1%"
   )
+
+  :: (define directory where "vcvarsxx.bat" files live)
+
+  set "VCVARSDIR=%VSCOMNTOOLS%\..\..\VC"
+
+  if %vsver% GEQ %vs2017% (
+    set "VCVARSDIR=%VCVARSDIR%\Auxiliary\Build"
+  )
+
   %return%
 
 :detect_vstudio_host
