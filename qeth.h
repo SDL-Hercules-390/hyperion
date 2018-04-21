@@ -246,7 +246,8 @@ typedef struct _OSA_GRP {
     U32   seqnumis;             /* MPC_RRH sequence number issuer    */
     U32   seqnumcm;             /* MPC_RRH sequence number cm        */
 
-    U32   ipas;                 /* Supported IP assist mask          */
+    U32   ipas4;                /* Supported IP assist mask IPv4     */
+    U32   ipas6;                /* Supported IP assist mask IPv6     */
     U32   ipae0;                /* Enabled IP assist mask            */
     U32   ipae4;                /* Enabled IP assist mask IPv4       */
     U32   ipae6;                /* Enabled IP assist mask IPv6       */

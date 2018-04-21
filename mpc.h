@@ -485,19 +485,19 @@ typedef struct _MPC_IPA {
 #define IPA_INBOUND_CHECKSUM    0x00000002L  /*                      */
 #define IPA_OUTBOUND_CHECKSUM   0x00000004L  /*                      */
 #define IPA_IP_FRAGMENTATION    0x00000008L  /*                      */
-#define IPA_FILTERING           0x00000010L  /*     *                */
+#define IPA_FILTERING           0x00000010L  /*  *  *                */
 #define IPA_IPV6                0x00000020L  /*  *  *                */
 #define IPA_MULTICASTING        0x00000040L  /*  *  *                */  /* Must be on for IPv6 */
 #define IPA_IP_REASSEMBLY       0x00000080L  /*                      */
-#define IPA_QUERY_ARP_COUNTERS  0x00000100L  /*     *                */
+#define IPA_QUERY_ARP_COUNTERS  0x00000100L  /*  *  *                */
 #define IPA_QUERY_ARP_ADDR_INFO 0x00000200L  /*     *                */
 #define IPA_SETADAPTERPARMS     0x00000400L  /*  *  *                */
-#define IPA_VLAN_PRIO           0x00000800L  /*     *                */
+#define IPA_VLAN_PRIO           0x00000800L  /*  *  *                */
 #define IPA_PASSTHRU            0x00001000L  /*  *  *                */
 #define IPA_FLUSH_ARP_SUPPORT   0x00002000L  /*     *                */
-#define IPA_FULL_VLAN           0x00004000L  /*     *                */
-#define IPA_INBOUND_PASSTHRU    0x00008000L  /*  *  *                */
-#define IPA_SOURCE_MAC          0x00010000L  /*  *  *                */
+#define IPA_FULL_VLAN           0x00004000L  /*  *  *                */
+#define IPA_INBOUND_PASSTHRU    0x00008000L  /*     *                */
+#define IPA_SOURCE_MAC          0x00010000L  /*     *                */
 #define IPA_OSA_MC_ROUTER       0x00020000L  /*     *                */
 #define IPA_QUERY_ARP_ASSIST    0x00040000L  /*     *                */
 #define IPA_INBOUND_TSO         0x00080000L  /*                      */
@@ -523,24 +523,36 @@ typedef struct _MPC_IPA {
 
 /*  Below is the assists that Hercules claims to support.            */
 #if defined(ENABLE_IPV6)
-#define IPA_SUPP ( 0 \
-                 | IPA_ARP_PROCESSING \
-                 | IPA_IPV6 \
-                 | IPA_MULTICASTING \
-                 | IPA_SETADAPTERPARMS \
-                 | IPA_PASSTHRU \
-                 | IPA_INBOUND_PASSTHRU \
-                 | IPA_SOURCE_MAC \
-                 )
+#define IPA_SUPP_IPv4 ( 0 \
+                      | IPA_ARP_PROCESSING \
+                      | IPA_FILTERING \
+                      | IPA_IPV6 \
+                      | IPA_MULTICASTING \
+                      | IPA_QUERY_ARP_COUNTERS \
+                      | IPA_SETADAPTERPARMS \
+                      | IPA_VLAN_PRIO \
+                      | IPA_PASSTHRU \
+                      | IPA_FULL_VLAN \
+                      )
+#define IPA_SUPP_IPv6 ( 0 \
+                      | IPA_IPV6 \
+                      | IPA_MULTICASTING \
+                      | IPA_SETADAPTERPARMS \
+                      | IPA_VLAN_PRIO \
+                      | IPA_PASSTHRU \
+                      | IPA_FULL_VLAN \
+                      )
 #else
-#define IPA_SUPP ( 0 \
-                 | IPA_ARP_PROCESSING \
-                 | IPA_MULTICASTING \
-                 | IPA_SETADAPTERPARMS \
-                 | IPA_PASSTHRU \
-                 | IPA_INBOUND_PASSTHRU \
-                 | IPA_SOURCE_MAC \
-                 )
+#define IPA_SUPP_IPv4 ( 0 \
+                      | IPA_ARP_PROCESSING \
+                      | IPA_FILTERING \
+                      | IPA_MULTICASTING \
+                      | IPA_QUERY_ARP_COUNTERS \
+                      | IPA_SETADAPTERPARMS \
+                      | IPA_VLAN_PRIO \
+                      | IPA_PASSTHRU \
+                      | IPA_FULL_VLAN \
+                      )
 #endif /*defined(ENABLE_IPV6)*/
 
 #define IPA_CMD_STARTLAN 0x01   /* Start LAN operations              */
@@ -635,28 +647,29 @@ typedef struct _MPC_IPA_MAC {
 /*-------------------------------------------------------------------*/
 typedef struct _MPC_IPA_SAP {
 /*000*/ FWORD   suppcm;         /* Supported subcommand mask         */
-#define IPA_SAP_QUERY   0x00000001L
-#define IPA_SAP_SETMAC  0x00000002L
-#define IPA_SAP_SETGADR 0x00000004L
-#define IPA_SAP_SETFADR 0x00000008L
-#define IPA_SAP_SETAMODE 0x00000010L
-#define IPA_SAP_SETCFG  0x00000020L
-#define IPA_SAP_SETCFGE 0x00000040L
-#define IPA_SAP_BRDCST  0x00000080L
-#define IPA_SAP_OSAMSG  0x00000100L
-#define IPA_SAP_SETSNMP 0x00000200L
-#define IPA_SAP_CARDINFO 0x00000400L
-#define IPA_SAP_PROMISC 0x00000800L
-#define IPA_SAP_SETDIAG 0x00002000L
-#define IPA_SAP_SETACCESS 0x00010000L
-
+#define IPA_SAP_QUERY     0x00000001L  /* Query Command Supported */
+#define IPA_SAP_SETMAC    0x00000002L  /* Alter MAC Address */
+#define IPA_SAP_SETGADR   0x00000004L  /* Add/Delete Group Address */
+#define IPA_SAP_SETFADR   0x00000008L  /* Add/Delete Functional Address */
+#define IPA_SAP_SETAMODE  0x00000010L  /* Set Addressing Mode */
+#define IPA_SAP_SETCFG    0x00000020L  /* Set Config Parms */
+#define IPA_SAP_SETCFGE   0x00000040L  /* Set Config Parms Extended */
+#define IPA_SAP_BRDCST    0x00000080L  /* Set Broadcast Mode */
+#define IPA_SAP_OSAMSG    0x00000100L  /* Send OSA Message */
+#define IPA_SAP_SETSNMP   0x00000200L  /* Set SNMP Control */
+#define IPA_SAP_CARDINFO  0x00000400L  /* Query Card Info */
+#define IPA_SAP_PROMISC   0x00000800L  /* Set Promisc Mode */
+#define IPA_SAP_SETDIAG   0x00002000L  /* Set Diag Assist */
+#define IPA_SAP_SETACCESS 0x00010000L  /* Set Access Control */
+#define IPA_SAP_QOAT      0x00080000L  /* Query OAT */
+#define IPA_SAP_QSWTATTR  0x00100000L  /* Query Switch Attrubutes */
 
 #define IPA_SAP_SUPP ( 0 \
                      | IPA_SAP_QUERY \
+                     | IPA_SAP_SETMAC \
                      | IPA_SAP_CARDINFO \
                      | IPA_SAP_PROMISC \
                      )
-
 
 /*004*/ FWORD   resv004;        /*                                   */
 /*008*/ HWORD   cmdlen;         /* Subcommand length                 */
@@ -676,7 +689,7 @@ typedef struct _SAP_QRY {
 /*004*/ BYTE    lan_type;       /* LAN type response                 */
 /*005*/ BYTE    resv005[3];
 /*008*/ FWORD   suppcm;         /* Supported commands bit map        */
-/*00A*/ DBLWRD  resv00a;
+/*00C*/ BYTE    resv00c[8];
     } SAP_QRY;
 
 /*-------------------------------------------------------------------*/
