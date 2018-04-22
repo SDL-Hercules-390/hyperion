@@ -1197,6 +1197,7 @@ AC_C_BIGENDIAN()
 
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
 AC_CHECK_SIZEOF(off_t)
@@ -2191,10 +2192,20 @@ AC_ARG_ENABLE( fthreads,
     [hc_cv_opt_fthreads=$hc_cv_is_windows]
 )
 
-if test "$hc_cv_have_u_int128_t" = "yes"; then
-  hc_cv_max_cpu_engines=128
-else
+# "There is no support in GCC for expressing an integer constant of type
+#  __int128 for targets with long long integer less than 128 bits wide."
+
+if test "$hc_cv_have_u_int128_t" != "yes"; then
   hc_cv_max_cpu_engines=64
+else
+  AC_PREPROC_IFELSE([AC_LANG_SOURCE([
+    #if SIZEOF_LONG_LONG < 16
+    #error native 128-bit integers are not supported
+    #endif
+    ])],
+    [hc_cv_max_cpu_engines=128],
+    [hc_cv_max_cpu_engines=64]
+  )
 fi
 
 hc_cv_default_num_cpu_engines=8
@@ -2210,12 +2221,16 @@ AC_ARG_ENABLE( multi-cpu,
         yes)             hc_cv_opt_num_cpu_engines=$hc_cv_default_num_cpu_engines  ;;
         no)              hc_cv_opt_num_cpu_engines=1                               ;;
         *)
-            if test 0 -lt "${enableval}" -a "$hc_cv_max_cpu_engines" -ge "${enableval}"
-            then
-                hc_cv_opt_num_cpu_engines=${enableval}
-            else
-                AC_MSG_RESULT( [ERROR: invalid 'multi-cpu' option] )
+            if test "${enableval}" -le 0; then
+                AC_MSG_RESULT( [ERROR: 'multi-cpu' value must be > 0] )
                 hc_error=yes
+            else
+              if test "${enableval}" -gt "$hc_cv_max_cpu_engines"; then
+                AC_MSG_RESULT( [ERROR: 'multi-cpu' value must be <= ${hc_cv_max_cpu_engines}] )
+                hc_error=yes
+              else
+                hc_cv_opt_num_cpu_engines=${enableval}
+              fi
             fi
             ;;
         esac

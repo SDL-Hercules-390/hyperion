@@ -20,14 +20,15 @@
 /* Maximum CPU Engines                                               */
 /*-------------------------------------------------------------------*/
 
-#ifndef MAX_CPU_ENGINES
-  #ifdef HAVE___UINT128_T
+#if !defined( MAX_CPU_ENGINES )
+  #if defined( HAVE___UINT128_T ) && defined( SIZEOF_LONG_LONG ) && SIZEOF_LONG_LONG >= 16
     #define MAX_CPU_ENGINES     128
   #else
     #define MAX_CPU_ENGINES      64
   #endif
 #endif
 
+// (PREFERRED default MAX_CPU_ENGINES)
 #define PREF_DEF_MAXCPU           8     /*  Default sysblk.maxcpu
                                             to 8 according to old
                                             MAX_CPU_ENGINES default  */

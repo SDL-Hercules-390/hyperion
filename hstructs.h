@@ -20,43 +20,47 @@
 #include "stfl.h"                       // Need STFL_HERC_BY_SIZE
 
 /*-------------------------------------------------------------------*/
-/* Typedefs for CPU bitmap fields                                    */
+/*              Typedefs for CPU bitmap fields                       */
+/*-------------------------------------------------------------------*/
+/* A CPU bitmap contains one bit for each processing engine.  The    */
+/* width of the bitmap depends on the maximum number of processing   */
+/* engines that was selected at build time.                          */
 /*                                                                   */
-/* A CPU bitmap contains one bit for each processing engine.         */
-/* The width of the bitmap depends on the maximum number of          */
-/* processing engines which was selected at build time.              */
+/* Due to GCC and MSVC limitations, a MAX_CPU_ENGINES value greater  */
+/* than 64 (e.g. 128) is only supported on platforms whose long long */
+/* integer size is actually 128 bits:                                */
+/*                                                                   */
+/* "As an extension the integer scalar type __int128 is supported    */
+/*  for targets which have an integer mode wide enough to hold 128   */
+/*  bits.  ... There is no support in GCC for expressing an integer  */
+/*  constant of type __int128 for targets with long long integer     */
+/*  less than 128 bits wide."                                        */
 /*-------------------------------------------------------------------*/
 
-#if MAX_CPU_ENGINES <= 32
+#if MAX_CPU_ENGINES <= 0
+  #error MAX_CPU_ENGINES must be greater than zero!
+#elif MAX_CPU_ENGINES <= 32
     typedef U32                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%8.8"PRIX32
 #elif MAX_CPU_ENGINES <= 64
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
 #elif MAX_CPU_ENGINES <= 128
- #if SIZEOF_SIZE_T == 4
-   #error MAX_CPU_ENGINES > 64 only supported on 64 bit platforms
- #endif
-
- #if defined(_MSVC_)
-    WARNING( "MAX_CPU_ENGINES in Windows is 64" )
-    typedef U64                 CPU_BITMAP;
-    #define F_CPU_BITMAP        "%16.16"PRIX64
-    #undef  MAX_CPU_ENGINES
-    #define MAX_CPU_ENGINES     64
- #else
+  #if defined( SIZEOF_LONG_LONG ) && SIZEOF_LONG_LONG >= 16
     typedef __uint128_t         CPU_BITMAP;
- // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
+    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
+    #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
     #define F_CPU_BITMAP        "%16.16"PRIX64
- #endif
-
+  #else
+    #error MAX_CPU_ENGINES cannot exceed 64
+  #endif
 #else
- #error MAX_CPU_ENGINES cannot exceed 128
+  #error MAX_CPU_ENGINES cannot exceed 128
 #endif
 
-
 /*-------------------------------------------------------------------*/
-/* Structure definition for CPU register context                     */
+/*       Structure definition for CPU register context               */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
 /* Note: REGS is very susceptable to performance problems due to     */
 /*       key fields either crossing or split across cache line       */
