@@ -21,7 +21,7 @@
   MAXCPU    8                   # Maximum number of CPUs
   CAPPING   0                   # Capping of CPs in MIPS, 0 = off
   ARCHLVL   z/Arch              # Architecture mode S/370, ESA/390 or z/Arch
-  ARCHLVL   DISABLE 006_ASN_LX_REUSE   # ASN-and-LX-Reuse facility
+  FACILITY  DISABLE 006_ASN_LX_REUSE   # ASN-and-LX-Reuse facility
 # ECPSVM    DISABLE             # VM Assist : NO or Level (20 recommended)
 
 #------------------------------------------------------------------------------
