@@ -981,145 +981,156 @@ int     n;
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
 
-#if defined(_FEATURE_SIE)
-/* Execute guest instructions */
-static int ARCH_DEP(run_sie) (REGS *regs)
+#if defined( _FEATURE_SIE )
+
+/* Execute guest instructions... */
+
+static int ARCH_DEP( run_sie )( REGS* regs )
 {
-    int i;
-    int   icode;    /* SIE longjmp intercept code      */
-    BYTE  oldv;     /* siebk->v change check reference */
-    BYTE *ip;       /* instruction pointer             */
-    const INSTR_FUNC *current_opcode_table;
+    BYTE*  ip;      /* instruction pointer        */
+    int    icode;   /* SIE longjmp intercept code */
+    int    i;
+    const INSTR_FUNC*  current_opcode_table;
 
-    SIE_PERFMON(SIE_PERF_RUNSIE);
+    SIE_PERFMON( SIE_PERF_RUNSIE );
 
-#if defined(_FEATURE_PER)
+#if defined( _FEATURE_PER )
     /* Reset any PER pending indication */
-    OFF_IC_PER(GUESTREGS);
-#endif /*defined(_FEATURE_PER)*/
+    OFF_IC_PER( GUESTREGS );
+#endif
 
 #ifdef FEATURE_INTERVAL_TIMER
     /* Load the shadow interval timer */
     {
-    S32 itimer;
-        FETCH_FW(itimer,GUESTREGS->psa->inttimer);
-        set_int_timer(GUESTREGS, itimer);
+        S32 itimer;
+        FETCH_FW( itimer, GUESTREGS->psa->inttimer );
+        set_int_timer( GUESTREGS, itimer );
     }
 #endif
 
     do {
-        SIE_PERFMON(SIE_PERF_RUNLOOP_1);
-        if(!(icode = setjmp(GUESTREGS->progjmp)))
+        SIE_PERFMON( SIE_PERF_RUNLOOP_1 );
+
+        if (!(icode = setjmp( GUESTREGS->progjmp )))
         {
             do
             {
-                SIE_PERFMON(SIE_PERF_RUNLOOP_2);
-
-                /* Keep a copy if SIEBK 'v' field for later checks */
-                oldv=GUESTREGS->siebk->v;
+                SIE_PERFMON( SIE_PERF_RUNLOOP_2 );
 
                 /* Set `execflag' to 0 in case EXecuted instruction did progjmp */
                 GUESTREGS->execflag = 0;
 
-                if(
-                    SIE_I_STOP(GUESTREGS)
-                 || SIE_I_EXT(GUESTREGS)
-                 || SIE_I_IO(GUESTREGS)
-                                          )
+                if (0
+                    || SIE_I_STOP ( GUESTREGS )
+                    || SIE_I_EXT  ( GUESTREGS )
+                    || SIE_I_IO   ( GUESTREGS )
+                )
                     break;
 
-                if( SIE_IC_INTERRUPT_CPU(GUESTREGS) )
+                if (SIE_IC_INTERRUPT_CPU( GUESTREGS ))
                 {
-                    SIE_PERFMON(SIE_PERF_INTCHECK);
+                    SIE_PERFMON( SIE_PERF_INTCHECK );
 
                     /* Process PER program interrupts */
-                    if( OPEN_IC_PER(GUESTREGS) )
-                        ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
+                    if (OPEN_IC_PER( GUESTREGS ))
+                        ARCH_DEP( program_interrupt )( GUESTREGS, PGM_PER_EVENT );
 
-                    OBTAIN_INTLOCK(regs);
-                    OFF_IC_INTERRUPT(GUESTREGS);
+                    OBTAIN_INTLOCK( regs );
+                    OFF_IC_INTERRUPT( GUESTREGS );
 
                     /* Set psw.IA and invalidate the aia */
-                    INVALIDATE_AIA(GUESTREGS);
+                    INVALIDATE_AIA( GUESTREGS );
 
-                    if( OPEN_IC_EXTPENDING(GUESTREGS) )
-                        ARCH_DEP(perform_external_interrupt) (GUESTREGS);
+                    if (OPEN_IC_EXTPENDING( GUESTREGS ))
+                        ARCH_DEP( perform_external_interrupt )( GUESTREGS );
 
-                    if( ((STATEBK->ec[0] & SIE_EC0_IOA) || (STATEBK->ec[3] & SIE_EC3_SIGAA))
-                      && OPEN_IC_IOPENDING(GUESTREGS) )
+                    if (1
+                        && (0
+                            || (STATEBK->ec[0] & SIE_EC0_IOA)
+                            || (STATEBK->ec[3] & SIE_EC3_SIGAA)
+                           )
+                        && OPEN_IC_IOPENDING( GUESTREGS )
+                    )
                     {
-                        PERFORM_SERIALIZATION (GUESTREGS);
-                        PERFORM_CHKPT_SYNC (GUESTREGS);
-                        ARCH_DEP (perform_io_interrupt) (GUESTREGS);
+                        PERFORM_SERIALIZATION ( GUESTREGS );
+                        PERFORM_CHKPT_SYNC    ( GUESTREGS );
+                        ARCH_DEP( perform_io_interrupt )( GUESTREGS );
                     }
 
-#if defined(_FEATURE_WAITSTATE_ASSIST)
-                    /* Wait state assist */
-                    if (WAITSTATE(&GUESTREGS->psw) && (STATEBK->ec[0] & SIE_EC0_WAIA))
-                    {
+#if defined( _FEATURE_WAITSTATE_ASSIST )
 
+                    /*  Is SIE guest in a wait state
+                        AND Wait State Assist enabled?
+                    */
+                    if (1
+                        && WAITSTATE( &GUESTREGS->psw )
+                        && (STATEBK->ec[0] & SIE_EC0_WAIA)
+                    )
+                    {
                         /* Test for disabled wait PSW and issue message */
-                        if( IS_IC_DISABLED_WAIT_PSW(GUESTREGS) )
+                        if (IS_IC_DISABLED_WAIT_PSW( GUESTREGS ))
                         {
-                            RELEASE_INTLOCK(regs);
-                            longjmp(GUESTREGS->progjmp, SIE_INTERCEPT_WAIT);
+                            RELEASE_INTLOCK( regs );
+                            longjmp( GUESTREGS->progjmp, SIE_INTERCEPT_WAIT );
                         }
 
-                        if(
-                            SIE_I_STOP(GUESTREGS)
-                         || SIE_I_EXT(GUESTREGS)
-                         || SIE_I_IO(GUESTREGS)
-                         || SIE_I_HOST(regs)
-                                          )
+                        /* Skip conditions we cannot assist with */
+                        if (0
+                            || SIE_I_STOP ( GUESTREGS )
+                            || SIE_I_EXT  ( GUESTREGS )
+                            || SIE_I_IO   ( GUESTREGS )
+                            || SIE_I_HOST (    regs   )
+                        )
                         {
-                            RELEASE_INTLOCK(regs);
+                            RELEASE_INTLOCK( regs );
                             break;
                         }
 
-                        SET_AEA_MODE(GUESTREGS);
+                        SET_AEA_MODE( GUESTREGS );
 
+                        /* Assist with the wait... but only briefly */
                         {
                             struct timespec waittime;
-                            U64 now = host_tod();
-                            waittime.tv_sec = now / 1000000;
-                            waittime.tv_nsec = ((now % 1000000) + 3333) * 1000;
-                            regs->waittod = now;
-                            sysblk.waiting_mask |= regs->cpubit;
-                            sysblk.intowner = LOCK_OWNER_NONE;
-                            timed_wait_condition
-                                 ( &regs->intcond, &sysblk.intlock, &waittime );
-                            while (sysblk.syncing)
-                                 wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
-                            sysblk.intowner = regs->cpuad;
 
-                            /* Remove CPU from the waiting mask; AND
-                             * must be used to handle the rare case
-                             * where the CPU was already removed from
-                             * sysblk.waiting_mask during
-                             * wait_condition.
-                             */
-                            sysblk.waiting_mask &= ~(regs->cpubit);
+                            U64 now = host_tod();
+
+                            waittime.tv_sec  =   (now >> (64-51)) / ONE_MILLION;
+                            waittime.tv_nsec = (((now >> (64-51)) % ONE_MILLION) + 3333) * 1000;
+                            waittime.tv_sec  += waittime.tv_nsec /  ONE_BILLION;
+                            waittime.tv_nsec %=                     ONE_BILLION;
+
+                            regs->waittod = now;
+
+                            sysblk.waiting_mask  |=  regs->cpubit;
+                            sysblk.intowner       =  LOCK_OWNER_NONE;
+                            {
+                                timed_wait_condition( &regs->intcond, &sysblk.intlock, &waittime );
+
+                                while (sysblk.syncing)
+                                     wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock );
+                            }
+                            sysblk.intowner       =   regs->cpuad;
+                            sysblk.waiting_mask  &=  ~regs->cpubit;
+
                             regs->waittime += host_tod() - regs->waittod;
                             regs->waittod = 0;
                         }
 
-                        RELEASE_INTLOCK(regs);
-
+                        RELEASE_INTLOCK( regs );
                         break;
 
-                    } /* end if(wait) */
-#endif
+                    }
+#endif /* defined( _FEATURE_WAITSTATE_ASSIST ) */
 
-                    RELEASE_INTLOCK(regs);
+                    RELEASE_INTLOCK( regs );
                 }
 
-                if(
-                    SIE_I_WAIT(GUESTREGS)
-                                          )
+                /* Break out of loop if SIE guest is waiting */
+                if (SIE_I_WAIT( GUESTREGS ))
                     break;
 
-                ip = INSTRUCTION_FETCH(GUESTREGS, 0);
-                current_opcode_table=GUESTREGS->ARCH_DEP(runtime_opcode_xxxx);
+                ip = INSTRUCTION_FETCH( GUESTREGS, 0 );
+                current_opcode_table = GUESTREGS->ARCH_DEP( runtime_opcode_xxxx );
 
 #if defined( SIE_DEBUG )
                 ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : ip );
@@ -1170,30 +1181,21 @@ static int ARCH_DEP(run_sie) (REGS *regs)
             ));
         }
 
-        if (icode == 0 || icode == SIE_NO_INTERCEPT)
+        if (!icode || SIE_NO_INTERCEPT == icode)
         {
             /* Check PER first, higher priority */
             if (OPEN_IC_PER( GUESTREGS ))
                 ARCH_DEP( program_interrupt )( GUESTREGS, PGM_PER_EVENT );
 
-            if (SIE_I_EXT( GUESTREGS ))
-                icode = SIE_INTERCEPT_EXTREQ;
-            else
-                if (SIE_I_IO( GUESTREGS ))
-                    icode = SIE_INTERCEPT_IOREQ;
-                else
-                    if (SIE_I_STOP( GUESTREGS ))
-                        icode = SIE_INTERCEPT_STOPREQ;
-                    else
-                        if (SIE_I_WAIT( GUESTREGS ))
-                            icode = SIE_INTERCEPT_WAIT;
-                        else
-                            if (SIE_I_HOST( regs ))
-                                icode = SIE_HOST_INTERRUPT;
+                 if (SIE_I_EXT  ( GUESTREGS )) icode = SIE_INTERCEPT_EXTREQ;
+            else if (SIE_I_IO   ( GUESTREGS )) icode = SIE_INTERCEPT_IOREQ;
+            else if (SIE_I_STOP ( GUESTREGS )) icode = SIE_INTERCEPT_STOPREQ;
+            else if (SIE_I_WAIT ( GUESTREGS )) icode = SIE_INTERCEPT_WAIT;
+            else if (SIE_I_HOST (   regs    )) icode = SIE_HOST_INTERRUPT;
         }
 
     }
-    while (icode == 0 || icode == SIE_NO_INTERCEPT);
+    while (!icode || icode == SIE_NO_INTERCEPT);
 
     return icode;
 } /* end function run_sie */
