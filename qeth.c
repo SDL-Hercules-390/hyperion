@@ -4009,7 +4009,7 @@ U32 mask4;
             WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "ipaddr" );
             retcode = -1;
         }
-        if (!grp->ttnetmask)
+        if (!grp->ttnetmask && !grp->ttpfxlen)
         {
             // "%1d:%04X %s: Required parameter '%s' missing"
             WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "netmask" );
