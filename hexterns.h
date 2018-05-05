@@ -74,6 +74,7 @@ int  configure_memlock(int);
 int  configure_memfree(int);
 int  configure_storage( U64 /* number of 4K pages */ );
 int  configure_xstorage(U64);
+U64  adjust_mainsize( int archnum, U64 mainsize );
 
 int  configure_herc_priority(int prio);
 int  configure_cpu_priority(int prio);

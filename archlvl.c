@@ -172,15 +172,12 @@ const char* get_arch_name( REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/*                     set_archmode_by_name                          */
+/*                     get_archmode_by_name                          */
 /*-------------------------------------------------------------------*/
-static bool set_archmode_by_name( const char* archname )
+static int get_archmode_by_name( const char* archname )
 {
-    const ARCHTAB* at;
-    if (!(at = get_archtab_by_name( archname )))
-        return false;
-    sysblk.arch_mode = at->num;
-    return true;
+    const ARCHTAB* at = get_archtab_by_name( archname );
+    return at ? at->num : -1;
 }
 
 /*-------------------------------------------------------------------*/
@@ -192,7 +189,11 @@ static bool set_archmode_by_name( const char* archname )
 /*-------------------------------------------------------------------*/
 int archlvl_cmd( int argc, char* argv[], char* cmdline )
 {
-    bool any_started, storage_reset = false;
+    U64   old_mainsize  = sysblk.mainsize;
+    U64   new_mainsize  = sysblk.mainsize;
+    int   old_arch_mode = sysblk.arch_mode;
+    int   new_arch_mode = sysblk.arch_mode;
+    bool  any_started;  // (true if any cpus are still started)
 
     UNREFERENCED( cmdline );
 
@@ -303,51 +304,52 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return HERRCPUONL;
     }
 
-    /* Set the architecture mode first */
-    if (!set_archmode_by_name( argv[1] ))
+    /* Determine new architecture mode */
+    if ((new_arch_mode = get_archmode_by_name( argv[1] )) < 0)
     {
         // "ARCHLVL '%s' is invalid"
         WRMSG( HHC00895, "E", argv[1] );
         return -1;
     }
 
-    /* Update the dummy regs to match the new archmode. */
-    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+    /* Nothing for us to do unless the architecture changed */
+    if (new_arch_mode != old_arch_mode )
+    {
+        /* Re-configure storage if MAINSIZE needs to be adjusted */
+        if ((new_mainsize = adjust_mainsize( new_arch_mode, sysblk.mainsize )) != old_mainsize)
+            configure_storage( new_mainsize >> SHIFT_4K );
 
-    /* Setting the architecture forces a system reset */
-    if (1
-        && sysblk.arch_mode > ARCH_370_IDX
-        && sysblk.mainsize  > 0
-        && sysblk.mainsize  < MIN_Z390_MAINSIZE_BYTES
-    )
-    {
-        /* Default main storage to 1M and do initial system reset */
-        storage_reset = configure_storage( MIN_Z390_MAINSIZE_PAGES ) == 0 ? true : false;
-    }
-    else
-    {
+        /* Switch to the new architecture mode as requested */
         OBTAIN_INTLOCK( NULL );
         {
+            /* Perform system reset to switch architecture mode */
             static const bool clear = false, ipl = false;
-            system_reset( sysblk.arch_mode, clear, ipl, sysblk.pcpu );
+            system_reset( new_arch_mode, clear, ipl, sysblk.pcpu );
+
+            /* (ensure dummyregs matches new architecture) */
+            sysblk.dummyregs.arch_mode = sysblk.arch_mode;
         }
         RELEASE_INTLOCK( NULL );
+
+        /* Perform "initial_cpu_reset()" for all processors */
+        initial_cpu_reset_all();
     }
 
     /* Display results */
-    if (argc == 2 && MLVL( VERBOSE ))
+    if (argc > 1 && MLVL( VERBOSE ))
     {
         // "%-14s set to %s"
-        WRMSG( HHC02204, "I", "ARCHLVL", get_arch_name( NULL ));
+        WRMSG( HHC02204, "I", "ARCHLVL", get_arch_name_by_arch( sysblk.arch_mode ));
 
-        if (storage_reset)
+        if (new_mainsize != old_mainsize)
         {
-            char memsize[128];
+            char memsize[64];
+            bool increased = (new_mainsize > old_mainsize);
             fmt_memsize_KB( sysblk.mainsize >> SHIFT_KIBIBYTE, memsize, sizeof( memsize ));
 
-            // "%-8s storage is %s (%ssize); storage is %slocked"
-            WRMSG( HHC17003, "I", "MAIN", memsize, "main",
-                sysblk.mainstor_locked ? "" : "not " );
+            // "MAINSIZE %screased to %s architectural %simim"
+            WRMSG( HHC17006, "W", increased ? "in" : "de", memsize,
+                increased ? "min" : "max" );
         }
     }
 

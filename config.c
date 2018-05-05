@@ -109,12 +109,12 @@ static void configure_region_reloc()
     for (i=0; i < FEATURE_SIE_MAXZONES; i++)
     {
         sysblk.zpb[i].mso = 0;
-        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
+        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> SHIFT_MEGABYTE;
 
         if (sysblk.xpndsize)
         {
             sysblk.zpb[i].eso = 0;
-            sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
+            sysblk.zpb[i].esl = ((size_t)sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> SHIFT_MEGABYTE;
         }
         else
         {
@@ -156,6 +156,59 @@ int configure_memfree( int mfree )
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/*  adjust_mainsize   --   range check MAINSIZE by architecture      */
+/*-------------------------------------------------------------------*/
+U64 adjust_mainsize( int archnum, U64 mainsize )
+{
+    static U64 min_mainsize[ NUM_GEN_ARCHS ] =
+    {
+#if defined( _370 )
+          MIN_370_MAINSIZE_BYTES,
+#endif
+#if defined( _390 )
+          MIN_390_MAINSIZE_BYTES,
+#endif
+#if defined( _900 )
+          MIN_900_MAINSIZE_BYTES,
+#endif
+    };
+    static U64 max_mainsize[ NUM_GEN_ARCHS ] =
+    {
+#if defined( _370 )
+          MAX_370_MAINSIZE_BYTES,
+#endif
+#if defined( _390 )
+          MAX_390_MAINSIZE_BYTES,
+#endif
+#if defined( _900 )
+          MAX_900_MAINSIZE_BYTES,
+#endif
+    };
+
+    if (mainsize < min_mainsize[ archnum ])
+        mainsize = min_mainsize[ archnum ];
+
+    if (mainsize > max_mainsize[ archnum ])
+        mainsize = max_mainsize[ archnum ];
+
+    /* Special case: 32-bit build of Herc limited to 32-bits */
+    if (sizeof( size_t ) < sizeof( U64 ))
+    {
+        if (mainsize < MIN_X86_MAINSIZE_BYTES)
+            mainsize = MIN_X86_MAINSIZE_BYTES;
+
+        if (mainsize > MAX_X86_MAINSIZE_BYTES)
+            mainsize = MAX_X86_MAINSIZE_BYTES;
+    }
+
+    /* Special case: if no CPUs then no storage is needed */
+    if (sysblk.maxcpu <= 0)
+        mainsize = 0;
+
+    return mainsize;
+}
+
 PUSH_GCC_WARNINGS()
 DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )
 DISABLE_GCC_WARNING( "-Wint-to-pointer-cast" )
@@ -169,12 +222,12 @@ static BYTE*  config_allocmaddr  = NULL;
 
 int configure_storage( U64 mainsize /* number of 4K pages */ )
 {
-BYTE *mainstor;
-BYTE *storkeys;
-BYTE *dofree = NULL;
-char *mfree = NULL;
-U64   storsize;
-U32   skeysize;
+    BYTE*  mainstor;
+    BYTE*  storkeys;
+    BYTE*  dofree = NULL;
+    char*  mfree  = NULL;
+    U64    storsize;
+    U32    skeysize;
 
     /* Ensure all CPUs have been stopped */
     if (are_any_cpus_started())
@@ -184,38 +237,29 @@ U32   skeysize;
     if (mainsize == ~0ULL)
     {
         if (config_allocmaddr)
-            free(config_allocmaddr);
+            free( config_allocmaddr );
+
         sysblk.storkeys = 0;
         sysblk.mainstor = 0;
         sysblk.mainsize = 0;
+
         config_allocmsize = 0;
         config_allocmaddr = NULL;
+
         return 0;
     }
 
-    /* Round requested storage size to architectural segment boundaries
+    /* Round requested storage size to architectural segment boundary
+     *
      *    ARCH_370_IDX  1   4K page
      *    ARCH_390_IDX  256 4K pages (or 1M)
      *    ARCH_900_IDX  256 4K pages (or 1M)
      */
     if (mainsize)
     {
-#if 0
-        if (mainsize <= (16 << (SHIFT_MEGABYTE - SHIFT_4K)))
-            storsize = MAX((sysblk.arch_mode <= ARCH_390_IDX) ? 1 : 2,
-                           mainsize);
-            /* The side effect of this for values less than 256 is to establish
-             * zones with a memory size of zero megabytes.  Channel subsystem I/O
-             * (see MSCH instruction) drives I/O address checks via the memory size
-             * established in zones, not mainsize.  A zero megabyte zone memory
-             * size causes all channel subsystem I/O to fail with a program check
-             * channel status.
-             */
-#else
         if (sysblk.arch_mode == ARCH_370_IDX)
-            storsize = MAX(1,mainsize);
+            storsize = MAX( 1, mainsize );
         else
-#endif
             storsize = (mainsize + 255) & ~255ULL;
         mainsize = storsize;
     }
@@ -230,19 +274,24 @@ U32   skeysize;
     /* Storage key array size rounded to next page boundary */
     switch (_STORKEY_ARRAY_UNITSIZE)
     {
-        case 2048:
-            skeysize = storsize << 1;
+        case _2K:
+            /* We need one storekey byte for every 2K page instead
+               of only one byte for every 4K page, so we need twice
+               as many pages as normal for our storage key array.
+            */
+            skeysize = storsize << (SHIFT_4K - SHIFT_2K);
             break;
-        case 4096:
+        case _4K:
             skeysize = storsize;
             break;
     }
-    skeysize += 4095;
+
+    /* Calculate number of 4K pages we will need to allocate */
+    skeysize += (_4K-1);
     skeysize >>= SHIFT_4K;
 
-    /* Add Storage key array size */
+    /* Add number of pages needed for our storage key array */
     storsize += skeysize;
-
 
     /* New memory is obtained only if the requested and calculated size
      * is larger than the last allocated size, or if the request is for
@@ -255,32 +304,35 @@ U32   skeysize;
      *       919M and XPNDSIZE 407M, for a total of 1326M.
      *
      *       Please understand that the results on any individual
-     *       32-bit host OS may vary from the note above, and the note
-     *       does not apply to any 64-bit host OS.
+     *       32-bit host OS may vary from the note above, and the
+     *       note does not apply to any 64-bit host OS.
      *
      */
-
-    if (storsize > config_allocmsize ||
-        (mainsize <= DEF_MAINSIZE_BYTES &&
-         storsize < config_allocmsize))
+    if (0
+        || (storsize > config_allocmsize)
+        || (storsize < config_allocmsize && mainsize <= DEF_MAINSIZE_PAGES)
+    )
     {
-        if (config_mfree && mainsize > DEF_MAINSIZE_BYTES)
-            mfree = malloc(config_mfree);
+        if (config_mfree && mainsize > DEF_MAINSIZE_PAGES)
+            mfree = malloc( config_mfree );
 
-        /* Obtain storage with hint to page size for cleanest allocation
-         */
-        storkeys = calloc((size_t)storsize + 1, 4096);
+        /* Obtain storage with pagesize hint for cleanest allocation */
+        storkeys = calloc( (size_t)(storsize + 1), _4K );
 
         if (mfree)
-            free(mfree);
+            free( mfree );
 
         if (!storkeys)
         {
             char buf[64];
             char memsize[64];
+
             sysblk.main_clear = 0;
-            fmt_memsize_KB( mainsize << 2, memsize, sizeof( memsize ));
-            MSGBUF( buf, "configure_storage(%s)", memsize );
+
+            fmt_memsize_KB( mainsize << (SHIFT_4K - SHIFT_1K), memsize, sizeof( memsize ));
+            MSGBUF( buf, "configure_storage( %s )", memsize );
+
+            // "Error in function %s: %s"
             WRMSG( HHC01430, "S", buf, strerror( errno ));
             return -1;
         }
@@ -288,11 +340,14 @@ U32   skeysize;
         /* Previously allocated storage to be freed, update actual
          * storage pointers and adjust new storage to page boundary.
          */
-        dofree = config_allocmaddr,
-        config_allocmsize = storsize,
-        config_allocmaddr = storkeys,
-        sysblk.main_clear = 1,
-        storkeys = (BYTE*)(((U64)storkeys + 4095) & ~0x0FFFULL);
+        dofree = config_allocmaddr;
+
+        config_allocmsize = storsize;
+        config_allocmaddr = storkeys;
+
+        sysblk.main_clear = 1;
+
+        storkeys = (BYTE*)(((U64)storkeys + (_4K-1)) & ~0x0FFFULL);
     }
     else
     {
@@ -301,39 +356,43 @@ U32   skeysize;
         dofree = NULL;
     }
 
-    /* Mainstor is located beyond the storage key array on a page boundary */
-    /* Isn't the storage key array already at a page boundary?  jph  */
+    /* MAINSTOR is located on the page boundary just beyond the
+       storage key array (which is already on a page boundary).
+     */
     mainstor = (BYTE*)((U64)(storkeys + (skeysize << SHIFT_4K)));
 
-    /* Set in sysblk */
+    /* Update SYSBLK... */
     sysblk.storkeys = storkeys;
     sysblk.mainstor = mainstor;
     sysblk.mainsize = mainsize << SHIFT_4K;
 
-    /*
-     *  Free prior storage in use
+    /*  Free previously allocated storage if no longer needed
      *
      *  FIXME: The storage ordering further limits the amount of storage
      *         that may be allocated following the initial storage
      *         allocation.
-     *
      */
     if (dofree)
-        free(dofree);
+        free( dofree );
 
     /* Initial power-on reset for main storage */
-    storage_clear();
+    storage_clear();  /* only clears if needed */
 
-#if 0   /*DEBUG-JJ-20/03/2000*/
+#if 0   /* DEBUG-JJ - 20/03/2000 */
+
     /* Mark selected frames invalid for debugging purposes */
-    for (i = 64 ; i < (sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE); i += 2)
+    for (i = 64; i < (sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE); i += 2)
+    {
         if (i < (sysblk.mainsize / _STORKEY_ARRAY_UNITSIZE) - 64)
-            sysblk.storkeys[i] = STORKEY_BADFRM;
+            sysblk.storkeys[i]   = STORKEY_BADFRM;
         else
             sysblk.storkeys[i++] = STORKEY_BADFRM;
+    }
+
 #endif
 
 #if 1 // The below is a kludge that will need to be cleaned up at some point in time
+
     /* Initialize dummy regs.
      * Dummy regs are used by the panel or gui when the target cpu
      * (sysblk.pcpu) is not configured (ie cpu_thread not started).
@@ -343,10 +402,13 @@ U32   skeysize;
     sysblk.dummyregs.storkeys = sysblk.storkeys;
     sysblk.dummyregs.mainlim = sysblk.mainsize ? (sysblk.mainsize - 1) : 0;
     sysblk.dummyregs.dummy = 1;
-    initial_cpu_reset (&sysblk.dummyregs);
+
+    initial_cpu_reset( &sysblk.dummyregs );
+
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
     sysblk.dummyregs.hostregs = &sysblk.dummyregs;
-#endif
+
+#endif // kludge?
 
     configure_region_reloc();
     initial_cpu_reset_all();
@@ -364,24 +426,27 @@ static BYTE*  config_allocxaddr  = NULL;
 int configure_xstorage( U64 xpndsize )
 {
 #ifdef _FEATURE_EXPANDED_STORAGE
-BYTE *xpndstor;
-BYTE *dofree = NULL;
-char *mfree = NULL;
+
+    BYTE*  xpndstor;
+    BYTE*  dofree = NULL;
+    char*  mfree  = NULL;
 
     /* Ensure all CPUs have been stopped */
     if (are_any_cpus_started())
         return HERRCPUONL;
 
     /* Release storage and return if zero or deconfiguring */
-    if (!xpndsize ||
-        xpndsize == ~0ULL)
+    if (!xpndsize || xpndsize == ~0ULL)
     {
         if (config_allocxaddr)
             free(config_allocxaddr);
-        sysblk.xpndsize = 0,
-        sysblk.xpndstor = 0,
-        config_allocxsize = 0,
+
+        sysblk.xpndsize = 0;
+        sysblk.xpndstor = 0;
+
+        config_allocxsize = 0;
         config_allocxaddr = NULL;
+
         return 0;
     }
 
@@ -403,21 +468,25 @@ char *mfree = NULL;
     if (xpndsize > config_allocxsize)
     {
         if (config_mfree)
-            mfree = malloc(config_mfree);
+            mfree = malloc( config_mfree );
 
         /* Obtain expanded storage, hinting to megabyte boundary */
-        xpndstor = calloc((size_t)xpndsize + 1, ONE_MEGABYTE);
+        xpndstor = calloc( (size_t)(xpndsize + 1), ONE_MEGABYTE );
 
         if (mfree)
-            free(mfree);
+            free( mfree );
 
         if (!xpndstor)
         {
             char buf[64];
             char memsize[64];
+
             sysblk.xpnd_clear = 0;
+
             fmt_memsize_MB( xpndsize, memsize, sizeof( memsize ));
             MSGBUF( buf, "configure_xstorage(%s)", memsize );
+
+            // "Error in function %s: %s"
             WRMSG( HHC01430, "S", buf, strerror( errno ));
             return -1;
         }
@@ -425,12 +494,16 @@ char *mfree = NULL;
         /* Previously allocated storage to be freed, update actual
          * storage pointers and adjust new storage to megabyte boundary.
          */
-        dofree = config_allocxaddr,
-        config_allocxsize = xpndsize,
-        config_allocxaddr = xpndstor,
-        sysblk.xpnd_clear = 1,
+        dofree = config_allocxaddr;
+
+        config_allocxsize = xpndsize;
+        config_allocxaddr = xpndstor;
+
+        sysblk.xpnd_clear = 1;
+
         xpndstor = (BYTE*)(((U64)xpndstor + (ONE_MEGABYTE - 1)) &
-                           ~((U64)ONE_MEGABYTE - 1)),
+                           ~((U64)ONE_MEGABYTE - 1));
+
         sysblk.xpndstor = xpndstor;
     }
     else
@@ -443,16 +516,14 @@ char *mfree = NULL;
     sysblk.xpndstor = xpndstor;
     sysblk.xpndsize = xpndsize << (SHIFT_MEBIBYTE - XSTORE_PAGESHIFT);
 
-    /*
-     *  Free prior storage in use
+    /*  Free previously allocated storage if no longer needed
      *
      *  FIXME: The storage ordering further limits the amount of storage
      *         that may be allocated following the initial storage
      *         allocation.
-     *
      */
     if (dofree)
-        free(dofree);
+        free( dofree );
 
     /* Initial power-on reset for expanded storage */
     xstorage_clear();
@@ -460,10 +531,14 @@ char *mfree = NULL;
     configure_region_reloc();
     initial_cpu_reset_all();
 
-#else /*!_FEATURE_EXPANDED_STORAGE*/
-    UNREFERENCED(xpndsize);
-    WRMSG(HHC01431, "I");
-#endif /*!_FEATURE_EXPANDED_STORAGE*/
+#else /* !_FEATURE_EXPANDED_STORAGE */
+
+    UNREFERENCED( xpndsize );
+
+    // "Expanded storage support not installed"
+    WRMSG( HHC01431, "I" );
+
+#endif /* !_FEATURE_EXPANDED_STORAGE */
 
     return 0;
 }
@@ -570,7 +645,7 @@ DEVBLK**dvpp;
 
     if(!dev)
     {
-        if (!(dev = (DEVBLK*)calloc_aligned((sizeof(DEVBLK)+4095) & ~4095,4096)))
+        if (!(dev = (DEVBLK*)calloc_aligned((sizeof(DEVBLK)+(_4K-1)) & ~(_4K-1),_4K)))
         {
             char buf[64];
             MSGBUF(buf, "calloc(%d)", (int)sizeof(DEVBLK));
@@ -1288,7 +1363,7 @@ int     i;                              /* Loop index                */
         if (dev->buf && dev->buf == dev->prev_buf)
             free_aligned( dev->buf );
 
-        dev->buf = dev->prev_buf = malloc_aligned( dev->bufsize, 4096 );
+        dev->buf = dev->prev_buf = malloc_aligned( dev->bufsize, _4K );
 
         if (dev->buf == NULL)
         {

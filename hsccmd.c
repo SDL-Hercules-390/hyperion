@@ -2979,74 +2979,91 @@ int xpndsize_cmd(int argc, char *argv[], char *cmdline);
 /*-------------------------------------------------------------------*/
 /* mainsize command                                                  */
 /*-------------------------------------------------------------------*/
-int mainsize_cmd(int argc, char *argv[], char *cmdline)
+int mainsize_cmd( int argc, char* argv[], char* cmdline )
 {
-char   *q_argv[2] = { "qstor", "main" };
-int     rc;
-u_int   i;
-u_int   lockreq = 0;
-u_int   locktype = 0;
-U64     mainsize;
-char    check[16];
-BYTE    f = ' ', c = '\0';
+    //  "MAINSIZE nnn[x]" --> 'nnn' = number, 'x' optional size suffix
+    //
+    //  If size suffix not given then 'nnn' is number of megabytes.
+    //
+    //  The value we calculate and pass to the configure_storage()
+    //  function however, is always specified in number of 4K pages.
 
+    char*  qstor_cmdline  =    "qstor    main"  ;
+    char*  qstor_args[2]  =  { "qstor", "main" };
 
-    UNREFERENCED(cmdline);
+    U64    mainsize;                // (the 'nnn' value they gave us)
+    U64    mainsize_numpages;       // (calculated from nnn + suffix)
 
-    if ( argc < 2 )
-    {
-        return qstor_cmd( 2, q_argv, "qstor main" );
-    }
+    BYTE   f = ' ';                 // (optional size suffix)
+    BYTE   c = '\0';                // (work for sscanf call)
+
+    char   lockopt[16];             // (LOCKED/UNLOCKED work)
+    bool   lock_mainstor = false;   // (true == "LOCKED" given)
+    int    i, rc;                   // (work)
+
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
+
+    if (argc < 2)
+        return qstor_cmd( 2, qstor_args, qstor_cmdline );
 
     /* Parse main storage size operand */
-    rc = sscanf(argv[1], "%"SCNu64"%c%c", &mainsize, &f, &c);
+    rc = sscanf( argv[1], "%"SCNu64"%c%c", &mainsize, &f, &c );
 
-    if ( rc < 1 || rc > 2 )
+    if (rc < 1 || rc > 2)
     {
+        // "Invalid value %s specified for %s"
         WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
     /* Handle size suffix and suffix overflow */
     {
-        U64 shiftsize = mainsize;              /* mainsize pages     */
-        U64 overflow = 0xFFFFFFFFFFFFFFFFULL;  /* Overflow mask      */
+        U64  suffix_oflow_mask  = 0xFFFFFFFFFFFFFFFFULL;
 
-        if ( rc == 2 )
+        mainsize_numpages = mainsize;  /* (converted to pages below) */
+
+        if (rc == 2)
         {
-            switch (toupper(f))
+            switch (toupper( f ))
             {
             case 'B':
-                overflow = 0;
-                shiftsize >>= 12;
+                suffix_oflow_mask = 0;
+                mainsize_numpages >>= 12;
                 if (mainsize & 0x0FFF)
-                    ++shiftsize;
+                    ++mainsize_numpages;
                 break;
+
             case 'K':
-                overflow  <<= 55;
-                shiftsize >>= 2;
+                suffix_oflow_mask <<= 55;
+                mainsize_numpages >>= 2;
                 if (mainsize & 0x03)
-                    ++shiftsize;
+                    ++mainsize_numpages;
                 break;
+
             case 'M':
-                overflow  <<= 45;
-                shiftsize <<= SHIFT_MEBIBYTE - 12;
+                suffix_oflow_mask <<= 45;
+                mainsize_numpages <<= SHIFT_MEBIBYTE - SHIFT_4K;
                 break;
+
             case 'G':
-                overflow  <<= 35;
-                shiftsize <<= SHIFT_GIBIBYTE - 12;
+                suffix_oflow_mask <<= 35;
+                mainsize_numpages <<= SHIFT_GIBIBYTE - SHIFT_4K;
                 break;
+
             case 'T':
-                overflow  <<= 25;
-                shiftsize <<= SHIFT_TEBIBYTE - 12;
+                suffix_oflow_mask <<= 25;
+                mainsize_numpages <<= SHIFT_TEBIBYTE - SHIFT_4K;
                 break;
+
             case 'P':
-                overflow  <<= 15;
-                shiftsize <<= SHIFT_PEBIBYTE - 12;
+                suffix_oflow_mask <<= 15;
+                mainsize_numpages <<= SHIFT_PEBIBYTE - SHIFT_4K;
                 break;
+
             case 'E':
-                overflow  <<=  5;
-                shiftsize <<= SHIFT_EXBIBYTE - 12;
+                suffix_oflow_mask <<=  5;
+                mainsize_numpages <<= SHIFT_EXBIBYTE - SHIFT_4K;
                 break;
             /*----------------------------------------------------------
             default:        // Force error
@@ -3054,75 +3071,69 @@ BYTE    f = ' ', c = '\0';
             ----------------------------------------------------------*/
             }
         }
-        else
+        else /* default is megabytes if no suffix  */
         {
-            overflow  <<= 45;
-            shiftsize <<= SHIFT_MEBIBYTE - 12;
+            suffix_oflow_mask <<= 45;
+            mainsize_numpages <<= SHIFT_MEBIBYTE - SHIFT_4K;
         }
 
-        if (shiftsize > 0x0010000000000000ULL /* 16E */ ||
-            mainsize & overflow)
+        /* Error if more than 16E-1 or suffix use causes U64 overflow */
+        if (0
+            || mainsize_numpages >= 0x0010000000000000ULL // (over 16E-1)
+            || (mainsize & suffix_oflow_mask)             // (too much)
+        )
         {
+            // "Invalid value %s specified for %s"
             WRMSG( HHC01451, "E", argv[1], argv[0]);
             return (-1);
         }
 
-        mainsize = shiftsize;
+        mainsize = (mainsize_numpages << SHIFT_4K);
+
+        // "mainsize_numpages" now holds mainsize value in #of 4K pages
+        // and "mainsize" holds the equivalent value in number of bytes.
     }
 
-    /* Validate storage sizes by architecture; minimums handled in
-     * config.c
-     */
-    if ( (!mainsize && sysblk.maxcpu > 0) ||    /* 0 only valid if MAXCPU 0           */
-         ( sysblk.arch_mode == ARCH_370_IDX &&      /* 64M maximum for S/370 support      */
-           mainsize > 0x004000 ) ||             /*     ...                            */
-         ( sysblk.arch_mode == ARCH_390_IDX &&      /*  2G maximum for ESA/390 support    */
-           mainsize > 0x080000 ) ||             /*     ...                            */
-         ( sizeof(size_t) < 8 &&                /*  4G maximum for 32-bit host        */
-           mainsize > 0x100000 ) )              /*     addressing                     */
+    /* Validate requested storage size */
+    if (adjust_mainsize( sysblk.arch_mode, mainsize ) != mainsize)
     {
-        WRMSG( HHC01451, "E", argv[1], argv[0]);
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
         return -1;
     }
 
     /* Process options */
-    for (i = 2; (int)i < argc; ++i)
+    for (i=2; i < argc; ++i)
     {
-        strnupper(check, argv[i], (u_int)sizeof(check));
+        strnupper( lockopt, argv[i], (u_int) sizeof( lockopt ));
 
-#if 0   // Interim - Storage is not locked yet in config.c
-        if (strabbrev("LOCKED", check, 1) &&
-            mainsize)
-        {
-            lockreq = 1;
-            locktype = 1;
-        }
+#if 0   // TEMPORARILY DISABLED; config.c doesn't support locking storage yet)
+        if (strabbrev( "LOCKED", lockopt, 1 ) && mainsize_numpages)
+            lock_mainstor = true;
         else
 #endif
-        if (strabbrev("UNLOCKED", check, 3))
-        {
-            lockreq = 1;
-            locktype = 0;
-        }
+        if (strabbrev( "UNLOCKED", lockopt, 3 ))
+            lock_mainstor = false;
         else
         {
+            // "Invalid value %s specified for %s"
             WRMSG( HHC01451, "E", argv[i], argv[0] );
             return -1;
         }
     }
 
-    /* Set lock request; if mainsize 0, storage is always UNLOCKED */
-    if (!mainsize)
-        sysblk.lock_mainstor = 0;
-    else if (lockreq)
-        sysblk.lock_mainstor = locktype;
+    /* Set lock request ("UNLOCKED" forced when mainsize = 0) */
+    if (!mainsize_numpages) lock_mainstor = false;
+    sysblk.lock_mainstor =  lock_mainstor;
 
     /* Update main storage size */
-    rc = configure_storage( mainsize ); /* number of 4K pages */
+    rc = configure_storage( mainsize_numpages );
+
     if (rc >= 0)
     {
         if (MLVL( VERBOSE ))
-            qstor_cmd( 2, q_argv, "qstor main" );
+            // Show them the results
+            qstor_cmd( 2, qstor_args, qstor_cmdline );
     }
     else if (HERRCPUONL == rc)
     {
@@ -3218,7 +3229,7 @@ u_int   locktype = 0;
                 )
             || (1
                 && sizeof_RADR >= sizeof(U64)         /* 32-bit addressing */
-                && shiftsize > 0x0000100000000000ULL  /* 16E maximum       */
+                && shiftsize >= 0x0000100000000000ULL /* 16E-1 maximum     */
                 )
         )
         {

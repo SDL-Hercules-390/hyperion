@@ -52,6 +52,8 @@
 #endif
 
 #define  SHIFT_KILOBYTE     10
+#define  SHIFT_1K           10      // (slightly shorter name)
+#define  SHIFT_2K           11
 #define  SHIFT_4K           12
 #define  SHIFT_64KBYTE      16
 #define  SHIFT_MEGABYTE     20
@@ -98,16 +100,34 @@
 #define ONE_SEXTILLION  ((U64)ONE_QUINTILLION * (U64)(1000))    /* zeros = 21 */
 #define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))    /* zeros = 24 */
 
+#define  _1K       1024         // (just a much shorter name)
+#define  _2K       2048         // (just a much shorter name)
 #define  _4K       4096         // (just a much shorter name)
 #define  _1M    1048576         // (just a much shorter name)
 
-/* Hercules default MAINSIZE value... */
+/*-------------------------------------------------------------------*/
+/*               Hercules "MAINSIZE" constants                       */
+/*-------------------------------------------------------------------*/
 
-#define DEF_MAINSIZE_BYTES          (2 << SHIFT_MEGABYTE)
-#define MIN_Z390_MAINSIZE_BYTES     (1 << SHIFT_MEGABYTE)
+#define MIN_X86_MAINSIZE_BYTES      (  1ULL << SHIFT_64KBYTE)
+#define MIN_370_MAINSIZE_BYTES      (  1ULL << SHIFT_64KBYTE)
+#define MIN_390_MAINSIZE_BYTES      (  1ULL << SHIFT_MEGABYTE)
+#define MIN_900_MAINSIZE_BYTES      (  1ULL << SHIFT_MEGABYTE)
+#define DEF_MAINSIZE_BYTES          (  2ULL << SHIFT_MEGABYTE)
+#define MAX_X86_MAINSIZE_BYTES      (919ULL << SHIFT_MEGABYTE)  // (see comments in configure_storage)
+#define MAX_370_MAINSIZE_BYTES      (  2ULL << SHIFT_GIGABYTE)  // (YES! 2GB!)
+#define MAX_390_MAINSIZE_BYTES      (  2ULL << SHIFT_GIGABYTE)
+#define MAX_900_MAINSIZE_BYTES      (ULLONG_MAX)
 
+#define MIN_X86_MAINSIZE_PAGES      (MIN_X86_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MIN_370_MAINSIZE_PAGES      (MIN_370_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MIN_390_MAINSIZE_PAGES      (MIN_390_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MIN_900_MAINSIZE_PAGES      (MIN_900_MAINSIZE_BYTES  >> SHIFT_4K)
 #define DEF_MAINSIZE_PAGES          (DEF_MAINSIZE_BYTES      >> SHIFT_4K)
-#define MIN_Z390_MAINSIZE_PAGES     (MIN_Z390_MAINSIZE_BYTES >> SHIFT_4K)
+#define MAX_X86_MAINSIZE_PAGES      (MAX_X86_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MAX_370_MAINSIZE_PAGES      (MAX_370_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MAX_390_MAINSIZE_PAGES      (MAX_390_MAINSIZE_BYTES  >> SHIFT_4K)
+#define MAX_900_MAINSIZE_PAGES      (MAX_900_MAINSIZE_BYTES  >> SHIFT_4K)
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
