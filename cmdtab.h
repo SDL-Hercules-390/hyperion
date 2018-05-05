@@ -343,39 +343,6 @@
                                 \
   "Format: \"define olddevn newdevn\"\n"
 
-#define defstore_cmd_desc       "Define/Display main and expanded storage values"
-#define defstore_cmd_help       \
-                                \
-  "Format: defstorE [ mAIN [ ssss[S] [ lOCK | unlOCK ] ] ]\n"                   \
-  "                 [ xSTORE | eXPANDED [ ssss[S] [ lOCK | unlOCK ] ] ]\n"      \
-  "        Main and Expanded Storage may be specified on the same command\n"    \
-  "        line.\n"                                                             \
-  "\n"                                                                          \
-  "                   Without any options, display current settings for both\n" \
-  "                   types of storage\n"                                       \
-  "\n"                                                                          \
-  "        mAIN     - define/display main storage allocations\n"                \
-  "        xSTORE   - define/display expanded storage allocations\n"            \
-  "        eXPANDED\n"                                                          \
-  "\n"                                                                          \
-  "        ssss     - specify amount of storate in M units\n"                   \
-  "        ssssS    - specify amount of storage in 'S' units where 'S' is\n"    \
-  "                   B = no multiplier             - main only\n"              \
-  "                   K = 2**10 (kilo/kibi)         - main only\n"              \
-  "                   M = 2**20 (mega/mebi)\n"                                  \
-  "                   G = 2**30 (giga/gibi)\n"                                  \
-  "                   T = 2**40 (tera/tebi)         - not 32-bit\n"             \
-  "                   P = 2**50 (peta/pebi)         - not 32-bit\n"             \
-  "                   E = 2**60 (exa/exbi)          - not 32-bit\n"             \
-  "\n"                                                                          \
-  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"         \
-  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"             \
-  "\n"                                                                          \
-  "      (none)    - display current value(s)\n"                                \
-  "\n"                                                                          \
-  " Note: Multipliers 'T', 'P', and 'E' are not available on 32bit machines\n"  \
-  "       Expanded Storage is allocated in minimum of 1M units\n"
-
 #define defsym_cmd_desc         "Define symbol"
 #define defsym_cmd_help         \
                                 \
@@ -1591,7 +1558,7 @@ COMMAND( "cmdlvl",                  cmdlvl_cmd,             SYSALL,             
 COMMAND( "cmdsep",                  cmdsep_cmd,             SYSALL,             cmdsep_cmd_desc,        cmdsep_cmd_help     )
 COMMAND( "help",                    HelpCommand,            SYSALL,             help_cmd_desc,          help_cmd_help       )
 COMMAND( "hst",                     History,                SYSALL,             hst_cmd_desc,           hst_cmd_help        )
-CMDABBR( "message",         1,     msg_cmd,                SYSALL,             message_cmd_desc,       message_cmd_help    )
+CMDABBR( "message",         1,      msg_cmd,                SYSALL,             message_cmd_desc,       message_cmd_help    )
 COMMAND( "msg",                     msg_cmd,                SYSALL,             msg_cmd_desc,           NULL                )
 COMMAND( "msglevel",                msglevel_cmd,           SYSALL,             msglevel_cmd_desc,      msglevel_cmd_help   )
 COMMAND( "msglvl",                  msglevel_cmd,           SYSALL,             msglvl_cmd_desc,        NULL                )
@@ -1702,7 +1669,6 @@ COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       
 COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       cpuprio_cmd_desc,       NULL                )
 COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       cpuserial_cmd_desc,     NULL                )
 COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
-CMDABBR( "defstore",        7,      defstore_cmd,           SYSCFGNDIAG8,       defstore_cmd_desc,      defstore_cmd_help   )
 COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       NULL                )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
