@@ -199,7 +199,8 @@ static int  non_arch_dep_static_helper_two( xxx... )
 /*                                                                   */
 /* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
 /* macros anywhere in any of your non-arch_dep functions. This means */
-/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function.  */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function,  */
+/* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
 /*                                                                   */
 /* Basically you MUST NOT use any architecture dependent macro that  */
 /* is #defined in the "feature.h" header.  If you you need to use    */

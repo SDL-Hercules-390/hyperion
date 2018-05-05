@@ -3094,6 +3094,7 @@ int           system_reset         ( const int target_mode, const bool clear, co
 int ARCH_DEP( system_reset )       ( const int target_mode, const bool clear, const bool ipl, const int cpu );
 int           cpu_reset            (REGS *regs);
 int ARCH_DEP( cpu_reset )          (REGS *regs);
+void          initial_cpu_reset_all();
 int           initial_cpu_reset    (REGS *regs);
 int ARCH_DEP( initial_cpu_reset )  (REGS *regs);
 int ARCH_DEP( common_load_begin )  (int cpu, int clear);

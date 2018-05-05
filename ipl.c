@@ -30,6 +30,12 @@
 #include "hexterns.h"
 #endif
 
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+// Note: non-arch-dep static functions should ideally be at the end
+// but you can put them here by using an ifdef similar to the below
 
 /*-------------------------------------------------------------------*/
 /* Function to reset instruction count and CPU time                  */
@@ -86,6 +92,20 @@ static INLINE void subsystem_reset()
     OBTAIN_INTLOCK( NULL );
 }
 #endif // _subsystem_reset_
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
 /* Function to perform System Reset   (either 'normal' or 'clear')   */
@@ -714,21 +734,68 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     return rc1;
 } /* end function initial_cpu_reset */
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "ipl.c"
-#endif
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "ipl.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "ipl.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "ipl.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+//-------------------------------------------------------------------
+//                      _FEATURE_XXX code
+//-------------------------------------------------------------------
+// Place any _FEATURE_XXX depdendent functions (WITH the underscore)
+// here. You may need to define such functions whenever one or more
+// build architectures has a given FEATURE_XXX (WITHOUT underscore)
+// defined for it. The underscore means AT LEAST ONE of the build
+// architectures #defined that feature. (See featchk.h) You must NOT
+// use any #ifdef FEATURE_XXX here. Test for ONLY for _FEATURE_XXX.
+// The functions in this area are compiled ONCE (only ONE time) and
+// ONLY one time but are always compiled LAST after everything else.
+//-------------------------------------------------------------------
 
 /*********************************************************************/
-/*             Externally Initiated Functions...                     */
+/*                  IMPORTANT PROGRAMMING NOTE                       */
+/*********************************************************************/
+/*                                                                   */
+/* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
+/* macros anywhere in any of your non-arch_dep functions. This means */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function,  */
+/* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
+/*                                                                   */
+/* Basically you MUST NOT use any architecture dependent macro that  */
+/* is #defined in the "feature.h" header.  If you you need to use    */
+/* any of them, then your function MUST be an "ARCH_DEP" function    */
+/* that is placed within the ARCH_DEP section at the beginning of    */
+/* this module where it can be compiled multiple times, once for     */
+/* each of the supported architectures so the macro gets #defined    */
+/* to its proper value for the architecture. YOU HAVE BEEN WARNED.   */
+/*                                                                   */
 /*********************************************************************/
 
 /*-------------------------------------------------------------------*/
@@ -755,6 +822,27 @@ int load_ipl( U16 lcss, U16 devnum, int cpu, int clear )
     }
 
     return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* initial_cpu_reset_all -- do initial_cpu_reset for every processor */
+/*-------------------------------------------------------------------*/
+void initial_cpu_reset_all()
+{
+    REGS* regs;
+    int cpu;
+
+    if (sysblk.cpus)
+    {
+        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
+        {
+            if (IS_CPU_ONLINE( cpu ))
+            {
+                regs = sysblk.regs[ cpu ];
+                initial_cpu_reset( regs ) ;
+            }
+        }
+    }
 }
 
 /*-------------------------------------------------------------------*/

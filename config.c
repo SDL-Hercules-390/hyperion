@@ -20,6 +20,16 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "chsc.h"
 
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+// (we have no ARCH_DEP code in this module)
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
 #if !defined( _GEN_ARCH )
 
 #if defined( _ARCH_NUM_2 )
@@ -33,6 +43,40 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  #include "config.c"
  #undef   _GEN_ARCH
 #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+/*********************************************************************/
+/*                  IMPORTANT PROGRAMMING NOTE                       */
+/*********************************************************************/
+/*                                                                   */
+/* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
+/* macros anywhere in any of your non-arch_dep functions. This means */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function,  */
+/* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
+/*                                                                   */
+/* Basically you MUST NOT use any architecture dependent macro that  */
+/* is #defined in the "feature.h" header.  If you you need to use    */
+/* any of them, then your function MUST be an "ARCH_DEP" function    */
+/* that is placed within the ARCH_DEP section at the beginning of    */
+/* this module where it can be compiled multiple times, once for     */
+/* each of the supported architectures so the macro gets #defined    */
+/* to its proper value for the architecture. YOU HAVE BEEN WARNED.   */
+/*                                                                   */
+/*********************************************************************/
 
 #if defined( HAVE_MLOCKALL )
 /*-------------------------------------------------------------------*/
@@ -129,10 +173,8 @@ BYTE *mainstor;
 BYTE *storkeys;
 BYTE *dofree = NULL;
 char *mfree = NULL;
-REGS *regs;
 U64   storsize;
 U32   skeysize;
-int cpu;
 
     /* Ensure all CPUs have been stopped */
     if (are_any_cpus_started())
@@ -307,19 +349,8 @@ int cpu;
 #endif
 
     configure_region_reloc();
+    initial_cpu_reset_all();
 
-    /* Call initial_cpu_reset for every online processor */
-    if (sysblk.cpus)
-    {
-        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
-        {
-            if (IS_CPU_ONLINE(cpu))
-            {
-                regs=sysblk.regs[cpu];
-                ARCH_DEP(initial_cpu_reset) (regs) ;
-            }
-        }
-    }
     return 0;
 }
 
@@ -336,8 +367,6 @@ int configure_xstorage( U64 xpndsize )
 BYTE *xpndstor;
 BYTE *dofree = NULL;
 char *mfree = NULL;
-REGS *regs;
-int  cpu;
 
     /* Ensure all CPUs have been stopped */
     if (are_any_cpus_started())
@@ -429,19 +458,7 @@ int  cpu;
     xstorage_clear();
 
     configure_region_reloc();
-
-    /* Call initial_cpu_reset for every online processor */
-    if (sysblk.cpus)
-    {
-        for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
-        {
-            if (IS_CPU_ONLINE(cpu))
-            {
-                regs=sysblk.regs[cpu];
-                ARCH_DEP(initial_cpu_reset) (regs) ;
-            }
-        }
-    }
+    initial_cpu_reset_all();
 
 #else /*!_FEATURE_EXPANDED_STORAGE*/
     UNREFERENCED(xpndsize);
