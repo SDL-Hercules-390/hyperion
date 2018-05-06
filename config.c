@@ -192,16 +192,6 @@ U64 adjust_mainsize( int archnum, U64 mainsize )
     if (mainsize > max_mainsize[ archnum ])
         mainsize = max_mainsize[ archnum ];
 
-    /* Special case: 32-bit build of Herc limited to 32-bits */
-    if (sizeof( size_t ) < sizeof( U64 ))
-    {
-        if (mainsize < MIN_X86_MAINSIZE_BYTES)
-            mainsize = MIN_X86_MAINSIZE_BYTES;
-
-        if (mainsize > MAX_X86_MAINSIZE_BYTES)
-            mainsize = MAX_X86_MAINSIZE_BYTES;
-    }
-
     /* Special case: if no CPUs then no storage is needed */
     if (sysblk.maxcpu <= 0)
         mainsize = 0;
@@ -296,17 +286,6 @@ int configure_storage( U64 mainsize /* number of 4K pages */ )
     /* New memory is obtained only if the requested and calculated size
      * is larger than the last allocated size, or if the request is for
      * less than 2M of memory.
-     *
-     * Note: Using the current algorithm, storage on a 32-bit host OS
-     *       is normally limited to a guest total of 1326M, split
-     *       between main and expanded storage. The most either may
-     *       specify is 919M. For example, one may specify MAINSIZE
-     *       919M and XPNDSIZE 407M, for a total of 1326M.
-     *
-     *       Please understand that the results on any individual
-     *       32-bit host OS may vary from the note above, and the
-     *       note does not apply to any 64-bit host OS.
-     *
      */
     if (0
         || (storsize > config_allocmsize)
@@ -452,19 +431,7 @@ int configure_xstorage( U64 xpndsize )
 
     /* New memory is obtained only if the requested and calculated size
      * is larger than the last allocated size.
-     *
-     * Note: Using the current algorithm, storage on a 32-bit host OS
-     *       is normally limited to a guest total of 1326M, split
-     *       between main and expanded storage. The most either may
-     *       specify is 919M. For example, one may specify MAINSIZE
-     *       407M and XPNDSIZE 919M, for a total of 1326M.
-     *
-     *       Please understand that the results on any individual
-     *       32-bit host OS may vary from the note above, and the note
-     *       does not apply to any 64-bit host OS.
-     *
      */
-
     if (xpndsize > config_allocxsize)
     {
         if (config_mfree)
