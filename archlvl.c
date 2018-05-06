@@ -330,10 +330,10 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
             sysblk.dummyregs.arch_mode = sysblk.arch_mode;
         }
         RELEASE_INTLOCK( NULL );
-
-        /* Perform "initial_cpu_reset()" for all processors */
-        initial_cpu_reset_all();
     }
+
+    /* ALWAYS do an "initial_cpu_reset()" for all processors */
+    initial_cpu_reset_all();
 
     /* Display results */
     if (argc > 1 && MLVL( VERBOSE ))
