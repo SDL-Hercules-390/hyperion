@@ -727,6 +727,7 @@ wantpgm     = ''
 prefix      = ''
 gpr.        = ''
 cr.         = ''
+xr.         = ''
 
 lastinfo    = ''
 lastmsg.0   = 0
@@ -841,64 +842,89 @@ Return
 /*********************************************************************/
 /*                           HHC02269I                               */
 /*********************************************************************/
-/* HHC02269I General purpose registers                                       */
-/* HHC02269I R0=0000000000000060 R1=0000000000000000 R2=0000...      */
-/* HHC02269I R4=0000000000000000 R5=0000000000000000 R6=0000...      */
-/* HHC02269I R8=0000000000000000 R9=0000000000000000 RA=0000...      */
-/* HHC02269I RC=0000000000000000 RD=0000000000000000 RE=0000...      */
-/*     --or--                                                        */
-/* HHC02269I General purpose registers                               */
-/* HHC02269I GR00=000000E0 GR01=00000000 GR02=FFFFFFFF GR03=00000000 */
-/* HHC02269I GR04=00000000 GR05=00000000 GR06=00000000 GR07=00000000 */
-/* HHC02269I GR08=00000000 GR09=00000000 GR10=00000000 GR11=00000000 */
-/* HHC02269I GR12=00000000 GR13=00000000 GR14=C2000000 GR15=00000200 */
-/*********************************************************************/
-
 HHC02269I:
-If verb = 'General'         -- (ignore header line)  
-   Then Return
-regsline = verb rest        -- ("R0=... R1..." etc, as one long string)
-Do While regsline \= ''
-   If LEFT( regsline, 2 ) = "GR" Then
-      Parse Var regsline    'GR' regnum '=' regval regsline
-   Else
-      Parse Var regsline    'R'  regnum '=' regval regsline
-   If \isnum( regnum )
-      Then regnum = X2D( regnum )
-   regnum = regnum + 0
-   gpr.regnum = regval
-End
+Call HHC022nnI 'General', 'GR', 'R';
+gpr. = xr.
 Return
 
 /*********************************************************************/
 /*                           HHC02271I                               */
 /*********************************************************************/
-/* HHC02271I Control registers                                       */
-/* HHC02271I C0=0000000000000060 C1=0000000000000000 C2=0000...      */
-/* HHC02271I C4=0000000000000000 C5=0000000000000000 C6=0000...      */
-/* HHC02271I C8=0000000000000000 C9=0000000000000000 CA=0000...      */
-/* HHC02271I CC=0000000000000000 CD=0000000000000000 CE=0000...      */
-/*     --or--                                                        */
-/* HHC02271I Control registers                                       */
-/* HHC02271I CR00=000000E0 CR01=00000000 CR02=FFFFFFFF CR03=00000000 */
-/* HHC02271I CR04=00000000 CR05=00000000 CR06=00000000 CR07=00000000 */
-/* HHC02271I CR08=00000000 CR09=00000000 CR10=00000000 CR11=00000000 */
-/* HHC02271I CR12=00000000 CR13=00000000 CR14=C2000000 CR15=00000200 */
-/*********************************************************************/
-
 HHC02271I:
-If verb = 'Control'         -- (ignore header line)  
-   Then Return
-regsline = verb rest        -- ("C0=... C1..." etc, as one long string)
+Call HHC022nnI 'Control', 'CR', 'C';
+cr. = xr.
+Return
+
+/*********************************************************************/
+/*                           HHC022nnI                               */
+/*********************************************************************/
+/* HHC022nnI xxxxxxx registers                                       */
+/* HHC022nnI x0=0000000000000060 x1=0000000000000000 x2=0000...      */
+/* HHC022nnI x4=0000000000000000 x5=0000000000000000 x6=0000...      */
+/* HHC022nnI x8=0000000000000000 x9=0000000000000000 xA=0000...      */
+/* HHC022nnI xC=0000000000000000 xD=0000000000000000 xE=0000...      */
+/*           --or--                                                  */
+/* HHC022nnI xxxxxxx registers                                       */
+/* HHC022nnI xR00=000000E0 xR01=00000000 xR02=FFFFFFFF xR03=00000000 */
+/* HHC022nnI xR04=00000000 xR05=00000000 xR06=00000000 xR07=00000000 */
+/* HHC022nnI xR08=00000000 xR09=00000000 xR10=00000000 xR11=00000000 */
+/* HHC022nnI xR12=00000000 xR13=00000000 xR14=C2000000 xR15=00000200 */
+/*           --or--                                                  */
+/* HHC022nnI xxxxxxx registers                                       */
+/* HHC022nnI CP00: x0=0000000000000000 x1=0000000000000000           */
+/* HHC022nnI CP00: x2=0000000000000000 x3=0000000000000000           */
+/* HHC022nnI CP00: x4=0000000000000000 x5=0000000000000000           */
+/* HHC022nnI CP00: x6=0000000000000000 x7=0000000000000000           */
+/* HHC022nnI CP00: x8=0000000000000000 x9=0000000000000000           */
+/* HHC022nnI CP00: xA=0000000000000000 xB=0000000000000000           */
+/* HHC022nnI CP00: xC=0000000000000000 xD=0000000000000000           */
+/* HHC022nnI CP00: xE=0000000000000000 xF=0000000000000000           */
+/*           --or--                                                  */
+/* HHC022nnI xxxxxxx registers                                       */
+/* HHC022nnI CP00: xx00=00000000 xx01=00000000 xx02=00000000 ...     */
+/* HHC022nnI CP00: xx04=00000000 xx05=00000000 xx06=00000000 ...     */
+/* HHC022nnI CP00: xx08=00000000 xx09=00000000 xx10=00000000 ...     */
+/* HHC022nnI CP00: xx12=00000000 xx13=00000000 xx14=00000000 ...     */
+/*********************************************************************/
+HHC022nnI:
+
+/* Example call:   Call HHC022nnI  'General',  'GR',  'R' ;   */
+/* Example call:   Call HHC022nnI  'Control',  'CR',  'C' ;   */
+
+If verb = ARG(1) Then Return  -- (ignore header line)  
+regsline = verb rest          -- ("x0=... x1..." as one long string)
+
+/* If NUMCPU > 1 strip the engine name/number prefix from each line */
+If LEFT( regsline, 2 ) = 'CP' | ,
+   LEFT( regsline, 2 ) = 'AP' | ,
+   LEFT( regsline, 2 ) = 'IL' | ,
+   LEFT( regsline, 2 ) = 'CF' | ,
+   LEFT( regsline, 2 ) = 'IP' Then
+Do
+   cputype  =      SUBSTR( regsline, 1, 2 )
+   cpunum   = X2D( SUBSTR( regsline, 3, 2 ))
+   regsline =      SUBSTR( regsline, 7 )
+End
+
+/* Register id expressed differently between architectures */
+If LEFT( regsline, 2 ) = ARG(2) Then
+  regid = ARG(2)
+Else
+  regid = ARG(3)
+
+/* Parse each individual register number and value... */
 Do While regsline \= ''
-   If LEFT( regsline, 2 ) = "CR" Then
-      Parse Var regsline    'CR' regnum '=' regval regsline
-   Else
-      Parse Var regsline    'C'  regnum '=' regval regsline
+
+   /* Extract the register number and register value */
+   INTERPRET "Parse Var regsline '" || regid || "' regnum '=' regval regsline"
+
+   /* Deal with hexadecimal register numbers */
    If \isnum( regnum )
       Then regnum = X2D( regnum )
+
    regnum = regnum + 0
-   cr.regnum = regval
+   xr.regnum = regval
+
 End
 Return
 
