@@ -17,46 +17,64 @@ numcpu 1
 
 archlvl s/370
 
+* Test 1
 mainsize -1
 *Error HHC01451E Invalid value -1 specified for MAINSIZE
 
+* Test 2
 mainsize 0
 *Error HHC01451E Invalid value 0 specified for MAINSIZE
 
+* Test 3
 mainsize 1
 *Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 
+* Test 4
 mainsize 1B
 *Error HHC01451E Invalid value 1B specified for MAINSIZE
 
+* Test 5
 mainsize 2K
 *Error HHC01451E Invalid value 2K specified for MAINSIZE
 
+* Test 6
 mainsize 65535B
 *Info HHC17003I MAIN     storage is 64K (mainsize); storage is not locked
 
+* Test 7
 mainsize 65536B
 *Info HHC17003I MAIN     storage is 64K (mainsize); storage is not locked
 
+* Test 8
 mainsize 16777215B
 *Info HHC17003I MAIN     storage is 16M (mainsize); storage is not locked
 
+* Test 9
 mainsize 16777216B
 *Info HHC17003I MAIN     storage is 16M (mainsize); storage is not locked
 
+* Test 10
 mainsize 16777217B
 *Info HHC17003I MAIN     storage is 16388K (mainsize); storage is not locked
 
+* Test 11
 mainsize 16m
 *Info HHC17003I MAIN     storage is 16M (mainsize); storage is not locked
 
-mainsize 1g
-*Info HHC17003I MAIN     storage is 1G (mainsize); storage is not locked
+* Test 12  (usually fails with 32-bit build of Hercules due to limited memory)
 
+*If $ptrsize \= 4
+  mainsize 1g
+  *Info HHC17003I MAIN     storage is 1G (mainsize); storage is not locked
+*Fi
+
+* Test 13
 mainsize 4K
 *Error HHC01451E Invalid value 4K specified for MAINSIZE
 
 #-------------------------------------------------------------------------------
+
+* Test 14
 
 archlvl esa/390
 
@@ -64,6 +82,8 @@ mainsize 1b
 *Error HHC01451E Invalid value 1b specified for MAINSIZE
 
 #-------------------------------------------------------------------------------
+
+* Test 15
 
 mainsize 2g
 
@@ -80,6 +100,8 @@ mainsize 2g
 
 #-------------------------------------------------------------------------------
 
+* Test 16
+
 mainsize 2147483647B
 
 *If $ptrsize = 4
@@ -94,6 +116,8 @@ mainsize 2147483647B
 *Fi
 
 #-------------------------------------------------------------------------------
+
+* Test 17
 
 mainsize 2147483648b
 
@@ -110,10 +134,14 @@ mainsize 2147483648b
 
 #-------------------------------------------------------------------------------
 
+* Test 18
+
 mainsize 2147483649B
 *Error HHC01451E Invalid value 2147483649B specified for MAINSIZE
 
 #-------------------------------------------------------------------------------
+
+* Test 19
 
 archlvl z/Arch
 
@@ -122,10 +150,14 @@ mainsize 16e
 
 #-------------------------------------------------------------------------------
 
+* Test 20
+
 mainsize 17E
 *Error HHC01451E Invalid value 17E specified for MAINSIZE
 
 #-------------------------------------------------------------------------------
+
+* Test 21
 
 archlvl s/370
 
@@ -134,6 +166,8 @@ mainsize 4k
 
 #-------------------------------------------------------------------------------
 
+* Test 22
+
 archlvl z/Arch
 
 *Info 3 HHC00811I Processor CP00: architecture mode z/Arch
@@ -141,6 +175,8 @@ archlvl z/Arch
 
 #-------------------------------------------------------------------------------
 # Test automatic MAINSIZE adjustment (raise/lower) on architecture switch
+
+* Test 23
 
 *If $ptrsize \= 4
 
@@ -152,8 +188,12 @@ archlvl z/Arch
 
 *Fi
 
+* Test 24
+
 mainsize 64k
 *Info HHC17003I MAIN     storage is 64K (mainsize); storage is not locked
+
+* Test 25
 
 archlvl z/Arch
 *Info 2 HHC17006W MAINSIZE increased to 1M architectural minimim
