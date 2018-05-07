@@ -1748,6 +1748,9 @@
     <None Include="tests\cmd-rv.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\cr.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\csxtr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

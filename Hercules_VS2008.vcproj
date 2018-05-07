@@ -4074,6 +4074,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\cr.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\csxtr.tst"
 							>
 						</File>

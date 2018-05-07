@@ -264,6 +264,7 @@ Select
    When msg = 'HHC01417I' Then Call HHC01417I   -- (startup)
    When msg = 'HHC01603I' Then Call HHC01603I   -- (command echo)
    When msg = 'HHC02269I' Then Call HHC02269I
+   When msg = 'HHC02271I' Then Call HHC02271I
    When msg = 'HHC02290I' Then Call HHC02290I   -- (real, absolute)
    When msg = 'HHC02291I' Then Call HHC02291I   -- (virtual)
 
@@ -544,6 +545,7 @@ Select
       When verb = '*Done'      Then call EndTest
       When verb = '*Want'      Then call DoWant
       When verb = '*Gpr'       Then call WantGPR
+      When verb = '*Cr'        Then call WantCR
       When verb = '*Key'       Then call WantKey
       When verb = '*Prefix'    Then call WantPrefix
       When verb = '*Explain'   Then call DoExplain
@@ -724,6 +726,7 @@ pgmchk      = ''
 wantpgm     = ''
 prefix      = ''
 gpr.        = ''
+cr.         = ''
 
 lastinfo    = ''
 lastmsg.0   = 0
@@ -761,6 +764,18 @@ WantGPR:
 Parse Upper Var rest r what '#' .
 Call OkayOrNot gpr.r = what, 'Gpr' r 'compare mismatch.',,
     'Want:' what, 'Got: ' gpr.r
+Return
+
+/*********************************************************************/
+/*                           WantCR                                  */
+/*********************************************************************/
+/* Verify contents of a control register.                            */
+/*********************************************************************/
+
+WantCR:
+Parse Upper Var rest r what '#' .
+Call OkayOrNot cr.r = what, 'Cr' r 'compare mismatch.',,
+    'Want:' what, 'Got: ' cr.r
 Return
 
 /*********************************************************************/
@@ -826,10 +841,17 @@ Return
 /*********************************************************************/
 /*                           HHC02269I                               */
 /*********************************************************************/
-/*  HHC02269I General purpose registers                              */
-/*  HHC02269I R0=0000000000000001 R1=0000000000000618 R2=0000...     */
-/*  HHC02269I R4=0000000000000500 R5=0000000000000000 R6=0000...     */
-/*  ...etc...                                                        */
+/* HHC02269I General purpose registers                                       */
+/* HHC02269I R0=0000000000000060 R1=0000000000000000 R2=0000...      */
+/* HHC02269I R4=0000000000000000 R5=0000000000000000 R6=0000...      */
+/* HHC02269I R8=0000000000000000 R9=0000000000000000 RA=0000...      */
+/* HHC02269I RC=0000000000000000 RD=0000000000000000 RE=0000...      */
+/*     --or--                                                        */
+/* HHC02269I General purpose registers                               */
+/* HHC02269I GR00=000000E0 GR01=00000000 GR02=FFFFFFFF GR03=00000000 */
+/* HHC02269I GR04=00000000 GR05=00000000 GR06=00000000 GR07=00000000 */
+/* HHC02269I GR08=00000000 GR09=00000000 GR10=00000000 GR11=00000000 */
+/* HHC02269I GR12=00000000 GR13=00000000 GR14=C2000000 GR15=00000200 */
 /*********************************************************************/
 
 HHC02269I:
@@ -837,11 +859,62 @@ If verb = 'General'         -- (ignore header line)
    Then Return
 regsline = verb rest        -- ("R0=... R1..." etc, as one long string)
 Do While regsline \= ''
-   Parse Var regsline  'R' regnum '=' regval regsline
-   regnum = X2D( regnum )
+   If LEFT( regsline, 2 ) = "GR" Then
+      Parse Var regsline    'GR' regnum '=' regval regsline
+   Else
+      Parse Var regsline    'R'  regnum '=' regval regsline
+   If \isnum( regnum )
+      Then regnum = X2D( regnum )
+   regnum = regnum + 0
    gpr.regnum = regval
 End
 Return
+
+/*********************************************************************/
+/*                           HHC02271I                               */
+/*********************************************************************/
+/* HHC02271I Control registers                                       */
+/* HHC02271I C0=0000000000000060 C1=0000000000000000 C2=0000...      */
+/* HHC02271I C4=0000000000000000 C5=0000000000000000 C6=0000...      */
+/* HHC02271I C8=0000000000000000 C9=0000000000000000 CA=0000...      */
+/* HHC02271I CC=0000000000000000 CD=0000000000000000 CE=0000...      */
+/*     --or--                                                        */
+/* HHC02271I Control registers                                       */
+/* HHC02271I CR00=000000E0 CR01=00000000 CR02=FFFFFFFF CR03=00000000 */
+/* HHC02271I CR04=00000000 CR05=00000000 CR06=00000000 CR07=00000000 */
+/* HHC02271I CR08=00000000 CR09=00000000 CR10=00000000 CR11=00000000 */
+/* HHC02271I CR12=00000000 CR13=00000000 CR14=C2000000 CR15=00000200 */
+/*********************************************************************/
+
+HHC02271I:
+If verb = 'Control'         -- (ignore header line)  
+   Then Return
+regsline = verb rest        -- ("C0=... C1..." etc, as one long string)
+Do While regsline \= ''
+   If LEFT( regsline, 2 ) = "CR" Then
+      Parse Var regsline    'CR' regnum '=' regval regsline
+   Else
+      Parse Var regsline    'C'  regnum '=' regval regsline
+   If \isnum( regnum )
+      Then regnum = X2D( regnum )
+   regnum = regnum + 0
+   cr.regnum = regval
+End
+Return
+
+/*********************************************************************/
+/*                           isnum                                   */
+/*********************************************************************/
+
+isnum: procedure -- (is it a numeric value?)
+return arg(1) <> "" & datatype(arg(1),"N");
+
+/*********************************************************************/
+/*                           ishex                                   */
+/*********************************************************************/
+
+ishex: procedure -- (is it a hexadecimal value?)
+return arg(1) <> "" & datatype(arg(1),"X");
 
 /*********************************************************************/
 /*                           DoExplain                               */

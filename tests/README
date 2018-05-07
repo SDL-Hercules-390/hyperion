@@ -332,6 +332,8 @@ are case sensitive.  Using "*testcase" for example accomplishes nothing.
             notify the CMS test driver that the register contains a
             storage address.
 
+*Cr         Same thing as *Gpr except for control registers.
+
 *Key        Compare the specified key against the key displayed in the
             previous r command.
 

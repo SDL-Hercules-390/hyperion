@@ -817,6 +817,7 @@
     <None Include="tests\cmd-rv-4K-32.subtst" />
     <None Include="tests\cmd-rv-4K-64.subtst" />
     <None Include="tests\cmd-rv.tst" />
+    <None Include="tests\cr.tst" />
     <None Include="tests\cpu0off.core" />
     <None Include="tests\csxtr.assemble" />
     <None Include="tests\csxtr.listing" />

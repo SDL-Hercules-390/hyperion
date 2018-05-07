@@ -131,11 +131,12 @@ EXTRA_DIST =                    \
      cipher.tst                 \
      cmd-abs-2K.subtst          \
      cmd-abs-4K.subtst          \
-     cmd-abs.subtst             \
+     cmd-abs.tst                \
      cmd-rv-2K.subtst           \
      cmd-rv-4K-32.subtst        \
      cmd-rv-4K-64.subtst        \
-     cmd-rv.subtst              \
+     cmd-rv.tst                 \
+     cr.tst                     \
      comments.txt               \
      cpu0off.core               \
      cpsdr.txt                  \
