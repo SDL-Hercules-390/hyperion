@@ -48,7 +48,6 @@ static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
 static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
 static char  logger_filename[MAX_PATH];
 
-
 /*********************************************************************/
 /*              log_read  -  read system log                         */
 /*********************************************************************/
@@ -191,6 +190,35 @@ int  i;
     return i ? msglen[i] + msgidx[0] : msglen[i];
 }
 
+#if !defined( _MSVC_ )
+
+static int  saved_stdout;
+
+static void logger_redirect()
+{
+    /* Save current stdout for later */
+    saved_stdout = dup( STDOUT_FILENO );
+
+    /* Redirect stdout to the logger */
+    if (dup2( logger_syslogfd[ LOG_WRITE ], STDOUT_FILENO ) == -1)
+    {
+        if (logger_hrdcpy)
+        {
+            // "Logger: error in function %s: %s"
+            fprintf( logger_hrdcpy, MSG( HHC02102, "E", "dup2()", strerror( errno )));
+        }
+        exit(1);
+    }
+}
+
+DLL_EXPORT void logger_unredirect()
+{
+    /* Restore stdout */
+    dup2(  saved_stdout, STDOUT_FILENO );
+    close( saved_stdout );
+}
+
+#endif // !defined( _MSVC_ )
 
 static void logger_term(void *arg)
 {
@@ -316,6 +344,17 @@ int bytes_read;
 
     /* Set device thread priority; ignore any errors */
     set_thread_priority(0, sysblk.devprio);
+
+
+
+
+#if !defined( _MSVC_ )
+    logger_redirect();
+#endif
+
+
+
+
 
     setvbuf (stdout, NULL, _IONBF, 0);
 

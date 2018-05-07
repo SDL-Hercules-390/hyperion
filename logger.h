@@ -34,7 +34,8 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* log message logging facility */
+/* log message logging facility                                      */
+/*-------------------------------------------------------------------*/
 
 #define LOG_NOBLOCK     0           // log_read() block option
 #define LOG_BLOCK       1           // log_read() block option
@@ -47,6 +48,9 @@ LOGR_DLL_IMPORT void   log_wakeup      ( void* arg );
 LOGR_DLL_IMPORT char*  log_dsphrdcpy   ();
 LOGR_DLL_IMPORT int    logger_isactive ();
 LOGR_DLL_IMPORT void   logger_timestamped_logfile_write( const void* pBuff, size_t nBytes );
+#if !defined( _MSVC_ )
+LOGR_DLL_IMPORT void   logger_unredirect();
+#endif
 
 /*-------------------------------------------------------------------*/
 
@@ -54,5 +58,7 @@ extern int logger_syslogfd[2];      // logger pipe file descriptors
 
 #define LOG_READ           0        // read  end of logger pipe
 #define LOG_WRITE          1        // write end of logger pipe
+
+/*-------------------------------------------------------------------*/
 
 #endif /* __LOGGER_H__ */
