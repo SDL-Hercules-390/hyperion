@@ -73,9 +73,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
   #define MAX_DEVLIST_DEVICES   (1024)      // 32-bit builds
 #endif
 
-#if defined( FEATURE_ECPSVM )
+#if defined( _FEATURE_ECPSVM )
 extern int ecpsvm_command( int argc, char **argv );
 #endif
+
 int HercCmdLine ( char *cmdline );
 int exec_cmd(int argc, char *argv[],char *cmdline);
 
@@ -1018,7 +1019,7 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#ifdef OPTION_IODELAY_KLUDGE
+#if defined( OPTION_IODELAY_KLUDGE )
 /*-------------------------------------------------------------------*/
 /* iodelay command - display or set I/O delay value                  */
 /*-------------------------------------------------------------------*/
@@ -1053,7 +1054,7 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-#endif /* #ifdef OPTION_IODELAY_KLUDGE */
+#endif /* defined( OPTION_IODELAY_KLUDGE ) */
 
 /*-------------------------------------------------------------------*/
 /* autoinit_cmd - show or set AUTOINIT switch                        */
@@ -1180,7 +1181,7 @@ static int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
 
     /* Convert tamdir to absolute path ending with a slash */
 
-#if defined(_MSVC_)
+#if defined( _MSVC_ )
     /* (expand any embedded %var% environment variables) */
     rc = expand_environ_vars( tamdir, dirwrk, MAX_PATH );
     if (rc == 0)
@@ -1446,19 +1447,19 @@ int rc;
         if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
         else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
 
-#if defined(_MSVC_)
+#if defined( _MSVC_ )
         // (expand any embedded %var% environment variables)
         rc = expand_environ_vars( tamdir2, workdir, MAX_PATH );
         if (rc == 0)
             strlcpy (tamdir2, workdir, MAX_PATH);
-#endif // _MSVC_
+#endif
 
         if (sysblk.defdir == NULL
-#if defined(_MSVC_)
+#if defined( _MSVC_ )
             || tamdir2[1] == ':'    // (fullpath given?)
-#else // !_MSVC_
+#else
             || tamdir2[0] == '/'    // (fullpath given?)
-#endif // _MSVC_
+#endif
             || tamdir2[0] == '.'    // (relative path given?)
         )
             tamdir1[0] = 0;         // (then use just given spec)
@@ -2515,7 +2516,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
 }  /* End of qeth_cmd */
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
 /*-------------------------------------------------------------------*/
 /* tt32 command - control/query CTCI-WIN functionality               */
 /*-------------------------------------------------------------------*/
@@ -2623,7 +2624,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     return rc;
 }
-#endif /* defined(OPTION_W32_CTCI) */
+#endif /* defined( OPTION_W32_CTCI ) */
 
 /*-------------------------------------------------------------------*/
 /* sclproot command - set SCLP base directory                        */
@@ -2927,10 +2928,10 @@ BYTE c;
     return rc;
 }
 
+#if defined( HAVE_MLOCKALL )
 /*-------------------------------------------------------------------*/
 /* memlock - lock all hercules memory                                */
 /*-------------------------------------------------------------------*/
-#if defined(HAVE_MLOCKALL)
 int memlock_cmd(int argc, char *argv[], char *cmdline)
 {
 int rc = 0;
@@ -2958,8 +2959,8 @@ int rc = 0;
 
 int memfree_cmd(int argc, char *argv[], char *cmdline)
 {
-int  mfree;
-char c;
+    int  mfree;
+    char c;
 
     UNREFERENCED(cmdline);
 
@@ -2970,7 +2971,7 @@ char c;
 
     return 0;
 }
-#endif /*defined(HAVE_MLOCKALL)*/
+#endif /* defined( HAVE_MLOCKALL ) */
 
 int qstor_cmd(int argc, char *argv[], char *cmdline);
 int mainsize_cmd(int argc, char *argv[], char *cmdline);
@@ -3946,7 +3947,7 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#ifdef PANEL_REFRESH_RATE
+#if defined( PANEL_REFRESH_RATE )
 /*-------------------------------------------------------------------*/
 /* panrate command - display or set rate at which console refreshes  */
 /*-------------------------------------------------------------------*/
@@ -4010,7 +4011,7 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
-#endif /*PANEL_REFRESH_RATE */
+#endif /* defined( PANEL_REFRESH_RATE ) */
 
 /*-------------------------------------------------------------------*/
 /* pantitle xxxxxxxx command - set console title                     */
@@ -4597,7 +4598,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
 static int default_shrdport = 3390;
 /*-------------------------------------------------------------------*/
 /* shrdport - shared dasd port number                                */
@@ -4639,7 +4640,7 @@ BYTE c;
 
     return 0;
 }
-#endif /*defined(OPTION_SHARED_DEVICES)*/
+#endif /* defined( OPTION_SHARED_DEVICES ) */
 
 /*-------------------------------------------------------------------*/
 /* lparname - set or display LPAR name                               */
@@ -6977,7 +6978,7 @@ int defsym_cmd( int argc, char* argv[], char* cmdline )
     free( sym );
     return 0;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
 /*-------------------------------------------------------------------*/
@@ -7023,7 +7024,7 @@ int delsym_cmd( int argc, char* argv[], char* cmdline )
     free( sym );
     return 0;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* x+ and x- commands - turn switches on or off                      */
@@ -7085,7 +7086,7 @@ BYTE c;                                 /* Character work area       */
         return 0;
     }
 
-#ifdef OPTION_CKD_KEY_TRACING
+#if defined( OPTION_CKD_KEY_TRACING )
 
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
 
@@ -7238,7 +7239,7 @@ int cmdsep_cmd( int argc, char* argv[], char* cmdline )
     return rc;
 }
 
-#if defined(_FEATURE_SYSTEM_CONSOLE)
+#if defined( _FEATURE_SYSTEM_CONSOLE )
 /*-------------------------------------------------------------------*/
 /* ssd - signal shutdown command                                     */
 /*-------------------------------------------------------------------*/
@@ -7325,7 +7326,7 @@ int scpimply_cmd(int argc, char *argv[], char *cmdline)
         WRMSG(HHC02204, "I", argv[0], (sysblk.scpimply ? "ON" : "OFF") );
     return 0;
 }
-#endif
+#endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
 
 /*-------------------------------------------------------------------*/
 /* ldmod - load a module                                             */
@@ -7493,7 +7494,7 @@ int modpath_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#ifdef FEATURE_ECPSVM
+#if defined( _FEATURE_ECPSVM )
 /*-------------------------------------------------------------------*/
 /* ecpsvm - ECPS:VM command                                          */
 /*-------------------------------------------------------------------*/
@@ -7601,7 +7602,7 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
 
     return rc;
 }
-#endif
+#endif /* defined( _FEATURE_ECPSVM ) */
 
 /*-------------------------------------------------------------------*/
 /* herclogo - Set the hercules logo file                             */
@@ -7696,7 +7697,7 @@ int sizeof_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#if defined(OPTION_HAO)
+#if defined( OPTION_HAO )
 /*-------------------------------------------------------------------*/
 /* hao - Hercules Automatic Operator                                 */
 /*-------------------------------------------------------------------*/
@@ -7707,7 +7708,7 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
     hao_command(cmdline);   /* (actual HAO code is in module hao.c) */
     return 0;
 }
-#endif /* defined(OPTION_HAO) */
+#endif /* defined( OPTION_HAO ) */
 
 /*-------------------------------------------------------------------*/
 /* conkpalv - set console session TCP keepalive values               */
@@ -8050,7 +8051,7 @@ int qpfkeys_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
+#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* qpid command                                                      */
@@ -8110,12 +8111,12 @@ int qports_cmd( int argc, char* argv[], char* cmdline )
         // "%s server inactive"
         WRMSG( HHC17002, "I", "Shared DASD" );
     }
-#else // !defined(OPTION_SHARED_DEVICES)
+#else // !defined( OPTION_SHARED_DEVICES )
 
     // "%s support not included in this engine build"
     WRMSG( HHC17015, "I", "Shared DASD" );
 
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif // defined( OPTION_SHARED_DEVICES )
 
     if (!strchr( sysblk.cnslport, ':' ))
     {
@@ -8166,7 +8167,7 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
 
     /* Visual Studio doesn't support macros split with #ifdefs */
     {
-#ifdef _FEATURE_S370_S390_VECTOR_FACILITY
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 
         u_int  nv  = sysblk.numvec;
 #else

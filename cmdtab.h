@@ -1716,7 +1716,7 @@ COMMAND( "cfall",                   cfall_cmd,              SYSCMDNDIAG8,       
 COMMAND( "cf",                      cf_cmd,                 SYSCMDNDIAG8,       NULL,                   NULL                )
 COMMAND( "cfall",                   cfall_cmd,              SYSCMDNDIAG8,       NULL,                   NULL                )
 #endif
-#if defined( FEATURE_ECPSVM )
+#if defined( _FEATURE_ECPSVM )
 COMMAND( "ecps:vm",                 ecpsvm_cmd,             SYSCMDNOPER,        ecps_cmd_desc,          ecps_cmd_help       )
 COMMAND( "ecpsvm",                  ecpsvm_cmd,             SYSCMDNOPER,        ecpsvm_cmd_desc,        ecpsvm_cmd_help     )
 COMMAND( "evm",                     ecpsvm_cmd,             SYSCMDNOPER,        evm_cmd_desc,           evm_cmd_help        )
