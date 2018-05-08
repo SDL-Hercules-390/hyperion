@@ -155,6 +155,7 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Funtion to load file to main storage                              */
 /*-------------------------------------------------------------------*/
+static void      s390_hwl_loadfile  ( SCCB_HWL_BK* hwl_bk ); // (fwd ref)
 static void ARCH_DEP(hwl_loadfile)(SCCB_HWL_BK *hwl_bk)
 {
 CREG sto;
