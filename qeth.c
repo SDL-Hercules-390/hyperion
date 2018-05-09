@@ -1580,7 +1580,7 @@ U16 offph;
                     else // (success)
                     {
                         free( grp->tthwaddr );
-                        grp->tthwaddr = pszMAC;
+                        grp->tthwaddr = strdup( pszMAC );
                         unregister_mac( grp, dev, grp->iMAC, MAC_TYPE_UNICST, FALSE );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
 
