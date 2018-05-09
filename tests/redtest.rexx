@@ -260,15 +260,15 @@ Parse Var stmt   msg verb rest
 Select
 
    When msg = 'HHC00007I' Then Nop -- "Previous message from function '%s' at %s(%d)"
-   When msg = 'HHC00809I' Then Call HHC00809I
+   When msg = 'HHC00809I' Then Call HHC00809I   -- (disabled wait)
    When msg = 'HHC01417I' Then Call HHC01417I   -- (startup)
    When msg = 'HHC01603I' Then Call HHC01603I   -- (command echo)
-   When msg = 'HHC02269I' Then Call HHC02269I
-   When msg = 'HHC02271I' Then Call HHC02271I
+   When msg = 'HHC02269I' Then Call HHC02269I   -- (gp registers)
+   When msg = 'HHC02271I' Then Call HHC02271I   -- (control regs)
    When msg = 'HHC02290I' Then Call HHC02290I   -- (real, absolute)
    When msg = 'HHC02291I' Then Call HHC02291I   -- (virtual)
 
-   When LEFT( msg,  8 ) = 'HHC02332'  Then Call HHC02332x
+   When LEFT( msg,  8 ) = 'HHC02332'  Then Call HHC02332x   -- (runtest script timeout)
    When LEFT( verb, 5 ) = 'REXX('     Then Call hRexx
 
    /*          HHC02277I Prefix register: %s */
@@ -912,11 +912,13 @@ If LEFT( regsline, 2 ) = ARG(2) Then
 Else
   regid = ARG(3)
 
+parsevarcmd = "Parse Var regsline '" || regid || "' regnum '=' regval regsline"
+
 /* Parse each individual register number and value... */
 Do While regsline \= ''
 
    /* Extract the register number and register value */
-   INTERPRET "Parse Var regsline '" || regid || "' regnum '=' regval regsline"
+   INTERPRET parsevarcmd
 
    /* Deal with hexadecimal register numbers */
    If \isnum( regnum )
