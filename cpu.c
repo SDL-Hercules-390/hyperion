@@ -1227,14 +1227,38 @@ REGS* z900_run_cpu( int cpu, REGS* oldregs );
 
 static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
 {
-#if defined(_370)
-            s370_run_cpu,
+#if defined(      _ARCH_NUM_0 )
+  #if      370 == _ARCH_NUM_0
+          s370_run_cpu,
+
+  #elif    390 == _ARCH_NUM_0
+          s390_run_cpu,
+
+  #else // 900 == _ARCH_NUM_0
+          z900_run_cpu,
+  #endif
 #endif
-#if defined(_390)
-            s390_run_cpu,
+#if defined(      _ARCH_NUM_1 )
+  #if      370 == _ARCH_NUM_1
+          s370_run_cpu,
+
+  #elif    390 == _ARCH_NUM_1
+          s390_run_cpu,
+
+  #else // 900 == _ARCH_NUM_1
+          z900_run_cpu,
+  #endif
 #endif
-#if defined(_900)
-            z900_run_cpu
+#if defined(      _ARCH_NUM_2 )
+  #if      370 == _ARCH_NUM_2
+          s370_run_cpu,
+
+  #elif    390 == _ARCH_NUM_2
+          s390_run_cpu,
+
+  #else // 900 == _ARCH_NUM_2
+          z900_run_cpu,
+  #endif
 #endif
 };
 

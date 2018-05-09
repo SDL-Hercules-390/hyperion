@@ -34,23 +34,48 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 #define _SIE_C
 
-static int s370_run_sie (REGS *regs);
-static int s390_run_sie (REGS *regs);
-#if defined(_900)
-static int z900_run_sie (REGS *regs);
-#endif /*defined(_900)*/
+static int   s370_run_sie( REGS* regs );
+static int   s390_run_sie( REGS* regs );
+#if defined( _900 )
+static int   z900_run_sie( REGS* regs );
+#endif
+
 static int (*run_sie[ NUM_GEN_ARCHS ])( REGS* regs) =
-    {
-#if defined(_370)
-        s370_run_sie,
+{
+#if defined(      _ARCH_NUM_0 )
+  #if      370 == _ARCH_NUM_0
+          s370_run_sie,
+
+  #elif    390 == _ARCH_NUM_0
+          s390_run_sie,
+
+  #else // 900 == _ARCH_NUM_0
+          z900_run_sie,
+  #endif
 #endif
-#if defined(_390)
-        s390_run_sie,
+#if defined(      _ARCH_NUM_1 )
+  #if      370 == _ARCH_NUM_1
+          s370_run_sie,
+
+  #elif    390 == _ARCH_NUM_1
+          s390_run_sie,
+
+  #else // 900 == _ARCH_NUM_1
+          z900_run_sie,
+  #endif
 #endif
-#if defined(_900)
-        z900_run_sie,
+#if defined(      _ARCH_NUM_2 )
+  #if      370 == _ARCH_NUM_2
+          s370_run_sie,
+
+  #elif    390 == _ARCH_NUM_2
+          s390_run_sie,
+
+  #else // 900 == _ARCH_NUM_2
+          z900_run_sie,
+  #endif
 #endif
-    };
+};
 
 #define GUESTREGS (regs->guestregs)
 #define STATEBK   ((SIEBK *)GUESTREGS->siebk)

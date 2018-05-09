@@ -32,16 +32,16 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #if !defined( _GEN_ARCH )
 
-#if defined( _ARCH_NUM_2 )
- #define  _GEN_ARCH _ARCH_NUM_2
+#if defined(             _ARCH_NUM_1 )
+ #define      _GEN_ARCH  _ARCH_NUM_1
  #include "config.c"
- #undef   _GEN_ARCH
+ #undef       _GEN_ARCH
 #endif
 
-#if defined( _ARCH_NUM_1 )
- #define  _GEN_ARCH _ARCH_NUM_1
+#if defined(             _ARCH_NUM_2 )
+ #define      _GEN_ARCH  _ARCH_NUM_2
  #include "config.c"
- #undef   _GEN_ARCH
+ #undef       _GEN_ARCH
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -161,36 +161,57 @@ int configure_memfree( int mfree )
 /*-------------------------------------------------------------------*/
 U64 adjust_mainsize( int archnum, U64 mainsize )
 {
-    static U64 min_mainsize[ NUM_GEN_ARCHS ] =
+    static const U64 minmax_mainsize[ NUM_GEN_ARCHS ][2] =
     {
-#if defined( _370 )
-          MIN_370_MAINSIZE_BYTES,
+#if defined(       _ARCH_NUM_0 )
+  #if       370 == _ARCH_NUM_0
+      { MIN_370_MAINSIZE_BYTES,
+        MAX_370_MAINSIZE_BYTES },
+
+  #elif     390 == _ARCH_NUM_0
+      { MIN_390_MAINSIZE_BYTES,
+        MAX_390_MAINSIZE_BYTES },
+
+  #else //  900 == _ARCH_NUM_0
+      { MIN_900_MAINSIZE_BYTES,
+        MAX_900_MAINSIZE_BYTES },
+  #endif
 #endif
-#if defined( _390 )
-          MIN_390_MAINSIZE_BYTES,
+#if defined(       _ARCH_NUM_1 )
+  #if       370 == _ARCH_NUM_1
+      { MIN_370_MAINSIZE_BYTES,
+        MAX_370_MAINSIZE_BYTES },
+
+  #elif     390 == _ARCH_NUM_1
+      { MIN_390_MAINSIZE_BYTES,
+        MAX_390_MAINSIZE_BYTES },
+
+  #else //  900 == _ARCH_NUM_1
+      { MIN_900_MAINSIZE_BYTES,
+        MAX_900_MAINSIZE_BYTES },
+  #endif
 #endif
-#if defined( _900 )
-          MIN_900_MAINSIZE_BYTES,
-#endif
-    };
-    static U64 max_mainsize[ NUM_GEN_ARCHS ] =
-    {
-#if defined( _370 )
-          MAX_370_MAINSIZE_BYTES,
-#endif
-#if defined( _390 )
-          MAX_390_MAINSIZE_BYTES,
-#endif
-#if defined( _900 )
-          MAX_900_MAINSIZE_BYTES,
+#if defined(       _ARCH_NUM_2 )
+  #if       370 == _ARCH_NUM_2
+      { MIN_370_MAINSIZE_BYTES,
+        MAX_370_MAINSIZE_BYTES },
+
+  #elif     390 == _ARCH_NUM_2
+      { MIN_390_MAINSIZE_BYTES,
+        MAX_390_MAINSIZE_BYTES },
+
+  #else //  900 == _ARCH_NUM_2
+      { MIN_900_MAINSIZE_BYTES,
+        MAX_900_MAINSIZE_BYTES },
+  #endif
 #endif
     };
 
-    if (mainsize < min_mainsize[ archnum ])
-        mainsize = min_mainsize[ archnum ];
+    if (mainsize < minmax_mainsize[ archnum ][0])
+        mainsize = minmax_mainsize[ archnum ][0];
 
-    if (mainsize > max_mainsize[ archnum ])
-        mainsize = max_mainsize[ archnum ];
+    if (mainsize > minmax_mainsize[ archnum ][1])
+        mainsize = minmax_mainsize[ archnum ][1];
 
     /* Special case: if no CPUs then no storage is needed */
     if (sysblk.maxcpu <= 0)

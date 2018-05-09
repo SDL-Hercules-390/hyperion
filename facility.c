@@ -1823,27 +1823,75 @@ static void dis_fac_ins( int arch, HDLINS** ppHDLINS, int opcode, const char* in
 {
     static const INSTR_FUNC pgmck_instr_func_tab[ NUM_GEN_ARCHS ] =
     {
-#if defined(     _370 )
-                &s370_facility_not_enabled,
+#if defined(       _ARCH_NUM_0 )
+   #if      370 == _ARCH_NUM_0
+          &s370_facility_not_enabled,
+
+   #elif    390 == _ARCH_NUM_0
+          &s390_facility_not_enabled,
+
+   #else // 900 == _ARCH_NUM_0
+          &z900_facility_not_enabled,
+   #endif
 #endif
-#if defined(     _390 )
-                &s390_facility_not_enabled,
+#if defined(       _ARCH_NUM_1 )
+   #if      370 == _ARCH_NUM_1
+          &s370_facility_not_enabled,
+
+   #elif    390 == _ARCH_NUM_1
+          &s390_facility_not_enabled,
+
+   #else // 900 == _ARCH_NUM_1
+          &z900_facility_not_enabled,
+   #endif
 #endif
-#if defined(     _900 )
-                &z900_facility_not_enabled,
+#if defined(       _ARCH_NUM_2 )
+   #if      370 == _ARCH_NUM_2
+          &s370_facility_not_enabled,
+
+   #elif    390 == _ARCH_NUM_2
+          &s390_facility_not_enabled,
+
+   #else // 900 == _ARCH_NUM_2
+          &z900_facility_not_enabled,
+   #endif
 #endif
     };
 
     static const int arch_to_hdl_arch_tab[ NUM_GEN_ARCHS ] =
     {
-#if defined(            _370 )
-            HDL_INSTARCH_370,
+#if defined( _ARCH_NUM_0 )
+  #if        _ARCH_NUM_0 == 370
+               HDL_INSTARCH_370,
+
+  #elif      _ARCH_NUM_0 == 390
+               HDL_INSTARCH_390,
+
+  #else //   _ARCH_NUM_0 == 900
+               HDL_INSTARCH_900,
+  #endif
 #endif
-#if defined(            _390 )
-            HDL_INSTARCH_390,
+#if defined( _ARCH_NUM_1 )
+  #if        _ARCH_NUM_1 == 370
+               HDL_INSTARCH_370,
+
+  #elif      _ARCH_NUM_1 == 390
+               HDL_INSTARCH_390,
+
+  #else //   _ARCH_NUM_1 == 900
+               HDL_INSTARCH_900,
+  #endif
 #endif
-#if defined(            _900 )
-            HDL_INSTARCH_900,
+#if defined( _ARCH_NUM_2 )
+  #if        _ARCH_NUM_2 == 370
+               HDL_INSTARCH_370,
+
+  #elif      _ARCH_NUM_2 == 390
+               HDL_INSTARCH_390,
+
+  #else //   _ARCH_NUM_2 == 900
+               HDL_INSTARCH_900,
+  #endif
 #endif
     };
 
