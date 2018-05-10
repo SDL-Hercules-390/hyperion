@@ -1344,7 +1344,6 @@ static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_A7_4[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_D20x[1][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_D50x[4][NUM_INSTR_TAB_PTRS];
@@ -6307,28 +6306,6 @@ static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
  /*9101*/ GENx370x390x900 (9101,SI,"TM")    /* Single bit TM */
 };
 
-// Branch Relative on Condition
-
-static INSTR_FUNC opcode_A7_4[16][NUM_INSTR_TAB_PTRS] =
-{
- /*A704*/ GENx370x390x900 (nop4,RX,"BRC"),
- /*A714*/ GENx37Xx390x900 (A714,RX,"BRC"),
- /*A724*/ GENx37Xx390x900 (A724,RX,"BRC"),
- /*A734*/ GENx37Xx390x900 (A734,RX,"BRC"),
- /*A744*/ GENx37Xx390x900 (A744,RX,"BRC"),
- /*A754*/ GENx37Xx390x900 (A754,RX,"BRC"),
- /*A764*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A774*/ GENx37Xx390x900 (A774,RX,"BRC"),
- /*A784*/ GENx37Xx390x900 (A784,RX,"BRC"),
- /*A794*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A7A4*/ GENx37Xx390x900 (A7A4,RX,"BRC"),
- /*A7B4*/ GENx37Xx390x900 (A7B4,RX,"BRC"),
- /*A7C4*/ GENx37Xx390x900 (A7C4,RX,"BRC"),
- /*A7D4*/ GENx37Xx390x900 (A7D4,RX,"BRC"),
- /*A7E4*/ GENx37Xx390x900 (A7E4,RX,"BRC"),
- /*A7F4*/ GENx37Xx390x900 (A7F4,RX,"BRC")
-};
-
 // Insert Characters Under Mask
 
 static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
@@ -6641,7 +6618,6 @@ void init_opcode_tables()
       replace_opcode_xxxx(arch, opcode_50_0[i][arch], 0x50, i << 4); /* Optimized ST */
       replace_opcode_xxxx(arch, opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
       replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
-      replace_opcode_xxxx(arch, opcode_A7_4[i][arch], 0xa7, (i << 4) + 0x4); /* Optimized BRC */
       replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
