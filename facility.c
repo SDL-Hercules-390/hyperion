@@ -1901,7 +1901,7 @@ static void dis_fac_ins( int arch, HDLINS** ppHDLINS, int opcode, const char* in
     /* Initialize the entry for this instruction */
     newins->instname  =  strdup( instname );
     newins->hdl_arch  =  arch_to_hdl_arch_tab[ arch ];
-    newins->opcode    =  opcode > 0xff ? opcode : (opcode << 8) ;
+    newins->opcode    =  opcode > 0xff ? opcode : (opcode << 8);
     newins->instfunc  =  pgmck_instr_func_tab[ arch ];
 
     /* Insert it at the head of the chain */

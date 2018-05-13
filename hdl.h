@@ -197,6 +197,7 @@ HDL_DLL_IMPORT int hdl_main             /* Main HDL init function    */
 /*                          hdl_devequ:    Device-type equates func  */
 /*                          hdl_getsym:    Retrieve symbol address   */
 /*                          hdl_next:      Find next entry in chain  */
+/*                          hdl_repins:    Update opcode table entry */
 
 HDL_DLL_IMPORT void         hdl_atexit   ( void );
 HDL_DLL_IMPORT void         hdl_addshut  ( const char* shutname, SHUTDN* shutfunc, void* shutarg );

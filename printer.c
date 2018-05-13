@@ -632,7 +632,7 @@ static int onconnect_callback (DEVBLK* dev)
     int rc;
 
     rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
-    if(rc)
+    if (rc)
     {
         // "Error in function create_thread(): %s"
         WRMSG( HHC00102, "E", strerror( rc ) );
@@ -1624,7 +1624,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
                 close_pipe( pipefd[0] );
                 _exit( 127 );
             }
-        } /* end if(pipefd[0] != STDIN_FILENO) */
+        } /* end if (pipefd[0] != STDIN_FILENO) */
 
         /* Close the original descriptor now duplicated to STDIN */
         close_pipe( pipefd[0] );
