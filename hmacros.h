@@ -103,7 +103,7 @@
  *
  *  Sample usage:
  *
- *      CASSERT(sizeof(struct foo) == 76, demo_c)
+ *      CASSERT( sizeof( struct foo ) == 76, demo_c );
  *
  *  On failure, attempts to typedef an array type of negative size
  *  resulting in a compiler error message that might look something
@@ -129,11 +129,11 @@
  *                      that should uniquely identify the source
  *                      file where the CASSERT statement appears.
  */
-#if !defined(CASSERT)
-#define CASSERT(cond, file)     _CASSERT_LINE(cond,__LINE__,file)
-#define _CASSERT_PASTE(a,b)     a##b
-#define _CASSERT_LINE(cond, line, file) \
-  typedef char _CASSERT_PASTE(assertion_failed_##file##_,line)[2*!!(cond)-1];
+#if !defined( CASSERT )
+#define       CASSERT( cond, file )     _CASSERT_LINE( cond, __LINE__, file )
+#define      _CASSERT_PASTE( a, b )     a ## b
+#define      _CASSERT_LINE( cond, line, file ) \
+typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1 ]
 #endif
 
 /*-------------------------------------------------------------------*/

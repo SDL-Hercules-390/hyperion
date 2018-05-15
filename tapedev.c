@@ -583,7 +583,7 @@ static const BYTE cfgdata[] =       // (prototype data)
 0x00,0x00,
 };
 
-CASSERT( sizeof(cfgdata) == 160, tapedev_c )
+CASSERT( sizeof(cfgdata) == 160, tapedev_c );
 
 /*-------------------------------------------------------------------*/
 /* Read Configuration Data function                                  */

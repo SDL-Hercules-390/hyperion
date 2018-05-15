@@ -148,7 +148,7 @@ struct TAPERDC
 };
 typedef struct TAPERDC  TAPERDC;
 
-CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h )
+CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h );
 
 /*-------------------------------------------------------------------*/
 /* Just some shorter names                                           */

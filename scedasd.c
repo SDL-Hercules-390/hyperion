@@ -124,8 +124,8 @@ char tempreal[MAX_PATH];
 }
 
 #define    CHUNKSIZE   (64 * 1024 * 1024)
-CASSERT(   CHUNKSIZE < (INT_MAX - PAGEFRAME_PAGESIZE), scedasd_c )
-CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c )
+CASSERT(   CHUNKSIZE < (INT_MAX - PAGEFRAME_PAGESIZE), scedasd_c );
+CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c );
 
 #endif /* !defined(_SCEDASD_C) */
 
