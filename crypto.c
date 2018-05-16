@@ -84,12 +84,12 @@ bool hopen_CSRNG()
 
         int i, randval;
 
-        srandom( (unsigned) time(0) );
+        srand( (unsigned) time(0) );
 
         for (i=0; i < 256; i++)
         {
-            randval = (int) random() * (int) (host_tod() & 0xFFFFFFFF);
-            srandom( (unsigned) randval );
+            randval = (int) rand() * (int) (host_tod() & 0xFFFFFFFF);
+            srand( (unsigned) randval );
         }
 
         sysblk.wkrandhand = DUMMY_CYRPTO_HANDLE;
