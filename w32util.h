@@ -41,6 +41,11 @@ W32_DLL_IMPORT int w32_strerror_r( int errnum, char* buffer, size_t buffsize );
 W32_DLL_IMPORT  char*  w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize );
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Convert NTSTATUS error code to Win32 "GetLastError()" code
+
+W32_DLL_IMPORT  DWORD w32_NtStatusToLastError( NTSTATUS ntStatus );
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Large File Support...
 
 #if (_MSC_VER < VS2005)

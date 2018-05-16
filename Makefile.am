@@ -783,6 +783,7 @@ noinst_HEADERS =          \
   comm3705.h              \
   commadpt.h              \
   cpuint.h                \
+  crypto.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
   dasdblks.h              \

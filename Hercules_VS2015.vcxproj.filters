@@ -2344,6 +2344,9 @@
     <ClInclude Include="cpuint.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="crypto.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="dat.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

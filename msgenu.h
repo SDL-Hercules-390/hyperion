@@ -1063,7 +1063,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01491 "Codepage: g2h pos[%2.2X] = %2.2X; h2g pos[%2.2X] = %2.2X"
 #define HHC01492 "Codepage: h2g pos[%2.2X] = %2.2X; g2h pos[%2.2X] = %2.2X"
 #define HHC01493 "Codepage: Tables are transparent"
-//efine HHC01494 - HHC01499 (available)
+#define HHC01494 "Crypto: '%s' failed: %s"
+//efine HHC01495 - HHC01499 (available)
 
 // reserve 015xx for Hercules dynamic loader
 #define HHC01500 "HDL: begin shutdown sequence"

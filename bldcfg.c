@@ -62,15 +62,15 @@
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-int build_config (const char *hercules_cnf)
+int build_config( const char* hercules_cnf )
 {
     int i;
 
-    /*      From impl.c, using system defaults of:
+    /*  From impl.c, using system defaults of:
      *
-     * LPARNUM  1                       # LPAR 1 with LPAR ID 01
-     * CPUIDFMT 0                       # CPU ID format 0
-     * XPNDSIZE 0                       # Expanded storage size
+     *      LPARNUM  1       # LPAR 1 with LPAR ID 01
+     *      CPUIDFMT 0       # CPU ID format 0
+     *      XPNDSIZE 0       # Expanded storage size
      */
 
     sysblk.xpndsize = 0;
@@ -123,6 +123,11 @@ int build_config (const char *hercules_cnf)
         if (IS_CPU_ONLINE(i))
             sysblk.regs[i]->chanset = i < FEATURE_LCSS_MAX ? i : 0xFFFF;
 
+    /* Initialize Crypto Wrapping Keys */
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) // (underscore!)
+    renew_wrapping_keys();
+#endif
+
     return 0;
 } /* end function build_config */
 
@@ -136,10 +141,15 @@ DLL_EXPORT const char* init_sysblk_netdev()
         /* Initialize default NETDEV */
 
 #if defined( __APPLE__ ) || defined( __FreeBSD__ )
+
         sysblk.netdev = strdup( "/dev/tun" );
+
 #elif !defined( OPTION_W32_CTCI )
+
         sysblk.netdev = strdup( "/dev/net/tun" );
-#else
+
+#else // defined( OPTION_W32_CTCI )
+
         sysblk.netdev = strdup( are_elevated() ? tt32_get_default_iface() : "" );
 #endif
     }

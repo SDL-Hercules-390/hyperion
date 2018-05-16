@@ -546,6 +546,11 @@ struct SYSBLK {
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
         RWLOCK  wklock;                 /* Wrapping-key lock         */
+#if defined( _WIN32 )
+        BCRYPT_ALG_HANDLE  wkrandhand;  /* secure random api handle  */
+#else
+        int     wkrandhand;             /* secure random api handle  */
+#endif
         BYTE    wkaes_reg[32];          /* Wrapping-key registers    */
         BYTE    wkdea_reg[24];
         BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */

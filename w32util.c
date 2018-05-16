@@ -196,6 +196,27 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Convert NTSTATUS error code to Win32 "GetLastError()" code
+
+DLL_EXPORT DWORD w32_NtStatusToLastError( NTSTATUS ntStatus )
+{
+    OVERLAPPED  ovl;
+    DWORD       dwOrigError, dwLastError, dwDummy;
+
+    ovl.InternalHigh = 0;
+    ovl.Internal     = ntStatus;
+    ovl.OffsetHigh   = 0;
+    ovl.Offset       = 0;
+    ovl.hEvent       = NULL;
+
+    dwOrigError = GetLastError();   // (save original value)
+    GetOverlappedResult( NULL, &ovl, &dwDummy, FALSE );
+    dwLastError = GetLastError();   // (save converted result)
+    SetLastError( dwOrigError );    // (restore original value)
+    return dwLastError;             // (return converted result)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Large File Support...
 
 #if (_MSC_VER < VS2005)

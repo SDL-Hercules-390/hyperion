@@ -957,6 +957,7 @@
     <ClInclude Include="comm3705.h" />
     <ClInclude Include="commadpt.h" />
     <ClInclude Include="cpuint.h" />
+    <ClInclude Include="crypto.h" />
     <ClInclude Include="crypto\include\crypto.h" />
     <ClInclude Include="crypto\include\crypto_version.h" />
     <ClInclude Include="crypto\include\rijndael.h" />

@@ -243,6 +243,19 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
         WRMSG( HHC90000, "E", "Could not perform reset within three seconds" );
     }
 
+    /* Clear Crypto Wrapping Keys. We do this regardless of whether
+       the facility is enabled for the given architecture or not
+       since there is no real harm in always doing so. Note too that
+       we only do this when the architecture is NOT being switched
+       so that it only gets done once and not twice since it doesn't
+       matter what the current architecture mode is since the crypto
+       wrapping keys aren't associated with any given architecture.
+    */
+#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) // (underscore!)
+    if (clear && !architecture_switch)
+        renew_wrapping_keys();
+#endif
+
     /* Finish the reset in the requested mode if switching architectures */
     if (architecture_switch)
     {
@@ -671,7 +684,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     /* Clear the registers */
     memset ( &regs->psw,           0, sizeof(regs->psw)           );
     memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+#if !defined( NOCHECK_AEA_ARRAY_BOUNDS )
     memset ( &regs->cr_struct,     0, sizeof(regs->cr_struct)     );
 #else
     memset ( &regs->cr,            0, sizeof(regs->cr)            );
@@ -687,13 +700,13 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->psa      = (PSA_3XX*)regs->mainstor;
 
     /* Perform a CPU reset (after setting PSA) */
-    rc1 = ARCH_DEP(cpu_reset) (regs);
+    rc1 = ARCH_DEP( cpu_reset )( regs );
 
     regs->todpr  = 0;
     regs->clkc   = 0;
-    set_cpu_timer(regs, 0);
-#ifdef _FEATURE_INTERVAL_TIMER
-    set_int_timer(regs, 0);
+    set_cpu_timer( regs, 0 );
+#if defined( _FEATURE_INTERVAL_TIMER )
+    set_int_timer( regs, 0 );
 #endif
 
     /* The breaking event address register is initialised to 1 */
@@ -703,33 +716,28 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->CR(0) = CR0_XM_INTKEY | CR0_XM_EXTSIG |
       (FACILITY_ENABLED( HERC_INTERVAL_TIMER, regs ) ? CR0_XM_ITIMER : 0);
 
-#if defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_S370_CHANNEL ) && !defined( FEATURE_ACCESS_REGISTERS )
     /* For S/370 initialize the channel masks in CR2 */
     regs->CR(2) = 0xFFFFFFFF;
-#endif /* defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_ACCESS_REGISTERS) */
+#endif
 
     regs->chanset =
-#if defined(FEATURE_CHANNEL_SWITCHING)
-                    regs->cpuad < FEATURE_LCSS_MAX ? regs->cpuad :
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
-                                                                   0xFFFF;
+#if defined( FEATURE_CHANNEL_SWITCHING )
+        regs->cpuad < FEATURE_LCSS_MAX ? regs->cpuad :
+#endif
+        0xFFFF;
 
     /* Initialize the machine check masks in control register 14 */
     regs->CR(14) = CR14_CHKSTOP | CR14_SYNCMCEL | CR14_XDMGRPT;
 
-#ifndef FEATURE_LINKAGE_STACK
+#if !defined( FEATURE_LINKAGE_STACK )
     /* For S/370 initialize the MCEL address in CR15 */
     regs->CR(15) = 512;
-#endif /*!FEATURE_LINKAGE_STACK*/
-
-    if(regs->host && regs->guestregs)
-      if( (rc = ARCH_DEP(initial_cpu_reset)(regs->guestregs)) )
-        rc1 = rc;
-
-#if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-    if (FACILITY_ENABLED( 076_MSA_EXTENSION_3, regs ))
-        renew_wrapping_keys();
 #endif
+
+    if (regs->host && regs->guestregs)
+        if ((rc = ARCH_DEP( initial_cpu_reset )( regs->guestregs )) != 0)
+            rc1 = rc;
 
     return rc1;
 } /* end function initial_cpu_reset */
