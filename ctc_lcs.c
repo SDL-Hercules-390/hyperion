@@ -1110,7 +1110,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             {
                 memcpy( pEthFrame->bSrcMAC, pLCSPORT->MAC_Address, sizeof( MAC ));
 #if !defined( OPTION_TUNTAP_LCS_SAME_ADDR )
-                pEthFrame->bSrcMAC[5]++;	/* Get next MAC address */
+                pEthFrame->bSrcMAC[5]++;    /* Get next MAC address */
 #endif
             }
 
