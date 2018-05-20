@@ -448,34 +448,28 @@ from accumulating in the file.
 
 <br />
 
-For CKD devices, a track <b>image</b> contains two fields:
+A <b>track image</b> or <b>block group image</b> contains two fields:
 
-a 5 byte <em>header</em>
+a 5-byte <em><u>header</u></em>
+and a variable amount of data that may or may not be compressed.
 
-and a variable amount of <i>data</i> that may or may not be compressed.
-
-FBA devices do not have track headers preceding their block group data.
-
-<p>
-
-For CKD devices, the length field (<i>L2_len</i>) in the peviously mentioned secondary
-lookup table entry (<i>CCKD_L2ENT</i>) show just above, includes the length of both the
-track header as well as the track data. For FBA devices it includes only the length of
-the block group data.
+The length field (<i>L2_len</i>) in the secondary lookup table entry (<i>CCKD_L2ENT</i>)
+show just above, includes the length of both the 5-byte header
+as well as the track or block group data.
 
 <p>
 
-The 5 byte track header contains a 1 byte compression indicator
-and 4 bytes that identify the track:
+The 5-byte <i>track or block group <u>header</u></i> contains a 1 byte compression indicator
+and 4 bytes that identify the track or block group. The format of the identifier
+depends on whether the emulated device is CKD or FBA:
 
 <p>
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-
 <table border=1 width="21.875%">
 
-<tr><th width="100%" colspan="5">CKDDASD_TRKHDR</th></tr>
+<tr><th width="100%" colspan="5">CKD Track Header</th></tr>
 <tr>
     <th width="6.25%">0</th>
     <th width="6.25%">1</th>
@@ -490,19 +484,53 @@ and 4 bytes that identify the track:
     <td align="center" colspan="2"><font size=-1>HH</font></td>
 </tr>
 
+<p>
+
 </table>
 
 <p>
 
-The 2 byte CC is the cylinder number for the track image and the HH
-is the head number.  These numbers are stored in <em>big-endian</em>
+For <b>CKD</b>, the 2 byte CC is the cylinder number of the track image
+and the HH is the head number.  These numbers are stored in <em>big-endian</em>
 byte order.  When the compression indicator byte is zero the 5 byte header
 is identical to the <em>Home Address</em> (or <em>HA</em>) for the track image.
 <p>
 The data, which may or may not be compressed, begins with the <em>R0</em>
 count and ends with the <em>end-of-track</em> marker,
 which is a count field containing <code>FFFFFFFFFFFFFFFF</code> (eight hex x'FF's).
-The <em>HA</em> plus the uncompressed track data comprise the track image.
+
+The Home Address plus the uncompressed track data comprise the track image.
+
+<p>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br>
+<table border=1 width="21.875%">
+
+<tr><th width="100%" colspan="5">FBA Block Group Header</th></tr>
+<tr>
+    <th width="6.25%">0</th>
+    <th width="6.25%">1</th>
+    <th width="6.25%">2</th>
+    <th width="6.25%">3</th>
+    <th width="6.25%">4</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="1"><font size=-1>cmp</font></td>
+    <td align="center" colspan="4"><font size=-1>nnnnnnnn</font></td>
+</tr>
+
+</table>
+
+<p>
+
+For <b>FBA</b>, the 4 byte nnnnnnnn is the <em>big-endian</em> sector number
+of the block group. The the block group data, which may or may not be compressed,
+follows immediately after the block group header.
+
+There is no end-of-track marker at the end of an FBA block group.
 
 <p>
 
