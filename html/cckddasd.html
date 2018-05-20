@@ -181,12 +181,12 @@ curent shadow file, and display the shadow file status and statistics:<br><br>
     <td align="left" valign="top"<font size=-1><i>level</i></font></td>
     <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.
                      Level is a number -1 ... 4, the default is <b>2</b>.  The levels are:<br>
-                     -1 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table <br>
-                     &nbsp 0 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables <br>
-                     &nbsp 1 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces <br>
-                     &nbsp 2 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs <br>
-                     &nbsp 3 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs <br>
-                     &nbsp 4 &nbsp&nbsp&nbsp devhdr, cdevhdr. Build everything else from recovery
+                     -1 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table <br>
+                     &nbsp; 0 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables <br>
+                     &nbsp; 1 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces <br>
+                     &nbsp; 2 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkhdrs <br>
+                     &nbsp; 3 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkimgs <br>
+                     &nbsp; 4 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr. Build everything else from recovery
                      </td>
 <tr><td align="left"><b>sfd</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
@@ -198,190 +198,381 @@ address to apply the command to all compressed dasd (e.g. <code>'sf+*'</code>,
 or <code>'sf-* nomerge'</code>).
 
 <p>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
 <hr noshade>
 <p><h2><a NAME="filestructure">Compressed DASD File Structure</a></h2>
 
 <p>
-A compressed DASD file has 6 types of spaces, a <em>device header</em>,
-a <em>compressed device header</em>, a <em>primary lookup table</em>,
+A compressed DASD file has 6 types of spaces, a <em><u>device header</u></em>,
+a <em><u>compressed device header</u></em>, a <em><u>primary lookup table</u></em>,
 <em>secondary lookup tables</em>, track or block group <em>images</em>,
 and <em>free spaces</em>.  The first 3 types only occur once, at the
 beginning of the file in order.  The rest of the file is occupied by
 the other 3 space types.
 <p>
-The first 512 bytes of a compressed DASD file contains a <b>device header</b>.
-The device header contains an eye-catcher that identifies the file type
-(CKD or FBA and base or shadow).  The device type and file size is also
-specified in this header.  The header is identical to the header used
-for uncompressed CKD files, except for the eye-catcher:
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
+
+The very first 512 bytes of a compressed DASD file is the <b>device header</b>.
 <p>
-<table border=1>
-<tr><td align="left" colspan="8"><font size=-1>devid</font></td>
-    <td align="left" colspan="4"><font size=-1>heads</font></td>
-    <td align="left" colspan="4"><font size=-1>trksize</font></td>
-<tr><td align="left" colspan="1"><font size=-1>devt</font></td>
-    <td align="left" colspan="1"><font size=-1>seq</font></td>
-    <td align="left" colspan="2"><font size=-1>hicyl</font></td>
-    <td align="left" colspan="12">&nbsp</td>
-<tr><td align="center" valign="middle" colspan="16">
+The device header contains an "eye-catcher" that identifies the file type
+(CKD or FBA and base or shadow).  The device type and file size information
+is also specified in this header.  The header is identical to the header used
+for uncompressed CKD files except for the eye-catcher:
+<p>
+<table border=1 width="70%">
+
+<tr><th width="100%" colspan="16">CKDDASD_DEVHDR</th></tr>
+<tr>
+    <th width="6.25%">0</th><th width="6.25%">1</th><th width="6.25%">2</th><th width="6.25%">3</th>
+    <th width="6.25%">4</th><th width="6.25%">5</th><th width="6.25%">6</th><th width="6.25%">7</th>
+    <th width="6.25%">8</th><th width="6.25%">9</th><th width="6.25%">A</th><th width="6.25%">B</th>
+    <th width="6.25%">C</th><th width="6.25%">D</th><th width="6.25%">E</th><th width="6.25%">F</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="8"><font size=-1>"<b>CKD_C370</b>" &nbsp; (device-id or "eye-catcher")</font></td>
+    <td align="center" colspan="4"><font size=-1>heads</font></td>
+    <td align="center" colspan="4"><font size=-1>trksize</font></td>
+</tr>
+
+<tr><td align="center" colspan="1"><font size=-1>devt</font></td>
+    <td align="center" colspan="1"><font size=-1>seq</font></td>
+    <td align="center" colspan="2"><font size=-1>highcyl</font></td>
+    <td align="center" colspan="12"><font size=-1>reserved</font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="16" valign="middle">
         <br><br><font size=-1>reserved</font><br><br><br></td>
+</tr>
 </table>
 <p>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
 
 The next 512 bytes contains the <b>compressed device header</b>.
-This contains file usage information such as the amount of free
-space in the file:
 <p>
-<table border=1>
-<tr><td align="left" colspan="3"><font size=-1>vrm</font></td>
-    <td align="left" colspan="1"><font size=-1>opts</font></td>
-    <td align="left" colspan="4"><font size=-1>numl1</font></td>
-    <td align="left" colspan="4"><font size=-1>numl2</font></td>
-    <td align="left" colspan="4"><font size=-1>size</font></td>
-<tr><td align="left" colspan="4"><font size=-1>used</font></td>
-    <td align="left" colspan="4"><font size=-1>->free</font></td>
-    <td align="left" colspan="4"><font size=-1>free</font></td>
-    <td align="left" colspan="4"><font size=-1>largest</font></td>
-<tr><td align="left" colspan="4"><font size=-1>number</font></td>
-    <td align="left" colspan="4"><font size=-1>&nbsp</font></td>
-    <td align="left" colspan="4"><font size=-1>cyls</font></td>
-    <td align="left" colspan="1"><font size=-1>&nbsp</font></td>
-    <td align="left" colspan="1"><font size=-1>comp</font></td>
-    <td align="left" colspan="4"><font size=-1>parm</font></td>
-<tr><td align="center" colspan="16">
+The compressed device header contains file usage information
+such as the amount of free space in the file:
+<p>
+<table border=1 width="70%">
+
+<tr><th width="100%" colspan="16">CCKDDASD_DEVHDR</th></tr>
+<tr>
+    <th width="6.25%">0</th><th width="6.25%">1</th><th width="6.25%">2</th><th width="6.25%">3</th>
+    <th width="6.25%">4</th><th width="6.25%">5</th><th width="6.25%">6</th><th width="6.25%">7</th>
+    <th width="6.25%">8</th><th width="6.25%">9</th><th width="6.25%">A</th><th width="6.25%">B</th>
+    <th width="6.25%">C</th><th width="6.25%">D</th><th width="6.25%">E</th><th width="6.25%">F</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="3"><font size=-1>vrm</font></td>
+    <td align="center" colspan="1"><font size=-1>opts</font></td>
+    <td align="center" colspan="4"><font size=-1>num_L1tab</font></td>
+    <td align="center" colspan="4"><font size=-1>num_L2tab</font></td>
+    <td align="center" colspan="4"><font size=-1>size</font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>used</font></td>
+    <td align="center" colspan="4"><font size=-1>free_off</font></td>
+    <td align="center" colspan="4"><font size=-1>free_total</font></td>
+    <td align="center" colspan="4"><font size=-1>free_largest</font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>free_num</font></td>
+    <td align="center" colspan="4"><font size=-1>free_imbed</font></td>
+    <td align="center" colspan="4"><font size=-1>cyls</font></td>
+    <td align="center" colspan="1"><font size=-1>nulfmt</font></td>
+    <td align="center" colspan="1"><font size=-1>cmp</font></td>
+    <td align="center" colspan="4"><font size=-1>cmp_parm</font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="16">
         <br><br><font size=-1>reserved</font><br><br><br></td>
+</tr>
 </table>
 <p>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
+
 After the compressed device header is the <b>primary lookup table</b>,
-also called the <em>level 1 table</em> or <em>l1tab</em>.  Each
-4 byte unsigned entry in the l1tab contains the file offset of
-a <em>secondary lookup table</em> or <em>level 2 table</em> or
-<em>l2tab</em>.  The track or block group number being accessed
-divided by 256 gives the index into the l1tab.  That is, each l1tab
-entry represents 256 tracks or block groups.  The number of entries
-in the l1tab is dependent on the size of the emulated device:
+also called the <em>level 1 table</em> or <em>L1tab</em>.
+
+Each 4 byte unsigned entry in the L1tab contains the file offset
+of a <em><u>secondary lookup table</u></em> (or <em>level 2 table</em> or <em>L2tab</em>).
+
 <p>
-<table border=1>
-<tr><td align="left" colspan="4"><font size=-1>l2<sub>0</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>1</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>2</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>3</sub></font></td>
-<tr><td align="left" colspan="4"><font size=-1>l2<sub>4</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>5</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>6</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>7</sub></font></td>
-<tr><td align="left" colspan="16">
-        <br><br><center>. &nbsp &nbsp . &nbsp &nbsp .</center><br><br></td>
-<tr><td align="left" colspan="4"><font size=-1>l2<sub>n-4</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>n-3</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>n-2</sub></font></td>
-    <td align="left" colspan="4"><font size=-1>l2<sub>n-1</sub></font></td>
+
+The track or block group number being accessed divided by 256 gives the index
+into the L1tab.  That is, each L1tab entry represents 256 tracks or block groups.
+The number of entries in the L1tab is dependent on the size of the emulated device:
+
+<p>
+
+<table border=1 width="70%">
+
+<tr><th width="100%" colspan="16">CCKD_L1TAB</th></tr>
+<tr>
+    <th width="25%" colspan="4">CCKD_L1ENT</th>
+    <th width="25%" colspan="4">CCKD_L1ENT</th>
+    <th width="25%" colspan="4">CCKD_L1ENT</th>
+    <th width="25%" colspan="4">CCKD_L1ENT</th>
+</tr>
+<tr>
+    <th width="6.25%">0</th><th width="6.25%">1</th><th width="6.25%">2</th><th width="6.25%">3</th>
+    <th width="6.25%">4</th><th width="6.25%">5</th><th width="6.25%">6</th><th width="6.25%">7</th>
+    <th width="6.25%">8</th><th width="6.25%">9</th><th width="6.25%">A</th><th width="6.25%">B</th>
+    <th width="6.25%">C</th><th width="6.25%">D</th><th width="6.25%">E</th><th width="6.25%">F</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>L1<sub>0</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>1</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>2</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>3</sub></font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>L1<sub>4</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>5</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>6</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>7</sub></font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="16">
+        <br><center><b>.&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;.</b></center><br></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>L1<sub>n-4</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>n-3</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>n-2</sub></font></td>
+    <td align="center" colspan="4"><font size=-1>L1<sub>n-1</sub></font></td>
+</tr>
+
 </table>
 <p>
-Following the <em>l1tab</em>,
-in no particular order, are <em>l2tabs</em>, track or block group
-<em>images</em>, and <em>free spaces</em>.
+
+<!-- ---------------------------------------------------------------------------------- -->
+
 <p>
-Each <b>secondary lookup table</b> (or <em>l2tab</em>), contains 256 8-byte
-entries.  The entry is indexed
-by the remainder of the track or block group number divided by 256.  Each
-entry contains an unsigned 4 byte offset, an unsigned 2 byte length and an
-unsigned 2 byte size.  The length is the space required for the track or
-block group image and the size is the amount of space actually used.  The
-size may be greater than the length to prevent short free spaces from
-accumulating in the file.
+
+Following the <em>L1tab</em>,
+in no particular order, are:
+<em>L2tabs</em>,
+<em>track or block group images</em>, and
+<em>free spaces</em>.
+
+<p><br>
+
+Each <b>secondary lookup table</b> (or <em>L2tab</em>),
+contains 256 eight byte entries.
+
+The entry is indexed by the remainder of the track or block group number divided by 256.
+
 <p>
-<table border=1>
-<tr><td align="left" colspan="4"><font size=-1>
-       <sup>0</sup>&nbsp ->image
-       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
-    <td align="left" colspan="2"><font size=-1>length</font></td>
-    <td align="left" colspan="2"><font size=-1>size</font></td>
-<tr><td align="left" colspan="4"><font size=-1>
-       <sup>1</sup>&nbsp ->image
-       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
-    <td align="left" colspan="2"><font size=-1>length</font></td>
-    <td align="left" colspan="2"><font size=-1>size</font></td>
-<tr><td align="center" colspan="8"><font size=-1>
-       <br>. &nbsp &nbsp .&nbsp &nbsp .<br><br></td>
-<tr><td align="left" colspan="4"><font size=-1>
-       <sup>255</sup>&nbsp ->image
-       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
-    <td align="left" colspan="2"><font size=-1>length</font></td>
-    <td align="left" colspan="2"><font size=-1>size</font></td>
+
+Each L2 entry contains an unsigned 4 byte <i>offset</i> to the track or block group image
+(file offset to where the image begins),
+
+an unsigned 2 byte track or block group <i>length</i> (the actual amount of data
+contained on the track or block group)
+
+and an unsigned 2 byte <i>size</i> of the track or block group image (i.e. how much
+space is actually available for use at that particular file offset).
+
+<p>
+
+The length is the amount of available space currently being consumed by the
+track or block group image, and the size is the amount of space actually available.
+
+The size of course may be greater than the length to prevent short free spaces
+from accumulating in the file.
+<p>
+<table border=1 width="70%">
+
+<tr><th width="100%" colspan="16">CCKD_L2TAB</th></tr>
+<tr>
+    <th width="50%" colspan="8">CCKD_L2ENT</th>
+    <th width="50%" colspan="8">CCKD_L2ENT</th>
+</tr>
+<tr>
+    <th width="6.25%">0</th><th width="6.25%">1</th><th width="6.25%">2</th><th width="6.25%">3</th>
+    <th width="6.25%">4</th><th width="6.25%">5</th><th width="6.25%">6</th><th width="6.25%">7</th>
+    <th width="6.25%">8</th><th width="6.25%">9</th><th width="6.25%">A</th><th width="6.25%">B</th>
+    <th width="6.25%">C</th><th width="6.25%">D</th><th width="6.25%">E</th><th width="6.25%">F</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>L2_trkoff<sub>0</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_len<sub>0</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_size<sub>0</sub></font></td>
+
+    <td align="center" colspan="4"><font size=-1>L2_trkoff<sub>1</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_len<sub>1</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_size<sub>1</sub></font></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="16"><font size=-1>
+        <br><center><b>.&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;.</b></center><br></td>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>L2_trkoff<sub>254</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_len<sub>254</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_size<sub>254</sub></font></td>
+
+    <td align="center" colspan="4"><font size=-1>L2_trkoff<sub>255</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_len<sub>255</sub></font></td>
+    <td align="center" colspan="2"><font size=-1>L2_size<sub>255</sub></font></td>
+</tr>
+
 </table>
 <p>
-A track or block group <b>image</b> contains two fields, a 5-byte
-<em>header</em> and a variable amount of data that may or may not be
-compressed.  The length in the l2tab entry includes the length of the
-header and the data.
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
+
+For CKD devices, a track <b>image</b> contains two fields:
+
+a 5 byte <em>header</em>
+
+and a variable amount of <i>data</i> that may or may not be compressed.
+
+FBA devices do not have track headers preceding their block group data.
+
 <p>
-<table border=1>
-<tr><td align="left"><font size=-1>hdr</font></td>
-    <td align="left"><font size=-1>track or block group data</font></td>
+
+For CKD devices, the length field (<i>L2_len</i>) in the peviously mentioned secondary
+lookup table entry (<i>CCKD_L2ENT</i>) show just above, includes the length of both the
+track header as well as the track data. For FBA devices it includes only the length of
+the block group data.
+
+<p>
+
+The 5 byte track header contains a 1 byte compression indicator
+and 4 bytes that identify the track:
+
+<p>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+
+<table border=1 width="21.875%">
+
+<tr><th width="100%" colspan="5">CKDDASD_TRKHDR</th></tr>
+<tr>
+    <th width="6.25%">0</th>
+    <th width="6.25%">1</th>
+    <th width="6.25%">2</th>
+    <th width="6.25%">3</th>
+    <th width="6.25%">4</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="1"><font size=-1>cmp</font></td>
+    <td align="center" colspan="2"><font size=-1>CC</font></td>
+    <td align="center" colspan="2"><font size=-1>HH</font></td>
+</tr>
+
 </table>
+
 <p>
-The 5 byte header contains a 1 byte compression indicator and 4 bytes that
-identify the track or block group.  The format of the identifier
-depends on whether the emulated device is CKD or FBA:
-<p>
-CKD hdr
-<table border=1>
-<tr><td><font size=-1>comp</font></td>
-    <td align="left" colspan="2"><font size=-1><b>CC</b></font>&nbsp&nbsp</td>
-    <td align="left" colspan="2"><font size=-1><b>HH</b></font>&nbsp&nbsp</td>
-</table>
-<p>
+
 The 2 byte CC is the cylinder number for the track image and the HH
 is the head number.  These numbers are stored in <em>big-endian</em>
-byte order.  When the compression indicator byte is zeroed, the 5 byte header
+byte order.  When the compression indicator byte is zero the 5 byte header
 is identical to the <em>Home Address</em> (or <em>HA</em>) for the track image.
+<p>
 The data, which may or may not be compressed, begins with the <em>R0</em>
-count and ends with the <em>end-of-track</em> (or <em>eot</em>) marker,
-which is a count field containing <code>FFFFFFFFFFFFFFFF</code>.
+count and ends with the <em>end-of-track</em> marker,
+which is a count field containing <code>FFFFFFFFFFFFFFFF</code> (eight hex x'FF's).
 The <em>HA</em> plus the uncompressed track data comprise the track image.
+
 <p>
-FBA hdr
-<table border=1>
-<tr><td><font size=-1>comp</font></td>
-    <td align="left" colspan="4"><font size=-1>nnnn</font>
-        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
-</table>
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
+
+The <b>cmp</b> compression indicator byte contains the value 0, 1 or 2.
+Any other value is invalid:
+
 <p>
-The 4 byte nnnn field is the FBA block group number in
-<em>big-endian</em> byte order. The data contains 120 FBA blocks,
-which may or may not be compressed.  Uncompressed, the FBA block
-group is 60K.  The header for FBA, unlike CKD, is not used as part
-of the uncompressed image.
-<p>
-The compression indicator byte contains the value 0, 1 or 2.  Any
-other value is invalid.
 
 <table border="1">
-<tr><td><center>0</center></td><td>&nbsp &nbsp Data is uncompressed</td>
-<tr><td><center>1</center></td><td>&nbsp &nbsp Data is compressed using zlib</td>
-<tr><td><center>2</center></td><td>&nbsp &nbsp Data is compressed using bzip2</td>
-<tr><td>3 .. 255</td><td>&nbsp &nbsp Not valid</td>
+
+<tr><td align="center">0</td><td align="left">&nbsp;&nbsp;&nbsp;Data is uncompressed</td></tr>
+<tr><td align="center">1</td><td align="left">&nbsp;&nbsp;&nbsp;Data is compressed using zlib</td></tr>
+<tr><td align="center">2</td><td align="left">&nbsp;&nbsp;&nbsp;Data is compressed using bzip2</td></tr>
+<tr><td align="center">3...255</td><td>&nbsp;&nbsp;&nbsp;Not valid</td>
+
 </table>
 
 <p>
 
-<b>Free space</b> contains a 4-byte <i>offset</i> to the next free space, a
-4-byte <i>length</i> of the free space, and zero or more bytes of residual data:
+<!-- ---------------------------------------------------------------------------------- -->
+
+<br />
+
+<b>Free space</b> contains a
+4 byte <i>offset</i> to the next free space,
+a 4 byte <i>length</i> of the free space,
+and zero or more bytes of residual data:
+
 <p>
-<table border=1>
-<tr><td><font size=-1>->next</font></td>
-    <td><font size=-1>length</font></td>
-    <td>&nbsp &nbsp<font size=-1>residual</font>&nbsp &nbsp</td>
+
+<table border=1 width="70%">
+
+<tr><th width="100%" colspan="16">CCKD_FREEBLK</th></tr>
+<tr>
+    <th width="6.25%">0</th><th width="6.25%">1</th><th width="6.25%">2</th><th width="6.25%">3</th>
+    <th width="6.25%">4</th><th width="6.25%">5</th><th width="6.25%">6</th><th width="6.25%">7</th>
+    <th width="50%" colspan="8" align="left">&nbsp;&nbsp;&nbsp;&nbsp;5&nbsp;&nbsp;&nbsp;.&nbsp;.&nbsp;.</th>
+</tr>
+
+<tr>
+    <td align="center" colspan="4"><font size=-1>fb_offnxt</font></td>
+    <td align="center" colspan="4"><font size=-1>fb_len</font></td>
+
+    <td align="center" colspan="8"><font size=-1>residual&nbsp;.&nbsp;.&nbsp;.</font></td>
+</tr>
 </table>
+
 <p>
+
 The minimum length of a free space is 8 bytes.
-The free space chain is ordered by file offset and no two free spaces are
-adjacent.  The <em>compressed device header</em> contains the offset to the
-first free space.  The chain is terminated when a free space has zero offset
-to the next free space.  The free space chain is read when the file is opened
-for read-write and written when the file is closed; while the file is opened,
-the free space chain is maintained in storage.
+
+The free space chain is ordered by file offset
+and no two free spaces are adjacent.
+
+The chain is terminated when a free space has zero offset to the next free space.
+
+The <b>compressed device header</b> contains the offset
+to the first free space (<i>free_off</i>).
+
+
+<p>
+
+The free space chain is read when the file is opened
+for read-write and written when the file is closed.
+The free space chain is maintained in storage while the file is opened.
+
 <p>
 
 <hr noshade>
@@ -523,9 +714,9 @@ the <b>cckd</b> command explained below.
     <td>Compression type:<br>
         <p>
         <b>-1</b> Default<br>
-        <b>&nbsp 0</b> None<br>
-        <b>&nbsp 1</b> zlib<br>
-        <b>&nbsp 2</b> bzip2
+        <b>&nbsp; 0</b> None<br>
+        <b>&nbsp; 1</b> zlib<br>
+        <b>&nbsp; 2</b> bzip2
         <p>
         Override the compression used for all cckd files.  -1 (default) means
         don't override the compression.
@@ -727,8 +918,8 @@ the <b>cckd</b> command explained below.
 <a NAME="fba2cfba">
 <a NAME="cfba2fba">
 <table>
-<tr><td valign="top"><b>ckd2cckd &nbsp</b><br><b>cckd2ckd &nbsp</b><br>
-                     <b>fba2cfba &nbsp</b><br><b>cfba2fba &nbsp</b></td>
+<tr><td valign="top"><b>ckd2cckd &nbsp;</b><br><b>cckd2ckd &nbsp;</b><br>
+                     <b>fba2cfba &nbsp;</b><br><b>cfba2fba &nbsp;</b></td>
     <td valign="top">These utilities are deprecated.  Use the <b>dasdcopy</b> utility instead</td>
 </table>
 
@@ -736,21 +927,21 @@ the <b>cckd</b> command explained below.
 
 <a NAME="cckdcdsk">
 <table>
-<tr><td valign="top"><b>cckdcdsk &nbsp</b></td>
+<tr><td valign="top"><b>cckdcdsk &nbsp;</b></td>
     <td valign="top"><em>[-v] [-f] [-ro] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">Check the integrity of one or more compressed files.
                      Recover damaged files.</td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">
     <table>
-    <tr><td valign="top"><b>-v &nbsp</b></td>
+    <tr><td valign="top"><b>-v &nbsp;</b></td>
         <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp</b></td>
+    <tr><td valign="top"><b>-f &nbsp;</b></td>
         <td valign="top">Perform check even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-ro &nbsp</b></td>
+    <tr><td valign="top"><b>-ro &nbsp;</b></td>
         <td valign="top">Open the file(s) <i>read-only</i>. The file will not be updated.</td>
-    <tr><td valign="top"><b>-level &nbsp</b></td>
+    <tr><td valign="top"><b>-level &nbsp;</b></td>
         <td valign="top">A number 1 .. 4 indicating the level of checking.<br>
                          <b>1</b> Minimal checking (default)<br>
                          <b>2</b> Medium checking. All track headers will be read.<br>
@@ -764,18 +955,18 @@ the <b>cckd</b> command explained below.
 
 <a NAME="cckdcomp">
 <table>
-<tr><td valign="top"><b>cckdcomp &nbsp</b></td>
+<tr><td valign="top"><b>cckdcomp &nbsp;</b></td>
     <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">Remove all free space from a compressed file or files.</td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">
     <table>
-    <tr><td valign="top"><b>-v &nbsp</b></td>
+    <tr><td valign="top"><b>-v &nbsp;</b></td>
         <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp</b></td>
+    <tr><td valign="top"><b>-f &nbsp;</b></td>
         <td valign="top">Perform compress even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-level &nbsp</b></td>
+    <tr><td valign="top"><b>-level &nbsp;</b></td>
         <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
     </table>
     </td>
@@ -785,19 +976,19 @@ the <b>cckd</b> command explained below.
 
 <a NAME="cckdswap">
 <table>
-<tr><td valign="top"><b>cckdswap &nbsp</b></td>
+<tr><td valign="top"><b>cckdswap &nbsp;</b></td>
     <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">Change the <i>endianess</i> or <i>byte-order</i> of a
                      compressed file or files</td>
-<tr><td valign="top"> &nbsp </td>
+<tr><td valign="top"> &nbsp; </td>
     <td valign="top">
     <table>
-    <tr><td valign="top"><b>-v &nbsp</b></td>
+    <tr><td valign="top"><b>-v &nbsp;</b></td>
         <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp</b></td>
+    <tr><td valign="top"><b>-f &nbsp;</b></td>
         <td valign="top">Perform swap even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-level &nbsp</b></td>
+    <tr><td valign="top"><b>-level &nbsp;</b></td>
         <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
     </table>
     </td>

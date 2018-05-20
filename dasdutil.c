@@ -632,11 +632,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         /* Set the device type */
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, 0);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
         if (ckd == NULL)
         {
             fprintf(stderr, MSG(HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid), cif->devblk.devnum, cif->fname,
-                    devhdr.devtype));
+                    devhdr.dvtyp));
             free (cif);
             return NULL;
         }
@@ -1227,16 +1227,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         memcpy(devhdr.devid, "CKD_P370", 8);
     else
         memcpy(devhdr.devid, "CKD_C370", 8);
-    devhdr.heads[3] = (heads >> 24) & 0xFF;
-    devhdr.heads[2] = (heads >> 16) & 0xFF;
-    devhdr.heads[1] = (heads >> 8) & 0xFF;
-    devhdr.heads[0] = heads & 0xFF;
+
+    devhdr.heads[3]   = (heads >> 24) & 0xFF;
+    devhdr.heads[2]   = (heads >> 16) & 0xFF;
+    devhdr.heads[1]   = (heads >> 8) & 0xFF;
+    devhdr.heads[0]   = heads & 0xFF;
+
     devhdr.trksize[3] = (trksize >> 24) & 0xFF;
     devhdr.trksize[2] = (trksize >> 16) & 0xFF;
     devhdr.trksize[1] = (trksize >> 8) & 0xFF;
     devhdr.trksize[0] = trksize & 0xFF;
-    devhdr.devtype = devtype & 0xFF;
-    devhdr.fileseq = fileseq;
+
+    devhdr.dvtyp      = devtype & 0xFF;
+    devhdr.fileseq    = fileseq;
+
     devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
     devhdr.highcyl[0] = highcyl & 0xFF;
 
@@ -1254,20 +1258,26 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         /* Create the compressed device header */
         memset(&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
-        cdevhdr.vrm[0] = CCKD_VERSION;
-        cdevhdr.vrm[1] = CCKD_RELEASE;
-        cdevhdr.vrm[2] = CCKD_MODLVL;
-        if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
-        cdevhdr.options |= CCKD_ORDWR;
-        cdevhdr.numl1tab = (volcyls * heads + 255) / 256;
-        cdevhdr.numl2tab = 256;
-        cdevhdr.cyls[3] = (volcyls >> 24) & 0xFF;
-        cdevhdr.cyls[2] = (volcyls >> 16) & 0xFF;
-        cdevhdr.cyls[1] = (volcyls >>    8) & 0xFF;
-        cdevhdr.cyls[0] = volcyls & 0xFF;
-        cdevhdr.compress = comp;
-        cdevhdr.compress_parm = -1;
-        cdevhdr.nullfmt = nullfmt;
+
+        cdevhdr.vrm[0]    = CCKD_VERSION;
+        cdevhdr.vrm[1]    = CCKD_RELEASE;
+        cdevhdr.vrm[2]    = CCKD_MODLVL;
+
+        if (cckd_endian())
+            cdevhdr.opts |= CCKD_BIGENDIAN;
+
+        cdevhdr.opts     |= CCKD_ORDWR;
+        cdevhdr.num_L1tab  = (volcyls * heads + 255) / 256;
+        cdevhdr.num_L2tab  = 256;
+
+        cdevhdr.cyls[3]   = (volcyls >> 24) & 0xFF;
+        cdevhdr.cyls[2]   = (volcyls >> 16) & 0xFF;
+        cdevhdr.cyls[1]   = (volcyls >>    8) & 0xFF;
+        cdevhdr.cyls[0]   = volcyls & 0xFF;
+
+        cdevhdr.cmp_algo  = comp;
+        cdevhdr.cmp_parm  = -1;
+        cdevhdr.nullfmt   = nullfmt;
 
         /* Write the compressed device header */
         rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
@@ -1279,19 +1289,19 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         /* Create the primary lookup table */
-        l1 = calloc (cdevhdr.numl1tab, CCKD_L1ENT_SIZE);
+        l1 = calloc (cdevhdr.num_L1tab, CCKD_L1ENT_SIZE);
         if (l1 == NULL)
         {
             char buf[40];
-            MSGBUF( buf, "calloc(%d,%d)", (int)cdevhdr.numl1tab, (int)CCKD_L1ENT_SIZE);
+            MSGBUF( buf, "calloc(%d,%d)", (int)cdevhdr.num_L1tab, (int)CCKD_L1ENT_SIZE);
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, buf, strerror(errno)));
             return -1;
         }
-        l1[0] = CCKD_L1TAB_POS + cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
+        l1[0] = CCKD_L1TAB_POS + cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
 
         /* Write the primary lookup table */
-        rc = write (fd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-        if (rc < (int)(cdevhdr.numl1tab * CCKD_L1ENT_SIZE))
+        rc = write (fd, l1, cdevhdr.num_L1tab * CCKD_L1ENT_SIZE);
+        if (rc < (int)(cdevhdr.num_L1tab * CCKD_L1ENT_SIZE))
         {
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                                  "write()", errno ? strerror(errno) : "incomplete"));
@@ -1596,8 +1606,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 else
                 {
                     len = (int)(pos - buf);
-                    l2[trk].pos = cpos;
-                    l2[trk].len = l2[trk].size = len;
+                    l2[trk].L2_trkoff = cpos;
+                    l2[trk].L2_len    = l2[trk].L2_size  = len;
                     cpos += len;
                 }
 
@@ -1629,7 +1639,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Complete building the compressed file */
     if (comp != 0xff)
     {
-        cdevhdr.size = cdevhdr.used = cpos;
+        cdevhdr.cdh_size = cdevhdr.cdh_used = cpos;
 
         /* Rewrite the compressed device header */
         rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
@@ -1662,7 +1672,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                                  "write()", errno ? strerror(errno) : "incomplete"));
             return -1;
         }
-        rc = ftruncate(fd, (off_t)cdevhdr.size);
+        rc = ftruncate(fd, (off_t)cdevhdr.cdh_size);
 
         free (l1);
         cyl = volcyls;
@@ -2044,7 +2054,7 @@ int             fd;                     /* File descriptor           */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 int             blkgrps;                /* Number block groups       */
-int             numl1tab, l1tabsz;      /* Level 1 entries, size     */
+int             num_L1tab, l1tabsz;      /* Level 1 entries, size     */
 CCKD_L1ENT     *l1;                     /* Level 1 table pointer     */
 CCKD_L2ENT      l2[256];                /* Level 2 table             */
 unsigned long   len2;                   /* Compressed buffer length  */
@@ -2056,13 +2066,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     UNREFERENCED(lfs);
 
     /* Calculate the size of the level 1 table */
-    blkgrps = (sectors / CFBA_BLOCK_NUM) + 1;
-    numl1tab = (blkgrps + 255) / 256;
-    l1tabsz = numl1tab * CCKD_L1ENT_SIZE;
+    blkgrps = (sectors / CFBA_BLKGRP_BLKS) + 1;
+    num_L1tab = (blkgrps + 255) / 256;
+    l1tabsz = num_L1tab * CCKD_L1ENT_SIZE;
     if (l1tabsz > 65536)
     {
         fprintf (stderr, MSG(HHC00464, "E", 0, 0, fname,
-                 (U64)(sectors * sectsz), numl1tab));
+                 (U64)(sectors * sectsz), num_L1tab));
         return -1;
     }
 
@@ -2097,19 +2107,26 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Write the compressed device header */
     memset (&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
-    cdevhdr.vrm[0] = CCKD_VERSION;
-    cdevhdr.vrm[1] = CCKD_RELEASE;
-    cdevhdr.vrm[2] = CCKD_MODLVL;
-    if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
-    cdevhdr.options |= CCKD_ORDWR;
-    cdevhdr.numl1tab = numl1tab;
-    cdevhdr.numl2tab = 256;
-    cdevhdr.cyls[3] = (sectors >> 24) & 0xFF;
-    cdevhdr.cyls[2] = (sectors >> 16) & 0xFF;
-    cdevhdr.cyls[1] = (sectors >>    8) & 0xFF;
-    cdevhdr.cyls[0] = sectors & 0xFF;
-    cdevhdr.compress = comp;
-    cdevhdr.compress_parm = -1;
+
+    cdevhdr.vrm[0]    = CCKD_VERSION;
+    cdevhdr.vrm[1]    = CCKD_RELEASE;
+    cdevhdr.vrm[2]    = CCKD_MODLVL;
+
+    if (cckd_endian())
+        cdevhdr.opts |= CCKD_BIGENDIAN;
+
+    cdevhdr.opts     |= CCKD_ORDWR;
+    cdevhdr.num_L1tab  = num_L1tab;
+    cdevhdr.num_L2tab  = 256;
+
+    cdevhdr.cyls[3]   = (sectors >> 24) & 0xFF;
+    cdevhdr.cyls[2]   = (sectors >> 16) & 0xFF;
+    cdevhdr.cyls[1]   = (sectors >>    8) & 0xFF;
+    cdevhdr.cyls[0]   = sectors & 0xFF;
+
+    cdevhdr.cmp_algo  = comp;
+    cdevhdr.cmp_parm  = -1;
+
     rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
     if (rc < (int)CCKDDASD_DEVHDR_SIZE)
     {
@@ -2132,7 +2149,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Write the 1st level 2 table */
     memset (&l2, 0, CCKD_L2TAB_SIZE);
-    l2[0].pos = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz +
+    l2[0].L2_trkoff = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz +
                 CCKD_L2TAB_SIZE;
     rc = write (fd, &l2, CCKD_L2TAB_SIZE);
     if (rc < (int)CCKD_L2TAB_SIZE)
@@ -2143,7 +2160,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Write the 1st block group */
-    memset (&buf, 0, CKDDASD_DEVHDR_SIZE + CFBA_BLOCK_SIZE);
+    memset (&buf, 0, CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE);
     if (!rawflag)
     {
         convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");
@@ -2152,7 +2169,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     len2 = sizeof(buf2);
 #ifdef HAVE_LIBZ
     rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
-                    CFBA_BLOCK_SIZE, -1);
+                    CFBA_BLKGRP_SIZE, -1);
     if (comp && rc == Z_OK)
     {
         buf[0] = CCKD_COMPRESS_ZLIB;
@@ -2170,25 +2187,25 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                          "write()", errno ? strerror(errno) : "incomplete"));
             return -1;
         }
-        l2[0].len = l2[0].size = CKDDASD_TRKHDR_SIZE + len2;
-        cdevhdr.size = cdevhdr.used = CKDDASD_DEVHDR_SIZE +
+        l2[0].L2_len = l2[0].L2_size = CKDDASD_TRKHDR_SIZE + len2;
+        cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
                        CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
                        CKDDASD_TRKHDR_SIZE + len2;
     }
     else
 #endif // defined(HAVE_LIBZ)
     {
-        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE);
-        if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE))
+        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE);
+        if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE))
         {
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                          "write()", errno ? strerror(errno) : "incomplete"));
             return -1;
         }
-        l2[0].len = l2[0].size = CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE;
-        cdevhdr.size = cdevhdr.used = CKDDASD_DEVHDR_SIZE +
+        l2[0].L2_len = l2[0].L2_size = CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
+        cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
                        CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
-                       CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE;
+                       CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
     }
 
     /* Re-write the compressed device header */

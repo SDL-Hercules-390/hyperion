@@ -101,7 +101,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* Check the OPENED bit */
-        if (!force && (cdevhdr.options & CCKD_OPENED))
+        if (!force && (cdevhdr.opts & CCKD_OPENED))
         {
             FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
             close (dev->fd);
@@ -109,7 +109,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* get the byte order of the file */
-        bigend = (cdevhdr.options & CCKD_BIGENDIAN);
+        bigend = (cdevhdr.opts & CCKD_BIGENDIAN);
 
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
@@ -136,7 +136,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* swap the byte order of the file if chkdsk didn't do it for us */
-        if (bigend == (cdevhdr.options & CCKD_BIGENDIAN))
+        if (bigend == (cdevhdr.opts & CCKD_BIGENDIAN))
         {
             WRMSG( HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
                     cckd_endian() ? "big-endian" : "little-endian" );

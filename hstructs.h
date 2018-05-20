@@ -1622,7 +1622,8 @@ struct CKDDASD_DEVHDR {                 /* Device header             */
         FWORD   heads;                  /* #of heads per cylinder
                                            (bytes in reverse order)  */
         FWORD   trksize;                /* Track size (reverse order)*/
-        BYTE    devtype;                /* Last 2 digits of device type
+
+        BYTE    dvtyp;                  /* Last 2 digits of device type
                                            (0x80=3380, 0x90=3390)    */
         BYTE    fileseq;                /* CKD image file sequence no.
                                            (0x00=only file, 0x01=first
@@ -1667,20 +1668,28 @@ struct CKDDASD_RECHDR {                 /* Record header             */
 /*-------------------------------------------------------------------*/
 struct CCKDDASD_DEVHDR {                /* Compress device header    */
 /*  0 */BYTE             vrm[3];        /* Version Release Modifier  */
-/*  3 */BYTE             options;       /* Options byte              */
-/*  4 */S32              numl1tab;      /* Size of lvl 1 table       */
-/*  8 */S32              numl2tab;      /* Size of lvl 2 tables      */
-/* 12 */U32              size;          /* File size                 */
-/* 16 */U32              used;          /* File used                 */
-/* 20 */U32              free;          /* Position to free space    */
+/*  3 */BYTE             opts;          /* Options byte              */
+
+/*  4 */S32              num_L1tab;     /* Number of L1tab entries   */
+/*  8 */S32              num_L2tab;     /* Number of L2tab entries   */
+
+/* 12 */U32              cdh_size;      /* File size                 */
+/* 16 */U32              cdh_used;      /* File used                 */
+
+/* 20 */U32              free_off;      /* Offset to free space      */
 /* 24 */U32              free_total;    /* Total free space          */
 /* 28 */U32              free_largest;  /* Largest free space        */
-/* 32 */S32              free_number;   /* Number free spaces        */
+/* 32 */S32              free_num;      /* Number free spaces        */
 /* 36 */U32              free_imbed;    /* Imbedded free space       */
-/* 40 */FWORD            cyls;          /* Cylinders on device       */
+
+/* 40 */FWORD            cyls;          /* Cylinders on CKD device   */
+                                        /* Sectors   on FBA device   */
+
 /* 44 */BYTE             nullfmt;       /* Null track format         */
-/* 45 */BYTE             compress;      /* Compression algorithm     */
-/* 46 */S16              compress_parm; /* Compression parameter     */
+
+/* 45 */BYTE             cmp_algo;      /* Compression algorithm     */
+/* 46 */S16              cmp_parm;      /* Compression parameter     */
+
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
 #define CCKD_DEVHDR      CCKDDASD_DEVHDR
@@ -1710,29 +1719,29 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 #define CCKD_STRESS_PARM2      2
 
 struct CCKD_L2ENT {                     /* Level 2 table entry       */
-        U32              pos;           /* Track offset              */
-        U16              len;           /* Track length              */
-        U16              size;          /* Track size  (size >= len) */
+        U32              L2_trkoff;     /* Offset to track image     */
+        U16              L2_len;        /* Track length              */
+        U16              L2_size;       /* Track size  (size >= len) */
 };
 
 struct CCKD_FREEBLK {                   /* Free block (file)         */
-        U32              pos;           /* Position next free blk    */
-        U32              len;           /* Length this free blk      */
+        U32              fb_offnxt;     /* Offset to next free blk   */
+        U32              fb_len;        /* Length this free blk      */
 };
 
 struct CCKD_IFREEBLK {                  /* Free block (internal)     */
-        U32              pos;           /* Position next free blk    */
-        U32              len;           /* Length this free blk      */
-        int              prev;          /* Index to prev free blk    */
-        int              next;          /* Index to next free blk    */
-        int              pending;       /* 1=Free pending (don't use)*/
+        U32              ifb_offnxt;    /* Offset to next free blk   */
+        U32              ifb_len;       /* Length this free blk      */
+        int              ifb_idxprv;    /* Index to prev free blk    */
+        int              ifb_idxnxt;    /* Index to next free blk    */
+        int              ifb_pending;   /* 1=Free pending (don't use)*/
 };
 
 struct CCKD_RA {                        /* Readahead queue entry     */
-        DEVBLK          *dev;           /* Readahead device          */
-        int              trk;           /* Readahead track           */
-        int              prev;          /* Index to prev entry       */
-        int              next;          /* Index to next entry       */
+        DEVBLK          *ra_dev;        /* Readahead device          */
+        int              ra_trk;        /* Readahead track           */
+        int              ra_idxprv;     /* Index to prev entry       */
+        int              ra_idxnxt;     /* Index to next entry       */
 };
 
 typedef  U32          CCKD_L1ENT;       /* Level 1 table entry       */
@@ -1788,8 +1797,8 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
 #define CCKD_DEFAULT_FREEPEND  -1       /* Default freepend cycles   */
 
-#define CFBA_BLOCK_NUM         120      /* Number fba blocks / group */
-#define CFBA_BLOCK_SIZE        61440    /* Size of a block group 60k */
+#define CFBA_BLKGRP_BLKS       120      /* Number fba blocks / group */
+#define CFBA_BLKGRP_SIZE       61440    /* Size of a block group 60k */
                                         /* Number of bytes in an fba
                                            block group.  Probably
                                            should be a multiple of 512
@@ -1878,6 +1887,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
 
 struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
+
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
                          cckdioact:1,   /* 1=Channel program active  */
@@ -1886,48 +1896,61 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1,    /* 1=Device is closing       */
                          notnull:1,     /* 1=Device has track images */
-                         l2ok:1,        /* 1=All l2s below bounds    */
+                         L2ok:1,        /* 1=All l2s below bounds    */
                          sfmerge:1,     /* 1=sf-xxxx merge           */
                          sfforce:1;     /* 1=sf-xxxx force           */
+
         int              sflevel;       /* sfk xxxx level            */
+
         LOCK             filelock;      /* File lock                 */
         LOCK             cckdiolock;    /* I/O lock                  */
         COND             cckdiocond;    /* I/O condition             */
+
         S64              maxsize;       /* Maximum file size         */
+
         int              cckdwaiters;   /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */
         int              sfn;           /* Number active shadow files*/
+
         int              sfx;           /* Active level 2 file index */
-        int              l1x;           /* Active level 2 table index*/
-        CCKD_L2ENT      *l2;            /* Active level 2 table      */
-        int              l2active;      /* Active level 2 cache entry*/
-        off_t            l2bounds;      /* L2 tables boundary        */
+        int              L1idx;         /* Active level 2 table index*/
+        CCKD_L2ENT      *L2tab;         /* Active level 2 table      */
+        int              L2_active;     /* Active level 2 cache entry*/
+        off_t            L2_bounds;     /* L2 tables boundary        */
+
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
         unsigned int     freemin;       /* Minimum free space size   */
-        CCKD_IFREEBLK   *free;          /* Internal free space chain */
-        int              freenbr;       /* Number free space entries */
-        int              free1st;       /* Index of 1st entry        */
-        int              freelast;      /* Index of last entry       */
-        int              freeavail;     /* Index of available entry  */
+        CCKD_IFREEBLK   *ifb;           /* Internal free space chain */
+
+        int              free_count;    /* Number free space entries */
+        int              free_idx1st;   /* Index of 1st entry        */
+        int              free_idxlast;  /* Index of last entry       */
+        int              free_idxavail; /* Index of available entry  */
+
         int              lastsync;      /* Time of last sync         */
+
         int              ralkup[CCKD_MAX_RA_SIZE];/* Lookup table    */
+
         int              ratrk;         /* Track to readahead        */
         unsigned int     totreads;      /* Total nbr trk reads       */
         unsigned int     totwrites;     /* Total nbr trk writes      */
         unsigned int     totl2reads;    /* Total nbr l2 reads        */
+
         unsigned int     cachehits;     /* Cache hits                */
+
         unsigned int     readaheads;    /* Number trks read ahead    */
         unsigned int     switches;      /* Number trk switches       */
         unsigned int     misses;        /* Number readahead misses   */
+
         int              fd[CCKD_MAX_SF+1];      /* File descriptors */
         BYTE             swapend[CCKD_MAX_SF+1]; /* Swap endian flag */
         BYTE             open[CCKD_MAX_SF+1];    /* Open flag        */
         int              reads[CCKD_MAX_SF+1];   /* Nbr track reads  */
-        int              l2reads[CCKD_MAX_SF+1]; /* Nbr l2 reads     */
+        int              L2_reads[CCKD_MAX_SF+1];/* Nbr l2 reads     */
         int              writes[CCKD_MAX_SF+1];  /* Nbr track writes */
-        CCKD_L1ENT      *l1[CCKD_MAX_SF+1];      /* Level 1 tables   */
+        CCKD_L1ENT      *L1tab[CCKD_MAX_SF+1];   /* Level 1 tables   */
         CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
 };
 

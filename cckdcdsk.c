@@ -94,7 +94,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
                 close (dev->fd);
                 continue;
             }
-            if (cdevhdr.options & CCKD_OPENED)
+            if (cdevhdr.opts & CCKD_OPENED)
             {
                 FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
                 close (dev->fd);

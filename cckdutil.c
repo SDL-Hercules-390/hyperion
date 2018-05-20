@@ -19,14 +19,17 @@
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
-
-typedef struct _SPCTAB {                /* Space table               */
-BYTE            typ;                    /* Type of space             */
-int             val;                    /* Value for space           */
-U32             pos;                    /* Space offset              */
-U32             len;                    /* Space length              */
-U32             siz;                    /* Space size                */
-               } SPCTAB;
+/* Space table                                                       */
+/*-------------------------------------------------------------------*/
+struct SPCTAB
+{
+    BYTE        spc_typ;                /* Type of space             */
+    int         spc_val;                /* Value for space           */
+    U32         spc_off;                /* Space offset              */
+    U32         spc_len;                /* Space length              */
+    U32         spc_siz;                /* Space size                */
+};
+typedef struct SPCTAB SPCTAB;
 
 #define SPCTAB_NONE     0               /* Ignore this space entry   */
 #define SPCTAB_DEVHDR   1               /* Space is device header    */
@@ -95,9 +98,9 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cswp_read_error;
-    swapend = (cdevhdr.options & CCKD_BIGENDIAN) != cckd_endian();
+    swapend = (cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian();
     cckd_swapend_chdr (&cdevhdr);
-    cdevhdr.options |= CCKD_ORDWR;
+    cdevhdr.opts |= CCKD_ORDWR;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -106,7 +109,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     if (!swapend) cckd_swapend_chdr (&cdevhdr);
 
     /* l1 table */
-    len = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
+    len = cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
     if ((l1 = malloc (len)) == NULL)
         goto cswp_malloc_error;
     off = CCKD_L1TAB_POS;
@@ -115,17 +118,17 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cswp_read_error;
-    cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
+    cckd_swapend_l1 (l1, (int)cdevhdr.num_L1tab);
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, l1, len)) != len)
         goto cswp_write_error;
-    if (!swapend) cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
+    if (!swapend) cckd_swapend_l1 (l1, (int)cdevhdr.num_L1tab);
     lopos = CCKD_L1TAB_POS + len;
 
     /* l2 tables */
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
         if (l1[i] == 0    || l1[i] == 0xffffffff
          || l1[i] < lopos || l1[i] > hipos - CCKD_L2TAB_SIZE)
@@ -149,10 +152,10 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     l1 = NULL;
 
     /* free space */
-    if (cdevhdr.free && cdevhdr.free >= lopos
-     && cdevhdr.free <= hipos - CCKD_FREEBLK_SIZE)
+    if (cdevhdr.free_off && cdevhdr.free_off >= lopos
+     && cdevhdr.free_off <= hipos - CCKD_FREEBLK_SIZE)
     {
-        off = (off_t)cdevhdr.free;
+        off = (off_t)cdevhdr.free_off;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -162,7 +165,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         if (memcmp(&freeblk, "FREE_BLK", 8) == 0)
         {
             /* New format free space */
-            for (i = 0; i < cdevhdr.free_number; i++)
+            for (i = 0; i < cdevhdr.free_num; i++)
             {
                 off += CCKD_FREEBLK_SIZE;
                 if (off > hipos - CCKD_FREEBLK_SIZE)
@@ -183,7 +186,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         else
         {
             /* Old format free space */
-            for (i = 0; i < cdevhdr.free_number; i++)
+            for (i = 0; i < cdevhdr.free_num; i++)
             {
                 if (off < lopos || off > hipos - CCKD_FREEBLK_SIZE)
                     break;
@@ -199,7 +202,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
                 if (!swapend) cckd_swapend_free (&freeblk);
-                off = (off_t)freeblk.pos;
+                off = (off_t)freeblk.fb_offnxt;
             } /* for each free space */
         } /* else old format free space */
     } /* if free space */
@@ -266,17 +269,17 @@ cswp_error:
 DLL_EXPORT void cckd_swapend_chdr (CCKD_DEVHDR *cdevhdr)
 {
     /* fix the compressed ckd header */
-    cdevhdr->options ^= CCKD_BIGENDIAN;
-    cckd_swapend4 ((char *) &cdevhdr->numl1tab);
-    cckd_swapend4 ((char *) &cdevhdr->numl2tab);
-    cckd_swapend4 ((char *) &cdevhdr->size);
-    cckd_swapend4 ((char *) &cdevhdr->used);
-    cckd_swapend4 ((char *) &cdevhdr->free);
+    cdevhdr->opts ^= CCKD_BIGENDIAN;
+    cckd_swapend4 ((char *) &cdevhdr->num_L1tab);
+    cckd_swapend4 ((char *) &cdevhdr->num_L2tab);
+    cckd_swapend4 ((char *) &cdevhdr->cdh_size);
+    cckd_swapend4 ((char *) &cdevhdr->cdh_used);
+    cckd_swapend4 ((char *) &cdevhdr->free_off);
     cckd_swapend4 ((char *) &cdevhdr->free_total);
     cckd_swapend4 ((char *) &cdevhdr->free_largest);
-    cckd_swapend4 ((char *) &cdevhdr->free_number);
+    cckd_swapend4 ((char *) &cdevhdr->free_num);
     cckd_swapend4 ((char *) &cdevhdr->free_imbed);
-    cckd_swapend2 ((char *) &cdevhdr->compress_parm);
+    cckd_swapend2 ((char *) &cdevhdr->cmp_parm);
 }
 
 /*-------------------------------------------------------------------*/
@@ -299,9 +302,9 @@ int i;                                  /* Index                     */
 
     for (i = 0; i < 256; i++)
     {
-        cckd_swapend4 ((char *) &l2[i].pos);
-        cckd_swapend2 ((char *) &l2[i].len);
-        cckd_swapend2 ((char *) &l2[i].size);
+        cckd_swapend4 ((char *) &l2[i].L2_trkoff);
+        cckd_swapend2 ((char *) &l2[i].L2_len);
+        cckd_swapend2 ((char *) &l2[i].L2_size);
     }
 }
 
@@ -310,8 +313,8 @@ int i;                                  /* Index                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd_swapend_free (CCKD_FREEBLK *fb)
 {
-    cckd_swapend4 ((char *) &fb->pos);
-    cckd_swapend4 ((char *) &fb->len);
+    cckd_swapend4 ((char *) &fb->fb_offnxt);
+    cckd_swapend4 ((char *) &fb->fb_len);
 }
 
 /*-------------------------------------------------------------------*/
@@ -374,8 +377,8 @@ U32             next;                   /* offset of next space      */
 int             s;                      /* space table index         */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKD_DEVHDR     cdevhdr;                /* CCKD device header        */
-CCKD_L1ENT     *l1=NULL;                /* -> l1 table               */
-CCKD_L2ENT    **l2=NULL;                /* -> l2 table array         */
+CCKD_L1ENT     *l1=NULL;                /* ->L1tab table               */
+CCKD_L2ENT    **l2=NULL;                /* ->L2tab table array         */
 SPCTAB         *spctab=NULL;            /* -> space table            */
 BYTE           *rbuf=NULL;              /* Relocation buffer         */
 BYTE           *p;                      /* -> relocation buffer      */
@@ -438,7 +441,7 @@ comp_restart:
     /*---------------------------------------------------------------
      * Check the endianess of the file
      *---------------------------------------------------------------*/
-    if ((cdevhdr.options & CCKD_BIGENDIAN) != cckd_endian())
+    if ((cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian())
     {
         if(dev->batch)
             fprintf(stdout, MSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
@@ -455,10 +458,10 @@ comp_restart:
     /*---------------------------------------------------------------
      * Some header checks
      *---------------------------------------------------------------*/
-    if ((off_t)cdevhdr.size != fst.st_size
-     || cdevhdr.size != cdevhdr.used || cdevhdr.free != 0
-     || cdevhdr.free_total != 0      || cdevhdr.free_largest != 0
-     || cdevhdr.free_number != 0     || cdevhdr.free_imbed != 0)
+    if ((off_t)cdevhdr.cdh_size != fst.st_size
+     || cdevhdr.cdh_size   != cdevhdr.cdh_used || cdevhdr.free_off     != 0
+     || cdevhdr.free_total != 0                || cdevhdr.free_largest != 0
+     || cdevhdr.free_num   != 0                || cdevhdr.free_imbed   != 0)
         relocate = 1;
 
     /*---------------------------------------------------------------
@@ -467,13 +470,13 @@ comp_restart:
     memset( &zero_l2, 0, CCKD_L2TAB_SIZE );
     if (cdevhdr.nullfmt != 0)
         for (i = 0; i < 256; i++)
-            zero_l2[i].len = zero_l2[i].size = cdevhdr.nullfmt;
+            zero_l2[i].L2_len = zero_l2[i].L2_size = cdevhdr.nullfmt;
     memset (&ff_l2, 0xff, CCKD_L2TAB_SIZE);
 
     /*---------------------------------------------------------------
      * Read the l1 table
      *---------------------------------------------------------------*/
-    l1size = len = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
+    l1size = len = cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
     if ((l1 = malloc (len)) == NULL)
         goto comp_malloc_error;
     off = CCKD_L1TAB_POS;
@@ -486,47 +489,47 @@ comp_restart:
     /*---------------------------------------------------------------
      * Build the space table
      *---------------------------------------------------------------*/
-    n = 1 + 1 + 1 + cdevhdr.numl1tab + 1;
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    n = 1 + 1 + 1 + cdevhdr.num_L1tab + 1;
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
         if (l1[i] != 0 && l1[i] != 0xffffffff)
             n += 256;
     len = sizeof(SPCTAB);
     if ((spctab = calloc (n, len)) == NULL)
         goto comp_calloc_error;
     s = 0;
-    spctab[s].typ = SPCTAB_DEVHDR;
-    spctab[s].val = -1;
-    spctab[s].pos = 0;
-    spctab[s].len =
-    spctab[s].siz = CKDDASD_DEVHDR_SIZE;
+    spctab[s].spc_typ = SPCTAB_DEVHDR;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = 0;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = CKDDASD_DEVHDR_SIZE;
     s++;
-    spctab[s].typ = SPCTAB_CDEVHDR;
-    spctab[s].val = -1;
-    spctab[s].pos = CCKD_DEVHDR_POS;
-    spctab[s].len =
-    spctab[s].siz = CCKD_DEVHDR_SIZE;
+    spctab[s].spc_typ = SPCTAB_CDEVHDR;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = CCKD_DEVHDR_POS;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = CCKD_DEVHDR_SIZE;
     s++;
-    spctab[s].typ = SPCTAB_L1;
-    spctab[s].val = -1;
-    spctab[s].pos = CCKD_L1TAB_POS;
-    spctab[s].len =
-    spctab[s].siz = l1size;
+    spctab[s].spc_typ = SPCTAB_L1;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = CCKD_L1TAB_POS;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = l1size;
     s++;
-    spctab[s].typ = SPCTAB_EOF;
-    spctab[s].val = -1;
-    spctab[s].pos = fst.st_size;
-    spctab[s].len =
-    spctab[s].siz = 0;
+    spctab[s].spc_typ = SPCTAB_EOF;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = fst.st_size;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = 0;
     s++;
 
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
         if (l1[i] != 0 && l1[i] != 0xffffffff)
         {
-            spctab[s].typ = SPCTAB_L2;
-            spctab[s].val = i;
-            spctab[s].pos = l1[i];
-            spctab[s].len =
-            spctab[s].siz = CCKD_L2TAB_SIZE;
+            spctab[s].spc_typ = SPCTAB_L2;
+            spctab[s].spc_val = i;
+            spctab[s].spc_off = l1[i];
+            spctab[s].spc_len =
+            spctab[s].spc_siz = CCKD_L2TAB_SIZE;
             s++;
         }
     qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
@@ -534,18 +537,18 @@ comp_restart:
     /*---------------------------------------------------------------
      * Read level 2 tables
      *---------------------------------------------------------------*/
-    n = cdevhdr.numl1tab;
+    n = cdevhdr.num_L1tab;
     len = sizeof (void *);
     if ((l2 = calloc (n, len)) == NULL)
         goto comp_calloc_error;
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
     {
-        if (spctab[i].typ != SPCTAB_L2) continue;
-        l = spctab[i].val;
+        if (spctab[i].spc_typ != SPCTAB_L2) continue;
+        l = spctab[i].spc_val;
         len = CCKD_L2TAB_SIZE;
         if ((l2[l] = malloc (len)) == NULL)
             goto comp_malloc_error;
-        off = (off_t)spctab[i].pos;
+        off = (off_t)spctab[i].spc_off;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -553,30 +556,30 @@ comp_restart:
             goto comp_read_error;
         for (j = 0; j < 256; j++)
         {
-            if (l2[l][j].pos == 0 || l2[l][j].pos == 0xffffffff)
+            if (l2[l][j].L2_trkoff == 0 || l2[l][j].L2_trkoff == 0xffffffff)
                 continue;
-            spctab[s].typ = SPCTAB_TRK;
-            spctab[s].val = spctab[i].val*256 + j;
-            spctab[s].pos = l2[l][j].pos;
-            spctab[s].len = l2[l][j].len;
-            spctab[s].siz = l2[l][j].size;
+            spctab[s].spc_typ = SPCTAB_TRK;
+            spctab[s].spc_val = spctab[i].spc_val*256 + j;
+            spctab[s].spc_off = l2[l][j].L2_trkoff;
+            spctab[s].spc_len = l2[l][j].L2_len;
+            spctab[s].spc_siz = l2[l][j].L2_size;
             s++;
         } /* for each l2 entry */
         /* check if empty l2 table */
         if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0
          || memcmp (l2[l], &ff_l2,   CCKD_L2TAB_SIZE) == 0)
         {
-            l1[l] = l2[l][0].pos; /* 0x00000000 or 0xffffffff */
-            spctab[i].typ = SPCTAB_NONE;
+            l1[l] = l2[l][0].L2_trkoff; /* 0x00000000 or 0xffffffff */
+            spctab[i].spc_typ = SPCTAB_NONE;
             free (l2[l]);
             l2[l] = NULL;
             relocate = 1;
         }
     } /* for each space */
     qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-    while (spctab[s-1].typ == SPCTAB_NONE) s--;
+    while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
     /* set relocate flag if last space is free space */
-    if (spctab[s-2].pos + spctab[s-2].len != spctab[s-1].pos)
+    if (spctab[s-2].spc_off + spctab[s-2].spc_len != spctab[s-1].spc_off)
         relocate = 1;
 
     /*---------------------------------------------------------------
@@ -585,7 +588,7 @@ comp_restart:
 
     /* determine l2 area */
     l2area = CCKD_L1TAB_POS + l1size;
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
         if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
         if (l1[i] != l2area)
@@ -596,10 +599,10 @@ comp_restart:
     /* quick return if all l2 tables are orderered and no free space */
     if (!relocate)
     {
-        for (i = 1; spctab[i].typ != SPCTAB_EOF; i++)
-            if (spctab[i-1].pos + spctab[i-1].len != spctab[i].pos)
+        for (i = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
+            if (spctab[i-1].spc_off + spctab[i-1].spc_len != spctab[i].spc_off)
                 break;
-        if (spctab[i].typ == SPCTAB_EOF)
+        if (spctab[i].spc_typ == SPCTAB_EOF)
         {
             if(dev->batch)
                 fprintf(stdout, MSG(HHC00358, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
@@ -610,88 +613,88 @@ comp_restart:
     }
 
     /* file will be updated */
-    cdevhdr.options |= CCKD_ORDWR;
+    cdevhdr.opts |= CCKD_ORDWR;
 
     /* calculate track size within the l2 area */
-    for (i = rlen = 0; spctab[i].pos < l2area; i++)
-        if (spctab[i].typ == SPCTAB_TRK)
-            rlen += sizeof(spctab[i].val) + sizeof(spctab[i].len)
-                 +  spctab[i].len;
+    for (i = rlen = 0; spctab[i].spc_off < l2area; i++)
+        if (spctab[i].spc_typ == SPCTAB_TRK)
+            rlen += sizeof(spctab[i].spc_val) + sizeof(spctab[i].spc_len)
+                 +  spctab[i].spc_len;
 
     /* read any tracks in the l2area into rbuf */
     if ((len = rlen) > 0)
     {
         if ((rbuf = malloc (len)) == NULL)
             goto comp_malloc_error;
-        for (i = 0, p = rbuf; spctab[i].pos < l2area; i++)
+        for (i = 0, p = rbuf; spctab[i].spc_off < l2area; i++)
         {
-            if (spctab[i].typ != SPCTAB_TRK) continue;
-            memcpy (p, &spctab[i].val, sizeof(spctab[i].val));
-            p += sizeof(spctab[i].val);
-            memcpy (p, &spctab[i].len, sizeof(spctab[i].len));
-            p += sizeof(spctab[i].len);
-            off = (off_t)spctab[i].pos;
+            if (spctab[i].spc_typ != SPCTAB_TRK) continue;
+            memcpy (p, &spctab[i].spc_val, sizeof(spctab[i].spc_val));
+            p += sizeof(spctab[i].spc_val);
+            memcpy (p, &spctab[i].spc_len, sizeof(spctab[i].spc_len));
+            p += sizeof(spctab[i].spc_len);
+            off = (off_t)spctab[i].spc_off;
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
             gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-            len = spctab[i].len;
+            len = spctab[i].spc_len;
             if ((rc = read (fd, p, len)) != len)
                 goto comp_read_error;
             p += len;
-            spctab[i].typ = SPCTAB_NONE;
+            spctab[i].spc_typ = SPCTAB_NONE;
         } /* for each space in the l2 area */
         qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-        while (spctab[s-1].typ == SPCTAB_NONE) s--;
+        while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
     } /* if any tracks to relocate */
 
     /* remove all l2 tables from the space table */
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].typ == SPCTAB_L2)
-            spctab[i].typ = SPCTAB_NONE;
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+        if (spctab[i].spc_typ == SPCTAB_L2)
+            spctab[i].spc_typ = SPCTAB_NONE;
     qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-    while (spctab[s-1].typ == SPCTAB_NONE) s--;
+    while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
 
     /* add all l2 tables at their ordered offsets */
     off = CCKD_L1TAB_POS + l1size;
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
         if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
-        spctab[s].typ = SPCTAB_L2;
-        spctab[s].val = i;
-        spctab[s].pos = (U32)off;
-        spctab[s].len =
-        spctab[s].siz = CCKD_L2TAB_SIZE;
+        spctab[s].spc_typ = SPCTAB_L2;
+        spctab[s].spc_val = i;
+        spctab[s].spc_off = (U32)off;
+        spctab[s].spc_len =
+        spctab[s].spc_siz = CCKD_L2TAB_SIZE;
         s++;
         off += CCKD_L2TAB_SIZE;
     }
     qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
     /* set end-of-file position */
-    spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
+    spctab[s-1].spc_off = spctab[s-2].spc_off + spctab[s-2].spc_len;
 
     /*---------------------------------------------------------------
      * Perform compression
      *---------------------------------------------------------------*/
 
     /* move spaces left */
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
     {
         /* ignore contiguous spaces */
-        if (spctab[i].pos + spctab[i].len == spctab[i+1].pos)
+        if (spctab[i].spc_off + spctab[i].spc_len == spctab[i+1].spc_off)
             continue;
 
         /* found a gap */
-        off = (off_t)spctab[i+1].pos;
+        off = (off_t)spctab[i+1].spc_off;
 
         /* figure out how much we can read */
-        for (len = 0, j = i + 1; spctab[j].typ != SPCTAB_EOF; j++)
+        for (len = 0, j = i + 1; spctab[j].spc_typ != SPCTAB_EOF; j++)
         {
-            if (len + spctab[j].len > sizeof(buf))
+            if (len + spctab[j].spc_len > sizeof(buf))
                 break;
-            next = spctab[j].pos + spctab[j].len;
-            spctab[j].pos = spctab[i].pos + spctab[i].len + len;
-            spctab[j].siz = spctab[j].len;
-            len += spctab[j].len;
-            if (next != spctab[j+1].pos)
+            next = spctab[j].spc_off + spctab[j].spc_len;
+            spctab[j].spc_off = spctab[i].spc_off + spctab[i].spc_len + len;
+            spctab[j].spc_siz = spctab[j].spc_len;
+            len += spctab[j].spc_len;
+            if (next != spctab[j+1].spc_off)
                 break;
         } /* search for contiguous spaces */
 
@@ -707,7 +710,7 @@ comp_restart:
             goto comp_write_error;
 
         /* write the images */
-        off = (off_t)spctab[i].pos + spctab[i].len;
+        off = (off_t)spctab[i].spc_off + spctab[i].spc_len;
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -716,33 +719,33 @@ comp_restart:
     }
 
     /* adjust the size of the file */
-    spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
+    spctab[s-1].spc_off = spctab[s-2].spc_off + spctab[s-2].spc_len;
 
     /*---------------------------------------------------------------
      * Write spaces relocated from the l2area to the end of the file
      *---------------------------------------------------------------*/
-    off = (off_t)spctab[s-1].pos;
+    off = (off_t)spctab[s-1].spc_off;
     p = rbuf;
     while (rlen)
     {
-        spctab[s].typ = SPCTAB_TRK;
-        spctab[s].pos = (U32)off;
-        memcpy (&spctab[s].val, p, sizeof(spctab[s].val));
-        p += sizeof(spctab[s].val);
-        memcpy (&spctab[s].len, p, sizeof(spctab[s].len));
-        spctab[s].siz = spctab[s].len;
-        p += sizeof(spctab[s].len);
+        spctab[s].spc_typ = SPCTAB_TRK;
+        spctab[s].spc_off = (U32)off;
+        memcpy (&spctab[s].spc_val, p, sizeof(spctab[s].spc_val));
+        p += sizeof(spctab[s].spc_val);
+        memcpy (&spctab[s].spc_len, p, sizeof(spctab[s].spc_len));
+        spctab[s].spc_siz = spctab[s].spc_len;
+        p += sizeof(spctab[s].spc_len);
 
         if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-        len = spctab[s].len;
+        len = spctab[s].spc_len;
         if ((rc = write (fd, p, len)) != len)
             goto comp_write_error;
 
         p += len;
         off += len;
-        rlen -= len + sizeof(spctab[s].val) + sizeof(spctab[s].len);
+        rlen -= len + sizeof(spctab[s].spc_val) + sizeof(spctab[s].spc_len);
         s++;
     } /* for each relocated space in l2area */
 
@@ -751,18 +754,18 @@ comp_restart:
     {
         free (rbuf); rbuf = NULL;
         qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-        spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
+        spctab[s-1].spc_off = spctab[s-2].spc_off + spctab[s-2].spc_len;
     }
 
     /*---------------------------------------------------------------
      * Update the device header
      *---------------------------------------------------------------*/
-    cdevhdr.size =
-    cdevhdr.used = spctab[s-1].pos;
-    cdevhdr.free =
+    cdevhdr.cdh_size =
+    cdevhdr.cdh_used = spctab[s-1].spc_off;
+    cdevhdr.free_off =
     cdevhdr.free_total =
     cdevhdr.free_largest =
-    cdevhdr.free_number =
+    cdevhdr.free_num =
     cdevhdr.free_imbed = 0;
     cdevhdr.vrm[0] = CCKD_VERSION;
     cdevhdr.vrm[1] = CCKD_RELEASE;
@@ -771,16 +774,16 @@ comp_restart:
     /*---------------------------------------------------------------
      * Update the lookup tables
      *---------------------------------------------------------------*/
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].typ == SPCTAB_L2)
-            l1[spctab[i].val] = spctab[i].pos;
-        else if (spctab[i].typ == SPCTAB_TRK)
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+        if (spctab[i].spc_typ == SPCTAB_L2)
+            l1[spctab[i].spc_val] = spctab[i].spc_off;
+        else if (spctab[i].spc_typ == SPCTAB_TRK)
         {
-            l = spctab[i].val / 256;
-            j = spctab[i].val % 256;
-            l2[l][j].pos  = spctab[i].pos;
-            l2[l][j].len  =
-            l2[l][j].size = spctab[i].len;
+            l = spctab[i].spc_val / 256;
+            j = spctab[i].spc_val % 256;
+            l2[l][j].L2_trkoff  = spctab[i].spc_off;
+            l2[l][j].L2_len  =
+            l2[l][j].L2_size = spctab[i].spc_len;
         }
 
     /*---------------------------------------------------------------
@@ -806,7 +809,7 @@ comp_restart:
         goto comp_write_error;
 
     /* write l2 tables */
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < cdevhdr.num_L1tab; i++)
         if (l1[i] != 0 && l1[i] != 0xffffffff)
         {
             off = (off_t)l1[i];
@@ -819,7 +822,7 @@ comp_restart:
         }
 
     /* truncate the file */
-    off = (off_t)spctab[s-1].pos;
+    off = (off_t)spctab[s-1].spc_off;
     if (off < fst.st_size)
     {
         VERIFY(!ftruncate (fd, off));
@@ -852,7 +855,7 @@ comp_return:
     if (rbuf) free(rbuf);
     if (l2)
     {
-        for (i = 0; i < cdevhdr.numl1tab; i++)
+        for (i = 0; i < cdevhdr.num_L1tab; i++)
             if (l2[i])
                 free (l2[i]);
         free (l2);
@@ -940,12 +943,12 @@ static int comp_spctab_sort(const void *a, const void *b)
 {
 const SPCTAB *x = a, *y = b;
 
-    if (x->typ == SPCTAB_NONE)      return  1;
-    else if (y->typ == SPCTAB_NONE) return -1;
-    else if (x->typ == SPCTAB_EOF)  return  1;
-    else if (y->typ == SPCTAB_EOF)  return -1;
-    else if (x->pos < y->pos)       return -1;
-    else                            return  1;
+         if (x->spc_typ == SPCTAB_NONE) return +1;
+    else if (y->spc_typ == SPCTAB_NONE) return -1;
+    else if (x->spc_typ == SPCTAB_EOF)  return +1;
+    else if (y->spc_typ == SPCTAB_EOF)  return -1;
+    else if (x->spc_off < y->spc_off)   return -1;
+    else                                return +1;
 }
 
 /*-------------------------------------------------------------------
@@ -968,7 +971,7 @@ int             fdflags;                /* file descriptor flags     */
 S64             maxsize;                /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
 int             f, i, j, l, n;          /* work integers             */
-int             l1x, l2x;               /* l1, l2 table indexes      */
+int             L1idx, l2x;             /* l1, l2 table indexes      */
 BYTE            compmask[256];          /* compression byte mask
                                            00 - supported
                                            0x - valid, not supported
@@ -1094,7 +1097,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Endianess check */
-    if ((cdevhdr.options & CCKD_BIGENDIAN) != cckd_endian())
+    if ((cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian())
     {
         if (!ro)
         {
@@ -1134,15 +1137,15 @@ BYTE            buf[4*65536];           /* buffer                    */
               + (devhdr.trksize[0]);
 
         /* ckd dasd lookup */
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, 0);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
         if (ckd == NULL)
         {
             if(dev->batch)
                 fprintf(stdout, MSG(HHC00361, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        devhdr.devtype, cyls));
+                        devhdr.dvtyp, cyls));
             else
                 WRMSG(HHC00361, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                      devhdr.devtype, cyls);
+                      devhdr.dvtyp, cyls);
              goto cdsk_error;
         }
 
@@ -1184,9 +1187,9 @@ BYTE            buf[4*65536];           /* buffer                    */
              + (cdevhdr.cyls[2] << 16)
              + (cdevhdr.cyls[1] <<  8)
              + (cdevhdr.cyls[0]);
-        trks = blks / CFBA_BLOCK_NUM;
-        if (blks % CFBA_BLOCK_NUM) trks++;
-        trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
+        trks = blks / CFBA_BLKGRP_BLKS;
+        if (blks % CFBA_BLKGRP_BLKS) trks++;
+        trksz = CFBA_BLKGRP_SIZE + CKDDASD_TRKHDR_SIZE;
         heads = 65536;
         cyls = trks / heads;
         if (trks % heads) cyls++;
@@ -1196,21 +1199,21 @@ BYTE            buf[4*65536];           /* buffer                    */
     blkgrps = trks;
     blkgrpsz = trksz;
 
-    /* `numl1tab' check */
+    /* `num_L1tab' check */
     n = trks / 256;
     if (trks % 256) n++;
 
-    if (cdevhdr.numl1tab != n && cdevhdr.numl1tab != n + 1)
+    if (cdevhdr.num_L1tab != n && cdevhdr.num_L1tab != n + 1)
     {
         if(dev->batch)
             fprintf(stdout, MSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "numl1tab", cdevhdr.numl1tab, n));
+                    "num_L1tab", cdevhdr.num_L1tab, n));
         else
             WRMSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                  "numl1tab", cdevhdr.numl1tab, n);
+                  "num_L1tab", cdevhdr.num_L1tab, n);
         goto cdsk_error;
     }
-    l1size = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
+    l1size = cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
     if (CCKD_L1TAB_POS + l1size > fst.st_size)
     {
         if(dev->batch)
@@ -1223,7 +1226,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     }
 
     /* check level 2 if SPERRS bit on */
-    if (!ro && level < 2 && (cdevhdr.options & CCKD_SPERRS))
+    if (!ro && level < 2 && (cdevhdr.opts & CCKD_SPERRS))
     {
         level = 2;
         if(dev->batch)
@@ -1234,16 +1237,16 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
-    hdrerr |= fst.st_size  != (off_t)cdevhdr.size && cdevhdr.size != cdevhdr.free  ? 0x0001 : 0;
-    hdrerr |= cdevhdr.size != cdevhdr.used + cdevhdr.free_total                    ? 0x0002 : 0;
-    hdrerr |= cdevhdr.free_largest > cdevhdr.free_total - cdevhdr.free_imbed       ? 0x0004 : 0;
-    hdrerr |= cdevhdr.free == 0 && cdevhdr.free_number != 0                        ? 0x0008 : 0;
-    hdrerr |= cdevhdr.free == 0 && cdevhdr.free_total  != cdevhdr.free_imbed       ? 0x0010 : 0;
-    hdrerr |= cdevhdr.free != 0 && cdevhdr.free_total  == 0                        ? 0x0020 : 0;
-    hdrerr |= cdevhdr.free != 0 && cdevhdr.free_number == 0                        ? 0x0040 : 0;
-    hdrerr |= cdevhdr.free_number == 0 && cdevhdr.free_total != cdevhdr.free_imbed ? 0x0080 : 0;
-    hdrerr |= cdevhdr.free_number != 0 && cdevhdr.free_total <= cdevhdr.free_imbed ? 0x0100 : 0;
-    hdrerr |= cdevhdr.free_imbed > cdevhdr.free_total                              ? 0x0200 : 0;
+    hdrerr |= fst.st_size != (off_t)cdevhdr.cdh_size && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
+    hdrerr |= cdevhdr.cdh_size !=      cdevhdr.free_total  +  cdevhdr.cdh_used               ? 0x0002 : 0;
+    hdrerr |= cdevhdr.free_largest  >  cdevhdr.free_total  -  cdevhdr.free_imbed             ? 0x0004 : 0;
+    hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_num    != 0                              ? 0x0008 : 0;
+    hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_total  != cdevhdr.free_imbed             ? 0x0010 : 0;
+    hdrerr |= cdevhdr.free_off != 0 && cdevhdr.free_total  == 0                              ? 0x0020 : 0;
+    hdrerr |= cdevhdr.free_off != 0 && cdevhdr.free_num    == 0                              ? 0x0040 : 0;
+    hdrerr |= cdevhdr.free_num == 0 && cdevhdr.free_total  != cdevhdr.free_imbed             ? 0x0080 : 0;
+    hdrerr |= cdevhdr.free_num != 0 && cdevhdr.free_total  <= cdevhdr.free_imbed             ? 0x0100 : 0;
+    hdrerr |= cdevhdr.free_imbed    >  cdevhdr.free_total                                    ? 0x0200 : 0;
 
     /* Additional checking if header errors */
     if (hdrerr != 0)
@@ -1263,7 +1266,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     }
 
     /* Additional checking if not properly closed */
-    if (level < 1 && (cdevhdr.options & CCKD_OPENED))
+    if (level < 1 && (cdevhdr.opts & CCKD_OPENED))
     {
         level = 1;
         if(dev->batch)
@@ -1273,20 +1276,20 @@ BYTE            buf[4*65536];           /* buffer                    */
     }
 
     /* Additional checking if last opened for read/write */
-    if (level < 0 && (cdevhdr.options & CCKD_ORDWR))
+    if (level < 0 && (cdevhdr.opts & CCKD_ORDWR))
         level = 0;
 
     /* Set check level -1 */
     if (level == 0 && !dev->batch && !hdrerr
-     && (cdevhdr.options & (CCKD_OPENED|CCKD_SPERRS)) == 0
-     && ((cdevhdr.options & (CCKD_ORDWR)) == 0 || ro))
+     && (cdevhdr.opts & (CCKD_OPENED|CCKD_SPERRS)) == 0
+     && ((cdevhdr.opts & (CCKD_ORDWR)) == 0 || ro))
         level = -1;
 
     /* Build empty l2 table */
     memset (&empty_l2, shadow, CCKD_L2TAB_SIZE);
     if (shadow == 0 && cdevhdr.nullfmt != 0)
         for (i = 0; i < 256; i++)
-            empty_l2[i].len = empty_l2[i].size = cdevhdr.nullfmt;
+            empty_l2[i].L2_size = empty_l2[i].L2_size = cdevhdr.nullfmt;
 
     /*---------------------------------------------------------------
      * read the level 1 table
@@ -1300,7 +1303,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cdsk_read_error;
-    if (swapend) cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
+    if (swapend) cckd_swapend_l1 (l1, (int)cdevhdr.num_L1tab);
     lopos = CCKD_L1TAB_POS + l1size;
 
     /*---------------------------------------------------------------
@@ -1308,11 +1311,11 @@ BYTE            buf[4*65536];           /* buffer                    */
      *---------------------------------------------------------------*/
 
     /* find number of non-null l1 entries */
-    for (i = n = 0; i < cdevhdr.numl1tab; i++)
+    for (i = n = 0; i < cdevhdr.num_L1tab; i++)
         if (l1[i] != 0 && l1[i] != 0xffffffff)
             n++;
 
-    if (level >= 4) n = cdevhdr.numl1tab;
+    if (level >= 4) n = cdevhdr.num_L1tab;
 
     /* calculate max possible space table entries */
     n = 1 + 1 + 1                    // devhdr, cdevhdr, l1tab
@@ -1330,43 +1333,43 @@ BYTE            buf[4*65536];           /* buffer                    */
     s = 0;
 
     /* devhdr */
-    spctab[s].typ = SPCTAB_DEVHDR;
-    spctab[s].val = -1;
-    spctab[s].pos = 0;
-    spctab[s].len =
-    spctab[s].siz = CKDDASD_DEVHDR_SIZE;
+    spctab[s].spc_typ = SPCTAB_DEVHDR;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = 0;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = CKDDASD_DEVHDR_SIZE;
     s++;
     /* cdevhdr */
-    spctab[s].typ = SPCTAB_CDEVHDR;
-    spctab[s].val = -1;
-    spctab[s].pos = CCKD_DEVHDR_POS;
-    spctab[s].len =
-    spctab[s].siz = CCKD_DEVHDR_SIZE;
+    spctab[s].spc_typ = SPCTAB_CDEVHDR;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = CCKD_DEVHDR_POS;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = CCKD_DEVHDR_SIZE;
     s++;
     /* l1 table */
-    spctab[s].typ = SPCTAB_L1;
-    spctab[s].val = -1;
-    spctab[s].pos = CCKD_L1TAB_POS;
-    spctab[s].len =
-    spctab[s].siz = l1size;
+    spctab[s].spc_typ = SPCTAB_L1;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = CCKD_L1TAB_POS;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = l1size;
     s++;
     /* l2 tables */
-    for (i = 0; i < cdevhdr.numl1tab && level < 4; i++)
+    for (i = 0; i < cdevhdr.num_L1tab && level < 4; i++)
     {
         if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
-        spctab[s].typ = SPCTAB_L2;
-        spctab[s].val = i;
-        spctab[s].pos = l1[i];
-        spctab[s].len =
-        spctab[s].siz = CCKD_L2TAB_SIZE;
+        spctab[s].spc_typ = SPCTAB_L2;
+        spctab[s].spc_val = i;
+        spctab[s].spc_off = l1[i];
+        spctab[s].spc_len =
+        spctab[s].spc_siz = CCKD_L2TAB_SIZE;
         s++;
     }
     /* end-of-file */
-    spctab[s].typ = SPCTAB_EOF;
-    spctab[s].val = -1;
-    spctab[s].pos = (U32)fst.st_size;
-    spctab[s].len =
-    spctab[s].siz = 0;
+    spctab[s].spc_typ = SPCTAB_EOF;
+    spctab[s].spc_val = -1;
+    spctab[s].spc_off = (U32)fst.st_size;
+    spctab[s].spc_len =
+    spctab[s].spc_siz = 0;
     s++;
 
     qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
@@ -1379,8 +1382,8 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         int err = 0;
         /* check for overlaps */
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-            if (spctab[i].pos + spctab[i].siz > spctab[i+1].pos)
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+            if (spctab[i].spc_off + spctab[i].spc_siz > spctab[i+1].spc_off)
                 err = 1;
         /* exit if no errors */
         if (!err) goto cdsk_return_ok;
@@ -1392,7 +1395,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     len = sizeof(BYTE);
 
-    n = cdevhdr.numl1tab;
+    n = cdevhdr.num_L1tab;
     if ((l2errs = calloc (n, len)) == NULL)
         goto cdsk_calloc_error;
 
@@ -1406,7 +1409,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (level == 4)
     {
-        memset (l2errs, 1, cdevhdr.numl1tab);
+        memset (l2errs, 1, cdevhdr.num_L1tab);
         memset (rcvtab, 1, trks);
         goto cdsk_recovery;
     }
@@ -1415,13 +1418,13 @@ BYTE            buf[4*65536];           /* buffer                    */
      * Read the level 2 tables
      *---------------------------------------------------------------*/
 
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
     {
-        if (spctab[i].typ != SPCTAB_L2
-         || spctab[i].pos < lopos || spctab[i].pos > hipos)
+        if (spctab[i].spc_typ != SPCTAB_L2
+         || spctab[i].spc_off < lopos || spctab[i].spc_off > hipos)
             continue;
 
-        off = spctab[i].pos;
+        off = spctab[i].spc_off;
         if ( lseek (fd, off, SEEK_SET) < 0 )
             goto cdsk_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -1433,13 +1436,13 @@ BYTE            buf[4*65536];           /* buffer                    */
         /* add trks/blkgrps to the space table */
         for (j = 0; j < 256; j++)
         {
-            if (l2tab[j].pos != 0 && l2tab[j].pos != 0xffffffff)
+            if (l2tab[j].L2_trkoff != 0 && l2tab[j].L2_trkoff != 0xffffffff)
             {
-                spctab[s].typ = trktyp;
-                spctab[s].val = spctab[i].val * 256 + j;
-                spctab[s].pos = l2tab[j].pos;
-                spctab[s].len = l2tab[j].len;
-                spctab[s].siz = l2tab[j].size;
+                spctab[s].spc_typ = trktyp;
+                spctab[s].spc_val = spctab[i].spc_val * 256 + j;
+                spctab[s].spc_off = l2tab[j].L2_trkoff;
+                spctab[s].spc_len = l2tab[j].L2_len;
+                spctab[s].spc_siz = l2tab[j].L2_size;
                 s++;
             }
         }
@@ -1458,47 +1461,47 @@ BYTE            buf[4*65536];           /* buffer                    */
     hipos = fst.st_size;
 
     /* Make adjustment if new format free space is at the end */
-    len = spctab[s-1].pos - (spctab[s-2].pos + spctab[s-2].siz);
+    len = spctab[s-1].spc_off - (spctab[s-2].spc_off + spctab[s-2].spc_siz);
     if (len > 0
-     && cdevhdr.size == cdevhdr.free
-     && cdevhdr.size + len == spctab[s-1].pos)
+     && cdevhdr.cdh_size == cdevhdr.free_off
+     && cdevhdr.cdh_size + len == spctab[s-1].spc_off)
     {
-        spctab[s-1].pos -= len;
+        spctab[s-1].spc_off -= len;
         hipos -= len;
     }
 
     memset( &cdevhdr2, 0, CCKD_DEVHDR_SIZE );
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
     {
         /* Calculate gap size */
-        len = spctab[i+1].pos - (spctab[i].pos + spctab[i].siz);
+        len = spctab[i+1].spc_off - (spctab[i].spc_off + spctab[i].spc_siz);
 
         /* Update space statistics */
-        cdevhdr2.size += spctab[i].siz + len;
-        cdevhdr2.used += spctab[i].len;
+        cdevhdr2.cdh_size += spctab[i].spc_siz + len;
+        cdevhdr2.cdh_used += spctab[i].spc_len;
         if (len > 0)
         {
-            cdevhdr2.free_number++;
+            cdevhdr2.free_num++;
             cdevhdr2.free_total += len;
             if (cdevhdr2.free_largest < (U32)len)
                 cdevhdr2.free_largest = (U32)len;
         }
-        if (spctab[i].typ == trktyp)
+        if (spctab[i].spc_typ == trktyp)
         {
-            cdevhdr2.free_total += spctab[i].siz - spctab[i].len;
-            cdevhdr2.free_imbed += spctab[i].siz - spctab[i].len;
+            cdevhdr2.free_total += spctab[i].spc_siz - spctab[i].spc_len;
+            cdevhdr2.free_imbed += spctab[i].spc_siz - spctab[i].spc_len;
         }
 
         /* ignore devhdr, cdevhdr and l1 (these are `out of bounds') */
-        if (spctab[i].typ == SPCTAB_DEVHDR
-         || spctab[i].typ == SPCTAB_CDEVHDR
-         || spctab[i].typ == SPCTAB_L1
+        if (spctab[i].spc_typ == SPCTAB_DEVHDR
+         || spctab[i].spc_typ == SPCTAB_CDEVHDR
+         || spctab[i].spc_typ == SPCTAB_L1
            )
             continue;
 
         /* check if the space is out of bounds */
-        valid = (off_t)spctab[i].pos >= lopos
-             && (off_t)spctab[i].pos + spctab[i].siz <= hipos;
+        valid = (off_t)spctab[i].spc_off >= lopos
+             && (off_t)spctab[i].spc_off + spctab[i].spc_siz <= hipos;
 
         /* Overlap check */
         if (len < 0 || !valid)
@@ -1507,78 +1510,78 @@ BYTE            buf[4*65536];           /* buffer                    */
             recovery = 1;
 
             /* issue error message */
-            j = MSGBUF(space1, "%s", spaces[spctab[i].typ]);
-            if (spctab[i].val >= 0)
-                sprintf(space1+j, "[%d]", spctab[i].val);
-            j = MSGBUF(space2, "%s", spaces[spctab[i+1].typ]);
-            if (spctab[i+1].val >= 0)
-                sprintf(space2+j, "[%d]", spctab[i+1].val);
+            j = MSGBUF(space1, "%s", spaces[spctab[i].spc_typ]);
+            if (spctab[i].spc_val >= 0)
+                sprintf(space1+j, "[%d]", spctab[i].spc_val);
+            j = MSGBUF(space2, "%s", spaces[spctab[i+1].spc_typ]);
+            if (spctab[i+1].spc_val >= 0)
+                sprintf(space2+j, "[%d]", spctab[i+1].spc_val);
 
             if (!valid)
             {
                 if(dev->batch)
                     fprintf(stdout, MSG(HHC00365, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            space1, spctab[i].pos, spctab[i].siz));
+                            space1, spctab[i].spc_off, spctab[i].spc_siz));
                 else
                     WRMSG(HHC00365, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                          space1, spctab[i].pos, spctab[i].siz);
+                          space1, spctab[i].spc_off, spctab[i].spc_siz);
             }
             else
             {
                 if(dev->batch)
                     fprintf(stdout, MSG(HHC00366, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            space1, spctab[i].pos, spctab[i].siz, space2, spctab[i+1].pos));
+                            space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off));
                 else
                     WRMSG(HHC00366, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                          space1, spctab[i].pos, spctab[i].siz, space2, spctab[i+1].pos);
+                          space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off);
             }
 
             /* setup recovery */
-            if (spctab[i].typ == SPCTAB_L2)
+            if (spctab[i].spc_typ == SPCTAB_L2)
             {
-                l2errs[spctab[i].val] = 1;
+                l2errs[spctab[i].spc_val] = 1;
                 /* Mark all tracks for the l2 for recovery */
-                memset (rcvtab + (spctab[i].val*256), 1, 256);
+                memset (rcvtab + (spctab[i].spc_val*256), 1, 256);
             }
-            else if (spctab[i].typ == trktyp)
-                rcvtab[spctab[i].val] = 1;
+            else if (spctab[i].spc_typ == trktyp)
+                rcvtab[spctab[i].spc_val] = 1;
 
-            if (spctab[i+1].typ == SPCTAB_L2 && valid)
+            if (spctab[i+1].spc_typ == SPCTAB_L2 && valid)
             {
-                l2errs[spctab[i+1].val] = 1;
-                memset (rcvtab + (spctab[i+1].val*256), 1, 256);
+                l2errs[spctab[i+1].spc_val] = 1;
+                memset (rcvtab + (spctab[i+1].spc_val*256), 1, 256);
             }
-            else if (spctab[i+1].typ == trktyp && valid)
-                rcvtab[spctab[i+1].val] = 1;
+            else if (spctab[i+1].spc_typ == trktyp && valid)
+                rcvtab[spctab[i+1].spc_val] = 1;
 
         } /* if overlap or out of bounds */
 
         /* Check image l2 entry consistency */
-        else if (spctab[i].typ == trktyp
-         && (spctab[i].len < CKDDASD_TRKHDR_SIZE
-          || spctab[i].len > spctab[i].siz
-          || spctab[i].len > trksz))
+        else if (spctab[i].spc_typ == trktyp
+         && (spctab[i].spc_len < CKDDASD_TRKHDR_SIZE
+          || spctab[i].spc_len > spctab[i].spc_siz
+          || spctab[i].spc_len > trksz))
         {
             recovery = 1;
 
             /* issue error message */
             if(dev->batch)
                 fprintf(stdout, MSG(HHC00367, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                        spaces[trktyp], spctab[i].val, spctab[i].len, spctab[i].siz));
+                        spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz));
             else
                 WRMSG(HHC00367, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                      spaces[trktyp], spctab[i].val, spctab[i].len, spctab[i].siz);
+                      spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz);
 
             /* setup recovery */
-            rcvtab[spctab[i].val] = 1;
+            rcvtab[spctab[i].spc_val] = 1;
         } /* if inconsistent l2 */
     } /* for each space */
 
     /* remove any l2 tables or tracks in error from the space table */
-    for (i = 0; recovery && spctab[i].typ != SPCTAB_EOF; i++)
-        if ((spctab[i].typ == SPCTAB_L2 && l2errs[spctab[i].val])
-         || (spctab[i].typ == trktyp    && rcvtab[spctab[i].val]))
-            spctab[i].typ = SPCTAB_NONE;
+    for (i = 0; recovery && spctab[i].spc_typ != SPCTAB_EOF; i++)
+        if ((spctab[i].spc_typ == SPCTAB_L2 && l2errs[spctab[i].spc_val])
+         || (spctab[i].spc_typ == trktyp    && rcvtab[spctab[i].spc_val]))
+            spctab[i].spc_typ = SPCTAB_NONE;
 
     /* overlaps are serious */
     if (recovery && level < 3)
@@ -1592,9 +1595,9 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* Rebuild free space if any errors */
     if (recovery || hdrerr
-     || cdevhdr.size         != cdevhdr2.size
-     || cdevhdr.used         != cdevhdr2.used
-     || cdevhdr.free_number  != cdevhdr2.free_number
+     || cdevhdr.cdh_size     != cdevhdr2.cdh_size
+     || cdevhdr.cdh_used     != cdevhdr2.cdh_used
+     || cdevhdr.free_num     != cdevhdr2.free_num
      || cdevhdr.free_largest != cdevhdr2.free_largest
      || cdevhdr.free_total   != cdevhdr2.free_total
      || cdevhdr.free_imbed   != cdevhdr2.free_imbed
@@ -1610,13 +1613,13 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (level >= 1 && !fsperr)
     {
-        while (cdevhdr.free) // `while' so code can break
+        while (cdevhdr.free_off) // `while' so code can break
         {
             fsperr = 1;  // be pessimistic
             fsp = NULL;
 
             /* Read the free space */
-            off = (off_t)cdevhdr.free;
+            off = (off_t)cdevhdr.free_off;
             len = CCKD_FREEBLK_SIZE;
             if (off < lopos || off + CCKD_FREEBLK_SIZE > hipos
              || lseek (fd, off, SEEK_SET) < 0
@@ -1628,35 +1631,35 @@ BYTE            buf[4*65536];           /* buffer                    */
             if (memcmp (&freeblk, "FREE_BLK", 8) == 0)
             {
                 /* new format free space */
-                len = cdevhdr.free_number * CCKD_FREEBLK_SIZE;
+                len = cdevhdr.free_num * CCKD_FREEBLK_SIZE;
                 if ((fsp = malloc(len)) == NULL
                  || (rc = read (fd, fsp, len)) != len)
                     break;
 
-                for (i = 0; i < cdevhdr.free_number; i++)
+                for (i = 0; i < cdevhdr.free_num; i++)
                 {
                     if (swapend) cckd_swapend_free (&fsp[i]);
-                    spctab[s].typ = SPCTAB_FREE;
-                    spctab[s].val = -1;
-                    spctab[s].pos = fsp[i].pos;
-                    spctab[s].len =
-                    spctab[s].siz = fsp[i].len;
+                    spctab[s].spc_typ = SPCTAB_FREE;
+                    spctab[s].spc_val = -1;
+                    spctab[s].spc_off = fsp[i].fb_offnxt;
+                    spctab[s].spc_len =
+                    spctab[s].spc_siz = fsp[i].fb_len;
                     /* Free space should be ascending */
-                    if (spctab[s].pos < lopos
-                     || spctab[s].pos + spctab[s].siz > hipos)
+                    if (spctab[s].spc_off < lopos
+                     || spctab[s].spc_off + spctab[s].spc_siz > hipos)
                         break;
-                    lopos = spctab[s].pos + spctab[s].siz;
+                    lopos = spctab[s].spc_off + spctab[s].spc_siz;
                     s++;
                 } /* for each free space */
-                if (i >= cdevhdr.free_number)
+                if (i >= cdevhdr.free_num)
                     fsperr = 0;
             } /* new format free space */
             else
             {
                 /* old format free space */
-                off = (off_t)cdevhdr.free;
+                off = (off_t)cdevhdr.free_off;
                 len = CCKD_FREEBLK_SIZE;
-                for (i = 0; i < cdevhdr.free_number; i++)
+                for (i = 0; i < cdevhdr.free_num; i++)
                 {
                     if (off < lopos || off > hipos) break;
                     if (lseek (fd, off, SEEK_SET) < 0)
@@ -1665,16 +1668,16 @@ BYTE            buf[4*65536];           /* buffer                    */
                     if ((rc = read (fd, &freeblk, len)) != len)
                         goto cdsk_read_error;
                     if (swapend) cckd_swapend_free (&freeblk);
-                    spctab[s].typ = SPCTAB_FREE;
-                    spctab[s].val = -1;
-                    spctab[s].pos = (U32)off;
-                    spctab[s].len =
-                    spctab[s].siz = freeblk.len;
+                    spctab[s].spc_typ = SPCTAB_FREE;
+                    spctab[s].spc_val = -1;
+                    spctab[s].spc_off = (U32)off;
+                    spctab[s].spc_len =
+                    spctab[s].spc_siz = freeblk.fb_len;
                     s++;
-                    lopos = off + freeblk.len;
-                    off = (off_t)freeblk.pos;
+                    lopos = off + freeblk.fb_len;
+                    off = (off_t)freeblk.fb_offnxt;
                 }
-                if (i >= cdevhdr.free_number && freeblk.pos == 0)
+                if (i >= cdevhdr.free_num && freeblk.fb_offnxt == 0)
                     fsperr = 0;
             } /* if old format free space */
 
@@ -1683,11 +1686,11 @@ BYTE            buf[4*65536];           /* buffer                    */
 
             /* Check for gaps/overlaps */
             qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-            for (i = 0; !fsperr && spctab[i].typ != SPCTAB_EOF; i++)
-                if (spctab[i].pos + spctab[i].siz != spctab[i+1].pos)
+            for (i = 0; !fsperr && spctab[i].spc_typ != SPCTAB_EOF; i++)
+                if (spctab[i].spc_off + spctab[i].spc_siz != spctab[i+1].spc_off)
                     fsperr = 1;
             break;
-        } /* while (cdevhdr.free) */
+        } /* while (cdevhdr.free_off) */
     } /* if (level >= 1 && !fsperr) */
 
     if (fsperr)
@@ -1706,16 +1709,16 @@ cdsk_space_check:
 
     if (level >= 2)
     {
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
         {
-            if (spctab[i].typ != trktyp) continue;
+            if (spctab[i].spc_typ != trktyp) continue;
 
             /* read the header or image depending on the check level */
-            off = spctab[i].pos;
+            off = spctab[i].spc_off;
             if ( lseek (fd, off, SEEK_SET) < 0 )
                 goto cdsk_lseek_error;
             gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-            len = level < 3 ? CKDDASD_TRKHDR_SIZE : spctab[i].len;
+            len = level < 3 ? CKDDASD_TRKHDR_SIZE : spctab[i].spc_len;
             if ((rc = read (fd, buf, len)) != len)
                 goto cdsk_read_error;
 
@@ -1728,20 +1731,20 @@ cdsk_space_check:
             /* Validate header info */
             if (compmask[comp] == 0xff
              || cyl >= cyls || head >= heads
-             || trk != spctab[i].val)
+             || trk != spctab[i].spc_val)
             {
                 if(dev->batch)
                     fprintf(stdout, MSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                            spaces[trktyp], spctab[i].val, off,
+                            spaces[trktyp], spctab[i].spc_val, off,
                             buf[0],buf[1],buf[2],buf[3],buf[4]));
                 else
                     WRMSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                          spaces[trktyp], spctab[i].val, off,
+                          spaces[trktyp], spctab[i].spc_val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
                 /* recover this track */
-                rcvtab[spctab[i].val] = recovery = 1;
-                spctab[i].typ = SPCTAB_NONE;
+                rcvtab[spctab[i].spc_val] = recovery = 1;
+                spctab[i].spc_typ = SPCTAB_NONE;
 
                 /* Force level 3 checking */
                 if (level < 3)
@@ -1784,7 +1787,7 @@ cdsk_space_check:
 
                     /* recover this track */
                     rcvtab[trk] = recovery = 1;
-                    spctab[i].typ = SPCTAB_NONE;
+                    spctab[i].spc_typ = SPCTAB_NONE;
                 } /* if invalid space */
                 else
                     rcvtab[trk] = 0;
@@ -1811,8 +1814,8 @@ cdsk_recovery:
          * occurred at the end of the file.
          */
         qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-        while (spctab[s-1].typ == SPCTAB_NONE) s--;
-        spctab[s-1].pos = fst.st_size;
+        while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
+        spctab[s-1].spc_off = fst.st_size;
 
         /* count number tracks to be recovered */
         for (i = n = 0; i < trks; i++)
@@ -1826,20 +1829,20 @@ cdsk_recovery:
         {
             /* recovery loop */
             s = cdsk_build_free_space (spctab, s);
-            for (f = 0; spctab[f].typ != SPCTAB_EOF && n; )
+            for (f = 0; spctab[f].spc_typ != SPCTAB_EOF && n; )
             {
                 /* next free space if too small */
-                if (spctab[f].typ != SPCTAB_FREE
-                 || spctab[f].siz <= CKDDASD_TRKHDR_SIZE+8)
+                if (spctab[f].spc_typ != SPCTAB_FREE
+                 || spctab[f].spc_siz <= CKDDASD_TRKHDR_SIZE+8)
                 {
-                    for (f = f + 1; spctab[f].typ != SPCTAB_EOF; f++)
-                        if (spctab[f].typ == SPCTAB_FREE)
+                    for (f = f + 1; spctab[f].spc_typ != SPCTAB_EOF; f++)
+                        if (spctab[f].spc_typ == SPCTAB_FREE)
                             break;
                     continue;
                 }
 
-                fpos = spctab[f].pos;
-                flen = spctab[f].siz;
+                fpos = spctab[f].spc_off;
+                flen = spctab[f].spc_siz;
 
                 /* length to read */
                 len = flen < sizeof(buf) ? flen : sizeof(buf);
@@ -1991,11 +1994,11 @@ cdsk_ckd_recover:
                     rcvtab[trk] = 2;
 
                     /* add recovered track to the space table */
-                    spctab[s].typ = trktyp;
-                    spctab[s].val = trk;
-                    spctab[s].pos = fpos + i;
-                    spctab[s].len =
-                    spctab[s].siz = l;
+                    spctab[s].spc_typ = trktyp;
+                    spctab[s].spc_val = trk;
+                    spctab[s].spc_off = fpos + i;
+                    spctab[s].spc_len =
+                    spctab[s].spc_siz = l;
                     s++;
                     /*
                      * adjust `i' knowing it will be incremented
@@ -2005,9 +2008,9 @@ cdsk_ckd_recover:
                 } /* for each byte in the free space */
 
                 /* Adjust the free space for what we processed */
-                spctab[f].pos += i;
-                spctab[f].len -= i;
-                spctab[f].siz -= i;
+                spctab[f].spc_off += i;
+                spctab[f].spc_len -= i;
+                spctab[f].spc_siz -= i;
 
             } /* for each free space */
 
@@ -2025,7 +2028,7 @@ cdsk_ckd_recover:
          *
          * On the first pass we recover all compressed blkgrps since
          * these are readily validated (they must uncompress to a
-         * certain size, CFBA_BLOCK_SIZE+CKDDASD_TRKHDR_SIZE).  We
+         * certain size, CFBA_BLKGRP_SIZE+CKDDASD_TRKHDR_SIZE).  We
          * also recover uncompressed blkgrps if they are followed by
          * a valid trkhdr (and don't occur to close to the beginning
          * of the file).
@@ -2034,34 +2037,34 @@ cdsk_ckd_recover:
          * that weren't recovered in the first pass.  The only
          * criteria is that the compression byte is zero and the
          * 4 byte blkgrp number is in range and there are at least
-         * CFBA_BLOCK_SIZE bytes following.
+         * CFBA_BLKGRP_SIZE bytes following.
          */
 
         for (pass = 0; fbadasd && pass < 2; pass++)
         {
-            lopos = CCKD_L1TAB_POS + (cdevhdr.numl1tab * 4);
+            lopos = CCKD_L1TAB_POS + (cdevhdr.num_L1tab * 4);
             if (pass == 0)
-                lopos += (cdevhdr.numl1tab * CCKD_L2TAB_SIZE);
+                lopos += (cdevhdr.num_L1tab * CCKD_L2TAB_SIZE);
 
             /* recovery loop */
             s = cdsk_build_free_space (spctab, s);
-            for (f = 0; spctab[f].typ != SPCTAB_EOF && n > 0; )
+            for (f = 0; spctab[f].spc_typ != SPCTAB_EOF && n > 0; )
             {
                 U32 flen, fpos;
 
                 /* next free space if too small */
-                if (spctab[f].typ != SPCTAB_FREE
-                 || spctab[f].siz <= CKDDASD_TRKHDR_SIZE+8
-                 || (pass == 1 && spctab[f].siz < blkgrpsz))
+                if (spctab[f].spc_typ != SPCTAB_FREE
+                 || spctab[f].spc_siz <= CKDDASD_TRKHDR_SIZE+8
+                 || (pass == 1 && spctab[f].spc_siz < blkgrpsz))
                 {
-                    for (f = f + 1; spctab[f].typ != SPCTAB_EOF; f++)
-                        if (spctab[f].typ == SPCTAB_FREE)
+                    for (f = f + 1; spctab[f].spc_typ != SPCTAB_EOF; f++)
+                        if (spctab[f].spc_typ == SPCTAB_FREE)
                             break;
                     continue;
                 }
 
-                fpos = spctab[f].pos;
-                flen = spctab[f].siz;
+                fpos = spctab[f].spc_off;
+                flen = spctab[f].spc_siz;
                 /*
                  * calculate length to read
                  * if flen > len then we only read part of the space
@@ -2223,11 +2226,11 @@ cdsk_fba_recover:
                         lopos = fpos + i;
 
                     /* add recovered block group to the space table */
-                    spctab[s].typ = trktyp;
-                    spctab[s].val = blkgrp;
-                    spctab[s].pos = fpos + i;
-                    spctab[s].len =
-                    spctab[s].siz = l;
+                    spctab[s].spc_typ = trktyp;
+                    spctab[s].spc_val = blkgrp;
+                    spctab[s].spc_off = fpos + i;
+                    spctab[s].spc_len =
+                    spctab[s].spc_siz = l;
                     s++;
                     /*
                      * adjust `i' knowing it will be incremented
@@ -2237,9 +2240,9 @@ cdsk_fba_recover:
                 } /* for each byte in the free space */
 
                 /* Adjust the free space for what we processed */
-                spctab[f].pos += i;
-                spctab[f].len -= i;
-                spctab[f].siz -= i;
+                spctab[f].spc_off += i;
+                spctab[f].spc_len -= i;
+                spctab[f].spc_siz -= i;
 
             } /* for each free space */
 
@@ -2265,12 +2268,12 @@ cdsk_fba_recover:
          * for l2 tables in `l2errs'.  Space validation may have
          * turned off all `rcvtab' entries for an l2.
          */
-        for (i = 0; i < cdevhdr.numl1tab; i++)
+        for (i = 0; i < cdevhdr.num_L1tab; i++)
             if (l2errs[i])
                 rcvtab[i*256] = 1;
 
         /* Get storage for the l2 table array */
-        n = cdevhdr.numl1tab;
+        n = cdevhdr.num_L1tab;
         len = sizeof(void *);
         if ((l2 = calloc (n, len)) == NULL)
             goto cdsk_calloc_error;
@@ -2279,36 +2282,36 @@ cdsk_fba_recover:
         len = CCKD_L2TAB_SIZE;
         for (i = 0; i < trks; i++)
         {
-            l1x = i / 256;
-            if (rcvtab[i] != 0 && l2[l1x] == NULL)
+            L1idx = i / 256;
+            if (rcvtab[i] != 0 && l2[L1idx] == NULL)
             {
-                if ((l2[l1x] = malloc (len)) == NULL)
+                if ((l2[L1idx] = malloc (len)) == NULL)
                     goto cdsk_malloc_error;
-                l1[l1x] = shadow ? 0xffffffff : 0;
-                memcpy (l2[l1x], &empty_l2, len);
+                l1[L1idx] = shadow ? 0xffffffff : 0;
+                memcpy (l2[L1idx], &empty_l2, len);
             }
         }
 
         /* Rebuild the l2 tables */
         qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
         {
-            if (spctab[i].typ == SPCTAB_L2 && l2[spctab[i].val])
-                spctab[i].typ = SPCTAB_NONE;
-            else if (spctab[i].typ == trktyp && l2[spctab[i].val/256])
+            if (spctab[i].spc_typ == SPCTAB_L2 && l2[spctab[i].spc_val])
+                spctab[i].spc_typ = SPCTAB_NONE;
+            else if (spctab[i].spc_typ == trktyp && l2[spctab[i].spc_val/256])
             {
-                l1x = spctab[i].val / 256;
-                l2x = spctab[i].val % 256;
-                l2[l1x][l2x].pos  = spctab[i].pos;
-                l2[l1x][l2x].len  = spctab[i].len;
-                l2[l1x][l2x].size = spctab[i].siz;
+                L1idx = spctab[i].spc_val / 256;
+                l2x = spctab[i].spc_val % 256;
+                l2[L1idx][l2x].L2_trkoff = spctab[i].spc_off;
+                l2[L1idx][l2x].L2_len   = spctab[i].spc_len;
+                l2[L1idx][l2x].L2_size  = spctab[i].spc_siz;
             }
         } /* for each space */
         qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-        while (spctab[s-1].typ == SPCTAB_NONE) s--;
+        while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
 
         /* Look for empty l2 tables */
-        for (i = 0; i < cdevhdr.numl1tab; i++)
+        for (i = 0; i < cdevhdr.num_L1tab; i++)
             if (l2[i] != NULL
              && memcmp (l2[i], &empty_l2, CCKD_L2TAB_SIZE) == 0)
             {
@@ -2320,24 +2323,24 @@ cdsk_fba_recover:
          * Set its `pos' to the maximum allowed value to ensure
          * there will be free space for the rebuilt l2 tables.
          */
-        spctab[s-1].pos = (U32)maxsize;
+        spctab[s-1].spc_off = (U32)maxsize;
 
         /* Build the free space */
         s = cdsk_build_free_space (spctab, s);
 
         /* Find space for the rebuilt l2 tables */
-        for (i = j = 0; i < cdevhdr.numl1tab; i++)
+        for (i = j = 0; i < cdevhdr.num_L1tab; i++)
         {
             if (l2[i] == NULL) continue;
 
             /* find a free space */
-            for ( ; spctab[j].typ != SPCTAB_EOF; j++)
-                if (spctab[j].typ == SPCTAB_FREE
-                 && spctab[j].siz >= CCKD_L2TAB_SIZE)
+            for ( ; spctab[j].spc_typ != SPCTAB_EOF; j++)
+                if (spctab[j].spc_typ == SPCTAB_FREE
+                 && spctab[j].spc_siz >= CCKD_L2TAB_SIZE)
                      break;
 
             /* weird error if no space */
-            if (spctab[j].typ == SPCTAB_EOF)
+            if (spctab[j].spc_typ == SPCTAB_EOF)
             {
                 if(dev->batch)
                     fprintf(stdout, MSG(HHC00374, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
@@ -2347,18 +2350,18 @@ cdsk_fba_recover:
             }
 
             /* add l2 space */
-            l1[i]         = spctab[j].pos;
-            spctab[s].typ = SPCTAB_L2;
-            spctab[s].val = i;
-            spctab[s].pos = spctab[j].pos;
-            spctab[s].len =
-            spctab[s].siz = CCKD_L2TAB_SIZE;
+            l1[i]             = spctab[j].spc_off;
+            spctab[s].spc_typ = SPCTAB_L2;
+            spctab[s].spc_val = i;
+            spctab[s].spc_off = spctab[j].spc_off;
+            spctab[s].spc_len =
+            spctab[s].spc_siz = CCKD_L2TAB_SIZE;
             s++;
 
             /* adjust the free space */
-            spctab[j].pos += CCKD_L2TAB_SIZE;
-            spctab[j].len -= CCKD_L2TAB_SIZE;
-            spctab[j].siz -= CCKD_L2TAB_SIZE;
+            spctab[j].spc_off += CCKD_L2TAB_SIZE;
+            spctab[j].spc_len -= CCKD_L2TAB_SIZE;
+            spctab[j].spc_siz -= CCKD_L2TAB_SIZE;
         } /* for each l2 table */
 
 
@@ -2398,26 +2401,26 @@ cdsk_fba_recover:
 
         /* Write l2 tables */
         qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
         {
-            l1x = spctab[i].val;
-            if (spctab[i].typ != SPCTAB_L2 || l2[l1x] == NULL)
+            L1idx = spctab[i].spc_val;
+            if (spctab[i].spc_typ != SPCTAB_L2 || l2[L1idx] == NULL)
                 continue;
-            off = (off_t)l1[l1x];
+            off = (off_t)l1[L1idx];
             if (lseek (fd, off, SEEK_SET) < 0)
                 goto cdsk_lseek_error;
             gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
             len = CCKD_L2TAB_SIZE;
-            if ((rc = write (fd, l2[l1x], len)) != len)
+            if ((rc = write (fd, l2[L1idx], len)) != len)
                 goto cdsk_write_error;
-            free (l2[l1x]);
-            l2[l1x] = NULL;
+            free (l2[L1idx]);
+            l2[L1idx] = NULL;
         } /* for each space */
 
         /* Free recovery related storage */
         if (l2)
         {
-            for (i = 0; i < cdevhdr.numl1tab; i++)
+            for (i = 0; i < cdevhdr.num_L1tab; i++)
                 if (l2[i])
                     free (l2[i]);
             free (l2); l2 = NULL;
@@ -2457,35 +2460,35 @@ cdsk_fsperr_retry:
          * spctab[s-1] is the SPCTAB_EOF entry.
          * if spctab[s-2] is SPCTAB_FREE then discard it
          */
-        if (spctab[s-2].typ == SPCTAB_FREE)
+        if (spctab[s-2].spc_typ == SPCTAB_FREE)
         {
-            spctab[s-1].typ = SPCTAB_NONE;
-            spctab[s-2].typ = SPCTAB_EOF;
-            spctab[s-2].val = -1;
-            spctab[s-2].len =
-            spctab[s-2].siz = 0;
+            spctab[s-1].spc_typ = SPCTAB_NONE;
+            spctab[s-2].spc_typ = SPCTAB_EOF;
+            spctab[s-2].spc_val = -1;
+            spctab[s-2].spc_len =
+            spctab[s-2].spc_siz = 0;
             s--;
         }
         /*
          * Check for short free spaces.
          * If found, shift left until the next free space or eof.
          */
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-            if (spctab[i].typ == SPCTAB_FREE
-             && spctab[i].siz < CCKD_FREEBLK_SIZE)
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+            if (spctab[i].spc_typ == SPCTAB_FREE
+             && spctab[i].spc_siz < CCKD_FREEBLK_SIZE)
                 break;
-        if (spctab[i].typ != SPCTAB_EOF)
+        if (spctab[i].spc_typ != SPCTAB_EOF)
         {
             /* Shift following space left */
-            l = spctab[i++].siz;
-            while (spctab[i].typ != SPCTAB_FREE && spctab[i].typ != SPCTAB_EOF)
+            l = spctab[i++].spc_siz;
+            while (spctab[i].spc_typ != SPCTAB_FREE && spctab[i].spc_typ != SPCTAB_EOF)
             {
                 /* Read the space and write shifted to the left */
-                off = (off_t)spctab[i].pos;
+                off = (off_t)spctab[i].spc_off;
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-                len = spctab[i].siz;
+                len = spctab[i].spc_siz;
                 if ((rc = read (fd, buf, len)) != len)
                     goto cdsk_read_error;
                 off -= l;
@@ -2494,29 +2497,29 @@ cdsk_fsperr_retry:
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, buf, len)) != len)
                     goto cdsk_write_error;
-                spctab[i].pos -= l;
+                spctab[i].spc_off -= l;
 
                 /* Update the l2 or l1 table entry */
-                if (spctab[i].typ == trktyp)
+                if (spctab[i].spc_typ == trktyp)
                 {
-                    l1x = spctab[i].val/256;
-                    l2x = spctab[i].val%256;
-                    off = (off_t)l1[l1x] + l2x * CCKD_L2ENT_SIZE;
+                    L1idx = spctab[i].spc_val/256;
+                    l2x = spctab[i].spc_val%256;
+                    off = (off_t)l1[L1idx] + l2x * CCKD_L2ENT_SIZE;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
                     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     len = CCKD_L2ENT_SIZE;
                     if ((rc = read (fd, &l2ent, len)) != len)
                         goto cdsk_read_error;
-                    l2ent.pos -= l;
+                    l2ent.L2_trkoff -= l;
                     if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
                     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                     if ((rc = write (fd, &l2ent, len)) != len)
                         goto cdsk_write_error;
                 } /* trk/blkgrp relocated */
-                else if (spctab[i].typ == SPCTAB_L2)
-                    l1[spctab[i].val] -= l;
+                else if (spctab[i].spc_typ == SPCTAB_L2)
+                    l1[spctab[i].spc_val] -= l;
                 i++;
             } /* while not FREE space or EOF */
             goto cdsk_fsperr_retry;
@@ -2530,43 +2533,43 @@ cdsk_fsperr_retry:
         cdevhdr.vrm[1] = CCKD_RELEASE;
         cdevhdr.vrm[2] = CCKD_MODLVL;
 
-        cdevhdr.size        = cdevhdr.used         = cdevhdr.free =
+        cdevhdr.cdh_size        = cdevhdr.cdh_used         = cdevhdr.free_off =
         cdevhdr.free_total  = cdevhdr.free_largest =
-        cdevhdr.free_number = cdevhdr.free_imbed   = 0;
-        for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-            if (spctab[i].typ == SPCTAB_FREE)
+        cdevhdr.free_num = cdevhdr.free_imbed   = 0;
+        for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+            if (spctab[i].spc_typ == SPCTAB_FREE)
             {
-                cdevhdr.size += spctab[i].siz;
-                if (spctab[i].siz > cdevhdr.free_largest)
-                    cdevhdr.free_largest = spctab[i].siz;
-                cdevhdr.free_total += spctab[i].siz;
-                cdevhdr.free_number++;
+                cdevhdr.cdh_size += spctab[i].spc_siz;
+                if (spctab[i].spc_siz > cdevhdr.free_largest)
+                    cdevhdr.free_largest = spctab[i].spc_siz;
+                cdevhdr.free_total += spctab[i].spc_siz;
+                cdevhdr.free_num++;
             }
             else
             {
-                cdevhdr.size += spctab[i].siz;
-                cdevhdr.used += spctab[i].len;
-                cdevhdr.free_total += spctab[i].siz - spctab[i].len;
-                cdevhdr.free_imbed += spctab[i].siz - spctab[i].len;
+                cdevhdr.cdh_size += spctab[i].spc_siz;
+                cdevhdr.cdh_used += spctab[i].spc_len;
+                cdevhdr.free_total += spctab[i].spc_siz - spctab[i].spc_len;
+                cdevhdr.free_imbed += spctab[i].spc_siz - spctab[i].spc_len;
              }
 
         /*-----------------------------------------------------------
          * Phase 3 -- write the free space
          *-----------------------------------------------------------*/
 
-        if (cdevhdr.free_number)
+        if (cdevhdr.free_num)
         {
             /* size needed for new format free space */
-            len = (cdevhdr.free_number+1) * CCKD_FREEBLK_SIZE;
+            len = (cdevhdr.free_num+1) * CCKD_FREEBLK_SIZE;
 
             /* look for existing free space to fit new format free space */
-            for (i = off = 0; !off && spctab[i].typ != SPCTAB_EOF; i++)
-                if (spctab[i].typ == SPCTAB_FREE && len <= (int)spctab[i].siz)
-                    off = (off_t)spctab[i].pos;
+            for (i = off = 0; !off && spctab[i].spc_typ != SPCTAB_EOF; i++)
+                if (spctab[i].spc_typ == SPCTAB_FREE && len <= (int)spctab[i].spc_siz)
+                    off = (off_t)spctab[i].spc_off;
 
             /* if no applicable space see if we can append to the file */
-            if (!off && maxsize - cdevhdr.size >= len)
-                off = (off_t)cdevhdr.size;
+            if (!off && maxsize - cdevhdr.cdh_size >= len)
+                off = (off_t)cdevhdr.cdh_size;
 
             /* get free space buffer */
             if (off && (fsp = malloc (len)) == NULL)
@@ -2576,11 +2579,11 @@ cdsk_fsperr_retry:
             {
                 /* new format free space */
                 memcpy (fsp, "FREE_BLK", 8);
-                for (i = 0, j = 1; spctab[i].typ != SPCTAB_EOF; i++)
-                    if (spctab[i].typ == SPCTAB_FREE)
+                for (i = 0, j = 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
+                    if (spctab[i].spc_typ == SPCTAB_FREE)
                     {
-                        fsp[j].pos = spctab[i].pos;
-                        fsp[j++].len = spctab[i].siz;
+                        fsp[j].fb_offnxt = spctab[i].spc_off;
+                        fsp[j++].fb_len = spctab[i].spc_siz;
                     }
 
                 /* Write the free space */
@@ -2589,7 +2592,7 @@ cdsk_fsperr_retry:
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, fsp, len)) != len)
                     goto cdsk_write_error;
-                cdevhdr.free = (U32)off;
+                cdevhdr.free_off = (U32)off;
 
                 free (fsp);
                 fsp = NULL;
@@ -2598,23 +2601,23 @@ cdsk_fsperr_retry:
             {
                 /* old format free space */
                 len = CCKD_FREEBLK_SIZE;
-                for (i = 0; spctab[i].typ != SPCTAB_FREE; i++);
-                cdevhdr.free = spctab[i].pos;
-                off = (off_t)spctab[i].pos;
-                freeblk.pos = 0;
-                freeblk.len = spctab[i].siz;
-                for (i = i + 1; spctab[i].typ != SPCTAB_EOF; i++)
-                    if (spctab[i].typ == SPCTAB_FREE)
+                for (i = 0; spctab[i].spc_typ != SPCTAB_FREE; i++);
+                cdevhdr.free_off = spctab[i].spc_off;
+                off = (off_t)spctab[i].spc_off;
+                freeblk.fb_offnxt = 0;
+                freeblk.fb_len = spctab[i].spc_siz;
+                for (i = i + 1; spctab[i].spc_typ != SPCTAB_EOF; i++)
+                    if (spctab[i].spc_typ == SPCTAB_FREE)
                     {
-                        freeblk.pos = spctab[i].pos;
+                        freeblk.fb_offnxt = spctab[i].spc_off;
                         if (lseek (fd, off, SEEK_SET) < 0)
                             goto cdsk_lseek_error;
                         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                         if (write (fd, &freeblk, len) != len)
                             goto cdsk_write_error;
-                        off = (off_t)spctab[i].pos;
-                        freeblk.pos = 0;
-                        freeblk.len = spctab[i].len;
+                        off = (off_t)spctab[i].spc_off;
+                        freeblk.fb_offnxt = 0;
+                        freeblk.fb_len = spctab[i].spc_len;
                     }
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
@@ -2622,7 +2625,7 @@ cdsk_fsperr_retry:
                 if (write (fd, &freeblk, len) != len)
                     goto cdsk_write_error;
             } /* old format free space */
-        } /* if (cdevhdr.free_number) */
+        } /* if (cdevhdr.free_num) */
 
         /* Write cdevhdr and l1 table */
         off = CCKD_DEVHDR_POS;
@@ -2642,9 +2645,9 @@ cdsk_fsperr_retry:
             goto cdsk_write_error;
 
         /* Truncate the file */
-        off = (off_t)cdevhdr.size;
-        if (cdevhdr.free == cdevhdr.size)
-            off += (cdevhdr.free_number+1) * CCKD_FREEBLK_SIZE;
+        off = (off_t)cdevhdr.cdh_size;
+        if (cdevhdr.free_off == cdevhdr.cdh_size)
+            off += (cdevhdr.free_num+1) * CCKD_FREEBLK_SIZE;
         rc = ftruncate (fd, off);
 
         if(dev->batch)
@@ -2662,7 +2665,7 @@ cdsk_return_ok:
 
     rc = recovery ? 2 : fsperr ? 1 : 0;
 
-    if (!ro && (cdevhdr.options & (CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS)))
+    if (!ro && (cdevhdr.opts & (CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS)))
     {
         /*
          * Leave the ORDWR bit on for now.  This will prevent
@@ -2670,9 +2673,9 @@ cdsk_return_ok:
          * on a file that has new-format free space
          */
 #if 0
-        cdevhdr.options &= ~(CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS);
+        cdevhdr.opts &= ~(CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS);
 #else
-        cdevhdr.options &= ~(CCKD_OPENED|CCKD_SPERRS);
+        cdevhdr.opts &= ~(CCKD_OPENED|CCKD_SPERRS);
 #endif
         /* Set version.release.modlvl */
         cdevhdr.vrm[0] = CCKD_VERSION;
@@ -2697,7 +2700,7 @@ cdsk_return:
     if (fsp)    free (fsp);
     if (l2)
     {
-        for (i = 0; i < cdevhdr.numl1tab; i++)
+        for (i = 0; i < cdevhdr.num_L1tab; i++)
             if (l2[i]) free (l2[i]);
         free (l2);
     }
@@ -2783,12 +2786,12 @@ static int cdsk_spctab_sort(const void *a, const void *b)
 {
 const SPCTAB *x = a, *y = b;
 
-    if (x->typ == SPCTAB_NONE)      return  1;
-    else if (y->typ == SPCTAB_NONE) return -1;
-    else if (x->typ == SPCTAB_EOF)  return  1;
-    else if (y->typ == SPCTAB_EOF)  return -1;
-    else if (x->pos < y->pos)       return -1;
-    else                            return  1;
+         if (x->spc_typ == SPCTAB_NONE) return +1;
+    else if (y->spc_typ == SPCTAB_NONE) return -1;
+    else if (x->spc_typ == SPCTAB_EOF)  return +1;
+    else if (y->spc_typ == SPCTAB_EOF)  return -1;
+    else if (x->spc_off < y->spc_off)   return -1;
+    else                                return +1;
 } /* end function cdsk_spctab_sort */
 
 /*-------------------------------------------------------------------*/
@@ -2799,18 +2802,18 @@ static int cdsk_build_free_space(SPCTAB *spctab, int s)
 int i;
 
     for (i = 0; i < s; i++)
-        if (spctab[i].typ == SPCTAB_FREE)
-            spctab[i].typ = SPCTAB_NONE;
+        if (spctab[i].spc_typ == SPCTAB_FREE)
+            spctab[i].spc_typ = SPCTAB_NONE;
     qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
-    while (spctab[s-1].typ == SPCTAB_NONE) s--;
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].pos + spctab[i].siz < spctab[i+1].pos)
+    while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
+    for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
+        if (spctab[i].spc_off + spctab[i].spc_siz < spctab[i+1].spc_off)
         {
-            spctab[s].typ = SPCTAB_FREE;
-            spctab[s].val = -1;
-            spctab[s].pos = spctab[i].pos + spctab[i].siz;
-            spctab[s].len =
-            spctab[s].siz = spctab[i+1].pos - spctab[s].pos;
+            spctab[s].spc_typ = SPCTAB_FREE;
+            spctab[s].spc_val = -1;
+            spctab[s].spc_off = spctab[i].spc_off + spctab[i].spc_siz;
+            spctab[s].spc_len =
+            spctab[s].spc_siz = spctab[i+1].spc_off - spctab[s].spc_off;
             s++;
         }
     qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
@@ -2892,7 +2895,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
     /* fba check */
     if (heads == 65536)
     {
-        if (bufl != CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE)
+        if (bufl != CFBA_BLKGRP_SIZE + CKDDASD_TRKHDR_SIZE)
             return 0;
         else
             return len > 0 ? len : bufl;

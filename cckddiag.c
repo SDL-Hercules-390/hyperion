@@ -628,12 +628,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         ckddasd = 1;
 
-        ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.devtype, 0);
+        ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
 
         if (!ckd)
         {
             // "DASD table entry not found for devtype 0x%2.2X"
-            FWRMSG( stderr, HHC02608, "S", devhdr.devtype );
+            FWRMSG( stderr, HHC02608, "S", devhdr.dvtyp );
             clean();
             exit( EXIT_NO_CKD_DASDTAB );
         }
@@ -647,7 +647,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         {
             ckddasd = 0;
 
-            fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.devtype, 0);
+            fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.dvtyp, 0);
 
             if (!fba)
             {
@@ -702,14 +702,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* cckd_endian() returns 1 for big-endian machines               */
     /*---------------------------------------------------------------*/
     swapend = (cckd_endian() !=
-               ((cdevhdr.options & CCKD_BIGENDIAN) != 0));
+               ((cdevhdr.opts & CCKD_BIGENDIAN) != 0));
 
     /*---------------------------------------------------------------*/
     /* display L1TAB - follows CDEVHDR                               */
     /*---------------------------------------------------------------*/
-    /* swap numl1tab if needed */
-    n = cdevhdr.numl1tab;
 
+    /* swap num_L1tab if needed */
+    n = cdevhdr.num_L1tab;
     if (swapend)
         cckd_swapend4((char *)&n);
 
@@ -774,8 +774,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             trk = (op_cc * heads) + op_hh;
         }
 
-        l1ndx = trk / cdevhdr.numl2tab;
-        l2ndx = trk % cdevhdr.numl2tab;
+        l1ndx = trk / cdevhdr.num_L2tab;
+        l2ndx = trk % cdevhdr.num_L2tab;
         l2taboff = l1[l1ndx];
 
         if (swapend)
@@ -793,18 +793,18 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         // "L1 index %d = L2TAB offset %d (0x%8.8X)"
         WRMSG( HHC02610, "I", l1ndx, (int) l2taboff, (int) l2taboff );
 
-        l2 = makbuf(cdevhdr.numl2tab * sizeof(CCKD_L2ENT), "L2TAB");
+        l2 = makbuf(cdevhdr.num_L2tab * sizeof(CCKD_L2ENT), "L2TAB");
 
         readpos(fd, l2, l2taboff,
-                cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
+                cdevhdr.num_L2tab * sizeof(CCKD_L2ENT));
 
         if (cmd_l2tab)
         {
             // "%s - %d (decimal) bytes:"
             printf("\n");
             WRMSG( HHC02614, "I", "L2TAB",
-                (int) (cdevhdr.numl2tab * sizeof( CCKD_L2ENT )) );
-            data_dump( l2, (cdevhdr.numl2tab * sizeof( CCKD_L2ENT )));
+                (int) (cdevhdr.num_L2tab * sizeof( CCKD_L2ENT )) );
+            data_dump( l2, (cdevhdr.num_L2tab * sizeof( CCKD_L2ENT )));
         }
 
         // "L2 index %d = L2TAB entry: %d bytes:"
@@ -813,8 +813,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         data_dump( &l2[l2ndx], sizeof( CCKD_L2ENT ));
         printf("\n");
 
-        trkhdroff = l2[l2ndx].pos;
-        imglen = l2[l2ndx].len;
+        trkhdroff = l2[l2ndx].L2_trkoff;
+        imglen    = l2[l2ndx].L2_len;
 
         if (swapend)
         {

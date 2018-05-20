@@ -626,7 +626,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     devhdr.trksize[2] = (trksize >> 16) & 0xFF;
     devhdr.trksize[1] = (trksize >> 8) & 0xFF;
     devhdr.trksize[0] = trksize & 0xFF;
-    devhdr.devtype = devtype & 0xFF;
+    devhdr.dvtyp = devtype & 0xFF;
     devhdr.fileseq = fileseq;
     devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
     devhdr.highcyl[0] = highcyl & 0xFF;
