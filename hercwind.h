@@ -181,6 +181,7 @@ struct dirent
   #undef  HAVE_FULL_KEEPALIVE
   #define HAVE_PARTIAL_KEEPALIVE
   #define HAVE_BASIC_KEEPALIVE
+  #define SUPPRESS_PARTIAL_KEEPALIVE_WARNING
 
 #endif // (!TCP keepalive HQA_SCENARIO)
 
