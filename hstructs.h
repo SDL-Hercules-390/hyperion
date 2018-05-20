@@ -1617,21 +1617,37 @@ struct DEVGRP {                         /* Device Group Structure    */
 /*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers                             */
 /*-------------------------------------------------------------------*/
-struct CKDDASD_DEVHDR {                 /* Device header             */
-        BYTE    devid[8];               /* Device identifier         */
-        FWORD   heads;                  /* #of heads per cylinder
-                                           (bytes in reverse order)  */
-        FWORD   trksize;                /* Track size (reverse order)*/
+struct CKDDASD_DEVHDR                   /* Device header             */
+{
+        BYTE    devid[8];               /* ASCII Device identifier:
+                                           "CKD_P370": Normal CKD
+                                           "CKD_C370": Compressed CCKD
+                                           "FBA_C370": Compressed CFBA
+                                           Normal FBA dasd don't have
+                                           CKDDASD_DEVHDR, only CFBA */
 
-        BYTE    dvtyp;                  /* Last 2 digits of device type
-                                           (0x80=3380, 0x90=3390)    */
-        BYTE    fileseq;                /* CKD image file sequence no.
-                                           (0x00=only file, 0x01=first
-                                           file of multiple files)   */
-        HWORD   highcyl;                /* Highest cylinder number on
-                                           this file, or zero if this
-                                           is the last or only file
+        FWORD   heads;                  /* CKD: heads per cylinder
+                                           CFBA: number of sectors
+                                           (bytes in reverse order)  */    
+
+        FWORD   trksize;                /* CKD: track size
+                                           CFBA: sector size
                                            (bytes in reverse order)  */
+
+        BYTE    dvtyp;                  /* Low byte of hex device type
+                                           (0x80=3380, 0x90=3390)    */
+
+        BYTE    fileseq;                /* CKD: image file sequence no.
+                                           (0x00=only file, 0x01=first
+                                           file of multiple files)
+                                           CFBA: 0x00 (not used)     */
+
+        HWORD   highcyl;                /* CKD: Highest cylinder number
+                                           on this file, or zero if this
+                                           is the last or only file.
+                                           CFBA: zero (not used)
+                                           (bytes in reverse order)  */
+
         BYTE    resv[492];              /* Reserved                  */
 };
 
@@ -1664,9 +1680,10 @@ struct CKDDASD_RECHDR {                 /* Record header             */
 #define CKDDASD_NULLTRK_SIZE2      (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
 
 /*-------------------------------------------------------------------*/
-/* Structure definitions for Compressed CKD devices                  */
+/* Structure definitions for Compressed CCKD/CFBA devices            */
 /*-------------------------------------------------------------------*/
-struct CCKDDASD_DEVHDR {                /* Compress device header    */
+struct CCKDDASD_DEVHDR                  /* Compress device header    */
+{
 /*  0 */BYTE             vrm[3];        /* Version Release Modifier  */
 /*  3 */BYTE             opts;          /* Options byte              */
 
@@ -1682,8 +1699,8 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 /* 32 */S32              free_num;      /* Number free spaces        */
 /* 36 */U32              free_imbed;    /* Imbedded free space       */
 
-/* 40 */FWORD            cyls;          /* Cylinders on CKD device   */
-                                        /* Sectors   on FBA device   */
+/* 40 */FWORD            cyls;          /* CCKD: Cylinders on device
+                                           CFBA: Sectors   on device */
 
 /* 44 */BYTE             nullfmt;       /* Null track format         */
 
@@ -1692,6 +1709,7 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
+
 #define CCKD_DEVHDR      CCKDDASD_DEVHDR
 
 #define CCKD_VERSION           0

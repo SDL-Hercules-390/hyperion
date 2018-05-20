@@ -1222,27 +1222,26 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
-    if (comp == 0xff)
-        memcpy(devhdr.devid, "CKD_P370", 8);
-    else
-        memcpy(devhdr.devid, "CKD_C370", 8);
+    memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
+
+    if (comp == 0xff) memcpy( devhdr.devid, "CKD_P370", 8 );
+    else              memcpy( devhdr.devid, "CKD_C370", 8 );
 
     devhdr.heads[3]   = (heads >> 24) & 0xFF;
     devhdr.heads[2]   = (heads >> 16) & 0xFF;
-    devhdr.heads[1]   = (heads >> 8) & 0xFF;
-    devhdr.heads[0]   = heads & 0xFF;
+    devhdr.heads[1]   = (heads >>  8) & 0xFF;
+    devhdr.heads[0]   =  heads        & 0xFF;
 
     devhdr.trksize[3] = (trksize >> 24) & 0xFF;
     devhdr.trksize[2] = (trksize >> 16) & 0xFF;
-    devhdr.trksize[1] = (trksize >> 8) & 0xFF;
-    devhdr.trksize[0] = trksize & 0xFF;
+    devhdr.trksize[1] = (trksize >>  8) & 0xFF;
+    devhdr.trksize[0] =  trksize        & 0xFF;
 
     devhdr.dvtyp      = devtype & 0xFF;
     devhdr.fileseq    = fileseq;
 
     devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
-    devhdr.highcyl[0] = highcyl & 0xFF;
+    devhdr.highcyl[0] =  highcyl       & 0xFF;
 
     /* Write the device header */
     rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
@@ -1267,13 +1266,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             cdevhdr.opts |= CCKD_BIGENDIAN;
 
         cdevhdr.opts     |= CCKD_ORDWR;
-        cdevhdr.num_L1tab  = (volcyls * heads + 255) / 256;
-        cdevhdr.num_L2tab  = 256;
+        cdevhdr.num_L1tab = (volcyls * heads + 255) / 256;
+        cdevhdr.num_L2tab = 256;
 
         cdevhdr.cyls[3]   = (volcyls >> 24) & 0xFF;
         cdevhdr.cyls[2]   = (volcyls >> 16) & 0xFF;
-        cdevhdr.cyls[1]   = (volcyls >>    8) & 0xFF;
-        cdevhdr.cyls[0]   = volcyls & 0xFF;
+        cdevhdr.cyls[1]   = (volcyls >>  8) & 0xFF;
+        cdevhdr.cyls[0]   =  volcyls        & 0xFF;
 
         cdevhdr.cmp_algo  = comp;
         cdevhdr.cmp_parm  = -1;
@@ -2094,9 +2093,27 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     fprintf (stderr, MSG(HHC00465, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, sectors, sectsz));
 
+    /* Create the device header */
+    memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
+    memcpy( &devhdr.devid, "FBA_C370", 8 );
+
+    devhdr.heads[3]   = (sectors >> 24) & 0xFF;
+    devhdr.heads[2]   = (sectors >> 16) & 0xFF;
+    devhdr.heads[1]   = (sectors >>  8) & 0xFF;
+    devhdr.heads[0]   =  sectors        & 0xFF;
+
+    devhdr.trksize[3] = (sectsz >> 24) & 0xFF;
+    devhdr.trksize[2] = (sectsz >> 16) & 0xFF;
+    devhdr.trksize[1] = (sectsz >>  8) & 0xFF;
+    devhdr.trksize[0] =  sectsz        & 0xFF;
+
+    devhdr.dvtyp      = devtype & 0xFF;
+    devhdr.fileseq    = 0;
+
+    devhdr.highcyl[1] = 0;
+    devhdr.highcyl[0] = 0;
+
     /* Write the device header */
-    memset (&devhdr, 0, CKDDASD_DEVHDR_SIZE);
-    memcpy (&devhdr.devid, "FBA_C370", 8);
     rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc < (int)CKDDASD_DEVHDR_SIZE)
     {
@@ -2116,13 +2133,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.opts |= CCKD_BIGENDIAN;
 
     cdevhdr.opts     |= CCKD_ORDWR;
-    cdevhdr.num_L1tab  = num_L1tab;
-    cdevhdr.num_L2tab  = 256;
+    cdevhdr.num_L1tab = num_L1tab;
+    cdevhdr.num_L2tab = 256;
 
     cdevhdr.cyls[3]   = (sectors >> 24) & 0xFF;
     cdevhdr.cyls[2]   = (sectors >> 16) & 0xFF;
-    cdevhdr.cyls[1]   = (sectors >>    8) & 0xFF;
-    cdevhdr.cyls[0]   = sectors & 0xFF;
+    cdevhdr.cyls[1]   = (sectors >>  8) & 0xFF;
+    cdevhdr.cyls[0]   =  sectors        & 0xFF;
 
     cdevhdr.cmp_algo  = comp;
     cdevhdr.cmp_parm  = -1;
