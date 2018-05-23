@@ -1848,11 +1848,11 @@ U32             trksize;                /* DASD image track length   */
         {
             char    msgbuf[128];
 
-#if defined(HAVE_LIBZ) && defined(CCKD_BZIP2)
+#if defined( HAVE_ZLIB ) && defined( CCKD_BZIP2 )
             char   *pszcomp     = " or zlib/bzip2 compression";
-#elif defined(HAVE_LIBZ)
+#elif defined( HAVE_ZLIB )
             char   *pszcomp     = " or zlib compression";
-#elif defined(CCKD_BZIP2)
+#elif defined( CCKD_BZIP2 )
             char   *pszcomp     = " or bzip2 compression";
 #else
             char   *pszcomp     = "";
@@ -2125,6 +2125,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     int              fd;                /* File descriptor           */
     CKDDASD_DEVHDR   devhdr;            /* Device header             */
     CCKDDASD_DEVHDR  cdevhdr;           /* Compressed device header  */
+    FBADASD_BKGHDR*  blkghdr;           /* Block Group Header        */
     int              blkgrps;           /* Number block groups       */
     int              num_L1tab, l1tabsz;/* Level 1 entries, size     */
     CCKD_L1ENT*      l1;                /* Level 1 table pointer     */
@@ -2270,7 +2271,13 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Clear the first block group's image data to binary zeros */
-    memset (&buf, 0, CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE);
+    memset( &buf, 0, FBADASD_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
+
+    /* Build the "Track Header" (FBA Block Group Header) */
+    blkghdr = (FBADASD_BKGHDR*) &buf[0]; /* (--> block group header) */
+    blkghdr->cmp = CCKD_COMPRESS_NONE;   /* (until we know for sure) */
+    store_fw( blkghdr->blknum, 0 );      /* (group's starting block) */
+
     /* Build the VOL1 label if requested */
     if (!rawflag)
     {
@@ -2280,15 +2287,22 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Write the 1st block group */
+#if defined( HAVE_ZLIB )
     len2 = sizeof( buf2 );
-#if defined( HAVE_LIBZ )
-    rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
-                    CFBA_BLKGRP_SIZE, -1);
-    if (comp && rc == Z_OK)
+    if (1
+        && CCKD_COMPRESS_ZLIB == (comp & CCKD_COMPRESS_MASK)
+        && Z_OK == (rc = compress2( &buf2[0], &len2, &buf[ FBADASD_BKGHDR_SIZE ],
+                                    CFBA_BLKGRP_SIZE, Z_DEFAULT_COMPRESSION ))
+    )
     {
-        buf[0] = CCKD_COMPRESS_ZLIB;
-        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);
-        if (rc < (int)CKDDASD_TRKHDR_SIZE)
+        blkghdr->cmp = CCKD_COMPRESS_ZLIB;
+
+        /* Write out the FBA Block Group Header separately (since it
+           was NOT compressed) followed by the compressed block group
+           data (which WAS compressed)
+        */
+        rc = write( fd, &buf, FBADASD_BKGHDR_SIZE );
+        if (rc < (int) FBADASD_BKGHDR_SIZE)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2296,8 +2310,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
             return -1;
         }
 
+        /* Now write out the compressed block group data (the sectors) */
         rc = write( fd, &buf2, len2 );
-
         if (rc < (int) len2)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
@@ -2305,27 +2319,33 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
                 "write()", errno ? strerror( errno ) : "incomplete" ));
             return -1;
         }
-        l2[0].L2_len = l2[0].L2_size = CKDDASD_TRKHDR_SIZE + len2;
-        cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
-                       CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
-                       CKDDASD_TRKHDR_SIZE + len2;
     }
     else
-#endif // defined( HAVE_LIBZ )
+#endif // defined( HAVE_ZLIB )
     {
-        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE);
-        if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE))
+        len2 = CFBA_BLKGRP_SIZE;
+        blkghdr->cmp = CCKD_COMPRESS_NONE;
+
+        /* Write out both the FBA Block Group Header and the Block Group
+           Data itself (i.e. all of the block group sectors) in one I/O.
+        */
+        rc = write( fd, &buf, FBADASD_BKGHDR_SIZE + len2 );
+        if (rc < (int)(FBADASD_BKGHDR_SIZE + len2))
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
                 "write()", errno ? strerror( errno ) : "incomplete" ));
             return -1;
         }
-        l2[0].L2_len = l2[0].L2_size = CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
-        cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
-                       CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
-                       CKDDASD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
     }
+
+    /* Update the L2 table entry for this block group */
+    l2[0].L2_len = l2[0].L2_size = FBADASD_BKGHDR_SIZE + len2;
+
+    /* Update compressed device header too */
+    cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
+                   CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
+                   FBADASD_BKGHDR_SIZE + len2;
 
     /* Re-write the compressed device header */
     if ((rcoff = lseek( fd, CKDDASD_DEVHDR_SIZE, SEEK_SET )) < 0)
