@@ -2573,12 +2573,12 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
         return -1;
 
     /* Check the device hdr */
-    if (sfx == 0 && memcmp (&devhdr.devid, "CKD_C370", 8) == 0)
+    if (sfx == 0 && memcmp (&devhdr.devhdrid, "CKD_C370", 8) == 0)
         cckd->ckddasd = 1;
-    else if (sfx == 0 && memcmp (&devhdr.devid, "FBA_C370", 8) == 0)
+    else if (sfx == 0 && memcmp (&devhdr.devhdrid, "FBA_C370", 8) == 0)
         cckd->fbadasd = 1;
-    else if (!(sfx && memcmp (&devhdr.devid, "CKD_S370", 8) == 0 && cckd->ckddasd)
-          && !(sfx && memcmp (&devhdr.devid, "FBA_S370", 8) == 0 && cckd->fbadasd))
+    else if (!(sfx && memcmp (&devhdr.devhdrid, "CKD_S370", 8) == 0 && cckd->ckddasd)
+          && !(sfx && memcmp (&devhdr.devhdrid, "FBA_S370", 8) == 0 && cckd->fbadasd))
     {
         WRMSG (HHC00305, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx));
         return -1;
@@ -3796,7 +3796,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
         goto sf_new_error;
 
     /* Make sure identifier is CKD_S370 or FBA_S370 */
-    devhdr.devid[4] = 'S';
+    devhdr.devhdrid[4] = 'S';
 
     /* Write new file's device header */
     if (cckd_write (dev, cckd->sfn+1, 0, &devhdr, CKDDASD_DEVHDR_SIZE) < 0)

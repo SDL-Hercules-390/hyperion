@@ -348,14 +348,15 @@ DLL_EXPORT void cckd_swapend2 (char *c)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_endian()
 {
-union
-{
-    long l;
-    char c[sizeof (long)];
-}   u;
+    union
+    {
+        long l;
+        char c[ sizeof( long )];
+    }
+    u;
 
     u.l = 1;
-    return u.c[sizeof (long) - 1] == 1 ? CCKD_BIGENDIAN : 0;
+    return u.c[ sizeof( long ) - 1 ] == 1 ? CCKD_BIGENDIAN : 0;
 }
 
 /*-------------------------------------------------------------------
@@ -413,10 +414,10 @@ BYTE            buf[65536*4];           /* Buffer                    */
     len = CKDDASD_DEVHDR_SIZE;
     if ((rc = read (fd, &devhdr, len)) != len)
         goto comp_read_error;
-    if (memcmp (devhdr.devid, "CKD_C370", 8) != 0
-     && memcmp (devhdr.devid, "CKD_S370", 8) != 0
-     && memcmp (devhdr.devid, "FBA_C370", 8) != 0
-     && memcmp (devhdr.devid, "FBA_S370", 8) != 0)
+    if (memcmp (devhdr.devhdrid, "CKD_C370", 8) != 0
+     && memcmp (devhdr.devhdrid, "CKD_S370", 8) != 0
+     && memcmp (devhdr.devhdrid, "FBA_C370", 8) != 0
+     && memcmp (devhdr.devhdrid, "FBA_S370", 8) != 0)
     {
         if(dev->batch)
             fprintf(stdout, MSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
@@ -1064,12 +1065,12 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Device header checks */
-    if (memcmp(devhdr.devid, "CKD_C370", 8) == 0
-     || memcmp(devhdr.devid, "CKD_S370", 8) == 0
+    if (memcmp(devhdr.devhdrid, "CKD_C370", 8) == 0
+     || memcmp(devhdr.devhdrid, "CKD_S370", 8) == 0
        )
         ckddasd = 1;
-    else if (memcmp(devhdr.devid, "FBA_C370", 8) == 0
-          || memcmp(devhdr.devid, "FBA_S370", 8) == 0
+    else if (memcmp(devhdr.devhdrid, "FBA_C370", 8) == 0
+          || memcmp(devhdr.devhdrid, "FBA_S370", 8) == 0
             )
         fbadasd = 1;
     else
@@ -1080,8 +1081,8 @@ BYTE            buf[4*65536];           /* buffer                    */
             WRMSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
         goto cdsk_error;
     }
-    if (memcmp(devhdr.devid, "CKD_S370", 8) == 0
-     || memcmp(devhdr.devid, "FBA_S370", 8) == 0
+    if (memcmp(devhdr.devhdrid, "CKD_S370", 8) == 0
+     || memcmp(devhdr.devhdrid, "FBA_S370", 8) == 0
        )
         shadow = 0xff;
 

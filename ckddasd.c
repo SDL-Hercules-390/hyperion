@@ -421,9 +421,9 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Check the device header identifier */
-        if (memcmp(devhdr.devid, "CKD_P370", 8) != 0)
+        if (memcmp(devhdr.devhdrid, "CKD_P370", 8) != 0)
         {
-            if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
+            if (memcmp(devhdr.devhdrid, "CKD_C370", 8) != 0)
             {
                 // "%1d:%04X CKD file %s: ckd header invalid"
                 WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
@@ -634,7 +634,7 @@ char           *strtok_str = NULL;      /* save last position        */
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 
-    /* Build the devid area */
+    /* Build the devhdrid area */
     dev->numdevid = dasd_build_ckd_devid (dev->ckdtab, dev->ckdcu,
                                           (BYTE *)&dev->devid);
 

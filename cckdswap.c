@@ -81,10 +81,10 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             close (dev->fd);
             continue;
         }
-        if (memcmp(devhdr.devid, "CKD_C370", 8) != 0
-         && memcmp(devhdr.devid, "CKD_S370", 8) != 0
-         && memcmp(devhdr.devid, "FBA_C370", 8) != 0
-         && memcmp(devhdr.devid, "FBA_S370", 8) != 0)
+        if (memcmp(devhdr.devhdrid, "CKD_C370", 8) != 0
+         && memcmp(devhdr.devhdrid, "CKD_S370", 8) != 0
+         && memcmp(devhdr.devhdrid, "FBA_C370", 8) != 0
+         && memcmp(devhdr.devhdrid, "FBA_S370", 8) != 0)
         {
             FWRMSG( stderr, HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
             close (dev->fd);

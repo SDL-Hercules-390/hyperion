@@ -695,8 +695,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         close (fd);
 
         if (iLen < CKDDASD_DEVHDR_SIZE
-         || (memcmp(devhdr.devid, "CKD_P370", 8)
-          && memcmp(devhdr.devid, "CKD_C370", 8)))
+         || (memcmp(devhdr.devhdrid, "CKD_P370", 8)
+          && memcmp(devhdr.devhdrid, "CKD_C370", 8)))
         {
             fprintf (stderr, MSG(HHC00406, "E", SSID_TO_LCSS(cif->devblk.ssid),
                 cif->devblk.devnum, cif->fname));
@@ -1305,8 +1305,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Create the device header */
     memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
 
-    if (comp == 0xff) memcpy( devhdr.devid, "CKD_P370", 8 );
-    else              memcpy( devhdr.devid, "CKD_C370", 8 );
+    if (comp == 0xff) memcpy( devhdr.devhdrid, "CKD_P370", 8 );
+    else              memcpy( devhdr.devhdrid, "CKD_C370", 8 );
 
     devhdr.heads[3]   = (heads >> 24) & 0xFF;
     devhdr.heads[2]   = (heads >> 16) & 0xFF;
@@ -2185,7 +2185,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 
     /* Create the device header */
     memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
-    memcpy( &devhdr.devid, "FBA_C370", 8 );
+    memcpy( &devhdr.devhdrid, "FBA_C370", 8 );
 
     devhdr.heads[3]   = (sectors >> 24) & 0xFF;
     devhdr.heads[2]   = (sectors >> 16) & 0xFF;

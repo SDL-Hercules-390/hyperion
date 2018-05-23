@@ -1619,7 +1619,7 @@ struct DEVGRP {                         /* Device Group Structure    */
 /*-------------------------------------------------------------------*/
 struct CKDDASD_DEVHDR                   /* Device header             */
 {
-        BYTE    devid[8];               /* ASCII Device identifier:
+        BYTE    devhdrid[8];            /* ASCII Device Header id:
                                            "CKD_P370": Normal CKD
                                            "CKD_C370": Compressed CCKD
                                            "FBA_C370": Compressed CFBA

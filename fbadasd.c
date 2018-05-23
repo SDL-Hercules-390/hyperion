@@ -151,7 +151,7 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Processing for compressed fba dasd */
-    if (memcmp (&devhdr.devid, "FBA_C370", 8) == 0)
+    if (memcmp (&devhdr.devhdrid, "FBA_C370", 8) == 0)
     {
         cfba = 1;
 
@@ -300,7 +300,7 @@ char   *strtok_str = NULL;              /* save last position        */
         return -1;
     }
 
-    /* Build the devid area */
+    /* Build the devhdrid area */
     dev->numdevid = dasd_build_fba_devid (dev->fbatab,(BYTE *)&dev->devid);
 
     /* Build the devchar area */

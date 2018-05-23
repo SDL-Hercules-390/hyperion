@@ -617,7 +617,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the device header */
     memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
-    memcpy(devhdr.devid, "CKD_P370", 8);
+    memcpy(devhdr.devhdrid, "CKD_P370", 8);
     devhdr.heads[3] = (heads >> 24) & 0xFF;
     devhdr.heads[2] = (heads >> 16) & 0xFF;
     devhdr.heads[1] = (heads >> 8) & 0xFF;
