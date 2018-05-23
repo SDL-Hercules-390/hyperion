@@ -215,14 +215,17 @@ the other 3 space types.
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br />
+<br>
 
 The very first 512 bytes of a compressed DASD file is the <b>device header</b>.
+
 <p>
+
 The device header contains an "eye-catcher" that identifies the file type
 (CKD or FBA and base or shadow).  The device type and file size information
 is also specified in this header.  The header is identical to the header used
 for uncompressed CKD files except for the eye-catcher:
+
 <p>
 <table border=1 width="70%">
 
@@ -255,7 +258,7 @@ for uncompressed CKD files except for the eye-catcher:
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br />
+<br><br>
 
 The next 512 bytes contains the <b>compressed device header</b>.
 <p>
@@ -305,19 +308,20 @@ such as the amount of free space in the file:
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br />
+<br><br>
 
-After the compressed device header is the <b>primary lookup table</b>,
-also called the <em>level 1 table</em> or <em>L1tab</em>.
+After the compressed device header is the <b>primary lookup table</b>
+(also called the Level 1 table or <em>L1tab</em>.)
 
-Each 4 byte unsigned entry in the L1tab contains the file offset
+Each 4 byte unsigned entry in the <i>L1tab</i> contains the file offset
 of a <em><u>secondary lookup table</u></em> (or <em>level 2 table</em> or <em>L2tab</em>).
 
 <p>
 
 The track or block group number being accessed divided by 256 gives the index
-into the L1tab.  That is, each L1tab entry represents 256 tracks or block groups.
-The number of entries in the L1tab is dependent on the size of the emulated device:
+into the <i>L1tab</i>.  That is, each L1tab entry (<i>CCKD_L1ENT</i>) represents
+256 tracks or block groups. The number of entries in the <i>L1tab</i> is dependent
+on the size of the emulated device:
 
 <p>
 
@@ -368,15 +372,15 @@ The number of entries in the L1tab is dependent on the size of the emulated devi
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<p>
+<br><br>
 
-Following the <em>L1tab</em>,
+Following the primary lookup table (<em>L1tab</em>),
 in no particular order, are:
-<em>L2tabs</em>,
+<b>secondary lookup tables</b> (<em>L2tabs</em>),
 <em>track or block group images</em>, and
 <em>free spaces</em>.
 
-<p><br>
+<p>
 
 Each <b>secondary lookup table</b> (or <em>L2tab</em>),
 contains 256 eight byte entries.
@@ -446,7 +450,7 @@ from accumulating in the file.
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br />
+<br><br>
 
 A <b>track image</b> or <b>block group image</b> contains two fields:
 
@@ -505,7 +509,6 @@ The Home Address plus the uncompressed track data comprise the track image.
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br>
 <table border=1 width="21.875%">
 
 <tr><th width="100%" colspan="5">FBA Block Group Header</th></tr>
@@ -527,16 +530,27 @@ The Home Address plus the uncompressed track data comprise the track image.
 <p>
 
 For <b>FBA</b>, the 4 byte nnnnnnnn is the <em>big-endian</em> sector number
-of the block group. The the block group data, which may or may not be compressed,
-follows immediately after the block group header.
+of the block group (i.e. the sector or block number of the first block in the group).
 
-There is no end-of-track marker at the end of an FBA block group.
+The block group data (the individual sectors in the block group), which may or
+may not be compressed (depending on the <i>cmp</i> flag), follows immediately
+after the block group header.
+
+There is of course no end-of-track marker at the end of an FBA block group.
+(FBA devices do not have tracks.)
+
+<p>
+
+Please note that while the <i>FBA Block Group Header</i> is the first part
+of the block group, it is <i><u>not</u></i> part of the compressed image.
+Only the sectors themselves (which immediately follow the <i>Block Group Header</i>)
+are actually compressed. FBA devices do not have Track Headers (Home Addresses).
+The <i>FBA Block Group Header</i> should be considered an internal structure
+and is never exposed to the guest.
 
 <p>
 
 <!-- ---------------------------------------------------------------------------------- -->
-
-<br />
 
 The <b>cmp</b> compression indicator byte contains the value 0, 1 or 2.
 Any other value is invalid:
@@ -556,7 +570,7 @@ Any other value is invalid:
 
 <!-- ---------------------------------------------------------------------------------- -->
 
-<br />
+<br><br>
 
 <b>Free space</b> contains a
 4 byte <i>offset</i> to the next free space,
