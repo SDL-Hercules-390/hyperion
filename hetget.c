@@ -682,7 +682,6 @@ main( int argc, char *argv[] )
         {
             case 'a':
                 opts.flags |= O_ASCII;
-                set_codepage(NULL);
             break;
 
             case 'h':

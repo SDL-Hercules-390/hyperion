@@ -156,8 +156,6 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  U8    beg_rec  = 0;
  U64   tot_len  = 0;
 
-    set_codepage(NULL);
-
     trk = (ttr[0] << 8) | ttr[1];
     rec = ttr[2];
 

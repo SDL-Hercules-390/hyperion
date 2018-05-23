@@ -73,8 +73,6 @@ DLL_EXPORT void convert_to_ebcdic (BYTE *dest, int len, char *source)
 {
 int     i;                              /* Array subscript           */
 
-    set_codepage(NULL);
-
     for (i = 0; i < len && source[i] != '\0'; i++)
         dest[i] = host_to_guest(source[i]);
 
@@ -91,8 +89,6 @@ int     i;                              /* Array subscript           */
 DLL_EXPORT int make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
-
-    set_codepage(NULL);
 
     for (len=0; len < srclen && len < destlen-1; len++)
         dest[len] = guest_to_host(src[len]);

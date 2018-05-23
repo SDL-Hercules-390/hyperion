@@ -1547,8 +1547,6 @@ char   *name;                           /* Text unit name            */
 BYTE    c, chars[9];                    /* Character work areas      */
 char    hex[17];                        /* Character work areas      */
 
-    set_codepage(NULL);
-
     /* Error if remaining length is insufficient for header */
     if (bufrem < 4)
     {
@@ -2143,9 +2141,6 @@ PDSDIR         *dirent;                 /* -> Directory entry        */
 char            memname[9];             /* Member name (ASCIIZ)      */
 BYTE            c, chars[25];           /* Character work areas      */
 char            hex[49];                /* Character work areas      */
-
-    set_codepage(NULL);
-
 
     /* Check for end of directory */
     if (blklen == 12 && memcmp(xbuf, twelvehex00, 12) == 0)
