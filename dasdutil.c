@@ -172,77 +172,85 @@ static void same_as_above( int* firstsame, int* lastsame,
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void data_dump ( void* addr, unsigned int len )
 {
-unsigned int    maxlen = 2048;
-unsigned int    i, xi, offset, startoff = 0;
-BYTE            c;
-BYTE           *pchar;
-char            print_chars[17];
-char            hex_chars[64];
-char            prev_hex[64] = "";
-int             firstsame = 0;
-int             lastsame = 0;
+    #define  DD_BPL      16     // bytes per line
+    #define  MAX_DD    2048     // must be multiple of DD_BPL
 
-    set_codepage(NULL);
+    CASSERT( MAX_DD == ROUND_UP( MAX_DD, DD_BPL ), dasdutil_c );
 
-    pchar = (BYTE *)addr;
+    unsigned int  maxoffset = len > MAX_DD ? MAX_DD : len;
+    unsigned int  i, xi, offset, lineoff = 0;
 
-    for (offset=0; ; )
+    int   firstsame = 0, lastsame = 0;
+    BYTE  c = 0, *pchar = NULL;
+
+    char  print_chars [ DD_BPL + 1 ]  = {0};
+    char  hex_chars   [ DD_BPL * 4 ]  = {0};
+    char  prev_hex    [ DD_BPL * 4 ]  = {0};
+
+    pchar = (BYTE*)addr;    /* init pointer to char being processed */
+
+    for (offset=0; offset < maxoffset; )
     {
-        if (offset >= maxlen && offset <= len - maxlen)
+        if (offset > 0) /* (only if NOT first time) */
         {
-            offset += 16;
-            pchar += 16;
-            prev_hex[0] = '\0';
-            continue;
-        }
-        if ( offset > 0 )
-        {
-            if ( strcmp ( hex_chars, prev_hex ) == 0 )
+            /* Current line same as previous line? */
+            if (strcmp( hex_chars, prev_hex ) == 0)
             {
-                if ( firstsame == 0 ) firstsame = startoff;
-                lastsame = startoff;
+                /* Save offset of first same line */
+                if (!firstsame)
+                    firstsame = lineoff;
+
+                /* Update offset of last same line */
+                lastsame = lineoff;
             }
-            else
+            else /* This line is different */
             {
-                if ( firstsame != 0 )
-                {
-                    if ( lastsame == firstsame )
-                        printf ("Line %4.4X same as above\n",
-                                firstsame );
-                    else
-                        printf ("Lines %4.4X to %4.4X same as above\n",
-                                firstsame, lastsame );
-                    firstsame = lastsame = 0;
-                }
-                printf ("+%4.4X %s %s\n",
-                        startoff, hex_chars, print_chars);
-                STRLCPY ( prev_hex, hex_chars );
+                same_as_above( &firstsame, &lastsame, lineoff, hex_chars, print_chars );
+                STRLCPY( prev_hex, hex_chars );
             }
         }
 
-        if ( offset >= (U32)len ) break;
+        /* Format next print line into hex_chars and print_chars */
 
-        memset( print_chars, 0, sizeof(print_chars) );
-        memset( hex_chars, SPACE, sizeof(hex_chars) );
-        startoff = offset;
-        for (xi=0, i=0; i < 16; i++)
+        memset( print_chars,  0,   sizeof( print_chars ));
+        memset( hex_chars,  SPACE, sizeof( hex_chars   ));
+
+        lineoff = offset;   /* save this line's offset */
+
+        for (xi=0, i=0; i < DD_BPL; i++)
         {
             c = *pchar++;
-            if (offset < (U32)len) {
-                sprintf(hex_chars+xi, "%2.2X", c);
+
+            if (offset < len)
+            {
+                sprintf( hex_chars+xi, "%2.2X", c );
                 print_chars[i] = '.';
-                if (isprint(c)) print_chars[i] = c;
+
+                if (isprint(c))
+                    print_chars[i] = c;
+
                 c = guest_to_host(c);
-                if (isprint(c)) print_chars[i] = c;
+
+                if (isprint(c))
+                    print_chars[i] = c;
             }
+
             offset++;
             xi += 2;
             hex_chars[xi] = SPACE;
-            if ((offset & 3) == 0) xi++;
-        } /* end for(i) */
-        hex_chars[xi] = '\0';
 
-    } /* end for(offset) */
+            if ((offset & 3) == 0)
+                xi++;
+        }
+
+        hex_chars[xi] = '\0';
+    }
+
+    if (firstsame || len <= DD_BPL)
+        same_as_above( &firstsame, &lastsame, lineoff, hex_chars, print_chars );
+
+    if (len > MAX_DD)
+        printf( "Lines %4.4X to %4.4X suppressed\n", offset, len-1, MAX_DD );
 
 } /* end function data_dump */
 
@@ -1499,15 +1507,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     convert_to_ebcdic (pos, keylen, "VOL1");
                     pos += keylen;
 
-                    convert_to_ebcdic (pos, 4, "VOL1");             //VOL1
-                    convert_to_ebcdic (pos+4, 6, volser);           //volser
-                    pos[10] = 0x40;                                 //security
-                    store_hw(pos+11,0);                             //vtoc CC
-                    store_hw(pos+13,1);                             //vtoc HH
-                    pos[15] = 0x01;                                 //vtoc R
-                    memset(pos+16, 0x40, 21);                       //reserved
-                    convert_to_ebcdic (pos+37, 14, "    HERCULES"); //ownerid
-                    memset(pos+51, 0x40, 29);                       //reserved
+                    /* Build the VOL1 label */
+                    build_vol1( pos, volser, NULL, true );
                     pos += vol1len;
 
                     /* 9 4096 data blocks for linux volume */
@@ -2273,9 +2274,11 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     /* Build the VOL1 label if requested */
     if (!rawflag)
     {
-        convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");
-        convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz+4], 6, volser);
+        /* The VOL1 label is at physical sector number 1 */
+        VOL1_FBA* fbavol1 = (VOL1_FBA*) &buf[ FBADASD_BKGHDR_SIZE + sectsz ];
+        build_vol1( fbavol1, volser, NULL, false );
     }
+
     /* Write the 1st block group */
     len2 = sizeof( buf2 );
 #if defined( HAVE_LIBZ )
