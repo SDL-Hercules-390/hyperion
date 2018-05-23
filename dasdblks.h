@@ -407,10 +407,10 @@ struct CIFBLK {                         /* CKD image file descriptor */
 /* Functions in module dasdutil.c */
 DUT_DLL_IMPORT void string_to_upper (char *source);
 DUT_DLL_IMPORT void string_to_lower (char *source);
-DUT_DLL_IMPORT void convert_to_ebcdic (BYTE *dest, int len, char *source);
+DUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source );
 DUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 DUT_DLL_IMPORT void build_vol1( void* buf, const char* volser, const char* owner, bool ckddasd );
-DUT_DLL_IMPORT void data_dump (void *addr, int len);
+DUT_DLL_IMPORT void data_dump( void* addr, unsigned int len );
 DUT_DLL_IMPORT int  read_track (CIFBLK *cif, U32 cyl, U8 head);
 int  rewrite_track (CIFBLK *cif);
 DUT_DLL_IMPORT int  read_block (CIFBLK *cif, U32 cyl, U8 head, U8 rec,
