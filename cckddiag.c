@@ -13,23 +13,22 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
-/* TODO: add FBA support or write cfbadiag                           */
-
 #include "hercules.h"
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "cckddiag"
+#define UTILITY_DESC    "CCKD/CFBA diagnostic program"
 
 /*-------------------------------------------------------------------*/
 /* Exit codes                                                        */
 /*-------------------------------------------------------------------*/
 #define EXIT_SEEK_ERROR         1
 #define EXIT_READ_ERROR         2
-#define EXIT_NO_FBA_SUPPORT     3
+#define EXIT_NO_FBA_CCHH        3
 #define EXIT_MALLOC_FAILED      4
 #define EXIT_NO_CKD_DASDTAB     5
 #define EXIT_NO_FBA_DASDTAB     6
+#define EXIT_DATA_NOTFOUND      7
 
 /*-------------------------------------------------------------------*/
 /* CKD DASD record stats structure                                   */
@@ -47,8 +46,8 @@ typedef struct _CKD_RECSTAT {     /* CKD DASD record stats           */
 /*-------------------------------------------------------------------*/
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
-static CCKD_L1ENT     *l1        = NULL;    /* L1TAB                 */
-static CCKD_L2ENT     *l2        = NULL;    /* L2TAB                 */
+static CCKD_L1ENT     *L1tab     = NULL;    /* Level 1 table pointer */
+static CCKD_L2ENT     *L2tab     = NULL;    /* Level 2 table pointer */
 static void           *tbuf      = NULL;    /* track header & data   */
 static void           *bulk      = NULL;    /* bulk data buffer      */
 static int             fd        = 0;       /* File descriptor       */
@@ -71,8 +70,8 @@ static int syntax(char *pgm)
 static void clean()
 {
     close(fd);
-    free(l1);                          /* L1TAB buffer               */
-    free(l2);                          /* L2TAB buffer               */
+    free(L1tab);                       /* L1TAB buffer               */
+    free(L2tab);                       /* L2TAB buffer               */
     free(tbuf);                        /* track and header buffer    */
     free(bulk);                        /* offset data buffer         */
 }
@@ -181,15 +180,15 @@ static int decomptrk
     char*  emsg                 /* addr of 81 byte msg buf or NULL   */
 )
 {
-#if defined( HAVE_LIBZ ) || defined( CCKD_BZIP2 )
+#if defined( HAVE_ZLIB ) || defined( CCKD_BZIP2 )
     int             rc;         /* Return code                       */
 #endif
     unsigned int    bufl;       /* Buffer length                     */
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     unsigned int    ubufl;      /* when size_t != unsigned int       */
 #endif
 
-#if !defined( HAVE_LIBZ ) && !defined( CCKD_BZIP2 )
+#if !defined( HAVE_ZLIB ) && !defined( CCKD_BZIP2 )
     UNREFERENCED(heads);
     UNREFERENCED(trk);
     UNREFERENCED(emsg);
@@ -206,13 +205,13 @@ static int decomptrk
         memcpy (obuf, ibuf, bufl);
         break;
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     case CCKD_COMPRESS_ZLIB:
         memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         bufl = obuflen - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress(&obuf[CKDDASD_TRKHDR_SIZE],
+        rc = uncompress(&obuf[ CKDDASD_TRKHDR_SIZE ],
                          (void *)&bufl,
-                         &ibuf[CKDDASD_TRKHDR_SIZE],
+                         &ibuf[ CKDDASD_TRKHDR_SIZE ],
                          ibuflen);
         if (rc != Z_OK)
         {
@@ -232,15 +231,15 @@ static int decomptrk
         break;
 #endif
 
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     case CCKD_COMPRESS_BZIP2:
         memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         ubufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress
         (
-            (char *)&obuf[CKDDASD_TRKHDR_SIZE],
+            (char *)&obuf[ CKDDASD_TRKHDR_SIZE ],
             &ubufl,
-            (char *)&ibuf[CKDDASD_TRKHDR_SIZE],
+            (char *)&ibuf[ CKDDASD_TRKHDR_SIZE ],
             ibuflen, 0, 0
         );
         if (rc != BZ_OK)
@@ -287,14 +286,14 @@ BYTE    *past;
     // "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
     WRMSG( HHC02605, "I", trk, cc, cc, hh, hh, r, r, kl, dl );
 
-    past = (BYTE *)rh + sizeof(CKDDASD_RECHDR);
+    past = (BYTE *)rh + CKDDASD_RECHDR_SIZE;
     return past;
 }
 
 /*-------------------------------------------------------------------*/
 /* show_ckd_key - display CKD dasd record KEY field                  */
 /*-------------------------------------------------------------------*/
-static BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int hexdump)
+static BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, bool hexdump)
 {
     if (hexdump && rh->klen)
     {
@@ -310,7 +309,7 @@ static BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int hexdump)
 /*-------------------------------------------------------------------*/
 /* show_ckd_data - display CKD dasd record DATA field                */
 /*-------------------------------------------------------------------*/
-static BYTE *show_ckd_data(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int hexdump)
+static BYTE* show_ckd_data( CKDDASD_RECHDR* rh, BYTE* buf, int trk, bool hexdump)
 {
     int dl;
 
@@ -328,20 +327,40 @@ static BYTE *show_ckd_data(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int hexdump)
 }
 
 /*-------------------------------------------------------------------*/
+/* show_fba_block - display FBA dasd block DATA                      */
+/*-------------------------------------------------------------------*/
+static void show_fba_block( BYTE* buf, int blk, bool hexdump )
+{
+    if (hexdump)
+    {
+        // "Block %d:"
+        WRMSG( HHC02616, "I", blk );
+        data_dump( buf, 512 );
+        printf("\n");
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /* snap - display msg, dump data                                     */
 /*-------------------------------------------------------------------*/
-static void snap( int comp, void *data, int len )
+#define COMPRESSED  1
+#define EXPANDED    0
+static void snap( int comp, void *data, int len, bool ckddasd )
 {
     if (comp)
     {
-        // "SHOWTRK Compressed track header and data:"
-        WRMSG( HHC90403, "D" );
+        // "SHOW%s Compressed %s header and data:"
+        WRMSG( HHC90403, "D",
+            ckddasd ? "TRK"   : "BKG",
+            ckddasd ? "track" : "block group" );
         data_dump( data, len );
     }
-    else
+    else // EXPANDED
     {
-        // "SHOWTRK Decompressed track header and data:"
-        WRMSG( HHC90404, "D" );
+        // "SHOW%s Decompressed %s header and data:"
+        WRMSG( HHC90404, "D",
+            ckddasd ? "TRK"   : "BKG",
+            ckddasd ? "track" : "block group" );
         data_dump( data, len );
     }
 
@@ -355,63 +374,82 @@ static void snap( int comp, void *data, int len )
 }
 
 /*-------------------------------------------------------------------*/
-/* showtrk - display track data                                      */
+/* showtrkorblk - display track or block data                        */
 /* This code mimics selected logic in cdsk_valid_trk.                */
 /*-------------------------------------------------------------------*/
-static void showtrk
+static void showtrkorblk
 (
     CKDDASD_TRKHDR*  buf,   /* track header ptr                      */
     int  imglen,            /* TRKHDR + track user data length       */
-    int  trk,               /* relative track number                 */
-    int  hexdump            /* 1=dump key & data blks; 0=don't       */
+    int  trk,               /* relative track or block number        */
+    bool ckddasd,           /* true = CKD dasd  false = FBA dasd     */
+    bool hexdump            /* true=dump key & data blks; false=don't*/
 )
 {
     BYTE             buf2[64*1024];     /* max uncompressed buffer   */
     char             msg[81];           /* error message buffer      */
     CKDDASD_RECHDR*  rh;                /* CCKD COUNT field          */
-    BYTE*            bufp;
-    int              len;
+    BYTE*            bufp;              /* Decompressed data pointer */
+    int              len;               /* Decompressed data length  */
 
     if (debug)
     {
-        // dump compressed block
-        snap( 1, buf, imglen );
+        snap( COMPRESSED, buf, imglen, ckddasd );
         printf("\n");
     }
 
+    /* Expand (decompress) the CKD track or FBA block group */
     len = decomptrk
     (
         (BYTE *)buf,        /* input buffer address            */
         imglen,             /* input buffer length             */
         buf2,               /* output buffer address           */
         sizeof(buf2),       /* output buffer length            */
-        1,                  /* >=0 means CKD, else FBA         */
+        ckddasd ? +1 : -1,  /* >=0 means CKD, else FBA         */
         trk,                /* relative track or block number  */
         msg                 /* addr of message buffer          */
     );
 
     if (debug)
     {
-        snap( 0, buf2, len );
+        snap( EXPANDED, buf2, len, ckddasd );
         printf("\n");
     }
 
-    bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
+    bufp = &buf2[ CKDDASD_TRKHDR_SIZE];
 
-    while (bufp < &buf2[sizeof(buf2)])
+    if (ckddasd)
     {
-        rh = (CKDDASD_RECHDR *)bufp;
-
-        if (memcmp((BYTE *)rh, &eighthexFF, 8) == 0)
+        while (bufp < &buf2[ sizeof( buf2 )])
         {
-            // "%s"
-            WRMSG( HHC02601, "I", "End of track" );
-            break;
-        }
+            rh = (CKDDASD_RECHDR*) bufp;
 
-        bufp = show_ckd_count ( rh, trk);
-        bufp = show_ckd_key   ( rh, bufp, trk, hexdump );
-        bufp = show_ckd_data  ( rh, bufp, trk, hexdump );
+            if (memcmp( (BYTE*) rh, &eighthexFF, 8 ) == 0)
+            {
+                // "%s"
+                WRMSG( HHC02601, "I", "End of track" );
+                break;
+            }
+
+            bufp = show_ckd_count ( rh, trk);
+            bufp = show_ckd_key   ( rh, bufp, trk, hexdump );
+            bufp = show_ckd_data  ( rh, bufp, trk, hexdump );
+        }
+    }
+    else // FBA
+    {
+        /* Extract block number of first block in block group */
+        FBADASD_BKGHDR* blkghdr = (FBADASD_BKGHDR*) buf;
+        U32 blknum = fetch_fw( blkghdr->blknum );
+
+        /* Calculate relative block number within block group */
+        U32 grpblk = (trk - blknum);
+
+        /* Index to desired block within expanded block group */
+        bufp += grpblk * 512;
+
+        /* Show desired block data */
+        show_fba_block( bufp, trk, hexdump );
     }
 }
 
@@ -438,7 +476,7 @@ static off_t offtify(char *s)
         s = s + 2;
 
         for (v = 0; isxdigit(*s); ++s)
-            v = (v << 4) + xv[strchr(xd, *s) - xd];
+            v = (v << 4) + xv[ strchr( xd, *s ) - xd ];
 
         if (debug)
         {
@@ -454,6 +492,7 @@ static off_t offtify(char *s)
         if (debug)
         {
             // "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
+            printf("\n");
             WRMSG( HHC90406, "D", p, (U64) v, (U64) v );
         }
         return v;
@@ -470,47 +509,48 @@ int             cckd_diag_rc = 0;       /* Program return code       */
 char*           pgm;                    /* less any extension (.ext) */
 char*           fn;                     /* File name                 */
 
-CKDDASD_DEVHDR  devhdr;                 /* [C]CKD device hdr         */
+CKDDASD_DEVHDR  devhdr;                 /* CKD device hdr            */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
 CKDDEV*         ckd          = NULL;    /* CKD DASD table entry      */
 FBADEV*         fba          = NULL;    /* FBA DASD table entry      */
 
-int             cmd_devhdr   = 0;       /* display DEVHDR            */
-int             cmd_cdevhdr  = 0;       /* display CDEVHDR           */
-int             cmd_l1tab    = 0;       /* display L1TAB             */
-int             cmd_l2tab    = 0;       /* display L2TAB             */
-int             cmd_trkdata  = 0;       /* display track data        */
-int             cmd_hexdump  = 0;       /* display track data (hex)  */
+bool            cmd_devhdr   = false;   /* display DEVHDR            */
+bool            cmd_cdevhdr  = false;   /* display CDEVHDR           */
+bool            cmd_l1tab    = false;   /* display L1TAB             */
+bool            cmd_l2tab    = false;   /* display L2TAB             */
+bool            cmd_trkdata  = false;   /* display track data        */
+bool            cmd_hexdump  = false;   /* display track data (hex)  */
 
-int             cmd_offset   = 0;       /* 1 = display data at       */
+bool            cmd_offset   = false;   /* true = display data at    */
 int             op_offset    = 0;       /* op_offset of length       */
 int             op_length    = 0;       /* op_length                 */
 
-int             cmd_cchh     = 0;       /* 1 = display CCHH data     */
+bool            cmd_cchh     = false;   /* true = display CCHH data  */
 int             op_cc        = 0;       /* CC = cylinder             */
 int             op_hh        = 0;       /* HH = head                 */
 
-int             cmd_tt       = 0;       /* 1 = display TT data       */
-int             op_tt        = 0;       /* relative track #          */
+bool            cmd_tt       = false;   /* true = display TT data    */
+int             op_tt        = 0;       /* relative track/block #    */
 
 int             heads        = 0;       /* Heads per cylinder        */
-int             trk          = 0;
+int             trk          = 0;       /* Track or block number     */
+int             maxtrk       = 0;       /* Tracks/Blocks on device   */
 int             imglen       = 0;       /* track length              */
 
-int             l1ndx        = 0;
-int             l2ndx        = 0;
+int             L1ndx        = 0;       /* Index into Level 1 table  */
+int             L2ndx        = 0;       /* Index into Level 2 table  */
 
-off_t           l2taboff     = 0;       /* offset to assoc. L2 table */
+off_t           L2taboff     = 0;       /* offset to assoc. L2 table */
 off_t           trkhdroff    = 0;       /* offset to assoc. trk hdr  */
 
-int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
-int             swapend;                /* 1 = New endianess doesn't
+bool            ckddasd = false;        /* true=CKD dasd, false=FBA  */
+bool            swapend = false;        /* 1 = New endianess doesn't
                                              match machine endianess */
-int             n;                      /* work                      */
-char            pathname[MAX_PATH];     /* file path in host format  */
+int             num_L1tab;              /* Number of L1tab entries   */
+char            pathname[ MAX_PATH ];   /* file path in host format  */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "CCKD diagnostic program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* parse the arguments */
 
@@ -527,23 +567,23 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                        return 0;
 
             case 'd':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_devhdr = 1;
+                       cmd_devhdr = true;
                        break;
 
             case 'c':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_cdevhdr = 1;
+                       cmd_cdevhdr = true;
                        break;
 
             case '1':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_l1tab = 1;
+                       cmd_l1tab = true;
                        break;
 
             case '2':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_l2tab = 1;
+                       cmd_l2tab = true;
                        break;
 
             case 'a':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_cchh = 1;
+                       cmd_cchh = true;
 
                        argc--; argv++;
                        op_cc = offtify(*argv);
@@ -553,14 +593,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                        break;
 
             case 'r':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_tt = 1;
+                       cmd_tt = true;
 
                        argc--; argv++;
                        op_tt = offtify(*argv);
                        break;
 
             case 'o':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_offset = 1;
+                       cmd_offset = true;
 
                        argc--; argv++;
                        op_offset = offtify(*argv);
@@ -570,12 +610,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                        break;
 
             case 't':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_trkdata = 1;
+                       cmd_trkdata = true;
                        break;
 
             case 'x':  if (argv[0][2] != '\0') return syntax (pgm);
-                       cmd_hexdump = 1;
-                       cmd_trkdata = 1;
+                       cmd_hexdump = true;
+                       cmd_trkdata = true;
                        break;
 
             case 'g':  if (argv[0][2] != '\0') return syntax (pgm);
@@ -590,6 +630,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     if (argc != 1)
         return syntax (pgm);
+
+    printf("\n");
 
     fn = argv[0];
 
@@ -607,14 +649,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* display DEVHDR - first 512 bytes of dasd image                */
     /*---------------------------------------------------------------*/
-    readpos(fd, &devhdr, 0, sizeof(devhdr));
+    readpos( fd, &devhdr, 0, CKDDASD_DEVHDR_SIZE );
 
     if (cmd_devhdr)
     {
         // "%s - %d (decimal) bytes:"
         printf("\n");
-        WRMSG( HHC02614, "I", "DEVHDR", (int) sizeof( devhdr ));
-        data_dump( &devhdr, sizeof( devhdr ));
+        WRMSG( HHC02614, "I", "DEVHDR", (int) CKDDASD_DEVHDR_SIZE );
+        data_dump( &devhdr, CKDDASD_DEVHDR_SIZE );
         printf("\n");
     }
 
@@ -622,11 +664,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Determine CKD or FBA device type                              */
     /*---------------------------------------------------------------*/
     if (0
-        || memcmp( devhdr.devid, "CKD_C370", 8) == 0
-        || memcmp( devhdr.devid, "CKD_S370", 8) == 0
+        || memcmp( devhdr.devhdrid, "CKD_C370", 8) == 0
+        || memcmp( devhdr.devhdrid, "CKD_S370", 8) == 0
     )
     {
-        ckddasd = 1;
+        ckddasd = true;
 
         ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
 
@@ -641,11 +683,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     else
     {
         if (0
-            || memcmp( devhdr.devid, "FBA_C370", 8) == 0
-            || memcmp( devhdr.devid, "FBA_S370", 8) == 0
+            || memcmp( devhdr.devhdrid, "FBA_C370", 8) == 0
+            || memcmp( devhdr.devhdrid, "FBA_S370", 8) == 0
         )
         {
-            ckddasd = 0;
+            ckddasd = false;
 
             fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.dvtyp, 0);
 
@@ -686,7 +728,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* display CDEVHDR - follows DEVHDR                              */
     /*---------------------------------------------------------------*/
-    readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
+    readpos( fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof( cdevhdr ));
 
     if (cmd_cdevhdr)
     {
@@ -709,21 +751,21 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
 
     /* swap num_L1tab if needed */
-    n = cdevhdr.num_L1tab;
+    num_L1tab = cdevhdr.num_L1tab;
     if (swapend)
-        cckd_swapend4((char *)&n);
+        cckd_swapend4( (char*) &num_L1tab );
 
-    l1 = makbuf(n * CCKD_L1ENT_SIZE, "L1TAB");
+    L1tab = makbuf( num_L1tab * CCKD_L1ENT_SIZE, "L1TAB" );
 
-    readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
+    readpos( fd, L1tab, CCKD_L1TAB_POS, num_L1tab * CCKD_L1ENT_SIZE );
 
     /* L1TAB itself is NOT adjusted for endian-ness */
     if (cmd_l1tab)
     {
         // "%s - %d (decimal) bytes:"
         printf("\n");
-        WRMSG( HHC02614, "I", "L1TAB", (int) (n * CCKD_L1ENT_SIZE) );
-        data_dump( l1, n * CCKD_L1ENT_SIZE );
+        WRMSG( HHC02614, "I", "L1TAB", (int) (num_L1tab * CCKD_L1ENT_SIZE) );
+        data_dump( L1tab, num_L1tab * CCKD_L1ENT_SIZE );
         printf("\n");
     }
 
@@ -748,14 +790,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /*---------------------------------------------------------------*/
-    /* FBA isn't supported here because I don't know much about FBA  */
+    /* FBA devices don't have cylinders or heads                     */
     /*---------------------------------------------------------------*/
-    if ( (!ckddasd) && ((cmd_cchh) || (cmd_tt)) )
+    if (!ckddasd && cmd_cchh)
     {
         // "%s%s"
-        FWRMSG( stderr, HHC02604, "S", "CCHH/reltrk not supported for FBA", "" );
+        FWRMSG( stderr, HHC02604, "S", "CCHH not supported for FBA", "" );
         clean();
-        exit( EXIT_NO_FBA_SUPPORT );
+        exit( EXIT_NO_FBA_CCHH );
     }
 
     /*---------------------------------------------------------------*/
@@ -774,47 +816,82 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             trk = (op_cc * heads) + op_hh;
         }
 
-        l1ndx = trk / cdevhdr.num_L2tab;
-        l2ndx = trk % cdevhdr.num_L2tab;
-        l2taboff = l1[l1ndx];
-
-        if (swapend)
-            cckd_swapend4((char *)&l2taboff);
+        L1ndx = trk / cdevhdr.num_L2tab;
+        L2ndx = trk % cdevhdr.num_L2tab;
     }
 
     /*---------------------------------------------------------------*/
-    /* display CKD CCHH or relative track data                       */
+    /* For FBA devices a relative track is treated as a block number */
+    /*---------------------------------------------------------------*/
+    if (!ckddasd && cmd_tt)
+    {
+        int blkgrp = (trk = op_tt) / CFBA_BLKGRP_BLKS;
+
+        L1ndx = blkgrp / cdevhdr.num_L2tab;
+        L2ndx = blkgrp % cdevhdr.num_L2tab;
+    }
+
+    /*---------------------------------------------------------------*/
+    /* Verify device is large enough for the request                 */
+    /*---------------------------------------------------------------*/
+    if (L1ndx >= num_L1tab)
+    {
+        // "%s %d does not exist on this device"
+        FWRMSG( stderr, HHC02617, "S", ckddasd ? "Track" : "Block", trk );
+        clean();
+        exit( EXIT_DATA_NOTFOUND );
+    }
+
+    L2taboff = L1tab[ L1ndx ];
+
+    if (swapend)
+        cckd_swapend4( (char*) &L2taboff );
+
+    /*---------------------------------------------------------------*/
+    /* Display CKD CCHH or relative track or FBA relative block data */
     /*---------------------------------------------------------------*/
     if ((cmd_cchh) || (cmd_tt))
     {
-        // "CC %d HH %d = reltrk %d; L1 index = %d, L2 index = %d"
-        WRMSG( HHC02609, "I", op_cc, op_hh, trk, l1ndx, l2ndx );
+        if (ckddasd)
+            // "CC %d HH %d = reltrk %d; L1 index = %d, L2 index = %d"
+            WRMSG( HHC02609, "I", op_cc, op_hh, trk, L1ndx, L2ndx );
+        else
+            // "Block %d; L1 index = %d, L2 index = %d"
+            WRMSG( HHC02615, "I", trk, L1ndx, L2ndx );
 
         // "L1 index %d = L2TAB offset %d (0x%8.8X)"
-        WRMSG( HHC02610, "I", l1ndx, (int) l2taboff, (int) l2taboff );
+        WRMSG( HHC02610, "I", L1ndx, (int) L2taboff, (int) L2taboff );
 
-        l2 = makbuf(cdevhdr.num_L2tab * sizeof(CCKD_L2ENT), "L2TAB");
+        if (!L2taboff)
+        {
+            // "L2tab for %s %d not found"
+            FWRMSG( stderr, HHC02618, "S", ckddasd ? "track" : "block", trk );
+            clean();
+            exit( EXIT_DATA_NOTFOUND );
+        }
 
-        readpos(fd, l2, l2taboff,
-                cdevhdr.num_L2tab * sizeof(CCKD_L2ENT));
+        L2tab = makbuf(cdevhdr.num_L2tab * CCKD_L2ENT_SIZE, "L2TAB");
+
+        readpos(fd, L2tab, L2taboff,
+                cdevhdr.num_L2tab * CCKD_L2ENT_SIZE);
 
         if (cmd_l2tab)
         {
             // "%s - %d (decimal) bytes:"
             printf("\n");
             WRMSG( HHC02614, "I", "L2TAB",
-                (int) (cdevhdr.num_L2tab * sizeof( CCKD_L2ENT )) );
-            data_dump( l2, (cdevhdr.num_L2tab * sizeof( CCKD_L2ENT )));
+                (int) (cdevhdr.num_L2tab * CCKD_L2ENT_SIZE) );
+            data_dump( L2tab, (cdevhdr.num_L2tab * CCKD_L2ENT_SIZE));
         }
 
         // "L2 index %d = L2TAB entry: %d bytes:"
         printf("\n");
-        WRMSG( HHC02611, "I", l2ndx, (int) sizeof( CCKD_L2ENT ));
-        data_dump( &l2[l2ndx], sizeof( CCKD_L2ENT ));
+        WRMSG( HHC02611, "I", L2ndx, (int) CCKD_L2ENT_SIZE);
+        data_dump( &L2tab[ L2ndx ], CCKD_L2ENT_SIZE);
         printf("\n");
 
-        trkhdroff = l2[l2ndx].L2_trkoff;
-        imglen    = l2[l2ndx].L2_len;
+        trkhdroff = L2tab[ L2ndx ].L2_trkoff;
+        imglen    = L2tab[ L2ndx ].L2_len;
 
         if (swapend)
         {
@@ -823,25 +900,34 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         // "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
-        WRMSG( HHC02613, "I", "TRKHDR",
+        WRMSG( HHC02613, "I", ckddasd ? "TRKHDR" : "BKGHDR",
             (int) trkhdroff, (int) trkhdroff, imglen, imglen, "" );
 
-        tbuf = makbuf(imglen, "TRKHDR+DATA");
+        /* Verify device contains the requested track/block */
+        if (!trkhdroff || !imglen)
+        {
+            // "%s %d not found"
+            FWRMSG( stderr, HHC02619, "S", ckddasd ? "Track" : "Block", trk );
+            clean();
+            exit( EXIT_DATA_NOTFOUND );
+        }
+
+        tbuf = makbuf(imglen, ckddasd ? "TRKHDR+DATA" : "BKGHDR+DATA");
         readpos(fd, tbuf, trkhdroff, imglen);
 
-        // HHC02612 "TRKHDR track %d:"
-        printf("\n");
-        WRMSG( HHC02612, "I", trk );
-        data_dump( tbuf, sizeof( CKDDASD_TRKHDR ));
+        // "%sHDR %s %d:"
+        WRMSG( HHC02612, "I", ckddasd ? "TRK"   : "BKG",
+                              ckddasd ? "track" : "block", trk );
+        data_dump( tbuf, CKDDASD_TRKHDR_SIZE);
         printf("\n");
 
         if (cmd_trkdata)
-            showtrk(tbuf, imglen, trk, cmd_hexdump);
+            showtrkorblk( tbuf, imglen, trk, ckddasd, cmd_hexdump );
 
-        free(l2);
+        free(L2tab);
         free(tbuf);
 
-        l2 = NULL;
+        L2tab = NULL;
         tbuf = NULL;
     }
 

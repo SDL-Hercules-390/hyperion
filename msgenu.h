@@ -1854,7 +1854,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02614 "%s - %d (decimal) bytes:"
 #define HHC02615 "Block %d; L1 index = %d, L2 index = %d"
 #define HHC02616 "Block %d:"
-//efine HHC02617 - HHC02619 (available)
+#define HHC02617 "%s %d does not exist on this device"
+#define HHC02618 "L2tab for %s %d not found"
+#define HHC02619 "%s %d not found"
 
 // vmfplc2
 #define HHC02620 "Usage: %s verb [outfile] tapefile\n" \
