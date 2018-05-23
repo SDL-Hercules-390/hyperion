@@ -455,7 +455,7 @@
   #define SR_STRING_ERROR   do { sr_string_error_(); return -1; } while (0)
 #endif
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
 #define SR_DEFAULT_FILENAME "hercules.srf.gz"
 #define SR_FILE gzFile
 #define SR_OPEN(_path, _mode) \

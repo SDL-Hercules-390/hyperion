@@ -1824,18 +1824,18 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // reserve 026xx for utilites
 // cckddiag
 #define HHC02600 "Usage: %s [options] file\n" \
-       "HHC02600I   file      name of CCKD file\n" \
+       "HHC02600I   file      name of CCKD/CFBA file\n" \
        "HHC02600I Options:\n" \
-       "HHC02600I   -d        display DEVHDR and exit\n" \
-       "HHC02600I   -c        display CDEVHDR and exit\n" \
+       "HHC02600I   -d        display DEVHDR\n" \
+       "HHC02600I   -c        display CDEVHDR\n" \
        "HHC02600I   -1        display L1TAB (numeric one)\n" \
        "HHC02600I   -g        enable debug output\n" \
-       "HHC02600I CKD track related options:\n" \
-       "HHC02600I   -a cc hh  display absolute CCHH data\n" \
-       "HHC02600I   -r tt     display relative TT data\n" \
+       "HHC02600I CKD track and FBA block related options:\n" \
+       "HHC02600I   -a cc hh  display absolute CCHH track data\n" \
+       "HHC02600I   -r nnnnn  display relative track/block data\n" \
        "HHC02600I   -2        display L2TAB related to -a or -r\n" \
-       "HHC02600I   -t        display track data\n" \
-       "HHC02600I   -x        hex display track key/data\n" \
+       "HHC02600I   -t        display track/block data\n" \
+       "HHC02600I   -x        hex display track key and/or block data\n" \
        "HHC02600I Offset option:\n" \
        "HHC02600I   -o oo ll  hex display data at offset oo of length ll"
 #define HHC02601 "%s" // action/info
@@ -1849,10 +1849,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02609 "CC %d HH %d = reltrk %d; L1 index = %d, L2 index = %d"
 #define HHC02610 "L1 index %d = L2TAB offset %d (0x%8.8X)"
 #define HHC02611 "L2 index %d = L2TAB entry: %d bytes:"
-#define HHC02612 "TRKHDR track %d:"
+#define HHC02612 "%sHDR %s %d:"
 #define HHC02613 "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
 #define HHC02614 "%s - %d (decimal) bytes:"
-//efine HHC02615 - HHC02619 (available)
+#define HHC02615 "Block %d; L1 index = %d, L2 index = %d"
+#define HHC02616 "Block %d:"
+//efine HHC02617 - HHC02619 (available)
 
 // vmfplc2
 #define HHC02620 "Usage: %s verb [outfile] tapefile\n" \
@@ -2370,8 +2372,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90400 "MAKBUF() malloc %s buffer of %d bytes at %p"
 #define HHC90401 "READPOS seeking %d (0x%8.8X)"
 #define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
-#define HHC90403 "SHOWTRK Compressed track header and data:"
-#define HHC90404 "SHOWTRK Decompressed track header and data:"
+#define HHC90403 "SHOW%s Compressed %s header and data:"
+#define HHC90404 "SHOW%s Decompressed %s header and data:"
 #define HHC90405 "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90406 "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90407 "%s device has %d heads/cylinder"

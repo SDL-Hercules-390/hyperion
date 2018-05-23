@@ -65,7 +65,7 @@ static off_t prevpos = 0;
 static void
 usage( char *name )
 {
-#ifdef  HET_BZIP2
+#if defined( HET_BZIP2 )
     char *bufbz = "                -b    use BZLIB compression\n";
 #else
     char *bufbz = "";

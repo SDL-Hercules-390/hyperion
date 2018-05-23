@@ -204,10 +204,10 @@ int             i, j;                   /* Loop indexes              */
     cckdblk.gcparm     = CCKD_DEFAULT_GCOLPARM;
     cckdblk.readaheads = CCKD_DEFAULT_READAHEADS;
     cckdblk.freepend   = CCKD_DEFAULT_FREEPEND;
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     cckdblk.comps     |= CCKD_COMPRESS_ZLIB;
 #endif
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     cckdblk.comps     |= CCKD_COMPRESS_BZIP2;
 #endif
     cckdblk.comp       = 0xff;
@@ -5219,7 +5219,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
 
 int cckd_uncompress_zlib (DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen)
 {
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
 unsigned long newlen;
 int rc;
 
@@ -5250,7 +5250,7 @@ int rc;
 }
 int cckd_uncompress_bzip2 (DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen)
 {
-#if defined(CCKD_BZIP2)
+#if defined( CCKD_BZIP2 )
 unsigned int newlen;
 int rc;
 
@@ -5316,7 +5316,7 @@ int cckd_compress_none (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
 }
 int cckd_compress_zlib (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
 {
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
 unsigned long newlen;
 int rc;
 BYTE *buf;
@@ -5339,7 +5339,7 @@ BYTE *buf;
     return (int)newlen;
 #else
 
-#if defined(CCKD_BZIP2)
+#if defined( CCKD_BZIP2 )
     return cckd_compress_bzip2 (dev, to, from, len, parm);
 #else
     return cckd_compress_none (dev, to, from, len, parm);
@@ -5349,7 +5349,7 @@ BYTE *buf;
 }
 int cckd_compress_bzip2 (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
 {
-#if defined(CCKD_BZIP2)
+#if defined( CCKD_BZIP2 )
 unsigned int newlen;
 int rc;
 BYTE *buf;

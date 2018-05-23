@@ -102,11 +102,11 @@ int     rc;                             /* Return code               */
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
         else if (strcmp("z", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_ZLIB;
 #endif
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
@@ -261,13 +261,13 @@ argexit ( int code, char *m )
         {
             // HHC02448 "Usage: dasdinit ...."
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
          char *bufz = "HHC02448I   -z        build compressed dasd image file using zlib\n";
 #else
          char *bufz = "";
 #endif
 
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
          char *bufbz = "HHC02448I   -bz2      build compressed dasd image file using bzip2\n";
 #else
          char *bufbz = "";

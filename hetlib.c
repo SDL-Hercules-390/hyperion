@@ -924,7 +924,7 @@ het_read( HETB *hetb, void *sbuf )
                 {
                     case 0:
                     break;
-#if defined( HAVE_LIBZ )
+#if defined( HAVE_ZLIB )
                     case HETHDR_FLAGS2_ZLIB_BUSTECH:
                         slen = HETMAX_BLOCKSIZE;
 
@@ -939,14 +939,14 @@ het_read( HETB *hetb, void *sbuf )
 
                         tlen = slen;
                     break;
-#endif /* defined( HAVE_LIBZ ) */
+#endif /* defined( HAVE_ZLIB ) */
                     default:
                         free_aligned( tbuf );
                         return( HETE_UNKMETH );
                 }
             break;
 
-#if defined( HAVE_LIBZ )
+#if defined( HAVE_ZLIB )
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
 
@@ -961,7 +961,7 @@ het_read( HETB *hetb, void *sbuf )
 
                 tlen = slen;
             break;
-#endif /* defined( HAVE_LIBZ ) */
+#endif /* defined( HAVE_ZLIB ) */
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
@@ -1258,7 +1258,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     int flags;
     unsigned long tlen;
     char *tbuf = NULL;
-#if defined(HAVE_LIBZ) || defined( HET_BZIP2 )
+#if defined( HAVE_ZLIB ) || defined( HET_BZIP2 )
     size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
     tbuf = malloc_aligned( tsiz, 4096 );
     if (!tbuf)
@@ -1293,7 +1293,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     {
         switch( hetb->method )
         {
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
             case HETHDR_FLAGS1_ZLIB:
                 tlen = tsiz;
 

@@ -18,7 +18,7 @@
 /*              -lfs creates one large output file (if supported)    */
 /* infile       is the name of the HDR-30 format CKD image file      */
 /*              ("-" means that the CKD image is read from stdin)    */
-/*              If this module was compiled with HAVE_LIBZ option    */
+/*              If this module was compiled with HAVE_ZLIB option    */
 /*              activated, then the input file may be compressed     */
 /*              or uncompressed. Otherwise it must be uncompressed.  */
 /* outfile      is the name of the AWSCKD image file to be created.  */
@@ -72,15 +72,15 @@ BYTE ckd_ident[] = {0x43, 0x4B, 0x44, 0x5F}; /* CKD_ in ASCII */
 /*-------------------------------------------------------------------*/
 /* Definition of file descriptor for gzip and non-gzip builds        */
 /*-------------------------------------------------------------------*/
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
   #define IFD           gzFile
   #define IFREAD        gzread
   #define IFCLOS        gzclose
-#else /*!defined(HAVE_LIBZ)*/
+#else /*!defined( HAVE_ZLIB )*/
   #define IFD           int
   #define IFREAD        read
   #define IFCLOS        close
-#endif /*!defined(HAVE_LIBZ)*/
+#endif /*!defined( HAVE_ZLIB )*/
 
 static void delayed_exit (int exit_code);
 static void argexit         ( int code, char *pgm );
@@ -241,7 +241,7 @@ int     len = 0;                        /* Number of bytes read      */
         if (rc < 0)
         {
             // "Error in function %s: %s"
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
             FWRMSG( stderr, HHC02412, "E", "gzread()", strerror( errno ));
 #else
             FWRMSG( stderr, HHC02412, "E", "read()", strerror( errno ));
@@ -254,7 +254,7 @@ int     len = 0;                        /* Number of bytes read      */
     if (len < reqlen)
     {
         // "Error in function %s: %s"
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
         FWRMSG( stderr, HHC02412, "E", "gzread()", "unexpected end of file" );
 #else
         FWRMSG( stderr, HHC02412, "E", "read()", "unexpected end of file" );
@@ -391,7 +391,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     hostpath(pathname, (char *)ifname, sizeof(pathname));
 
     /* Open the HDR-30 CKD image file */
-  #if defined(HAVE_LIBZ)
+  #if defined( HAVE_ZLIB )
     if (strcmp(ifname, "-") == 0)
         ifd = gzdopen (STDIN_FILENO, "rb");
     else
@@ -403,7 +403,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         FWRMSG( stderr, HHC02412, "E", "gzopen()", strerror( errno ));
         EXIT(3);
     }
-  #else /*!defined(HAVE_LIBZ)*/
+  #else /*!defined( HAVE_ZLIB )*/
     if (strcmp(ifname, "-") == 0)
         ifd = STDIN_FILENO;
     else
@@ -417,13 +417,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             EXIT(3);
         }
     }
-  #endif /*!defined(HAVE_LIBZ)*/
+  #endif /*!defined( HAVE_ZLIB )*/
 
     /* Read the first track header */
     read_input_data (ifd, ifname, (BYTE*)&h30trkhdr,
                     H30CKD_TRKHDR_SIZE, 0);
 
-  #if !defined(HAVE_LIBZ)
+  #if !defined( HAVE_ZLIB )
     /* Reject input if compressed and we lack gzip support */
     if (memcmp(h30trkhdr.devcode, gz_magic_id, sizeof(gz_magic_id)) == 0)
     {
@@ -431,7 +431,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         FWRMSG( stderr, HHC02413, "E" );
         EXIT(3);
     }
-  #endif /*!defined(HAVE_LIBZ)*/
+  #endif /*!defined( HAVE_ZLIB )*/
 
     /* Reject input if it is already in CKD or CCKD format */
     if (memcmp((BYTE*)&h30trkhdr, ckd_ident, sizeof(ckd_ident)) == 0)

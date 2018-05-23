@@ -634,7 +634,7 @@ static const char *build_info[] = {
     "With    SIGABEND handler",
 #endif
 
-#if defined(CCKD_BZIP2)
+#if defined( CCKD_BZIP2 )
     "With    CCKD BZIP2 support",
 #else
     "Without CCKD BZIP2 support",
@@ -646,7 +646,7 @@ static const char *build_info[] = {
     "Without HET BZIP2 support",
 #endif
 
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
     "With    ZLIB support",
 #else
     "Without ZLIB support",

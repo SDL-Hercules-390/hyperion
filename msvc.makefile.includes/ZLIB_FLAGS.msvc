@@ -13,5 +13,5 @@ ZLIB_DLL = $(ZLIB_DIR)\zlib1.dll
 ZLIB_LIB = $(ZLIB_DIR)/lib/zdll.lib
 ZLIB_INC = $(ZLIB_DIR)/include
 LIBS     = $(LIBS) "$(ZLIB_LIB)"
-cflags   = $(cflags) /D HAVE_LIBZ /D HAVE_ZLIB_H /I"$(ZLIB_INC)"
+cflags   = $(cflags) /D HAVE_ZLIB /D HAVE_ZLIB_H /I"$(ZLIB_INC)"
 !ENDIF

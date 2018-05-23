@@ -1734,7 +1734,7 @@ struct CCKDDASD_DEVHDR                  /* Compress device header    */
 #define CCKD_COMPRESS_MASK     0x03
 
 #define CCKD_STRESS_MINLEN     4096
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
 #define CCKD_STRESS_COMP       CCKD_COMPRESS_ZLIB
 #else
 #define CCKD_STRESS_COMP       CCKD_COMPRESS_NONE

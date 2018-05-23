@@ -1039,12 +1039,12 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Build table for compression byte test */
     memset (compmask, 0xff, 256);
     compmask[0] = 0;
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_ZLIB )
     compmask[CCKD_COMPRESS_ZLIB] = 0;
 #else
     compmask[CCKD_COMPRESS_ZLIB] = 1;
 #endif
-#if defined(CCKD_BZIP2)
+#if defined( CCKD_BZIP2 )
     compmask[CCKD_COMPRESS_BZIP2] = 0;
 #else
     compmask[CCKD_COMPRESS_BZIP2] = 2;
@@ -2834,13 +2834,13 @@ int             len2;                   /* Positive `len'            */
 int             kl, dl;                 /* Key/Data lengths          */
 BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
 uLongf          zlen;
 #endif
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
 unsigned int    bz2len;
 #endif
-#if defined(HAVE_LIBZ) || defined(CCKD_BZIP2)
+#if defined( HAVE_ZLIB ) || defined( CCKD_BZIP2 )
 int             rc;                     /* Return code               */
 BYTE            buf2[65536];            /* Uncompressed buffer       */
 #endif
@@ -2859,7 +2859,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         bufl = len2;
         break;
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     case CCKD_COMPRESS_ZLIB:
         if (len < 0) return 0;
         bufp = (BYTE *)buf2;
@@ -2873,7 +2873,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         break;
 #endif
 
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     case CCKD_COMPRESS_BZIP2:
         if (len < 0) return 0;
         bufp = (BYTE *)buf2;

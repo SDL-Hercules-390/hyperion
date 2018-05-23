@@ -200,7 +200,7 @@ char    *strtok_str = NULL;             /* last position             */
                 cu = op;
                 continue;
             }
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
             if (strlen (argv[i]) > 5
              && memcmp("comp=", argv[i], 5) == 0)
             {
@@ -219,10 +219,10 @@ char    *strtok_str = NULL;             /* last position             */
 
     /* Set suported compression */
     dev->rmtcomps = 0;
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;
 #endif
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     dev->rmtcomps |= SHRD_BZIP2;
 #endif
 
@@ -387,9 +387,9 @@ FWORD    origin;                        /* FBA origin                */
 FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
 char    *strtok_str = NULL;             /* last token                */
-#endif /*HAVE_LIBZ*/
+#endif /*HAVE_ZLIB*/
 
     retry = dev->connecting;
 
@@ -443,7 +443,7 @@ char    *strtok_str = NULL;             /* last token                */
         rc = 0;
         for (i = 1; i < argc; i++)
         {
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
             if (strlen (argv[i]) > 5
              && memcmp("comp=", argv[i], 5) == 0)
             {
@@ -464,10 +464,10 @@ char    *strtok_str = NULL;             /* last token                */
 
     /* Set suported compression */
     dev->rmtcomps = 0;
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     dev->rmtcomps |= SHRD_LIBZ;
 #endif
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
     dev->rmtcomps |= SHRD_BZIP2;
 #endif
 
@@ -1437,7 +1437,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         if (rc < 0) return -1;
     }
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     /* Compress the buf */
     if (dev->rmtcomp != 0
      && flag == 0 && off <= SHRD_COMP_MAX_OFF
@@ -1633,7 +1633,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
 
     /* Check for compression */
     if (comp == SHRD_LIBZ) {
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
         unsigned long newlen;
 
         if (off > 0)
@@ -1654,7 +1654,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     }
     else if (comp == SHRD_BZIP2)
     {
-#ifdef CCKD_BZIP2
+#if defined( CCKD_BZIP2 )
         unsigned int newlen;
 
         if (off > 0)
@@ -2065,7 +2065,7 @@ int      off;                           /* Offset into record        */
         break;
 
     case SHRD_COMPRESS:
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
         dev->shrd[ix]->comp = (flag & 0x0f);
         store_hw (buf, dev->shrd[ix]->comp);
 #else
@@ -2204,7 +2204,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     shrdtrc(dev,"server_send %2.2x %2.2x %2.2x %d %d\n",
             code, status, devnum, id, len);
 
-#ifdef HAVE_LIBZ
+#if defined( HAVE_ZLIB )
     /* Compress the buf */
     if (ix >= 0 && dev->shrd[ix]->comp != 0
      && code == SHRD_OK && status == 0
