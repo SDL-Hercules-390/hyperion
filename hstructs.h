@@ -1657,6 +1657,11 @@ struct CKDDASD_TRKHDR {                 /* Track header              */
         HWORD   head;                   /* Head number               */
 };
 
+struct FBADASD_BKGHDR {                 /* Block Group Header        */
+        BYTE    cmp;                    /* Compression byte          */
+        FWORD   blknum;                 /* Sector number             */
+};
+
 struct CKDDASD_RECHDR {                 /* Record header             */
         HWORD   cyl;                    /* Cylinder number           */
         HWORD   head;                   /* Head number               */
@@ -1667,6 +1672,7 @@ struct CKDDASD_RECHDR {                 /* Record header             */
 
 #define CKDDASD_DEVHDR_SIZE     ((ssize_t)sizeof(CKDDASD_DEVHDR))
 #define CKDDASD_TRKHDR_SIZE     ((ssize_t)sizeof(CKDDASD_TRKHDR))
+#define FBADASD_BKGHDR_SIZE     ((ssize_t)sizeof(FBADASD_BKGHDR))
 #define CKDDASD_RECHDR_SIZE     ((ssize_t)sizeof(CKDDASD_RECHDR))
 
 /* Null track formats */
@@ -1977,6 +1983,9 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
 #define CCKD_OPEN_RD           2
 #define CCKD_OPEN_RW           3
 
+/*-------------------------------------------------------------------*/
+/* Structure used by EXTERNAL GUI to track device status updates     */
+/*-------------------------------------------------------------------*/
 struct GUISTAT
 {
     char*   pszOldStatStr;
@@ -1985,6 +1994,5 @@ struct GUISTAT
     char    szStatStrBuff1[GUI_STATSTR_BUFSIZ];
     char    szStatStrBuff2[GUI_STATSTR_BUFSIZ];
 };
-
 
 #endif // _HSTRUCTS_H

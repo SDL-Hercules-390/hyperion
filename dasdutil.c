@@ -100,6 +100,74 @@ int             len;                    /* Result length             */
 } /* end function make_asciiz */
 
 /*-------------------------------------------------------------------*/
+/* Subroutine to construct an 80-byte VOL1 label in memory.          */
+/* ckddasd: true = CKD, false = FBA                                  */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void build_vol1( void* buf, const char* volser, const char* owner, bool ckddasd )
+{
+#define HERC_OWNER  "** HERCULES **"    // (14-bytes, centered)
+
+    if (!owner)
+        owner = HERC_OWNER;
+
+    if (ckddasd)
+    {
+        VOL1_CKD*  ckd  = buf;
+
+        convert_to_ebcdic( ckd->vol1,   sizeof( ckd->vol1   ), "VOL1" );
+        convert_to_ebcdic( ckd->volser, sizeof( ckd->volser ), volser );
+        convert_to_ebcdic( ckd->owner,  sizeof( ckd->owner  ), owner  );
+
+        ckd->security = 0xC0;
+
+        store_hw( ckd->vtoc_CC, 0 );
+        store_hw( ckd->vtoc_HH, 1 );
+                  ckd->vtoc_R = 1;
+
+        convert_to_ebcdic( ckd->rsrvd3, sizeof( ckd->rsrvd3 ), "" );
+        convert_to_ebcdic( ckd->rsrvd4, sizeof( ckd->rsrvd4 ), "" );
+    }
+    else
+    {
+        VOL1_FBA*  fba  = buf;
+
+        convert_to_ebcdic( fba->vol1,   sizeof( fba->vol1   ), "VOL1" );
+        convert_to_ebcdic( fba->volser, sizeof( fba->volser ), volser );
+        convert_to_ebcdic( fba->owner,  sizeof( fba->owner  ), owner  );
+
+        fba->security = 0xC0;
+        fba->rsrvd1 = 0;
+
+        store_fw( fba->vtoc_block,    2 );
+        store_fw( fba->vtoc_cisz,  1024 );
+        store_fw( fba->vtoc_seci,     2 );
+        store_fw( fba->vtoc_slci,     7 );
+
+        convert_to_ebcdic( fba->rsrvd2, sizeof( fba->rsrvd2 ), "" );
+        convert_to_ebcdic( fba->rsrvd3, sizeof( fba->rsrvd3 ), "" );
+        convert_to_ebcdic( fba->rsrvd4, sizeof( fba->rsrvd4 ), "" );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* data_dump helper function to print "same as above" if needed      */
+/*-------------------------------------------------------------------*/
+static void same_as_above( int* firstsame, int* lastsame,
+    unsigned int lineoff, const char* hex_chars, const char* print_chars )
+{
+    if (*firstsame)
+    {
+        if (*lastsame == *firstsame)
+            printf( "Line %4.4X same as above\n", *firstsame );
+        else
+            printf( "Lines %4.4X to %4.4X same as above\n", *firstsame, *lastsame );
+
+        *firstsame = *lastsame = 0;
+    }
+    printf( "+%4.4X %s %s\n", lineoff, hex_chars, print_chars );
+}
+
+/*-------------------------------------------------------------------*/
 /* Subroutine to print a data block in hex and character format.     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void data_dump ( void *addr, int len )

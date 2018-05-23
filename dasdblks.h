@@ -16,6 +16,9 @@
 
 //  Forward references...
 
+typedef  struct  VOL1_CKD       VOL1_CKD;       // VOL1 layout for CKD
+typedef  struct  VOL1_FBA       VOL1_FBA;       // VOL1 layout for FBA
+
 typedef  struct  FORMAT1_DSCB   FORMAT1_DSCB;   // DSCB1: Dataset descriptor
 typedef  struct  FORMAT3_DSCB   FORMAT3_DSCB;   // DSCB3: Additional extents
 typedef  struct  FORMAT4_DSCB   FORMAT4_DSCB;   // DSCB4: VTOC descriptor
@@ -32,6 +35,67 @@ typedef  struct  COPYR2         COPYR2;         // IEBCOPY header record 2
 typedef  struct  DATABLK        DATABLK;        // IEBCOPY unload data rec
 
 #define  MAX_TRACKS   32767
+
+/*-------------------------------------------------------------------*/
+/* Layout of a standard VOL1 label for CKD dasd                      */
+/*-------------------------------------------------------------------*/
+struct VOL1_CKD
+{
+    /* VOL1 label format for CKD devices:
+
+      Dec  Len   Type      Description
+       0    4    EBCDIC    Always "VOL1"
+       4    6    EBCDIC    Volume Serial number
+      10    1    Hex       Security byte (X'C0')
+      11    5    Hex       CCHHR of the VTOC
+      16   21    Reserved  EBCDIC X'40' spaces
+      37   14    EBCDIC    Owner code for LVTOC listing
+      51   29    Reserved  EBCDIC X'40' spaces
+    */
+    BYTE   vol1[4];     // Always "VOL1"
+    BYTE   volser[6];   // Volume Serial number
+    BYTE   security;    // Security byte (X'C0')
+    HWORD  vtoc_CC;     // CCHHR of the VTOC
+    HWORD  vtoc_HH;     // CCHHR of the VTOC
+    BYTE   vtoc_R;      // CCHHR of the VTOC
+    BYTE   rsrvd3[21];  // EBCDIC X'40' spaces
+    BYTE   owner[14];   // Owner code for LVTOC listing
+    BYTE   rsrvd4[29];  // EBCDIC X'40' spaces
+};
+
+/*-------------------------------------------------------------------*/
+/* Layout of a standard VOL1 label for FBA dasd                      */
+/*-------------------------------------------------------------------*/
+struct VOL1_FBA
+{
+    /* VOL1 label format for FBA devices:
+
+      Dec  Len   Type      Description
+       0    4    EBCDIC    Always "VOL1"
+       4    6    EBCDIC    Volume Serial number
+      10    1    Hex       Security byte (X'C0')
+      11    5    Unsigned  Sector number of the VTOC
+      16    5    Reserved  EBCDIC X'40' spaces
+      21    4    Unsigned  VTOC Control Interval size
+      25    4    Unsigned  VTOC sectors per Control Interval
+      29    4    Unsigned  VTOC DSCB slots per Control Interval
+      33    4    Reserved  EBCDIC X'40' spaces
+      37   14    EBCDIC    Volume Owner and Address
+      51   29    Reserved  EBCDIC X'40' spaces
+    */
+    BYTE   vol1[4];     // Always "VOL1"
+    BYTE   volser[6];   // Volume Serial number
+    BYTE   security;    // Security byte (X'C0')
+    BYTE   rsrvd1;      // X'00'
+    FWORD  vtoc_block;  // Sector number of the VTOC
+    BYTE   rsrvd2[5];   // EBCDIC X'40' spaces
+    FWORD  vtoc_cisz;   // VTOC Control Interval size (bytes)
+    FWORD  vtoc_seci;   // VTOC sectors per Control Interval
+    FWORD  vtoc_slci;   // VTOC DSCB slots per Control Interval
+    BYTE   rsrvd3[4];   // EBCDIC X'40' spaces
+    BYTE   owner[14];   // Owner code for LVTOC listing
+    BYTE   rsrvd4[29];  // EBCDIC X'40' spaces
+};
 
 /*-------------------------------------------------------------------*/
 /* Definition of DSCB records in VTOC                                */
@@ -345,6 +409,7 @@ DUT_DLL_IMPORT void string_to_upper (char *source);
 DUT_DLL_IMPORT void string_to_lower (char *source);
 DUT_DLL_IMPORT void convert_to_ebcdic (BYTE *dest, int len, char *source);
 DUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
+DUT_DLL_IMPORT void build_vol1( void* buf, const char* volser, const char* owner, bool ckddasd );
 DUT_DLL_IMPORT void data_dump (void *addr, int len);
 DUT_DLL_IMPORT int  read_track (CIFBLK *cif, U32 cyl, U8 head);
 int  rewrite_track (CIFBLK *cif);

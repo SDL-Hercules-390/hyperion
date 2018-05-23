@@ -192,6 +192,7 @@ typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
 typedef struct CKDDASD_DEVHDR   CKDDASD_DEVHDR;   // Device header
 typedef struct CKDDASD_TRKHDR   CKDDASD_TRKHDR;   // Track header
+typedef struct FBADASD_BKGHDR   FBADASD_BKGHDR;   // Block Group header
 typedef struct CKDDASD_RECHDR   CKDDASD_RECHDR;   // Record header
 typedef struct CCKDDASD_DEVHDR  CCKDDASD_DEVHDR;  // Compress device header
 typedef struct CCKD_L2ENT       CCKD_L2ENT;       // Level 2 table entry
