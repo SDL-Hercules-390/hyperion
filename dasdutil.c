@@ -250,7 +250,7 @@ DLL_EXPORT void data_dump ( void* addr, unsigned int len )
         same_as_above( &firstsame, &lastsame, lineoff, hex_chars, print_chars );
 
     if (len > MAX_DD)
-        printf( "Lines %4.4X to %4.4X suppressed\n", offset, len-1, MAX_DD );
+        printf( "Lines %4.4X to %4.4X suppressed\n", offset, len-1 );
 
 } /* end function data_dump */
 
@@ -2134,7 +2134,9 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     CCKD_L1ENT*      l1;                /* Level 1 table pointer     */
     CCKD_L2ENT       l2[256];           /* Level 2 table             */
     unsigned long    len2;              /* Compressed buffer length  */
+#if defined( HAVE_ZLIB )
     BYTE             buf2[256];         /* Compressed buffer         */
+#endif
     BYTE             buf[65536];        /* Buffer                    */
     int              x = O_EXCL;        /* Open option               */
     char             pathname[MAX_PATH];/* file path in host format  */

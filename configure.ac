@@ -506,6 +506,7 @@ AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implemen
 AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
 AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
 AH_TEMPLATE( [_BSD_SOCKLEN_T_],         [Define missing macro on apple darwin (osx) platform] )
+AH_TEMPLATE( [HAVE_ZLIB],               [Define to enable zlib compression in emulated DASDs] )
 AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
@@ -984,7 +985,9 @@ AC_CHECK_LIB( m,      sqrt           )
 AC_CHECK_LIB( socket, connect        )
 AC_CHECK_LIB( nsl,    gethostbyname  )
 AC_CHECK_LIB( resolv, inet_aton      )
-AC_CHECK_LIB( z,      uncompress     )
+AC_CHECK_LIB( z,      uncompress,
+            [ hc_cv_have_libz=yes ],
+            [ hc_cv_have_libz=no  ] )
 AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
             [ hc_cv_have_libbz2=no  ] )
@@ -2739,6 +2742,7 @@ test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
 test "$hc_cv_opt_fthreads"                = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
 test "$hc_cv_have_lt_dlopen"              = "yes"  &&  AC_DEFINE(HDL_USE_LIBTOOL)
 test "$hc_cv_is_windows"                  = "yes"  &&  AC_DEFINE(WIN32)
+test "$hc_cv_have_libz"                   = "yes"  &&  AC_DEFINE(HAVE_ZLIB)
 test "$hc_cv_opt_cckd_bzip2"              = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
 test "$hc_cv_opt_het_bzip2"               = "yes"  &&  AC_DEFINE(HET_BZIP2)
 test "$hc_cv_timespec_in_sys_types_h"     = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
@@ -2832,6 +2836,7 @@ test "x$hc_cv_optimization_flags" !=  "x" &&  CFLAGS="$CFLAGS $hc_cv_optimizatio
 
 test  "$hc_cv_dash_pthread_needed" =  "yes"  &&  LIBS="$LIBS -pthread"
 test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
+test  "$hc_cv_have_libz"           =  "yes"  &&  LIBS="$LIBS -lz"
 
 #      ---------------------- MINGW32 ----------------------
 

@@ -1644,10 +1644,12 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             recvlen = (int)newlen + off;
         else
         {
+            // "Shared: decompress error %d offset %d length %d"
             WRMSG(HHC00727, "E", rc, off, len - off);
             recvlen = -1;
         }
 #else
+        // "Shared: data compressed using method %s is unsupported"
         WRMSG(HHC00728, "E", "libz");
         recvlen = -1;
 #endif
@@ -1666,6 +1668,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             recvlen = (int)newlen + off;
         else
         {
+            // "Shared: decompress error %d offset %d length %d"
             WRMSG(HHC00727, "E", rc, off, len - off);
             recvlen = -1;
         }

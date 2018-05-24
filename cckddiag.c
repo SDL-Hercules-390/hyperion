@@ -535,7 +535,6 @@ int             op_tt        = 0;       /* relative track/block #    */
 
 int             heads        = 0;       /* Heads per cylinder        */
 int             trk          = 0;       /* Track or block number     */
-int             maxtrk       = 0;       /* Tracks/Blocks on device   */
 int             imglen       = 0;       /* track length              */
 
 int             L1ndx        = 0;       /* Index into Level 1 table  */
