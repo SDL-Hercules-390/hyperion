@@ -1619,12 +1619,8 @@ struct DEVGRP {                         /* Device Group Structure    */
 /*-------------------------------------------------------------------*/
 struct CKDDASD_DEVHDR                   /* Device header             */
 {
-        BYTE    devhdrid[8];            /* ASCII Device Header id:
-                                           "CKD_P370": Normal CKD
-                                           "CKD_C370": Compressed CCKD
-                                           "FBA_C370": Compressed CFBA
-                                           Normal FBA dasd don't have
-                                           CKDDASD_DEVHDR, only CFBA */
+        BYTE    devhdrid[8];            /* ASCII Device Header id;
+                                           see dasdblks.h for list   */
 
         FWORD   heads;                  /* CKD: heads per cylinder
                                            CFBA: number of sectors

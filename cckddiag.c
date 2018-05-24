@@ -663,14 +663,11 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* Determine CKD or FBA device type                              */
     /*---------------------------------------------------------------*/
-    if (0
-        || memcmp( devhdr.devhdrid, "CKD_C370", 8) == 0
-        || memcmp( devhdr.devhdrid, "CKD_S370", 8) == 0
-    )
+    if (is_devhdrid_typ( devhdr.devhdrid, CMP_CKD_TYP ))
     {
         ckddasd = true;
 
-        ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
+        ckd = dasd_lookup( DASD_CKDDEV, NULL, devhdr.dvtyp, 0 );
 
         if (!ckd)
         {
@@ -680,32 +677,26 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             exit( EXIT_NO_CKD_DASDTAB );
         }
     }
+    else if (is_devhdrid_typ( devhdr.devhdrid, CMP_FBA_TYP ))
+    {
+        ckddasd = false;
+
+        fba = dasd_lookup( DASD_FBADEV, NULL, devhdr.dvtyp, 0 );
+
+        if (!fba)
+        {
+            // "DASD table entry not found for devtype 0x%2.2X"
+            FWRMSG( stderr, HHC02608, "S", DEFAULT_FBA_TYPE );
+            clean();
+            exit( EXIT_NO_FBA_DASDTAB );
+        }
+    }
     else
     {
-        if (0
-            || memcmp( devhdr.devhdrid, "FBA_C370", 8) == 0
-            || memcmp( devhdr.devhdrid, "FBA_S370", 8) == 0
-        )
-        {
-            ckddasd = false;
-
-            fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.dvtyp, 0);
-
-            if (!fba)
-            {
-                // "DASD table entry not found for devtype 0x%2.2X"
-                FWRMSG( stderr, HHC02608, "S", DEFAULT_FBA_TYPE );
-                clean();
-                exit( EXIT_NO_FBA_DASDTAB );
-            }
-        }
-        else
-        {
-            // "%s%s"
-            FWRMSG( stderr, HHC02604, "E", "incorrect header id", "" );
-            clean();
-            return -1;
-        }
+        // "%s%s"
+        FWRMSG( stderr, HHC02604, "E", "incorrect header id", "" );
+        clean();
+        return -1;
     }
 
     /*---------------------------------------------------------------*/

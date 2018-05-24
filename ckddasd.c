@@ -421,23 +421,22 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Check the device header identifier */
-        if (memcmp(devhdr.devhdrid, "CKD_P370", 8) != 0)
+        if (!is_devhdrid_typ( devhdr.devhdrid, CKD_XSF_TYP ))
         {
-            if (memcmp(devhdr.devhdrid, "CKD_C370", 8) != 0)
+            // "%1d:%04X CKD file %s: ckd header invalid"
+            WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
+            return -1;
+        }
+
+        if (is_devhdrid_typ( devhdr.devhdrid, CKD_C370_TYP ))
+        {
+            cckd = 1;
+
+            if (fileseq != 1)
             {
-                // "%1d:%04X CKD file %s: ckd header invalid"
-                WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
+                // "%1d:%04X CKD file %s: only 1 CCKD file allowed"
+                WRMSG( HHC00407, "E", LCSS_DEVNUM, filename );
                 return -1;
-            }
-            else
-            {
-                cckd = 1;
-                if (fileseq != 1)
-                {
-                    // "%1d:%04X CKD file %s: only 1 CCKD file allowed"
-                    WRMSG( HHC00407, "E", LCSS_DEVNUM, filename );
-                    return -1;
-                }
             }
         }
 

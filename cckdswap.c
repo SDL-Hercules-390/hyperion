@@ -10,8 +10,8 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
+#include "dasdblks.h"
 
 #define UTILITY_NAME    "cckdswap"
 
@@ -58,36 +58,37 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
     if (argc < 1) return syntax( pgm );
 
-    for (i = 0; i < argc; i++)
+    for (i=0; i < argc; i++)
     {
-        memset (dev, 0, sizeof (DEVBLK));
+        memset( dev, 0, sizeof( DEVBLK ));
         dev->batch = 1;
 
         /* open the input file */
-        hostpath(dev->filename, argv[i], sizeof(dev->filename));
-        dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
-        if (dev->fd < 0)
+        hostpath( dev->filename, argv[i], sizeof( dev->filename ));
+
+        if ((dev->fd = HOPEN( dev->filename, O_RDWR | O_BINARY )) < 0)
         {
-            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "open()", strerror( errno ));
+            // "%1d:%04X CCKD file %s: error in function %s: %s"
+            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->filename, "open()", strerror( errno ));
             continue;
         }
 
         /* read the CKD device header */
-        if ((rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE)) < CKDDASD_DEVHDR_SIZE)
+        if ((rc = read( dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE )) < CKDDASD_DEVHDR_SIZE)
         {
-            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
-                    "read()", (U64)0, rc < 0 ? strerror( errno ) : "incomplete" );
-            close (dev->fd);
+            // "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
+            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->filename, "read()", (U64) 0, rc < 0 ? strerror( errno ) : "incomplete" );
+            close( dev->fd );
             continue;
         }
-        if (memcmp(devhdr.devhdrid, "CKD_C370", 8) != 0
-         && memcmp(devhdr.devhdrid, "CKD_S370", 8) != 0
-         && memcmp(devhdr.devhdrid, "FBA_C370", 8) != 0
-         && memcmp(devhdr.devhdrid, "FBA_S370", 8) != 0)
+
+        if (!is_devhdrid_typ( devhdr.devhdrid, ANY_CMP_TYP ))
         {
-            FWRMSG( stderr, HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
-            close (dev->fd);
+            // "%1d:%04X CCKD file %s: not a compressed dasd file"
+            FWRMSG( stderr, HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, dev->filename );
+            close( dev->fd );
             continue;
         }
 

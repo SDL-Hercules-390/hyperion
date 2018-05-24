@@ -401,49 +401,103 @@ struct CIFBLK {                         /* CKD image file descriptor */
 };
 
 /*-------------------------------------------------------------------*/
-/* Function prototypes                                               */
+/* Functions in module dasdutil.c                                    */
 /*-------------------------------------------------------------------*/
 
-/* Functions in module dasdutil.c */
 DUT_DLL_IMPORT void string_to_upper (char *source);
 DUT_DLL_IMPORT void string_to_lower (char *source);
 DUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source );
+
 DUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 DUT_DLL_IMPORT void build_vol1( void* buf, const char* volser, const char* owner, bool ckddasd );
 DUT_DLL_IMPORT void data_dump( void* addr, unsigned int len );
+
 DUT_DLL_IMPORT int  read_track (CIFBLK *cif, U32 cyl, U8 head);
+
 int  rewrite_track (CIFBLK *cif);
+
 DUT_DLL_IMPORT int  read_block (CIFBLK *cif, U32 cyl, U8 head, U8 rec,
         BYTE **keyptr, U8 *keylen, BYTE **dataptr, U16 *datalen);
+
 DUT_DLL_IMPORT int  search_key_equal (CIFBLK *cif, BYTE *key, U8 keylen, u_int noext,
         DSXTENT extent[], U32 *cyl, U8 *head, U8 *rec);
+
 DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 heads,
         U32 *cyl, U8 *head);
+
 #define IMAGE_OPEN_NORMAL   0x00000000
 #define IMAGE_OPEN_DASDCOPY 0x00000001
 #define IMAGE_OPEN_QUIET    0x00000002  /* (no msgs) */
+
 DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
         int option);
+
 DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
         int option);
+
 DUT_DLL_IMPORT int  close_ckd_image (CIFBLK *cif);
-#define close_image_file(cif) close_ckd_image((cif))
+
+#define close_image_file(cif)   close_ckd_image((cif))
+
 DUT_DLL_IMPORT int  build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
         int *noext);
+
 DUT_DLL_IMPORT int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *newused, int *trkbaln, int *physlen, int *kbconst,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
+
 DUT_DLL_IMPORT int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
         U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
         int nullfmt, int rawflag, int flagECmode, int flagMachinecheck);
+
 DUT_DLL_IMPORT int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
         char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag);
+
 int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
         U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy,
         int rawflag);
+
 int get_verbose_util(void);
+
 DUT_DLL_IMPORT void set_verbose_util(int v);
 
 DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
-#define DEFAULT_FBA_TYPE 0x3370
+
+#define DEFAULT_FBA_TYPE    0x3370
+
+/*-------------------------------------------------------------------*/
+/* Dasd image file classification masks and functions                */
+/*-------------------------------------------------------------------*/
+
+#define CKD_P370_TYP    0x80        // "CKD_P370"
+#define CKD_C370_TYP    0x40        // "CKD_C370"
+#define CKD_S370_TYP    0x20        // "CKD_S370"
+
+#define FBA_P370_TYP    0x08        // "FBA_P370"
+#define FBA_C370_TYP    0x04        // "FBA_C370"
+#define FBA_S370_TYP    0x02        // "FBA_S370"
+
+// Compressed type
+
+#define CMP_CKD_TYP     (CKD_C370_TYP | CKD_S370_TYP)
+#define CMP_FBA_TYP     (FBA_C370_TYP | FBA_S370_TYP)
+#define ANY_CMP_TYP     (CMP_CKD_TYP  | CMP_FBA_TYP)
+
+// Shadow type
+
+#define CKD_SF_TYP      (CKD_S370_TYP)
+#define FBA_SF_TYP      (FBA_S370_TYP)
+#define ANY_SF_TYP      (CKD_SF_TYP | FBA_SF_TYP)
+
+// Non-shadow type
+
+#define CKD_XSF_TYP     (CKD_P370_TYP | CKD_C370_TYP)
+#define FBA_XSF_TYP     (FBA_P370_TYP | FBA_C370_TYP)
+#define ANY_XSF_TYP     (CKD_XSF_TYP  | FBA_XSF_TYP)
+
+// Functions
+
+DUT_DLL_IMPORT const char*  devhdrid_str( BYTE typmsk );
+DUT_DLL_IMPORT BYTE         devhdrid_typ( BYTE* devhdrid );
+DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, BYTE typmsk );

@@ -151,7 +151,7 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Processing for compressed fba dasd */
-    if (memcmp (&devhdr.devhdrid, "FBA_C370", 8) == 0)
+    if (is_devhdrid_typ( devhdr.devhdrid, FBA_C370_TYP ))
     {
         cfba = 1;
 

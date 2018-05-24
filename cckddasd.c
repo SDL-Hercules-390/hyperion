@@ -20,6 +20,7 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
+#include "dasdblks.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -2559,37 +2560,41 @@ off_t           off;                    /* Offset to l1 entry        */
 /*-------------------------------------------------------------------*/
 int cckd_read_init (DEVBLK *dev)
 {
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             sfx;                    /* File index                */
-CKDDASD_DEVHDR  devhdr;                 /* Device header             */
+    CCKDDASD_EXT*   cckd;               /* -> cckd extension         */
+    int             sfx;                /* File index                */
+    CKDDASD_DEVHDR  devhdr;             /* Device header             */
+    BYTE            imgtyp;             /* Dasd device image type    */
 
     cckd = dev->cckd_ext;
-    sfx = cckd->sfn;
+    sfx  = cckd->sfn;
 
-    cckd_trace (dev, "file[%d] read_init", sfx);
+    cckd_trace( dev, "file[%d] read_init", sfx );
 
     /* Read the device header */
-    if (cckd_read (dev, sfx, 0, &devhdr, CKDDASD_DEVHDR_SIZE) < 0)
+    if (cckd_read( dev, sfx, 0, &devhdr, CKDDASD_DEVHDR_SIZE ) < 0)
         return -1;
 
     /* Check the device hdr */
-    if (sfx == 0 && memcmp (&devhdr.devhdrid, "CKD_C370", 8) == 0)
+    imgtyp = devhdrid_typ( devhdr.devhdrid );
+    if (!sfx && (imgtyp & CKD_C370_TYP))
         cckd->ckddasd = 1;
-    else if (sfx == 0 && memcmp (&devhdr.devhdrid, "FBA_C370", 8) == 0)
+    else if (!sfx && (imgtyp & FBA_C370_TYP))
         cckd->fbadasd = 1;
-    else if (!(sfx && memcmp (&devhdr.devhdrid, "CKD_S370", 8) == 0 && cckd->ckddasd)
-          && !(sfx && memcmp (&devhdr.devhdrid, "FBA_S370", 8) == 0 && cckd->fbadasd))
+    else if (!(sfx && (imgtyp & CKD_SF_TYP) && cckd->ckddasd)
+          && !(sfx && (imgtyp & FBA_SF_TYP) && cckd->fbadasd))
     {
-        WRMSG (HHC00305, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, sfx, cckd_sf_name (dev, sfx));
+        // "%1d:%04X CCKD file[%d] %s: device header id error"
+        WRMSG( HHC00305, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            sfx, cckd_sf_name( dev, sfx ));
         return -1;
     }
 
     /* Read the compressed header */
-    if (cckd_read_chdr (dev) < 0)
+    if (cckd_read_chdr( dev ) < 0)
         return -1;
 
     /* Read the level 1 table */
-    if (cckd_read_l1 (dev) < 0)
+    if (cckd_read_l1( dev ) < 0)
         return -1;
 
     return 0;

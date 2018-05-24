@@ -74,6 +74,7 @@ CKDDEV         *ckd=NULL;               /* -> CKD device table entry */
 FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
+BYTE            imgtyp;                 /* Dasd file image type      */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
@@ -179,33 +180,34 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* If we don't know what the input file is then find out */
-    if (in == 0)
+    if (!in)
     {
         BYTE buf[8];
-        hostpath(pathname, ifile, sizeof(pathname));
-        fd = HOPEN (pathname, O_RDONLY|O_BINARY);
-        if (fd < 0)
+
+        hostpath( pathname, ifile, sizeof( pathname ));
+
+        if ((fd = HOPEN( pathname, O_RDONLY | O_BINARY )) < 0)
         {
             // "Error in function %s: %s"
-            FWRMSG( stderr, HHC02412, "E", "open()", strerror(errno) );
+            FWRMSG( stderr, HHC02412, "E", "open()", strerror( errno ));
             return -1;
         }
-        rc = read (fd, buf, 8);
-        if (rc < 8)
+
+        if ((rc = read( fd, buf, 8 )) < 8)
         {
             // "Error in function %s: %s"
-            FWRMSG( stderr, HHC02412, "E", "read()", strerror(errno) );
+            FWRMSG( stderr, HHC02412, "E", "read()", strerror( errno ));
             return -1;
         }
-        if (memcmp(buf, "CKD_P370", 8) == 0)
-            in = CKD;
-        else if (memcmp(buf, "CKD_C370", 8) == 0)
-            in = CCKD;
-        else if (memcmp(buf, "FBA_C370", 8) == 0)
-            in = CFBA;
-        else
-            in = FBA;
-        close (fd);
+
+        imgtyp = devhdrid_typ( buf );
+
+             if (imgtyp & CKD_P370_TYP) in = CKD;
+        else if (imgtyp & CKD_C370_TYP) in = CCKD;
+        else if (imgtyp & FBA_P370_TYP) in = FBA;
+        else                            in = CFBA;
+
+        close( fd );
     }
 
     /* If we don't know what the output file type is

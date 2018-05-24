@@ -694,13 +694,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         close (fd);
 
-        if (iLen < CKDDASD_DEVHDR_SIZE
-         || (memcmp(devhdr.devhdrid, "CKD_P370", 8)
-          && memcmp(devhdr.devhdrid, "CKD_C370", 8)))
+        /* Error if no device header or not CKD non-shadow type */
+        if (0
+            || iLen < CKDDASD_DEVHDR_SIZE
+            || !(devhdrid_typ( devhdr.devhdrid ) & CKD_XSF_TYP)
+        )
         {
-            fprintf (stderr, MSG(HHC00406, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname));
-            free (cif);
+            // "%1d:%04X CKD file %s: ckd header invalid"
+            fprintf( stderr, MSG( HHC00406, "E", SSID_TO_LCSS( cif->devblk.ssid ),
+                cif->devblk.devnum, cif->fname ));
+            free( cif );
             return NULL;
         }
 
@@ -1305,8 +1308,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Create the device header */
     memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
 
-    if (comp == 0xff) memcpy( devhdr.devhdrid, "CKD_P370", 8 );
-    else              memcpy( devhdr.devhdrid, "CKD_C370", 8 );
+    if (comp == 0xff) memcpy( devhdr.devhdrid, devhdrid_str( CKD_P370_TYP ), 8 );
+    else              memcpy( devhdr.devhdrid, devhdrid_str( CKD_C370_TYP ), 8 );
 
     devhdr.heads[3]   = (heads >> 24) & 0xFF;
     devhdr.heads[2]   = (heads >> 16) & 0xFF;
@@ -2185,7 +2188,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 
     /* Create the device header */
     memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
-    memcpy( &devhdr.devhdrid, "FBA_C370", 8 );
+    memcpy(  devhdr.devhdrid, devhdrid_str( FBA_C370_TYP ), 8 );
 
     devhdr.heads[3]   = (sectors >> 24) & 0xFF;
     devhdr.heads[2]   = (sectors >> 16) & 0xFF;
@@ -2438,4 +2441,65 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
             return FALSE;
     }
     return TRUE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Dasd image file classification functions                          */
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT const char* devhdrid_str( BYTE typmsk )
+{
+#define RETURN_DEVHDRID_STR( typ )      \
+                                        \
+    if (typ ## _TYP == typmsk)          \
+        return #typ
+
+    RETURN_DEVHDRID_STR( CKD_P370 );    // "CKD_P370"
+    RETURN_DEVHDRID_STR( CKD_C370 );    // "CKD_C370"
+    RETURN_DEVHDRID_STR( CKD_S370 );    // "CKD_S370"
+
+    RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370"
+    RETURN_DEVHDRID_STR( FBA_C370 );    // "FBA_C370"
+    RETURN_DEVHDRID_STR( FBA_S370 );    // "FBA_S370"
+
+    return NULL;
+}
+
+DLL_EXPORT BYTE devhdrid_typ( BYTE* devhdrid )
+{
+#define RETURN_DEVHDRID_TYP( typ )          \
+                                            \
+    if (memcmp( devhdrid, #typ, 8 ) == 0)   \
+        return typ ## _TYP
+
+    RETURN_DEVHDRID_TYP( CKD_P370 );    // "CKD_P370"
+    RETURN_DEVHDRID_TYP( CKD_C370 );    // "CKD_C370"
+    RETURN_DEVHDRID_TYP( CKD_S370 );    // "CKD_S370"
+
+    RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370"
+    RETURN_DEVHDRID_TYP( FBA_C370 );    // "FBA_C370"
+    RETURN_DEVHDRID_TYP( FBA_S370 );    // "FBA_S370"
+
+    return 0;
+}
+
+DLL_EXPORT bool is_devhdrid_typ( BYTE* devhdrid, BYTE typmsk )
+{
+#define RETURN_IS_DEVHDRID( typ )               \
+                                                \
+    if (1                                       \
+        && typmsk & typ ## _TYP                 \
+        && memcmp( devhdrid, #typ, 8 ) == 0     \
+    )                                           \
+        return true
+
+    RETURN_IS_DEVHDRID( CKD_P370 );     // "CKD_P370"
+    RETURN_IS_DEVHDRID( CKD_C370 );     // "CKD_C370"
+    RETURN_IS_DEVHDRID( CKD_S370 );     // "CKD_S370"
+
+    RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370"
+    RETURN_IS_DEVHDRID( FBA_C370 );     // "FBA_C370"
+    RETURN_IS_DEVHDRID( FBA_S370 );     // "FBA_S370"
+
+    return false;
 }

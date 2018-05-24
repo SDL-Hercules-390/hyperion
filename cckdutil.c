@@ -17,6 +17,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#include "dasdblks.h"
 
 /*-------------------------------------------------------------------*/
 /* Space table                                                       */
@@ -408,21 +409,22 @@ BYTE            buf[65536*4];           /* Buffer                    */
      * Read device header
      *---------------------------------------------------------------*/
     off = 0;
-    if (lseek (fd, off, SEEK_SET) < 0)
+    if (lseek( fd, off, SEEK_SET ) < 0)
         goto comp_lseek_error;
-    gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
+    gui_fprintf( stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     len = CKDDASD_DEVHDR_SIZE;
-    if ((rc = read (fd, &devhdr, len)) != len)
+    if ((rc = read( fd, &devhdr, len )) != len)
         goto comp_read_error;
-    if (memcmp (devhdr.devhdrid, "CKD_C370", 8) != 0
-     && memcmp (devhdr.devhdrid, "CKD_S370", 8) != 0
-     && memcmp (devhdr.devhdrid, "FBA_C370", 8) != 0
-     && memcmp (devhdr.devhdrid, "FBA_S370", 8) != 0)
+
+    if (!(devhdrid_typ( devhdr.devhdrid ) & ANY_CMP_TYP))
     {
-        if(dev->batch)
-            fprintf(stdout, MSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+        // "%1d:%04X CCKD file %s: not a compressed dasd file"
+        if (dev->batch)
+            fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, dev->filename ));
         else
-            WRMSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->filename );
         goto comp_error;
     }
 
@@ -973,6 +975,7 @@ S64             maxsize;                /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
 int             f, i, j, l, n;          /* work integers             */
 int             L1idx, l2x;             /* l1, l2 table indexes      */
+BYTE            imgtyp;                 /* Dasd image type           */
 BYTE            compmask[256];          /* compression byte mask
                                            00 - supported
                                            0x - valid, not supported
@@ -1065,25 +1068,23 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Device header checks */
-    if (memcmp(devhdr.devhdrid, "CKD_C370", 8) == 0
-     || memcmp(devhdr.devhdrid, "CKD_S370", 8) == 0
-       )
-        ckddasd = 1;
-    else if (memcmp(devhdr.devhdrid, "FBA_C370", 8) == 0
-          || memcmp(devhdr.devhdrid, "FBA_S370", 8) == 0
-            )
-        fbadasd = 1;
+    imgtyp = devhdrid_typ( devhdr.devhdrid );
+
+         if (imgtyp & CMP_CKD_TYP) ckddasd = 1;
+    else if (imgtyp & CMP_FBA_TYP) fbadasd = 1;
     else
     {
-        if(dev->batch)
-            fprintf(stdout, MSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+        // "%1d:%04X CCKD file %s: not a compressed dasd file"
+        if (dev->batch)
+            fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, dev->filename ));
         else
-            WRMSG(HHC00356, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                dev->filename );
         goto cdsk_error;
     }
-    if (memcmp(devhdr.devhdrid, "CKD_S370", 8) == 0
-     || memcmp(devhdr.devhdrid, "FBA_S370", 8) == 0
-       )
+
+    if (imgtyp & ANY_SF_TYP)
         shadow = 0xff;
 
     trktyp = ckddasd ? SPCTAB_TRK : SPCTAB_BLKGRP;
