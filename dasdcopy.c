@@ -76,7 +76,7 @@ int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
 BYTE            imgtyp;                 /* Dasd file image type      */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
-int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
+int             nullfmt = CKD_NULLTRK_FMT0; /* Null track format     */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
     INITIALIZE_UTILITY( UTILITY_NAME, "DASD copy/convert", &pgm );
@@ -263,7 +263,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         return -1;
     }
     idev = &icif->devblk;
-    if (idev->oslinux) nullfmt = CKDDASD_NULLTRK_FMT2;
+    if (idev->oslinux) nullfmt = CKD_NULLTRK_FMT2;
 
     /* Calculate the number of tracks or blocks to copy */
     if (ckddasd)
@@ -436,8 +436,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 int nulltrk(BYTE *buf, int trk, int heads, int nullfmt)
 {
 int             i;                      /* Loop counter              */
-CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+CKD_TRKHDR     *trkhdr;                 /* -> Track header           */
+CKD_RECHDR     *rechdr;                 /* -> Record header          */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE            r;                      /* Record number             */
@@ -449,16 +449,16 @@ BYTE           *pos;                    /* -> Next position in buffer*/
     head = trk % heads;
 
     /* Build the track header */
-    trkhdr = (CKDDASD_TRKHDR*)buf;
+    trkhdr = (CKD_TRKHDR*)buf;
     trkhdr->bin = 0;
     store_hw(&trkhdr->cyl, cyl);
     store_hw(&trkhdr->head, head);
-    pos = buf + CKDDASD_TRKHDR_SIZE;
+    pos = buf + CKD_TRKHDR_SIZE;
 
     /* Build record zero */
     r = 0;
-    rechdr = (CKDDASD_RECHDR*)pos;
-    pos += CKDDASD_RECHDR_SIZE;
+    rechdr = (CKD_RECHDR*)pos;
+    pos += CKD_RECHDR_SIZE;
     store_hw(&rechdr->cyl, cyl);
     store_hw(&rechdr->head, head);
     rechdr->rec = r;
@@ -468,10 +468,10 @@ BYTE           *pos;                    /* -> Next position in buffer*/
     r++;
 
     /* Specific null track formatting */
-    if (nullfmt == CKDDASD_NULLTRK_FMT0)
+    if (nullfmt == CKD_NULLTRK_FMT0)
     {
-        rechdr = (CKDDASD_RECHDR*)pos;
-        pos += CKDDASD_RECHDR_SIZE;
+        rechdr = (CKD_RECHDR*)pos;
+        pos += CKD_RECHDR_SIZE;
 
         store_hw(&rechdr->cyl, cyl);
         store_hw(&rechdr->head, head);
@@ -480,12 +480,12 @@ BYTE           *pos;                    /* -> Next position in buffer*/
         store_hw(&rechdr->dlen, 0);
         r++;
     }
-    else if (nullfmt == CKDDASD_NULLTRK_FMT2)
+    else if (nullfmt == CKD_NULLTRK_FMT2)
     {
         for (i = 0; i < 12; i++)
         {
-            rechdr = (CKDDASD_RECHDR*)pos;
-            pos += CKDDASD_RECHDR_SIZE;
+            rechdr = (CKD_RECHDR*)pos;
+            pos += CKD_RECHDR_SIZE;
 
             store_hw(&rechdr->cyl, cyl);
             store_hw(&rechdr->head, head);

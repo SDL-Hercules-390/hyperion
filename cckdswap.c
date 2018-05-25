@@ -24,8 +24,8 @@ int syntax( const char* pgm );
 int main ( int argc, char *argv[])
 {
 char           *pgm;                    /* less any extension (.ext) */
-CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+CKD_DEVHDR      devhdr;                 /* CKD device header         */
+CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 int             level = 0;              /* Chkdsk level              */
 int             force = 0;              /* 1=swap if OPENED bit on   */
 int             rc;                     /* Return code               */
@@ -75,7 +75,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* read the CKD device header */
-        if ((rc = read( dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE )) < CKDDASD_DEVHDR_SIZE)
+        if ((rc = read( dev->fd, &devhdr, CKD_DEVHDR_SIZE )) < CKD_DEVHDR_SIZE)
         {
             // "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
             FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,

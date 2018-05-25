@@ -29,7 +29,7 @@ int             rc;                     /* Return code               */
 int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1=Open readonly           */
 int             force=0;                /* 1=Check if OPENED bit on  */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 

@@ -190,11 +190,11 @@ typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 /*      Secondary Device and I/O Control Related Structures          */
 /*-------------------------------------------------------------------*/
 
-typedef struct CKDDASD_DEVHDR   CKDDASD_DEVHDR;   // Device header
-typedef struct CKDDASD_TRKHDR   CKDDASD_TRKHDR;   // Track header
-typedef struct FBADASD_BKGHDR   FBADASD_BKGHDR;   // Block Group header
-typedef struct CKDDASD_RECHDR   CKDDASD_RECHDR;   // Record header
-typedef struct CCKDDASD_DEVHDR  CCKDDASD_DEVHDR;  // Compress device header
+typedef struct CKD_DEVHDR       CKD_DEVHDR;       // Device header
+typedef struct CKD_TRKHDR       CKD_TRKHDR;       // Track header
+typedef struct FBA_BKGHDR       FBA_BKGHDR;       // Block Group header
+typedef struct CKD_RECHDR       CKD_RECHDR;       // Record header
+typedef struct CCKD_DEVHDR      CCKD_DEVHDR;      // Compress device header
 typedef struct CCKD_L2ENT       CCKD_L2ENT;       // Level 2 table entry
 
 typedef struct CCKD_FREEBLK     CCKD_FREEBLK;     // Free block
@@ -202,7 +202,7 @@ typedef struct CCKD_IFREEBLK    CCKD_IFREEBLK;    // Free block (internal)
 typedef struct CCKD_RA          CCKD_RA;          // Readahead queue entry
 
 typedef struct CCKDBLK          CCKDBLK;          // Global cckd dasd block
-typedef struct CCKDDASD_EXT     CCKDDASD_EXT;     // Ext for compressed ckd
+typedef struct CCKD_EXT         CCKD_EXT;         // Ext for compressed ckd
 
 typedef struct COMMADPT         COMMADPT;         // Comm Adapter
 typedef struct bind_struct      bind_struct;      // Socket Device Ctl

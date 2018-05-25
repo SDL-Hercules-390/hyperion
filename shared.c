@@ -880,18 +880,18 @@ static int shared_ckd_trklen (DEVBLK *dev, BYTE *buf)
 {
 int             sz;                     /* Size so far               */
 
-    for (sz = CKDDASD_TRKHDR_SIZE;
+    for (sz = CKD_TRKHDR_SIZE;
          memcmp (buf + sz, &eighthexFF, 8) != 0; )
     {
         /* add length of count, key, and data fields */
-        sz += CKDDASD_RECHDR_SIZE +
+        sz += CKD_RECHDR_SIZE +
                 buf[sz+5] +
                 (buf[sz+6] << 8) + buf[sz+7];
         if (sz > dev->ckdtrksz - 8) break;
     }
 
     /* add length for end-of-track indicator */
-    sz += CKDDASD_RECHDR_SIZE;
+    sz += CKD_RECHDR_SIZE;
 
     if (sz > dev->ckdtrksz)
         sz = dev->ckdtrksz;

@@ -29,7 +29,7 @@ int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 int             level=-1;               /* Level for chkdsk          */
 int             force=0;                /* 1=Compress if OPENED set  */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 

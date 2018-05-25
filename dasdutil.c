@@ -336,7 +336,7 @@ DLL_EXPORT int read_block (CIFBLK *cif, U32 cyl, U8 head, U8 rec, BYTE **keyptr,
 {
 int             rc;                     /* Return code               */
 BYTE           *ptr;                    /* -> byte in track buffer   */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+CKD_RECHDR     *rechdr;                 /* -> Record header          */
 U8              kl;                     /* Key length                */
 U16             dl;                     /* Data length               */
 
@@ -346,7 +346,7 @@ U16             dl;                     /* Data length               */
 
     /* Search for the requested record in the track buffer */
     ptr = cif->trkbuf;
-    ptr += CKDDASD_TRKHDR_SIZE;
+    ptr += CKD_TRKHDR_SIZE;
 
     while (1)
     {
@@ -355,7 +355,7 @@ U16             dl;                     /* Data length               */
             return +1;
 
         /* Extract key length and data length from count field */
-        rechdr = (CKDDASD_RECHDR*)ptr;
+        rechdr = (CKD_RECHDR*)ptr;
         kl = rechdr->klen;
         dl = (rechdr->dlen[0] << 8) | rechdr->dlen[1];
 
@@ -373,13 +373,13 @@ U16             dl;                     /* Data length               */
 //              rechdr->dlen[0], rechdr->dlen[1]);
 
         /* Point past count key and data to next block */
-        ptr += CKDDASD_RECHDR_SIZE + kl + dl;
+        ptr += CKD_RECHDR_SIZE + kl + dl;
     }
 
     /* Return key and data pointers and lengths */
-    if (keyptr != NULL) *keyptr = ptr + CKDDASD_RECHDR_SIZE;
+    if (keyptr != NULL) *keyptr = ptr + CKD_RECHDR_SIZE;
     if (keylen != NULL) *keylen = kl;
-    if (dataptr != NULL) *dataptr = ptr + CKDDASD_RECHDR_SIZE + kl;
+    if (dataptr != NULL) *dataptr = ptr + CKD_RECHDR_SIZE + kl;
     if (datalen != NULL) *datalen = dl;
     return 0;
 
@@ -410,7 +410,7 @@ u_int           cext;                   /* Extent sequence number    */
 U32             ecyl;                   /* Extent end cylinder       */
 U32             ehead;                  /* Extent end head           */
 BYTE           *ptr;                    /* -> byte in track buffer   */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+CKD_RECHDR     *rechdr;                 /* -> Record header          */
 U8              kl;                     /* Key length                */
 U16             dl;                     /* Data length               */
 
@@ -435,7 +435,7 @@ U16             dl;                     /* Data length               */
 
         /* Search for the requested record in the track buffer */
         ptr = cif->trkbuf;
-        ptr += CKDDASD_TRKHDR_SIZE;
+        ptr += CKD_TRKHDR_SIZE;
 
         while (1)
         {
@@ -444,13 +444,13 @@ U16             dl;                     /* Data length               */
                 break;
 
             /* Extract key length and data length from count field */
-            rechdr = (CKDDASD_RECHDR*)ptr;
+            rechdr = (CKD_RECHDR*)ptr;
             kl = rechdr->klen;
             dl = (rechdr->dlen[0] << 8) | rechdr->dlen[1];
 
             /* Return if requested record key found */
             if (kl == keylen
-                && memcmp(ptr + CKDDASD_RECHDR_SIZE, key, 44) == 0)
+                && memcmp(ptr + CKD_RECHDR_SIZE, key, 44) == 0)
             {
                 *cyl = ccyl;
                 *head = chead;
@@ -468,7 +468,7 @@ U16             dl;                     /* Data length               */
 //                  rechdr->dlen[0], rechdr->dlen[1]);
 
             /* Point past count key and data to next block */
-            ptr += CKDDASD_RECHDR_SIZE + kl + dl;
+            ptr += CKD_RECHDR_SIZE + kl + dl;
 
         } /* end while */
 
@@ -578,7 +578,7 @@ DLL_EXPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
 int             fd;                     /* File descriptor           */
 int             rc;                     /* Return code               */
 int             iLen;                   /* Record length             */
-CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
+CKD_DEVHDR      devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 DEVBLK         *dev;                    /* CKD device block          */
 CKDDEV         *ckd;                    /* CKD DASD table entry      */
@@ -683,7 +683,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (fd >= 0)
     {
 
-        iLen = read(fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+        iLen = read(fd, &devhdr, CKD_DEVHDR_SIZE);
         if (iLen < 0)
         {
             fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
@@ -696,7 +696,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
         /* Error if no device header or not CKD non-shadow type */
         if (0
-            || iLen < CKDDASD_DEVHDR_SIZE
+            || iLen < CKD_DEVHDR_SIZE
             || !(devhdrid_typ( devhdr.devhdrid ) & CKD_XSF_TYP)
         )
         {
@@ -1236,12 +1236,12 @@ off_t           rcoff;                  /* Return value from lseek() */
 int             fd;                     /* File descriptor           */
 int             i;                      /* Loop counter              */
 int             n;                      /* Loop delimiter            */
-CKDDASD_DEVHDR  devhdr;                 /* Device header             */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
+CKD_DEVHDR      devhdr;                 /* Device header             */
+CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
 CCKD_L2ENT      l2[256];                /* Secondary lookup table    */
-CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+CKD_TRKHDR     *trkhdr;                 /* -> Track header           */
+CKD_RECHDR     *rechdr;                 /* -> Record header          */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 U32             trk = 0;                /* Track number              */
@@ -1306,7 +1306,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
+    memset( &devhdr, 0, CKD_DEVHDR_SIZE );
 
     if (comp == 0xff) memcpy( devhdr.devhdrid, devhdrid_str( CKD_P370_TYP ), 8 );
     else              memcpy( devhdr.devhdrid, devhdrid_str( CKD_C370_TYP ), 8 );
@@ -1328,8 +1328,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     devhdr.highcyl[0] =  highcyl       & 0xFF;
 
     /* Write the device header */
-    rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < (int)CKDDASD_DEVHDR_SIZE)
+    rc = write (fd, &devhdr, CKD_DEVHDR_SIZE);
+    if (rc < (int)CKD_DEVHDR_SIZE)
     {
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, "write()",
                 errno ? strerror(errno) : "incomplete"));
@@ -1340,7 +1340,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (comp != 0xff)
     {
         /* Create the compressed device header */
-        memset(&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
+        memset(&cdevhdr, 0, CCKD_DEVHDR_SIZE);
 
         cdevhdr.vrm[0]    = CCKD_VERSION;
         cdevhdr.vrm[1]    = CCKD_RELEASE;
@@ -1363,8 +1363,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.nullfmt   = nullfmt;
 
         /* Write the compressed device header */
-        rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < (int)CCKDDASD_DEVHDR_SIZE)
+        rc = write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+        if (rc < (int)CCKD_DEVHDR_SIZE)
         {
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                                  "write()", errno ? strerror(errno) : "incomplete"));
@@ -1426,16 +1426,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 memset (buf, 0, trksize);
 
                 /* Build the track header */
-                trkhdr = (CKDDASD_TRKHDR*)buf;
+                trkhdr = (CKD_TRKHDR*)buf;
                 trkhdr->bin = 0;
                 store_hw(&trkhdr->cyl, cyl);
                 store_hw(&trkhdr->head, head);
-                pos = buf + CKDDASD_TRKHDR_SIZE;
+                pos = buf + CKD_TRKHDR_SIZE;
 
                 /* Build record zero */
                 r = 0;
-                rechdr = (CKDDASD_RECHDR*)pos;
-                pos += CKDDASD_RECHDR_SIZE;
+                rechdr = (CKD_RECHDR*)pos;
+                pos += CKD_RECHDR_SIZE;
                 store_hw(&rechdr->cyl, cyl);
                 store_hw(&rechdr->head, head);
                 rechdr->rec = r;
@@ -1448,8 +1448,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 if (!rawflag && fseqn == 1 && trk == 0)
                 {
                     /* Build the IPL1 record */
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     store_hw(&rechdr->cyl, cyl);
                     store_hw(&rechdr->head, head);
@@ -1481,8 +1481,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += ipl1len;
 
                     /* Build the IPL2 record */
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     store_hw(&rechdr->cyl, cyl);
                     store_hw(&rechdr->head, head);
@@ -1497,8 +1497,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += ipl2len;
 
                     /* Build the VOL1 record */
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     store_hw(&rechdr->cyl, cyl);
                     store_hw(&rechdr->head, head);
@@ -1515,12 +1515,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += vol1len;
 
                     /* 9 4096 data blocks for linux volume */
-                    if (nullfmt == CKDDASD_NULLTRK_FMT2)
+                    if (nullfmt == CKD_NULLTRK_FMT2)
                     {
                         for (i = 0; i < 9; i++)
                         {
-                            rechdr = (CKDDASD_RECHDR*)pos;
-                            pos += CKDDASD_RECHDR_SIZE;
+                            rechdr = (CKD_RECHDR*)pos;
+                            pos += CKD_RECHDR_SIZE;
 
                             store_hw(&rechdr->cyl, cyl);
                             store_hw(&rechdr->head, head);
@@ -1534,11 +1534,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 } /* end if(trk == 0) */
 
                 /* Track 1 for linux contains an empty VTOC */
-                else if (fseqn == 1 && trk == 1 && nullfmt == CKDDASD_NULLTRK_FMT2)
+                else if (fseqn == 1 && trk == 1 && nullfmt == CKD_NULLTRK_FMT2)
                 {
                     /* build format 4 dscb */
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     /* track 1 record 1 count */
                     store_hw(&rechdr->cyl, cyl);
@@ -1572,8 +1572,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += 96;
 
                     /* build format 5 dscb */
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     /* track 1 record 1 count */
                     store_hw(&rechdr->cyl, cyl);
@@ -1602,8 +1602,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     /* build format 7 dscb */
                     if (trks > 65535)
                     {
-                        rechdr = (CKDDASD_RECHDR*)pos;
-                        pos += CKDDASD_RECHDR_SIZE;
+                        rechdr = (CKD_RECHDR*)pos;
+                        pos += CKD_RECHDR_SIZE;
 
                         /* track 1 record 3 count */
                         store_hw(&rechdr->cyl, cyl);
@@ -1629,8 +1629,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     n = 12 - r + 1;
                     for (i = 0; i < n; i++)
                     {
-                        rechdr = (CKDDASD_RECHDR*)pos;
-                        pos += CKDDASD_RECHDR_SIZE;
+                        rechdr = (CKD_RECHDR*)pos;
+                        pos += CKD_RECHDR_SIZE;
 
                         store_hw(&rechdr->cyl, cyl);
                         store_hw(&rechdr->head, head);
@@ -1643,10 +1643,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 }
 
                 /* Specific null track formatting */
-                else if (nullfmt == CKDDASD_NULLTRK_FMT0)
+                else if (nullfmt == CKD_NULLTRK_FMT0)
                 {
-                    rechdr = (CKDDASD_RECHDR*)pos;
-                    pos += CKDDASD_RECHDR_SIZE;
+                    rechdr = (CKD_RECHDR*)pos;
+                    pos += CKD_RECHDR_SIZE;
 
                     store_hw(&rechdr->cyl, cyl);
                     store_hw(&rechdr->head, head);
@@ -1655,13 +1655,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     store_hw(&rechdr->dlen, 0);
                     r++;
                 }
-                else if (nullfmt == CKDDASD_NULLTRK_FMT2)
+                else if (nullfmt == CKD_NULLTRK_FMT2)
                 {
                     /* Other linux tracks have 12 4096 data records */
                     for (i = 0; i < 12; i++)
                     {
-                        rechdr = (CKDDASD_RECHDR*)pos;
-                        pos += CKDDASD_RECHDR_SIZE;
+                        rechdr = (CKD_RECHDR*)pos;
+                        pos += CKD_RECHDR_SIZE;
                         store_hw(&rechdr->cyl, cyl);
                         store_hw(&rechdr->head, head);
                         rechdr->rec = r;
@@ -1718,15 +1718,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.cdh_size = cdevhdr.cdh_used = cpos;
 
         /* Rewrite the compressed device header */
-        rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+        rcoff = lseek (fd, CKD_DEVHDR_SIZE, SEEK_SET);
         if (rcoff == -1)
         {
             fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                                  "lseek()", strerror(errno)));
             return -1;
         }
-        rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < (int)CCKDDASD_DEVHDR_SIZE)
+        rc = write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+        if (rc < (int)CCKD_DEVHDR_SIZE)
         {
           fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                                  "write()", errno ? strerror(errno) : "incomplete"));
@@ -1821,9 +1821,9 @@ u_int           rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* DASD image track length   */
 
     /* Compute the DASD image track length */
-    trksize = sizeof(CKDDASD_TRKHDR)
-                + sizeof(CKDDASD_RECHDR) + rec0len
-                + sizeof(CKDDASD_RECHDR) + maxdlen
+    trksize = sizeof(CKD_TRKHDR)
+                + sizeof(CKD_RECHDR) + rec0len
+                + sizeof(CKD_RECHDR) + maxdlen
                 + sizeof(eighthexFF);
     trksize = ROUND_UP(trksize,512);
 
@@ -1832,7 +1832,7 @@ U32             trksize;                /* DASD image track length   */
     mincyls = 1;
     if (comp == 0xff && !lfs)
     {
-        maxcpif = (0x7fffffff - CKDDASD_DEVHDR_SIZE + 1) / cylsize;
+        maxcpif = (0x7fffffff - CKD_DEVHDR_SIZE + 1) / cylsize;
         maxcyls = maxcpif * CKD_MAXFILES;
     }
     else
@@ -2126,9 +2126,9 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     int              rc;                /* Return code               */
     off_t            rcoff;             /* Return value from lseek() */
     int              fd;                /* File descriptor           */
-    CKDDASD_DEVHDR   devhdr;            /* Device header             */
-    CCKDDASD_DEVHDR  cdevhdr;           /* Compressed device header  */
-    FBADASD_BKGHDR*  blkghdr;           /* Block Group Header        */
+    CKD_DEVHDR       devhdr;            /* Device header             */
+    CCKD_DEVHDR      cdevhdr;           /* Compressed device header  */
+    FBA_BKGHDR*      blkghdr;           /* Block Group Header        */
     int              blkgrps;           /* Number block groups       */
     int              num_L1tab, l1tabsz;/* Level 1 entries, size     */
     CCKD_L1ENT*      l1;                /* Level 1 table pointer     */
@@ -2189,7 +2189,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
         devtype, rawflag ? "" : volser, sectors, sectsz ));
 
     /* Create the device header */
-    memset( &devhdr, 0, CKDDASD_DEVHDR_SIZE );
+    memset( &devhdr, 0, CKD_DEVHDR_SIZE );
     memcpy(  devhdr.devhdrid, devhdrid_str( FBA_C370_TYP ), 8 );
 
     devhdr.heads[3]   = (sectors >> 24) & 0xFF;
@@ -2209,8 +2209,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     devhdr.highcyl[0] = 0;
 
     /* Write the device header */
-    rc = write( fd, &devhdr, CKDDASD_DEVHDR_SIZE );
-    if (rc < (int) CKDDASD_DEVHDR_SIZE)
+    rc = write( fd, &devhdr, CKD_DEVHDR_SIZE );
+    if (rc < (int) CKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
         fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2219,7 +2219,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Build and Write the compressed device header */
-    memset( &cdevhdr, 0, CCKDDASD_DEVHDR_SIZE );
+    memset( &cdevhdr, 0, CCKD_DEVHDR_SIZE );
 
     cdevhdr.vrm[0]    = CCKD_VERSION;
     cdevhdr.vrm[1]    = CCKD_RELEASE;
@@ -2240,8 +2240,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     cdevhdr.cmp_algo  = comp;
     cdevhdr.cmp_parm  = -1;
 
-    rc = write( fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE );
-    if (rc < (int) CCKDDASD_DEVHDR_SIZE)
+    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE );
+    if (rc < (int) CCKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
         fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2252,7 +2252,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     /* Build and Write the level 1 table */
     l1 = (CCKD_L1ENT*) &buf;
     memset( l1, 0, l1tabsz );
-    l1[0] = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz;
+    l1[0] = CKD_DEVHDR_SIZE + CCKD_DEVHDR_SIZE + l1tabsz;
     rc = write( fd, l1, l1tabsz );
     if (rc < l1tabsz)
     {
@@ -2264,7 +2264,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 
     /* Build and Write the 1st level 2 table */
     memset( &l2, 0, CCKD_L2TAB_SIZE );
-    l2[0].L2_trkoff = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE
+    l2[0].L2_trkoff = CKD_DEVHDR_SIZE + CCKD_DEVHDR_SIZE
         + l1tabsz + CCKD_L2TAB_SIZE;
     rc = write( fd, &l2, CCKD_L2TAB_SIZE );
     if (rc < (int) CCKD_L2TAB_SIZE)
@@ -2276,10 +2276,10 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Clear the first block group's image data to binary zeros */
-    memset( &buf, 0, FBADASD_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
+    memset( &buf, 0, FBA_BKGHDR_SIZE + CFBA_BLKGRP_SIZE );
 
     /* Build the "Track Header" (FBA Block Group Header) */
-    blkghdr = (FBADASD_BKGHDR*) &buf[0]; /* (--> block group header) */
+    blkghdr = (FBA_BKGHDR*) &buf[0]; /* (--> block group header) */
     blkghdr->cmp = CCKD_COMPRESS_NONE;   /* (until we know for sure) */
     store_fw( blkghdr->blknum, 0 );      /* (group's starting block) */
 
@@ -2287,7 +2287,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if (!rawflag)
     {
         /* The VOL1 label is at physical sector number 1 */
-        VOL1_FBA* fbavol1 = (VOL1_FBA*) &buf[ FBADASD_BKGHDR_SIZE + sectsz ];
+        VOL1_FBA* fbavol1 = (VOL1_FBA*) &buf[ FBA_BKGHDR_SIZE + sectsz ];
         build_vol1( fbavol1, volser, NULL, false );
     }
 
@@ -2296,7 +2296,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     len2 = sizeof( buf2 );
     if (1
         && CCKD_COMPRESS_ZLIB == (comp & CCKD_COMPRESS_MASK)
-        && Z_OK == (rc = compress2( &buf2[0], &len2, &buf[ FBADASD_BKGHDR_SIZE ],
+        && Z_OK == (rc = compress2( &buf2[0], &len2, &buf[ FBA_BKGHDR_SIZE ],
                                     CFBA_BLKGRP_SIZE, Z_DEFAULT_COMPRESSION ))
     )
     {
@@ -2306,8 +2306,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
            was NOT compressed) followed by the compressed block group
            data (which WAS compressed)
         */
-        rc = write( fd, &buf, FBADASD_BKGHDR_SIZE );
-        if (rc < (int) FBADASD_BKGHDR_SIZE)
+        rc = write( fd, &buf, FBA_BKGHDR_SIZE );
+        if (rc < (int) FBA_BKGHDR_SIZE)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2334,8 +2334,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
         /* Write out both the FBA Block Group Header and the Block Group
            Data itself (i.e. all of the block group sectors) in one I/O.
         */
-        rc = write( fd, &buf, FBADASD_BKGHDR_SIZE + len2 );
-        if (rc < (int)(FBADASD_BKGHDR_SIZE + len2))
+        rc = write( fd, &buf, FBA_BKGHDR_SIZE + len2 );
+        if (rc < (int)(FBA_BKGHDR_SIZE + len2))
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
             fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2345,23 +2345,23 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Update the L2 table entry for this block group */
-    l2[0].L2_len = l2[0].L2_size = FBADASD_BKGHDR_SIZE + len2;
+    l2[0].L2_len = l2[0].L2_size = FBA_BKGHDR_SIZE + len2;
 
     /* Update compressed device header too */
-    cdevhdr.cdh_size = cdevhdr.cdh_used = CKDDASD_DEVHDR_SIZE +
-                   CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
-                   FBADASD_BKGHDR_SIZE + len2;
+    cdevhdr.cdh_size = cdevhdr.cdh_used = CKD_DEVHDR_SIZE +
+                   CCKD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
+                   FBA_BKGHDR_SIZE + len2;
 
     /* Re-write the compressed device header */
-    if ((rcoff = lseek( fd, CKDDASD_DEVHDR_SIZE, SEEK_SET )) < 0)
+    if ((rcoff = lseek( fd, CKD_DEVHDR_SIZE, SEEK_SET )) < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
         fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
                          "lseek()", strerror(errno)));
         return -1;
     }
-    rc = write( fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE );
-    if (rc < (int) CCKDDASD_DEVHDR_SIZE)
+    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE );
+    if (rc < (int) CCKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
         fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
@@ -2370,7 +2370,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Re-write the 1st level 2 table */
-    if ((rcoff = lseek( fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET )) < 0)
+    if ((rcoff = lseek( fd, CKD_DEVHDR_SIZE + CCKD_DEVHDR_SIZE + l1tabsz, SEEK_SET )) < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
         fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,

@@ -74,8 +74,8 @@ char   *cu = NULL;                      /* Specified control unit    */
 char   *kw = NULL;                      /* Argument keyword          */
 int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
-CKDDASD_DEVHDR  devhdr;                 /* Device header             */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
+CKD_DEVHDR      devhdr;                 /* Device header             */
+CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 char   *strtok_str = NULL;              /* save last position        */
 
     /* For re-initialisation, close the existing file, if any */
@@ -133,8 +133,8 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Read the first block to see if it's compressed */
-    rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < (int)CKDDASD_DEVHDR_SIZE)
+    rc = read (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
+    if (rc < (int)CKD_DEVHDR_SIZE)
     {
         /* Handle read error condition */
         if (rc < 0)
@@ -156,8 +156,8 @@ char   *strtok_str = NULL;              /* save last position        */
         cfba = 1;
 
         /* Read the compressed device header */
-        rc = read (dev->fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < (int)CKDDASD_DEVHDR_SIZE)
+        rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+        if (rc < (int)CKD_DEVHDR_SIZE)
         {
             /* Handle read error condition */
             if (rc < 0)
@@ -326,7 +326,7 @@ char   *strtok_str = NULL;              /* save last position        */
 void fbadasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    CCKDDASD_EXT    *cckd;
+    CCKD_EXT    *cckd;
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 

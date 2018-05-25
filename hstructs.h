@@ -398,6 +398,7 @@ struct REGS {                           /* Processor registers       */
 
         BLOCK_TRAILER;                  /* Name of block  END        */
 };
+// end REGS
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
@@ -878,6 +879,7 @@ struct SYSBLK {
 
         BLOCK_TRAILER;                  /* eye-end                   */
 };
+// end SYSBLK
 
 /*-------------------------------------------------------------------*/
 /* I/O interrupt queue entry                                         */
@@ -1601,6 +1603,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
         BLOCK_TRAILER;                  /* eye-end                   */
 };
+// end DEVBLK
 
 
 /*-------------------------------------------------------------------*/
@@ -1617,7 +1620,7 @@ struct DEVGRP {                         /* Device Group Structure    */
 /*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers                             */
 /*-------------------------------------------------------------------*/
-struct CKDDASD_DEVHDR                   /* Device header             */
+struct CKD_DEVHDR                       /* Device header             */
 {
         BYTE    devhdrid[8];            /* ASCII Device Header id;
                                            see dasdblks.h for list   */
@@ -1647,18 +1650,18 @@ struct CKDDASD_DEVHDR                   /* Device header             */
         BYTE    resv[492];              /* Reserved                  */
 };
 
-struct CKDDASD_TRKHDR {                 /* Track header              */
+struct CKD_TRKHDR {                     /* Track header              */
         BYTE    bin;                    /* Bin number                */
         HWORD   cyl;                    /* Cylinder number           */
         HWORD   head;                   /* Head number               */
 };
 
-struct FBADASD_BKGHDR {                 /* Block Group Header        */
+struct FBA_BKGHDR {                     /* Block Group Header        */
         BYTE    cmp;                    /* Compression byte          */
         FWORD   blknum;                 /* Sector number             */
 };
 
-struct CKDDASD_RECHDR {                 /* Record header             */
+struct CKD_RECHDR {                     /* Record header             */
         HWORD   cyl;                    /* Cylinder number           */
         HWORD   head;                   /* Head number               */
         BYTE    rec;                    /* Record number             */
@@ -1666,25 +1669,25 @@ struct CKDDASD_RECHDR {                 /* Record header             */
         HWORD   dlen;                   /* Data length               */
 };
 
-#define CKDDASD_DEVHDR_SIZE     ((ssize_t)sizeof(CKDDASD_DEVHDR))
-#define CKDDASD_TRKHDR_SIZE     ((ssize_t)sizeof(CKDDASD_TRKHDR))
-#define FBADASD_BKGHDR_SIZE     ((ssize_t)sizeof(FBADASD_BKGHDR))
-#define CKDDASD_RECHDR_SIZE     ((ssize_t)sizeof(CKDDASD_RECHDR))
+#define CKD_DEVHDR_SIZE         ((ssize_t)sizeof(CKD_DEVHDR))
+#define CKD_TRKHDR_SIZE         ((ssize_t)sizeof(CKD_TRKHDR))
+#define FBA_BKGHDR_SIZE         ((ssize_t)sizeof(FBA_BKGHDR))
+#define CKD_RECHDR_SIZE         ((ssize_t)sizeof(CKD_RECHDR))
 
 /* Null track formats */
-#define CKDDASD_NULLTRK_FMT0       0    /* ha r0 r1 eot              */
-#define CKDDASD_NULLTRK_FMT1       1    /* ha r0 eot                 */
-#define CKDDASD_NULLTRK_FMT2       2    /* linux (3390 only)         */
-#define CKDDASD_NULLTRK_FMTMAX     CKDDASD_NULLTRK_FMT2
+#define CKD_NULLTRK_FMT0        0       /* ha r0 r1 eot              */
+#define CKD_NULLTRK_FMT1        1       /* ha r0 eot                 */
+#define CKD_NULLTRK_FMT2        2       /* linux (3390 only)         */
+#define CKD_NULLTRK_FMTMAX      CKD_NULLTRK_FMT2
 
-#define CKDDASD_NULLTRK_SIZE0      (5 + 8 + 8 + 8 + 8)
-#define CKDDASD_NULLTRK_SIZE1      (5 + 8 + 8 + 8)
-#define CKDDASD_NULLTRK_SIZE2      (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
+#define CKD_NULLTRK_SIZE0       (5 + 8 + 8 + 8 + 8)
+#define CKD_NULLTRK_SIZE1       (5 + 8 + 8 + 8)
+#define CKD_NULLTRK_SIZE2       (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
 
 /*-------------------------------------------------------------------*/
 /* Structure definitions for Compressed CCKD/CFBA devices            */
 /*-------------------------------------------------------------------*/
-struct CCKDDASD_DEVHDR                  /* Compress device header    */
+struct CCKD_DEVHDR                      /* Compress device header    */
 {
 /*  0 */BYTE             vrm[3];        /* Version Release Modifier  */
 /*  3 */BYTE             opts;          /* Options byte              */
@@ -1711,8 +1714,6 @@ struct CCKDDASD_DEVHDR                  /* Compress device header    */
 
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
-
-#define CCKD_DEVHDR      CCKDDASD_DEVHDR
 
 #define CCKD_VERSION           0
 #define CCKD_RELEASE           3
@@ -1769,16 +1770,15 @@ typedef  CCKD_L1ENT   CCKD_L1TAB[];     /* Level 1 table             */
 typedef  CCKD_L2ENT   CCKD_L2TAB[256];  /* Level 2 table             */
 typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 
-#define CCKDDASD_DEVHDR_SIZE   ((ssize_t)sizeof(CCKDDASD_DEVHDR))
-#define CCKD_DEVHDR_SIZE       CCKDDASD_DEVHDR_SIZE
-#define CCKD_DEVHDR_POS        CKDDASD_DEVHDR_SIZE
+#define CCKD_DEVHDR_SIZE       ((ssize_t)sizeof(CCKD_DEVHDR))
 #define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
-#define CCKD_L1TAB_POS         ((CCKD_DEVHDR_POS)+(CCKD_DEVHDR_SIZE))
 #define CCKD_L2ENT_SIZE        ((ssize_t)sizeof(CCKD_L2ENT))
 #define CCKD_L2TAB_SIZE        ((ssize_t)sizeof(CCKD_L2TAB))
 #define CCKD_FREEBLK_SIZE      ((ssize_t)sizeof(CCKD_FREEBLK))
-#define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_IFREEBLK))
-#define CCKD_IFREEBLK_SIZE     (CCKD_FREEBLK_ISIZE)
+#define CCKD_IFREEBLK_SIZE     ((ssize_t)sizeof(CCKD_IFREEBLK))
+
+#define CCKD_DEVHDR_POS        (CKD_DEVHDR_SIZE)
+#define CCKD_L1TAB_POS         ((CCKD_DEVHDR_POS)+(CCKD_DEVHDR_SIZE))
 
 /* Flag bits */
 #define CCKD_SIZE_EXACT         0x01    /* Space obtained is exact   */
@@ -1905,7 +1905,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
 };
 
-struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
+struct CCKD_EXT {                       /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
 
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
@@ -1971,7 +1971,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         int              L2_reads[CCKD_MAX_SF+1];/* Nbr l2 reads     */
         int              writes[CCKD_MAX_SF+1];  /* Nbr track writes */
         CCKD_L1ENT      *L1tab[CCKD_MAX_SF+1];   /* Level 1 tables   */
-        CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
+        CCKD_DEVHDR      cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
 };
 
 #define CCKD_OPEN_NONE         0

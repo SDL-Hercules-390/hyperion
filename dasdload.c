@@ -474,14 +474,14 @@ char            pathname[MAX_PATH];     /* iplfnm in host path format*/
 static void
 init_track (int trklen, BYTE *trkbuf, int cyl, int head, int *usedv)
 {
-CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+    CKD_TRKHDR *trkhdr;                 /* -> Track header           */
+    CKD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Clear the track buffer to zeroes */
     memset (trkbuf, 0, trklen);
 
     /* Build the home address in the track buffer */
-    trkhdr = (CKDDASD_TRKHDR*)trkbuf;
+    trkhdr = (CKD_TRKHDR*)trkbuf;
     trkhdr->bin = 0;
     trkhdr->cyl[0] = (cyl >> 8) & 0xFF;
     trkhdr->cyl[1] = cyl & 0xFF;
@@ -489,7 +489,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     trkhdr->head[1] = head & 0xFF;
 
     /* Build a standard record zero in the track buffer */
-    rechdr = (CKDDASD_RECHDR*)(trkbuf + CKDDASD_TRKHDR_SIZE);
+    rechdr = (CKD_RECHDR*)(trkbuf + CKD_TRKHDR_SIZE);
     rechdr->cyl[0] = (cyl >> 8) & 0xFF;
     rechdr->cyl[1] = cyl & 0xFF;
     rechdr->head[0] = (head >> 8) & 0xFF;
@@ -500,7 +500,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     rechdr->dlen[1] = R0_DATALEN & 0xFF;
 
     /* Set number of bytes used in track buffer */
-    *usedv = CKDDASD_TRKHDR_SIZE + CKDDASD_RECHDR_SIZE + R0_DATALEN;
+    *usedv = CKD_TRKHDR_SIZE + CKD_RECHDR_SIZE + R0_DATALEN;
 
     /* Build end of track marker at end of buffer */
     memcpy (trkbuf + *usedv, eighthexFF, 8);
@@ -533,7 +533,7 @@ int             rc;                     /* Return code               */
 
     /* Don't overwrite HA */
     if (*usedv == 0)
-        *usedv = CKDDASD_TRKHDR_SIZE;
+        *usedv = CKD_TRKHDR_SIZE;
 
     /* Build end of track marker at end of buffer */
     memcpy (cif->trkbuf + *usedv, eighthexFF, 8);
@@ -592,7 +592,7 @@ write_block (CIFBLK *cif, char *ofname, DATABLK *blk, int keylen,
 {
 int             rc;                     /* Return code               */
 int             cc;                     /* Capacity calculation code */
-CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+CKD_RECHDR     *rechdr;                 /* -> Record header          */
 
     UNREFERENCED(devtype);
 
@@ -644,7 +644,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     }
 
     /* Double check that record will not exceed virtual track size */
-    if (*usedv + CKDDASD_RECHDR_SIZE + keylen + datalen + 8 > trklen)
+    if (*usedv + CKD_RECHDR_SIZE + keylen + datalen + 8 > trklen)
     {
         XMERRF ( MSG( HHC02512, "E", blk->cyl[0], blk->cyl[1],
                 blk->head[0], blk->head[1], blk->rec ) );
@@ -653,7 +653,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Add data block to virtual track buffer */
     (*rec)++;
-    rechdr = (CKDDASD_RECHDR*)(cif->trkbuf + *usedv);
+    rechdr = (CKD_RECHDR*)(cif->trkbuf + *usedv);
     rechdr->cyl[0] = (*cyl >> 8) & 0xFF;
     rechdr->cyl[1] = *cyl & 0xFF;
     rechdr->head[0] = (*head >> 8) & 0xFF;
@@ -662,7 +662,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
     rechdr->klen = keylen;
     rechdr->dlen[0] = (datalen >> 8) & 0xFF;
     rechdr->dlen[1] = datalen & 0xFF;
-    *usedv += CKDDASD_RECHDR_SIZE;
+    *usedv += CKD_RECHDR_SIZE;
     memcpy (cif->trkbuf + *usedv, blk->kdarea, keylen + datalen);
     *usedv += keylen + datalen;
     cif->trkmodif = 1;
@@ -861,8 +861,8 @@ int             klen;                   /* Record key length         */
 int             dlen;                   /* Record data length        */
 int             skiplen;                /* Number of bytes to skip   */
 int             offset;                 /* Offset into trkbuf        */
-CKDDASD_TRKHDR  trkhdr;                 /* Track header              */
-CKDDASD_RECHDR  rechdr;                 /* Record header             */
+CKD_TRKHDR      trkhdr;                 /* Track header              */
+CKD_RECHDR      rechdr;                 /* Record header             */
 
     UNREFERENCED(heads);
     UNREFERENCED(trklen);
@@ -880,8 +880,8 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     }
 
     /* Copy the track header */
-    memcpy (&trkhdr, cif->trkbuf, CKDDASD_TRKHDR_SIZE);
-    offset = CKDDASD_TRKHDR_SIZE;
+    memcpy (&trkhdr, cif->trkbuf, CKD_TRKHDR_SIZE);
+    offset = CKD_TRKHDR_SIZE;
 
     /* Validate the track header */
     if (trkhdr.bin != 0
@@ -900,8 +900,8 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     while (1)
     {
         /* Copy the next record header */
-        memcpy (&rechdr, cif->trkbuf + offset, CKDDASD_RECHDR_SIZE);
-        offset += CKDDASD_RECHDR_SIZE;
+        memcpy (&rechdr, cif->trkbuf + offset, CKD_RECHDR_SIZE);
+        offset += CKD_RECHDR_SIZE;
 
         /* Check for end of track */
         if (memcmp(&rechdr, eighthexFF, 8) == 0)
@@ -2334,8 +2334,8 @@ int             curcyl;                 /* Current cylinder          */
 int             curhead;                /* Current head              */
 int             offset;                 /* Offset into track buffer  */
 int             skiplen;                /* Number of bytes to skip   */
-CKDDASD_TRKHDR  trkhdr;                 /* Track header              */
-CKDDASD_RECHDR  rechdr;                 /* Record header             */
+CKD_TRKHDR      trkhdr;                 /* Track header              */
+CKD_RECHDR      rechdr;                 /* Record header             */
 BYTE            notelist[1024];         /* Note list                 */
 
     UNREFERENCED(trklen);
@@ -2367,8 +2367,8 @@ BYTE            notelist[1024];         /* Note list                 */
     }
 
     /* Copy the track header */
-    memcpy (&trkhdr, cif->trkbuf, CKDDASD_TRKHDR_SIZE);
-    offset = CKDDASD_TRKHDR_SIZE;
+    memcpy (&trkhdr, cif->trkbuf, CKD_TRKHDR_SIZE);
+    offset = CKD_TRKHDR_SIZE;
 
     /* Validate the track header */
     if (trkhdr.bin != 0
@@ -2387,8 +2387,8 @@ BYTE            notelist[1024];         /* Note list                 */
     while (1)
     {
         /* Copy the next record header */
-        memcpy (&rechdr, cif->trkbuf + offset, CKDDASD_RECHDR_SIZE);
-        offset += CKDDASD_RECHDR_SIZE;
+        memcpy (&rechdr, cif->trkbuf + offset, CKD_RECHDR_SIZE);
+        offset += CKD_RECHDR_SIZE;
 
         /* Check for end of track */
         if (memcmp(&rechdr, eighthexFF, 8) == 0)
@@ -4238,10 +4238,10 @@ int             fsflag = 0;             /* 1=Free space message sent */
     XMINFF (0, MSG( HHC02591, "I", ofname, outcyl ) );
 
     /* Update the VTOC pointer in the volume label */
-    offset = CKDDASD_TRKHDR_SIZE + CKDDASD_RECHDR_SIZE + 8
-           + CKDDASD_RECHDR_SIZE + IPL1_KEYLEN + IPL1_DATALEN
-           + CKDDASD_RECHDR_SIZE + IPL2_KEYLEN + IPL2_DATALEN
-           + CKDDASD_RECHDR_SIZE + VOL1_KEYLEN + 11;
+    offset = CKD_TRKHDR_SIZE + CKD_RECHDR_SIZE + 8
+           + CKD_RECHDR_SIZE + IPL1_KEYLEN + IPL1_DATALEN
+           + CKD_RECHDR_SIZE + IPL2_KEYLEN + IPL2_DATALEN
+           + CKD_RECHDR_SIZE + VOL1_KEYLEN + 11;
 
     XMINFF (5, MSG( HHC02592, "I", volvtoc[0], volvtoc[1], volvtoc[2], volvtoc[3], volvtoc[4] ) );
 
@@ -4419,9 +4419,9 @@ char           *strtok_str = NULL;      /* last token position       */
         reqcyls = devcyls;
 
     /* Calculate the track size of the virtual device */
-    outtrklv = sizeof(CKDDASD_TRKHDR)
-                + sizeof(CKDDASD_RECHDR) + R0_DATALEN
-                + sizeof(CKDDASD_RECHDR) + outmaxdl
+    outtrklv = sizeof(CKD_TRKHDR)
+                + sizeof(CKD_RECHDR) + R0_DATALEN
+                + sizeof(CKD_RECHDR) + outmaxdl
                 + sizeof(eighthexFF);
     outtrklv = ROUND_UP(outtrklv,512);
 

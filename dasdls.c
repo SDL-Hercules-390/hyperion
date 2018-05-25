@@ -394,17 +394,17 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
         if (rc < 0)
             return -1;
 
-        ptr = cif->trkbuf + CKDDASD_TRKHDR_SIZE;
+        ptr = cif->trkbuf + CKD_TRKHDR_SIZE;
 
         while (!end_of_track( ptr ))
         {
 
-            CKDDASD_RECHDR *rechdr = (CKDDASD_RECHDR*)ptr;
+            CKD_RECHDR *rechdr = (CKD_RECHDR*)ptr;
 
             int kl = rechdr->klen;
             int dl = (rechdr->dlen[0] << 8) | rechdr->dlen[1];
 
-            FORMAT1_DSCB *f1dscb = (FORMAT1_DSCB*) (ptr + CKDDASD_RECHDR_SIZE);
+            FORMAT1_DSCB *f1dscb = (FORMAT1_DSCB*) (ptr + CKD_RECHDR_SIZE);
 
 //*debug*/   printf("F1DSCB\n");
 //*debug*/   data_dump(f1dscb, sizeof(FORMAT1_DSCB));
@@ -419,7 +419,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
             double value;
 
-            make_asciiz( dsname, sizeof( dsname ), ptr + CKDDASD_RECHDR_SIZE, kl );
+            make_asciiz( dsname, sizeof( dsname ), ptr + CKD_RECHDR_SIZE, kl );
 
             if (valid_dsname( dsname ))
             {
@@ -574,7 +574,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
             } /* end if (valid_dsname( dsname )) */
 
-            ptr += CKDDASD_RECHDR_SIZE + kl + dl;
+            ptr += CKD_RECHDR_SIZE + kl + dl;
 
         } /* end while (!end_of_track( ptr )) */
 

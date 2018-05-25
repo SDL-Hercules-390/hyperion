@@ -88,7 +88,7 @@ BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
-int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
+int     nullfmt = CKD_NULLTRK_FMT1;     /* Null track format type    */
 int     rc;                             /* Return code               */
 
     INITIALIZE_UTILITY( UTILITY_NAME, "DASD image file creation program", &pgm );
@@ -117,7 +117,7 @@ int     rc;                             /* Return code               */
         else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
         else if (strcmp("linux", &argv[1][1]) == 0)
-            nullfmt = CKDDASD_NULLTRK_FMT2;
+            nullfmt = CKD_NULLTRK_FMT2;
         else if (strcmp("b", &argv[1][1]) == 0)
             flagECmode = 0;
         else if (strcmp("m", &argv[1][1]) == 0)
@@ -199,7 +199,7 @@ int     rc;                             /* Return code               */
     }
 
     /* `-linux' only supported for 3390 device type */
-    if (nullfmt == CKDDASD_NULLTRK_FMT2 && devtype != 0x3390)
+    if (nullfmt == CKD_NULLTRK_FMT2 && devtype != 0x3390)
         argexit(6, NULL);
 
     if (altcylflag)

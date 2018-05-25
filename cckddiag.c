@@ -162,7 +162,7 @@ static int readpos
 /* decomptrk - decompress track data                                 */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*  ibuf      points at CKDDASD_TRKHDR header followed by track data */
+/*  ibuf      points at CKD_TRKHDR header followed by track data     */
 /*  ibuflen   specifies length of TRKHDR and data                    */
 /*                                                                   */
 /*  Returns   length of decompressed data or -1 on error.            */
@@ -207,11 +207,11 @@ static int decomptrk
 
 #if defined( HAVE_ZLIB )
     case CCKD_COMPRESS_ZLIB:
-        memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);
-        bufl = obuflen - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress(&obuf[ CKDDASD_TRKHDR_SIZE ],
+        memcpy (obuf, ibuf, CKD_TRKHDR_SIZE);
+        bufl = obuflen - CKD_TRKHDR_SIZE;
+        rc = uncompress(&obuf[ CKD_TRKHDR_SIZE ],
                          (void *)&bufl,
-                         &ibuf[ CKDDASD_TRKHDR_SIZE ],
+                         &ibuf[ CKD_TRKHDR_SIZE ],
                          ibuflen);
         if (rc != Z_OK)
         {
@@ -227,19 +227,19 @@ static int decomptrk
             }
             return -1;
         }
-        bufl += CKDDASD_TRKHDR_SIZE;
+        bufl += CKD_TRKHDR_SIZE;
         break;
 #endif
 
 #if defined( CCKD_BZIP2 )
     case CCKD_COMPRESS_BZIP2:
-        memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
-        ubufl = obuflen - CKDDASD_TRKHDR_SIZE;
+        memcpy(obuf, ibuf, CKD_TRKHDR_SIZE);
+        ubufl = obuflen - CKD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress
         (
-            (char *)&obuf[ CKDDASD_TRKHDR_SIZE ],
+            (char *)&obuf[ CKD_TRKHDR_SIZE ],
             &ubufl,
-            (char *)&ibuf[ CKDDASD_TRKHDR_SIZE ],
+            (char *)&ibuf[ CKD_TRKHDR_SIZE ],
             ibuflen, 0, 0
         );
         if (rc != BZ_OK)
@@ -257,7 +257,7 @@ static int decomptrk
             return -1;
         }
         bufl=ubufl;
-        bufl += CKDDASD_TRKHDR_SIZE;
+        bufl += CKD_TRKHDR_SIZE;
         break;
 #endif
 
@@ -272,7 +272,7 @@ static int decomptrk
 /* show_ckd_count - display CKD dasd record COUNT field              */
 /* RECHDR is stored in big-endian byte order.                        */
 /*-------------------------------------------------------------------*/
-static BYTE *show_ckd_count(CKDDASD_RECHDR *rh, int trk)
+static BYTE *show_ckd_count(CKD_RECHDR *rh, int trk)
 {
 int     cc, hh, r, kl, dl;
 BYTE    *past;
@@ -286,14 +286,14 @@ BYTE    *past;
     // "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
     WRMSG( HHC02605, "I", trk, cc, cc, hh, hh, r, r, kl, dl );
 
-    past = (BYTE *)rh + CKDDASD_RECHDR_SIZE;
+    past = (BYTE *)rh + CKD_RECHDR_SIZE;
     return past;
 }
 
 /*-------------------------------------------------------------------*/
 /* show_ckd_key - display CKD dasd record KEY field                  */
 /*-------------------------------------------------------------------*/
-static BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, bool hexdump)
+static BYTE *show_ckd_key(CKD_RECHDR *rh, BYTE *buf, int trk, bool hexdump)
 {
     if (hexdump && rh->klen)
     {
@@ -309,7 +309,7 @@ static BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, bool hexdump)
 /*-------------------------------------------------------------------*/
 /* show_ckd_data - display CKD dasd record DATA field                */
 /*-------------------------------------------------------------------*/
-static BYTE* show_ckd_data( CKDDASD_RECHDR* rh, BYTE* buf, int trk, bool hexdump)
+static BYTE* show_ckd_data( CKD_RECHDR* rh, BYTE* buf, int trk, bool hexdump)
 {
     int dl;
 
@@ -379,7 +379,7 @@ static void snap( int comp, void *data, int len, bool ckddasd )
 /*-------------------------------------------------------------------*/
 static void showtrkorblk
 (
-    CKDDASD_TRKHDR*  buf,   /* track header ptr                      */
+    CKD_TRKHDR*  buf,       /* track header ptr                      */
     int  imglen,            /* TRKHDR + track user data length       */
     int  trk,               /* relative track or block number        */
     bool ckddasd,           /* true = CKD dasd  false = FBA dasd     */
@@ -388,7 +388,7 @@ static void showtrkorblk
 {
     BYTE             buf2[64*1024];     /* max uncompressed buffer   */
     char             msg[81];           /* error message buffer      */
-    CKDDASD_RECHDR*  rh;                /* CCKD COUNT field          */
+    CKD_RECHDR*      rh;                /* CCKD COUNT field          */
     BYTE*            bufp;              /* Decompressed data pointer */
     int              len;               /* Decompressed data length  */
 
@@ -416,13 +416,13 @@ static void showtrkorblk
         printf("\n");
     }
 
-    bufp = &buf2[ CKDDASD_TRKHDR_SIZE];
+    bufp = &buf2[ CKD_TRKHDR_SIZE];
 
     if (ckddasd)
     {
         while (bufp < &buf2[ sizeof( buf2 )])
         {
-            rh = (CKDDASD_RECHDR*) bufp;
+            rh = (CKD_RECHDR*) bufp;
 
             if (memcmp( (BYTE*) rh, &eighthexFF, 8 ) == 0)
             {
@@ -439,7 +439,7 @@ static void showtrkorblk
     else // FBA
     {
         /* Extract block number of first block in block group */
-        FBADASD_BKGHDR* blkghdr = (FBADASD_BKGHDR*) buf;
+        FBA_BKGHDR* blkghdr = (FBA_BKGHDR*) buf;
         U32 blknum = fetch_fw( blkghdr->blknum );
 
         /* Calculate relative block number within block group */
@@ -509,8 +509,8 @@ int             cckd_diag_rc = 0;       /* Program return code       */
 char*           pgm;                    /* less any extension (.ext) */
 char*           fn;                     /* File name                 */
 
-CKDDASD_DEVHDR  devhdr;                 /* CKD device hdr            */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+CKD_DEVHDR      devhdr;                 /* CKD device hdr            */
+CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 
 CKDDEV*         ckd          = NULL;    /* CKD DASD table entry      */
 FBADEV*         fba          = NULL;    /* FBA DASD table entry      */
@@ -648,14 +648,14 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* display DEVHDR - first 512 bytes of dasd image                */
     /*---------------------------------------------------------------*/
-    readpos( fd, &devhdr, 0, CKDDASD_DEVHDR_SIZE );
+    readpos( fd, &devhdr, 0, CKD_DEVHDR_SIZE );
 
     if (cmd_devhdr)
     {
         // "%s - %d (decimal) bytes:"
         printf("\n");
-        WRMSG( HHC02614, "I", "DEVHDR", (int) CKDDASD_DEVHDR_SIZE );
-        data_dump( &devhdr, CKDDASD_DEVHDR_SIZE );
+        WRMSG( HHC02614, "I", "DEVHDR", (int) CKD_DEVHDR_SIZE );
+        data_dump( &devhdr, CKD_DEVHDR_SIZE );
         printf("\n");
     }
 
@@ -718,7 +718,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* display CDEVHDR - follows DEVHDR                              */
     /*---------------------------------------------------------------*/
-    readpos( fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof( cdevhdr ));
+    readpos( fd, &cdevhdr, CKD_DEVHDR_SIZE, sizeof( cdevhdr ));
 
     if (cmd_cdevhdr)
     {
@@ -908,7 +908,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "%sHDR %s %d:"
         WRMSG( HHC02612, "I", ckddasd ? "TRK"   : "BKG",
                               ckddasd ? "track" : "block", trk );
-        data_dump( tbuf, CKDDASD_TRKHDR_SIZE);
+        data_dump( tbuf, CKD_TRKHDR_SIZE);
         printf("\n");
 
         if (cmd_trkdata)

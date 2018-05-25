@@ -220,8 +220,8 @@ int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int             rc;                     /* Return code               */
 struct stat     statbuf;                /* File information          */
-CKDDASD_DEVHDR  devhdr;                 /* Device header             */
-CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
+CKD_DEVHDR      devhdr;                 /* Device header             */
+CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 int             i;                      /* Loop index                */
 int             fileseq;                /* File sequence number      */
 char           *sfxptr;                 /* -> Last char of file name */
@@ -406,8 +406,8 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Read the device header */
-        rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-        if (rc < (int)CKDDASD_DEVHDR_SIZE)
+        rc = read (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
+        if (rc < (int)CKD_DEVHDR_SIZE)
         {
             if (rc < 0)
                 // "%1d:%04X CKD file %s: error in function %s: %s"
@@ -443,8 +443,8 @@ char           *strtok_str = NULL;      /* save last position        */
         /* Read the compressed device header */
         if ( cckd )
         {
-            rc = read (dev->fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-            if (rc < (int)CCKDDASD_DEVHDR_SIZE)
+            rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+            if (rc < (int)CCKD_DEVHDR_SIZE)
             {
                 if (rc < 0)
                 {
@@ -478,7 +478,7 @@ char           *strtok_str = NULL;      /* save last position        */
         {
             if (dev->dasdcopy == 0)
             {
-                trks = (statbuf.st_size - CKDDASD_DEVHDR_SIZE) / trksize;
+                trks = (statbuf.st_size - CKD_DEVHDR_SIZE) / trksize;
                 cyls = trks / heads;
                 if (fileseq == 1 && highcyl == cyls)
                 {
@@ -501,7 +501,7 @@ char           *strtok_str = NULL;      /* save last position        */
                     highcyl = 0;
                     devhdr.highcyl[0] = devhdr.highcyl[1] = 0;
                     lseek (dev->fd, 0, SEEK_SET);
-                    rc = write (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+                    rc = write (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
                 }
             }
         }
@@ -549,7 +549,7 @@ char           *strtok_str = NULL;      /* save last position        */
 
         /* Consistency check device header */
         if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
-            || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
+            || ((off_t)trks * trksize) + CKD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
@@ -666,7 +666,7 @@ char           *strtok_str = NULL;      /* save last position        */
 void ckddasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    CCKDDASD_EXT    *cckd;
+    CCKD_EXT    *cckd;
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
@@ -787,18 +787,18 @@ int ckd_trklen (DEVBLK *dev, BYTE *buf)
 {
 int             sz;                     /* Size so far               */
 
-    for (sz = CKDDASD_TRKHDR_SIZE;
+    for (sz = CKD_TRKHDR_SIZE;
          memcmp (buf + sz, eighthexFF, 8) != 0; )
     {
         /* add length of count, key, and data fields */
-        sz += CKDDASD_RECHDR_SIZE +
+        sz += CKD_RECHDR_SIZE +
                 buf[sz+5] +
                 (buf[sz+6] << 8) + buf[sz+7];
         if (sz > dev->ckdtrksz - 8) break;
     }
 
     /* add length for end-of-track indicator */
-    sz += CKDDASD_RECHDR_SIZE;
+    sz += CKD_RECHDR_SIZE;
 
     if (sz > dev->ckdtrksz)
         sz = dev->ckdtrksz;
@@ -817,7 +817,7 @@ int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
 off_t           offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
-CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
+CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
 
     // "%1d:%04X CKD file %s: read trk %d cur trk %d"
     LOGDEVTR( HHC00424, "I", dev->filename, trk, dev->bufcur );
@@ -929,7 +929,7 @@ ckd_read_track_retry:
         dev->fd = dev->ckdfd[f];
 
         /* Calculate the track offset */
-        dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
+        dev->ckdtrkoff = CKD_DEVHDR_SIZE +
              (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
         return 0;
@@ -966,7 +966,7 @@ ckd_read_track_retry:
     dev->fd = dev->ckdfd[f];
 
     /* Calculate the track offset */
-    dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
+    dev->ckdtrkoff = CKD_DEVHDR_SIZE +
          (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
     // "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
@@ -1011,13 +1011,13 @@ ckd_read_track_retry:
     }
     else
     {
-        trkhdr = (CKDDASD_TRKHDR *)dev->buf;
+        trkhdr = (CKD_TRKHDR*)dev->buf;
         trkhdr->bin = 0;
         trkhdr->cyl[0] = (cyl >> 8);
         trkhdr->cyl[1] = (cyl & 0xFF);
         trkhdr->head[0] = (head >> 8);
         trkhdr->head[1] = (head & 0xFF);
-        memset (dev->buf + CKDDASD_TRKHDR_SIZE, 0xFF, 8);
+        memset (dev->buf + CKD_TRKHDR_SIZE, 0xFF, 8);
     }
 
     /* Validate the track header */
@@ -1026,7 +1026,7 @@ ckd_read_track_retry:
     LOGDEVTR( HHC00430, "I", dev->filename, trk,
         dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4] );
 
-    trkhdr = (CKDDASD_TRKHDR *)dev->buf;
+    trkhdr = (CKD_TRKHDR*)dev->buf;
     if (trkhdr->bin != 0
       || trkhdr->cyl[0] != (cyl >> 8)
       || trkhdr->cyl[1] != (cyl & 0xFF)
@@ -1545,7 +1545,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
 /* Seek to a specified cylinder and head                             */
 /*-------------------------------------------------------------------*/
 static int ckd_seek ( DEVBLK *dev, int cyl, int head,
-                      CKDDASD_TRKHDR *trkhdr, BYTE *unitstat )
+                      CKD_TRKHDR *trkhdr, BYTE *unitstat )
 {
 int             rc;                     /* Return code               */
 
@@ -1566,10 +1566,10 @@ int             rc;                     /* Return code               */
     dev->ckdorient = CKDORIENT_INDEX;
 
     /* Copy the track header */
-    if (trkhdr) memcpy (trkhdr, &dev->buf[dev->bufoff], CKDDASD_TRKHDR_SIZE);
+    if (trkhdr) memcpy (trkhdr, &dev->buf[dev->bufoff], CKD_TRKHDR_SIZE);
 
     /* Increment offset past the track header */
-    dev->bufoff += CKDDASD_TRKHDR_SIZE;
+    dev->bufoff += CKD_TRKHDR_SIZE;
 
     return 0;
 } /* end function ckd_seek */
@@ -1650,7 +1650,7 @@ int             head;                   /* Next head for multitrack  */
 /* Read count field                                                  */
 /*-------------------------------------------------------------------*/
 static int ckd_read_count ( DEVBLK *dev, BYTE code,
-                CKDDASD_RECHDR *rechdr, BYTE *unitstat)
+                            CKD_RECHDR *rechdr, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
 int             skipr0 = 0;             /* 1=Skip record zero        */
@@ -1692,7 +1692,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             dev->bufoff += dev->ckdcurdl;
 
         /* Make sure we don't copy past the end of the buffer */
-        if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
+        if (dev->bufoff + CKD_RECHDR_SIZE >= dev->bufoffhi)
         {
             /* Handle error condition */
             // "%1d:%04X CKD file %s: error attempting to read past end of track %d %d"
@@ -1707,8 +1707,8 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         }
 
         /* Copy the record header (count field) */
-        memcpy (rechdr, &dev->buf[dev->bufoff], CKDDASD_RECHDR_SIZE);
-        dev->bufoff += CKDDASD_RECHDR_SIZE;
+        memcpy (rechdr, &dev->buf[dev->bufoff], CKD_RECHDR_SIZE);
+        dev->bufoff += CKD_RECHDR_SIZE;
 
         /* Set the device orientation fields */
         dev->ckdcurrec = rechdr->rec;
@@ -1801,7 +1801,7 @@ static int ckd_read_key ( DEVBLK *dev, BYTE code,
                 BYTE *buf, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
-CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
+CKD_RECHDR      rechdr;                 /* CKD record header         */
 
     /* If not oriented to count field, read next count field */
     if (dev->ckdorient != CKDORIENT_COUNT)
@@ -1849,7 +1849,7 @@ static int ckd_read_data ( DEVBLK *dev, BYTE code,
                 BYTE *buf, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
-CKDDASD_RECHDR  rechdr;                 /* Record header             */
+CKD_RECHDR      rechdr;                 /* Record header             */
 
     /* If not oriented to count or key field, read next count field */
     if (dev->ckdorient != CKDORIENT_COUNT
@@ -1901,7 +1901,7 @@ static int ckd_erase ( DEVBLK *dev, BYTE *buf, int len, int *size,
                 BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
-CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
+CKD_RECHDR      rechdr;                 /* CKD record header         */
 int             keylen;                 /* Key length                */
 int             datalen;                /* Data length               */
 int             ckdlen;                 /* Count+key+data length     */
@@ -1913,16 +1913,16 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset(&rechdr, 0, CKDDASD_RECHDR_SIZE);
-    memcpy (&rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
-                                len : CKDDASD_RECHDR_SIZE);
+    memset(&rechdr, 0, CKD_RECHDR_SIZE);
+    memcpy (&rechdr, buf, (len < CKD_RECHDR_SIZE) ?
+                           len : CKD_RECHDR_SIZE);
 
     /* Extract the key length and data length */
     keylen = rechdr.klen;
     datalen = (rechdr.dlen[0] << 8) + rechdr.dlen[1];
 
     /* Calculate total count key and data size */
-    ckdlen = CKDDASD_RECHDR_SIZE + keylen + datalen;
+    ckdlen = CKD_RECHDR_SIZE + keylen + datalen;
 
     /* Check that there is enough space on the current track to
        contain the complete erase plus an end of track marker */
@@ -1956,7 +1956,7 @@ static int ckd_write_ckd ( DEVBLK *dev, BYTE *buf, int len,
                 BYTE *unitstat, BYTE trk_ovfl)
 {
 int             rc;                     /* Return code               */
-CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
+CKD_RECHDR      rechdr;                 /* CKD record header         */
 int             recnum;                 /* Record number             */
 int             keylen;                 /* Key length                */
 int             datalen;                /* Data length               */
@@ -1969,9 +1969,9 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset( &rechdr, 0, CKDDASD_RECHDR_SIZE );
-    memcpy( &rechdr, buf, (len < CKDDASD_RECHDR_SIZE) ?
-                                len : CKDDASD_RECHDR_SIZE);
+    memset( &rechdr, 0, CKD_RECHDR_SIZE );
+    memcpy( &rechdr, buf, (len < CKD_RECHDR_SIZE) ?
+                           len : CKD_RECHDR_SIZE);
 
     /* Extract the record number, key length and data length */
     recnum = rechdr.rec;
@@ -1979,7 +1979,7 @@ int             ckdlen;                 /* Count+key+data length     */
     datalen = (rechdr.dlen[0] << 8) + rechdr.dlen[1];
 
     /* Calculate total count key and data size */
-    ckdlen = CKDDASD_RECHDR_SIZE + keylen + datalen;
+    ckdlen = CKD_RECHDR_SIZE + keylen + datalen;
 
     if (dev->bufoff + ckdlen + 8 >= dev->bufoffhi)
     {
@@ -2129,8 +2129,8 @@ void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 {
 int             rc;                     /* Return code               */
 int             i, j;                   /* Loop index                */
-CKDDASD_TRKHDR  trkhdr;                 /* CKD track header (HA)     */
-CKDDASD_RECHDR  rechdr;                 /* CKD record header (count) */
+CKD_TRKHDR      trkhdr;                 /* CKD track header (HA)     */
+CKD_RECHDR      rechdr;                 /* CKD record header (count) */
 U32             size;                   /* Number of bytes available */
 U32             num;                    /* Number of bytes to move   */
 U32             offset;                 /* Offset into buf for I/O   */
@@ -2586,13 +2586,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_RECHDR_SIZE;
+        size = CKD_RECHDR_SIZE;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
 
         /* Copy count field to I/O buffer */
-        memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
+        memcpy (iobuf, &rechdr, CKD_RECHDR_SIZE);
 
         /* Turn off track overflow flag in read record header */
         if(dev->ckdcyls < 32768)
@@ -2659,13 +2659,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
+        size = CKD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
 
         /* Copy count field to I/O buffer */
-        memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
+        memcpy (iobuf, &rechdr, CKD_RECHDR_SIZE);
 
         /* Turn off track overflow flag in read record header */
         if(dev->ckdcyls < 32768)
@@ -2673,12 +2673,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Read key field */
         rc = ckd_read_key (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE, unitstat);
+                            iobuf + CKD_RECHDR_SIZE, unitstat);
         if (rc < 0) break;
 
         /* Read data field */
         rc = ckd_read_data (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE + dev->ckdcurkl,
+                            iobuf + CKD_RECHDR_SIZE + dev->ckdcurkl,
                             unitstat);
         if (rc < 0) break;
 
@@ -2741,13 +2741,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_TRKHDR_SIZE;
+        size = CKD_TRKHDR_SIZE;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
 
         /* Copy home address field to I/O buffer */
-        memcpy (iobuf, &trkhdr, CKDDASD_TRKHDR_SIZE);
+        memcpy (iobuf, &trkhdr, CKD_TRKHDR_SIZE);
 
         /* Save size and offset of data not used by this CCW */
         dev->ckdrem = size - num;
@@ -2804,7 +2804,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to write and set residual count */
-        size = CKDDASD_TRKHDR_SIZE;
+        size = CKD_TRKHDR_SIZE;
         num = (count < size) ? count : size;
     /* FIXME: what devices want 5 bytes, what ones want 7, and what
         ones want 11? Do this right when we figure that out */
@@ -2854,14 +2854,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes to read and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
+        size = CKD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
         if (count < size) *more = 1;
-        offset = CKDDASD_RECHDR_SIZE + dev->ckdcurkl;
+        offset = CKD_RECHDR_SIZE + dev->ckdcurkl;
 
         /* Copy count field to I/O buffer */
-        memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
+        memcpy (iobuf, &rechdr, CKD_RECHDR_SIZE);
 
         /* Turn off track overflow flag in read record header */
         if(dev->ckdcyls < 32768)
@@ -2869,12 +2869,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Read key field */
         rc = ckd_read_key (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE, unitstat);
+                            iobuf + CKD_RECHDR_SIZE, unitstat);
         if (rc < 0) break;
 
         /* Read data field */
         rc = ckd_read_data (dev, code,
-                            iobuf + CKDDASD_RECHDR_SIZE + dev->ckdcurkl,
+                            iobuf + CKD_RECHDR_SIZE + dev->ckdcurkl,
                             unitstat);
         if (rc < 0) break;
 
@@ -2961,8 +2961,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
 
             /* Copy count field to I/O buffer */
-            memcpy (iobuf + size, &rechdr, CKDDASD_RECHDR_SIZE);
-            size += CKDDASD_RECHDR_SIZE;
+            memcpy (iobuf + size, &rechdr, CKD_RECHDR_SIZE);
+            size += CKD_RECHDR_SIZE;
 
             /* Turn off track overflow flag */
             if(dev->ckdcyls < 32768)
@@ -3049,8 +3049,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             if (rc < 0) break;
 
             /* Copy count field to I/O buffer */
-            memcpy (iobuf + size, &rechdr, CKDDASD_RECHDR_SIZE);
-            size += CKDDASD_RECHDR_SIZE;
+            memcpy (iobuf + size, &rechdr, CKD_RECHDR_SIZE);
+            size += CKD_RECHDR_SIZE;
 
             /* Turn off track overflow flag */
             if(dev->ckdcyls < 32768)
@@ -4446,7 +4446,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
+        size = CKD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4532,7 +4532,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
+        size = CKD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 
@@ -4586,7 +4586,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Calculate number of bytes written and set residual count */
-        size = CKDDASD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
+        size = CKD_RECHDR_SIZE + dev->ckdcurkl + dev->ckdcurdl;
         num = (count < size) ? count : size;
         *residual = count - num;
 

@@ -568,9 +568,9 @@ convert_ckd_file (IFD ifd, char *ifname, int itrklen, BYTE *itrkbuf,
 {
 int             rc;                     /* Return code               */
 int             ofd;                    /* Output file descriptor    */
-CKDDASD_DEVHDR  devhdr;                 /* Output device header      */
-CKDDASD_TRKHDR *trkhdr;                 /* -> Output track header    */
-CKDDASD_RECHDR *rechdr;                 /* -> Output record header   */
+CKD_DEVHDR      devhdr;                 /* Output device header      */
+CKD_TRKHDR     *trkhdr;                 /* -> Output track header    */
+CKD_RECHDR     *rechdr;                 /* -> Output record header   */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 int             fileseq;                /* CKD header sequence number*/
@@ -616,7 +616,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
+    memset(&devhdr, 0, CKD_DEVHDR_SIZE);
     memcpy( devhdr.devhdrid, devhdrid_str( CKD_P370_TYP ), 8 );
     devhdr.heads[3] = (heads >> 24) & 0xFF;
     devhdr.heads[2] = (heads >> 16) & 0xFF;
@@ -632,8 +632,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     devhdr.highcyl[0] = highcyl & 0xFF;
 
     /* Write the device header */
-    rc = write (ofd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < CKDDASD_DEVHDR_SIZE)
+    rc = write (ofd, &devhdr, CKD_DEVHDR_SIZE);
+    if (rc < CKD_DEVHDR_SIZE)
     {
         // "Error in function %s: %s"
         FWRMSG( stderr, HHC02412, "E", "write()", errno ? strerror(errno) : "incomplete" );
@@ -682,11 +682,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             memset (obuf, 0, trksize);
 
             /* Build the output track header */
-            trkhdr = (CKDDASD_TRKHDR*)obuf;
+            trkhdr = (CKD_TRKHDR*)obuf;
             trkhdr->bin = 0;
             STORE_HW (trkhdr->cyl, cyl);
             STORE_HW (trkhdr->head, head);
-            opos = obuf + CKDDASD_TRKHDR_SIZE;
+            opos = obuf + CKD_TRKHDR_SIZE;
 
             /* Copy each record from the input buffer */
             iptr = itrkbuf + H30CKD_TRKHDR_SIZE;
@@ -712,8 +712,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 }
 
                 /* Build AWSCKD record header in output buffer */
-                rechdr = (CKDDASD_RECHDR*)opos;
-                opos += CKDDASD_RECHDR_SIZE;
+                rechdr = (CKD_RECHDR*)opos;
+                opos += CKD_RECHDR_SIZE;
                 STORE_HW (rechdr->cyl, ihc);
                 STORE_HW (rechdr->head, ihh);
                 rechdr->rec = rec;
@@ -810,9 +810,9 @@ int             rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* AWSCKD image track length */
 
     /* Compute the AWSCKD image track length */
-    trksize = sizeof(CKDDASD_TRKHDR)
-                + sizeof(CKDDASD_RECHDR) + rec0len
-                + sizeof(CKDDASD_RECHDR) + maxdlen
+    trksize = sizeof(CKD_TRKHDR)
+                + sizeof(CKD_RECHDR) + rec0len
+                + sizeof(CKD_RECHDR) + maxdlen
                 + sizeof(eighthexFF);
     trksize = ROUND_UP(trksize,512);
 
@@ -907,5 +907,3 @@ U32             trksize;                /* AWSCKD image track length */
     free (obuf);
 
 } /* end function convert_ckd */
-
-

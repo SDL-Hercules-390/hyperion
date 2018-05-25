@@ -65,7 +65,7 @@ static char *comps[]  = { "none", "zlib",   "bzip2" };
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_swapend (DEVBLK *dev)
 {
-CCKDDASD_EXT     *cckd;                 /* -> cckd extension         */
+CCKD_EXT         *cckd;                 /* -> cckd extension         */
 int               fd;                   /* File descriptor           */
 int               rc;                   /* Return code               */
 struct stat       fst;                  /* File status buffer        */
@@ -365,7 +365,7 @@ DLL_EXPORT int cckd_endian()
  *-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_comp (DEVBLK *dev)
 {
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+CCKD_EXT       *cckd;                   /* -> cckd extension         */
 int             fd;                     /* File descriptor           */
 struct stat     fst;                    /* File status buffer        */
 int             rc;                     /* Return code               */
@@ -377,7 +377,7 @@ int             relocate = 0;           /* 1=spaces will be relocated*/
 int             l1size;                 /* l1 table size             */
 U32             next;                   /* offset of next space      */
 int             s;                      /* space table index         */
-CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
+CKD_DEVHDR      devhdr;                 /* CKD device header         */
 CCKD_DEVHDR     cdevhdr;                /* CCKD device header        */
 CCKD_L1ENT     *l1=NULL;                /* ->L1tab table               */
 CCKD_L2ENT    **l2=NULL;                /* ->L2tab table array         */
@@ -412,7 +412,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
     if (lseek( fd, off, SEEK_SET ) < 0)
         goto comp_lseek_error;
     gui_fprintf( stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-    len = CKDDASD_DEVHDR_SIZE;
+    len = CKD_DEVHDR_SIZE;
     if ((rc = read( fd, &devhdr, len )) != len)
         goto comp_read_error;
 
@@ -504,7 +504,7 @@ comp_restart:
     spctab[s].spc_val = -1;
     spctab[s].spc_off = 0;
     spctab[s].spc_len =
-    spctab[s].spc_siz = CKDDASD_DEVHDR_SIZE;
+    spctab[s].spc_siz = CKD_DEVHDR_SIZE;
     s++;
     spctab[s].spc_typ = SPCTAB_CDEVHDR;
     spctab[s].spc_val = -1;
@@ -967,7 +967,7 @@ const SPCTAB *x = a, *y = b;
  *-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_chkdsk(DEVBLK *dev, int level)
 {
-CCKDDASD_EXT   *cckd;                   /* -> ckd extension          */
+CCKD_EXT       *cckd;                   /* -> ckd extension          */
 int             fd;                     /* file descriptor           */
 struct stat     fst;                    /* file status information   */
 int             fdflags;                /* file descriptor flags     */
@@ -1012,7 +1012,7 @@ int             s;                      /* space table index         */
 SPCTAB         *spctab=NULL;            /* -> space table            */
 BYTE           *l2errs=NULL;            /* l2 error table            */
 BYTE           *rcvtab=NULL;            /* recovered tracks          */
-CKDDASD_DEVHDR  devhdr;                 /* device header             */
+CKD_DEVHDR      devhdr;                 /* device header             */
 CCKD_DEVHDR     cdevhdr;                /* compressed device header  */
 CCKD_DEVHDR     cdevhdr2;               /* compressed device header 2*/
 CCKD_L1ENT     *l1=NULL;                /* -> level 1 table          */
@@ -1063,7 +1063,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-    len = CKDDASD_DEVHDR_SIZE;
+    len = CKD_DEVHDR_SIZE;
     if ((rc = read (fd, &devhdr, len)) != len)
         goto cdsk_read_error;
 
@@ -1152,9 +1152,9 @@ BYTE            buf[4*65536];           /* buffer                    */
         }
 
         /* track size check */
-        n = sizeof(CKDDASD_TRKHDR)
-          + sizeof(CKDDASD_RECHDR) + 8        /* r0 length */
-          + sizeof(CKDDASD_RECHDR) + ckd->r1  /* max data length */
+        n = sizeof(CKD_TRKHDR)
+          + sizeof(CKD_RECHDR) + 8        /* r0 length */
+          + sizeof(CKD_RECHDR) + ckd->r1  /* max data length */
           + sizeof(eighthexFF);
         n = ((n+511)/512)*512;
         if ((int)trksz != n)
@@ -1191,7 +1191,7 @@ BYTE            buf[4*65536];           /* buffer                    */
              + (cdevhdr.cyls[0]);
         trks = blks / CFBA_BLKGRP_BLKS;
         if (blks % CFBA_BLKGRP_BLKS) trks++;
-        trksz = CFBA_BLKGRP_SIZE + CKDDASD_TRKHDR_SIZE;
+        trksz = CFBA_BLKGRP_SIZE + CKD_TRKHDR_SIZE;
         heads = 65536;
         cyls = trks / heads;
         if (trks % heads) cyls++;
@@ -1339,7 +1339,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     spctab[s].spc_val = -1;
     spctab[s].spc_off = 0;
     spctab[s].spc_len =
-    spctab[s].spc_siz = CKDDASD_DEVHDR_SIZE;
+    spctab[s].spc_siz = CKD_DEVHDR_SIZE;
     s++;
     /* cdevhdr */
     spctab[s].spc_typ = SPCTAB_CDEVHDR;
@@ -1560,7 +1560,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
         /* Check image l2 entry consistency */
         else if (spctab[i].spc_typ == trktyp
-         && (spctab[i].spc_len < CKDDASD_TRKHDR_SIZE
+         && (spctab[i].spc_len < CKD_TRKHDR_SIZE
           || spctab[i].spc_len > spctab[i].spc_siz
           || spctab[i].spc_len > trksz))
         {
@@ -1720,7 +1720,7 @@ cdsk_space_check:
             if ( lseek (fd, off, SEEK_SET) < 0 )
                 goto cdsk_lseek_error;
             gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
-            len = level < 3 ? CKDDASD_TRKHDR_SIZE : spctab[i].spc_len;
+            len = level < 3 ? CKD_TRKHDR_SIZE : spctab[i].spc_len;
             if ((rc = read (fd, buf, len)) != len)
                 goto cdsk_read_error;
 
@@ -1835,7 +1835,7 @@ cdsk_recovery:
             {
                 /* next free space if too small */
                 if (spctab[f].spc_typ != SPCTAB_FREE
-                 || spctab[f].spc_siz <= CKDDASD_TRKHDR_SIZE+8)
+                 || spctab[f].spc_siz <= CKD_TRKHDR_SIZE+8)
                 {
                     for (f = f + 1; spctab[f].spc_typ != SPCTAB_EOF; f++)
                         if (spctab[f].spc_typ == SPCTAB_FREE)
@@ -1858,7 +1858,7 @@ cdsk_recovery:
                     goto cdsk_read_error;
 
                 /* Scan the space for a trkhdr */
-                for (i = 0; i < len - (CKDDASD_TRKHDR_SIZE+8); i++)
+                for (i = 0; i < len - (CKD_TRKHDR_SIZE+8); i++)
                 {
                     /* Check compression byte */
                     if (compmask[buf[i]])
@@ -1923,8 +1923,8 @@ cdsk_recovery:
                     }
 
                     /* Scan for next trkhdr */
-                    for (j = i + CKDDASD_TRKHDR_SIZE+8;
-                         j <= len - (CKDDASD_TRKHDR_SIZE+8);
+                    for (j = i + CKD_TRKHDR_SIZE+8;
+                         j <= len - (CKD_TRKHDR_SIZE+8);
                          j++)
                     {
                         if (j - i > (int)trksz) break;
@@ -1975,7 +1975,7 @@ cdsk_recovery:
                     }
 
                     /* Scan all lengths */
-                    for (l = CKDDASD_TRKHDR_SIZE+8; i + l <= len; l++)
+                    for (l = CKD_TRKHDR_SIZE+8; i + l <= len; l++)
                     {
                         if (l > (int)trksz)
                             break;
@@ -2030,7 +2030,7 @@ cdsk_ckd_recover:
          *
          * On the first pass we recover all compressed blkgrps since
          * these are readily validated (they must uncompress to a
-         * certain size, CFBA_BLKGRP_SIZE+CKDDASD_TRKHDR_SIZE).  We
+         * certain size, CFBA_BLKGRP_SIZE+CKD_TRKHDR_SIZE).  We
          * also recover uncompressed blkgrps if they are followed by
          * a valid trkhdr (and don't occur to close to the beginning
          * of the file).
@@ -2056,7 +2056,7 @@ cdsk_ckd_recover:
 
                 /* next free space if too small */
                 if (spctab[f].spc_typ != SPCTAB_FREE
-                 || spctab[f].spc_siz <= CKDDASD_TRKHDR_SIZE+8
+                 || spctab[f].spc_siz <= CKD_TRKHDR_SIZE+8
                  || (pass == 1 && spctab[f].spc_siz < blkgrpsz))
                 {
                     for (f = f + 1; spctab[f].spc_typ != SPCTAB_EOF; f++)
@@ -2082,7 +2082,7 @@ cdsk_ckd_recover:
                     goto cdsk_read_error;
 
                 /* Scan the space */
-                for (i = 0; i < len - (CKDDASD_TRKHDR_SIZE+8); i++)
+                for (i = 0; i < len - (CKD_TRKHDR_SIZE+8); i++)
                 {
                     /* For pass 1 the size left must be at least blkgrpsz */
                     if (pass == 1 && len - i < (int)blkgrpsz)
@@ -2133,7 +2133,7 @@ cdsk_ckd_recover:
                             goto cdsk_fba_recover;
                         /* Pass 0 checks */
                         if (pass == 0
-                         && (len - i - l < CKDDASD_TRKHDR_SIZE+8
+                         && (len - i - l < CKD_TRKHDR_SIZE+8
                           || compmask[buf[i+l]]
                           || fetch_fw (buf+i+l+1) >= (unsigned int)blkgrps)
                            )
@@ -2157,8 +2157,8 @@ cdsk_ckd_recover:
                     }
 
                     /* Scan for next trkhdr */
-                    for (j = i + CKDDASD_TRKHDR_SIZE+8;
-                         j <= len - (CKDDASD_TRKHDR_SIZE+8);
+                    for (j = i + CKD_TRKHDR_SIZE+8;
+                         j <= len - (CKD_TRKHDR_SIZE+8);
                          j++)
                     {
                         if (j - i > (int)blkgrpsz) break;
@@ -2203,7 +2203,7 @@ cdsk_ckd_recover:
                     }
 
                     /* Scan all lengths */
-                    for (l = CKDDASD_TRKHDR_SIZE+8; i + l <= len; l++)
+                    for (l = CKD_TRKHDR_SIZE+8; i + l <= len; l++)
                     {
                         if (l > (int)blkgrpsz)
                             break;
@@ -2850,7 +2850,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
     /* Negative len only allowed for comp none */
     len2 = len > 0 ? len : -len;
 
-    if (len2 < CKDDASD_TRKHDR_SIZE + 8)
+    if (len2 < CKD_TRKHDR_SIZE + 8)
         return 0;
 
     /* Uncompress the track/block image */
@@ -2865,13 +2865,13 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
     case CCKD_COMPRESS_ZLIB:
         if (len < 0) return 0;
         bufp = (BYTE *)buf2;
-        memcpy (buf2, buf, CKDDASD_TRKHDR_SIZE);
-        zlen = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress (buf2 + CKDDASD_TRKHDR_SIZE, &zlen,
-                         buf + CKDDASD_TRKHDR_SIZE, len - CKDDASD_TRKHDR_SIZE);
+        memcpy (buf2, buf, CKD_TRKHDR_SIZE);
+        zlen = sizeof(buf2) - CKD_TRKHDR_SIZE;
+        rc = uncompress (buf2 + CKD_TRKHDR_SIZE, &zlen,
+                         buf + CKD_TRKHDR_SIZE, len - CKD_TRKHDR_SIZE);
         if (rc != Z_OK)
             return 0;
-        bufl = (int)zlen + CKDDASD_TRKHDR_SIZE;
+        bufl = (int)zlen + CKD_TRKHDR_SIZE;
         break;
 #endif
 
@@ -2879,13 +2879,13 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
     case CCKD_COMPRESS_BZIP2:
         if (len < 0) return 0;
         bufp = (BYTE *)buf2;
-        memcpy (buf2, buf, CKDDASD_TRKHDR_SIZE);
-        bz2len = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( (char *)&buf2[CKDDASD_TRKHDR_SIZE], &bz2len,
-                         (char *)&buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE, 0, 0);
+        memcpy (buf2, buf, CKD_TRKHDR_SIZE);
+        bz2len = sizeof(buf2) - CKD_TRKHDR_SIZE;
+        rc = BZ2_bzBuffToBuffDecompress ( (char *)&buf2[CKD_TRKHDR_SIZE], &bz2len,
+                         (char *)&buf[CKD_TRKHDR_SIZE], len - CKD_TRKHDR_SIZE, 0, 0);
         if (rc != BZ_OK)
             return 0;
-        bufl = (int)bz2len + CKDDASD_TRKHDR_SIZE;
+        bufl = (int)bz2len + CKD_TRKHDR_SIZE;
         break;
 #endif
 
@@ -2897,7 +2897,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
     /* fba check */
     if (heads == 65536)
     {
-        if (bufl != CFBA_BLKGRP_SIZE + CKDDASD_TRKHDR_SIZE)
+        if (bufl != CFBA_BLKGRP_SIZE + CKD_TRKHDR_SIZE)
             return 0;
         else
             return len > 0 ? len : bufl;

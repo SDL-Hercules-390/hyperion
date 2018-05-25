@@ -6128,7 +6128,7 @@ int     rc;
     {
         if (dev)
         {
-            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            CCKD_EXT *cckd = dev->cckd_ext;
             cckd->sfmerge = flag == 1;
             cckd->sfforce = flag == 2;
         }
@@ -6143,7 +6143,7 @@ int     rc;
     {
         if (dev)
         {
-            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            CCKD_EXT *cckd = dev->cckd_ext;
             cckd->sflevel = level;
         }
         else
