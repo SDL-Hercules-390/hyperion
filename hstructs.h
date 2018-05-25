@@ -1807,15 +1807,15 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_MIN_WRITER        1        /* Min writer threads        */
 #define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
 
-#define CCKD_DEFAULT_RA_SIZE   4        /* Readahead queue size      */
-#define CCKD_DEFAULT_RA        2        /* Default number readaheads */
-#define CCKD_DEFAULT_WRITER    2        /* Default number writers    */
-#define CCKD_DEFAULT_GCOL      1        /* Default number garbage
+#define CCKD_DEF_RA_SIZE       4        /* Readahead queue size      */
+#define CCKD_DEF_RA            2        /* Default number readaheads */
+#define CCKD_DEF_WRITER        2        /* Default number writers    */
+#define CCKD_DEF_GCOL          1        /* Default number garbage
                                               collectors             */
-#define CCKD_DEFAULT_GCOLWAIT  10       /* Default wait (seconds)    */
-#define CCKD_DEFAULT_GCOLPARM  0        /* Default adjustment parm   */
-#define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
-#define CCKD_DEFAULT_FREEPEND  -1       /* Default freepend cycles   */
+#define CCKD_DEF_GCOLWAIT     10        /* Default wait (seconds)    */
+#define CCKD_DEF_GCOLPARM      0        /* Default adjustment parm   */
+#define CCKD_DEF_READAHEADS    2        /* Default nbr to read ahead */
+#define CCKD_DEF_FREEPEND     -1        /* Default freepend cycles   */
 
 #define CFBA_BLKGRP_BLKS       120      /* Number fba blocks / group */
 #define CFBA_BLKGRP_SIZE       61440    /* Size of a block group 60k */

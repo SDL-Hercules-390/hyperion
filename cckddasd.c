@@ -197,14 +197,14 @@ int             i, j;                   /* Loop indexes              */
 
     /* Initialize some variables */
     cckdblk.wrprio     = 16;
-    cckdblk.ranbr      = CCKD_DEFAULT_RA_SIZE;
-    cckdblk.ramax      = CCKD_DEFAULT_RA;
-    cckdblk.wrmax      = CCKD_DEFAULT_WRITER;
-    cckdblk.gcmax      = CCKD_DEFAULT_GCOL;
-    cckdblk.gcwait     = CCKD_DEFAULT_GCOLWAIT;
-    cckdblk.gcparm     = CCKD_DEFAULT_GCOLPARM;
-    cckdblk.readaheads = CCKD_DEFAULT_READAHEADS;
-    cckdblk.freepend   = CCKD_DEFAULT_FREEPEND;
+    cckdblk.ranbr      = CCKD_DEF_RA_SIZE;
+    cckdblk.ramax      = CCKD_DEF_RA;
+    cckdblk.wrmax      = CCKD_DEF_WRITER;
+    cckdblk.gcmax      = CCKD_DEF_GCOL;
+    cckdblk.gcwait     = CCKD_DEF_GCOLWAIT;
+    cckdblk.gcparm     = CCKD_DEF_GCOLPARM;
+    cckdblk.readaheads = CCKD_DEF_READAHEADS;
+    cckdblk.freepend   = CCKD_DEF_FREEPEND;
 #if defined( HAVE_ZLIB )
     cckdblk.comps     |= CCKD_COMPRESS_ZLIB;
 #endif
