@@ -470,13 +470,13 @@ DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
 /* Dasd image file classification masks and functions                */
 /*-------------------------------------------------------------------*/
 
-#define CKD_P370_TYP    0x80        // "CKD_P370"
-#define CKD_C370_TYP    0x40        // "CKD_C370"
-#define CKD_S370_TYP    0x20        // "CKD_S370"
+#define CKD_P370_TYP    0x80000000        // "CKD_P370"
+#define CKD_C370_TYP    0x40000000        // "CKD_C370"
+#define CKD_S370_TYP    0x20000000        // "CKD_S370"
 
-#define FBA_P370_TYP    0x08        // "FBA_P370"
-#define FBA_C370_TYP    0x04        // "FBA_C370"
-#define FBA_S370_TYP    0x02        // "FBA_S370"
+#define FBA_P370_TYP    0x00008000        // "FBA_P370"
+#define FBA_C370_TYP    0x00004000        // "FBA_C370"
+#define FBA_S370_TYP    0x00002000        // "FBA_S370"
 
 // Compressed type
 
@@ -498,6 +498,6 @@ DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
 
 // Functions
 
-DUT_DLL_IMPORT const char*  devhdrid_str( BYTE typmsk );
-DUT_DLL_IMPORT BYTE         devhdrid_typ( BYTE* devhdrid );
-DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, BYTE typmsk );
+DUT_DLL_IMPORT const char*  devhdrid_str( U32 typmsk );
+DUT_DLL_IMPORT U32          devhdrid_typ( BYTE* devhdrid );
+DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, U32 typmsk );

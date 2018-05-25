@@ -2449,7 +2449,7 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
 /* Dasd image file classification functions                          */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT const char* devhdrid_str( BYTE typmsk )
+DLL_EXPORT const char* devhdrid_str( U32 typmsk )
 {
 #define RETURN_DEVHDRID_STR( typ )      \
                                         \
@@ -2467,7 +2467,7 @@ DLL_EXPORT const char* devhdrid_str( BYTE typmsk )
     return NULL;
 }
 
-DLL_EXPORT BYTE devhdrid_typ( BYTE* devhdrid )
+DLL_EXPORT U32 devhdrid_typ( BYTE* devhdrid )
 {
 #define RETURN_DEVHDRID_TYP( typ )          \
                                             \
@@ -2485,7 +2485,7 @@ DLL_EXPORT BYTE devhdrid_typ( BYTE* devhdrid )
     return 0;
 }
 
-DLL_EXPORT bool is_devhdrid_typ( BYTE* devhdrid, BYTE typmsk )
+DLL_EXPORT bool is_devhdrid_typ( BYTE* devhdrid, U32 typmsk )
 {
 #define RETURN_IS_DEVHDRID( typ )               \
                                                 \
