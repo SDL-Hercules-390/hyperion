@@ -416,7 +416,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
     if ((rc = read( fd, &devhdr, len )) != len)
         goto comp_read_error;
 
-    if (!(devhdrid_typ( devhdr.devhdrid ) & ANY_CMP_TYP))
+    if (!(devhdrid_typ( devhdr.devhdrid ) & ANY32_CMP_OR_SF_TYP))
     {
         // "%1d:%04X CCKD file %s: not a compressed dasd file"
         if (dev->batch)
@@ -1070,8 +1070,8 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Device header checks */
     imgtyp = devhdrid_typ( devhdr.devhdrid );
 
-         if (imgtyp & CMP_CKD_TYP) ckddasd = 1;
-    else if (imgtyp & CMP_FBA_TYP) fbadasd = 1;
+         if (imgtyp & CKD32_CMP_OR_SF_TYP) ckddasd = 1;
+    else if (imgtyp & FBA32_CMP_OR_SF_TYP) fbadasd = 1;
     else
     {
         // "%1d:%04X CCKD file %s: not a compressed dasd file"
@@ -1084,7 +1084,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_error;
     }
 
-    if (imgtyp & ANY_SF_TYP)
+    if (imgtyp & ANY32_SF_TYP)
         shadow = 0xff;
 
     trktyp = ckddasd ? SPCTAB_TRK : SPCTAB_BLKGRP;

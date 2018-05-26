@@ -662,7 +662,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* Determine CKD or FBA device type                              */
     /*---------------------------------------------------------------*/
-    if (is_devhdrid_typ( devhdr.devhdrid, CMP_CKD_TYP ))
+    if (is_devhdrid_typ( devhdr.devhdrid, CKD32_CMP_OR_SF_TYP ))
     {
         ckddasd = true;
 
@@ -676,7 +676,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             exit( EXIT_NO_CKD_DASDTAB );
         }
     }
-    else if (is_devhdrid_typ( devhdr.devhdrid, CMP_FBA_TYP ))
+    else if (is_devhdrid_typ( devhdr.devhdrid, FBA32_CMP_OR_SF_TYP ))
     {
         ckddasd = false;
 

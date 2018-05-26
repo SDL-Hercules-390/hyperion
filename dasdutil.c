@@ -697,7 +697,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Error if no device header or not CKD non-shadow type */
         if (0
             || iLen < CKD_DEVHDR_SIZE
-            || !(devhdrid_typ( devhdr.devhdrid ) & CKD_XSF_TYP)
+            || !(devhdrid_typ( devhdr.devhdrid ) & CKD32_CMP_OR_NML_TYP)
         )
         {
             // "%1d:%04X CKD file %s: ckd header invalid"
@@ -2456,13 +2456,21 @@ DLL_EXPORT const char* devhdrid_str( U32 typmsk )
     if (typ ## _TYP == typmsk)          \
         return #typ
 
-    RETURN_DEVHDRID_STR( CKD_P370 );    // "CKD_P370"
-    RETURN_DEVHDRID_STR( CKD_C370 );    // "CKD_C370"
-    RETURN_DEVHDRID_STR( CKD_S370 );    // "CKD_S370"
+    RETURN_DEVHDRID_STR( CKD_P370 );    // "CKD_P370" (P=Normal)
+    RETURN_DEVHDRID_STR( CKD_C370 );    // "CKD_C370" (C=Compressed)
+    RETURN_DEVHDRID_STR( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370"
-    RETURN_DEVHDRID_STR( FBA_C370 );    // "FBA_C370"
-    RETURN_DEVHDRID_STR( FBA_S370 );    // "FBA_S370"
+    RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370" (same for FBA)
+    RETURN_DEVHDRID_STR( FBA_C370 );    // "FBA_C370"        "
+    RETURN_DEVHDRID_STR( FBA_S370 );    // "FBA_S370"        "
+
+    RETURN_DEVHDRID_STR( CKD_P064 );    // "CKD_P064" (64-bit filesize)
+    RETURN_DEVHDRID_STR( CKD_C064 );    // "CKD_C064"        "
+    RETURN_DEVHDRID_STR( CKD_S064 );    // "CKD_S064"        "
+
+    RETURN_DEVHDRID_STR( FBA_P064 );    // "FBA_P064" (same for FBA)
+    RETURN_DEVHDRID_STR( FBA_C064 );    // "FBA_C064"        "
+    RETURN_DEVHDRID_STR( FBA_S064 );    // "FBA_S064"        "
 
     return NULL;
 }
@@ -2474,13 +2482,21 @@ DLL_EXPORT U32 devhdrid_typ( BYTE* devhdrid )
     if (memcmp( devhdrid, #typ, 8 ) == 0)   \
         return typ ## _TYP
 
-    RETURN_DEVHDRID_TYP( CKD_P370 );    // "CKD_P370"
-    RETURN_DEVHDRID_TYP( CKD_C370 );    // "CKD_C370"
-    RETURN_DEVHDRID_TYP( CKD_S370 );    // "CKD_S370"
+    RETURN_DEVHDRID_TYP( CKD_P370 );    // "CKD_P370" (P=Normal)
+    RETURN_DEVHDRID_TYP( CKD_C370 );    // "CKD_C370" (C=Compressed)
+    RETURN_DEVHDRID_TYP( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370"
-    RETURN_DEVHDRID_TYP( FBA_C370 );    // "FBA_C370"
-    RETURN_DEVHDRID_TYP( FBA_S370 );    // "FBA_S370"
+    RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370" (same for FBA)
+    RETURN_DEVHDRID_TYP( FBA_C370 );    // "FBA_C370"        "
+    RETURN_DEVHDRID_TYP( FBA_S370 );    // "FBA_S370"        "
+
+    RETURN_DEVHDRID_TYP( CKD_P064 );    // "CKD_P064" (64-bit filesize)
+    RETURN_DEVHDRID_TYP( CKD_C064 );    // "CKD_C064"        "
+    RETURN_DEVHDRID_TYP( CKD_S064 );    // "CKD_S064"        "
+
+    RETURN_DEVHDRID_TYP( FBA_P064 );    // "FBA_P064" (same for FBA)
+    RETURN_DEVHDRID_TYP( FBA_C064 );    // "FBA_C064"        "
+    RETURN_DEVHDRID_TYP( FBA_S064 );    // "FBA_S064"        "
 
     return 0;
 }
@@ -2495,13 +2511,21 @@ DLL_EXPORT bool is_devhdrid_typ( BYTE* devhdrid, U32 typmsk )
     )                                           \
         return true
 
-    RETURN_IS_DEVHDRID( CKD_P370 );     // "CKD_P370"
-    RETURN_IS_DEVHDRID( CKD_C370 );     // "CKD_C370"
-    RETURN_IS_DEVHDRID( CKD_S370 );     // "CKD_S370"
+    RETURN_IS_DEVHDRID( CKD_P370 );     // "CKD_P370" (P=Normal)
+    RETURN_IS_DEVHDRID( CKD_C370 );     // "CKD_C370" (C=Compressed)
+    RETURN_IS_DEVHDRID( CKD_S370 );     // "CKD_S370" (S=Shadow)
 
-    RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370"
-    RETURN_IS_DEVHDRID( FBA_C370 );     // "FBA_C370"
-    RETURN_IS_DEVHDRID( FBA_S370 );     // "FBA_S370"
+    RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370" (same for FBA)
+    RETURN_IS_DEVHDRID( FBA_C370 );     // "FBA_C370"        "
+    RETURN_IS_DEVHDRID( FBA_S370 );     // "FBA_S370"        "
+
+    RETURN_IS_DEVHDRID( CKD_P064 );     // "CKD_P064" (64-bit filesize)
+    RETURN_IS_DEVHDRID( CKD_C064 );     // "CKD_C064"        "
+    RETURN_IS_DEVHDRID( CKD_S064 );     // "CKD_S064"        "
+
+    RETURN_IS_DEVHDRID( FBA_P064 );     // "FBA_P064" (same for FBA)
+    RETURN_IS_DEVHDRID( FBA_C064 );     // "FBA_C064"        "
+    RETURN_IS_DEVHDRID( FBA_S064 );     // "FBA_S064"        "
 
     return false;
 }

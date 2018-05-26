@@ -421,7 +421,7 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Check the device header identifier */
-        if (!is_devhdrid_typ( devhdr.devhdrid, CKD_XSF_TYP ))
+        if (!is_devhdrid_typ( devhdr.devhdrid, CKD32_CMP_OR_NML_TYP ))
         {
             // "%1d:%04X CKD file %s: ckd header invalid"
             WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );

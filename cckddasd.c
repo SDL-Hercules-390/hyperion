@@ -2580,8 +2580,8 @@ int cckd_read_init (DEVBLK *dev)
         cckd->ckddasd = 1;
     else if (!sfx && (imgtyp & FBA_C370_TYP))
         cckd->fbadasd = 1;
-    else if (!(sfx && (imgtyp & CKD_SF_TYP) && cckd->ckddasd)
-          && !(sfx && (imgtyp & FBA_SF_TYP) && cckd->fbadasd))
+    else if (!(sfx && (imgtyp & CKD32_SF_TYP) && cckd->ckddasd)
+          && !(sfx && (imgtyp & FBA32_SF_TYP) && cckd->fbadasd))
     {
         // "%1d:%04X CCKD file[%d] %s: device header id error"
         WRMSG( HHC00305, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,

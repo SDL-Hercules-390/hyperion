@@ -84,7 +84,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             continue;
         }
 
-        if (!is_devhdrid_typ( devhdr.devhdrid, ANY_CMP_TYP ))
+        if (!is_devhdrid_typ( devhdr.devhdrid, ANY32_CMP_OR_SF_TYP ))
         {
             // "%1d:%04X CCKD file %s: not a compressed dasd file"
             FWRMSG( stderr, HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, dev->filename );

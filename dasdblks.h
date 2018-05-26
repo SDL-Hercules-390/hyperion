@@ -467,37 +467,113 @@ DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
 #define DEFAULT_FBA_TYPE    0x3370
 
 /*-------------------------------------------------------------------*/
-/* Dasd image file classification masks and functions                */
+/*     Dasd image file classification masks and functions            */
 /*-------------------------------------------------------------------*/
 
-#define CKD_P370_TYP    0x80000000        // "CKD_P370"
-#define CKD_C370_TYP    0x40000000        // "CKD_C370"
-#define CKD_S370_TYP    0x20000000        // "CKD_S370"
+#define CKD_P370_TYP    0x80000000      // "CKD_P370" (P=Normal)
+#define CKD_C370_TYP    0x40000000      // "CKD_C370" (C=Compressed)
+#define CKD_S370_TYP    0x20000000      // "CKD_S370" (S=Shadow)
 
-#define FBA_P370_TYP    0x00008000        // "FBA_P370"
-#define FBA_C370_TYP    0x00004000        // "FBA_C370"
-#define FBA_S370_TYP    0x00002000        // "FBA_S370"
+#define CKD_P064_TYP    0x00800000      // "CKD_P064" (64-bit filesize)
+#define CKD_C064_TYP    0x00400000      // "CKD_C064"        "
+#define CKD_S064_TYP    0x00200000      // "CKD_S064"        "
 
-// Compressed type
+#define FBA_P370_TYP    0x00008000      // "FBA_P370" (same for FBA)
+#define FBA_C370_TYP    0x00004000      // "FBA_C370"        "
+#define FBA_S370_TYP    0x00002000      // "FBA_S370"        "
 
-#define CMP_CKD_TYP     (CKD_C370_TYP | CKD_S370_TYP)
-#define CMP_FBA_TYP     (FBA_C370_TYP | FBA_S370_TYP)
-#define ANY_CMP_TYP     (CMP_CKD_TYP  | CMP_FBA_TYP)
+#define FBA_P064_TYP    0x00000080      // "FBA_P064" (same for FBA)
+#define FBA_C064_TYP    0x00000040      // "FBA_C064"        "
+#define FBA_S064_TYP    0x00000020      // "FBA_S064"        "
 
-// Shadow type
+/*-------------------------------------------------------------------*/
+/*                 Original 32-bit filesize types                    */
+/*-------------------------------------------------------------------*/
 
-#define CKD_SF_TYP      (CKD_S370_TYP)
-#define FBA_SF_TYP      (FBA_S370_TYP)
-#define ANY_SF_TYP      (CKD_SF_TYP | FBA_SF_TYP)
+#define CKD32_NML_TYP           (CKD_P370_TYP)
+#define CKD32_SF_TYP            (CKD_S370_TYP)
 
-// Non-shadow type
+#define FBA32_NML_TYP           (FBA_P370_TYP)
+#define FBA32_SF_TYP            (FBA_S370_TYP)
 
-#define CKD_XSF_TYP     (CKD_P370_TYP | CKD_C370_TYP)
-#define FBA_XSF_TYP     (FBA_P370_TYP | FBA_C370_TYP)
-#define ANY_XSF_TYP     (CKD_XSF_TYP  | FBA_XSF_TYP)
+#define CKD32_CMP_NO_SF_TYP     (CKD_C370_TYP)
+#define FBA32_CMP_NO_SF_TYP     (FBA_C370_TYP)
 
-// Functions
+/*-------------------------------------------------------------------*/
+
+#define CKD32_CMP_OR_SF_TYP     ((CKD32_CMP_NO_SF_TYP) | (CKD32_SF_TYP))
+#define FBA32_CMP_OR_SF_TYP     ((FBA32_CMP_NO_SF_TYP) | (FBA32_SF_TYP))
+
+#define CKD32_CMP_OR_NML_TYP    ((CKD32_CMP_NO_SF_TYP) | (CKD32_NML_TYP))
+#define FBA32_CMP_OR_NML_TYP    ((FBA32_CMP_NO_SF_TYP) | (FBA32_NML_TYP))
+
+#define ANY32_CMP_NO_SF_TYP     ((CKD32_CMP_NO_SF_TYP) | (FBA32_CMP_NO_SF_TYP))
+#define ANY32_CMP_OR_SF_TYP     ((CKD32_CMP_OR_SF_TYP) | (FBA32_CMP_OR_SF_TYP))
+
+#define ANY32_NML_TYP           ((CKD32_NML_TYP) | (FBA32_NML_TYP))
+#define ANY32_SF_TYP            ((CKD32_SF_TYP)  | (FBA32_SF_TYP))
+#define ANY32_NML_CMP_SF_TYP    ((ANY32_NML_TYP) | (ANY32_CMP_OR_SF_TYP))
+
+/*-------------------------------------------------------------------*/
+/*                     New 64-bit filesize types                     */
+/*-------------------------------------------------------------------*/
+
+#define CKD64_NML_TYP           (CKD_P064_TYP)
+#define CKD64_SF_TYP            (CKD_S064_TYP)
+
+#define FBA64_NML_TYP           (FBA_P064_TYP)
+#define FBA64_SF_TYP            (FBA_S064_TYP)
+
+#define CKD64_CMP_NO_SF_TYP     (CKD_C064_TYP)
+#define FBA64_CMP_NO_SF_TYP     (FBA_C064_TYP)
+
+/*-------------------------------------------------------------------*/
+
+#define CKD64_CMP_OR_SF_TYP     ((CKD64_CMP_NO_SF_TYP) | (CKD64_SF_TYP))
+#define FBA64_CMP_OR_SF_TYP     ((FBA64_CMP_NO_SF_TYP) | (FBA64_SF_TYP))
+
+#define CKD64_CMP_OR_NML_TYP    ((CKD64_CMP_NO_SF_TYP) | (CKD64_NML_TYP))
+#define FBA64_CMP_OR_NML_TYP    ((FBA64_CMP_NO_SF_TYP) | (FBA64_NML_TYP))
+
+#define ANY64_CMP_NO_SF_TYP     ((CKD64_CMP_NO_SF_TYP) | (FBA64_CMP_NO_SF_TYP))
+#define ANY64_CMP_OR_SF_TYP     ((CKD64_CMP_OR_SF_TYP) | (FBA64_CMP_OR_SF_TYP))
+
+#define ANY64_NML_TYP           ((CKD64_NML_TYP) | (FBA64_NML_TYP))
+#define ANY64_SF_TYP            ((CKD64_SF_TYP)  | (FBA64_SF_TYP))
+#define ANY64_NML_CMP_SF_TYP    ((ANY64_NML_TYP) | (ANY64_CMP_OR_SF_TYP))
+
+/*-------------------------------------------------------------------*/
+/*            Generic EITHER 32-bit/64-bit filesize types            */
+/*-------------------------------------------------------------------*/
+
+#define CKD_NML_TYP             (CKD_P370_TYP | CKD_P064_TYP)
+#define CKD_SF_TYP              (CKD_S370_TYP | CKD_S064_TYP)
+
+#define FBA_NML_TYP             (FBA_P370_TYP | FBA_P064_TYP)
+#define FBA_SF_TYP              (FBA_S370_TYP | FBA_S064_TYP)
+
+#define CKD_CMP_NO_SF_TYP       (CKD_C370_TYP | CKD_C064_TYP)
+#define FBA_CMP_NO_SF_TYP       (FBA_C370_TYP | FBA_C064_TYP)
+
+/*-------------------------------------------------------------------*/
+
+#define CKD_CMP_OR_SF_TYP       ((CKD_CMP_NO_SF_TYP) | (CKD_SF_TYP))
+#define FBA_CMP_OR_SF_TYP       ((FBA_CMP_NO_SF_TYP) | (FBA_SF_TYP))
+
+#define CKD_CMP_OR_NML_TYP      ((CKD_CMP_NO_SF_TYP) | (CKD_NML_TYP))
+#define FBA_CMP_OR_NML_TYP      ((FBA_CMP_NO_SF_TYP) | (FBA_NML_TYP))
+
+#define ANY_CMP_NO_SF_TYP       ((CKD_CMP_NO_SF_TYP) | (FBA_CMP_NO_SF_TYP))
+#define ANY_CMP_OR_SF_TYP       ((CKD_CMP_OR_SF_TYP) | (FBA_CMP_OR_SF_TYP))
+
+#define ANY_NML_TYP             ((CKD_NML_TYP) | (FBA_NML_TYP))
+#define ANY_SF_TYP              ((CKD_SF_TYP)  | (FBA_SF_TYP))
+#define ANY_NML_CMP_SF_TYP      ((ANY_NML_TYP) | (ANY_CMP_OR_SF_TYP))
+
+/*-------------------------------------------------------------------*/
 
 DUT_DLL_IMPORT const char*  devhdrid_str( U32 typmsk );
 DUT_DLL_IMPORT U32          devhdrid_typ( BYTE* devhdrid );
 DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, U32 typmsk );
+
+/*-------------------------------------------------------------------*/
