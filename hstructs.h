@@ -1714,9 +1714,9 @@ struct CCKD_DEVHDR                      /* Compress device header    */
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
 
-#define CCKD_VERSION           2
-#define CCKD_RELEASE           0
-#define CCKD_MODLVL            0
+#define CCKD_VERSION           0
+#define CCKD_RELEASE           3
+#define CCKD_MODLVL            1
 
 #define CCKD_BIGENDIAN         2
 #define CCKD_SPERRS            32        /* Space errors detected    */
