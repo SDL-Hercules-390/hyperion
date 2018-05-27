@@ -74,7 +74,7 @@ CKDDEV         *ckd=NULL;               /* -> CKD device table entry */
 FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
-BYTE            imgtyp;                 /* Dasd file image type      */
+U32             imgtyp;                 /* Dasd file image type      */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKD_NULLTRK_FMT0; /* Null track format     */
 char            pathname[MAX_PATH];     /* file path in host format  */

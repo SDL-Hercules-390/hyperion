@@ -2563,7 +2563,7 @@ int cckd_read_init (DEVBLK *dev)
     CCKD_EXT*       cckd;               /* -> cckd extension         */
     int             sfx;                /* File index                */
     CKD_DEVHDR      devhdr;             /* Device header             */
-    BYTE            imgtyp;             /* Dasd device image type    */
+    U32             imgtyp;             /* Dasd device image type    */
 
     cckd = dev->cckd_ext;
     sfx  = cckd->sfn;

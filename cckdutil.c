@@ -975,7 +975,7 @@ S64             maxsize;                /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
 int             f, i, j, l, n;          /* work integers             */
 int             L1idx, l2x;             /* l1, l2 table indexes      */
-BYTE            imgtyp;                 /* Dasd image type           */
+U32             imgtyp;                 /* Dasd image type           */
 BYTE            compmask[256];          /* compression byte mask
                                            00 - supported
                                            0x - valid, not supported
