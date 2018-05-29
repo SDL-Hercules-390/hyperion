@@ -1345,8 +1345,6 @@ static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_D20x[1][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_D50x[4][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
@@ -6315,23 +6313,6 @@ static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
  /*BF_F*/ GENx370x390x900 (BF_F,RS,"ICM")
 };
 
-// Move Characters
-
-static INSTR_FUNC opcode_D20x[1][NUM_INSTR_TAB_PTRS] =
-{
- /*D200*/ GENx370x390x900 (D200,SS,"MVC")
-};
-
-// Compare Logical Characters
-
-static INSTR_FUNC opcode_D50x[4][NUM_INSTR_TAB_PTRS] =
-{
- /*D500*/ GENx370x390x900 (D500,SS,"CLC"),
- /*D501*/ GENx370x390x900 (D501,SS,"CLC"),
- /*D503*/ GENx370x390x900 (D503,SS,"CLC"),
- /*D507*/ GENx370x390x900 (D507,SS,"CLC")
-};
-
 static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E3*/   GENx370x390x900 (E3_0,e3xx,"")
@@ -6622,12 +6603,6 @@ void init_opcode_tables()
       replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
     }
-
-    replace_opcode_xxxx(arch, opcode_D20x[0][arch], 0xd2, 0x00); /* Optimized MVC */
-    replace_opcode_xxxx(arch, opcode_D50x[0][arch], 0xd5, 0x00); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[1][arch], 0xd5, 0x01); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[2][arch], 0xd5, 0x03); /* Optimized CLC */
-    replace_opcode_xxxx(arch, opcode_D50x[3][arch], 0xd5, 0x07); /* Optimized CLC */
 
     bit = 0x80;
 

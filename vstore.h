@@ -752,7 +752,7 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
   }
 
 #if !((defined(SIZEOF_LONG) && SIZEOF_LONG > 7) || (defined(SIZEOF_INT_P) && SIZEOF_INT_P > 7) || defined(OPTION_STRICT_ALLIGNMENT))
-  /* Code for 32bit machines */
+  /* Code for 32-bit builds */
   /* Copy full words in right condition, on enough length and src - dst distance */
   if(n && regs->cpubit == regs->sysblk->started_mask && abs(u8d - u8s) > 3)
   {
@@ -765,9 +765,9 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
     }
   }
   else /* copy double words */
-#else
+#else // x64 builds
   UNREFERENCED(regs);
-#endif /* Hercules for 32bit machine builds */
+#endif /* end code for 32-bit builds */
 
   /* Copy double words on enough length and src - dst distance */
   if(n && labs(u8d - u8s) > 7)
@@ -836,7 +836,6 @@ int     len2, len3;                     /* Lengths to copy           */
 
     ITIMER_SYNC(addr2,len,regs);
 
-#ifndef OPTION_OPTINST
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 0))
     {
@@ -846,7 +845,6 @@ int     len2, len3;                     /* Lengths to copy           */
         ITIMER_UPDATE(addr1,len,regs);
         return;
     }
-#endif
 
     /* Translate addresses of leftmost operand bytes */
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);

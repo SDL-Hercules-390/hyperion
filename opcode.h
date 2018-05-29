@@ -4841,17 +4841,6 @@ DEF_INST( BF_7 );
 DEF_INST( BF_F );
 DEF_INST( BF_x );
 
-// Compare Logical Character
-
-DEF_INST( D500 );
-DEF_INST( D501 );
-DEF_INST( D503 );
-DEF_INST( D507 );
-
-// Move Characters
-
-DEF_INST( D200 );
-
 // Test Under Mask
 
 DEF_INST(9180);
