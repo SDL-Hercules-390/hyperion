@@ -2311,6 +2311,44 @@ BYTE    cbyte;                          /* Compare byte              */
 
 
 /*-------------------------------------------------------------------*/
+/* BD   CLM   - Compare Logical Characters under Mask           [RS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_characters_under_mask)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     i, j;                           /* Integer work areas        */
+int     cc = 0;                         /* Condition code            */
+BYTE    rbyte[4],                       /* Register bytes            */
+        vbyte;                          /* Virtual storage byte      */
+
+    RS(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Set register bytes by mask */
+    i = 0;
+    if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
+    if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
+    if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
+    if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;
+
+    /* Perform access check if mask is 0 */
+    if (!r3) ARCH_DEP(vfetchb) (effective_addr2, b2, regs);
+
+    /* Compare byte by byte */
+    for (j = 0; j < i && !cc; j++)
+    {
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
+        vbyte = ARCH_DEP(vfetchb) (effective_addr2++, b2, regs);
+        if (rbyte[j] != vbyte)
+            cc = rbyte[j] < vbyte ? 1 : 2;
+    }
+
+    regs->psw.cc = cc;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* D5   CLC   - Compare Logical Character                       [SS] */
 /*-------------------------------------------------------------------*/
 DEF_INST( compare_logical_character )
@@ -2480,45 +2518,6 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
         }
     }
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
-}
-
-
-/*-------------------------------------------------------------------*/
-/* BD   CLM   - Compare Logical Characters under Mask           [RS] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_characters_under_mask)
-{
-int     r1, r3;                         /* Register numbers          */
-int     b2;                             /* effective address base    */
-VADR    effective_addr2;                /* effective address         */
-int     i, j;                           /* Integer work areas        */
-int     cc = 0;                         /* Condition code            */
-BYTE    rbyte[4],                       /* Register bytes            */
-        vbyte;                          /* Virtual storage byte      */
-
-    RS(inst, regs, r1, r3, b2, effective_addr2);
-
-    /* Set register bytes by mask */
-    i = 0;
-    if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
-    if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
-    if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
-    if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;
-
-    /* Perform access check if mask is 0 */
-    if (!r3) ARCH_DEP(vfetchb) (effective_addr2, b2, regs);
-
-    /* Compare byte by byte */
-    for (j = 0; j < i && !cc; j++)
-    {
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        vbyte = ARCH_DEP(vfetchb) (effective_addr2++, b2, regs);
-        if (rbyte[j] != vbyte)
-            cc = rbyte[j] < vbyte ? 1 : 2;
-    }
-
-    regs->psw.cc = cc;
-
 }
 
 
