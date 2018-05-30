@@ -4564,7 +4564,6 @@ VADR    effective_addr1,
 }
 
 
-#if 0 // OLD way
 /*-------------------------------------------------------------------*/
 /* E8   MVCIN - Move Inverse                                    [SS] */
 /*-------------------------------------------------------------------*/
@@ -4616,83 +4615,6 @@ int     i;                              /* Integer work areas        */
         effective_addr2 &= ADDRESS_MAXWRAP( regs );
     }
 }
-#else // fishtest NEW way
-/*-------------------------------------------------------------------*/
-/* E8   MVCIN - Move Inverse                                    [SS] */
-/*-------------------------------------------------------------------*/
-DEF_INST( move_inverse )
-{
-VADR    eff_addr1, eff_addr2;           /* Effective addresses       */
-VADR    op2end;                         /* Where operand-2 ends      */
-int     b1, b2;                         /* Base registers            */
-BYTE    len;                            /* Amount to move minus 1    */
-BYTE   *dst1, *dst2;                    /* eff_addr1 MAINSTOR addrs  */
-BYTE   *src1, *src2;                    /* eff_addr2 MAINSTOR addrs  */
-BYTE   *p1, *p2;                        /* Work ptrs for reversing   */
-SIZE_T  dstlen1, dstlen2;               /* eff_addr1 part 1/2 lens   */
-SIZE_T  srclen1, srclen2;               /* eff_addr2 part 1/2 lens   */
-ALIGN_8 BYTE wrk[256];                  /* Work area for reversing   */
-
-    SS_L( inst, regs, len, b1, eff_addr1, b2, eff_addr2 );
-
-    /* If op1 crosses a page, make sure both pages are accessable */
-    dstlen1 = PAGEFRAME_PAGESIZE - (eff_addr1 & PAGEFRAME_BYTEMASK);
-    if (dstlen1 < ((SIZE_T)len + 1))
-    {
-        ARCH_DEP( validate_operand )( eff_addr1, b1, len, ACCTYPE_WRITE_SKP, regs );
-        dstlen2 = ((SIZE_T)len + 1) - dstlen1;
-        dst1 = MADDR( eff_addr1,           b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-        dst2 = MADDR( eff_addr1 + dstlen1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-    }
-    else
-    {
-        dstlen1 = (SIZE_T)len + 1;
-        dstlen2 = 0;
-        dst1 = MADDR( eff_addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-        dst2 = NULL;
-    }
-
-    /* If op2 crosses a page, make sure both pages are accessable */
-    op2end  = (eff_addr2 - len) & ADDRESS_MAXWRAP( regs );
-    srclen1 = PAGEFRAME_PAGESIZE - (op2end & PAGEFRAME_BYTEMASK);
-    if (srclen1 < ((SIZE_T)len + 1))
-    {
-        ARCH_DEP( validate_operand )( op2end, b2, len, ACCTYPE_READ, regs );
-        srclen2 = ((SIZE_T)len + 1) - srclen1;
-        src1 = MADDR( op2end,           b2, regs, ACCTYPE_READ, regs->psw.pkey );
-        src2 = MADDR( op2end + srclen1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-    }
-    else
-    {
-        srclen1 = (SIZE_T)len + 1;
-        srclen2 = 0;
-        src1 = MADDR( op2end, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-        src2 = NULL;
-    }
-
-    /* Copy source string to work area */
-    concpy( regs, &wrk[0], src1, srclen1 );
-    if (srclen2)
-        concpy( regs, &wrk[ srclen1 ], src2, srclen2 );
-
-    /* Reverse the string in our work area */
-    p1 = &wrk[0];
-    p2 = p1 + len;
-    while (p1 < p2)
-    {
-        *p1 ^= *p2;
-        *p2 ^= *p1;
-        *p1 ^= *p2;
-        p1++;
-        p2--;
-    }
-
-    /* Copy results back to destination */
-    concpy( regs, dst1, &wrk[0], dstlen1 );
-    if (dstlen2)
-        concpy( regs, dst2, &wrk[ dstlen1 ], dstlen2 );
-}
-#endif // fishtest
 
 
 /*-------------------------------------------------------------------*/
