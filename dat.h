@@ -825,7 +825,7 @@ RADR    pto = 0;                        /* Page table origin         */
 int     cc;                             /* Condition code            */
 int     tlbix = TLBIX(vaddr);           /* TLB entry index           */
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-----------------------------------*/
 /* S/370 Dynamic Address Translation */
 /*-----------------------------------*/
@@ -971,16 +971,16 @@ U32     ptl;                            /* Page table length         */
     /* Combine the page frame real address with the byte
        index of the virtual address to form the real address */
     regs->dat.raddr = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-#if defined(FEATURE_S370E_EXTENDED_ADDRESSING)
+#if defined( FEATURE_S370E_EXTENDED_ADDRESSING )
         (((U32)pte & PAGETAB_EA_4K) << 23) |
 #endif
         (((U32)pte & PAGETAB_PFRA_4K) << 8) | (vaddr & 0xFFF) :
         (((U32)pte & PAGETAB_PFRA_2K) << 8) | (vaddr & 0x7FF);
 
     regs->dat.rpfra = regs->dat.raddr & PAGEFRAME_PAGEMASK;
-#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#if defined(FEATURE_S390_DAT)
+#if defined( FEATURE_S390_DAT )
 /*-----------------------------------*/
 /* S/390 Dynamic Address Translation */
 /*-----------------------------------*/
@@ -1106,9 +1106,9 @@ U32     ptl;                            /* Page table length         */
        pagetable entry */
         regs->dat.raddr = pto;
 
-#endif /*defined(FEATURE_S390_DAT)*/
+#endif /* defined( FEATURE_S390_DAT ) */
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-----------------------------------*/
 /* ESAME Dynamic Address Translation */
 /*-----------------------------------*/
@@ -1234,13 +1234,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R1TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
                 if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
-
+#endif
                 /* Extract the region-second table origin, offset, and
                    length from the region-first table entry */
                 rto = rte & REGTAB_TO;
@@ -1288,13 +1287,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R2TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
                 if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
-
+#endif
                 /* Extract the region-third table origin, offset, and
                    length from the region-second table entry */
                 rto = rte & REGTAB_TO;
@@ -1342,13 +1340,12 @@ U16     sx, px;                         /* Segment and page index,
                 if ((rte & REGTAB_TT) != TT_R3TABL)
                     goto tran_spec_excp;
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
                 if (FACILITY_ENABLED( 008_EDAT_1, regs )
                  && (regs->CR_L(0) & CR0_ED)
                  && (rte & REGTAB_P))
                     regs->dat.protect |= 1;
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
-
+#endif
                 /* Extract the segment table origin, offset, and
                    length from the region-third table entry */
                 sto = rte & REGTAB_TO;
@@ -1399,7 +1396,7 @@ U16     sx, px;                         /* Segment and page index,
             if (regs->dat.pvtaddr && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
             if (FACILITY_ENABLED( 008_EDAT_1, regs )
               && (regs->CR_L(0) & CR0_ED)
               && (ste & ZSEGTAB_FC))
@@ -1444,7 +1441,7 @@ U16     sx, px;                         /* Segment and page index,
                 return 0;
 
             }
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
 
             /* Extract the page table origin from segment table entry */
             pto = ste & ZSEGTAB_PTO;
@@ -1461,12 +1458,12 @@ U16     sx, px;                         /* Segment and page index,
                 regs->dat.raddr = pto;
                 regs->dat.xcode = 0;
                 cc = (ste & ZSEGTAB_P) ? 1 : 0;
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
                 if (FACILITY_ENABLED( 008_EDAT_1, regs )
                   && (regs->CR_L(0) & CR0_ED)
                   && regs->dat.protect)
                     cc = 1;
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif
                 return cc;
             } /* end if(ACCTYPE_LPTEA) */
 
@@ -1516,9 +1513,11 @@ U16     sx, px;                         /* Segment and page index,
     }
     else
         regs->dat.raddr = pto;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
+    /*-----------------------------------------------------------*/
     /* The following code is common to S/370, ESA/390, and ESAME */
+    /*-----------------------------------------------------------*/
 
     /* Clear exception code and return with zero return code */
     regs->dat.xcode = 0;
@@ -1533,7 +1532,7 @@ address_excp:
     goto tran_prog_check;
 
 tran_spec_excp:
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 //    logmsg("dat.c: translation specification exception...\n");
 //    logmsg("       pte = %16.16"PRIX64", ste = %16.16"PRIX64", rte=%16.16"PRIX64"\n",
 //        pte, ste, rte);
@@ -1545,21 +1544,21 @@ tran_spec_excp:
     regs->dat.xcode = PGM_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto tran_prog_check;
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 spec_oper_excp:
     regs->dat.xcode = PGM_SPECIAL_OPERATION_EXCEPTION;
     goto tran_prog_check;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
 tran_prog_check:
-#if defined(FEATURE_036_ENH_MONITOR_FACILITY)
+#if defined( FEATURE_036_ENH_MONITOR_FACILITY )
     /* No program interrupt for enhanced MC */
     if(acctype & ACC_ENH_MC)
     {
         cc = 5;
         return cc;
     }
-#endif /*defined(FEATURE_036_ENH_MONITOR_FACILITY)*/
+#endif
     regs->program_interrupt (regs, regs->dat.xcode);
 
 /* Conditions which the caller may or may not program check */
@@ -1585,13 +1584,13 @@ page_tran_invalid:
     cc = 2;
     goto tran_excp_addr;
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 page_tran_length:
     regs->dat.xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
     regs->dat.raddr = pto;
     cc = 3;
     goto tran_excp_addr;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
 seg_tran_length:
 //  logmsg("dat.c: segment translation exception due to segment length\n");
@@ -1606,7 +1605,7 @@ tran_alet_excp:
     cc = (acctype & ACC_LPTEA) ? 3 : 4;
     return cc;
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 reg_first_invalid:
     /* For LPTEA, return region table entry address with cc 2 */
     if (acctype & ACC_LPTEA)
@@ -1675,7 +1674,7 @@ tran_excp_addr:
     regs->TEA = vaddr & PAGEFRAME_PAGEMASK;
 
     /* Set the address space indication in the exception address */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if(regs->dat.stid == TEA_ST_ARMODE)
     {
         if ((regs->dat.asd & ASCE_TO) == (regs->CR(1) & ASCE_TO))
@@ -1689,7 +1688,7 @@ tran_excp_addr:
     }
     else
         regs->TEA |= regs->dat.stid;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     if(regs->dat.stid == TEA_ST_ARMODE)
     {
         if ((regs->dat.asd & STD_STO) == (regs->CR(1) & STD_STO))
@@ -1708,17 +1707,16 @@ tran_excp_addr:
             regs->TEA |= TEA_ST_SECNDRY | TEA_SECADDR;
         else
             regs->TEA |= regs->dat.stid;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#if defined(FEATURE_075_ACC_EX_FS_INDIC_FACILITY)         /*810*/
+#if defined( FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
     /* Set the fetch/store indication bits 52-53 in the TEA */
     if (acctype & ACC_READ) {
         regs->TEA |= TEA_FETCH;
     } else if (acctype & (ACC_WRITE|ACC_CHECK)) {
         regs->TEA |= TEA_STORE;
     }
-#endif /*defined(FEATURE_075_ACC_EX_FS_INDIC_FACILITY)*/  /*810*/
-
+#endif
     /* Set the exception access identification */
     if (ACCESS_REGISTER_MODE(&regs->psw)
      || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
@@ -2188,18 +2186,18 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
     /* Convert logical address to real address */
     if ( (REAL_MODE(&regs->psw) || arn == USE_REAL_ADDR)
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined( FEATURE_INTERPRETIVE_EXECUTION )
       /* Under SIE guest real is always host primary, regardless
          of the DAT mode */
       && !(regs->sie_active
-#if !defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if !defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
                             && arn == USE_PRIMARY_SPACE
 #else
 //                          && ( (arn == USE_PRIMARY_SPACE)
 //                               || SIE_STATB(regs->guestregs, MX, XC) )
-#endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
           )
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */
        )
     {
         regs->dat.pvtaddr = regs->dat.protect = 0;
@@ -2231,7 +2229,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     if (regs->dat.aaddr > regs->mainlim)
         goto vabs_addr_excp;
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
@@ -2272,23 +2270,21 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Take into account SIE guests with a 2K page scheme
            because the SIE host may be operating with a 4K page
            system */
-#if defined(FEATURE_2K_STORAGE_KEYS)
-        if((addr & PAGEFRAME_PAGEMASK) & 0x800)
-        {
-            apfra|=0x800;
-        }
+#if defined( FEATURE_2K_STORAGE_KEYS )
+        if ((addr & PAGEFRAME_PAGEMASK) & 0x800)
+            apfra |= 0x800;
 #endif
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Check protection and set reference and change bits */
     regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Do not apply host key access when SIE fetches/stores data */
     if (unlikely(SIE_ACTIVE(regs)))
         return regs->mainstor + aaddr;
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     if (likely(acctype & ACC_READ))
     {
@@ -2332,22 +2328,22 @@ int     ix = TLBIX(addr);               /* TLB index                 */
                               :  ACC_READ;
         regs->tlb.main[ix]    = NEW_MAINADDR (regs, addr, apfra);
 
-#if defined(FEATURE_PER)
+#if defined( FEATURE_PER )
         if (EN_IC_PER_SA(regs))
         {
             regs->tlb.acc[ix] = ACC_READ;
             if (arn != USE_REAL_ADDR
-#if defined(FEATURE_PER2)
+#if defined( FEATURE_PER2 )
             && ( REAL_MODE(&regs->psw) ||
                ARCH_DEP(check_sa_per2) (arn, acctype, regs)
                )
-#endif /*defined(FEATURE_PER2)*/
+#endif
             /* Check the range altered enters the SA PER range */
             && PER_RANGE_CHECK2(addr,addr+(len-1),regs->CR(10),regs->CR(11))
             )
                 ON_IC_PER_SA(regs);
         }
-#endif /*defined(FEATURE_PER)*/
+#endif /* defined( FEATURE_PER ) */
     } /* acctype & ACC_WRITE|CHECK */
 
     /* Return mainstor address */
@@ -2357,31 +2353,31 @@ vabs_addr_excp:
     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
 vabs_prot_excp:
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
     regs->TEA = addr & STORAGE_KEY_PAGEMASK;
     if (regs->dat.protect && (acctype & (ACC_WRITE|ACC_CHECK)) )
     {
         regs->TEA |= TEA_PROT_AP;
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->dat.protect & 2)
             regs->TEA |= TEA_PROT_A;
-  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     }
     regs->TEA |= regs->dat.stid;
     regs->excarid = (arn > 0 ? arn : 0);
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+#endif /* defined( FEATURE_SUPPRESSION_ON_PROTECTION ) */
 
-#if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
+#if defined( _FEATURE_PROTECTION_INTERCEPTION_CONTROL )
     if(SIE_MODE(regs) && regs->hostregs->dat.protect)
     {
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
         regs->hostregs->TEA = regs->TEA;
         regs->hostregs->excarid = regs->excarid;
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+#endif
         (regs->hostregs->program_interrupt) (regs->hostregs, PGM_PROTECTION_EXCEPTION);
     }
     else
-#endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
+#endif /* defined( _FEATURE_PROTECTION_INTERCEPTION_CONTROL ) */
         regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
 
 vabs_prog_check:
@@ -2397,6 +2393,6 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
     return ARCH_DEP(logical_to_main_l)(addr,arn,regs,acctype,akey,1);
 }
 
-#endif /* defined(_DAT_C) */
+#endif /* defined( _DAT_C ) */
 
 /* end of DAT.H */

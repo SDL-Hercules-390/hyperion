@@ -106,7 +106,7 @@ BYTE   *dest;                         /* Pointer to target byte      */
 /*-------------------------------------------------------------------*/
 /* D6   OC    - Or Characters                                   [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(or_character)
+DEF_INST( or_character )
 {
 int     len, len2, len3;                /* Lengths to copy           */
 int     b1, b2;                         /* Base register numbers     */
@@ -117,19 +117,19 @@ BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-    ITIMER_SYNC(addr1,len,regs);
-    ITIMER_SYNC(addr2,len,regs);
+    ITIMER_SYNC( addr1, len, regs );
+    ITIMER_SYNC( addr2, len, regs );
 
     /* Quick out for 1 byte (no boundary crossed) */
-    if (unlikely(len == 0))
+    if (unlikely( !len ))
     {
-        source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        source1 = MADDR( addr2, b2, regs, ACCTYPE_READ,  regs->psw.pkey );
+        dest1   = MADDR( addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
         *dest1 |= *source1;
         regs->psw.cc = (*dest1 != 0);
-        ITIMER_UPDATE(addr1,len,regs);
+        ITIMER_UPDATE( addr1, len, regs );
         return;
     }
 
@@ -144,30 +144,35 @@ int     cc = 0;                         /* Condition code            */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDRL (addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    dest1 = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     if ( NOCROSS2K(addr1,len) )
     {
         if ( NOCROSS2K(addr2,len) )
         {
             /* (1) - No boundaries are crossed */
-            for (i = 0; i <= len; i++)
-                if ( (*dest1++ |= *source1++) ) cc = 1;
-
+            for (i=0; i <= len; i++)
+                if ((*dest1++ |= *source1++))
+                    cc = 1;
         }
         else
         {
              /* (2) - Second operand crosses a boundary */
              len2 = 0x800 - (addr2 & 0x7FF);
-             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
-                              b2, regs, ACCTYPE_READ, regs->psw.pkey);
-             for ( i = 0; i < len2; i++)
-                 if ( (*dest1++ |= *source1++) ) cc = 1;
+             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+             for (i=0; i < len2; i++)
+                 if ( (*dest1++ |= *source1++) )
+                     cc = 1;
+
              len2 = len - len2;
-             for ( i = 0; i <= len2; i++)
-                 if ( (*dest1++ |= *source2++) ) cc = 1;
+
+             for (i=0; i <= len2; i++)
+                 if ( (*dest1++ |= *source2++) )
+                     cc = 1;
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
@@ -175,57 +180,79 @@ int     cc = 0;                         /* Condition code            */
     {
         /* First operand crosses a boundary */
         len2 = 0x800 - (addr1 & 0x7FF);
-        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
-                       b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if ( NOCROSS2K(addr2,len) )
         {
              /* (3) - First operand crosses a boundary */
-             for ( i = 0; i < len2; i++)
-                 if ( (*dest1++ |= *source1++) ) cc = 1;
+             for (i=0; i < len2; i++)
+                 if ((*dest1++ |= *source1++))
+                     cc = 1;
+
              len2 = len - len2;
-             for ( i = 0; i <= len2; i++)
-                 if ( (*dest2++ |= *source1++) ) cc = 1;
+
+             for (i=0; i <= len2; i++)
+                 if ((*dest2++ |= *source1++))
+                     cc = 1;
         }
         else
         {
             /* (4) - Both operands cross a boundary */
             len3 = 0x800 - (addr2 & 0x7FF);
-            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
-                             b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+                              b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
-                for ( i = 0; i < len2; i++)
-                    if ( (*dest1++ |= *source1++) ) cc = 1;
+                for (i=0; i < len2; i++)
+                    if ((*dest1++ |= *source1++))
+                        cc = 1;
+
                 len2 = len - len2;
-                for ( i = 0; i <= len2; i++)
-                    if ( (*dest2++ |= *source2++) ) cc = 1;
+
+                for (i=0; i <= len2; i++)
+                    if ((*dest2++ |= *source2++))
+                        cc = 1;
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
-                for ( i = 0; i < len2; i++)
-                    if ( (*dest1++ |= *source1++) ) cc = 1;
+                for (i=0; i < len2; i++)
+                    if ((*dest1++ |= *source1++))
+                        cc = 1;
+
                 len2 = len3 - len2;
-                for ( i = 0; i < len2; i++)
-                    if ( (*dest2++ |= *source1++) ) cc = 1;
+
+                for (i=0; i < len2; i++)
+                    if ((*dest2++ |= *source1++))
+                        cc = 1;
+
                 len2 = len - len3;
-                for ( i = 0; i <= len2; i++)
-                    if ( (*dest2++ |= *source2++) ) cc = 1;
+
+                for (i=0; i <= len2; i++)
+                    if ((*dest2++ |= *source2++))
+                        cc = 1;
             }
             else
             {
                 /* (4c) - Second operand crosses first */
                 for ( i = 0; i < len3; i++)
-                    if ( (*dest1++ |= *source1++) ) cc = 1;
+                    if ((*dest1++ |= *source1++))
+                        cc = 1;
+
                 len3 = len2 - len3;
-                for ( i = 0; i < len3; i++)
-                    if ( (*dest1++ |= *source2++) ) cc = 1;
+
+                for (i=0; i < len3; i++)
+                    if ((*dest1++ |= *source2++))
+                        cc = 1;
+
                 len3 = len - len2;
-                for ( i = 0; i <= len3; i++)
-                    if ( (*dest2++ |= *source2++) ) cc = 1;
+
+                for (i=0; i <= len3; i++)
+                    if ((*dest2++ |= *source2++))
+                        cc = 1;
             }
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
@@ -234,8 +261,7 @@ int     cc = 0;                         /* Condition code            */
 
     regs->psw.cc = cc;
 
-    ITIMER_UPDATE(addr1,len,regs);
-
+    ITIMER_UPDATE( addr1, len, regs );
 }
 
 
@@ -858,7 +884,7 @@ U32     n;                              /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 /* 9B   STAM  - Store Access Multiple                           [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_access_multiple)
+DEF_INST( store_access_multiple )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -866,9 +892,9 @@ VADR    effective_addr2;                /* effective address         */
 int     i, m, n;                        /* Integer work area         */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
@@ -877,21 +903,21 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
     /* Address of operand beginning */
-    p1 = (U32*)MADDRL(effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    p1 = (U32*) MADDRL( effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Get address of next page if boundary crossed */
-    if (unlikely (m < n))
-        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    if (unlikely( m < n ))
+        p2 = (U32*) MADDR( effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
     else
         m = n;
 
     /* Store to first page */
-    for (i = 0; i < m; i++)
-        store_fw (p1++, regs->AR((r1 + i) & 0xF));
+    for (i=0; i < m; i++)
+        store_fw( p1++, regs->AR( (r1 + i) & 0xF ));
 
     /* Store to next page */
-    for ( ; i < n; i++)
-        store_fw (p2++, regs->AR((r1 + i) & 0xF));
+    for (; i < n; i++)
+        store_fw( p2++, regs->AR( (r1 + i) & 0xF ));
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -1076,7 +1102,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 90   STM   - Store Multiple                                  [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_multiple)
+DEF_INST( store_multiple )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -1085,7 +1111,7 @@ int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2;                        /* Mainstor pointers         */
 BYTE   *bp1;                            /* Unaligned mainstor ptr    */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
     /* Calculate number of bytes to store */
     n = (((r3 - r1) & 0xF) + 1) << 2;
@@ -1094,46 +1120,48 @@ BYTE   *bp1;                            /* Unaligned mainstor ptr    */
     m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
     /* Get address of first page */
-    bp1 = (BYTE*)MADDRL(effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    p1 = (U32*)bp1;
+    bp1 = (BYTE*) MADDRL( effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
+    p1  = (U32*)  bp1;
 
-    if (likely(n <= m))
+    if (likely( n <= m ))
     {
         /* boundary not crossed */
         n >>= 2;
-#if defined(OPTION_STRICT_ALIGNMENT)
-        if(likely(!(((uintptr_t)effective_addr2)&0x03)))
+#if defined( OPTION_STRICT_ALIGNMENT )
+        if (likely(!(((uintptr_t)effective_addr2) & 0x03)))
         {
 #endif
-            for (i = 0; i < n; i++)
-                store_fw (p1++, regs->GR_L((r1 + i) & 0xF));
-#if defined(OPTION_STRICT_ALIGNMENT)
+            for (i=0; i < n; i++)
+                store_fw( p1++, regs->GR_L( (r1 + i) & 0xF ));
+#if defined( OPTION_STRICT_ALIGNMENT )
         }
         else
         {
-            for (i = 0; i < n; i++,bp1+=4)
-                store_fw (bp1, regs->GR_L((r1 + i) & 0xF));
+            for (i=0; i < n; i++, bp1 += 4)
+                store_fw( bp1, regs->GR_L( (r1 + i) & 0xF ));
         }
 #endif
-
-        ITIMER_UPDATE(effective_addr2,(n*4)-1,regs);
+        ITIMER_UPDATE( effective_addr2, (n*4)-1, regs );
     }
     else
     {
         /* boundary crossed, get address of the 2nd page */
         effective_addr2 += m;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        p2 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        effective_addr2 &= ADDRESS_MAXWRAP( regs );
+        p2 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-        if (likely((m & 0x3) == 0))
+        if (likely( !(m & 0x3) ))
         {
             /* word aligned */
             m >>= 2;
-            for (i = 0; i < m; i++)
-                store_fw (p1++, regs->GR_L((r1 + i) & 0xF));
+
+            for (i=0; i < m; i++)
+                store_fw( p1++, regs->GR_L( (r1 + i) & 0xF ));
+
             n >>= 2;
-            for ( ; i < n; i++)
-                store_fw (p2++, regs->GR_L((r1 + i) & 0xF));
+
+            for (; i < n; i++)
+                store_fw( p2++, regs->GR_L( (r1 + i) & 0xF ));
         }
         else
         {
@@ -1141,21 +1169,23 @@ BYTE   *bp1;                            /* Unaligned mainstor ptr    */
             U32 rwork[16];
             BYTE *b1, *b2;
 
-            for (i = 0; i < (n >> 2); i++)
-                rwork[i] = CSWAP32(regs->GR_L((r1 + i) & 0xF));
-            b1 = (BYTE *)&rwork[0];
+            for (i=0; i < (n >> 2); i++)
+                rwork[i] = CSWAP32( regs->GR_L( (r1 + i) & 0xF ));
 
-            b2 = (BYTE *)p1;
-            for (i = 0; i < m; i++)
+            b1 = (BYTE*) &rwork[0];
+            b2 = (BYTE*) p1;
+
+            for (i=0; i < m; i++)
                 *b2++ = *b1++;
 
-            b2 = (BYTE *)p2;
-            for ( ; i < n; i++)
+            b2 = (BYTE*) p2;
+
+            for (; i < n; i++)
                 *b2++ = *b1++;
         }
     }
 
-} /* end DEF_INST(store_multiple) */
+} /* end DEF_INST( store_multiple ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1580,7 +1610,7 @@ U16     h2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* DC   TR    - Translate                                       [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(translate)
+DEF_INST( translate )
 {
 int     len, len2 = -1;                 /* Lengths                   */
 int     b1, b2;                         /* Values of base field      */
@@ -1588,10 +1618,10 @@ int     i, b, n;                        /* Work variables            */
 VADR    addr1, addr2;                   /* Effective addresses       */
 BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
     /* Get destination pointer */
-    dest = MADDRL (addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    dest = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Get pointer to next page if destination crosses a boundary */
     if (CROSS2K (addr1, len))
@@ -1599,19 +1629,18 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         len2 = len;
         len = 0x7FF - (addr1 & 0x7FF);
         len2 -= (len + 1);
-        dest2 = MADDR ((addr1+len+1) & ADDRESS_MAXWRAP(regs),
-                       b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        dest2 = MADDR( (addr1+len+1) & ADDRESS_MAXWRAP( regs ),
+                        b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
     }
 
     /* Fast path if table does not cross a boundary */
     if (NOCROSS2K (addr2, 255))
     {
-        tab = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        tab = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
         /* Perform translate function */
-        for (i = 0; i <= len; i++)
-            dest[i] = tab[dest[i]];
-        for (i = 0; i <= len2; i++)
-            dest2[i] = tab[dest2[i]];
+        for (i=0; i <= len;  i++) dest [i] = tab[dest [i]];
+        for (i=0; i <= len2; i++) dest2[i] = tab[dest2[i]];
     }
     else
     {
@@ -1621,35 +1650,32 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         /* Referenced part of the table may or may not span boundary */
         if (b < n)
         {
-            tab = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-            for (i = 1; i <= len && b < n; i++)
-                b = dest[i];
-            for (i = 0; i <= len2 && b < n; i++)
-                b = dest2[i];
-            tab2 = b < n
-                 ? NULL
-                 : MADDR ((addr2+n) & ADDRESS_MAXWRAP(regs),
-                          b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            tab = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+            for (i=1; i <= len  && b < n; i++) b = dest [i];
+            for (i=0; i <= len2 && b < n; i++) b = dest2[i];
+
+            tab2 = b < n ? NULL
+                         : MADDR( (addr2+n) & ADDRESS_MAXWRAP( regs ),
+                                   b2, regs, ACCTYPE_READ, regs->psw.pkey );
         }
         else
         {
-            tab2 = MADDR ((addr2+n) & ADDRESS_MAXWRAP(regs),
-                          b2, regs, ACCTYPE_READ, regs->psw.pkey);
-            for (i = 1; i <= len && b >= n; i++)
-                b = dest[i];
-            for (i = 0; i <= len2 && b >= n; i++)
-                b = dest2[i];
-            tab = b >= n
-                ? NULL
-                : MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            tab2 = MADDR( (addr2+n) & ADDRESS_MAXWRAP( regs ),
+                           b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+            for (i=1; i <= len  && b >= n; i++) b = dest [i];
+            for (i=0; i <= len2 && b >= n; i++) b = dest2[i];
+
+            tab = b >= n ? NULL
+                         : MADDR( addr2,
+                                  b2, regs, ACCTYPE_READ, regs->psw.pkey );
         }
 
         /* Perform translate function */
-        for (i = 0; i <= len; i++)
-            dest[i] = dest[i] < n ? tab[dest[i]] : tab2[dest[i]-n];
-        for (i = 0; i <= len2; i++)
-            dest2[i] = dest2[i] < n ? tab[dest2[i]] : tab2[dest2[i]-n];
-    } /* Translate table spans a boundary */
+        for (i=0; i <= len;  i++) dest [i] = dest [i] < n ? tab[dest [i]] : tab2[dest [i]-n];
+        for (i=0; i <= len2; i++) dest2[i] = dest2[i] < n ? tab[dest2[i]] : tab2[dest2[i]-n];
+    }
 }
 
 

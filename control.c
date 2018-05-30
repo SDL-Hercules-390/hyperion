@@ -1837,7 +1837,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 /*-------------------------------------------------------------------*/
 /* B7   LCTL  - Load Control                                    [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_control)
+DEF_INST( load_control )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -1846,86 +1846,88 @@ int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 U16     updated = 0;                    /* Updated control regs      */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-#if defined(FEATURE_ECPSVM)
-    if(ecpsvm_dolctl(regs,r1,r3,b2,effective_addr2)==0)
-    {
+#if defined( FEATURE_ECPSVM )
+    if (ecpsvm_dolctl( regs, r1, r3, b2, effective_addr2 ) == 0)
         return;
-    }
 #endif
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
-    ITIMER_SYNC(effective_addr2,(n*4)-1,regs);
+    ITIMER_SYNC( effective_addr2, (n*4)-1, regs );
 
-#if defined(_FEATURE_SIE)
-    if (SIE_MODE(regs))
+#if defined( _FEATURE_SIE )
+    if (SIE_MODE( regs ))
     {
-        U16 cr_mask = fetch_hw (regs->siebk->lctl_ctl);
-        for (i = 0; i < n; i++)
-            if (cr_mask & BIT(15 - ((r1 + i) & 0xF)))
-                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        U16 cr_mask = fetch_hw( regs->siebk->lctl_ctl );
+        for (i=0; i < n; i++)
+            if (cr_mask & BIT( 15 - ( (r1 + i) & 0xF )))
+                longjmp( regs->progjmp, SIE_INTERCEPT_INST );
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     /* Calculate number of words to next boundary */
     m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
     /* Address of operand beginning */
-    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* Get address of next page if boundary crossed */
-    if (unlikely (m < n))
-        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    if (unlikely( m < n ))
+        p2 = (U32*) MADDR( effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey );
     else
         m = n;
 
     /* Copy from operand beginning */
-    for (i = 0; i < m; i++, p1++)
+    for (i=0; i < m; i++, p1++)
     {
-        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p1);
-        updated |= BIT((r1 + i) & 0xF);
+        regs->CR_L( (r1 + i) & 0xF ) = fetch_fw( p1 );
+        updated |= BIT( (r1 + i) & 0xF );
     }
 
     /* Copy from next page */
-    for ( ; i < n; i++, p2++)
+    for (; i < n; i++, p2++)
     {
-        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p2);
-        updated |= BIT((r1 + i) & 0xF);
+        regs->CR_L( (r1 + i) & 0xF ) = fetch_fw( p2 );
+        updated |= BIT( (r1 + i) & 0xF );
     }
 
     /* Actions based on updated control regs */
-    SET_IC_MASK(regs);
+    SET_IC_MASK( regs );
+
 #if __GEN_ARCH == 370
-    if (updated & BIT(1))
+    if (updated & BIT( 1 ))
     {
-        SET_AEA_COMMON(regs);
-        INVALIDATE_AIA(regs);
+        SET_AEA_COMMON( regs );
+        INVALIDATE_AIA( regs );
     }
 #else
-    if (updated & (BIT(1) | BIT(7) | BIT(13)))
-        SET_AEA_COMMON(regs);
-    if (updated & BIT(regs->AEA_AR(USE_INST_SPACE)))
-        INVALIDATE_AIA(regs);
+    if (updated & (BIT( 1 ) | BIT( 7 ) | BIT( 13 )))
+        SET_AEA_COMMON( regs );
+    if (updated & BIT( regs->AEA_AR( USE_INST_SPACE )))
+        INVALIDATE_AIA( regs );
 #endif
-    if (updated & BIT(9))
+    if (updated & BIT( 9 ))
     {
-        OBTAIN_INTLOCK(regs);
-        SET_IC_PER(regs);
-        RELEASE_INTLOCK(regs);
-        if (EN_IC_PER_SA(regs))
-            ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
+        OBTAIN_INTLOCK( regs );
+        {
+            SET_IC_PER( regs );
+        }
+        RELEASE_INTLOCK( regs );
+
+        if (EN_IC_PER_SA( regs ))
+            ARCH_DEP( invalidate_tlb )( regs, ~(ACC_WRITE | ACC_CHECK) );
     }
 
-    RETURN_INTCHECK(regs);
+    RETURN_INTCHECK( regs );
 
-} /* end DEF_INST(load_control) */
+} /* end DEF_INST( load_control ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6299,7 +6301,7 @@ U64     dreg;                           /* Clock value               */
 /*-------------------------------------------------------------------*/
 /* B6   STCTL - Store Control                                   [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_control)
+DEF_INST( store_control )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -6307,22 +6309,21 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
-#if defined(FEATURE_ECPSVM)
-    if(ecpsvm_dostctl(regs,r1,r3,b2,effective_addr2)==0)
-    {
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
+
+#if defined( FEATURE_ECPSVM )
+    if (ecpsvm_dostctl( regs, r1, r3, b2, effective_addr2 ) == 0)
         return;
-    }
 #endif
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, IC1, STCTL))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#if defined( _FEATURE_SIE )
+    if (SIE_STATB( regs, IC1, STCTL ))
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
 
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
@@ -6331,25 +6332,25 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
     /* Address of operand beginning */
-    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Get address of next page if boundary crossed */
-    if (unlikely (m < n))
-        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    if (unlikely( m < n ))
+        p2 = (U32*) MADDR( effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
     else
         m = n;
 
     /* Store at operand beginning */
-    for (i = 0; i < m; i++)
-        store_fw (p1++, regs->CR_L((r1 + i) & 0xF));
+    for (i=0; i < m; i++)
+        store_fw( p1++, regs->CR_L( (r1 + i) & 0xF ));
 
     /* Store on next page */
-    for ( ; i < n; i++)
-        store_fw (p2++, regs->CR_L((r1 + i) & 0xF));
+    for (; i < n; i++)
+        store_fw( p2++, regs->CR_L( (r1 + i) & 0xF ));
 
-    ITIMER_UPDATE(effective_addr2,(n*4)-1,regs);
+    ITIMER_UPDATE( effective_addr2, (n*4)-1, regs );
 
-} /* end DEF_INST(store_control) */
+} /* end DEF_INST( store_control ) */
 
 
 /*-------------------------------------------------------------------*/
