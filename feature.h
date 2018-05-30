@@ -622,6 +622,35 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*              Operand Length Checking Macros                       */
+/*                                                                   */
+/* The following macros are used to determine whether an operand     */
+/* storage access will cross a page boundary or not.                 */
+/*                                                                   */
+/* The first 'plain' pair of macros (without the 'L') are used for   */
+/* 0-based lengths wherein zero = 1 byte is being referenced and 255 */
+/* means 256 bytes are being referenced. They are obviously designed */
+/* for maximum length values of 0-255 as used w/MVC instructions.    */
+/*                                                                   */
+/* The second pair of 'L' macros are using for 1-based lengths where */
+/* 0 = no bytes are being referenced, 1 = one byte, etc. They are    */
+/* designed for 'Large' maximum length values such as occur with the */
+/* MVCL instruction for example (where the length can be over 256).  */
+/* NOTE: The 'L' macros are limited to a maximum length of one page! */
+/*-------------------------------------------------------------------*/
+
+#undef NOCROSSPAGE
+#undef   CROSSPAGE
+#undef NOCROSSPAGEL
+#undef   CROSSPAGEL
+
+#define NOCROSSPAGE(  addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= (PAGEFRAME_BYTEMASK - (len)) )
+#define   CROSSPAGE(  addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  (PAGEFRAME_BYTEMASK - (len)) )
+
+#define NOCROSSPAGEL( addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= (PAGEFRAME_PAGESIZE - (len)) )
+#define   CROSSPAGEL( addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  (PAGEFRAME_PAGESIZE - (len)) )
+
+/*-------------------------------------------------------------------*/
 /* EXPANDED STORAGE page-size related constants                      */
 /*-------------------------------------------------------------------*/
 

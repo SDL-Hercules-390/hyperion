@@ -148,9 +148,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    if ( NOCROSS2K(addr1,len) )
+    if (NOCROSSPAGE( addr1, len ))
     {
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (1) - No boundaries are crossed */
             for (i=0; i <= len; i++)
@@ -160,7 +160,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
              /* (2) - Second operand crosses a boundary */
-             len2 = 0x800 - (addr2 & 0x7FF);
+             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
              source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                                b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
@@ -179,12 +179,12 @@ int     cc = 0;                         /* Condition code            */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
              /* (3) - First operand crosses a boundary */
              for (i=0; i < len2; i++)
@@ -200,7 +200,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
@@ -900,7 +900,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDRL( effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -1117,7 +1117,7 @@ BYTE   *bp1;                            /* Unaligned mainstor ptr    */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Get address of first page */
     bp1 = (BYTE*) MADDRL( effective_addr2, n, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -1624,17 +1624,17 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
     dest = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Get pointer to next page if destination crosses a boundary */
-    if (CROSS2K (addr1, len))
+    if (CROSSPAGE( addr1, len ))
     {
         len2 = len;
-        len = 0x7FF - (addr1 & 0x7FF);
+        len = PAGEFRAME_BYTEMASK - (addr1 & PAGEFRAME_BYTEMASK);
         len2 -= (len + 1);
         dest2 = MADDR( (addr1+len+1) & ADDRESS_MAXWRAP( regs ),
                         b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
     }
 
     /* Fast path if table does not cross a boundary */
-    if (NOCROSS2K (addr2, 255))
+    if (NOCROSSPAGE( addr2, 255 ))
     {
         tab = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
@@ -1642,9 +1642,9 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         for (i=0; i <= len;  i++) dest [i] = tab[dest [i]];
         for (i=0; i <= len2; i++) dest2[i] = tab[dest2[i]];
     }
-    else
+    else /* Translate table spans a boundary */
     {
-        n = 0x800  - (addr2 & 0x7FF);
+        n = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
         b = dest[0];
 
         /* Referenced part of the table may or may not span boundary */

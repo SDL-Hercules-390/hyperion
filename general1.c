@@ -293,9 +293,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    if ( NOCROSS2K(addr1,len ) )
+    if (NOCROSSPAGE( addr1,len ))
     {
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2,len ))
         {
             /* (1) - No boundaries are crossed */
             for (i=0; i <= len; i++)
@@ -305,7 +305,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
              /* (2) - Second operand crosses a boundary */
-             len2 = 0x800 - (addr2 & 0x7FF);
+             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
              source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                                b2, regs, ACCTYPE_READ, regs->psw.pkey );
              for (i=0; i < len2; i++)
@@ -323,12 +323,12 @@ int     cc = 0;                         /* Condition code            */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len ))
+        if (NOCROSSPAGE( addr2,len ))
         {
              /* (3) - First operand crosses a boundary */
              for (i=0; i < len2; i++)
@@ -344,7 +344,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
@@ -2352,9 +2352,9 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
      *     (c) source boundary crossed first
      */
 
-    if ( (ea1 & 0x7FF) <= 0x7FF - len )
+    if ((ea1 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
     {
-        if ( (ea2 & 0x7FF) <= 0x7FF - len )
+        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
         {
             /* (1) - No boundaries are crossed */
             switch(len) {
@@ -2401,7 +2401,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
         else
         {
             /* (2) - Second operand crosses a boundary */
-            len2 = 0x800 - (ea2 & 0x7FF);
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
             rc = memcmp( m1, m2, len2 );
             if (rc == 0)
             {
@@ -2414,8 +2414,8 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     else
     {
         /* First operand crosses a boundary */
-        len1 = 0x800 - (ea1 & 0x7FF);
-        if ( (ea2 & 0x7FF) <= 0x7FF - len )
+        len1 = PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_BYTEMASK);
+        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len )
         {
             /* (3) - First operand crosses a boundary */
             rc = memcmp( m1, m2, len1 );
@@ -2429,7 +2429,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len2 = 0x800 - (ea2 & 0x7FF);
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
             if (len1 == len2)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -3644,9 +3644,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    if ( NOCROSS2K(addr1,len))
+    if (NOCROSSPAGE( addr1, len ))
     {
-        if ( NOCROSS2K(addr2,len))
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (1) - No boundaries are crossed */
             if (dest1 == source1)
@@ -3665,7 +3665,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
              /* (2) - Second operand crosses a boundary */
-             len2 = 0x800 - (addr2 & 0x7FF);
+             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
              source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                                b2, regs, ACCTYPE_READ, regs->psw.pkey );
              for (i=0; i < len2; i++)
@@ -3683,12 +3683,12 @@ int     cc = 0;                         /* Condition code            */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len))
+        if (NOCROSSPAGE( addr2, len ))
         {
              /* (3) - First operand crosses a boundary */
              for (i=0; i < len2; i++)
@@ -3704,7 +3704,7 @@ int     cc = 0;                         /* Condition code            */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
@@ -4146,7 +4146,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -4285,7 +4285,7 @@ BYTE   *bp1;                            /* Unaligned maintstor ptr   */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Address of operand beginning */
     bp1 = (BYTE*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -4564,6 +4564,7 @@ VADR    effective_addr1,
 }
 
 
+#if 0 // OLD way
 /*-------------------------------------------------------------------*/
 /* E8   MVCIN - Move Inverse                                    [SS] */
 /*-------------------------------------------------------------------*/
@@ -4615,6 +4616,83 @@ int     i;                              /* Integer work areas        */
         effective_addr2 &= ADDRESS_MAXWRAP( regs );
     }
 }
+#else // fishtest NEW way
+/*-------------------------------------------------------------------*/
+/* E8   MVCIN - Move Inverse                                    [SS] */
+/*-------------------------------------------------------------------*/
+DEF_INST( move_inverse )
+{
+VADR    eff_addr1, eff_addr2;           /* Effective addresses       */
+VADR    op2end;                         /* Where operand-2 ends      */
+int     b1, b2;                         /* Base registers            */
+BYTE    len;                            /* Amount to move minus 1    */
+BYTE   *dst1, *dst2;                    /* eff_addr1 MAINSTOR addrs  */
+BYTE   *src1, *src2;                    /* eff_addr2 MAINSTOR addrs  */
+BYTE   *p1, *p2;                        /* Work ptrs for reversing   */
+SIZE_T  dstlen1, dstlen2;               /* eff_addr1 part 1/2 lens   */
+SIZE_T  srclen1, srclen2;               /* eff_addr2 part 1/2 lens   */
+ALIGN_8 BYTE wrk[256];                  /* Work area for reversing   */
+
+    SS_L( inst, regs, len, b1, eff_addr1, b2, eff_addr2 );
+
+    /* If op1 crosses a page, make sure both pages are accessable */
+    dstlen1 = PAGEFRAME_PAGESIZE - (eff_addr1 & PAGEFRAME_BYTEMASK);
+    if (dstlen1 < ((SIZE_T)len + 1))
+    {
+        ARCH_DEP( validate_operand )( eff_addr1, b1, len, ACCTYPE_WRITE_SKP, regs );
+        dstlen2 = ((SIZE_T)len + 1) - dstlen1;
+        dst1 = MADDR( eff_addr1,           b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dst2 = MADDR( eff_addr1 + dstlen1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    }
+    else
+    {
+        dstlen1 = (SIZE_T)len + 1;
+        dstlen2 = 0;
+        dst1 = MADDR( eff_addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dst2 = NULL;
+    }
+
+    /* If op2 crosses a page, make sure both pages are accessable */
+    op2end  = (eff_addr2 - len) & ADDRESS_MAXWRAP( regs );
+    srclen1 = PAGEFRAME_PAGESIZE - (op2end & PAGEFRAME_BYTEMASK);
+    if (srclen1 < ((SIZE_T)len + 1))
+    {
+        ARCH_DEP( validate_operand )( op2end, b2, len, ACCTYPE_READ, regs );
+        srclen2 = ((SIZE_T)len + 1) - srclen1;
+        src1 = MADDR( op2end,           b2, regs, ACCTYPE_READ, regs->psw.pkey );
+        src2 = MADDR( op2end + srclen1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    }
+    else
+    {
+        srclen1 = (SIZE_T)len + 1;
+        srclen2 = 0;
+        src1 = MADDR( op2end, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+        src2 = NULL;
+    }
+
+    /* Copy source string to work area */
+    concpy( regs, &wrk[0], src1, srclen1 );
+    if (srclen2)
+        concpy( regs, &wrk[ srclen1 ], src2, srclen2 );
+
+    /* Reverse the string in our work area */
+    p1 = &wrk[0];
+    p2 = p1 + len;
+    while (p1 < p2)
+    {
+        *p1 ^= *p2;
+        *p2 ^= *p1;
+        *p1 ^= *p2;
+        p1++;
+        p2--;
+    }
+
+    /* Copy results back to destination */
+    concpy( regs, dst1, &wrk[0], dstlen1 );
+    if (dstlen2)
+        concpy( regs, dst2, &wrk[ dstlen1 ], dstlen2 );
+}
+#endif // fishtest
 
 
 /*-------------------------------------------------------------------*/
@@ -4726,13 +4804,13 @@ int     orglen1;                        /* Original dest length      */
         /* Clear or copy memory */
         if (!len2)
         {
-            len = NOCROSS2KL(addr1,len1) ? len1 : (int)(0x800 - (addr1 & 0x7FF));
+            len = NOCROSSPAGEL( addr1, len1 ) ? len1 : (int)(PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK));
             memset( dest, pad, len );
         }
         else
         {
-            len3 = NOCROSS2KL(addr1,len1) ? len1 : (int)(0x800 - (addr1 & 0x7FF));
-            len4 = NOCROSS2KL(addr2,len2) ? len2 : (int)(0x800 - (addr2 & 0x7FF));
+            len3 = NOCROSSPAGEL( addr1, len1 ) ? len1 : (int)(PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK));
+            len4 = NOCROSSPAGEL( addr2, len2 ) ? len2 : (int)(PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK));
             len = len3 < len4 ? len3 : len4;
             /* Use concpy to ensure Concurrent block update consistency */
             concpy( regs, dest, source, len );
@@ -4773,12 +4851,12 @@ int     orglen1;                        /* Original dest length      */
         {
             if (len2)
             {
-                if (addr2 & 0x7FF)
+                if (addr2 & PAGEFRAME_BYTEMASK)
                     source += len;
                 else
                     source = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
             }
-            if (addr1 & 0x7FF)
+            if (addr1 & PAGEFRAME_BYTEMASK)
                 dest += len;
             else
                 dest = MADDRL( addr1, len1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -4933,9 +5011,9 @@ int     i;                              /* Loop counter              */
      *     (c) source boundary crossed first
      */
 
-    if ( NOCROSS2K(addr1,len))
+    if (NOCROSSPAGE( addr1, len ))
     {
-        if ( NOCROSS2K(addr2,len))
+        if (NOCROSSPAGE( addr2,len ))
         {
             /* (1) - No boundaries are crossed */
             for (i=0; i <= len; i++)
@@ -4944,7 +5022,7 @@ int     i;                              /* Loop counter              */
         else
         {
             /* (2) - Second operand crosses a boundary */
-            len2 = 0x800 - (addr2 & 0x7FF);
+            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
@@ -4961,12 +5039,12 @@ int     i;                              /* Loop counter              */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (3) - First operand crosses a boundary */
             for (i=0; i < len2; i++)
@@ -4980,7 +5058,7 @@ int     i;                              /* Loop counter              */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
@@ -5210,9 +5288,9 @@ int     i;                              /* Loop counter              */
      *     (c) source boundary crossed first
      */
 
-    if ( NOCROSS2K(addr1,len) )
+    if (NOCROSSPAGE( addr1, len ))
     {
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (1) - No boundaries are crossed */
             for (i=0; i <= len; i++)
@@ -5221,7 +5299,7 @@ int     i;                              /* Loop counter              */
         else
         {
             /* (2) - Second operand crosses a boundary */
-            len2 = 0x800 - (addr2 & 0x7FF);
+            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
@@ -5238,12 +5316,12 @@ int     i;                              /* Loop counter              */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (3) - First operand crosses a boundary */
             for (i=0; i < len2; i++)
@@ -5257,7 +5335,7 @@ int     i;                              /* Loop counter              */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)

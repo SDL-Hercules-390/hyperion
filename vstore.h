@@ -115,29 +115,6 @@
         z900_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
 /*-------------------------------------------------------------------*/
-/*              Operand Length Checking Macros                       */
-/*                                                                   */
-/* The following macros are used to determine whether an operand     */
-/* storage access will cross a 2K page boundary or not.              */
-/*                                                                   */
-/* The first 'plain' pair of macros (without the 'L') are used for   */
-/* 0-based lengths wherein zero = 1 byte is being referenced and 255 */
-/* means 256 bytes are being referenced. They are obviously designed */
-/* for maximum length values of 0-255 as used w/MVC instructions.    */
-/*                                                                   */
-/* The second pair of 'L' macros are using for 1-based lengths where */
-/* 0 = no bytes are being referenced, 1 = one byte, etc. They are    */
-/* designed for 'Large' maximum length values such as occur with the */
-/* MVCL instruction for example (where the length can be up to 16MB) */
-/*-------------------------------------------------------------------*/
-
-#define NOCROSS2K(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x7FF - (_len) ) )
-#define CROSS2K(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x7FF - (_len) ) )
-
-#define NOCROSS2KL(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x800 - (_len) ) )
-#define CROSS2KL(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x800 - (_len) ) )
-
-/*-------------------------------------------------------------------*/
 /* Store 1 to 256 characters into virtual storage operand            */
 /*                                                                   */
 /* Input:                                                            */
@@ -159,7 +136,7 @@ BYTE   *main1, *main2;                  /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key addresses     */
 int     len2;                           /* Length to end of page     */
 
-    if ( NOCROSS2K(addr,len) )
+    if (NOCROSSPAGE( addr,len ))
     {
         memcpy( MADDRL( addr, len+1, arn, regs, ACCTYPE_WRITE, regs->psw.pkey ),
                src, len + 1);
@@ -167,7 +144,7 @@ int     len2;                           /* Length to end of page     */
     }
     else
     {
-        len2 = 0x800 - (addr & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
         main1 = MADDRL( addr, len2, arn, regs, ACCTYPE_WRITE_SKP,
                         regs->psw.pkey );
         sk = regs->dat.storkey;
@@ -239,7 +216,8 @@ _VSTORE_C_STATIC
 void ARCH_DEP( vstore2 )( U16 value, VADR addr, int arn, REGS* regs )
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if (likely(!((VADR_L)addr & 1) || ((VADR_L)addr & 0x7FF) != 0x7FF))
+    if (likely(!((VADR_L)addr & 1)
+        || ((VADR_L)addr & PAGEFRAME_BYTEMASK) != PAGEFRAME_BYTEMASK))
     {
         BYTE* mn;
         mn = MADDRL( addr, 2, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -271,7 +249,7 @@ BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[4];                        /* Copied value              */
 
-    len = 0x800 - (addr & 0x7FF);
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk = regs->dat.storkey;
     main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4-len, arn, regs,
@@ -288,7 +266,8 @@ _VSTORE_C_STATIC
 void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if(likely(!((VADR_L)addr & 0x03)) || (((VADR_L)addr & 0x7ff) <= 0x7fc))
+    if (likely(!((VADR_L)addr & 0x03))
+        || (((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-3)))
     {
         BYTE *mn;
         mn = MADDRL( addr, 4, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -323,7 +302,7 @@ BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copied value              */
 
-    len = 0x800 - (addr & 0x7FF);
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk = regs->dat.storkey;
     main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8-len, arn, regs,
@@ -359,7 +338,7 @@ void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
            code as above because casting U64* to a non aligned
            pointer may break on those architectures mandating
            strict alignement */
-        if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
+        if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-7)))
         {
             /* Non aligned but not crossing page boundary */
             BYTE *mn;
@@ -397,14 +376,14 @@ int     len2;                           /* Length to copy on page    */
 
     main1 = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    if ( NOCROSS2K(addr,len) )
+    if (NOCROSSPAGE( addr,len ))
     {
         ITIMER_SYNC( addr, len, regs );
         memcpy( dest, main1, len + 1 );
     }
     else
     {
-        len2 = 0x800 - (addr & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
         main2 = MADDR( (addr + len2) & ADDRESS_MAXWRAP( regs ),
                         arn, regs, ACCTYPE_READ, regs->psw.pkey );
         memcpy(        dest,        main1,           len2 );
@@ -469,7 +448,8 @@ U16     value;
 _VSTORE_C_STATIC
 U16 ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs )
 {
-    if(likely(!((VADR_L)addr & 0x01)) || (((VADR_L)addr & 0x7ff) !=0x7ff ))
+    if (likely(!((VADR_L)addr & 0x01))
+        || (((VADR_L)addr & PAGEFRAME_BYTEMASK) != PAGEFRAME_BYTEMASK ))
     {
         BYTE *mn;
         ITIMER_SYNC( addr, 2-1, regs );
@@ -502,7 +482,7 @@ BYTE    temp[8];                        /* Copy destination          */
 
     mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp, mn, 4 );
-    len = 0x800 - (addr & 0x7FF);
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     mn = MADDR( (addr + len) & ADDRESS_MAXWRAP( regs ), arn, regs,
                  ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp+len, mn, 4 );
@@ -513,7 +493,8 @@ BYTE    temp[8];                        /* Copy destination          */
 _VSTORE_C_STATIC
 U32 ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs )
 {
-    if ( (likely(!((VADR_L)addr & 0x03)) || (((VADR_L)addr & 0x7ff) <= 0x7fc )))
+    if ((likely(!((VADR_L)addr & 0x03))
+        || (((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-3) )))
     {
         BYTE *mn;
         ITIMER_SYNC( addr, 4-1, regs );
@@ -547,7 +528,7 @@ BYTE    temp[16];                       /* Copy destination          */
     /* Get absolute address of first byte of operand */
     mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp, mn, 8 );
-    len = 0x800 - (addr & 0x7FF);
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     mn = MADDR( (addr + len) & ADDRESS_MAXWRAP( regs ), arn, regs,
                 ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp+len, mn, 8 );
@@ -572,7 +553,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
     else
 #endif
     {
-        if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
+        if (likely(((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-7)))
         {
             /* unaligned, non-crossing doubleword fetch */
             BYTE *mn;
@@ -868,9 +849,9 @@ int     len2, len3;                     /* Lengths to copy           */
      *       neither operand can cross more than one 2K boundary.
      */
 
-    if ( NOCROSS2K(addr1,len) )
+    if (NOCROSSPAGE( addr1, len ))
     {
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
             /* (1) - No boundaries are crossed */
             concpy( regs, dest1, source1, len + 1 );
@@ -878,7 +859,7 @@ int     len2, len3;                     /* Lengths to copy           */
         else
         {
             /* (2) - Second operand crosses a boundary */
-            len2 = 0x800 - (addr2 & 0x7FF);
+            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, key2 );
             concpy( regs, dest1,        source1,       len2     );
@@ -889,12 +870,12 @@ int     len2, len3;                     /* Lengths to copy           */
     else
     {
         /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
+        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
                         arn1, regs, ACCTYPE_WRITE_SKP, key1 );
         sk2 = regs->dat.storkey;
 
-        if ( NOCROSS2K(addr2,len) )
+        if (NOCROSSPAGE( addr2, len ))
         {
              /* (3) - First operand crosses a boundary */
              concpy( regs, dest1, source1,              len2     );
@@ -903,7 +884,7 @@ int     len2, len3;                     /* Lengths to copy           */
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
+            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
             source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
                               arn2, regs, ACCTYPE_READ, key2 );
             if (len2 == len3)
@@ -1000,10 +981,8 @@ int     len1, len2, len3;               /* Work areas for lengths    */
     while (len > 0)
     {
         /* Calculate distance to next 2K boundary */
-        len1 = NOCROSS2KL(addr1,len) ? len :
-                (int)(0x800 - (addr1 & 0x7FF));
-        len2 = NOCROSS2KL(addr2,len) ? len :
-                (int)(0x800 - (addr2 & 0x7FF));
+        len1 = NOCROSSPAGEL( addr1, len ) ? len : (int)(PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK));
+        len2 = NOCROSSPAGEL( addr2, len ) ? len : (int)(PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK));
         len3 = len1 < len2 ? len1 : len2;
 
         /* Copy bytes from source to destination */
@@ -1021,10 +1000,8 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 
         /* Adjust addresses for start of next chunk, or
            translate again if a 2K boundary was crossed */
-        main2 = (addr2 & 0x7FF) ? main2 + len3 :
-                    MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
-        main1 = (addr1 & 0x7FF) ? main1 + len3 :
-                    MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+        main2 = (addr2 & PAGEFRAME_BYTEMASK) ? main2 + len3 : MADDR( addr2, space2, regs, ACCTYPE_READ,  key2 );
+        main1 = (addr1 & PAGEFRAME_BYTEMASK) ? main1 + len3 : MADDR( addr1, space1, regs, ACCTYPE_WRITE, key1 );
 
     } /* end while(len) */
 
@@ -1061,7 +1038,7 @@ void ARCH_DEP( validate_operand )( VADR addr, int arn, int len,
     MADDR( addr, arn, regs, acctype, regs->psw.pkey );
 
     /* Translate next page if boundary crossed */
-    if ( CROSS2K(addr,len) )
+    if (CROSSPAGE( addr, len ))
     {
         MADDR( (addr + len) & ADDRESS_MAXWRAP( regs ),
                arn, regs, acctype, regs->psw.pkey );

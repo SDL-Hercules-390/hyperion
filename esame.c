@@ -3974,7 +3974,7 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -4053,7 +4053,7 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     n = (((r3 - r1) & 0xF) + 1) << 3;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Address of operand beginning */
     bp1 = (BYTE*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -4167,7 +4167,7 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* Calculate number of double words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 3;
 
     /* Address of operand beginning */
     p1 = (U64*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -4223,7 +4223,7 @@ U16     updated = 0;                    /* Updated control regs      */
 #endif
 
     /* Calculate number of double words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 3;
 
     /* Address of operand beginning */
     p1 = (U64*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -4294,7 +4294,7 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     n = (((r3 - r1) & 0xF) + 1) << 3;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Get address of first page */
     bp1 = (BYTE*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -4394,7 +4394,7 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Get address of first page */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -7214,7 +7214,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -7300,7 +7300,7 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -7516,7 +7516,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         ARCH_DEP( vstore4 )( regs->AR( (r1 + i) & 0xF ), effective_addr2 + (i*4), b2, regs );
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -7644,7 +7644,7 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     n = (((r3 - r1) & 0xF) + 1) << 2;
 
     /* Calculate number of bytes to next boundary */
-    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
+    m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Get address of first page */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );

@@ -1873,7 +1873,7 @@ U16     updated = 0;                    /* Updated control regs      */
 #endif
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
@@ -6329,7 +6329,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
     p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
