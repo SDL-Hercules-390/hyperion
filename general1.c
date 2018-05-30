@@ -4569,51 +4569,33 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 DEF_INST( move_inverse )
 {
-BYTE    len;                            /* Amount to move minus 1    */
-int     b1, b2;                         /* Base registers            */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
+CACHE_ALIGN BYTE wrk[256] = {0};        /* Cache-aligned Work area   */
+BYTE   *p1, *p2;                        /* Work ptrs for reversing   */
+VADR    eff_addr1, eff_addr2;           /* Effective addresses       */
 VADR    op2end;                         /* Where operand-2 ends      */
-BYTE    byt;                            /* Byte being copied         */
-int     i;                              /* Integer work areas        */
+int     b1, b2;                         /* Base registers            */
+BYTE    len;                            /* Amount to move minus 1    */
 
-    SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
+    SS_L( inst, regs, len, b1, eff_addr1, b2, eff_addr2 );
 
-    /* If operand 1 crosses a page, make sure both pages are accessable */
-    if ((effective_addr1        & PAGEFRAME_PAGEMASK) !=
-       ((effective_addr1 + len) & PAGEFRAME_PAGEMASK))
+    /* Copy operand-2 source string to work area */
+    op2end = (eff_addr2 - len) & ADDRESS_MAXWRAP( regs );
+    ARCH_DEP( vfetchc )( wrk, len, op2end, b2, regs );
+
+    /* Reverse the string in place in our work area */
+    p1 = &wrk[0];
+    p2 = p1 + len;
+    while (p1 < p2)
     {
-        ARCH_DEP( validate_operand )( effective_addr1, b1, len, ACCTYPE_WRITE_SKP, regs );
+        *p1 ^= *p2;
+        *p2 ^= *p1;
+        *p1 ^= *p2;
+        p1++;
+        p2--;
     }
 
-    /* If operand 2 crosses a page, make sure both pages are accessable */
-    op2end = (effective_addr2 - len) & ADDRESS_MAXWRAP( regs );
-
-    if ((op2end        & PAGEFRAME_PAGEMASK) !=
-       ((op2end + len) & PAGEFRAME_PAGEMASK))
-    {
-        ARCH_DEP( validate_operand )( op2end, b2, len, ACCTYPE_READ, regs );
-    }
-
-    /* Process the destination operand from left to right,
-       and the source operand from right to left */
-    for (i=0; i <= len; i++ )   // (use <= and not < since len from
-                                // instruction is desired length-1)
-    {
-        /* Fetch a byte from the source operand */
-        byt = ARCH_DEP( vfetchb )( effective_addr2, b2, regs );
-
-        /* Store the byte in the destination operand */
-        ARCH_DEP( vstoreb )( byt, effective_addr1, b1, regs );
-
-        /* Increment destination operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP( regs );
-
-        /* Decrement source operand address */
-        effective_addr2--;
-        effective_addr2 &= ADDRESS_MAXWRAP( regs );
-    }
+    /* Copy results back to operand-1 destination */
+    ARCH_DEP( vstorec )( wrk, len, eff_addr1, b1, regs );
 }
 
 

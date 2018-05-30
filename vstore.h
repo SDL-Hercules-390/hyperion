@@ -376,7 +376,7 @@ int     len2;                           /* Length to copy on page    */
 
     main1 = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    if (NOCROSSPAGE( addr,len ))
+    if (NOCROSSPAGE( addr, len ))
     {
         ITIMER_SYNC( addr, len, regs );
         memcpy( dest, main1, len + 1 );
