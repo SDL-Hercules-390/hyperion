@@ -786,11 +786,6 @@ int     rc;
     initialize_condition (&sysblk.ioqcond);
     initialize_lock( &sysblk.dasdcache_lock );
 
-#if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-    /* Initialize the wrapping key registers lock */
-    initialize_rwlock( &sysblk.wklock );
-#endif
-
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */

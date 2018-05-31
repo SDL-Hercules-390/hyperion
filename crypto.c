@@ -301,75 +301,74 @@ void renew_wrapping_keys()
     U64     cpuid;
     BYTE    lparname[8];
     BYTE    randbytes[32];
-    size_t  i;
+    size_t  i, idx = 0;
+    BYTE    lparnum1;
 
     CASSERT( sizeof( sysblk.wkvpaes_reg ) >= sizeof( cpuid ) + sizeof( lparname ) + 1, crypto_c );
     CASSERT( sizeof( sysblk.wkvpdea_reg ) >= sizeof( cpuid ) + sizeof( lparname ) + 1, crypto_c );
 
-    obtain_wrlock( &sysblk.wklock );
+    /* Gather needed data */
+
+    cpuid = sysblk.cpuid;
+    lparnum1 = sysblk.lparnum & 0xff;
+    get_lparname( lparname );
+
+    VERIFY( hopen_CSRNG() );
     {
-        size_t  idx = 0;
-
-        VERIFY( hopen_CSRNG() );
-
         VERIFY( hget_random_bytes( sysblk.wkaes_reg, sizeof( sysblk.wkaes_reg )));
         VERIFY( hget_random_bytes( sysblk.wkdea_reg, sizeof( sysblk.wkdea_reg )));
         VERIFY( hget_random_bytes( randbytes,        sizeof( randbytes        )));
-
-        /*
-        ** We set the verification pattern to:
-        **
-        **    CPUID         (8 bytes)
-        **    LPAR Name     (8 bytes)
-        **    LPAR Number   (1 byte)   (low order)
-        **    Random bytes  (n bytes)  (remainder)
-        */
-
-        memset( sysblk.wkvpaes_reg, 0, sizeof( sysblk.wkvpaes_reg ));
-        memset( sysblk.wkvpdea_reg, 0, sizeof( sysblk.wkvpdea_reg ));
-
-        /* CPUID */
-
-        cpuid = sysblk.cpuid;
-
-        idx += sizeof( cpuid );
-
-        for (i=0; i < sizeof( cpuid ); i++)
-        {
-            sysblk.wkvpaes_reg[ idx - 1 - i ] = cpuid & 0xff;
-            sysblk.wkvpdea_reg[ idx - 1 - i ] = cpuid & 0xff;
-            cpuid >>= 8;
-        }
-
-        /* LPAR Name */
-
-        get_lparname( lparname );
-
-        memcpy( &sysblk.wkvpaes_reg[ idx ], lparname, sizeof( lparname ));
-        memcpy( &sysblk.wkvpdea_reg[ idx ], lparname, sizeof( lparname ));
-
-        idx += sizeof( lparname );
-
-        /* LPAR Number */
-
-        sysblk.wkvpaes_reg[ idx ] = sysblk.lparnum & 0xff;
-        sysblk.wkvpdea_reg[ idx ] = sysblk.lparnum & 0xff;
-
-        idx += 1;
-
-        /* Random bytes, if there's room */
-
-        for (i=0; i < sizeof( sysblk.wkvpaes_reg ) - idx; i++)
-                              sysblk.wkvpaes_reg[    idx + i ] = randbytes[i];
-
-        for (i=0; i < sizeof( sysblk.wkvpdea_reg ) - idx; i++)
-                              sysblk.wkvpdea_reg[    idx + i ] = randbytes[i];
-
-        VERIFY( hclose_CSRNG() );
     }
-    release_rwlock( &sysblk.wklock );
+    VERIFY( hclose_CSRNG() );
 
-#if defined( WRAPPINGKEYS_DEBUG )
+    /*
+    **  We set the verification pattern to:
+    **
+    **    CPUID         (8 bytes)
+    **    LPAR Name     (8 bytes)
+    **    LPAR Number   (1 byte)   (low order)
+    **    Random bytes  (n bytes)  (remainder)
+    */
+
+    memset( sysblk.wkvpaes_reg, 0, sizeof( sysblk.wkvpaes_reg ));
+    memset( sysblk.wkvpdea_reg, 0, sizeof( sysblk.wkvpdea_reg ));
+
+    /* CPUID */
+
+    idx += sizeof( cpuid );  /* (since it's processed right to left) */
+
+    for (i=0; i < sizeof( cpuid ); i++)
+    {
+        sysblk.wkvpaes_reg[ idx - 1 - i ] = cpuid & 0xff;
+        sysblk.wkvpdea_reg[ idx - 1 - i ] = cpuid & 0xff;
+        cpuid >>= 8;
+    }
+
+    /* LPAR Name */
+
+    memcpy( &sysblk.wkvpaes_reg[ idx ], lparname, sizeof( lparname ));
+    memcpy( &sysblk.wkvpdea_reg[ idx ], lparname, sizeof( lparname ));
+
+    idx += sizeof( lparname );  /* (next field starts past this one) */
+
+    /* LPAR Number */
+
+    sysblk.wkvpaes_reg[ idx ] = lparnum1;
+    sysblk.wkvpdea_reg[ idx ] = lparnum1;
+
+    idx += 1;
+
+    /* Random bytes (if there's room) */
+
+    for (i=0; i < sizeof( sysblk.wkvpaes_reg ) - idx; i++)
+                          sysblk.wkvpaes_reg[    idx + i ] = randbytes[i];
+
+    for (i=0; i < sizeof( sysblk.wkvpdea_reg ) - idx; i++)
+                          sysblk.wkvpdea_reg[    idx + i ] = randbytes[i];
+
+    /* Display wrapping keys if debugging... */
+
+#if defined( WRAPPINGKEYS_DEBUG )  // (see beginning of source modue)
 
     {
         char  buf[128] = {0};

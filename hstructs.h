@@ -546,7 +546,6 @@ struct SYSBLK {
         U64     program_parameter;      /* Program Parameter Register*/
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-        RWLOCK  wklock;                 /* Wrapping-key lock         */
 #if defined( _WIN32 )
         BCRYPT_ALG_HANDLE  wkrandhand;  /* secure random api handle  */
 #else
@@ -556,7 +555,7 @@ struct SYSBLK {
         BYTE    wkdea_reg[24];
         BYTE    wkvpaes_reg[32];        /* Wrapping-key Verification */
         BYTE    wkvpdea_reg[24];        /* Pattern registers         */
-#endif
+#endif /* defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 ) */
 
 #if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
         BYTE    zpbits;                 /* Zeropad alignment bits    */
