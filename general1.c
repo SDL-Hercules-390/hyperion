@@ -2348,175 +2348,353 @@ BYTE    rbyte[4],                       /* Register bytes            */
 }
 
 
+#ifndef MEMNEQ
+#define MEMNEQ
+/*-------------------------------------------------------------------*/
+/* memneq: return index of first unequal byte                        */
+/*-------------------------------------------------------------------*/
+static INLINE U32 memneq( const BYTE* m1, const BYTE* m2, U32 len )
+{
+    U32  i;
+    for (i=0; i < len; i++)
+        if (m1[i] != m2[i])
+            break;
+    return i;
+}
+#endif // MEMNEQ
+
+
+/*-------------------------------------------------------------------*/
+/*           mem_pad_cmp  --  compare memory to padding              */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      len     Compare length (0 < len < pagesize)                  */
+/*      pad     Pointer to padding bytes (i.e. operand-2)            */
+/*      regs    CPU register context                                 */
+/*      idx     Pointer to where inequality was found    (CLCL only) */
+/* Output:                                                           */
+/*      rc      Same as for CRT memcmp() function: -1, 0, +1         */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_pad_cmp )
+(
+    VADR   ea1, int b1,         // op-1 (dst)
+    U32    len,                 // compare length
+    const BYTE* pad,            // pointer to padding bytes (i.e. op-2)
+    REGS*  regs,                // register context
+    U32*   idx                  // unequal idx ptr
+)
+{
+    const BYTE    *m1,   *m2;   // operand mainstor addresses
+    const BYTE  *neq1, *neq2;   // operand mainstor addresses
+    U32          len1;          // operand-1 length
+    U32    neqlen;              // length of unequal part
+    U32    neqidx = 0;          // index where inequality found
+    int    rc;                  // return code (same as CRT memcmp)
+
+    ITIMER_SYNC( ea1, len-1, regs );
+
+    // Translate leftmost byte of each operand
+    m1 = neq1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = neq2 = pad;
+
+    // Quick out if comparing just 1 byte
+    if (unlikely( (neqlen = len) == 1 ))
+        rc = (*m1 == *m2 ? 0 : (*m1 < *m2 ? -1 : +1));
+    else if ((ea1 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - (len-1))
+    {
+        // (1) - Neither operand crosses a page boundary
+
+        switch (neqlen = len)
+        {
+            case 2: // halfword
+            {
+                U16 v1, v2;
+                v1 = fetch_hw( m1 );
+                v2 = fetch_hw( m2 );
+                rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+            }
+            break;
+
+            case 4: // fullword
+            {
+                U32 v1, v2;
+                v1 = fetch_fw( m1 );
+                v2 = fetch_fw( m2 );
+                rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+            }
+            break;
+
+#if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
+            case 8: // doubleword
+            {
+                U64 v1, v2;
+                v1 = fetch_dw( m1 );
+                v2 = fetch_dw( m2 );
+                rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+            }
+            break;
+#endif
+            default:  // some other length
+            {
+                rc = memcmp( m1, m2, neqlen = len );
+            }
+            break;
+        }
+    }
+    else // (3) - Only operand-1 crosses a page boundary
+    {
+        len1 = PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_BYTEMASK);
+        rc = memcmp( m1, m2, neqlen = len1 );
+        if (rc == 0)
+        {
+            neqidx = neqlen;
+            m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            rc = memcmp( m1, neq2 = m2, neqlen = len - len1 );
+        }
+    }
+
+    // Is caller interested in where the inequality was found?
+    if (idx)
+    {
+        if (rc ==0)
+            *idx = len;
+        else
+            VERIFY((*idx = neqidx += memneq( neq1, neq2, neqlen )) < len );
+    }
+
+    return rc;
+} /* end ARCHDEP( mem_pad_cmp ) */
+
+
+/*-------------------------------------------------------------------*/
+/*                 mem_cmp  --  compare memory                       */
+/*-------------------------------------------------------------------*/
+/* Input:                                                            */
+/*      ea1     Logical address of leftmost byte of operand-1        */
+/*      b1      Operand-1 base register                              */
+/*      ea2     Logical address of leftmost byte of operand-2        */
+/*      b2      Operand-2 base register                              */
+/*      len     Compare length (0 < len < pagesize)                  */
+/*      regs    CPU register context                                 */
+/*      idx     Pointer to where inequality was found    (CLCL only) */
+/* Output:                                                           */
+/*      rc      Same as for CRT memcmp() function: -1, 0, +1         */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( mem_cmp )
+(
+    VADR   ea1, int b1,         // op-1 (dst)
+    VADR   ea2, int b2,         // op-2 (src)
+    U32    len,                 // compare length
+    REGS*  regs,                // register context
+    U32*   idx                  // unequal idx ptr
+)
+{
+    const BYTE    *m1,   *m2;   // operand mainstor addresses
+    const BYTE  *neq1, *neq2;   // operand mainstor addresses
+    U32          len1,  len2;   // operand lengths
+    U32    neqlen;              // length of unequal part
+    U32    neqidx = 0;          // index where inequality found
+    int    rc;                  // return code (same as CRT memcmp)
+
+    ITIMER_SYNC( ea1, len-1, regs );
+
+    // Translate leftmost byte of each operand
+    m1 = neq1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = neq2 = MADDR( ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    //----------------------------------------------------------------
+    //
+    // There are several scenarios: (in optimal order)
+    //
+    //  (1) NEITHER operand crosses a page boundary
+    //
+    //      (a) halfword compare
+    //      (b) fullword compare
+    //      (c) doubleword compare (64-bit machine)
+    //      (d) some other length
+    //
+    //  (2) Op1 does NOT cross a page boundary, but Op2 does
+    //  (3) Op1 crosses a page boundary, but Op2 does NOT
+    //  (4) BOTH operands cross a page boundary
+    //
+    //      (a) Both operands cross at the same place
+    //      (b) Operand-1 crosses the page boundary first
+    //      (c) Operand-2 crosses the page boundary first
+    //
+    //----------------------------------------------------------------
+
+    // Quick out if comparing just 1 byte
+    if (unlikely( (neqlen = len) == 1 ))
+        rc = (*m1 == *m2 ? 0 : (*m1 < *m2 ? -1 : +1));
+    else if ((ea1 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - (len-1))
+    {
+        if  ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - (len-1))
+        {
+            // (1) - Neither operand crosses a page boundary
+
+            switch (neqlen = len)
+            {
+                case 2: // halfword
+                {
+                    U16 v1, v2;
+                    v1 = fetch_hw( m1 );
+                    v2 = fetch_hw( m2 );
+                    rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+                }
+                break;
+
+                case 4: // fullword
+                {
+                    U32 v1, v2;
+                    v1 = fetch_fw( m1 );
+                    v2 = fetch_fw( m2 );
+                    rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+                }
+                break;
+
+#if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
+                case 8: // doubleword
+                {
+                    U64 v1, v2;
+                    v1 = fetch_dw( m1 );
+                    v2 = fetch_dw( m2 );
+                    rc = (v1 == v2 ? 0 : (v1 < v2 ? -1 : +1));
+                }
+                break;
+#endif
+                default:  // some other length
+                {
+                    rc = memcmp( m1, m2, neqlen = len );
+                }
+                break;
+            }
+        }
+        else // (2) - Operand-2 crosses a page boundary
+        {
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
+            rc = memcmp( m1, m2, neqlen = len2 );
+            if (rc == 0)
+            {
+                neqidx = neqlen;
+                m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                    b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                rc = memcmp( neq1 = m1 + len2, m2, neqlen = len - len2 );
+             }
+        }
+    }
+    else // (Operand-1 crosses a page boundary...)
+    {
+        len1 = PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_BYTEMASK);
+        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - (len-1) )
+        {
+            // (3) - Only operand-1 crosses a page boundary
+
+            rc = memcmp( m1, m2, neqlen = len1 );
+            if (rc == 0)
+            {
+                neqidx = neqlen;
+                m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                    b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                rc = memcmp( m1, neq2 = m2 + len1, neqlen = len - len1 );
+             }
+        }
+        else // (4) - Both operands cross a page boundary
+        {
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
+            if (len1 == len2)
+            {
+                // (4a) - Both operands cross at the same place
+
+                rc = memcmp( m1, m2, neqlen = len1 );
+                if (rc == 0)
+                {
+                    neqidx = neqlen;
+                    m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                        b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = neq2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
+                                        b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1, m2, neqlen = len - len1 );
+                }
+            }
+            else if (len1 < len2)
+            {
+                // (4b) - Operand-1 crosses first
+
+                rc = memcmp( m1, m2, neqlen = len1 );
+                if (rc == 0)
+                {
+                    neqidx = neqlen;
+                    m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                        b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1, neq2 = m2 + len1, neqlen = len2 - len1 );
+                    if (rc == 0)
+                    {
+                        neqidx = neqlen;
+                        m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                            b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                        rc = memcmp( neq1 = m1 + len2 - len1, m2, neqlen = len - len2 );
+                    }
+                }
+            }
+            else
+            {
+                // (4c) - Operand-2 crosses first
+
+                rc = memcmp( m1, m2, neqlen = len2 );
+                if (rc == 0)
+                {
+                    neqidx = neqlen;
+                    m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                        b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( neq1 = m1 + len2, m2, neqlen = len1 - len2 );
+                    if (rc == 0)
+                    {
+                        neqidx = neqlen;
+                        m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                            b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                        rc = memcmp( m1, neq2 = m2 + len1 - len2, neqlen = len - len1 );
+                    }
+                }
+            }
+        }
+    }
+
+    // Is caller interested in where the inequality was found?
+    if (idx)
+    {
+        if (rc ==0)
+            *idx = len;
+        else
+            VERIFY((*idx = neqidx += memneq( neq1, neq2, neqlen )) < len );
+    }
+
+    return rc;
+} /* end ARCHDEP( mem_cmp ) */
+
+
 /*-------------------------------------------------------------------*/
 /* D5   CLC   - Compare Logical Character                       [SS] */
 /*-------------------------------------------------------------------*/
 DEF_INST( compare_logical_character )
 {
-unsigned int len, len1, len2;           /* Lengths                   */
-int      rc;                            /* memcmp() return code      */
-int      b1, b2;                        /* Base registers            */
 VADR     ea1, ea2;                      /* Effective addresses       */
-BYTE    *m1, *m2;                       /* Mainstor addresses        */
+int      b1, b2;                        /* Base registers            */
+U32      len;                           /* Length minus 1            */
+int      rc;                            /* mem_cmp() return code     */
 
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
-
-    ITIMER_SYNC( ea1, len, regs );
-    ITIMER_SYNC( ea2, len, regs );
-
-    /* Translate addresses of leftmost operand bytes */
-    m1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
-    m2 = MADDR( ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-
-    /* Quick out if comparing just 1 byte */
-    if (unlikely( !len ))
-    {
-        rc = *m1 - *m2;
-        regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2 ));
-        return;
-    }
-
-    /* There are several scenarios (in optimal order):
-     * (1) dest boundary and source boundary not crossed
-     *     (a) halfword compare
-     *     (b) fullword compare
-     *     (c) doubleword compare (64-bit machines)
-     *     (d) other
-     * (2) dest boundary not crossed and source boundary crossed
-     * (3) dest boundary crossed and source boundary not crossed
-     * (4) dest boundary and source boundary are crossed
-     *     (a) dest and source boundary cross at the same time
-     *     (b) dest boundary crossed first
-     *     (c) source boundary crossed first
-     */
-
-    if ((ea1 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
-    {
-        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
-        {
-            /* (1) - No boundaries are crossed */
-            switch(len) {
-
-            case 1:
-                /* (1a) - halfword compare */
-                {
-                    U16 v1, v2;
-                    v1 = fetch_hw( m1 );
-                    v2 = fetch_hw( m2 );
-                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
-                    return;
-                }
-                break;
-
-            case 3:
-                /* (1b) - fullword compare */
-                {
-                    U32 v1, v2;
-                    v1 = fetch_fw( m1 );
-                    v2 = fetch_fw( m2 );
-                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
-                    return;
-                }
-                break;
-
-            case 7:
-                /* (1c) - doubleword compare (64-bit machines) */
-                if (sizeof( unsigned int ) >= 8)
-                {
-                    U64 v1, v2;
-                    v1 = fetch_dw( m1 );
-                    v2 = fetch_dw( m2 );
-                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
-                    return;
-                }
-
-            default:
-                /* (1d) - other compare */
-                rc = memcmp( m1, m2, len + 1 );
-                break;
-            }
-        }
-        else
-        {
-            /* (2) - Second operand crosses a boundary */
-            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
-            rc = memcmp( m1, m2, len2 );
-            if (rc == 0)
-            {
-                m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                             b2, regs, ACCTYPE_READ, regs->psw.pkey );
-                rc = memcmp( m1 + len2, m2, len - len2 + 1 );
-             }
-        }
-    }
-    else
-    {
-        /* First operand crosses a boundary */
-        len1 = PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_BYTEMASK);
-        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len )
-        {
-            /* (3) - First operand crosses a boundary */
-            rc = memcmp( m1, m2, len1 );
-            if (rc == 0)
-            {
-                m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                             b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                rc = memcmp( m1, m2 + len1, len - len1 + 1 );
-             }
-        }
-        else
-        {
-            /* (4) - Both operands cross a boundary */
-            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
-            if (len1 == len2)
-            {
-                /* (4a) - Both operands cross at the same time */
-                rc = memcmp( m1, m2, len1 );
-                if (rc == 0)
-                {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                    m2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
-                    rc = memcmp( m1, m2, len - len1 +1 );
-                }
-            }
-            else if (len1 < len2)
-            {
-                /* (4b) - First operand crosses first */
-                rc = memcmp( m1, m2, len1 );
-                if (rc == 0)
-                {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                    rc = memcmp( m1, m2 + len1, len2 - len1 );
-                }
-                if (rc == 0)
-                {
-                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
-                    rc = memcmp( m1 + len2 - len1, m2, len - len2 + 1 );
-                }
-            }
-            else
-            {
-                /* (4c) - Second operand crosses first */
-                rc = memcmp( m1, m2, len2 );
-                if (rc == 0)
-                {
-                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
-                    rc = memcmp( m1 + len2, m2, len1 - len2 );
-                }
-                if (rc == 0)
-                {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                    rc = memcmp( m1, m2 + len1 - len2, len - len1 + 1 );
-                }
-            }
-        }
-    }
+    rc = ARCH_DEP( mem_cmp )( ea1, b1, ea2, b2, len+1, regs, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
 }
 
@@ -2524,100 +2702,149 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
 /*-------------------------------------------------------------------*/
 /* 0F   CLCL  - Compare Logical Long                            [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_character_long)
+DEF_INST( compare_logical_character_long )
 {
-int     r1, r2;                         /* Values of R fields        */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-U32     len1, len2;                     /* Operand lengths           */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    pad;                            /* Padding byte              */
+    VADR    addr1, addr2;               // Operand addresses
+    U32     len1,  len2;                // Operand lengths
+    int     r1,    r2;                  // Values of R fields
 
-    RR(inst, regs, r1, r2);
+    U32 unpadded_len, padded_len;       // work variables
+    U32 chunk, rem;                     // work variables
+    U32 chunk_idx, idx = 0;             // amount actually compared
+    int rc = 0;                         // memcmp() return code
 
-    ODD2_CHECK(r1, r2, regs);
+    RR( inst, regs, r1, r2 );
+    ODD2_CHECK( r1, r2, regs );
 
-    /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    // Determine the destination and source addresses
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
-    /* Load padding byte from bits 0-7 of R2+1 register */
-    pad = regs->GR_LHHCH(r2+1);
+    // Load operand lengths from bits 8-31 of R1+1 and R2+1
+    len1 = regs->GR_LA24( r1+1 );
+    len2 = regs->GR_LA24( r2+1 );
 
-    /* Load operand lengths from bits 8-31 of R1+1 and R2+1 */
-    len1 = regs->GR_LA24(r1+1);
-    len2 = regs->GR_LA24(r2+1);
-
-    /* Process operands from left to right */
-    while (len1 > 0 || len2 > 0)
+    // Save lengths of padded/unpadded parts
+    if (len1 == len2)
     {
-        /* Fetch a byte from each operand, or use padding byte */
-        byte1 = (len1 > 0) ? ARCH_DEP(vfetchb) (addr1, r1, regs) : pad;
-        byte2 = (len2 > 0) ? ARCH_DEP(vfetchb) (addr2, r2, regs) : pad;
+        unpadded_len = len1;
+        padded_len   = 0;
+    }
+    else if (len1 < len2)
+    {
+        unpadded_len = len1;
+        padded_len   = len2 - len1;
+    }
+    else // (len1 > len2)
+    {
+        unpadded_len = len2;
+        padded_len   = len1 - len2;
+    }
 
-        /* Compare operand bytes, set condition code if unequal */
-        if (byte1 != byte2)
+#undef  CHUNK_AMT
+#define CHUNK_AMT       (PAGEFRAME_PAGESIZE - 256)
+
+#undef  MAX_CPU_AMT
+#define MAX_CPU_AMT     (64 * 1024) // (arbitrary)
+
+    // Compare the unpadded part first
+
+    rem = unpadded_len;
+
+    while (rem && idx < MAX_CPU_AMT)
+    {
+        chunk = rem < CHUNK_AMT
+              ? rem : CHUNK_AMT;
+
+        if ((rc = ARCH_DEP( mem_cmp )( addr1, r1, addr2, r2, chunk, regs, &chunk_idx )) != 0)
         {
-            cc = (byte1 < byte2) ? 1 : 2;
-            break;
-        } /* end if */
-
-        /* Update the first operand address and length */
-        if (len1 > 0)
-        {
-            addr1++;
-            addr1 &= ADDRESS_MAXWRAP(regs);
-            len1--;
-        }
-
-        /* Update the second operand address and length */
-        if (len2 > 0)
-        {
-            addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
-            len2--;
-        }
-
-        /* Update Regs if cross half page - may get access rupt */
-        if ((addr1 & 0x7ff) == 0 || (addr2 & 0x7ff) == 0)
-        {
-            SET_GR_A(r1, regs, addr1);
-            SET_GR_A(r2, regs, addr2);
-
-            regs->GR_LA24(r1+1) = len1;
-            regs->GR_LA24(r2+1) = len2;
-        }
-
-        /* The instruction can be interrupted when a CPU determined
-           number of bytes have been processed.  The instruction
-           address will be backed up, and the instruction will
-           be re-executed.  This is consistent with operation
-           under a hypervisor such as LPAR or VM.                *JJ */
-        if ((len1 + len2 > 255) && !((addr1 - len2) & 0xFFF))
-        {
-            UPD_PSW_IA (regs, PSW_IA(regs, -REAL_ILC(regs)));
+            addr1 += chunk_idx;
+            addr2 += chunk_idx;
+            idx   += chunk_idx;
+            rem   -= chunk_idx;
             break;
         }
 
-    } /* end while(len1||len2) */
+        addr1 += chunk;
+        addr2 += chunk;
+        idx   += chunk;
+        rem   -= chunk;
+    }
 
-    /* Update the registers */
-    SET_GR_A(r1, regs,addr1);
-    SET_GR_A(r2, regs,addr2);
+    // Now compare the padded part, if needed
 
-    regs->GR_LA24(r1+1) = len1;
-    regs->GR_LA24(r2+1) = len2;
+    if (rc == 0 && padded_len && idx < MAX_CPU_AMT)
+    {
+        BYTE  padding[ CHUNK_AMT ];
+        VADR  longer_addr = (len1 > len2) ? addr1 : addr2;
+        int   longer_r    = (len1 > len2) ? r1    : r2;
+        bool  swap_rc     = (len1 > len2) ? false : true;
+        BYTE  pad         = regs->GR_LHHCH( r2+1 );
 
-    regs->psw.cc = cc;
+        memset( padding, pad, MIN( padded_len, sizeof( padding )));
 
-}
+        rem = padded_len;
+
+        while (rem && idx < MAX_CPU_AMT)
+        {
+            chunk = rem < CHUNK_AMT
+                  ? rem : CHUNK_AMT;
+
+            if ((rc = ARCH_DEP( mem_pad_cmp )( longer_addr, longer_r, chunk, padding, regs, &chunk_idx )) != 0)
+            {
+                longer_addr += chunk_idx;
+                idx         += chunk_idx;
+                rem         -= chunk_idx;
+                break;
+            }
+
+            longer_addr += chunk;
+            idx         += chunk;
+            rem         -= chunk;
+        }
+
+        if (swap_rc)
+        {
+            rc = -rc;
+            addr2 = longer_addr;
+        }
+        else
+            addr1 = longer_addr;
+    }
+
+    // Update the registers
+
+    SET_GR_A( r1, regs, addr1 );
+    SET_GR_A( r2, regs, addr2 );
+
+    if ( regs->GR_LA24( r1+1 ) >= idx)
+         regs->GR_LA24( r1+1 ) -= idx;
+    else regs->GR_LA24( r1+1 ) = 0;
+
+    if ( regs->GR_LA24( r2+1 ) >= idx)
+         regs->GR_LA24( r2+1 ) -= idx;
+    else regs->GR_LA24( r2+1 ) = 0;
+
+    // Backup the PSW for re-execution if instruction was interrupted
+
+    if (rc == 0 && idx < (unpadded_len + padded_len))
+    {
+        ASSERT( idx >= MAX_CPU_AMT );   // (sanity check)
+        UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+    }
+
+    // Set the condition code and return
+
+    regs->psw.cc = (!rc ? 0 : (rc < 0 ? 1 : 2));
+
+} /* end DEF_INST( compare_logical_character_long ) */
 
 
-#if defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)
+#if defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )
 /*-------------------------------------------------------------------*/
 /* A9   CLCLE - Compare Logical Long Extended                   [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_long_extended)
+DEF_INST( compare_logical_long_extended )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -2629,20 +2856,20 @@ GREG    len1, len2;                     /* Operand lengths           */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    pad;                            /* Padding byte              */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-    ODD2_CHECK(r1, r3, regs);
+    ODD2_CHECK( r1, r3, regs );
 
     /* Load padding byte from bits 24-31 of effective address */
     pad = effective_addr2 & 0xFF;
 
     /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r3) & ADDRESS_MAXWRAP(regs);
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r3 ) & ADDRESS_MAXWRAP( regs );
 
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
-    len1 = GR_A(r1+1, regs);
-    len2 = GR_A(r3+1, regs);
+    len1 = GR_A( r1+1, regs );
+    len2 = GR_A( r3+1, regs );
 
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i++)
@@ -2655,21 +2882,21 @@ BYTE    pad;                            /* Padding byte              */
         }
 
         /* Fetch a byte from each operand, or use padding byte */
-        byte1 = (len1 > 0) ? ARCH_DEP(vfetchb) (addr1, r1, regs) : pad;
-        byte2 = (len2 > 0) ? ARCH_DEP(vfetchb) (addr2, r3, regs) : pad;
+        byte1 = (len1 > 0) ? ARCH_DEP( vfetchb )( addr1, r1, regs ) : pad;
+        byte2 = (len2 > 0) ? ARCH_DEP( vfetchb )( addr2, r3, regs ) : pad;
 
         /* Compare operand bytes, set condition code if unequal */
         if (byte1 != byte2)
         {
             cc = (byte1 < byte2) ? 1 : 2;
             break;
-        } /* end if */
+        }
 
         /* Update the first operand address and length */
         if (len1 > 0)
         {
             addr1++;
-            addr1 &= ADDRESS_MAXWRAP(regs);
+            addr1 &= ADDRESS_MAXWRAP( regs );
             len1--;
         }
 
@@ -2677,25 +2904,26 @@ BYTE    pad;                            /* Padding byte              */
         if (len2 > 0)
         {
             addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
+            addr2 &= ADDRESS_MAXWRAP( regs );
             len2--;
         }
 
     } /* end for(i) */
 
     /* Update the registers */
-    SET_GR_A(r1, regs,addr1);
-    SET_GR_A(r1+1, regs,len1);
-    SET_GR_A(r3, regs,addr2);
-    SET_GR_A(r3+1, regs,len2);
+    SET_GR_A( r1, regs, addr1 );
+    SET_GR_A( r3, regs, addr2 );
+
+    SET_GR_A( r1+1, regs, len1 );
+    SET_GR_A( r3+1, regs, len2 );
 
     regs->psw.cc = cc;
 
-}
-#endif /*defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)*/
+} /* end DEF_INST( compare_logical_long_extended ) */
+#endif /* defined( FEATURE_COMPARE_AND_MOVE_EXTENDED ) */
 
 
-#if defined(FEATURE_STRING_INSTRUCTION)
+#if defined( FEATURE_STRING_INSTRUCTION )
 /*-------------------------------------------------------------------*/
 /* B25D CLST  - Compare Logical String                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2773,15 +3001,15 @@ BYTE    termchar;                       /* Terminating character     */
     /* Set condition code */
     regs->psw.cc =  cc;
 
-} /* end DEF_INST(compare_logical_string) */
-#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
+} /* end DEF_INST( compare_logical_string ) */
+#endif /* defined( FEATURE_STRING_INSTRUCTION ) */
 
 
-#if defined(FEATURE_STRING_INSTRUCTION)
+#if defined( FEATURE_STRING_INSTRUCTION )
 /*-------------------------------------------------------------------*/
 /* B257 CUSE  - Compare Until Substring Equal                  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_until_substring_equal)
+DEF_INST( compare_until_substring_equal )
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -2971,8 +3199,8 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     /* Set condition code */
     regs->psw.cc =  cc;
 
-} /* end DEF_INST(compare_until_substring_equal) */
-#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
+} /* end DEF_INST( compare_until_substring_equal ) */
+#endif /* defined( FEATURE_STRING_INSTRUCTION ) */
 
 
 #ifdef FEATURE_EXTENDED_TRANSLATION_FACILITY_1
