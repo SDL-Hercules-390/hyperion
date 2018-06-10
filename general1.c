@@ -2682,7 +2682,9 @@ int ARCH_DEP( mem_cmp )
     return rc;
 } /* end ARCHDEP( mem_cmp ) */
 
-
+#undef  USE_NEW_CLC
+//#define USE_NEW_CLC
+#if defined( USE_NEW_CLC )
 /*-------------------------------------------------------------------*/
 /* D5   CLC   - Compare Logical Character                       [SS] */
 /*-------------------------------------------------------------------*/
@@ -2697,6 +2699,179 @@ int      rc;                            /* mem_cmp() return code     */
     rc = ARCH_DEP( mem_cmp )( ea1, b1, ea2, b2, len+1, regs, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
 }
+#else // !defined( USE_NEW_CLC )
+/*-------------------------------------------------------------------*/
+/* D5   CLC   - Compare Logical Character                       [SS] */
+/*-------------------------------------------------------------------*/
+DEF_INST( compare_logical_character )
+{
+unsigned int len, len1, len2;           /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
+
+    SS_L( inst, regs, len, b1, ea1, b2, ea2 );
+
+    ITIMER_SYNC( ea1, len, regs );
+    ITIMER_SYNC( ea2, len, regs );
+
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDR( ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+    /* Quick out if comparing just 1 byte */
+    if (unlikely( !len ))
+    {
+        rc = *m1 - *m2;
+        regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2 ));
+        return;
+    }
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) halfword compare
+     *     (b) fullword compare
+     *     (c) doubleword compare (64-bit machines)
+     *     (d) other
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ((ea1 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
+    {
+        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len)
+        {
+            /* (1) - No boundaries are crossed */
+            switch(len) {
+
+            case 1:
+                /* (1a) - halfword compare */
+                {
+                    U16 v1, v2;
+                    v1 = fetch_hw( m1 );
+                    v2 = fetch_hw( m2 );
+                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
+                    return;
+                }
+                break;
+
+            case 3:
+                /* (1b) - fullword compare */
+                {
+                    U32 v1, v2;
+                    v1 = fetch_fw( m1 );
+                    v2 = fetch_fw( m2 );
+                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
+                    return;
+                }
+                break;
+
+            case 7:
+                /* (1c) - doubleword compare (64-bit machines) */
+                if (sizeof( unsigned int ) >= 8)
+                {
+                    U64 v1, v2;
+                    v1 = fetch_dw( m1 );
+                    v2 = fetch_dw( m2 );
+                    regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
+                    return;
+                }
+
+            default:
+                /* (1d) - other compare */
+                rc = memcmp( m1, m2, len + 1 );
+                break;
+            }
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
+            rc = memcmp( m1, m2, len2 );
+            if (rc == 0)
+            {
+                m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                             b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                rc = memcmp( m1 + len2, m2, len - len2 + 1 );
+             }
+        }
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len1 = PAGEFRAME_PAGESIZE - (ea1 & PAGEFRAME_BYTEMASK);
+        if ((ea2 & PAGEFRAME_BYTEMASK) <= PAGEFRAME_BYTEMASK - len )
+        {
+            /* (3) - First operand crosses a boundary */
+            rc = memcmp( m1, m2, len1 );
+            if (rc == 0)
+            {
+                m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                             b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                rc = memcmp( m1, m2 + len1, len - len1 + 1 );
+             }
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = PAGEFRAME_PAGESIZE - (ea2 & PAGEFRAME_BYTEMASK);
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                rc = memcmp( m1, m2, len1 );
+                if (rc == 0)
+                {
+                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
+                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1, m2, len - len1 +1 );
+                }
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - First operand crosses first */
+                rc = memcmp( m1, m2, len1 );
+                if (rc == 0)
+                {
+                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1, m2 + len1, len2 - len1 );
+                }
+                if (rc == 0)
+                {
+                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1 + len2 - len1, m2, len - len2 + 1 );
+                }
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                rc = memcmp( m1, m2, len2 );
+                if (rc == 0)
+                {
+                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1 + len2, m2, len1 - len2 );
+                }
+                if (rc == 0)
+                {
+                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    rc = memcmp( m1, m2 + len1 - len2, len - len1 + 1 );
+                }
+            }
+        }
+    }
+    regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
+}
+#endif // !defined( USE_NEW_CLC )
 
 
 /*-------------------------------------------------------------------*/
