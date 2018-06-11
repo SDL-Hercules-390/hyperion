@@ -942,7 +942,7 @@ static void NP_update(REGS *regs)
     int     i, n;
     int     mode, zhost;
     int     cpupct_total;
-    QWORD   curpsw;
+    QWORD   curr_psw;
     U32     addr, aaddr;
     DEVBLK *dev;
     int     online, busy, open;
@@ -1031,36 +1031,33 @@ static void NP_update(REGS *regs)
         }
 
         /* Display the psw */
-        memset(curpsw, 0, sizeof(QWORD));
-        copy_psw (regs, curpsw);
-        if (!NPpsw_valid || memcmp(NPpsw, curpsw, sizeof(QWORD)))
+        memset( curr_psw, 0, sizeof( curr_psw ));
+        copy_psw( regs, curr_psw );
+        if (!NPpsw_valid || memcmp( NPpsw, curr_psw, sizeof( NPpsw )))
         {
             set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
             set_pos (PSW_LINE, 3);
             if (mode)
             {
-                draw_dw (fetch_dw(curpsw));
-                set_pos (PSW_LINE, 22);
-                draw_dw (fetch_dw(curpsw+8));
+                draw_dw( fetch_dw( curr_psw ));
+                set_pos( PSW_LINE, 22 );
+                draw_dw( fetch_dw( curr_psw + 8 ));
             }
             else if (zhost)
             {
-                draw_fw (fetch_fw(curpsw));
-//              draw_fw (0);
-                draw_fw (fetch_fw(curpsw+4)); /* *JJ */
-                set_pos (PSW_LINE, 22);
-//              draw_fw (fetch_fw(curpsw+4) & 0x80000000 ? 0x80000000 : 0);
-//              draw_fw (fetch_fw(curpsw+4) & 0x7fffffff);
-                draw_text("----------------"); /* *JJ */
+                draw_fw( fetch_fw( curr_psw ));
+                draw_fw( fetch_fw( curr_psw + 4 )); /* *JJ */
+                set_pos( PSW_LINE, 22 );
+                draw_text( "----------------" ); /* *JJ */
             }
             else
             {
-                draw_fw (fetch_fw(curpsw));
-                set_pos (PSW_LINE, 12);
-                draw_fw (fetch_fw(curpsw+4));
+                draw_fw( fetch_fw( curr_psw ));
+                set_pos( PSW_LINE, 12 );
+                draw_fw( fetch_fw( curr_psw + 4 ));
             }
             NPpsw_valid = 1;
-            memcpy (NPpsw, curpsw, sizeof(QWORD));
+            memcpy( NPpsw, curr_psw, sizeof( NPpsw ));
         }
 
         /* Display psw state */
@@ -1609,40 +1606,40 @@ REGS *copy_regs(int cpu)
 DLL_EXPORT void the_real_panel_display()
 {
 #ifndef _MSVC_
-  int     rc;                           /* Return code                */
-  int     maxfd;                        /* Highest file descriptor    */
-  fd_set  readset;                      /* Select file descriptors    */
-  struct  timeval tv;                   /* Select timeout structure   */
+  int     rc;                           /* Return code               */
+  int     maxfd;                        /* Highest file descriptor   */
+  fd_set  readset;                      /* Select file descriptors   */
+  struct  timeval tv;                   /* Select timeout structure  */
 #endif // _MSVC_
-int     i;                              /* Array subscripts           */
-int     len;                            /* Length                     */
-REGS   *regs;                           /* -> CPU register context    */
-QWORD   curpsw;                         /* Current PSW                */
-QWORD   prvpsw;                         /* Previous PSW               */
-BYTE    prvstate = 0xFF;                /* Previous stopped state     */
-U64     prev_instcount = 0;             /* Previous sysblk.instcount  */
-U32     numcpu = 0;                     /* Online CPU count           */
-
+int     i;                              /* Array subscripts          */
+int     len;                            /* Length                    */
+REGS   *regs;                           /* -> CPU register context   */
+QWORD   curr_psw;                       /* Current PSW               */
+QWORD   prev_psw;                       /* Previous PSW              */
+int     prev_pcpu      = 0;             /* Previous pcpu             */
+int     prev_arch_mode = 0;             /* Previous primary arch.    */
+int     prev_cpupct    = 0;             /* Previous cpu percentage   */
+BYTE    prev_cpustate  = 0xFF;          /* Previous stopped state    */
+U64     prev_instcount = 0;             /* Previous instruction count*/
+U32     prev_mipsrate  = 0;             /* Previous MIPS rate        */
+U32     prev_siosrate  = 0;             /* Previous SIOS rate        */
 #if defined( OPTION_SHARED_DEVICES )
-U32     prvscount = 0;                  /* Previous shrdcount         */
+U32     prev_shrdcount = 0;             /* Previous shrdcount        */
 #endif
-
-int     prvcpupct = 0;                  /* Previous cpu percentage    */
-int     prvpcpu = 0;                    /* Previous pcpu              */
-int     prvparch = 0;                   /* Previous primary arch.     */
-char    readbuf[MSG_SIZE];              /* Message read buffer        */
-int     readoff = 0;                    /* Number of bytes in readbuf */
-BYTE    c;                              /* Character work area        */
-size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer    */
-char   *kbbuf = NULL;                   /* Keyboard input buffer      */
-int     kblen;                          /* Number of chars in kbbuf   */
-U32     aaddr;                          /* Absolute address for STO   */
-char    buf[1024];                      /* Buffer workarea            */
-size_t  loopcount;                    /* Number of iterations done   */
+U32     numcpu = 0;                     /* Online CPU count          */
+char    readbuf[MSG_SIZE];              /* Message read buffer       */
+int     readoff = 0;                    /* Number of bytes in readbuf*/
+BYTE    c;                              /* Character work area       */
+size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
+char   *kbbuf = NULL;                   /* Keyboard input buffer     */
+int     kblen;                          /* Number of chars in kbbuf  */
+U32     aaddr;                          /* Absolute address for STO  */
+char    buf[1024];                      /* Buffer workarea           */
+size_t  loopcount;                      /* Number of iterations done */
 
     SET_THREAD_NAME("panel_display");
 
-    set_thread_priority(0,0);     /* (don't actually change priority) */
+    set_thread_priority(0,0);     /* (don't actually change priority)*/
 
     /* Display thread started message on control panel */
     WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Control panel");
@@ -2865,8 +2862,8 @@ FinishShutdown:
 
         /* Obtain the PSW for target CPU */
         regs = copy_regs( sysblk.pcpu );
-        memset( curpsw, 0, sizeof( curpsw ));
-        copy_psw( regs, curpsw );
+        memset( curr_psw, 0, sizeof( curr_psw ));
+        copy_psw( regs, curr_psw );
 
         numcpu = 0;
         for (i=0; i < sysblk.maxcpu; ++i )
@@ -2877,25 +2874,27 @@ FinishShutdown:
            if anything interesting happened.
         */
         if (0
-            || memcmp( curpsw, prvpsw, sizeof( curpsw )) != 0
-            || prvcpupct != regs->cpupct
-            || prvstate  != regs->cpustate
-
+            || memcmp( curr_psw, prev_psw, sizeof( curr_psw )) != 0
+            || prev_cpupct    != regs->cpupct
+            || prev_cpustate  != regs->cpustate
+            || prev_instcount != sysblk.instcount
+            || prev_mipsrate  != sysblk.mipsrate
+            || prev_siosrate  != sysblk.siosrate
 #if defined( OPTION_SHARED_DEVICES )
-            || prvscount != sysblk.shrdcount
+            || prev_shrdcount != sysblk.shrdcount
 #endif
-            || (prev_instcount != sysblk.instcount && NPDup && NPcpugraph)
         )
         {
             redraw_status = 1;
-            memcpy (prvpsw, curpsw, sizeof(prvpsw));
-            prvcpupct = regs->cpupct;
-            prvstate  = regs->cpustate;
-
-#if defined( OPTION_SHARED_DEVICES )
-            prvscount = sysblk.shrdcount;
-#endif
+            memcpy( prev_psw, curr_psw, sizeof( prev_psw ));
+            prev_cpupct    = regs->cpupct;
+            prev_cpustate  = regs->cpustate;
             prev_instcount = sysblk.instcount;
+            prev_mipsrate  = sysblk.mipsrate;
+            prev_siosrate  = sysblk.siosrate;
+#if defined( OPTION_SHARED_DEVICES )
+            prev_shrdcount = sysblk.shrdcount;
+#endif
         }
 
         /* =NP= : Display the screen - traditional or NP */
@@ -2975,20 +2974,19 @@ FinishShutdown:
             /* Determine if redraw required for CPU or architecture
              * change.
              */
-            if ((sysblk.pcpu != prvpcpu &&
-                 (regs = sysblk.regs[sysblk.pcpu]) != NULL) ||
-                ((regs = sysblk.regs[prvpcpu]) != NULL &&
-                 regs->arch_mode != prvparch))
+            if (0
+                || (sysblk.pcpu != prev_pcpu && (regs = sysblk.regs[ sysblk.pcpu ]) != NULL)
+                || ((regs = sysblk.regs[ prev_pcpu ]) != NULL && regs->arch_mode != prev_arch_mode)
+            )
             {
                 redraw_status = 1;
-                prvpcpu = sysblk.pcpu;
-                prvparch = regs->arch_mode;
+                prev_pcpu = sysblk.pcpu;
+                prev_arch_mode = regs->arch_mode;
             }
 
             if (redraw_status && !npquiet)
             {
-                char    ibuf[64];       /* Rate buffer                */
-
+                char ibuf[64];      /* Rate buffer */
                 {
                     int cnt_disabled = 0;
                     int cnt_stopped  = 0;
@@ -3031,10 +3029,10 @@ FinishShutdown:
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
                     len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
-                                   fetch_fw(curpsw), fetch_fw(curpsw+4));
+                                   fetch_fw( curr_psw ), fetch_fw( curr_psw + 4 ));
                     if (regs->arch_mode == ARCH_900_IDX)
                         len += sprintf (buf+len, "%16.16"PRIX64" ",
-                                        fetch_dw (curpsw+8));
+                                        fetch_dw( curr_psw + 8 ));
 #if defined(_FEATURE_SIE)
                     else
                         if( SIE_MODE(regs) )
@@ -3071,24 +3069,24 @@ FinishShutdown:
                 i = 0;
                 if (numcpu)
                 {
-                    U32 mipsrate = sysblk.mipsrate / 1000000;
+                    U32 mipsrate = prev_mipsrate / 1000000;
 
                     /* Format instruction count */
                     i = snprintf(ibuf, sizeof(ibuf),
                                  "instcnt %s",
-                                 format_int( sysblk.instcount ));
+                                 format_int( prev_instcount ));
 
                     if ((len + i + 12) < cons_cols)
                     {
                         if (mipsrate > 999)
                             i += snprintf(ibuf + i, sizeof(ibuf) - i,
                                           "; mips %1d,%03d",
-                                          sysblk.mipsrate / 1000000000,
-                                          ((sysblk.mipsrate % 1000000000) +
+                                          prev_mipsrate / 1000000000,
+                                          ((prev_mipsrate % 1000000000) +
                                             500000) / 1000000);
                         else
                         {
-                            U32 mipsfrac = sysblk.mipsrate % 1000000;
+                            U32 mipsfrac = prev_mipsrate % 1000000;
 
                             if (mipsrate > 99)
                                 i += snprintf(ibuf + i, sizeof(ibuf) - i,
@@ -3125,7 +3123,7 @@ FinishShutdown:
                         ibuf[(int)i++] = ' ';
                     i += snprintf(ibuf + i, sizeof(ibuf) - i,
                                   "I/O %6.6s",
-                                  format_int(sysblk.siosrate));
+                                  format_int( prev_siosrate ));
                 }
 
                 /* Copy prepared statistics to buffer */
@@ -3226,7 +3224,7 @@ PANMSG* p;
             write_text (p->msg, MSG_SIZE);
         }
     }
-    sysblk.panel_init = 0;                          /* Panel is no longer running */
+    sysblk.panel_init = 0;      /* Panel is no longer running */
 
     /* Restore the terminal mode */
     set_or_reset_console_mode( keybfd, 0 );
