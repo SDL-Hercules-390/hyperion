@@ -4971,7 +4971,7 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 DEF_INST( move_inverse )
 {
-CACHE_ALIGN BYTE wrk[256] = {0};        /* Cache-aligned Work area   */
+CACHE_ALIGN BYTE wrk[256];              /* Cache-aligned Work area   */
 BYTE   *p1, *p2;                        /* Work ptrs for reversing   */
 VADR    eff_addr1, eff_addr2;           /* Effective addresses       */
 VADR    op2end;                         /* Where operand-2 ends      */

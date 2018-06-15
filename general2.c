@@ -1682,61 +1682,60 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 /*-------------------------------------------------------------------*/
 /* DD   TRT   - Translate and Test                              [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(translate_and_test)
+DEF_INST( translate_and_test )
 {
-int     l;                              /* Lenght byte               */
-int     b1, b2;                         /* Values of base field      */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
+CACHE_ALIGN BYTE op1[256], op2[256];    /* Operand work areas        */
+VADR    addr1, addr2;                   /* Effective addresses       */
+int     b1, b2;                         /* Base registers            */
+int     len;                            /* Length - 1                */
+int     i;                              /* work variable             */
 int     cc = 0;                         /* Condition code            */
-BYTE    sbyte;                          /* Byte work areas           */
-BYTE    dbyte;                          /* Byte work areas           */
-int     i;                              /* Integer work areas        */
+BYTE    dbyte = 0, sbyte = 0;           /* Byte work areas           */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L( inst, regs, len, b1, addr1, b2, addr2 );
+
+    /* Copy operand-1 data to work area */
+    ARCH_DEP( vfetchc )( op1, len, addr1, b1, regs );
+
+    /* Determine how much of op2 we need to fetch */
+    for (i=0; i <= len; i++)
+        if (op1[i] > dbyte)
+            dbyte = op1[i];
+
+    /* Copy operand-2 data to work area */
+    ARCH_DEP( vfetchc )( op2, dbyte, addr2, b2, regs );
 
     /* Process first operand from left to right */
-    for ( i = 0; i <= l; i++ )
+    for (i=0; i <= len && sbyte == 0; i++)
     {
-        /* Fetch argument byte from first operand */
-        dbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+        dbyte = op1[i];
+        sbyte = op2[ dbyte ];
+    }
 
-        /* Fetch function byte from second operand */
-        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte)
-                                   & ADDRESS_MAXWRAP(regs), b2, regs );
+    /* Test for non-zero function byte */
+    if (sbyte != 0)
+    {
+        addr1 += i - 1;
+        addr1 &= ADDRESS_MAXWRAP( regs );
 
-        /* Test for non-zero function byte */
-        if (sbyte != 0) {
-
-            /* Store address of argument byte in register 1 */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-            if(regs->psw.amode64)
-                regs->GR_G(1) = effective_addr1;
-            else
+        /* Store address of argument byte in register 1 */
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+        if (regs->psw.amode64)
+            regs->GR_G(1) = addr1;
+        else
 #endif
-            if ( regs->psw.amode )
-                regs->GR_L(1) = effective_addr1;
-            else
-                regs->GR_LA24(1) = effective_addr1;
+        if (regs->psw.amode)
+            regs->GR_L(1) = addr1;
+        else
+            regs->GR_LA24(1) = addr1;
 
-            /* Store function byte in low-order byte of reg.2 */
-            regs->GR_LHLCL(2) = sbyte;
+        /* Store function byte in low-order byte of reg.2 */
+        regs->GR_LHLCL(2) = sbyte;
 
-            /* Set condition code 2 if argument byte was last byte
-               of first operand, otherwise set condition code 1 */
-            cc = (i == l) ? 2 : 1;
-
-            /* Terminate the operation at this point */
-            break;
-
-        } /* end if(sbyte) */
-
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-
-    } /* end for(i) */
+        /* Set condition code 2 if argument byte was last byte
+           of first operand, otherwise set condition code 1 */
+        cc = (i == len) ? 2 : 1;
+    }
 
     /* Update the condition code */
     regs->psw.cc = cc;
