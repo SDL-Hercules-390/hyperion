@@ -3195,6 +3195,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CLCL-et-al.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\cpu0off.core"
 						>
 					</File>
@@ -4070,6 +4074,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CLCL-et-al.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cmd-abs.tst"
 							>
 						</File>
@@ -4386,6 +4394,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CLCL-et-al.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
@@ -4526,6 +4538,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\CCW-ILS.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CLCL-et-al.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CLCL-et-al.pdf"
 								>
 							</File>
 							<File

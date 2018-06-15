@@ -116,6 +116,11 @@ EXTRA_DIST =                    \
      CCW-ILS.core               \
      CCW-ILS.tst                \
      CCWILS.3390-1.comp-z       \
+     CLCL-et-al.asm             \
+     CLCL-et-al.core            \
+     CLCL-et-al.list            \
+     CLCL-et-al.pdf             \
+     CLCL-et-al.tst             \
      cdfr.txt                   \
      cdgr.txt                   \
      cdsg.txt                   \

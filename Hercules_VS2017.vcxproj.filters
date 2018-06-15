@@ -2183,7 +2183,22 @@
     <None Include="tests\CCW-ILS.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="Hercules_VS2017.sln">
+    <None Include="tests\CLCL-et-al.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCL-et-al.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCL-et-al.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL-et-al.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL-et-al.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+      <None Include="Hercules_VS2017.sln">
       <Filter>Other Files\Build\msvc\VS2017</Filter>
     </None>
     <None Include="Hercules_VS2017.vcxproj">

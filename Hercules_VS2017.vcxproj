@@ -807,6 +807,11 @@
     <None Include="tests\CCW-ILS.list" />
     <None Include="tests\CCW-ILS.pdf" />
     <None Include="tests\CCW-ILS.tst" />
+    <None Include="tests\CLCL-et-al.asm" />
+    <None Include="tests\CLCL-et-al.core" />
+    <None Include="tests\CLCL-et-al.list" />
+    <None Include="tests\CLCL-et-al.pdf" />
+    <None Include="tests\CLCL-et-al.tst" />
     <None Include="tests\cipher.assemble" />
     <None Include="tests\cipher.listing" />
     <None Include="tests\cipher.tst" />

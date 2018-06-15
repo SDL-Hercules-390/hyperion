@@ -1,0 +1,2598 @@
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *            CLC, CLCL, MVCIN and TRT instruction tests
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *  This program tests proper functioning of the CLCL, MVCIN and TRT
+                                                     9 *  instructions.  It also optionally times them.
+                                                    10 *
+                                                    11 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    12 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    13 *  NOT designed to test all aspects of any of the instructions.
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *
+                                                    17 *  Example Hercules Testcase:
+                                                    18 *
+                                                    19 *
+                                                    20 *     *Testcase CLCL-et-al (Test CLCL, MVCIN and TRT instructions)
+                                                    21 *
+                                                    22 *     archlvl     390
+                                                    23 *     mainsize    2
+                                                    24 *     numcpu      1
+                                                    25 *     sysclear
+                                                    26 *
+                                                    27 *     loadcore    "$(testpath)/CLCL-et-al.core"
+                                                    28 *
+                                                    29 *     runtest     2         # (NON-timing test duration)
+                                                    30 *     ##r           1fff=ff   # (enable timing tests too!)
+                                                    31 *     ##runtest     360       # (TIMING too test duration)
+                                                    32 *
+                                                    33 *     *Compare
+                                                    34 *     r 2000.2
+                                                    35 *
+                                                    36 *     *Want  "Ending test/subtest number (NON-timing)"   0402
+                                                    37 *     ##*Want  "Ending test/subtest number (TIMING too)"   9401
+                                                    38 *
+                                                    39 *     *Done
+                                                    40 *
+                                                    41 *
+                                                    42 ***********************************************************************
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    44          PRINT OFF
+                                                  3425          PRINT ON
+
+                                                  3427 ***********************************************************************
+                                                  3428 *        SATK prolog stuff...
+                                                  3429 ***********************************************************************
+
+                                                  3431          ARCHLVL  ZARCH=NO,MNOTE=NO
+                                                  3433+$AL      OPSYN AL
+                                                  3434+$ALR     OPSYN ALR
+                                                  3435+$B       OPSYN B
+                                                  3436+$BAS     OPSYN BAS
+                                                  3437+$BASR    OPSYN BASR
+                                                  3438+$BC      OPSYN BC
+                                                  3439+$BCTR    OPSYN BCTR
+                                                  3440+$BE      OPSYN BE
+                                                  3441+$BH      OPSYN BH
+                                                  3442+$BL      OPSYN BL
+                                                  3443+$BM      OPSYN BM
+                                                  3444+$BNE     OPSYN BNE
+                                                  3445+$BNH     OPSYN BNH
+                                                  3446+$BNL     OPSYN BNL
+                                                  3447+$BNM     OPSYN BNM
+                                                  3448+$BNO     OPSYN BNO
+                                                  3449+$BNP     OPSYN BNP
+                                                  3450+$BNZ     OPSYN BNZ
+                                                  3451+$BO      OPSYN BO
+                                                  3452+$BP      OPSYN BP
+                                                  3453+$BXLE    OPSYN BXLE
+                                                  3454+$BZ      OPSYN BZ
+                                                  3455+$CH      OPSYN CH
+                                                  3456+$L       OPSYN L
+                                                  3457+$LH      OPSYN LH
+                                                  3458+$LM      OPSYN LM
+                                                  3459+$LPSW    OPSYN LPSW
+                                                  3460+$LR      OPSYN LR
+                                                  3461+$LTR     OPSYN LTR
+                                                  3462+$NR      OPSYN NR
+                                                  3463+$SL      OPSYN SL
+                                                  3464+$SLR     OPSYN SLR
+                                                  3465+$SR      OPSYN SR
+                                                  3466+$ST      OPSYN ST
+                                                  3467+$STM     OPSYN STM
+                                                  3468+$X       OPSYN X
+                                                  3469+$AHI     OPSYN AHI
+                                                  3470+$B       OPSYN J
+                                                  3471+$BC      OPSYN BRC
+                                                  3472+$BE      OPSYN JE
+                                                  3473+$BH      OPSYN JH
+                                                  3474+$BL      OPSYN JL
+                                                  3475+$BM      OPSYN JM
+                                                  3476+$BNE     OPSYN JNE
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3477+$BNH     OPSYN JNH
+                                                  3478+$BNL     OPSYN JNL
+                                                  3479+$BNM     OPSYN JNM
+                                                  3480+$BNO     OPSYN JNO
+                                                  3481+$BNP     OPSYN JNP
+                                                  3482+$BNZ     OPSYN JNZ
+                                                  3483+$BO      OPSYN JO
+                                                  3484+$BP      OPSYN JP
+                                                  3485+$BXLE    OPSYN JXLE
+                                                  3486+$BZ      OPSYN JZ
+                                                  3487+$CHI     OPSYN CHI
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3489 ***********************************************************************
+                                                  3490 *        Initiate the CLCLetal CSECT in the CODE region
+                                                  3491 *        with the location counter at 0
+                                                  3492 ***********************************************************************
+
+                                                  3494 CLCLetal ASALOAD  REGION=CODE
+                              00000000  00002001  3495+CLCLetal START 0,CODE
+00000000  000A0000 00000008                       3497+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000008                      00000008  00000058  3498+         ORG   CLCLetal+X'058'
+00000058  000A0000 00000018                       3500+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000060  000A0000 00000020                       3501+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000068  000A0000 00000028                       3502+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000070  000A0000 00000030                       3503+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000078  000A0000 00000038                       3504+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+00000080                      00000080  00000200  3505+         ORG   CLCLetal+512
+
+
+
+                                                  3507 ***********************************************************************
+                                                  3508 *        Create IPL (restart) PSW
+                                                  3509 ***********************************************************************
+
+                                                  3511          ASAIPL   IA=BEGIN
+00000200                      00000200  00000000  3512+         ORG   CLCLetal
+00000000  00080000 00000200                       3513+         PSW   0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3514+         ORG   CLCLetal+512     Reset CSECT to end of assigned storage area
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3516 ***********************************************************************
+                                                  3517 *               The actual "CLCLetal" program itself...
+                                                  3518 ***********************************************************************
+                                                  3519 *
+                                                  3520 *  Architecture Mode: 390
+                                                  3521 *  Addressing Mode:   31-bit
+                                                  3522 *  Register Usage:
+                                                  3523 *
+                                                  3524 *   R0       (work)
+                                                  3525 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3526 *   R2       First base register
+                                                  3527 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3528 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3529 *   R5-R7    (work)
+                                                  3530 *   R8       ORB pointer
+                                                  3531 *   R9       Second base register
+                                                  3532 *   R10-R13  (work)
+                                                  3533 *   R14      Subroutine call
+                                                  3534 *   R15      Secondary Subroutine call or work
+                                                  3535 *
+                                                  3536 ***********************************************************************
+
+
+00000200                      00000000            3538          USING  ASA,R0          Low core addressability
+00000200                      00000200            3539          USING  BEGIN,R2        FIRST Base Register
+00000200                      00001200            3540          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00000000            3541          USING  IOCB,R3         SATK Device I/O Control Block
+00000200                      00000000            3542          USING  ORB,R8          ESA/390 Operation Request Block
+
+
+00000200  0520                                    3544 BEGIN    BALR  R2,0             Initalize FIRST base register
+00000202  0620                                    3545          BCTR  R2,0             Initalize FIRST base register
+00000204  0620                                    3546          BCTR  R2,0             Initalize FIRST base register
+
+00000206  4190 2800                     00000800  3548          LA    R9,2048(,R2)     Initalize SECOND base register
+0000020A  4190 9800                     00000800  3549          LA    R9,2048(,R9)     Initalize SECOND base register
+
+0000020E  45E0 9078                     00001278  3551          BAL   R14,INIT         Initalize Program
+                                                  3552 *
+                                                  3553 **       Run the tests...
+                                                  3554 *
+00000212  45E0 2036                     00000236  3555          BAL   R14,TEST01       Test CLC   instruction
+00000216  45E0 20EC                     000002EC  3556          BAL   R14,TEST02       Test CLCL  instruction
+0000021A  45E0 21C6                     000003C6  3557          BAL   R14,TEST03       Test MVCIN instruction
+0000021E  45E0 220C                     0000040C  3558          BAL   R14,TEST04       Test TRT   instruction
+                                                  3559 *
+00000222  45E0 22B0                     000004B0  3560          BAL   R14,TEST91       Time CLC   instruction  (speed test)
+00000226  45E0 258C                     0000078C  3561          BAL   R14,TEST92       Time CLCL  instruction  (speed test)
+0000022A  45E0 29B8                     00000BB8  3562          BAL   R14,TEST93       Time MVCIN instruction  (speed test)
+0000022E  45E0 2C5E                     00000E5E  3563          BAL   R14,TEST94       Time TRT   instruction  (speed test)
+                                                  3564 *
+00000232  47F0 90C8                     000012C8  3565          B     EOJ              Normal completion
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3567 ***********************************************************************
+                                                  3568 *        TEST01                 Test CLC instruction
+                                                  3569 ***********************************************************************
+
+00000236  9201 9E00                     00002000  3571 TEST01   MVI   TESTNUM,X'01'
+                                                  3572 *
+                                                  3573 **       Initialize test parameters...
+                                                  3574 *
+0000023A  5850 92C8                     000014C8  3575          L      R5,CLC4         Operand-1 address
+0000023E  92FF 5003                     00000003  3576          MVI    3(R5),X'FF'     Force unequal compare (op1 high)
+00000242  5850 92D8                     000014D8  3577          L      R5,CLC256       (same thing for CLC256)
+00000246  92FF 50FF                     000000FF  3578          MVI    255(R5),X'FF'   (same thing for CLC256)
+0000024A  5850 92E0                     000014E0  3579          L      R5,CLCOP1       (same thing for CLCOP1)
+0000024E  92FF 50FF                     000000FF  3580          MVI    255(R5),X'FF'   (same thing for CLCOP1)
+00000252  5860 92D4                     000014D4  3581          L      R6,CLC8+4       OPERAND-2(!) address
+00000256  92FF 6007                     00000007  3582          MVI    7(R6),X'FF'     Force OPERAND-2 to be high! (op1 LOW!)
+                                                  3583 *
+                                                  3584 **       Neither cross (one byte)
+                                                  3585 *
+0000025A  9201 9E01                     00002001  3586          MVI   SUBTEST,X'01'
+0000025E  9856 92A8                     000014A8  3587          LM    R5,R6,CLC1
+00000262  D500 5000 6000      00000000  00000000  3588          CLC   0(1,R5),0(R6)
+00000268  4770 90F8                     000012F8  3589          BNE   FAILTEST
+                                                  3590 *
+                                                  3591 **       Neither cross (two bytes)
+                                                  3592 *
+0000026C  9202 9E01                     00002001  3593          MVI   SUBTEST,X'02'
+00000270  9856 92B0                     000014B0  3594          LM    R5,R6,CLC2
+00000274  D501 5000 6000      00000000  00000000  3595          CLC   0(2,R5),0(R6)
+0000027A  4770 90F8                     000012F8  3596          BNE   FAILTEST
+                                                  3597 *
+                                                  3598 **       Neither cross (four bytes)
+                                                  3599 *
+0000027E  9204 9E01                     00002001  3600          MVI   SUBTEST,X'04'
+00000282  9856 92C8                     000014C8  3601          LM    R5,R6,CLC4
+00000286  D503 5000 6000      00000000  00000000  3602          CLC   0(4,R5),0(R6)
+0000028C  47D0 90F8                     000012F8  3603          BNH   FAILTEST                 (see INIT; CLC4:    op1 > op2)
+                                                  3604 *
+                                                  3605 **       Neither cross (eight bytes)
+                                                  3606 *
+00000290  9208 9E01                     00002001  3607          MVI   SUBTEST,X'08'
+00000294  9856 92D0                     000014D0  3608          LM    R5,R6,CLC8
+00000298  D507 5000 6000      00000000  00000000  3609          CLC   0(8,R5),0(R6)
+0000029E  47B0 90F8                     000012F8  3610          BNL   FAILTEST                 (see INIT; CLC8:    op1 < op2)
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3612 *
+                                                  3613 **       Neither cross (256 bytes)
+                                                  3614 *
+000002A2  92FF 9E01                     00002001  3615          MVI   SUBTEST,X'FF'
+000002A6  9856 92D8                     000014D8  3616          LM    R5,R6,CLC256
+000002AA  D5FF 5000 6000      00000000  00000000  3617          CLC   0(256,R5),0(R6)
+000002B0  47D0 90F8                     000012F8  3618          BNH   FAILTEST                 (see INIT; CLC256:  op1 > op2)
+                                                  3619 *
+                                                  3620 **       Both cross
+                                                  3621 *
+000002B4  9222 9E01                     00002001  3622          MVI   SUBTEST,X'22'
+000002B8  9856 92B8                     000014B8  3623          LM    R5,R6,CLCBOTH
+000002BC  D5FF 5000 6000      00000000  00000000  3624          CLC   0(256,R5),0(R6)
+000002C2  4770 90F8                     000012F8  3625          BNE   FAILTEST
+                                                  3626 *
+                                                  3627 **       Only op1 crosses
+                                                  3628 *
+000002C6  9210 9E01                     00002001  3629          MVI   SUBTEST,X'10'
+000002CA  9856 92E0                     000014E0  3630          LM    R5,R6,CLCOP1
+000002CE  D5FF 5000 6000      00000000  00000000  3631          CLC   0(256,R5),0(R6)
+000002D4  47D0 90F8                     000012F8  3632          BNH   FAILTEST                 (see INIT; CLCOP1:  op1 > op2)
+                                                  3633 *
+                                                  3634 **       Only op2 crosses
+                                                  3635 *
+000002D8  9220 9E01                     00002001  3636          MVI   SUBTEST,X'20'
+000002DC  9856 92C0                     000014C0  3637          LM    R5,R6,CLCOP2
+000002E0  D5FF 5000 6000      00000000  00000000  3638          CLC   0(256,R5),0(R6)
+000002E6  4770 90F8                     000012F8  3639          BNE   FAILTEST
+                                                  3640 *
+000002EA  07FE                                    3641          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3643 ***********************************************************************
+                                                  3644 *        TEST02                   Test CLCL instruction
+                                                  3645 ***********************************************************************
+
+000002EC  9202 9E00                     00002000  3647 TEST02   MVI   TESTNUM,X'02'
+                                                  3648 *
+                                                  3649 **       Initialize test parameters...
+                                                  3650 *
+000002F0  9856 9D0C                     00001F0C  3651          LM     R5,R6,CLCL4     CLCL4 test Op1 address and length
+000002F4  1E56                                    3652          ALR    R5,R6           Point past last byte
+000002F6  0650                                    3653          BCTR   R5,0            Backup to last byte
+000002F8  92FF 5000                     00000000  3654          MVI    0(R5),X'FF'     Force unequal compare (op1 high)
+                                                  3655 *
+000002FC  9856 9D2C                     00001F2C  3656          LM     R5,R6,CLCLOP1   (same thing for CLCLOP1 test)
+00000300  1E56                                    3657          ALR    R5,R6                        "
+00000302  0650                                    3658          BCTR   R5,0                         "
+00000304  92FF 5000                     00000000  3659          MVI    0(R5),X'FF'                  "
+                                                  3660 *
+00000308  9856 9D24                     00001F24  3661          LM     R5,R6,CLCL8+8   CLCL8 test ===> OP2 <===
+0000030C  1E56                                    3662          ALR    R5,R6
+0000030E  0650                                    3663          BCTR   R5,0
+00000310  92FF 5000                     00000000  3664          MVI    0(R5),X'FF'     ===> OPERAND-2 high (OP1 LOW) <===
+                                                  3665 *
+                                                  3666 **       Neither cross (one byte)
+                                                  3667 *
+00000314  9201 9E01                     00002001  3668          MVI   SUBTEST,X'01'
+00000318  98AD 9CAC                     00001EAC  3669          LM    R10,R13,CLCL1
+0000031C  0FAC                                    3670          CLCL  R10,R12
+0000031E  4770 90F8                     000012F8  3671          BNE   FAILTEST
+00000322  4150 9D3C                     00001F3C  3672          LA    R5,ECLCL1
+00000326  45F0 908A                     0000128A  3673          BAL   R15,ENDCLCL
+                                                  3674 *
+                                                  3675 **       Neither cross (two bytes)
+                                                  3676 *
+0000032A  9202 9E01                     00002001  3677          MVI   SUBTEST,X'02'
+0000032E  98AD 9CBC                     00001EBC  3678          LM    R10,R13,CLCL2
+00000332  0FAC                                    3679          CLCL  R10,R12
+00000334  4770 90F8                     000012F8  3680          BNE   FAILTEST
+00000338  4150 9D4C                     00001F4C  3681          LA    R5,ECLCL2
+0000033C  45F0 908A                     0000128A  3682          BAL   R15,ENDCLCL
+                                                  3683 *
+                                                  3684 **       Neither cross (four bytes)
+                                                  3685 **       (inequality on last byte of op1)
+                                                  3686 *
+00000340  9204 9E01                     00002001  3687          MVI   SUBTEST,X'04'
+00000344  98AD 9D0C                     00001F0C  3688          LM    R10,R13,CLCL4
+00000348  0FAC                                    3689          CLCL  R10,R12
+0000034A  47D0 90F8                     000012F8  3690          BNH   FAILTEST                 (see INIT; CLCL4:   op1 > op2)
+0000034E  4150 9D9C                     00001F9C  3691          LA    R5,ECLCL4
+00000352  45F0 908A                     0000128A  3692          BAL   R15,ENDCLCL
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3694 *
+                                                  3695 **       Neither cross (eight bytes)
+                                                  3696 **       (inequality on last byte of op2)
+                                                  3697 *
+00000356  9208 9E01                     00002001  3698          MVI   SUBTEST,X'08'
+0000035A  98AD 9D1C                     00001F1C  3699          LM    R10,R13,CLCL8
+0000035E  0FAC                                    3700          CLCL  R10,R12
+00000360  47B0 90F8                     000012F8  3701          BNL   FAILTEST                 (see INIT; CLCL8:   op1 < op2)
+00000364  4150 9DAC                     00001FAC  3702          LA    R5,ECLCL8
+00000368  45F0 908A                     0000128A  3703          BAL   R15,ENDCLCL
+                                                  3704 *
+                                                  3705 **       Neither cross (1K bytes)
+                                                  3706 *
+0000036C  92FF 9E01                     00002001  3707          MVI   SUBTEST,X'FF'
+00000370  98AD 9CDC                     00001EDC  3708          LM    R10,R13,CLCL1K
+00000374  0FAC                                    3709          CLCL  R10,R12
+00000376  4770 90F8                     000012F8  3710          BNE   FAILTEST
+0000037A  4150 9D6C                     00001F6C  3711          LA    R5,ECLCL1K
+0000037E  45F0 908A                     0000128A  3712          BAL   R15,ENDCLCL
+                                                  3713 *
+                                                  3714 **       Both cross
+                                                  3715 *
+00000382  9222 9E01                     00002001  3716          MVI   SUBTEST,X'22'
+00000386  98AD 9CEC                     00001EEC  3717          LM    R10,R13,CLCLBOTH
+0000038A  0FAC                                    3718          CLCL  R10,R12
+0000038C  4770 90F8                     000012F8  3719          BNE   FAILTEST
+00000390  4150 9D7C                     00001F7C  3720          LA    R5,ECLCLBTH
+00000394  45F0 908A                     0000128A  3721          BAL   R15,ENDCLCL
+                                                  3722 *
+                                                  3723 **       Only op1 crosses
+                                                  3724 **       (inequality on last byte of op1)
+                                                  3725 *
+00000398  9210 9E01                     00002001  3726          MVI   SUBTEST,X'10'
+0000039C  98AD 9D2C                     00001F2C  3727          LM    R10,R13,CLCLOP1
+000003A0  0FAC                                    3728          CLCL  R10,R12
+000003A2  47D0 90F8                     000012F8  3729          BNH   FAILTEST                 (see INIT; CLCLOP1: op1 > op2)
+000003A6  4150 9DBC                     00001FBC  3730          LA    R5,ECLCLOP1
+000003AA  45F0 908A                     0000128A  3731          BAL   R15,ENDCLCL
+                                                  3732 *
+                                                  3733 **       Only op2 crosses
+                                                  3734 *
+000003AE  9220 9E01                     00002001  3735          MVI   SUBTEST,X'20'
+000003B2  98AD 9CFC                     00001EFC  3736          LM    R10,R13,CLCLOP2
+000003B6  0FAC                                    3737          CLCL  R10,R12
+000003B8  4770 90F8                     000012F8  3738          BNE   FAILTEST
+000003BC  4150 9D8C                     00001F8C  3739          LA    R5,ECLCLOP2
+000003C0  45F0 908A                     0000128A  3740          BAL   R15,ENDCLCL
+                                                  3741 *
+000003C4  07FE                                    3742          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3744 ***********************************************************************
+                                                  3745 *        TEST03                   Test MVCIN instruction
+                                                  3746 ***********************************************************************
+
+000003C6  9203 9E00                     00002000  3748 TEST03   MVI   TESTNUM,X'03'
+                                                  3749 *
+                                                  3750 **       Neither cross (one byte)
+                                                  3751 *
+000003CA  4150 92E8                     000014E8  3752          LA    R5,INV1
+000003CE  45F0 909A                     0000129A  3753          BAL   R15,MVCINTST
+                                                  3754 *
+                                                  3755 **       Neither cross (two bytes)
+                                                  3756 *
+000003D2  4150 92F8                     000014F8  3757          LA    R5,INV2
+000003D6  45F0 909A                     0000129A  3758          BAL   R15,MVCINTST
+                                                  3759 *
+                                                  3760 **       Neither cross (four bytes)
+                                                  3761 *
+000003DA  4150 9308                     00001508  3762          LA    R5,INV4
+000003DE  45F0 909A                     0000129A  3763          BAL   R15,MVCINTST
+                                                  3764 *
+                                                  3765 **       Neither cross (eight bytes)
+                                                  3766 *
+000003E2  4150 9318                     00001518  3767          LA    R5,INV8
+000003E6  45F0 909A                     0000129A  3768          BAL   R15,MVCINTST
+                                                  3769 *
+                                                  3770 **       Neither cross (256 bytes)
+                                                  3771 *
+000003EA  4150 9328                     00001528  3772          LA    R5,INV256
+000003EE  45F0 909A                     0000129A  3773          BAL   R15,MVCINTST
+                                                  3774 *
+                                                  3775 **       Both cross
+                                                  3776 *
+000003F2  4150 9338                     00001538  3777          LA    R5,INVBOTH
+000003F6  45F0 909A                     0000129A  3778          BAL   R15,MVCINTST
+                                                  3779 *
+                                                  3780 **       Only op1 crosses
+                                                  3781 *
+000003FA  4150 9348                     00001548  3782          LA    R5,INVOP1
+000003FE  45F0 909A                     0000129A  3783          BAL   R15,MVCINTST
+                                                  3784 *
+                                                  3785 **       Only op2 crosses
+                                                  3786 *
+00000402  4150 9358                     00001558  3787          LA    R5,INVOP2
+00000406  45F0 909A                     0000129A  3788          BAL   R15,MVCINTST
+                                                  3789 *
+0000040A  07FE                                    3790          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3792 ***********************************************************************
+                                                  3793 *        TEST04                   Test TRT instruction
+                                                  3794 ***********************************************************************
+
+0000040C  9204 9E00                     00002000  3796 TEST04   MVI   TESTNUM,X'04'
+                                                  3797
+00000410  5010 22A4                     000004A4  3798          ST    R1,SAVER1          Save register 1
+00000414  18F2                                    3799          LR    R15,R2             Save first base register
+                                                  3800
+00000416                                          3801          DROP  R2                 Temporarily drop addressability
+00000416                      00000200            3802          USING BEGIN,R15          Establish temporary addressability
+                                                  3803
+00000416  4150 9568                     00001768  3804          LA    R5,TRTCTL          Point R5 --> testing control table
+0000041A                      00000000            3805          USING TRTTEST,R5         What each table entry looks like
+                                                  3806
+                              0000041A  00000001  3807 TST4LOOP EQU   *
+                                                  3808 *
+                                                  3809 **       Initialize operand data  (move data to testing address)
+                                                  3810 *
+0000041A  58A0 5008                     00000008  3811          L     R10,OP1WHERE       Where to move operand-1 data to
+0000041E  58C0 5014                     00000014  3812          L     R12,OP2WHERE       Where to move operand-2 data to
+                                                  3813
+00000422  5860 5000                     00000000  3814          L     R6,OP1DATA         Where op1 data is right now
+00000426  5870 5004                     00000004  3815          L     R7,OP1LEN          How much of it there is
+0000042A  4470 F28E                     0000048E  3816          EX    R7,TRTMVC1         Move op1 data to testing location
+                                                  3817
+0000042E  5860 500C                     0000000C  3818          L     R6,OP2DATA         Where op1 data is right now
+00000432  5870 5010                     00000010  3819          L     R7,OP2LEN          How much of it there is
+00000436  4470 F294                     00000494  3820          EX    R7,TRTMVC2         Move op1 data to testing location
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3822 *
+                                                  3823 **       Initialize R1/R2...      (TRT non-zero CC updates R1/R2!)
+                                                  3824 *
+0000043A  1F11                                    3825          SLR   R1,R1              (known value)
+0000043C  5820 91E4                     000013E4  3826          L     R2,=A(REG2PATT)    (known value)
+                                                  3827 *
+                                                  3828 **       Execute TRT instruction and check for expected condition code
+                                                  3829 *
+00000440  5870 5018                     00000018  3830          L     R7,EXLEN           (len-1)
+00000444  58B0 501C                     0000001C  3831          L     R11,FAILMASK       (failure CC)
+                                                  3832
+00000448  9200 9E01                     00002001  3833          MVI   SUBTEST,X'00'      (primary TRT)
+0000044C  4470 F29A                     0000049A  3834          EX    R7,TRT             TRT...
+00000450  9012 F2A8                     000004A8  3835          STM   R1,R2,SAVETRT      (save R1/R2 results)
+00000454  44B0 F2A0                     000004A0  3836          EX    R11,TRTBC          fail if...
+                                                  3837 *
+                                                  3838 **       Verify R1/R2 now contain (or still contain!) expected values
+                                                  3839 *
+00000458  9867 5020                     00000020  3840          LM    R6,R7,ENDREGS
+                                                  3841
+0000045C  9201 9E01                     00002001  3842          MVI   SUBTEST,X'01'      (R1 result)
+00000460  1516                                    3843          CLR   R1,R6              R1 correct?
+00000462  4770 F282                     00000482  3844          BNE   TRTFAIL            No, FAILTEST!
+                                                  3845
+00000466  9202 9E01                     00002001  3846          MVI   SUBTEST,X'02'      (R2 result)
+0000046A  1527                                    3847          CLR   R2,R7              R2 correct?
+0000046C  4770 F282                     00000482  3848          BNE   TRTFAIL            No, FAILTEST!
+                                                  3849
+00000470  4150 5028                     00000028  3850          LA    R5,TRTNEXT         Go on to next table entry
+00000474  D503 91E8 5000      000013E8  00000000  3851          CLC   =F'0',0(R5)        End of table?
+0000047A  4770 F21A                     0000041A  3852          BNE   TST4LOOP           No, loop...
+0000047E  47F0 F286                     00000486  3853          B     TRTDONE            Done! (success!)
+                                                  3854
+00000482  41E0 90F8                     000012F8  3855 TRTFAIL  LA    R14,FAILTEST       Unexpected results!
+00000486  5810 F2A4                     000004A4  3856 TRTDONE  L     R1,SAVER1          Restore register 1
+0000048A  182F                                    3857          LR    R2,R15             Restore first base register
+0000048C  07FE                                    3858          BR    R14                Return to caller or FAILTEST
+                                                  3859
+0000048E  D200 A000 6000      00000000  00000000  3860 TRTMVC1  MVC   0(0,R10),0(R6)     (move op1 to where it should be)
+00000494  D200 C000 6000      00000000  00000000  3861 TRTMVC2  MVC   0(0,R12),0(R6)     (move op2 to where it should be)
+                                                  3862
+0000049A  DD00 A000 C000      00000000  00000000  3863 TRT      TRT   0(0,R10),0(R12)    (TRT op1,op2)
+000004A0  4700 F282                     00000482  3864 TRTBC    BC    0,TRTFAIL          (fail if unexpected condition code)
+                                                  3865
+000004A4  00000000                                3866 SAVER1   DC    F'0'
+000004A8  00000000 00000000                       3867 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
+                                                  3868
+000004B0                                          3869          DROP  R15
+000004B0                      00000200            3870          USING BEGIN,R2
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3872 ***********************************************************************
+                                                  3873 *        TEST91                 Time CLC instruction  (speed test)
+                                                  3874 ***********************************************************************
+
+000004B0  91FF 9DFF                     00001FFF  3876 TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
+000004B4  078E                                    3877          BZR   R14              No, skip timing tests
+
+000004B6  9291 9E00                     00002000  3879          MVI   TESTNUM,X'91'
+000004BA  9201 9E01                     00002001  3880          MVI   SUBTEST,X'01'
+                                                  3881 *
+                                                  3882 **       First, time the overhead...
+                                                  3883 *
+000004BE  5850 9214                     00001414  3884          L     R5,NUMLOOPS
+000004C2  B205 9218                     00001418  3885          STCK  BEGCLOCK
+000004C6  0560                                    3886          BALR  R6,0
+000004C8  0656                                    3887          BCTR  R5,R6
+000004CA  B205 9220                     00001420  3888          STCK  ENDCLOCK
+000004CE  45F0 2FEC                     000011EC  3889          BAL   R15,CALCDUR
+000004D2  D207 9230 9228      00001430  00001428  3890          MVC   OVERHEAD,DURATION
+                                                  3891 *
+                                                  3892 **       Now do the actual timing run...
+                                                  3893 *
+000004D8  5850 9214                     00001414  3894          L     R5,NUMLOOPS
+000004DC  98AD 9CCC                     00001ECC  3895          LM    R10,R13,CLCL256
+000004E0  B205 9218                     00001418  3896          STCK  BEGCLOCK
+000004E4  0560                                    3897          BALR  R6,0
+000004E6  D5FF A000 C000      00000000  00000000  3898          CLC   0(256,R10),0(R12)
+000004EC  D5FF A000 C000      00000000  00000000  3899          CLC   0(256,R10),0(R12)
+                                                  3900 *        ..........ETC..........
+                                                  3901          PRINT OFF
+                                                  4007          PRINT ON
+00000768  D5FF A000 C000      00000000  00000000  4008          CLC   0(256,R10),0(R12)
+0000076E  D5FF A000 C000      00000000  00000000  4009          CLC   0(256,R10),0(R12)
+00000774  D5FF A000 C000      00000000  00000000  4010          CLC   0(256,R10),0(R12)
+0000077A  0656                                    4011          BCTR  R5,R6
+0000077C  B205 9220                     00001420  4012          STCK  ENDCLOCK
+                                                  4013 *
+00000780  D204 9279 91F8      00001479  000013F8  4014          MVC   PRTLINE+33(5),=CL5'CLC'
+00000786  45F0 2F0E                     0000110E  4015          BAL   R15,RPTSPEED
+0000078A  07FE                                    4016          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4018 ***********************************************************************
+                                                  4019 *        TEST92                 Time CLCL instruction  (speed test)
+                                                  4020 ***********************************************************************
+
+0000078C  91FF 9DFF                     00001FFF  4022 TEST92   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
+00000790  078E                                    4023          BZR   R14              No, skip timing tests
+
+00000792  9292 9E00                     00002000  4025          MVI   TESTNUM,X'92'
+00000796  9201 9E01                     00002001  4026          MVI   SUBTEST,X'01'
+                                                  4027 *
+                                                  4028 **       First, time the overhead...
+                                                  4029 *
+0000079A  5850 9214                     00001414  4030          L     R5,NUMLOOPS
+0000079E  B205 9218                     00001418  4031          STCK  BEGCLOCK
+000007A2  0560                                    4032          BALR  R6,0
+000007A4  98AD 9CCC                     00001ECC  4033          LM    R10,R13,CLCL256
+000007A8  98AD 9CCC                     00001ECC  4034          LM    R10,R13,CLCL256
+000007AC  98AD 9CCC                     00001ECC  4035          LM    R10,R13,CLCL256
+                                                  4036 *        .........ETC.........
+                                                  4037          PRINT OFF
+                                                  4133          PRINT ON
+0000092C  98AD 9CCC                     00001ECC  4134          LM    R10,R13,CLCL256
+00000930  98AD 9CCC                     00001ECC  4135          LM    R10,R13,CLCL256
+00000934  0656                                    4136          BCTR  R5,R6
+00000936  B205 9220                     00001420  4137          STCK  ENDCLOCK
+0000093A  45F0 2FEC                     000011EC  4138          BAL   R15,CALCDUR
+0000093E  D207 9230 9228      00001430  00001428  4139          MVC   OVERHEAD,DURATION
+                                                  4140 *
+                                                  4141 **       Now do the actual timing run...
+                                                  4142 *
+00000944  5850 9214                     00001414  4143          L     R5,NUMLOOPS
+00000948  B205 9218                     00001418  4144          STCK  BEGCLOCK
+0000094C  0560                                    4145          BALR  R6,0
+0000094E  98AD 9CCC                     00001ECC  4146          LM    R10,R13,CLCL256
+00000952  0FAC                                    4147          CLCL  R10,R12
+00000954  98AD 9CCC                     00001ECC  4148          LM    R10,R13,CLCL256
+00000958  0FAC                                    4149          CLCL  R10,R12
+0000095A  98AD 9CCC                     00001ECC  4150          LM    R10,R13,CLCL256
+0000095E  0FAC                                    4151          CLCL  R10,R12
+                                                  4152 *        .........ETC.........
+                                                  4153          PRINT OFF
+                                                  4344          PRINT ON
+00000B9A  98AD 9CCC                     00001ECC  4345          LM    R10,R13,CLCL256
+00000B9E  0FAC                                    4346          CLCL  R10,R12
+00000BA0  98AD 9CCC                     00001ECC  4347          LM    R10,R13,CLCL256
+00000BA4  0FAC                                    4348          CLCL  R10,R12
+00000BA6  0656                                    4349          BCTR  R5,R6
+00000BA8  B205 9220                     00001420  4350          STCK  ENDCLOCK
+                                                  4351 *
+00000BAC  D204 9279 91FD      00001479  000013FD  4352          MVC   PRTLINE+33(5),=CL5'CLCL'
+00000BB2  45F0 2F0E                     0000110E  4353          BAL   R15,RPTSPEED
+00000BB6  07FE                                    4354          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4356 ***********************************************************************
+                                                  4357 *        TEST93                 Time MVCIN instruction  (speed test)
+                                                  4358 ***********************************************************************
+
+00000BB8  91FF 9DFF                     00001FFF  4360 TEST93   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
+00000BBC  078E                                    4361          BZR   R14              No, skip timing tests
+
+00000BBE  9293 9E00                     00002000  4363          MVI   TESTNUM,X'93'
+00000BC2  9201 9E01                     00002001  4364          MVI   SUBTEST,X'01'
+                                                  4365 *
+                                                  4366 **       First, time the overhead...
+                                                  4367 *
+00000BC6  5850 9214                     00001414  4368          L     R5,NUMLOOPS
+00000BCA  B205 9218                     00001418  4369          STCK  BEGCLOCK
+00000BCE  0560                                    4370          BALR  R6,0
+00000BD0  0656                                    4371          BCTR  R5,R6
+00000BD2  B205 9220                     00001420  4372          STCK  ENDCLOCK
+00000BD6  45F0 2FEC                     000011EC  4373          BAL   R15,CALCDUR
+00000BDA  D207 9230 9228      00001430  00001428  4374          MVC   OVERHEAD,DURATION
+                                                  4375 *
+                                                  4376 **       Now do the actual timing run...
+                                                  4377 *
+00000BE0  98AD 9328                     00001528  4378          LM    R10,R13,INV256
+00000BE4  D2FF D000 9368      00000000  00001568  4379          MVC   0(256,R13),MVCININ
+00000BEA  5850 9214                     00001414  4380          L     R5,NUMLOOPS
+00000BEE  B205 9218                     00001418  4381          STCK  BEGCLOCK
+00000BF2  0560                                    4382          BALR  R6,0
+00000BF4  E8FF A000 B000      00000000  00000000  4383          MVCIN 0(256,R10),0(R11)
+00000BFA  E8FF A000 B000      00000000  00000000  4384          MVCIN 0(256,R10),0(R11)
+00000C00  E8FF A000 B000      00000000  00000000  4385          MVCIN 0(256,R10),0(R11)
+                                                  4386 *        .........ETC.........
+                                                  4387          PRINT OFF
+                                                  4482          PRINT ON
+00000E3A  E8FF A000 B000      00000000  00000000  4483          MVCIN 0(256,R10),0(R11)
+00000E40  E8FF A000 B000      00000000  00000000  4484          MVCIN 0(256,R10),0(R11)
+00000E46  E8FF A000 B000      00000000  00000000  4485          MVCIN 0(256,R10),0(R11)
+00000E4C  0656                                    4486          BCTR  R5,R6
+00000E4E  B205 9220                     00001420  4487          STCK  ENDCLOCK
+                                                  4488 *
+00000E52  D204 9279 9202      00001479  00001402  4489          MVC   PRTLINE+33(5),=CL5'MVCIN'
+00000E58  45F0 2F0E                     0000110E  4490          BAL   R15,RPTSPEED
+00000E5C  07FE                                    4491          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4493 ***********************************************************************
+                                                  4494 *        TEST94                 Time TRT instruction  (speed test)
+                                                  4495 ***********************************************************************
+
+00000E5E  91FF 9DFF                     00001FFF  4497 TEST94   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
+00000E62  078E                                    4498          BZR   R14              No, skip timing tests
+
+00000E64  9294 9E00                     00002000  4500          MVI   TESTNUM,X'94'
+00000E68  9201 9E01                     00002001  4501          MVI   SUBTEST,X'01'
+                                                  4502 *
+                                                  4503 **       First, time the overhead...
+                                                  4504 *
+00000E6C  5850 9214                     00001414  4505          L     R5,NUMLOOPS
+00000E70  B205 9218                     00001418  4506          STCK  BEGCLOCK
+00000E74  0560                                    4507          BALR  R6,0
+00000E76  0656                                    4508          BCTR  R5,R6
+00000E78  B205 9220                     00001420  4509          STCK  ENDCLOCK
+00000E7C  45F0 2FEC                     000011EC  4510          BAL   R15,CALCDUR
+00000E80  D207 9230 9228      00001430  00001428  4511          MVC   OVERHEAD,DURATION
+                                                  4512 *
+                                                  4513 **       Now do the actual timing run...
+                                                  4514 *
+00000E86  58A0 91EC                     000013EC  4515          L     R10,=A(00+(5*K64))
+00000E8A  D2FF A000 96AC      00000000  000018AC  4516          MVC   0(256,R10),TRTOP10
+00000E90  58C0 91F0                     000013F0  4517          L     R12,=A(MB+(5*K64))
+00000E94  D2FF C000 99AC      00000000  00001BAC  4518          MVC   0(256,R12),TRTOP20
+00000E9A  5850 9214                     00001414  4519          L     R5,NUMLOOPS
+00000E9E  B205 9218                     00001418  4520          STCK  BEGCLOCK
+00000EA2  0560                                    4521          BALR  R6,0
+00000EA4  DDFF A000 C000      00000000  00000000  4522          TRT   0(256,R10),0(R12)
+00000EAA  DDFF A000 C000      00000000  00000000  4523          TRT   0(256,R10),0(R12)
+00000EB0  DDFF A000 C000      00000000  00000000  4524          TRT   0(256,R10),0(R12)
+                                                  4525 *        .........ETC.........
+                                                  4526          PRINT OFF
+                                                  4621          PRINT ON
+000010EA  DDFF A000 C000      00000000  00000000  4622          TRT   0(256,R10),0(R12)
+000010F0  DDFF A000 C000      00000000  00000000  4623          TRT   0(256,R10),0(R12)
+000010F6  DDFF A000 C000      00000000  00000000  4624          TRT   0(256,R10),0(R12)
+000010FC  0656                                    4625          BCTR  R5,R6
+000010FE  B205 9220                     00001420  4626          STCK  ENDCLOCK
+                                                  4627 *
+00001102  D204 9279 9207      00001479  00001407  4628          MVC   PRTLINE+33(5),=CL5'TRT'
+00001108  45F0 2F0E                     0000110E  4629          BAL   R15,RPTSPEED
+0000110C  07FE                                    4630          BR    R14
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4632 ***********************************************************************
+                                                  4633 *        RPTSPEED                 Report instruction speed
+                                                  4634 ***********************************************************************
+
+0000110E  50F0 2FE8                     000011E8  4636 RPTSPEED ST    R15,RPTSAVE        Save return address
+00001112  45F0 2FEC                     000011EC  4637          BAL   R15,CALCDUR        Calculate duration
+                                                  4638 *
+00001116  4150 9230                     00001430  4639          LA    R5,OVERHEAD        Subtract overhead
+0000111A  4160 9228                     00001428  4640          LA    R6,DURATION        From raw timing
+0000111E  4170 9228                     00001428  4641          LA    R7,DURATION        Yielding true instruction timing
+00001122  45F0 9040                     00001240  4642          BAL   R15,SUBDWORD       Do it
+                                                  4643 *
+00001126  98CD 9228                     00001428  4644          LM    R12,R13,DURATION   Convert to...
+0000112A  8CC0 000C                     0000000C  4645          SRDL  R12,12             ... microseconds
+                                                  4646 *
+0000112E  4EC0 9238                     00001438  4647          CVD   R12,TICKSAAA       convert HIGH part to decimal
+00001132  4ED0 9240                     00001440  4648          CVD   R13,TICKSBBB       convert LOW  part to decimal
+                                                  4649 *
+00001136  F877 9248 9238      00001448  00001438  4650          ZAP   TICKSTOT,TICKSAAA            Calculate...
+0000113C  FC75 9248 920C      00001448  0000140C  4651          MP    TICKSTOT,=P'4294967296'      ...decimal...
+00001142  FA77 9248 9240      00001448  00001440  4652          AP    TICKSTOT,TICKSBBB            ...microseconds
+                                                  4653 *
+00001148  D20B 9283 929C      00001483  0000149C  4654          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
+0000114E  DE0B 9283 924B      00001483  0000144B  4655          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
+
+
+
+
+
+
+                                                  4657          RAWIO 4,FAIL=FAILIO      Print elapsed time on console
+00001154  9200 300E                     0000000E  4658+         MVI   IOCBSC,X'00'          Clear SC information
+00001158  D201 300A 3006      0000000A  00000006  4659+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+0000115E  5810 3000                     00000000  4660+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  4661+* Initiate Subchannel-based input/output operation
+00001162  5840 3018                     00000018  4662+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+00001166  B233 4000                     00000000  4663+         SSCH  0(4)                  Initiate the I/O operation
+0000116A  A774 00BF                     000012E8  4664+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+0000116E  5840 3020                     00000020  4665+         $L    4,IOCBIRB             Locate the IRB storage area
+00001172                      00000000            4666+         USING IRB,4                 Make it addressable
+
+                                                  4668+* Wait for I/O operation to present status via an interruption
+00001172                                          4669+IOWT0007 DS    0H  Wait for I/O to complete
+00001172  D207 2F98 0078      00001198  00000078  4671+         MVC   IOS0008(8),120(0)               Save Input/Output new PSW
+00001178  D207 0078 2F90      00000078  00001190  4672+         MVC   120(8,0),ION0008               Establish Input/Ouput new PSW
+0000117E  8200 2F88                     00001188  4673+         $LPSW WPSW0008                       Wait for event
+00001188  020A0000 00000000                       4674+WPSW0008 PSW   2,0,2,0,0                      Wait for event
+00001190  00082000 000011A0                       4675+ION0008  PSW   0,0,0,32,IRST0008,24                I/O New PSW: cc==2
+00001198  00000000 00000000                       4676+IOS0008  DC    XL8'00'
+                                                  4677+* Handle input/output interruption
+000011A0                                          4678+IRST0008 DS    0H
+000011A0  D207 0078 2F98      00000078  00001198  4679+         MVC   120(8,0),IOS0008             Restore input/output new PSW
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4680+* Process the interruption...
+                                                  4681+* Validate interruption is for the expected subchannel
+000011A6  5510 00B8                     000000B8  4682+         CL    1,IOSSID              Is this the device for which I am waiting?
+000011AA  A774 FFE4                     00001172  4683+         $BNE  IOWT0007              ..No, continue waiting for it
+                                                  4684+* Accumulate interruption information from IRB
+000011AE  B235 4000                     00000000  4685+         TSCH  0(4)                  Retrive interrupt information
+000011B2  A744 FFE0                     00001172  4686+         $BC   B'0100',IOWT0007      CC1 (not status pending), wait for it to arrive
+000011B6  A714 0099                     000012E8  4687+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  4688+*                                    CC0 (status was pending), accumulate the status
+000011BA  D600 300E 4003      0000000E  00000003  4689+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+000011C0  D601 300A 4008      0000000A  00000008  4690+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+000011C6  9104 300E                     0000000E  4691+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+000011CA  A7E4 FFD4                     00001172  4692+         $BNO  IOWT0007              ..No, wait for primary status
+000011CE  D203 3010 4004      00000010  00000004  4693+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+000011D4  D201 3016 400A      00000016  0000000A  4694+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  4695+* Test for errors as specified in the IOCB
+000011DA  910C 300A                     0000000A  4696+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+000011DE  A7E4 0085                     000012E8  4697+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  4698+* Input/Output operation successful
+
+
+000011E2  58F0 2FE8                     000011E8  4700          L     R15,RPTSAVE        Restore return address
+000011E6  07FF                                    4701          BR    R15                Return to caller
+
+000011E8  00000000                                4703 RPTSAVE  DC    F'0'               R15 save area
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4705 ***********************************************************************
+                                                  4706 *        CALCDUR                  Calculate DURATION
+                                                  4707 ***********************************************************************
+
+000011EC  50F0 9030                     00001230  4709 CALCDUR  ST    R15,CALCRET        Save return address
+000011F0  9057 9034                     00001234  4710          STM   R5,R7,CALCWORK     Save work registers
+                                                  4711 *
+000011F4  9867 9218                     00001418  4712          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
+000011F8  8C60 0006                     00000006  4713          SRDL  R6,6                            "
+000011FC  8D60 0006                     00000006  4714          SLDL  R6,6                            "
+00001200  9067 9218                     00001418  4715          STM   R6,R7,BEGCLOCK                  "
+                                                  4716 *
+00001204  9867 9220                     00001420  4717          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
+00001208  8C60 0006                     00000006  4718          SRDL  R6,6                            "
+0000120C  8D60 0006                     00000006  4719          SLDL  R6,6                            "
+00001210  9067 9220                     00001420  4720          STM   R6,R7,ENDCLOCK                  "
+                                                  4721 *
+00001214  4150 9218                     00001418  4722          LA    R5,BEGCLOCK        Starting time
+00001218  4160 9220                     00001420  4723          LA    R6,ENDCLOCK        Ending time
+0000121C  4170 9228                     00001428  4724          LA    R7,DURATION        Difference
+00001220  45F0 9040                     00001240  4725          BAL   R15,SUBDWORD       Calculate duration
+                                                  4726 *
+00001224  9857 9034                     00001234  4727          LM    R5,R7,CALCWORK     Restore work registers
+00001228  58F0 9030                     00001230  4728          L     R15,CALCRET        Restore return address
+0000122C  07FF                                    4729          BR    R15                Return to caller
+
+00001230  00000000                                4731 CALCRET  DC    F'0'               R15 save area
+00001234  00000000 00000000                       4732 CALCWORK DC    3F'0'              R5-R7 save area
+
+
+
+
+                                                  4734 ***********************************************************************
+                                                  4735 *        SUBDWORD                 Subtract two doublewords
+                                                  4736 *        R5 --> subtrahend, R6 --> minuend, R7 --> result
+                                                  4737 ***********************************************************************
+
+00001240  90AD 9068                     00001268  4739 SUBDWORD STM   R10,R13,SUBDWSAV   Save registers
+                                                  4740 *
+00001244  98AB 5000                     00000000  4741          LM    R10,R11,0(R5)      Subtrahend  (value to subtract)
+00001248  98CD 6000                     00000000  4742          LM    R12,R13,0(R6)      Minuend     (what to subtract FROM)
+0000124C  1FDB                                    4743          SLR   R13,R11            Subtract LOW part
+0000124E  47B0 9056                     00001256  4744          BNM   *+4+4              (branch if no borrow)
+00001252  5FC0 91F4                     000013F4  4745          SL    R12,=F'1'          (otherwise do borrow)
+00001256  1FCA                                    4746          SLR   R12,R10            Subtract HIGH part
+00001258  90CD 7000                     00000000  4747          STM   R12,R13,0(R7)      Store results
+                                                  4748 *
+0000125C  98AD 9068                     00001268  4749          LM    R10,R13,SUBDWSAV   Restore registers
+00001260  07FF                                    4750          BR    R15                Return to caller
+
+00001268  00000000 00000000                       4752 SUBDWSAV DC    2D'0'              R10-R13 save area
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4754 ***********************************************************************
+                                                  4755 *        Program Initialization
+                                                  4756 ***********************************************************************
+
+00001278                                          4758 INIT     DS     0H              Program Initialization
+
+00001278  4130 9168                     00001368  4760          LA     R3,IOCB_009     Point to IOCB
+0000127C  5880 3018                     00000018  4761          L      R8,IOCBORB      Point to ORB
+
+00001280  45F0 9108                     00001308  4763          BAL    R15,IOINIT      Initialize the CPU for I/O operations
+00001284  45F0 9116                     00001316  4764          BAL    R15,ENADEV      Enable our device making ready for use
+00001288  07FE                                    4765          BR     R14             Return to caller
+
+
+
+
+
+                                                  4767 ***********************************************************************
+                                                  4768 *        Verify CLCL ending register values
+                                                  4769 * R10-R12 = actual ending values, R5 --> expected ending values
+                                                  4770 ***********************************************************************
+
+0000128A  90AD 9DCC                     00001FCC  4772 ENDCLCL  STM    R10,R13,CLCLEND     Save actual ending register values
+0000128E  D50F 5000 9DCC      00000000  00001FCC  4773          CLC    0(4*4,R5),CLCLEND   Do they have the expected values?
+00001294  4770 90F8                     000012F8  4774          BNE    FAILTEST            If not then the test has failed
+00001298  07FF                                    4775          BR     R15                 Otherwise return to caller
+
+
+
+
+
+                                                  4777 ***********************************************************************
+                                                  4778 *        MVCINTST
+                                                  4779 ***********************************************************************
+
+0000129A  98AD 5000                     00000000  4781 MVCINTST LM    R10,R13,0(R5)        a(dst),a(src+(len-1)),a(len-1),a(src)
+0000129E  4160 9467                     00001667  4782          LA    R6,MVCININ+256-1     Point to end of source
+000012A2  1F6C                                    4783          SLR   R6,R12               Backup by length amount
+000012A4  44C0 90B6                     000012B6  4784          EX    R12,MVCINSRC         Initialize source data
+000012A8  44C0 90BC                     000012BC  4785          EX    R12,MVCINMVC         Do the Move Inverse
+000012AC  44C0 90C2                     000012C2  4786          EX    R12,MVCINCLC         Compare with expected results
+000012B0  4770 90F8                     000012F8  4787          BNE   FAILTEST             FAIL if not the expected value
+000012B4  07FF                                    4788          BR    R15                  Otherwise return to caller
+
+
+
+000012B6  D200 D000 6000      00000000  00000000  4790 MVCINSRC MVC   0(0,R13),0(R6)       Executed Instruction
+000012BC  E800 A000 B000      00000000  00000000  4791 MVCINMVC MVCIN 0(0,R10),0(R11)      Executed Instruction
+000012C2  D500 A000 9468      00000000  00001668  4792 MVCINCLC CLC   0(0,R10),MVCINOUT    Executed Instruction
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4794 ***********************************************************************
+                                                  4795 *        Normal completion or Abnormal termination PSWs
+                                                  4796 ***********************************************************************
+
+
+
+
+
+                                                  4798 EOJ      DWAITEND LOAD=YES          Normal completion
+000012C8                                          4800+EOJ      DS    0H
+000012C8  8200 90D0                     000012D0  4801+         LPSW  DWAT0010
+000012D0  000A0000 00000000                       4802+DWAT0010 PSW   0,0,2,0,X'000000'
+
+
+
+
+
+                                                  4804 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
+000012D8                                          4805+FAILDEV  DS    0H
+000012D8  8200 90E0                     000012E0  4806+         LPSW  DWAT0011
+000012E0  000A0000 00010001                       4807+DWAT0011 PSW   0,0,2,0,X'010001'
+
+
+
+
+
+                                                  4809 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
+000012E8                                          4810+FAILIO   DS    0H
+000012E8  8200 90F0                     000012F0  4811+         LPSW  DWAT0012
+000012F0  000A0000 00010002                       4812+DWAT0012 PSW   0,0,2,0,X'010002'
+
+
+
+
+
+                                                  4814 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+000012F8                                          4815+FAILTEST DS    0H
+000012F8  8200 9100                     00001300  4816+         LPSW  DWAT0013
+00001300  000A0000 00010BAD                       4817+DWAT0013 PSW   0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4819 ***********************************************************************
+                                                  4820 *        Initialize the CPU for I/O operations
+                                                  4821 ***********************************************************************
+
+
+                                                  4823 IOINIT   IOINIT ,
+00001308  B766 9110                     00001310  4824+IOINIT   LCTL  6,6,IOMK0014       Enable subchannel subclasses for interruptions
+0000130C  47F0 9114                     00001314  4825+         B     IOMK0014+4
+00001310                                          4826+IOMK0014 DS    0F
+00001310  FF000000                                4827+         DC    XL4'FF000000'         All subchannel subclasses enabled
+
+
+00001314  07FF                                    4829          BR    R15                Return to caller
+
+
+
+
+
+
+                                                  4831 ***********************************************************************
+                                                  4832 *        Enable the device, making it ready for use
+                                                  4833 ***********************************************************************
+
+
+                                                  4835 ENADEV   ENADEV ENAOKAY,FAILDEV,REG=4
+00001316  5810 915C                     0000135C  4836+ENADEV   L     1,FIND0015
+0000131A  5840 3028                     00000028  4837+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+0000131E                      00000000            4838+         USING SCHIB,4
+0000131E                                          4839+FINL0015 DS    0H   Retrieve Subchannel Information Block for desired device number
+0000131E  B234 4000                     00000000  4840+         STSCH 0(4)               Store the SCHIB for first subchannel
+00001322  A774 FFDB                     000012D8  4841+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+00001326  9101 4005                     00000005  4842+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+0000132A  A784 0011                     0000134C  4843+         $BZ   FINN0015           ..No, check the next subchannel
+0000132E  D501 4006 3004      00000006  00000004  4844+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+00001334  A774 000C                     0000134C  4845+         $BNE  FINN0015           ..No, check the next subchannel
+                                                  4846+* Subchannel found!
+00001338  5010 3000                     00000000  4847+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+0000133C  9680 4005                     00000005  4848+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+00001340  B232 4000                     00000000  4849+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+00001344  A784 0010                     00001364  4850+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+00001348  A7F4 FFC8                     000012D8  4851+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+0000134C                                          4852+FINN0015 DS    0H  Advance to next subchannel
+0000134C  4110 1001                     00000001  4853+         LA    1,1(0,1)           Advance to next subchannel
+00001350  5510 9160                     00001360  4854+         CL    1,FINM0015         Beyond maximum subchannel
+00001354  A7D4 FFE5                     0000131E  4855+         $BNH  FINL0015           ..No, examine the next subchannel
+00001358  A724 FFC0                     000012D8  4856+         $BH   FAILDEV            ..Yes, failed to enable the device
+0000135C                                          4857+         DROP  4                  Forget SCHIB addressing
+0000135C  00010000                                4858+FIND0015 DC    A(X'00010000')     First subchannel subsystem ID
+00001360  0001FFFF                                4859+FINM0015 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+
+
+00001364  07FF                                    4861 ENAOKAY  BR    R15                Return to caller
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4863 ***********************************************************************
+                                                  4864 *         Structure used by RAWIO identifying
+                                                  4865 *         the device and operation being performed
+                                                  4866 ***********************************************************************
+
+
+                                                  4868 IOCB_009 IOCB  X'009',CCW=CONPGM
+00001368  00000000                                4869+IOCB_009 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+0000136C  0009                                    4870+         DC    AL2(X'009')     +4 Device address or device number
+0000136E  0000                                    4871+         DC    H'0'            +6 Must be zeros
+00001370  D3                                      4872+         DC    AL1(X'D3')      +8 Default detected unit errors
+00001371  3F                                      4873+         DC    AL1(X'3F')      +9 Default detected channel errors
+00001372  0000                                    4874+         DC    HL2'0'          +10 Accumulated unit and channel errors
+00001374  0000                                    4875+         DC    HL2'0'          +12 Tested unit and channel status
+00001376  00                                      4876+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+00001377  80                                      4877+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00001378  00000000                                4878+         DC    F'0'            +16 I/O status CCW address
+0000137C  00000000                                4879+         DC    F'0'            +20 residual count
+00001380  000013D8                                4880+         DC    A(IORB0016)     +24  Address where ORB is located
+00001384  00000000                                4881+         DC    A(0)            +28  reserved
+00001388  00001398                                4882+         DC    A(IIRB0016)     +32 Address where IRB stored
+0000138C  00000000                                4883+         DC    A(0)            +36 reserved
+00001390  00001398                                4884+         DC    A(IIRB0016)     +40 Address where SCHIB stored
+00001394  00000000                                4885+         DC    A(0)            +44 reserved
+00001398  00000000 00000000                       4886+IIRB0016 DC    16F'0'              Embedded shared IRB and SCHIB area
+000013D8                                          4888+IORB0016 DS    0XL12
+000013D8  00000000                                4889+         DC    A(0)                         Word 0 - Interruption Parameter
+000013DC  00                                      4890+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+000013DD  80                                      4891+         DC    BL1'10000000'                Word 1, bits 8-15
+000013DE  FF                                      4892+         DC    AL1(255)                     Word 1, bits 16-23
+000013DF  00                                      4893+         DC    BL1'00000000'                 Word 1, bits 24-31
+000013E0  00001450                                4894+         DC    AL4(CONPGM)                  Word 2 - CCW address
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4896 ***********************************************************************
+                                                  4897 *        Working Storage
+                                                  4898 ***********************************************************************
+
+
+000013E4                                          4900          LTORG ,                Literals pool
+000013E4  AABBCCDD                                4901                =A(REG2PATT)
+000013E8  00000000                                4902                =F'0'
+000013EC  00050000                                4903                =A(00+(5*K64))
+000013F0  00150000                                4904                =A(MB+(5*K64))
+000013F4  00000001                                4905                =F'1'
+000013F8  C3D3C340 40                             4906                =CL5'CLC'
+000013FD  C3D3C3D3 40                             4907                =CL5'CLCL'
+00001402  D4E5C3C9 D5                             4908                =CL5'MVCIN'
+00001407  E3D9E340 40                             4909                =CL5'TRT'
+0000140C  04294967 296C                           4910                =P'4294967296'
+
+
+
+                              00000400  00000001  4912 K        EQU   1024             One KB
+                              00001000  00000001  4913 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001  4914 K64      EQU   (64*K)           64 KB
+                              00100000  00000001  4915 MB       EQU   (K*K)             1 MB
+
+
+                              00002000  00000001  4917 TESTADDR EQU   (2*PAGE)         Address where test numbers will be placed
+                              00001FFF  00000001  4918 TIMEADDR EQU   TESTADDR-1       Address of timing tests option flag
+
+
+00001414  00002710                                4920 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
+
+
+
+00001418  BBBBBBBB BBBBBBBB                       4922 BEGCLOCK DC    0D'0',8X'BB'     Begin
+00001420  EEEEEEEE EEEEEEEE                       4923 ENDCLOCK DC    0D'0',8X'EE'     End
+00001428  DDDDDDDD DDDDDDDD                       4924 DURATION DC    0D'0',8X'DD'     Diff
+00001430  FFFFFFFF FFFFFFFF                       4925 OVERHEAD DC    0D'0',8X'FF'     Overhead
+
+
+00001438  00000000 0000000C                       4927 TICKSAAA DC    PL8'0'           Clock ticks high part
+00001440  00000000 0000000C                       4928 TICKSBBB DC    PL8'0'           Clock ticks low part
+00001448  00000000 0000000C                       4929 TICKSTOT DC    PL8'0'           Total clock ticks
+
+
+
+00001450  09000044 00001458                       4931 CONPGM   CCW1  X'09',PRTLINE,0,L'PRTLINE
+00001458  40404040 40404040                       4932 PRTLINE  DC    C'         1,000,000 iterations of XXXXX took 999,999,999 microseconds'
+0000149C  40202020 6B202020                       4933 EDIT     DC    X'402020206B2020206B202120'
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4935 ***********************************************************************
+                                                  4936 *        CLC Test Parameters:   A(operand-1),A(operand-2)
+                                                  4937 ***********************************************************************
+
+000014A8  00010000 00110000                       4939 CLC1     DC    A(1*K64),A(MB+(1*K64))                       both equal
+000014B0  00010000 00110000                       4940 CLC2     DC    A(1*K64),A(MB+(1*K64))                       both equal
+000014B8  0000FFF4 0010FFDE                       4941 CLCBOTH  DC    A(1*K64-12),A(MB+(1*K64)-34)                 both equal
+000014C0  00010000 0010FFDE                       4942 CLCOP2   DC    A(1*K64),A(MB+(1*K64)-34)                    both equal
+
+000014C8  00020000 00120000                       4944 CLC4     DC    A(2*K64),A(MB+(2*K64))                         op1 HIGH
+000014D0  00030000 00130000                       4945 CLC8     DC    A(3*K64),A(MB+(3*K64))                         op1 LOW!
+000014D8  00040000 00140000                       4946 CLC256   DC    A(4*K64),A(MB+(4*K64))                         op1 HIGH
+000014E0  0004FFF4 00150000                       4947 CLCOP1   DC    A(5*K64-12),A(MB+(5*K64))                      op1 HIGH
+
+
+                                                  4949 ***********************************************************************
+                                                  4950 *        MVCIN Test Parameters
+                                                  4951 ***********************************************************************
+                                                  4952          PRINT DATA
+000014E8  00010000 00110000                       4953 INV1     DC    A(1*K64),A(MB+(1*K64)+1-1),A(1-1),A(MB+(1*K64))
+000014F0  00000000 00110000
+000014F8  00020000 00120001                       4954 INV2     DC    A(2*K64),A(MB+(2*K64)+2-1),A(2-1),A(MB+(2*K64))
+00001500  00000001 00120000
+00001508  00030000 00130003                       4955 INV4     DC    A(3*K64),A(MB+(3*K64)+4-1),A(4-1),A(MB+(3*K64))
+00001510  00000003 00130000
+00001518  00040000 00140007                       4956 INV8     DC    A(4*K64),A(MB+(4*K64)+8-1),A(8-1),A(MB+(4*K64))
+00001520  00000007 00140000
+00001528  00050000 001500FF                       4957 INV256   DC    A(5*K64),A(MB+(5*K64)+256-1),A(256-1),A(MB+(5*K64))
+00001530  000000FF 00150000
+
+00001538  0005FFF4 001600DD                       4959 INVBOTH  DC    A(6*K64-12),A(MB+(6*K64)-34+256-1),A(256-1),A(MB+(6*K64)-34)
+00001540  000000FF 0015FFDE
+00001548  0006FFF4 001700FF                       4960 INVOP1   DC    A(7*K64-12),A(MB+(7*K64)+256-1),A(256-1),A(MB+(7*K64))
+00001550  000000FF 00170000
+00001558  00080000 001800DD                       4961 INVOP2   DC    A(8*K64),A(MB+(8*K64)-34+256-1),A(256-1),A(MB+(8*K64)-34)
+00001560  000000FF 0017FFDE
+                                                  4962          PRINT NODATA
+00001568                                          4963 MVCININ  DC    0XL256'00'
+00001568  00010203 04050607                       4964          DC    XL16'000102030405060708090A0B0C0D0E0F'
+00001578  10111213 14151617                       4965          DC    XL16'101112131415161718191A1B1C1D1E1F'
+00001588  20212223 24252627                       4966          DC    XL16'202122232425262728292A2B2C2D2E2F'
+00001598  30313233 34353637                       4967          DC    XL16'303132333435363738393A3B3C3D3E3F'
+                                                  4968          PRINT OFF
+                                                  4981          PRINT ON
+00001668                                          4982 MVCINOUT DC    0XL256'00'
+00001668  FFFEFDFC FBFAF9F8                       4983          DC    XL16'FFFEFDFCFBFAF9F8F7F6F5F4F3F2F1F0'
+00001678  EFEEEDEC EBEAE9E8                       4984          DC    XL16'EFEEEDECEBEAE9E8E7E6E5E4E3E2E1E0'
+00001688  DFDEDDDC DBDAD9D8                       4985          DC    XL16'DFDEDDDCDBDAD9D8D7D6D5D4D3D2D1D0'
+00001698  CFCECDCC CBCAC9C8                       4986          DC    XL16'CFCECDCCCBCAC9C8C7C6C5C4C3C2C1C0'
+                                                  4987          PRINT OFF
+                                                  5000          PRINT ON
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5002 ***********************************************************************
+                                                  5003 *        TRTTEST DSECT
+                                                  5004 ***********************************************************************
+
+
+                                                  5006 TRTTEST  DSECT ,
+
+
+
+00000000  00000000                                5008 OP1DATA  DC    A(0)           Pointer to Operand-1 data
+00000004  00000000                                5009 OP1LEN   DC    F'0'           How much data is there - 1
+00000008  00000000                                5010 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
+
+
+0000000C  00000000                                5012 OP2DATA  DC    A(0)           Pointer to Operand-2 data
+00000010  00000000                                5013 OP2LEN   DC    F'0'           How much data is there - 1
+00000014  00000000                                5014 OP2WHERE DC    A(0)           Where Operand-2 data should be placed
+
+
+00000018  00000000                                5016 EXLEN    DC    F'0'           Operand-1 test length (EX instruction)
+0000001C  00000000                                5017 FAILMASK DC    A(0)           Failure Branch on Condition mask
+
+
+00000020  00000000 00000000                       5019 ENDREGS  DC    A(0),XL4'00'   Ending R1/R2 register values
+
+
+                              00000028  00000001  5021 TRTNEXT  EQU   *              Start of next table entry...
+
+
+
+
+
+
+                              AABBCCDD  00000001  5023 REG2PATT EQU   X'AABBCCDD'    Register 2 starting/ending CC0 value
+                              000000DD  00000001  5024 REG2LOW  EQU         X'DD'    (last byte above)
+
+
+
+
+
+
+
+
+                              00000000  00002001  5026 CLCLetal CSECT ,
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5028 ***********************************************************************
+                                                  5029 *        TRT Testing Control tables   (ref: TRTDSECT)
+                                                  5030 ***********************************************************************
+                                                  5031
+                                                  5032          PRINT DATA
+00001768                                          5033 TRTCTL   DC    0A(0)    start of table
+
+
+
+
+00001768  000018AC 00000000                       5035 TRT1     DC    A(TRTOP10),A(001-1),A(00+(1*K64))
+00001770  00010000
+00001774  00001BAC 000000FF                       5036          DC    A(TRTOP20),A(256-1),A(MB+(1*K64))
+0000177C  00110000
+00001780  00000000 00000007                       5037          DC               A(001-1),A(7) CC0
+00001788  00000000 AABBCCDD                       5038          DC                        A(0),A(REG2PATT)
+
+
+
+
+00001790  000018AC 00000000                       5040 TRT2     DC    A(TRTOP10),A(002-2),A(00+(2*K64))
+00001798  00020000
+0000179C  00001BAC 000000FF                       5041          DC    A(TRTOP20),A(256-1),A(MB+(2*K64))
+000017A4  00120000
+000017A8  00000001 00000007                       5042          DC               A(002-1),A(7) CC0
+000017B0  00000000 AABBCCDD                       5043          DC                        A(0),A(REG2PATT)
+
+
+
+
+000017B8  000018AC 00000003                       5045 TRT4     DC    A(TRTOP10),A(004-1),A(00+(3*K64))
+000017C0  00030000
+000017C4  00001BAC 000000FF                       5046          DC    A(TRTOP20),A(256-1),A(MB+(3*K64))
+000017CC  00130000
+000017D0  00000003 00000007                       5047          DC               A(004-1),A(7) CC0
+000017D8  00000000 AABBCCDD                       5048          DC                        A(0),A(REG2PATT)
+
+
+
+
+000017E0  000018AC 00000007                       5050 TRT8     DC    A(TRTOP10),A(008-1),A(00+(4*K64))
+000017E8  00040000
+000017EC  00001BAC 000000FF                       5051          DC    A(TRTOP20),A(256-1),A(MB+(4*K64))
+000017F4  00140000
+000017F8  00000007 00000007                       5052          DC               A(008-1),A(7) CC0
+00001800  00000000 AABBCCDD                       5053          DC                        A(0),A(REG2PATT)
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001808  000018AC 000000FF                       5055 TRT256   DC    A(TRTOP10),A(256-1),A(00+(5*K64))
+00001810  00050000
+00001814  00001BAC 000000FF                       5056          DC    A(TRTOP20),A(256-1),A(MB+(5*K64))
+0000181C  00150000
+00001820  000000FF 00000007                       5057          DC               A(256-1),A(7) CC0
+00001828  00000000 AABBCCDD                       5058          DC                        A(0),A(REG2PATT)
+
+
+
+
+00001830  000019AC 000000FF                       5060 TRTBTH   DC    A(TRTOP111),A(256-1),A(00+(6*K64)-12)  both cross page
+00001838  0005FFF4
+0000183C  00001CAC 000000FF                       5061          DC    A(TRTOP211),A(256-1),A(MB+(6*K64)-34)  both cross page
+00001844  0015FFDE
+00001848  000000FF 0000000B                       5062          DC                A(256-1),A(11) CC1 = stop, scan incomplete
+00001850  00060005 AABBCC11                       5063          DC                         A(00+(6*K64)-12+X'11'),A(REG2PATT-REG2LOW+X'11')
+
+
+
+
+00001858  00001AAC 000000FF                       5065 TRTOP1   DC    A(TRTOP1F0),A(256-1),A(00+(7*K64)-12)  only op1 crosses
+00001860  0006FFF4
+00001864  00001DAC 000000FF                       5066          DC    A(TRTOP2F0),A(256-1),A(MB+(7*K64))
+0000186C  00170000
+00001870  000000FF 0000000D                       5067          DC                A(256-1),A(13) CC2 = stopped on last byte
+00001878  000700F3 AABBCCF0                       5068          DC                         A(00+(7*K64)-12+255),A(REG2PATT-REG2LOW+X'F0')
+
+
+
+
+00001880  000019AC 000000FF                       5070 TRTOP2   DC    A(TRTOP111),A(256-1),A(00+(8*K64))
+00001888  00080000
+0000188C  00001CAC 000000FF                       5071          DC    A(TRTOP211),A(256-1),A(MB+(8*K64)-34)  only op2 crosses
+00001894  0017FFDE
+00001898  000000FF 0000000B                       5072          DC                A(256-1),A(11) CC1 = stop, scan incomplete
+000018A0  00080011 AABBCC11                       5073          DC                         A(00+(8*K64)+X'11'),A(REG2PATT-REG2LOW+X'11')
+
+
+
+
+
+
+
+000018A8  00000000                                5075          DC    A(0)     end of table
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5077 ***********************************************************************
+                                                  5078 *        TRT op1 scan data...
+                                                  5079 ***********************************************************************
+
+000018AC  78125634 78125634                       5081 TRTOP10  DC    64XL4'78125634'    (CC0)
+000018B4  78125634 78125634
+000018BC  78125634 78125634
+000018C4  78125634 78125634
+000018CC  78125634 78125634
+000018D4  78125634 78125634
+000018DC  78125634 78125634
+000018E4  78125634 78125634
+000018EC  78125634 78125634
+000018F4  78125634 78125634
+000018FC  78125634 78125634
+00001904  78125634 78125634
+0000190C  78125634 78125634
+00001914  78125634 78125634
+0000191C  78125634 78125634
+00001924  78125634 78125634
+0000192C  78125634 78125634
+00001934  78125634 78125634
+0000193C  78125634 78125634
+00001944  78125634 78125634
+0000194C  78125634 78125634
+00001954  78125634 78125634
+0000195C  78125634 78125634
+00001964  78125634 78125634
+0000196C  78125634 78125634
+00001974  78125634 78125634
+0000197C  78125634 78125634
+00001984  78125634 78125634
+0000198C  78125634 78125634
+00001994  78125634 78125634
+0000199C  78125634 78125634
+000019A4  78125634 78125634
+
+000019AC  78125634 78125634                       5083 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+000019B4  78125634 78125634
+000019BC  00110000 78125634
+000019C4  78125634 78125634
+000019CC  78125634 78125634
+000019D4  78125634 78125634
+000019DC  78125634 78125634
+000019E4  78125634 78125634
+000019EC  78125634 78125634
+000019F4  78125634 78125634
+000019FC  78125634 78125634
+00001A04  78125634 78125634
+00001A0C  78125634 78125634
+00001A14  78125634 78125634
+00001A1C  78125634 78125634
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001A24  78125634 78125634
+00001A2C  78125634 78125634
+00001A34  78125634 78125634
+00001A3C  78125634 78125634
+00001A44  78125634 78125634
+00001A4C  78125634 78125634
+00001A54  78125634 78125634
+00001A5C  78125634 78125634
+00001A64  78125634 78125634
+00001A6C  78125634 78125634
+00001A74  78125634 78125634
+00001A7C  78125634 78125634
+00001A84  78125634 78125634
+00001A8C  78125634 78125634
+00001A94  78125634 78125634
+00001A9C  78125634 78125634
+00001AA4  78125634 78125634
+
+00001AAC  78125634 78125634                       5085 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC2)
+00001AB4  78125634 78125634
+00001ABC  78125634 78125634
+00001AC4  78125634 78125634
+00001ACC  78125634 78125634
+00001AD4  78125634 78125634
+00001ADC  78125634 78125634
+00001AE4  78125634 78125634
+00001AEC  78125634 78125634
+00001AF4  78125634 78125634
+00001AFC  78125634 78125634
+00001B04  78125634 78125634
+00001B0C  78125634 78125634
+00001B14  78125634 78125634
+00001B1C  78125634 78125634
+00001B24  78125634 78125634
+00001B2C  78125634 78125634
+00001B34  78125634 78125634
+00001B3C  78125634 78125634
+00001B44  78125634 78125634
+00001B4C  78125634 78125634
+00001B54  78125634 78125634
+00001B5C  78125634 78125634
+00001B64  78125634 78125634
+00001B6C  78125634 78125634
+00001B74  78125634 78125634
+00001B7C  78125634 78125634
+00001B84  78125634 78125634
+00001B8C  78125634 78125634
+00001B94  78125634 78125634
+00001B9C  78125634 78125634
+00001BA4  78125634 000000F0
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5087 ***********************************************************************
+                                                  5088 *        TRT op2 stop tables...
+                                                  5089 ***********************************************************************
+
+00001BAC  00000000 00000000                       5091 TRTOP20  DC    256X'00'     no stop
+00001BB4  00000000 00000000
+00001BBC  00000000 00000000
+00001BC4  00000000 00000000
+00001BCC  00000000 00000000
+00001BD4  00000000 00000000
+00001BDC  00000000 00000000
+00001BE4  00000000 00000000
+00001BEC  00000000 00000000
+00001BF4  00000000 00000000
+00001BFC  00000000 00000000
+00001C04  00000000 00000000
+00001C0C  00000000 00000000
+00001C14  00000000 00000000
+00001C1C  00000000 00000000
+00001C24  00000000 00000000
+00001C2C  00000000 00000000
+00001C34  00000000 00000000
+00001C3C  00000000 00000000
+00001C44  00000000 00000000
+00001C4C  00000000 00000000
+00001C54  00000000 00000000
+00001C5C  00000000 00000000
+00001C64  00000000 00000000
+00001C6C  00000000 00000000
+00001C74  00000000 00000000
+00001C7C  00000000 00000000
+00001C84  00000000 00000000
+00001C8C  00000000 00000000
+00001C94  00000000 00000000
+00001C9C  00000000 00000000
+00001CA4  00000000 00000000
+
+00001CAC  00000000 00000000                       5093 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+00001CB4  00000000 00000000
+00001CBC  00110000 00000000
+00001CC4  00000000 00000000
+00001CCC  00000000 00000000
+00001CD4  00000000 00000000
+00001CDC  00000000 00000000
+00001CE4  00000000 00000000
+00001CEC  00000000 00000000
+00001CF4  00000000 00000000
+00001CFC  00000000 00000000
+00001D04  00000000 00000000
+00001D0C  00000000 00000000
+00001D14  00000000 00000000
+00001D1C  00000000 00000000
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001D24  00000000 00000000
+00001D2C  00000000 00000000
+00001D34  00000000 00000000
+00001D3C  00000000 00000000
+00001D44  00000000 00000000
+00001D4C  00000000 00000000
+00001D54  00000000 00000000
+00001D5C  00000000 00000000
+00001D64  00000000 00000000
+00001D6C  00000000 00000000
+00001D74  00000000 00000000
+00001D7C  00000000 00000000
+00001D84  00000000 00000000
+00001D8C  00000000 00000000
+00001D94  00000000 00000000
+00001D9C  00000000 00000000
+00001DA4  00000000 00000000
+
+00001DAC  00000000 00000000                       5095 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+00001DB4  00000000 00000000
+00001DBC  00000000 00000000
+00001DC4  00000000 00000000
+00001DCC  00000000 00000000
+00001DD4  00000000 00000000
+00001DDC  00000000 00000000
+00001DE4  00000000 00000000
+00001DEC  00000000 00000000
+00001DF4  00000000 00000000
+00001DFC  00000000 00000000
+00001E04  00000000 00000000
+00001E0C  00000000 00000000
+00001E14  00000000 00000000
+00001E1C  00000000 00000000
+00001E24  00000000 00000000
+00001E2C  00000000 00000000
+00001E34  00000000 00000000
+00001E3C  00000000 00000000
+00001E44  00000000 00000000
+00001E4C  00000000 00000000
+00001E54  00000000 00000000
+00001E5C  00000000 00000000
+00001E64  00000000 00000000
+00001E6C  00000000 00000000
+00001E74  00000000 00000000
+00001E7C  00000000 00000000
+00001E84  00000000 00000000
+00001E8C  00000000 00000000
+00001E94  00000000 00000000
+00001E9C  F0000000 00000000
+00001EA4  00000000 00000000
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5097 ***********************************************************************
+                                                  5098 *        CLCL Test Parameters
+                                                  5099 ***********************************************************************
+                                                  5100          PRINT DATA
+00001EAC  00060000 00000001                       5101 CLCL1    DC    A(6*K64),A(1),A(MB+(6*K64)),A(1)             both equal
+00001EB4  00160000 00000001
+00001EBC  00060000 00000002                       5102 CLCL2    DC    A(6*K64),A(2),A(MB+(6*K64)),A(2)             both equal
+00001EC4  00160000 00000002
+00001ECC  00060000 00000100                       5103 CLCL256  DC    A(6*K64),A(256),A(MB+(6*K64)),A(256)         both equal
+00001ED4  00160000 00000100
+00001EDC  00060000 00000400                       5104 CLCL1K   DC    A(6*K64),A(K),A(MB+(6*K64)),A(K)             both equal
+00001EE4  00160000 00000400
+00001EEC  0005FFF4 00010000                       5105 CLCLBOTH DC    A(6*K64-12),A(K64),A(MB+(6*K64)-34),A(K64)   both equal
+00001EF4  0015FFDE 00010000
+00001EFC  00060000 00001000                       5106 CLCLOP2  DC    A(6*K64),A(PAGE),A(MB+(6*K64)-34),A(K64)     both equal
+00001F04  0015FFDE 00010000
+
+00001F0C  00070000 00000004                       5108 CLCL4    DC    A(7*K64),A(4),A(MB+(7*K64)),A(4)               op1 HIGH
+00001F14  00170000 00000004
+00001F1C  00080000 00000008                       5109 CLCL8    DC    A(8*K64),A(8),A(MB+(8*K64)),A(8)               op1 LOW!
+00001F24  00180000 00000008
+00001F2C  0008FFF4 00010000                       5110 CLCLOP1  DC    A(9*K64-12),A(K64),A(MB+(9*K64)),A(PAGE)       op1 HIGH
+00001F34  00190000 00001000
+
+
+                                                  5112 ***********************************************************************
+                                                  5113 *        CLCL Expected Ending Register Values
+                                                  5114 ***********************************************************************
+
+00001F3C  00060001 00000000                       5116 ECLCL1   DC    A(6*K64+1),A(0),A(MB+(6*K64)+1),A(0)         both equal
+00001F44  00160001 00000000
+00001F4C  00060002 00000000                       5117 ECLCL2   DC    A(6*K64+2),A(0),A(MB+(6*K64)+2),A(0)         both equal
+00001F54  00160002 00000000
+00001F5C  00060100 00000000                       5118 ECLCL256 DC    A(6*K64+256),A(0),A(MB+(6*K64)+256),A(0)     both equal
+00001F64  00160100 00000000
+00001F6C  00060400 00000000                       5119 ECLCL1K  DC    A(6*K64+K),A(0),A(MB+(6*K64)+K),A(0)         both equal
+00001F74  00160400 00000000
+00001F7C  0006FFF4 00000000                       5120 ECLCLBTH DC    A(6*K64-12+K64),A(0),A(MB+(6*K64)-34+K64),A(0) bth equl
+00001F84  0016FFDE 00000000
+00001F8C  00061000 00000000                       5121 ECLCLOP2 DC    A(6*K64+PAGE),A(0),A(MB+(6*K64)-34+K64),A(0) both equal
+00001F94  0016FFDE 00000000
+
+00001F9C  00070003 00000001                       5123 ECLCL4   DC    A(7*K64+4-1),A(1),A(MB+(7*K64)+4-1),A(1)       op1 HIGH
+00001FA4  00170003 00000001
+00001FAC  00080007 00000001                       5124 ECLCL8   DC    A(8*K64+8-1),A(1),A(MB+(8*K64)+8-1),A(1)       op1 LOW!
+00001FB4  00180007 00000001
+00001FBC  0009FFF3 00000001                       5125 ECLCLOP1 DC    A(9*K64-12+K64-1),A(1),A(MB+(9*K64)+PAGE),A(0) op1 HIGH
+00001FC4  00191000 00000000
+
+00001FCC  00000000 00000000                       5127 CLCLEND  DC    4F'0'  (actual ending register values)
+00001FD4  00000000 00000000
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    34
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5129 ***********************************************************************
+                                                  5130 *        Fixed storage locations
+                                                  5131 ***********************************************************************
+
+
+
+
+
+00001FDC                      00001FDC  00001FFF  5133          ORG   CLCLetal+TIMEADDR      (s/b @ X'1FFF')
+
+
+00001FFF  00                                      5135 TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
+
+
+
+
+
+
+
+
+
+00002000                      00002000  00002000  5137          ORG   CLCLetal+TESTADDR      (s/b @ X'2000')
+
+
+00002000  00                                      5139 TESTNUM  DC    X'00'      Test number of active test
+00002001  00                                      5140 SUBTEST  DC    X'00'      Active test sub-test number
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    35
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5142 ***********************************************************************
+                                                  5143 *        IOCB DSECT
+                                                  5144 ***********************************************************************
+
+                                                  5146          DSECTS NAME=IOCB
+                                                  5148+IOCB     DSECT
+                                                  5149+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          5150+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    5151+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    5152+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    5153+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    5154+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      5155+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      5156+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          5157+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      5158+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      5159+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      5160+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      5161+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      5162+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      5163+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                5164+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          5165+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    5166+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    5167+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          5168+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       5169+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       5170+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       5171+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  5172+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    36
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5174 ***********************************************************************
+                                                  5175 *        ORB DSECT
+                                                  5176 ***********************************************************************
+
+                                                  5178          DSECTS NAME=ORB
+                                                  5180+ORB      DSECT
+00000000  00000000                                5181+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      5183+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  5184+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  5185+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  5186+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  5187+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  5188+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      5190+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  5191+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  5192+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  5193+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  5194+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  5195+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  5196+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  5197+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  5198+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      5199+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      5200+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  5201+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  5202+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  5203+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  5204+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  5205+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  5206+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                5208+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  5209+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  5210+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  5211+* Extended ORB fields
+0000000C  00                                      5212+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      5213+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          5214+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      5215+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      5216+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       5217+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+00000018  00000000 00000000
+                              00000020  00000001  5218+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    37
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5221 ***********************************************************************
+                                                  5222 *        IRB DSECT
+                                                  5223 ***********************************************************************
+
+                                                  5225          DSECTS NAME=IRB
+                                                  5227+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       5228+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+00000008  00000000
+0000000C  00000000 00000000                       5229+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000014  00000000 00000000
+0000001C  00000000
+00000020  00000000 00000000                       5230+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+00000028  00000000 00000000
+00000030  00000000 00000000
+00000038  00000000 00000000
+                              00000040  00000001  5231+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       5232+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+00000048  00000000 00000000
+00000050  00000000 00000000
+00000058  00000000 00000000
+                              00000060  00000001  5233+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    38
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5236 ***********************************************************************
+                                                  5237 *        SCSW DSECT
+                                                  5238 ***********************************************************************
+
+                                                  5240          DSECTS NAME=SCSW
+                                                  5242+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      5243+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  5244+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  5245+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  5246+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  5247+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  5248+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  5249+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  5250+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      5252+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  5253+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  5254+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  5255+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  5256+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  5257+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  5258+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  5259+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  5260+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      5262+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  5263+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  5264+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  5265+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  5266+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  5267+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  5268+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  5269+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  5270+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      5271+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  5272+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  5273+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  5274+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  5275+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  5276+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  5277+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  5278+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  5279+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                5281+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      5283+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  5284+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  5285+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  5286+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  5287+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  5288+SCSWCE   EQU   X'08'    Channel end
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    39
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000004  00000001  5289+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  5290+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  5291+SCSWUX   EQU   X'01'    Unit exception
+
+00000009  00                                      5293+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  5294+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  5295+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  5296+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  5297+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  5298+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  5299+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  5300+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  5301+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    5303+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  5304+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    40
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5307 ***********************************************************************
+                                                  5308 *        (other DSECTS needed by SATK)
+                                                  5309 ***********************************************************************
+
+                                                  5311          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  5587          PRINT ON
+
+                                                  5589 ***********************************************************************
+                                                  5590 *        Register equates
+                                                  5591 ***********************************************************************
+
+
+                              00000000  00000001  5593 R0       EQU   0
+                              00000001  00000001  5594 R1       EQU   1
+                              00000002  00000001  5595 R2       EQU   2
+                              00000003  00000001  5596 R3       EQU   3
+                              00000004  00000001  5597 R4       EQU   4
+                              00000005  00000001  5598 R5       EQU   5
+                              00000006  00000001  5599 R6       EQU   6
+                              00000007  00000001  5600 R7       EQU   7
+                              00000008  00000001  5601 R8       EQU   8
+                              00000009  00000001  5602 R9       EQU   9
+                              0000000A  00000001  5603 R10      EQU   10
+                              0000000B  00000001  5604 R11      EQU   11
+                              0000000C  00000001  5605 R12      EQU   12
+                              0000000D  00000001  5606 R13      EQU   13
+                              0000000E  00000001  5607 R14      EQU   14
+                              0000000F  00000001  5608 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  5610          END
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    41
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ASA                 4    00000000         512  5315  3538
+ASBEGIN             U    00000000           1  5316  5321  5363  5399  5408  5426  5433  5439  5443  5447  5453  5470
+ASEND               U    00000200           1  5469  5470
+ASLENGTH            U    00000200           1  5470
+BCEXTCOD            H    0000001A           2  5333
+BCIOCOD             H    0000003A           2  5341
+BCMCKCOD            H    00000032           2  5339
+BCPGMCOD            H    0000002A           2  5337
+BCSVCCOD            H    00000022           2  5335
+BEGCLOCK            D    00001418           8  4922  3885  3896  4031  4144  4369  4381  4506  4520  4712  4715  4722
+BEGIN               I    00000200           2  3544  3513  3539  3540  3802  3870
+CALCDUR             I    000011EC           4  4709  3889  4138  4373  4510  4637
+CALCRET             F    00001230           4  4731  4709  4728
+CALCWORK            F    00001234           4  4732  4710  4727
+CAW                 F    00000048           4  5345
+CAWADDR             R    00000049           3  5348
+CAWKEY              X    00000048           1  5346
+CAWSUSP             U    00000008           1  5347
+CCW0                4    00000000           8  5474  5480
+CCW0ADDR            R    00000001           3  5476
+CCW0CNT             H    00000006           2  5479
+CCW0CODE            X    00000000           1  5475
+CCW0FLGS            X    00000004           1  5477
+CCW0L               U    00000008           1  5480
+CCW1                4    00000000           8  5492  5497
+CCW1ADDR            A    00000004           4  5496
+CCW1CNT             H    00000002           2  5495
+CCW1CODE            X    00000000           1  5493
+CCW1FLGS            X    00000001           1  5494
+CCW1L               U    00000008           1  5497
+CCWCC               U    00000040           1  5484
+CCWCD               U    00000080           1  5483
+CCWIDA              U    00000004           1  5488
+CCWPCI              U    00000008           1  5487
+CCWSKIP             U    00000010           1  5486
+CCWSLI              U    00000020           1  5485
+CCWSUSP             U    00000002           1  5489
+CHANID              F    000000A8           4  5400
+CLC1                A    000014A8           4  4939  3587
+CLC2                A    000014B0           4  4940  3594
+CLC256              A    000014D8           4  4946  3577  3616
+CLC4                A    000014C8           4  4944  3575  3601
+CLC8                A    000014D0           4  4945  3581  3608
+CLCBOTH             A    000014B8           4  4941  3623
+CLCL1               A    00001EAC           4  5101  3669
+CLCL1K              A    00001EDC           4  5104  3708
+CLCL2               A    00001EBC           4  5102  3678
+CLCL256             A    00001ECC           4  5103  3895  4033  4034  4035  4038  4039  4040  4041  4042  4043  4044  4045  4046
+                                                     4047  4048  4049  4050  4051  4052  4053  4054  4055  4056  4057  4058  4059
+                                                     4060  4061  4062  4063  4064  4065  4066  4067  4068  4069  4070  4071  4072
+                                                     4073  4074  4075  4076  4077  4078  4079  4080  4081  4082  4083  4084  4085
+                                                     4086  4087  4088  4089  4090  4091  4092  4093  4094  4095  4096  4097  4098
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    42
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     4099  4100  4101  4102  4103  4104  4105  4106  4107  4108  4109  4110  4111
+                                                     4112  4113  4114  4115  4116  4117  4118  4119  4120  4121  4122  4123  4124
+                                                     4125  4126  4127  4128  4129  4130  4131  4132  4134  4135  4146  4148  4150
+                                                     4154  4156  4158  4160  4162  4164  4166  4168  4170  4172  4174  4176  4178
+                                                     4180  4182  4184  4186  4188  4190  4192  4194  4196  4198  4200  4202  4204
+                                                     4206  4208  4210  4212  4214  4216  4218  4220  4222  4224  4226  4228  4230
+                                                     4232  4234  4236  4238  4240  4242  4244  4246  4248  4250  4252  4254  4256
+                                                     4258  4260  4262  4264  4266  4268  4270  4272  4274  4276  4278  4280  4282
+                                                     4284  4286  4288  4290  4292  4294  4296  4298  4300  4302  4304  4306  4308
+                                                     4310  4312  4314  4316  4318  4320  4322  4324  4326  4328  4330  4332  4334
+                                                     4336  4338  4340  4342  4345  4347
+CLCL4               A    00001F0C           4  5108  3651  3688
+CLCL8               A    00001F1C           4  5109  3661  3699
+CLCLBOTH            A    00001EEC           4  5105  3717
+CLCLEND             F    00001FCC           4  5127  4772  4773
+CLCLETAL            J    00000000        8194  3495  3498  3505  3512  3514  5133  5137
+CLCLOP1             A    00001F2C           4  5110  3656  3727
+CLCLOP2             A    00001EFC           4  5106  3736
+CLCOP1              A    000014E0           4  4947  3579  3630
+CLCOP2              A    000014C0           4  4942  3637
+CODE                2    00000000        8194  3495
+CONPGM              W    00001450           8  4931  4894
+CPUID               U    0000031B           1  5472
+CSW                 F    00000040           8  5344
+CSWATTN             U    00000080           1  5514
+CSWBUSY             U    00000010           1  5517
+CSWCCTL             U    00000004           1  5529
+CSWCCW              R    00000001           3  5511
+CSWCDAT             U    00000008           1  5528
+CSWCE               U    00000008           1  5518  4696
+CSWCHNG             U    00000001           1  5531
+CSWCNT              H    00000006           2  5533
+CSWCS               X    00000005           1  5523
+CSWCUE              U    00000020           1  5516
+CSWDCC0             U    00000000           1  5507
+CSWDCC1             U    00000001           1  5508
+CSWDCC3             U    00000003           1  5509
+CSWDCCM             U    00000003           1  5506
+CSWDE               U    00000004           1  5519  4696
+CSWFLAG             X    00000000           1  5501
+CSWFMT              4    00000000           8  5500  5534
+CSWFMTL             U    00000008           1  5534
+CSWICTL             U    00000002           1  5530
+CSWIL               U    00000040           1  5525
+CSWKEYM             U    000000F0           1  5502
+CSWLOG              U    00000004           1  5505
+CSWPCI              U    00000080           1  5524
+CSWPRGM             U    00000020           1  5526
+CSWPROT             U    00000010           1  5527
+CSWSM               U    00000040           1  5515
+CSWSUSP             U    00000008           1  5504
+CSWUC               U    00000002           1  5520
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    43
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+CSWUS               X    00000004           1  5513
+CSWUX               U    00000001           1  5521
+DURATION            D    00001428           8  4924  3890  4139  4374  4511  4640  4641  4644  4724
+DWAT0010            3    000012D0           8  4802  4801
+DWAT0011            3    000012E0           8  4807  4806
+DWAT0012            3    000012F0           8  4812  4811
+DWAT0013            3    00001300           8  4817  4816
+ECLCL1              A    00001F3C           4  5116  3672
+ECLCL1K             A    00001F6C           4  5119  3711
+ECLCL2              A    00001F4C           4  5117  3681
+ECLCL256            A    00001F5C           4  5118
+ECLCL4              A    00001F9C           4  5123  3691
+ECLCL8              A    00001FAC           4  5124  3702
+ECLCLBTH            A    00001F7C           4  5120  3720
+ECLCLOP1            A    00001FBC           4  5125  3730
+ECLCLOP2            A    00001F8C           4  5121  3739
+EDIT                X    0000149C          12  4933  4654  4655
+ENADEV              I    00001316           4  4836  4764
+ENAOKAY             I    00001364           2  4861  4850
+ENDCLCL             I    0000128A           4  4772  3673  3682  3692  3703  3712  3721  3731  3740
+ENDCLOCK            D    00001420           8  4923  3888  4012  4137  4350  4372  4487  4509  4626  4717  4720  4723
+ENDREGS             A    00000020           4  5019  3840
+EOJ                 H    000012C8           2  4800  3565
+EXLEN               F    00000018           4  5016  3830
+EXTCPUAD            H    00000084           2  5365
+EXTICODE            H    00000086           2  5366
+EXTIPARM            F    00000080           4  5364
+EXTNPSW             F    00000058           8  5354
+EXTOPSW             F    00000018           8  5326  5332
+FAILDEV             H    000012D8           2  4805  4841  4851  4856
+FAILIO              H    000012E8           2  4810  4664  4687  4697
+FAILMASK            A    0000001C           4  5017  3831
+FAILTEST            H    000012F8           2  4815  3589  3596  3603  3610  3618  3625  3632  3639  3671  3680  3690  3701  3710
+                                                     3719  3729  3738  3855  4774  4787
+FIND0015            A    0000135C           4  4858  4836
+FINL0015            H    0000131E           2  4839  4855
+FINM0015            A    00001360           4  4859  4854
+FINN0015            H    0000134C           2  4852  4843  4845
+IIRB0016            F    00001398           4  4886  4882  4884
+IMAGE               1    00000000        8194     0
+INIT                H    00001278           2  4758  3551
+INV1                A    000014E8           4  4953  3752
+INV2                A    000014F8           4  4954  3757
+INV256              A    00001528           4  4957  3772  4378
+INV4                A    00001508           4  4955  3762
+INV8                A    00001518           4  4956  3767
+INVBOTH             A    00001538           4  4959  3777
+INVOP1              A    00001548           4  4960  3782
+INVOP2              A    00001558           4  4961  3787
+IOCB                4    00000000          48  5148  5172  3541
+IOCBCAW             A    00000018           4  5168
+IOCBCM              X    00000009           1  5156
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    44
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+IOCBCS              X    0000000B           1  5159
+IOCBCT              X    0000000D           1  5161
+IOCBDEV             H    00000004           2  5153  4844
+IOCBDID             F    00000000           4  5150  4660  4847
+IOCBDV              H    00000002           2  5152
+IOCBIRB             A    00000020           8  5170  4665
+IOCBL               U    00000030           1  5172
+IOCBORB             A    00000018           8  5169  4662  4761
+IOCBRCNT            H    00000016           2  5167  4694
+IOCBSC              X    0000000E           1  5162  4658  4689  4691
+IOCBSCCW            A    00000010           4  5164  4693
+IOCBSCNT            F    00000014           4  5165
+IOCBSIB             A    00000028           8  5171  4837
+IOCBST              H    0000000A           2  5157  4659  4690
+IOCBUM              X    00000008           1  5155
+IOCBUS              X    0000000A           1  5158  4696
+IOCBUT              X    0000000C           1  5160
+IOCBWAIT            X    0000000F           1  5163
+IOCBZERO            H    00000006           2  5154  4659
+IOCB_009            A    00001368           4  4869  4760
+IOELADDR            F    000000AC           4  5401
+IOICODE             H    000000BA           2  5406
+IOIID               F    000000C0           4  5411
+IOINIT              I    00001308           4  4824  4763
+IOIPARM             F    000000BC           4  5410
+IOMK0014            F    00001310           4  4826  4824  4825
+ION0008             3    00001190           8  4675  4672
+IONPSW              F    00000078           8  5358
+IOOPSW              F    00000038           8  5330  5340
+IORB0016            X    000013D8          12  4888  4880
+IOS0008             X    00001198           8  4676  4671  4679
+IOSSID              F    000000B8           4  5409  4682
+IOWT0007            H    00001172           2  4669  4683  4686  4692
+IPLCCW1             F    00000008           8  5318
+IPLCCW2             F    00000010           8  5319
+IPLPSW              F    00000000           8  5317
+IRB                 4    00000000          96  5227  5231  5233  4666
+IRBECW              X    00000020          32  5230
+IRBEMW              X    00000040          32  5232
+IRBESW              X    0000000C          20  5229
+IRBL                U    00000040           1  5231
+IRBSCSW             X    00000000          12  5228  4689  4690  4693  4694
+IRBXL               U    00000060           1  5233
+IRST0008            H    000011A0           2  4678  4675
+K                   U    00000400           1  4912  4913  4914  4915  5104  5119
+K64                 U    00010000           1  4914  4515  4517  4939  4940  4941  4942  4944  4945  4946  4947  4953  4954  4955
+                                                     4956  4957  4959  4960  4961  5035  5036  5040  5041  5045  5046  5050  5051
+                                                     5055  5056  5060  5061  5063  5065  5066  5068  5070  5071  5073  5101  5102
+                                                     5103  5104  5105  5106  5108  5109  5110  5116  5117  5118  5119  5120  5121
+                                                     5123  5124  5125
+LCHANLOG            F    000000B0           4  5402
+MB                  U    00100000           1  4915  4517  4939  4940  4941  4942  4944  4945  4946  4947  4953  4954  4955  4956
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    45
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     4957  4959  4960  4961  5036  5041  5046  5051  5056  5061  5066  5071  5101
+                                                     5102  5103  5104  5105  5106  5108  5109  5110  5116  5117  5118  5119  5120
+                                                     5121  5123  5124  5125
+MCKLOG              F    00000100           4  5434
+MCKNPSW             F    00000070           8  5357
+MCKOPSW             F    00000030           8  5329  5338
+MEASUREB            X    000000B9           1  5405
+MKARCHMD            X    000000A3           1  5393
+MKARS               F    00000120           4  5432
+MKCLKCMP            F    000000E0           8  5418
+MKCPUTIM            F    000000D8           8  5417
+MKCRS               F    000001C0           4  5437
+MKDMGCOD            F    000000F4           4  5421
+MKFAILA             F    000000F8           4  5423
+MKFPRS              D    00000160           8  5435
+MKICODE             F    000000E8           4  5419
+MKLOGOUT            F    00000100           4  5425
+MKMODEL             F    000000FC           4  5424
+MKXSAA              F    000000D4           4  5416
+MONCLS              H    00000094           2  5381
+MONCODE             F    0000009C           4  5388
+MONNUMBR            X    00000095           1  5383
+MPGACCID            X    000000A2           1  5391
+MVCINCLC            I    000012C2           6  4792  4786
+MVCININ             X    00001568         256  4963  4379  4782
+MVCINMVC            I    000012BC           6  4791  4785
+MVCINOUT            X    00001668         256  4982  4792
+MVCINSRC            I    000012B6           6  4790  4784
+MVCINTST            I    0000129A           4  4781  3753  3758  3763  3768  3773  3778  3783  3788
+NKGRS               F    00000180           4  5436
+NUMLOOPS            F    00001414           4  4920  3884  3894  4030  4143  4368  4380  4505  4519
+OP1DATA             A    00000000           4  5008  3814
+OP1LEN              F    00000004           4  5009  3815
+OP1WHERE            A    00000008           4  5010  3811
+OP2DATA             A    0000000C           4  5012  3818
+OP2LEN              F    00000010           4  5013  3819
+OP2WHERE            A    00000014           4  5014  3812
+ORB                 4    00000000          32  5180  5210  5218  3542
+ORB1_0              X    00000004           1  5183
+ORB1_8              X    00000005           1  5190
+ORBA                U    00000010           1  5194
+ORBB                U    00000004           1  5196
+ORBC                U    00000004           1  5186
+ORBCCW              A    00000008           4  5208
+ORBCSS              X    0000000C           1  5212
+ORBCU               X    0000000E           1  5215
+ORBD                U    00000040           1  5203
+ORBF                U    00000080           1  5191
+ORBH                U    00000002           1  5197
+ORBI                U    00000020           1  5193
+ORBKEYM             U    000000F0           1  5184
+ORBL                U    00000080           1  5201
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    46
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ORBLEN              U    0000000C           1  5210
+ORBLPM              X    00000006           1  5199
+ORBM                U    00000002           1  5187
+ORBP                U    00000040           1  5192
+ORBPARM             F    00000000           4  5181
+ORBPGM              X    0000000E           1  5214
+ORBRSV25            U    0000007E           1  5205
+ORBRSV26            U    0000003E           1  5204
+ORBRSV3             U    0000007F           1  5202
+ORBRSV4             U    00000080           1  5209
+ORBRSV5             X    0000000D           1  5213
+ORBRSV6             X    0000000F           1  5216
+ORBRSV7             X    00000010          16  5217
+ORBS                U    00000008           1  5185
+ORBT                U    00000001           1  5198
+ORBU                U    00000008           1  5195
+ORBX                U    00000001           1  5206
+ORBXLEN             U    00000020           1  5218
+ORBY                U    00000001           1  5188
+ORRB1_24            X    00000007           1  5200
+OVERHEAD            D    00001430           8  4925  3890  4139  4374  4511  4639
+PAGE                U    00001000           1  4913  4917  5106  5110  5121  5125
+PCFETO              A    000000C4           4  5412
+PERACCID            X    000000A1           1  5390
+PERADDR             F    00000098           4  5387
+PERCODE             X    00000096           1  5384
+PERCODMK            U    000000F0           1  5385
+PGMACCID            X    000000A0           1  5389
+PGMDXC              F    00000090           4  5379
+PGMICODE            H    0000008E           2  5378
+PGMIID              F    0000008C           4  5374
+PGMIILC             X    0000008D           1  5376
+PGMIILCM            U    0000000C           1  5377
+PGMNPSW             F    00000068           8  5356
+PGMOPSW             F    00000028           8  5328  5336
+PGMTRX              F    00000090           4  5380
+PMCW1_0             X    00000004           1  5541
+PMCW1_8             X    00000005           1  5544  4842  4848
+PMCWB               U    00000004           1  5576
+PMCWCHP0            X    00000010           1  5565
+PMCWCHP1            X    00000011           1  5566
+PMCWCHP2            X    00000012           1  5567
+PMCWCHP3            X    00000013           1  5568
+PMCWCHP4            X    00000014           1  5569
+PMCWCHP5            X    00000015           1  5570
+PMCWCHP6            X    00000016           1  5571
+PMCWCHP7            X    00000017           1  5572
+PMCWDNUM            H    00000006           2  5556  4844
+PMCWE               U    00000080           1  5545  4848
+PMCWEXC             X    0000001B           1  5575
+PMCWIP              F    00000000           4  5540
+PMCWISCM            U    00000038           1  5542
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    47
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+PMCWLM              U    00000060           1  5546
+PMCWLMG             U    00000020           1  5547
+PMCWLML             U    00000040           1  5548
+PMCWLPM             X    00000008           1  5558
+PMCWLPUM            X    0000000A           1  5560
+PMCWM               U    00000004           1  5552
+PMCWMBI             H    0000000C           2  5562
+PMCWMM              U    00000018           1  5549
+PMCWMMC             U    00000008           1  5551
+PMCWMME             U    00000010           1  5550
+PMCWPAM             X    0000000F           1  5564
+PMCWPIM             X    0000000B           1  5561
+PMCWPNOM            X    00000009           1  5559
+PMCWPOM             X    0000000E           1  5563
+PMCWRES1            X    00000018           4  5573
+PMCWRES2            X    00000018           3  5574
+PMCWS               U    00000001           1  5578
+PMCWT               U    00000002           1  5553
+PMCWV               U    00000001           1  5554  4842
+PMCWX               U    00000002           1  5577
+PRTLINE             C    00001458          68  4932  4014  4352  4489  4628  4654  4655  4931
+R0                  U    00000000           1  5593  3538
+R1                  U    00000001           1  5594  3798  3825  3835  3843  3856
+R10                 U    0000000A           1  5603  3669  3670  3678  3679  3688  3689  3699  3700  3708  3709  3717  3718  3727
+                                                     3728  3736  3737  3811  3860  3863  3895  3898  3899  3902  3903  3904  3905
+                                                     3906  3907  3908  3909  3910  3911  3912  3913  3914  3915  3916  3917  3918
+                                                     3919  3920  3921  3922  3923  3924  3925  3926  3927  3928  3929  3930  3931
+                                                     3932  3933  3934  3935  3936  3937  3938  3939  3940  3941  3942  3943  3944
+                                                     3945  3946  3947  3948  3949  3950  3951  3952  3953  3954  3955  3956  3957
+                                                     3958  3959  3960  3961  3962  3963  3964  3965  3966  3967  3968  3969  3970
+                                                     3971  3972  3973  3974  3975  3976  3977  3978  3979  3980  3981  3982  3983
+                                                     3984  3985  3986  3987  3988  3989  3990  3991  3992  3993  3994  3995  3996
+                                                     3997  3998  3999  4000  4001  4002  4003  4004  4005  4006  4008  4009  4010
+                                                     4033  4034  4035  4038  4039  4040  4041  4042  4043  4044  4045  4046  4047
+                                                     4048  4049  4050  4051  4052  4053  4054  4055  4056  4057  4058  4059  4060
+                                                     4061  4062  4063  4064  4065  4066  4067  4068  4069  4070  4071  4072  4073
+                                                     4074  4075  4076  4077  4078  4079  4080  4081  4082  4083  4084  4085  4086
+                                                     4087  4088  4089  4090  4091  4092  4093  4094  4095  4096  4097  4098  4099
+                                                     4100  4101  4102  4103  4104  4105  4106  4107  4108  4109  4110  4111  4112
+                                                     4113  4114  4115  4116  4117  4118  4119  4120  4121  4122  4123  4124  4125
+                                                     4126  4127  4128  4129  4130  4131  4132  4134  4135  4146  4147  4148  4149
+                                                     4150  4151  4154  4155  4156  4157  4158  4159  4160  4161  4162  4163  4164
+                                                     4165  4166  4167  4168  4169  4170  4171  4172  4173  4174  4175  4176  4177
+                                                     4178  4179  4180  4181  4182  4183  4184  4185  4186  4187  4188  4189  4190
+                                                     4191  4192  4193  4194  4195  4196  4197  4198  4199  4200  4201  4202  4203
+                                                     4204  4205  4206  4207  4208  4209  4210  4211  4212  4213  4214  4215  4216
+                                                     4217  4218  4219  4220  4221  4222  4223  4224  4225  4226  4227  4228  4229
+                                                     4230  4231  4232  4233  4234  4235  4236  4237  4238  4239  4240  4241  4242
+                                                     4243  4244  4245  4246  4247  4248  4249  4250  4251  4252  4253  4254  4255
+                                                     4256  4257  4258  4259  4260  4261  4262  4263  4264  4265  4266  4267  4268
+                                                     4269  4270  4271  4272  4273  4274  4275  4276  4277  4278  4279  4280  4281
+                                                     4282  4283  4284  4285  4286  4287  4288  4289  4290  4291  4292  4293  4294
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    48
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     4295  4296  4297  4298  4299  4300  4301  4302  4303  4304  4305  4306  4307
+                                                     4308  4309  4310  4311  4312  4313  4314  4315  4316  4317  4318  4319  4320
+                                                     4321  4322  4323  4324  4325  4326  4327  4328  4329  4330  4331  4332  4333
+                                                     4334  4335  4336  4337  4338  4339  4340  4341  4342  4343  4345  4346  4347
+                                                     4348  4378  4383  4384  4385  4388  4389  4390  4391  4392  4393  4394  4395
+                                                     4396  4397  4398  4399  4400  4401  4402  4403  4404  4405  4406  4407  4408
+                                                     4409  4410  4411  4412  4413  4414  4415  4416  4417  4418  4419  4420  4421
+                                                     4422  4423  4424  4425  4426  4427  4428  4429  4430  4431  4432  4433  4434
+                                                     4435  4436  4437  4438  4439  4440  4441  4442  4443  4444  4445  4446  4447
+                                                     4448  4449  4450  4451  4452  4453  4454  4455  4456  4457  4458  4459  4460
+                                                     4461  4462  4463  4464  4465  4466  4467  4468  4469  4470  4471  4472  4473
+                                                     4474  4475  4476  4477  4478  4479  4480  4481  4483  4484  4485  4515  4516
+                                                     4522  4523  4524  4527  4528  4529  4530  4531  4532  4533  4534  4535  4536
+                                                     4537  4538  4539  4540  4541  4542  4543  4544  4545  4546  4547  4548  4549
+                                                     4550  4551  4552  4553  4554  4555  4556  4557  4558  4559  4560  4561  4562
+                                                     4563  4564  4565  4566  4567  4568  4569  4570  4571  4572  4573  4574  4575
+                                                     4576  4577  4578  4579  4580  4581  4582  4583  4584  4585  4586  4587  4588
+                                                     4589  4590  4591  4592  4593  4594  4595  4596  4597  4598  4599  4600  4601
+                                                     4602  4603  4604  4605  4606  4607  4608  4609  4610  4611  4612  4613  4614
+                                                     4615  4616  4617  4618  4619  4620  4622  4623  4624  4739  4741  4746  4749
+                                                     4772  4781  4791  4792
+R11                 U    0000000B           1  5604  3831  3836  4383  4384  4385  4388  4389  4390  4391  4392  4393  4394  4395
+                                                     4396  4397  4398  4399  4400  4401  4402  4403  4404  4405  4406  4407  4408
+                                                     4409  4410  4411  4412  4413  4414  4415  4416  4417  4418  4419  4420  4421
+                                                     4422  4423  4424  4425  4426  4427  4428  4429  4430  4431  4432  4433  4434
+                                                     4435  4436  4437  4438  4439  4440  4441  4442  4443  4444  4445  4446  4447
+                                                     4448  4449  4450  4451  4452  4453  4454  4455  4456  4457  4458  4459  4460
+                                                     4461  4462  4463  4464  4465  4466  4467  4468  4469  4470  4471  4472  4473
+                                                     4474  4475  4476  4477  4478  4479  4480  4481  4483  4484  4485  4741  4743
+                                                     4791
+R12                 U    0000000C           1  5605  3670  3679  3689  3700  3709  3718  3728  3737  3812  3861  3863  3898  3899
+                                                     3902  3903  3904  3905  3906  3907  3908  3909  3910  3911  3912  3913  3914
+                                                     3915  3916  3917  3918  3919  3920  3921  3922  3923  3924  3925  3926  3927
+                                                     3928  3929  3930  3931  3932  3933  3934  3935  3936  3937  3938  3939  3940
+                                                     3941  3942  3943  3944  3945  3946  3947  3948  3949  3950  3951  3952  3953
+                                                     3954  3955  3956  3957  3958  3959  3960  3961  3962  3963  3964  3965  3966
+                                                     3967  3968  3969  3970  3971  3972  3973  3974  3975  3976  3977  3978  3979
+                                                     3980  3981  3982  3983  3984  3985  3986  3987  3988  3989  3990  3991  3992
+                                                     3993  3994  3995  3996  3997  3998  3999  4000  4001  4002  4003  4004  4005
+                                                     4006  4008  4009  4010  4147  4149  4151  4155  4157  4159  4161  4163  4165
+                                                     4167  4169  4171  4173  4175  4177  4179  4181  4183  4185  4187  4189  4191
+                                                     4193  4195  4197  4199  4201  4203  4205  4207  4209  4211  4213  4215  4217
+                                                     4219  4221  4223  4225  4227  4229  4231  4233  4235  4237  4239  4241  4243
+                                                     4245  4247  4249  4251  4253  4255  4257  4259  4261  4263  4265  4267  4269
+                                                     4271  4273  4275  4277  4279  4281  4283  4285  4287  4289  4291  4293  4295
+                                                     4297  4299  4301  4303  4305  4307  4309  4311  4313  4315  4317  4319  4321
+                                                     4323  4325  4327  4329  4331  4333  4335  4337  4339  4341  4343  4346  4348
+                                                     4517  4518  4522  4523  4524  4527  4528  4529  4530  4531  4532  4533  4534
+                                                     4535  4536  4537  4538  4539  4540  4541  4542  4543  4544  4545  4546  4547
+                                                     4548  4549  4550  4551  4552  4553  4554  4555  4556  4557  4558  4559  4560
+                                                     4561  4562  4563  4564  4565  4566  4567  4568  4569  4570  4571  4572  4573
+                                                     4574  4575  4576  4577  4578  4579  4580  4581  4582  4583  4584  4585  4586
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    49
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     4587  4588  4589  4590  4591  4592  4593  4594  4595  4596  4597  4598  4599
+                                                     4600  4601  4602  4603  4604  4605  4606  4607  4608  4609  4610  4611  4612
+                                                     4613  4614  4615  4616  4617  4618  4619  4620  4622  4623  4624  4644  4645
+                                                     4647  4742  4745  4746  4747  4783  4784  4785  4786
+R13                 U    0000000D           1  5606  3669  3678  3688  3699  3708  3717  3727  3736  3895  4033  4034  4035  4038
+                                                     4039  4040  4041  4042  4043  4044  4045  4046  4047  4048  4049  4050  4051
+                                                     4052  4053  4054  4055  4056  4057  4058  4059  4060  4061  4062  4063  4064
+                                                     4065  4066  4067  4068  4069  4070  4071  4072  4073  4074  4075  4076  4077
+                                                     4078  4079  4080  4081  4082  4083  4084  4085  4086  4087  4088  4089  4090
+                                                     4091  4092  4093  4094  4095  4096  4097  4098  4099  4100  4101  4102  4103
+                                                     4104  4105  4106  4107  4108  4109  4110  4111  4112  4113  4114  4115  4116
+                                                     4117  4118  4119  4120  4121  4122  4123  4124  4125  4126  4127  4128  4129
+                                                     4130  4131  4132  4134  4135  4146  4148  4150  4154  4156  4158  4160  4162
+                                                     4164  4166  4168  4170  4172  4174  4176  4178  4180  4182  4184  4186  4188
+                                                     4190  4192  4194  4196  4198  4200  4202  4204  4206  4208  4210  4212  4214
+                                                     4216  4218  4220  4222  4224  4226  4228  4230  4232  4234  4236  4238  4240
+                                                     4242  4244  4246  4248  4250  4252  4254  4256  4258  4260  4262  4264  4266
+                                                     4268  4270  4272  4274  4276  4278  4280  4282  4284  4286  4288  4290  4292
+                                                     4294  4296  4298  4300  4302  4304  4306  4308  4310  4312  4314  4316  4318
+                                                     4320  4322  4324  4326  4328  4330  4332  4334  4336  4338  4340  4342  4345
+                                                     4347  4378  4379  4644  4648  4739  4742  4743  4747  4749  4772  4781  4790
+R14                 U    0000000E           1  5607  3551  3555  3556  3557  3558  3560  3561  3562  3563  3641  3742  3790  3855
+                                                     3858  3877  4016  4023  4354  4361  4491  4498  4630  4765
+R15                 U    0000000F           1  5608  3673  3682  3692  3703  3712  3721  3731  3740  3753  3758  3763  3768  3773
+                                                     3778  3783  3788  3799  3802  3857  3869  3889  4015  4138  4353  4373  4490
+                                                     4510  4629  4636  4637  4642  4700  4701  4709  4725  4728  4729  4750  4763
+                                                     4764  4775  4788  4829  4861
+R2                  U    00000002           1  5595  3539  3544  3545  3546  3548  3799  3801  3826  3835  3847  3857  3870
+R3                  U    00000003           1  5596  3541  4760
+R4                  U    00000004           1  5597
+R5                  U    00000005           1  5598  3575  3576  3577  3578  3579  3580  3587  3588  3594  3595  3601  3602  3608
+                                                     3609  3616  3617  3623  3624  3630  3631  3637  3638  3651  3652  3653  3654
+                                                     3656  3657  3658  3659  3661  3662  3663  3664  3672  3681  3691  3702  3711
+                                                     3720  3730  3739  3752  3757  3762  3767  3772  3777  3782  3787  3804  3805
+                                                     3850  3851  3884  3887  3894  4011  4030  4136  4143  4349  4368  4371  4380
+                                                     4486  4505  4508  4519  4625  4639  4710  4722  4727  4741  4773  4781
+R6                  U    00000006           1  5599  3581  3582  3587  3588  3594  3595  3601  3602  3608  3609  3616  3617  3623
+                                                     3624  3630  3631  3637  3638  3651  3652  3656  3657  3661  3662  3814  3818
+                                                     3840  3843  3860  3861  3886  3887  3897  4011  4032  4136  4145  4349  4370
+                                                     4371  4382  4486  4507  4508  4521  4625  4640  4712  4713  4714  4715  4717
+                                                     4718  4719  4720  4723  4742  4782  4783  4790
+R7                  U    00000007           1  5600  3815  3816  3819  3820  3830  3834  3840  3847  4641  4710  4712  4715  4717
+                                                     4720  4724  4727  4747
+R8                  U    00000008           1  5601  3542  4761
+R9                  U    00000009           1  5602  3540  3548  3549
+REG2LOW             U    000000DD           1  5024  5063  5068  5073
+REG2PATT            U    AABBCCDD           1  5023  3826  5038  5043  5048  5053  5058  5063  5068  5073
+RPTSAVE             F    000011E8           4  4703  4636  4700
+RPTSPEED            I    0000110E           4  4636  4015  4353  4490  4629
+RSTNPSW             F    00000000           8  5322
+RSTOPSW             F    00000008           8  5323
+SAVER1              F    000004A4           4  3866  3798  3856
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    50
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+SAVETRT             D    000004A8           8  3867  3835
+SCANOUT             X    00000080           1  5360  5361
+SCANOUTL            U    00000000           1  5361
+SCHIB               4    00000000          52  5537  5584  4838
+SCHIBL              U    00000034           1  5584
+SCHMBA              A    00000028           8  5582
+SCHMDA1             X    00000030           4  5583
+SCHMDA3             X    00000028          12  5581
+SCHPMCW             X    00000000          28  5539
+SCHSCSW             X    0000001C          12  5580
+SCSW                4    00000000          12  5242  5304
+SCSW0CC             U    00000004           1  5258
+SCSW1               X    00000002           1  5262
+SCSW2               X    00000003           1  5271  4689
+SCSWACP             U    00000001           1  5270
+SCSWADA             U    00000040           1  5273
+SCSWAHP             U    00000002           1  5269
+SCSWALKC            U    00000010           1  5256
+SCSWARP             U    00000008           1  5267
+SCSWASA             U    00000080           1  5272
+SCSWASP             U    00000004           1  5268
+SCSWASUS            U    00000020           1  5274
+SCSWATTN            U    00000080           1  5284
+SCSWBUSY            U    00000010           1  5287
+SCSWCCTL            U    00000004           1  5299
+SCSWCCW             A    00000004           4  5281  4693
+SCSWCCWF            U    00000080           1  5253
+SCSWCCWP            U    00000040           1  5254
+SCSWCDAT            U    00000008           1  5298
+SCSWCE              U    00000008           1  5288
+SCSWCHNG            U    00000001           1  5301
+SCSWCNT             H    0000000A           2  5303  4694
+SCSWCS              X    00000009           1  5293
+SCSWCTLS            X    00000001           1  5252
+SCSWCUE             U    00000020           1  5286
+SCSWDCC0            U    00000000           1  5248
+SCSWDCC1            U    00000001           1  5249
+SCSWDCC3            U    00000003           1  5250
+SCSWDCCM            U    00000003           1  5247
+SCSWDE              U    00000004           1  5289
+SCSWECWC            U    00000002           1  5259
+SCSWESWF            U    00000004           1  5246
+SCSWFC              U    00000010           1  5266
+SCSWFH              U    00000020           1  5265
+SCSWFLAG            X    00000000           1  5243
+SCSWFM              U    00000070           1  5263
+SCSWFS              U    00000040           1  5264
+SCSWICTL            U    00000002           1  5300
+SCSWIL              U    00000040           1  5295
+SCSWISIC            U    00000020           1  5255
+SCSWKEYM            U    000000F0           1  5244
+SCSWL               U    0000000C           1  5304
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    51
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+SCSWPCI             U    00000080           1  5294
+SCSWPNOP            U    00000001           1  5260
+SCSWPRGM            U    00000020           1  5296
+SCSWPROT            U    00000010           1  5297
+SCSWSAS             U    00000010           1  5275
+SCSWSINT            U    00000008           1  5276
+SCSWSM              U    00000040           1  5285
+SCSWSPEN            U    00000001           1  5279
+SCSWSPRI            U    00000004           1  5277  4691
+SCSWSSEC            U    00000002           1  5278
+SCSWSSIC            U    00000008           1  5257
+SCSWSUSC            U    00000008           1  5245
+SCSWUC              U    00000002           1  5290
+SCSWUS              X    00000008           1  5283  4690
+SCSWUX              U    00000001           1  5291
+SSARCHMD            X    000000A3           1  5392
+SSARS               F    00000120           4  5448
+SSCLKCMP            F    000000E0           8  5442
+SSCPUTIM            F    000000D8           8  5441
+SSCRS               F    000001C0           4  5451
+SSFPRS              D    00000160           8  5449
+SSGRS               F    00000180           4  5450
+SSMODEL             F    0000010C           4  5446
+SSPREFIX            F    00000108           4  5445
+SSPSW               F    00000100           8  5444
+SSXSAA              A    000000D4           4  5440
+STFLDATA            F    000000C8           4  5413
+SUBDWORD            I    00001240           4  4739  4642  4725
+SUBDWSAV            D    00001268           8  4752  4739  4749
+SUBTEST             X    00002001           1  5140  3586  3593  3600  3607  3615  3622  3629  3636  3668  3677  3687  3698  3707
+                                                     3716  3726  3735  3833  3842  3846  3880  4026  4364  4501
+SVCICODE            H    0000008A           2  5372
+SVCIID              F    00000088           4  5368
+SVCIILC             X    00000089           1  5370
+SVCIILCM            U    0000000C           1  5371
+SVCNPSW             F    00000060           8  5355
+SVCOPSW             F    00000020           8  5327  5334
+TEST01              I    00000236           4  3571  3555
+TEST02              I    000002EC           4  3647  3556
+TEST03              I    000003C6           4  3748  3557
+TEST04              I    0000040C           4  3796  3558
+TEST91              I    000004B0           4  3876  3560
+TEST92              I    0000078C           4  4022  3561
+TEST93              I    00000BB8           4  4360  3562
+TEST94              I    00000E5E           4  4497  3563
+TESTADDR            U    00002000           1  4917  4918  5137
+TESTNUM             X    00002000           1  5139  3571  3647  3748  3796  3879  4025  4363  4500
+TICKSAAA            P    00001438           8  4927  4647  4650
+TICKSBBB            P    00001440           8  4928  4648  4652
+TICKSTOT            P    00001448           8  4929  4650  4651  4652  4655
+TIMEADDR            U    00001FFF           1  4918  5133
+TIMEOPT             X    00001FFF           1  5135  3876  4022  4360  4497
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    52
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+TIMER               F    00000050           4  5351
+TRT                 I    0000049A           6  3863  3834
+TRT1                A    00001768           4  5035
+TRT2                A    00001790           4  5040
+TRT256              A    00001808           4  5055
+TRT4                A    000017B8           4  5045
+TRT8                A    000017E0           4  5050
+TRTBC               I    000004A0           4  3864  3836
+TRTBTH              A    00001830           4  5060
+TRTCTL              A    00001768           4  5033  3804
+TRTDONE             I    00000486           4  3856  3853
+TRTFAIL             I    00000482           4  3855  3844  3848  3864
+TRTMVC1             I    0000048E           6  3860  3816
+TRTMVC2             I    00000494           6  3861  3820
+TRTNEXT             U    00000028           1  5021  3850
+TRTOP1              A    00001858           4  5065
+TRTOP10             X    000018AC           4  5081  4516  5035  5040  5045  5050  5055
+TRTOP111            X    000019AC           4  5083  5060  5070
+TRTOP1F0            X    00001AAC           4  5085  5065
+TRTOP2              A    00001880           4  5070
+TRTOP20             X    00001BAC           1  5091  4518  5036  5041  5046  5051  5056
+TRTOP211            X    00001CAC           1  5093  5061  5071
+TRTOP2F0            X    00001DAC           1  5095  5066
+TRTTEST             4    00000000          40  5006  3805
+TST4LOOP            U    0000041A           1  3807  3852
+TTDES               F    00000054           4  5352
+UA0                 F    00000010           8  5324
+UA1                 F    0000004C           4  5349
+UA2                 F    000000A4           4  5394
+UA3                 F    000000B4           4  5403
+UA4                 X    000000B8           1  5404
+UA5                 X    000000CC           8  5414
+UA6                 X    000000EC           8  5420
+UA7                 F    00000118           8  5431
+UA8                 X    00000180          32  5460
+WPSW0008            3    00001188           8  4674  4673
+ZBRKADDR            A    00000110           8  5430
+ZEMONCNT            F    0000010C           4  5429
+ZEMONCTR            A    00000100           8  5427
+ZEMONSIZ            F    00000108           4  5428
+ZEXTNPSW            X    000001B0          16  5463
+ZEXTOPSW            X    00000130          16  5455
+ZIONPSW             X    000001F0          16  5467
+ZIOOPSW             X    00000170          16  5459
+ZMCKNPSW            X    000001E0          16  5466
+ZMCKOPSW            X    00000160          16  5458
+ZMKFAILA            F    000000F8           8  5422
+ZMONCODE            F    000000B0           8  5397
+ZPGMNPSW            X    000001D0          16  5465
+ZPGMOPSW            X    00000150          16  5457
+ZPGMTRX             F    000000A8           8  5396
+ZRSTNPSW            X    000001A0          16  5462
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    53
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ZRSTOPSW            X    00000120          16  5454
+ZSASDISP            U    000011C0           1  5468
+ZSVCNPSW            X    000001C0          16  5464
+ZSVCOPSW            X    00000140          16  5456
+=A(00+(5*K64))      A    000013EC           4  4903  4515
+=A(MB+(5*K64))      A    000013F0           4  4904  4517
+=A(REG2PATT)        A    000013E4           4  4901  3826
+=CL5'CLC'           C    000013F8           5  4906  4014
+=CL5'CLCL'          C    000013FD           5  4907  4352
+=CL5'MVCIN'         C    00001402           5  4908  4489
+=CL5'TRT'           C    00001407           5  4909  4628
+=F'0'               F    000013E8           4  4902  3851
+=F'1'               F    000013F4           4  4905  4745
+=P'4294967296'      P    0000140C           6  4910  4651
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    54
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        110
+APROB       242
+ARCHIND     402   3432
+ARCHLVL     543   3431
+ASAIPL      669   3511
+ASALOAD     749   3494
+ASAREA      804   5314
+ASAZAREA    989
+CPUWAIT    1072   4670
+DSECTS     1398   5146   5178   5225   5240   5311
+DWAIT      1601   4799   4804   4809   4814
+DWAITEND   1658   4798
+ENADEV     1666   4835
+ESA390     1766
+IOCB       1777   4868
+IOCBDS     1953   5147
+IOFMT      1987   5179   5226   5241   5473   5491   5499   5536
+IOINIT     2325   4823
+IOTRFR     2366
+ORB        2414   4887
+POINTER    2603
+PSWFMT     2631
+RAWAIT     2765
+RAWIO      2861   4657
+SIGCPU     3019
+SMMGR      3077
+SMMGRB     3177
+TRAP128    3226
+TRAP64     3203   3496   3499
+TRAPS      3239
+ZARCH      3313
+ZEROH      3325
+ZEROL      3353
+ZEROLH     3381
+ZEROLL     3404
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    55
+
+   DESC     SYMBOL   SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE     8194  0000-2001  0000-2001
+  Region   CODE      8194  0000-2001  0000-2001
+    CSECT  CLCLETAL  8194  0000-2001  0000-2001
+ASMA Ver. 0.2.0              CLCL-et-al (Test CLCL, MVCIN and TRT instructions)                     15 Jun 2018 05:55:11  Page    56
+
+   STMT                                             FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\CLCL-et-al\CLCL-et-al.asm
+2     C:\Users\Fish\Documents\Visual Studio 2008\Projects\Hercules\_Git\_Harold\SATK-0\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+
