@@ -2368,12 +2368,12 @@ static INLINE U32 memneq( const BYTE* m1, const BYTE* m2, U32 len )
 /*           mem_pad_cmp  --  compare memory to padding              */
 /*-------------------------------------------------------------------*/
 /* Input:                                                            */
+/*      regs    CPU register context                                 */
 /*      ea1     Logical address of leftmost byte of operand-1        */
 /*      b1      Operand-1 base register                              */
-/*      len     Compare length (0 < len < pagesize)                  */
 /*      pad     Pointer to padding bytes (i.e. operand-2)            */
-/*      regs    CPU register context                                 */
-/*      idx     Pointer to where inequality was found    (CLCL only) */
+/*      len     Compare length (0 < len < pagesize)                  */
+/*      idx     Index to where inequality was found      (CLCL only) */
 /* Output:                                                           */
 /*      rc      Same as for CRT memcmp() function: -1, 0, +1         */
 /*                                                                   */
@@ -2383,10 +2383,10 @@ static INLINE U32 memneq( const BYTE* m1, const BYTE* m2, U32 len )
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( mem_pad_cmp )
 (
-    VADR   ea1, int b1,         // op-1 (dst)
-    U32    len,                 // compare length
-    const BYTE* pad,            // pointer to padding bytes (i.e. op-2)
     REGS*  regs,                // register context
+    VADR   ea1, int b1,         // op-1 (dst)
+    const BYTE* pad,            // pointer to padding bytes (i.e. op-2)
+    U32    len,                 // compare length
     U32*   idx                  // unequal idx ptr
 )
 {
@@ -2477,13 +2477,13 @@ int ARCH_DEP( mem_pad_cmp )
 /*                 mem_cmp  --  compare memory                       */
 /*-------------------------------------------------------------------*/
 /* Input:                                                            */
+/*      regs    CPU register context                                 */
 /*      ea1     Logical address of leftmost byte of operand-1        */
 /*      b1      Operand-1 base register                              */
 /*      ea2     Logical address of leftmost byte of operand-2        */
 /*      b2      Operand-2 base register                              */
 /*      len     Compare length (0 < len < pagesize)                  */
-/*      regs    CPU register context                                 */
-/*      idx     Pointer to where inequality was found    (CLCL only) */
+/*      idx     Index to where inequality was found      (CLCL only) */
 /* Output:                                                           */
 /*      rc      Same as for CRT memcmp() function: -1, 0, +1         */
 /*                                                                   */
@@ -2493,10 +2493,10 @@ int ARCH_DEP( mem_pad_cmp )
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( mem_cmp )
 (
+    REGS*  regs,                // register context
     VADR   ea1, int b1,         // op-1 (dst)
     VADR   ea2, int b2,         // op-2 (src)
     U32    len,                 // compare length
-    REGS*  regs,                // register context
     U32*   idx                  // unequal idx ptr
 )
 {
@@ -2696,7 +2696,7 @@ U32      len;                           /* Length minus 1            */
 int      rc;                            /* mem_cmp() return code     */
 
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
-    rc = ARCH_DEP( mem_cmp )( ea1, b1, ea2, b2, len+1, regs, NULL );
+    rc = ARCH_DEP( mem_cmp )( regs, ea1, b1, ea2, b2, len+1, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
 }
 #else // !defined( USE_NEW_CLC )
@@ -2877,16 +2877,28 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
 /*-------------------------------------------------------------------*/
 /* 0F   CLCL  - Compare Logical Long                            [RR] */
 /*-------------------------------------------------------------------*/
+
+#undef   CHUNK_AMT
+#define  CHUNK_AMT          (PAGEFRAME_PAGESIZE - 256)
+
+#undef   MAX_CPU_AMT
+#define  MAX_CPU_AMT        (64 * 1024) // (purely arbitrary)
+
+CASSERT( CHUNK_AMT      <   (PAGEFRAME_PAGESIZE), general1_c );
+CASSERT( MAX_CPU_AMT    >   (PAGEFRAME_PAGESIZE), general1_c );
+
 DEF_INST( compare_logical_character_long )
 {
-    VADR    addr1, addr2;               // Operand addresses
-    U32     len1,  len2;                // Operand lengths
-    int     r1,    r2;                  // Values of R fields
-
-    U32 unpadded_len, padded_len;       // work variables
-    U32 chunk, rem;                     // work variables
-    U32 chunk_idx, idx = 0;             // amount actually compared
-    int rc = 0;                         // memcmp() return code
+    VADR  addr1, addr2;         // Operand addresses
+    U32   len1,  len2;          // Operand lengths
+    int   r1,    r2;            // Values of R fields
+    U32   unpadded_len;         // work (lesser of the two lengths)
+    U32   padded_len;           // work (greater length minus lesser)
+    U32   in_amt;               // Work (amount to be compared)
+    U32   out_amt;              // Work (amount that was found equal)
+    U32   rem;                  // Work (amount remaining)
+    U32   total = 0;            // TOTAL amount compared so far
+    int   rc = 0;               // memcmp() return code
 
     RR( inst, regs, r1, r2 );
     ODD2_CHECK( r1, r2, regs );
@@ -2916,95 +2928,82 @@ DEF_INST( compare_logical_character_long )
         padded_len   = len1 - len2;
     }
 
-#undef  CHUNK_AMT
-#define CHUNK_AMT       (PAGEFRAME_PAGESIZE - 256)
-
-#undef  MAX_CPU_AMT
-#define MAX_CPU_AMT     (64 * 1024) // (arbitrary)
-
     // Compare the unpadded part first
 
     rem = unpadded_len;
 
-    while (rem && idx < MAX_CPU_AMT)
+    while (rc == 0 && rem && total < MAX_CPU_AMT)
     {
-        chunk = rem < CHUNK_AMT
-              ? rem : CHUNK_AMT;
+        in_amt = rem < CHUNK_AMT
+               ? rem : CHUNK_AMT;
 
-        if ((rc = ARCH_DEP( mem_cmp )( addr1, r1, addr2, r2, chunk, regs, &chunk_idx )) != 0)
-        {
-            addr1 += chunk_idx;
-            addr2 += chunk_idx;
-            idx   += chunk_idx;
-            rem   -= chunk_idx;
-            break;
-        }
+        rc = ARCH_DEP( mem_cmp )( regs, addr1, r1, addr2, r2, in_amt,
+                                                            &out_amt );
+        addr1 += out_amt;
+        addr2 += out_amt;
+        total += out_amt;
+        rem   -= out_amt;
 
-        addr1 += chunk;
-        addr2 += chunk;
-        idx   += chunk;
-        rem   -= chunk;
+        // Must update register values as we go in case
+        // the next compare causes an access interrupt
+
+        SET_GR_A( r1, regs, addr1 );
+
+        if ( regs->GR_LA24( r1+1 ) >= out_amt)
+             regs->GR_LA24( r1+1 ) -= out_amt;
+        else regs->GR_LA24( r1+1 ) = 0;
+
+        SET_GR_A( r2, regs, addr2 );
+
+        if ( regs->GR_LA24( r2+1 ) >= out_amt)
+             regs->GR_LA24( r2+1 ) -= out_amt;
+        else regs->GR_LA24( r2+1 ) = 0;
     }
 
     // Now compare the padded part, if needed
 
-    if (rc == 0 && padded_len && idx < MAX_CPU_AMT)
+    if (rc == 0 && padded_len && total < MAX_CPU_AMT)
     {
         BYTE  padding[ CHUNK_AMT ];
-        VADR  longer_addr = (len1 > len2) ? addr1 : addr2;
-        int   longer_r    = (len1 > len2) ? r1    : r2;
-        bool  swap_rc     = (len1 > len2) ? false : true;
-        BYTE  pad         = regs->GR_LHHCH( r2+1 );
+        VADR  addr     =  (len1 > len2) ? addr1 : addr2;
+        int   r        =  (len1 > len2) ? r1    : r2;
+        bool  swap_rc  =  (len1 > len2) ? false : true;
+        BYTE  pad      =  regs->GR_LHHCH( r2+1 );
 
         memset( padding, pad, MIN( padded_len, sizeof( padding )));
 
         rem = padded_len;
 
-        while (rem && idx < MAX_CPU_AMT)
+        while (rc == 0 && rem && total < MAX_CPU_AMT)
         {
-            chunk = rem < CHUNK_AMT
-                  ? rem : CHUNK_AMT;
+            in_amt = rem < CHUNK_AMT
+                   ? rem : CHUNK_AMT;
 
-            if ((rc = ARCH_DEP( mem_pad_cmp )( longer_addr, longer_r, chunk, padding, regs, &chunk_idx )) != 0)
-            {
-                longer_addr += chunk_idx;
-                idx         += chunk_idx;
-                rem         -= chunk_idx;
-                break;
-            }
+            rc = ARCH_DEP( mem_pad_cmp )( regs, addr, r, padding, in_amt,
+                                                                &out_amt );
+            addr  += out_amt;
+            total += out_amt;
+            rem   -= out_amt;
 
-            longer_addr += chunk;
-            idx         += chunk;
-            rem         -= chunk;
+            // Must update register values as we go in case
+            // the next compare causes an access interrupt
+
+            SET_GR_A( r, regs, addr );
+
+            if ( regs->GR_LA24( r+1 ) >= out_amt)
+                 regs->GR_LA24( r+1 ) -= out_amt;
+            else regs->GR_LA24( r+1 ) = 0;
         }
 
         if (swap_rc)
-        {
             rc = -rc;
-            addr2 = longer_addr;
-        }
-        else
-            addr1 = longer_addr;
     }
-
-    // Update the registers
-
-    SET_GR_A( r1, regs, addr1 );
-    SET_GR_A( r2, regs, addr2 );
-
-    if ( regs->GR_LA24( r1+1 ) >= idx)
-         regs->GR_LA24( r1+1 ) -= idx;
-    else regs->GR_LA24( r1+1 ) = 0;
-
-    if ( regs->GR_LA24( r2+1 ) >= idx)
-         regs->GR_LA24( r2+1 ) -= idx;
-    else regs->GR_LA24( r2+1 ) = 0;
 
     // Backup the PSW for re-execution if instruction was interrupted
 
-    if (rc == 0 && idx < (unpadded_len + padded_len))
+    if (rc == 0 && total < (unpadded_len + padded_len))
     {
-        ASSERT( idx >= MAX_CPU_AMT );   // (sanity check)
+        ASSERT( total >= MAX_CPU_AMT );   // (sanity check)
         UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
     }
 
