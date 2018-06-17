@@ -113,6 +113,8 @@ BEGIN    BALR  R2,0             Initalize FIRST base register
          BAL   R14,TEST93       Time MVCIN instruction  (speed test)
          BAL   R14,TEST94       Time TRT   instruction  (speed test)
 *
+         BAL   R14,TEST95       Test CLCL page fault handling
+*
          B     EOJ              Normal completion
                                                                 EJECT
 ***********************************************************************
@@ -255,7 +257,7 @@ TEST02   MVI   TESTNUM,X'02'
 *
 **       Neither cross (1K bytes)
 *
-         MVI   SUBTEST,X'FF'
+         MVI   SUBTEST,X'00'
          LM    R10,R13,CLCL1K
          CLCL  R10,R12
          BNE   FAILTEST
@@ -417,6 +419,7 @@ TRTBC    BC    0,TRTFAIL          (fail if unexpected condition code)
 SAVER1   DC    F'0'
 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
 
+         DROP  R5
          DROP  R15
          USING BEGIN,R2
                                                                 EJECT
@@ -1181,6 +1184,134 @@ TEST94   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          BR    R14
                                                                 EJECT
 ***********************************************************************
+*        TEST95                   Test CLCL page fault handling
+***********************************************************************
+                                                                SPACE
+TEST95   MVI   TESTNUM,X'95'
+         MVI   SUBTEST,X'00'
+*
+**       Initialize Dynamic Address Translation tables...
+*
+         L     R10,=A(SEGTABLS)   Segment Tables Origin
+         LA    R11,NUMPGTBS       Number of Segment Table Entries
+         L     R12,=A(PAGETABS)   Page Tables Origin
+         SLR   R0,R0              First Page Frame Address
+         LA    R6,4               Size of one table entry
+         L     R7,=A(PAGE)        Size of one Page Frame
+                                                                SPACE
+SEGLOOP  ST    R12,0(,R10)        Seg Table Entry <= Page Table Origin
+         OI    3(R10),X'0F'       Seg Table Entry <= Page Table Length
+         ALR   R10,R6             Bump to next Segment Table Entry
+                                                                SPACE
+         LA    R13,16             Page Table Entries per Page Table
+PAGELOOP ST    R0,0(,R12)         Page Table Entry = Page Frame Address
+         ALR   R0,R7              Increment to next Page Frame Address
+         ALR   R12,R6             Bump to next Page Table Entry
+         BCT   R13,PAGELOOP       Loop until Page table is complete
+                                                                SPACE
+         BCT   R11,SEGLOOP        Loop until all Segment Table Entries built
+*
+**       Update desired page table entry to cause page fault
+*
+         LM    R10,R13,CLCLPF     Retrieve CLCL PF test parameters
+         LR    R5,R10             R5 --> Operand-1
+         AL    R5,=A(PFPGBYTS)    R5 --> Operand-1 Page Fault address
+         LR    R6,R5              R6 --> Address where PF should occur
+         SRL   R5,12              R5 = Page Frame number
+         SLL   R5,2               R5 = Page Table Entry number
+                                                                SPACE
+         MVI   SUBTEST,X'04'
+         AL    R5,=A(PAGETABS)    R5 --> Page Table Entry
+         OI    2(R5),X'04'        Mark this page invalid
+*
+**       Install program check routine to catch the page fault
+*
+         MVI   SUBTEST,X'02'
+         MVC   SVPGMNEW,PGMNPSW   Save original Program New PSW
+         LA    R0,MYPGMNEW        Point to temporary Pgm New routine
+         ST    R0,PGMNPSW+4       Point Program New PSW to our routine
+         MVI   PGMNPSW+1,X'08'    Make it a non-disabled-wait PSW!
+                                                                EJECT
+*
+**       Run the test: should cause a page fault
+*
+         MVI   SUBTEST,X'0F'
+         LCTL  R0,R0,CRLREG0      Switch to DAT mode
+         LCTL  R1,R1,CTLREG1      Switch to DAT mode
+         LPSW  DATONPSW           Switch to DAT mode
+BEGDATON NOP   *                  (pad)
+         NOP   *                  (pad)
+         PTLB  ,                  Purge Translation Lookaside Buffer
+PFINSADR CLCL  R10,R12            Page Fault should occur on this instr
+         CNOP  0,8                        (align to doubleword)
+LOGICERR DC    D'0'                       We should never reach here!
+SVPGMNEW DC    D'0'                       Original Program New PSW
+DATONPSW DC    XL4'04080000',A(BEGDATON)  Enable DAT PSW
+*
+**       Temporary Program New routine:
+**       Restore original Program New PSW
+*
+MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
+*
+**       Verify Program Check occurred on expected instruction
+*
+         MVI   SUBTEST,X'68'
+         CLC   =A(PFINSADR),PGMOPSW+4   Program Check where expected?
+         BNE   FAILTEST                 No?! Something is VERY WRONG!
+*
+**       Verify Program Check was indeed a page fault
+*
+         MVI   SUBTEST,X'11'
+         CLI   PGMICODE+1,X'11'   Verify it's a Page Fault interrupt
+         BNE   FAILTEST           If not then something is VERY WRONG!
+*
+**       Verify Page Fault occurred on expected Page
+*
+         MVI   SUBTEST,X'05'
+         L     R0,PGMTRX          Get where Page Fault occurred
+         SRL   R0,12
+         SLL   R0,12
+                                                                SPACE
+         SRL   R6,12              Where Page Fault is expected 
+         SLL   R6,12
+                                                                SPACE
+         CLR   R0,R6              Page Fault occur on expected Page?
+         BNE   FAILTEST           No? Then something is very wrong!
+                                                                EJECT
+*
+**       Verify CLCL instruction registers were updated as expected
+*
+         MVI   SUBTEST,X'06'
+         CL    R10,CLCLPF         (op1 greater than starting value?)
+         BNH   FAILTEST
+         CL    R12,CLCLPF+4+4     (op2 greater than starting value?)
+         BNH   FAILTEST
+                                                                SPACE
+         MVI   SUBTEST,X'07'
+         CLR   R11,R13            (same remaining lengths?)
+         BNE   FAILTEST
+         CL    R11,CLCLPF+4       (op1 len less than starting value?)
+         BNL   FAILTEST
+         CL    R13,CLCLPF+4+4+4   (op2 len less than starting value?)
+         BNL   FAILTEST
+                                                                SPACE
+         MVI   SUBTEST,X'08'
+         CL    R10,ECLCLPF        (stop before end?)
+         BNL   FAILTEST
+                                                                SPACE
+         MVI   SUBTEST,X'09'
+         CLR   R10,R6             (stop at or before expected page?)
+         BH    FAILTEST
+                                                                SPACE
+         MVI   SUBTEST,X'10'
+         LR    R7,R10             (op1 stopped address)
+         ALR   R7,R11             (add remaining length)
+         CLR   R7,R6              (would remainder reach PF page?)
+         BNH   FAILTEST
+                                                                SPACE
+         BR    R14                Success!
+                                                                EJECT
+***********************************************************************
 *        RPTSPEED                 Report instruction speed
 ***********************************************************************
                                                                 SPACE
@@ -1341,26 +1472,34 @@ IOCB_009 IOCB  X'009',CCW=CONPGM
 ***********************************************************************
                                                                 SPACE 2
          LTORG ,                Literals pool
-                                                                SPACE 3
+                                                                SPACE
 K        EQU   1024             One KB
 PAGE     EQU   (4*K)            Size of one page
 K64      EQU   (64*K)           64 KB
 MB       EQU   (K*K)             1 MB
-                                                                SPACE 2
-TESTADDR EQU   (2*PAGE)         Address where test numbers will be placed
-TIMEADDR EQU   TESTADDR-1       Address of timing tests option flag
-                                                                SPACE 2
+                                                                SPACE
+TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
+TIMEADDR EQU   (TESTADDR-1)       Address of timing tests option flag
+                                                                SPACE
+MAINSIZE EQU   (2*MB)                   Minimum required storage size
+NUMPGTBS EQU   ((MAINSIZE+K64-1)/K64)   Number of Page Tables needed
+NUMSEGTB EQU   ((NUMPGTBS*4)/(16*4))    Number of Segment Tables
+SEGTABLS EQU   (3*PAGE)                 Segment Tables Origin
+PAGETABS EQU   (SEGTABLS+(NUMPGTBS*4))  Page Tables Origin
+CRLREG0  DC    0A(0),XL4'00B00060'      Control Register 0
+CTLREG1  DC    A(SEGTABLS+NUMSEGTB)     Control Register 1
+                                                                SPACE
 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
-                                                                SPACE 3
+                                                                SPACE
 BEGCLOCK DC    0D'0',8X'BB'     Begin
 ENDCLOCK DC    0D'0',8X'EE'     End
 DURATION DC    0D'0',8X'DD'     Diff
 OVERHEAD DC    0D'0',8X'FF'     Overhead
-                                                                SPACE 2
+                                                                SPACE
 TICKSAAA DC    PL8'0'           Clock ticks high part
 TICKSBBB DC    PL8'0'           Clock ticks low part
 TICKSTOT DC    PL8'0'           Total clock ticks
-                                                                SPACE 3
+                                                                SPACE
 CONPGM   CCW1  X'09',PRTLINE,0,L'PRTLINE
 PRTLINE  DC    C'         1,000,000 iterations of XXXXX took 999,999,999 microseconds'
 EDIT     DC    X'402020206B2020206B202120'
@@ -1461,7 +1600,6 @@ CLCLetal CSECT ,
 ***********************************************************************
 *        TRT Testing Control tables   (ref: TRTDSECT)
 ***********************************************************************
-
          PRINT DATA
 TRTCTL   DC    0A(0)    start of table
                                                                 SPACE 4
@@ -1530,47 +1668,71 @@ TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
 ***********************************************************************
 *        CLCL Test Parameters
 ***********************************************************************
-         PRINT DATA
-CLCL1    DC    A(6*K64),A(1),A(MB+(6*K64)),A(1)             both equal
-CLCL2    DC    A(6*K64),A(2),A(MB+(6*K64)),A(2)             both equal
-CLCL256  DC    A(6*K64),A(256),A(MB+(6*K64)),A(256)         both equal
-CLCL1K   DC    A(6*K64),A(K),A(MB+(6*K64)),A(K)             both equal
-CLCLBOTH DC    A(6*K64-12),A(K64),A(MB+(6*K64)-34),A(K64)   both equal
-CLCLOP2  DC    A(6*K64),A(PAGE),A(MB+(6*K64)-34),A(K64)     both equal
                                                                 SPACE
+CLCL1    DC    A(6*K64),A(1),A(MB+(6*K64)),A(1)             both equal
+                                                                SPACE 2
+CLCL2    DC    A(6*K64),A(2),A(MB+(6*K64)),A(2)             both equal
+                                                                SPACE 2
+CLCL256  DC    A(6*K64),A(256),A(MB+(6*K64)),A(256)         both equal
+                                                                SPACE 2
+CLCL1K   DC    A(6*K64),A(K),A(MB+(6*K64)),A(K)             both equal
+                                                                SPACE 2
+CLCLBOTH DC    A(6*K64-12),A(K64),A(MB+(6*K64)-34),A(K64)   both equal
+                                                                SPACE 2
+CLCLOP2  DC    A(6*K64),A(PAGE),A(MB+(6*K64)-34),A(K64)     both equal
+                                                                SPACE 2
 CLCL4    DC    A(7*K64),A(4),A(MB+(7*K64)),A(4)               op1 HIGH
+                                                                SPACE 2
 CLCL8    DC    A(8*K64),A(8),A(MB+(8*K64)),A(8)               op1 LOW!
+                                                                SPACE 2
 CLCLOP1  DC    A(9*K64-12),A(K64),A(MB+(9*K64)),A(PAGE)       op1 HIGH
                                                                 SPACE 2
+CLCLPF   DC    A(10*K64),A(K64),A(MB+(10*K64)),A(K64)       page fault
+                                                                EJECT
 ***********************************************************************
 *        CLCL Expected Ending Register Values
 ***********************************************************************
                                                                 SPACE
 ECLCL1   DC    A(6*K64+1),A(0),A(MB+(6*K64)+1),A(0)         both equal
+                                                                SPACE 2
 ECLCL2   DC    A(6*K64+2),A(0),A(MB+(6*K64)+2),A(0)         both equal
+                                                                SPACE 2
 ECLCL256 DC    A(6*K64+256),A(0),A(MB+(6*K64)+256),A(0)     both equal
+                                                                SPACE 2
 ECLCL1K  DC    A(6*K64+K),A(0),A(MB+(6*K64)+K),A(0)         both equal
+                                                                SPACE 2
 ECLCLBTH DC    A(6*K64-12+K64),A(0),A(MB+(6*K64)-34+K64),A(0) bth equl
+                                                                SPACE 2
 ECLCLOP2 DC    A(6*K64+PAGE),A(0),A(MB+(6*K64)-34+K64),A(0) both equal
-                                                                SPACE
+                                                                SPACE 2
 ECLCL4   DC    A(7*K64+4-1),A(1),A(MB+(7*K64)+4-1),A(1)       op1 HIGH
+                                                                SPACE 2
 ECLCL8   DC    A(8*K64+8-1),A(1),A(MB+(8*K64)+8-1),A(1)       op1 LOW!
+                                                                SPACE 2
 ECLCLOP1 DC    A(9*K64-12+K64-1),A(1),A(MB+(9*K64)+PAGE),A(0) op1 HIGH
-                                                                SPACE
-CLCLEND  DC    4F'0'  (actual ending register values)
+                                                                SPACE 2
+ECLCLPF  DC    A(10*K64+K64),A(0),A(MB+(10*K64)+K64),A(0)   page fault
                                                                 SPACE 3
+CLCLEND  DC    4F'0'          (actual ending register values)
+PFPAGE   EQU   5              (page the Page Fault should occur on)
+PFPGBYTS EQU   (PFPAGE*PAGE)  (number of bytes into operand-1)
+                                                                EJECT
 ***********************************************************************
 *        Fixed storage locations
 ***********************************************************************
                                                                 SPACE 5
-         ORG   CLCLetal+TIMEADDR      (s/b @ X'1FFF')
-                                                                SPACE 2
+         ORG   CLCLetal+TIMEADDR      (s/b @ X'21FD')
+                                                                SPACE
 TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
                                                                 SPACE 9
-         ORG   CLCLetal+TESTADDR      (s/b @ X'2000')
-                                                                SPACE 2
+         ORG   CLCLetal+TESTADDR      (s/b @ X'21FE', X'21FF')
+                                                                SPACE
 TESTNUM  DC    X'00'      Test number of active test
 SUBTEST  DC    X'00'      Active test sub-test number
+                                                                SPACE 9
+         ORG   CLCLetal+SEGTABLS      (s/b @ X'3000')
+                                                                SPACE
+DATTABS  DC    X'00'      Segment and Page Tables will go here...
                                                                 EJECT
 ***********************************************************************
 *        IOCB DSECT
