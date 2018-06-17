@@ -2882,7 +2882,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
 #define  CHUNK_AMT          (PAGEFRAME_PAGESIZE - 256)
 
 #undef   MAX_CPU_AMT
-#define  MAX_CPU_AMT        (64 * 1024) // (purely arbitrary)
+#define  MAX_CPU_AMT        (32 * 1024) // (purely arbitrary)
 
 CASSERT( CHUNK_AMT      <   (PAGEFRAME_PAGESIZE), general1_c );
 CASSERT( MAX_CPU_AMT    >   (PAGEFRAME_PAGESIZE), general1_c );
