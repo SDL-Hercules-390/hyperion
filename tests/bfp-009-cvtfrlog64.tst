@@ -18,7 +18,7 @@ loadcore "$(testpath)/bfp-009-cvtfrlog64.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Inputs converted to BFP Short - Results

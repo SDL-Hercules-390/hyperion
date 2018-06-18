@@ -18,7 +18,7 @@ loadcore "$(testpath)/bfp-017-loadl.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Short to long BFP non-finite results 

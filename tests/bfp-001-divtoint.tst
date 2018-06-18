@@ -19,7 +19,7 @@ loadcore "$(testpath)/bfp-001-divtoint.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # NaN propagation tests - BFP Short

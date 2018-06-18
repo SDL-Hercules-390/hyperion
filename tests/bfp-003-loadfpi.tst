@@ -19,7 +19,7 @@ loadcore "$(testpath)/bfp-003-loadfpi.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Short BFP Inputs converted to integer short BFP

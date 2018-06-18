@@ -18,6 +18,7 @@ r 580=F0703838000028280000000000000000 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
@@ -58,6 +59,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -99,6 +101,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -140,6 +143,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -185,6 +189,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -230,6 +235,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -275,6 +281,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -315,6 +322,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -356,6 +364,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -397,6 +406,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -442,6 +452,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -488,6 +499,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -534,6 +546,7 @@ r 800=FFFFFFFFFFFFFFFF                 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -579,6 +592,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -625,6 +639,7 @@ r 800=8F2A6717867A9DC4762802F21FB9D355 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.10
@@ -676,6 +691,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8
@@ -727,6 +743,7 @@ r 800=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter blocks
 r 600.8

@@ -19,7 +19,7 @@ loadcore "$(testpath)/bfp-021-multadd.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 

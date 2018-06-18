@@ -18,7 +18,7 @@ loadcore "$(testpath)/bfp-002-loadr.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Long BFP Inputs converted to short BFP

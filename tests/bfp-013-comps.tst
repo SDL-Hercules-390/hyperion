@@ -19,7 +19,7 @@ loadcore "$(testpath)/bfp-013-comps.core"
 
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Compare short BFP results - FPCR contents and CC

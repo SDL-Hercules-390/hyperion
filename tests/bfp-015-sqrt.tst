@@ -18,7 +18,7 @@ ostailor quiet
 loadcore "$(testpath)/bfp-015-sqrt.core"
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Short BFP Basic test results

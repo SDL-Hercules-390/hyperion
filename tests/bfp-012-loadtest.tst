@@ -17,7 +17,7 @@ ostailor quiet
 loadcore "$(testpath)/bfp-012-loadtest.core"
 runtest 1.0
 
-ostailor null   # restore messages for subsequent tests
+ostailor default   # restore messages for subsequent tests
 
 
 # Test Results - Load and Test

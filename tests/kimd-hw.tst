@@ -17,6 +17,7 @@ r 580=F0000000000000004000000000000000 # Expected result
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
@@ -49,6 +50,7 @@ r 630=303132333435363738393A3B3C3D3E3F # Second operand
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
@@ -84,6 +86,7 @@ r 630=303132333435363738393A3B3C3D3E3F # Second operand
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
@@ -127,6 +130,7 @@ r 670=707172737475767778797A7B7C7D7E7F # Second operand
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
@@ -165,6 +169,7 @@ r 630=303132333435363738393A3B3C3D3E3F # Second operand
 *
 ostailor null
 runtest .1
+ostailor default
 *Compare
 * Display parameter block
 r 500.10
