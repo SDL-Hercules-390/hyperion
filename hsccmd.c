@@ -5726,56 +5726,66 @@ int rc;
 /*-------------------------------------------------------------------*/
 /* pgmtrace command - trace program interrupts                       */
 /*-------------------------------------------------------------------*/
-int pgmtrace_cmd(int argc, char *argv[], char *cmdline)
+int pgmtrace_cmd( int argc, char* argv[], char* cmdline )
 {
-int abs_rupt_num, rupt_num;
-BYTE    c;                              /* Character work area       */
+    int   abs_rupt_num;
+    int       rupt_num;
+    BYTE  c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
+    /* No arguments = query current settings */
     if (argc < 2)
     {
-        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)
-            WRMSG(HHC02281, "I", "pgmtrace == all");
-        else if (sysblk.pgminttr == 0)
-            WRMSG(HHC02281, "I", "pgmtrace == none");
+             if (OS_NULL  == sysblk.pgminttr) WRMSG( HHC02281, "I", "pgmtrace == all"  );
+        else if (OS_QUIET == sysblk.pgminttr) WRMSG( HHC02281, "I", "pgmtrace == none" );
         else
         {
             char flags[64+1]; int i;
+
             for (i=0; i < 64; i++)
                 flags[i] = (sysblk.pgminttr & (1ULL << i)) ? ' ' : '*';
+
             flags[64] = 0;
-            WRMSG(HHC02281, "I", "* = Tracing suppressed; otherwise tracing enabled");
-            WRMSG(HHC02281, "I", "0000000000000001111111111111111222222222222222233333333333333334");
-            WRMSG(HHC02281, "I", "123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0");
-            WRMSG(HHC02281, "I", flags);
+
+            WRMSG( HHC02281, "I", "* = Tracing suppressed; otherwise tracing enabled" );
+            WRMSG( HHC02281, "I", "0000000000000001111111111111111222222222222222233333333333333334" );
+            WRMSG( HHC02281, "I", "123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0" );
+            WRMSG( HHC02281, "I", flags );
         }
         return 0;
     }
-    else if ( argc > 2 )
+    /* More than one argument = ERROR */
+    else if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
+    /* Otherwise argument is interrupt number to be added or removed */
+    if (sscanf( argv[1], "%x%c", &rupt_num, &c ) != 1)
     {
-        WRMSG(HHC02205, "E", argv[1], ": program interrupt number is invalid" );
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], ": program interrupt number is invalid" );
         return -1;
     }
 
-    if ((abs_rupt_num = abs(rupt_num)) < 1 || abs_rupt_num > 0x40)
+    if (0
+        || (abs_rupt_num = abs( rupt_num )) < 1
+        || (abs_rupt_num > 0x40)
+    )
     {
-        WRMSG(HHC02205, "E", argv[1], ": program interrupt number is out of range" );
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], ": program interrupt number is out of range" );
         return -1;
     }
 
-    /* Add to, or remove interruption code from mask */
-
+    /* Add or remove interruption code from mask */
     if (rupt_num < 0)
-        sysblk.pgminttr &= ~((U64)1 << (abs_rupt_num - 1));
+        sysblk.pgminttr &= ~(1ULL << (abs_rupt_num - 1));
     else
-        sysblk.pgminttr |=  ((U64)1 << (abs_rupt_num - 1));
+        sysblk.pgminttr |=  (1ULL << (abs_rupt_num - 1));
 
     return 0;
 }
@@ -5783,118 +5793,99 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* ostailor command - trace program interrupts                       */
 /*-------------------------------------------------------------------*/
-int ostailor_cmd(int argc, char *argv[], char *cmdline)
+int ostailor_cmd( int argc, char* argv[], char* cmdline )
 {
-    char   *postailor  = NULL;
-    int     b_on       = FALSE;
-    int     b_off      = FALSE;
-    int     nolrasoe   = FALSE;
-    U64     mask       = 0;
+    char*  ostailor  = NULL;
+    U64    mask      = 0;
+    bool   b_on      = false;
+    bool   b_off     = false;
+    bool   nolrasoe  = false;
 
-    UNREFERENCED(cmdline);
-
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
 
-    if ( argc > 2 )
+    /* Error if more than one argument */
+    if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
+    /* If no arguments, display the current setting */
     if (argc < 2)
     {
-        char    msgbuf[64];
-        char   *sostailor = NULL;
+        char   msgbuf[64];
 
-        if (sysblk.pgminttr == OS_OS390             )   sostailor = "OS/390";
-        if (sysblk.pgminttr == OS_ZOS               )   sostailor = "z/OS";
+        if (sysblk.pgminttr == OS_DEFAULT     ) ostailor = "DEFAULT";
+        if (sysblk.pgminttr == OS_QUIET       ) ostailor = "QUIET";
+        if (sysblk.pgminttr == OS_NULL        ) ostailor = "NULL";
         if (sysblk.pgminttr == OS_VSE
-                   && sysblk.nolrasoe == 1          )   sostailor = "z/VSE";
+                          && !sysblk.nolrasoe ) ostailor = "VSE";
         if (sysblk.pgminttr == OS_VSE
-                   && sysblk.nolrasoe == 0          )   sostailor = "VSE";
-        if (sysblk.pgminttr == OS_VM                )   sostailor = "VM";
-        if (sysblk.pgminttr == OS_LINUX             )   sostailor = "LINUX";
-        if (sysblk.pgminttr == OS_OPENSOLARIS       )   sostailor = "OpenSolaris";
-        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)   sostailor = "NULL";
-        if (sysblk.pgminttr == 0                    )   sostailor = "QUIET";
-        if (sysblk.pgminttr == OS_NONE              )   sostailor = "DEFAULT";
-        if ( sostailor == NULL )
+                          &&  sysblk.nolrasoe ) ostailor = "z/VSE";
+        if (sysblk.pgminttr == OS_ZOS         ) ostailor = "z/OS";
+        if (sysblk.pgminttr == OS_LINUX       ) ostailor = "LINUX";
+        if (sysblk.pgminttr == OS_OPENSOLARIS ) ostailor = "OpenSolaris";
+        if (sysblk.pgminttr == OS_OS390       ) ostailor = "OS/390";
+        if (sysblk.pgminttr == OS_VM          ) ostailor = "VM";
+
+        if (!ostailor)
             MSGBUF( msgbuf, "Custom(0x%16.16"PRIX64")", sysblk.pgminttr );
         else
-            MSGBUF( msgbuf, "%s", sostailor );
-        WRMSG(HHC02203, "I", argv[0], msgbuf);
+            MSGBUF( msgbuf, "%s", ostailor );
+
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
         return 0;
     }
 
-    postailor = argv[1];
+    /* Otherwise the single argument specifies the ostailor setting */
 
-    if ( postailor[0] == '+' )
+    ostailor = argv[1];
+
+    if (ostailor[0] == '+')
     {
-        b_on = TRUE;
-        b_off = FALSE;
-        postailor++;
+        b_on  = true;
+        b_off = false;
+        ostailor++;
     }
-    else if ( postailor[0] == '-' )
+    else if (ostailor[0] == '-')
     {
-        b_off = TRUE;
-        b_on = FALSE;
-        postailor++;
+        b_off = true;
+        b_on  = false;
+        ostailor++;
     }
     else
     {
-        b_on = FALSE;
-        b_off = FALSE;
+        b_on  = false;
+        b_off = false;
     }
 
-    nolrasoe = FALSE;
+    nolrasoe = false;
 
-    if      ( CMD( postailor, OS/390, 2 ) )
-        mask = OS_OS390;
-    else if ( CMD( postailor, Z/OS,   3 ) )
-        mask = OS_ZOS;
-    else if ( CMD( postailor, Z/VSE,  3 ) )
-    {
-        mask = OS_VSE;
-        nolrasoe = TRUE;
-    }
-    else if ( CMD( postailor, VSE,    2 ) )
-    {
-        mask = OS_VSE;
-        nolrasoe = FALSE;
-    }
-    else if ( CMD( postailor, VM,     2 ) )
-        mask = OS_VM;
-    else if ( CMD( postailor, LINUX,  5 ) )
-        mask = OS_LINUX;
-    else if ( CMD( postailor, OpenSolaris, 4 ) )
-        mask = OS_OPENSOLARIS;
-    else if ( CMD( postailor, DEFAULT,7 ) || CMD( postailor, NONE, 4 ) )
-    {
-        mask = OS_NONE;
-        b_on = FALSE;
-        b_off = FALSE;
-    }
-    else if ( CMD( postailor, NULL,   4 ) )
-    {
-        mask = 0xFFFFFFFFFFFFFFFFULL;
-        b_on = FALSE;
-        b_off = FALSE;
-    }
-    else if ( CMD( postailor, QUIET,  5 ) )
-    {
-        mask = 0;
-        b_on = FALSE;
-        b_off = FALSE;
-    }
+         if (CMD( ostailor, NONE,    4 )) {   mask = OS_DEFAULT; b_on = false; b_off = false; }
+    else if (CMD( ostailor, DEFAULT, 3 )) {   mask = OS_DEFAULT; b_on = false; b_off = false; }
+    else if (CMD( ostailor, QUIET,   5 )) {   mask = OS_QUIET;   b_on = false; b_off = false; }
+    else if (CMD( ostailor, NULL,    4 )) {   mask = OS_NULL;    b_on = false; b_off = false; }
+    else if (CMD( ostailor, VSE,     2 )) {   mask = OS_VSE;     nolrasoe = false; }
+    else if (CMD( ostailor, Z/VSE,   4 )) {   mask = OS_VSE;     nolrasoe = true;  }
+    else if (CMD( ostailor, Z/VM,    4 ))     mask = OS_VM;
+    else if (CMD( ostailor, Z/OS,    4 ))     mask = OS_ZOS;
+    else if (CMD( ostailor, OpenSolaris, 4 )) mask = OS_OPENSOLARIS;
+    else if (CMD( ostailor, LINUX,   2 ))     mask = OS_LINUX;
+    else if (CMD( ostailor, OS/390,  2 ))     mask = OS_OS390;
+    else if (CMD( ostailor, VM,      2 ))     mask = OS_VM;
     else
     {
-        WRMSG(HHC02205, "E", argv[1], ": unknown OS tailor specification");
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], ": unknown OS tailor specification" );
         return -1;
     }
 
-    if      ( b_off ) sysblk.pgminttr |= ~mask;
-    else if ( b_on  ) sysblk.pgminttr &=  mask;
-    else              sysblk.pgminttr  =  mask;
+         if (b_off) sysblk.pgminttr |= ~mask;
+    else if (b_on)  sysblk.pgminttr &=  mask;
+    else            sysblk.pgminttr  =  mask;
 
     sysblk.nolrasoe = nolrasoe;
 

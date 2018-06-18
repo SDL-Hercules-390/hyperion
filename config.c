@@ -692,7 +692,7 @@ DEVBLK**dvpp;
     dev->attnioint.dev = dev;
     dev->attnioint.attnpending = 1;
     dev->attnioint.priority = -1;
-    dev->oslinux = sysblk.pgminttr == OS_LINUX;
+    dev->oslinux = (OS_LINUX == sysblk.pgminttr);
 
     /* Initialize storage view */
     dev->mainstor = sysblk.mainstor;

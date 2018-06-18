@@ -335,40 +335,33 @@
 #endif // (KEEPALIVE)
 
 /*-------------------------------------------------------------------*/
-/* Miscellaneous Hercules-related constants...                       */
+/*          Miscellaneous Hercules-related constants                 */
 /*-------------------------------------------------------------------*/
 #define PATHSEPC '/'         /* Everyone else */
 #define PATHSEPS "/"
 
 #define SPACE   ' '    /* <---<<< Look close! There's a space there! */
 
-/* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */
-#define OS_NONE         0x7FFFFFFFF7DE7FFFULL   /* No spec OS tail.  */
-#define OS_OS390        0x7FF673FFF7DE7FFDULL   /* OS/390            */
-#define OS_ZOS          0x7B7673FFF7DE7FB7ULL   /* z/OS              */
-#define OS_VSE          0x7FF673FFF7DE7FFFULL   /* VSE               */
-#define OS_VM           0x7FFFFFFFF7DE7FFCULL   /* VM                */
-#define OS_OPENSOLARIS  0xF8FFFFFFFFDE7FF7ULL   /* OpenSolaris       */
-#if !defined(NO_IEEE_SUPPORT)
-#define OS_LINUX        0x78FFFFFFF7DE7FF7ULL   /* Linux             */
-#else
-#define OS_LINUX        0x78FFFFFFF7DE7FD6ULL   /* Linux             */
-#endif
-
-/* Definitions for program product OS restriction flag. This flag
-   is ORed with the SCLP READ CPU INFO response code. A 4 here makes
-   the CPU look like an IFL (Integrated Facility for Linux) engine,
-   which cannot run licensed ESA/390 or z/Architecture OSes.
-*/
+/*-------------------------------------------------------------------*/
+/*       Definitions for program product OS restriction flag.        */
+/*-------------------------------------------------------------------*/
+/* This flag is ORed with the SCLP READ CPU INFO response code. A    */
+/* '4' here makes the CPU look like an IFL (Integrated Facility for  */
+/* Linux) engine which can't run licensed ESA/390 or z/Arch OSes.    */
+/*-------------------------------------------------------------------*/
 #define PGM_PRD_OS_RESTRICTED 4                 /* Restricted        */
 #define PGM_PRD_OS_LICENSED   0                 /* Licensed          */
 
-/* Storage access bits used by logical_to_main */
+/*-------------------------------------------------------------------*/
+/*           Storage access bits used by logical_to_main             */
+/*-------------------------------------------------------------------*/
 #define ACC_CHECK          0x0001          /* Possible storage update*/
 #define ACC_WRITE          0x0002          /* Storage update         */
 #define ACC_READ           0x0004          /* Storage read           */
 
-/* Storage access bits used by other dat.h routines */
+/*-------------------------------------------------------------------*/
+/*        Storage access bits used by other dat.h routines           */
+/*-------------------------------------------------------------------*/
 #define ACC_NOTLB          0x0100          /* Don't do TLB lookup    */
 #define ACC_PTE            0x0200          /* Return page table entry*/
 #define ACC_LPTEA          0x0400          /* Esame page table entry */
@@ -391,16 +384,19 @@
 #define ACCTYPE_LPTEA     (ACC_LPTEA|ACC_NOTLB) /* LPTEA instruction */
 #define ACCTYPE_EMC       (ACC_ENH_MC|ACCTYPE_WRITE) /* MC instr.    */
 
-/* Special value for arn parameter for translate functions in dat.c */
+/*-------------------------------------------------------------------*/
+/* Special value for arn parameter for translate functions in dat.c  */
+/*-------------------------------------------------------------------*/
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
 #define USE_REAL_ADDR           (-2)    /* Real address              */
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
-#define USE_ARMODE              16      /* OR with access register
+#define USE_ARMODE              (16)    /* OR with access register
                                            number to force AR mode   */
-
-/* Interception codes used by longjmp/SIE */
+/*-------------------------------------------------------------------*/
+/*              Interception codes used by longjmp/SIE               */
+/*-------------------------------------------------------------------*/
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */
 #define SIE_HOST_INTERRUPT      (-2)    /* Host interrupt pending    */
 #define SIE_HOST_PGMINT         (-3)    /* Host program interrupt    */
@@ -418,21 +414,20 @@
 #define SIE_INTERCEPT_IOINT    (-15)    /* I/O Interruption          */
 #define SIE_INTERCEPT_IOINTP   (-16)    /* I/O Interruption pending  */
 #define SIE_INTERCEPT_IOINST   (-17)    /* I/O Instruction           */
-
-#if defined(SIE_DEBUG_PERFMON)
-#define SIE_PERF_ENTER          0       /* SIE performance monitor   */
-#define SIE_PERF_ENTER_F       -31      /* Enter Fast (retain state) */
-#define SIE_PERF_EXIT          -30      /* SIE exit                  */
-#define SIE_PERF_RUNSIE        -29      /* run_sie entered           */
-#define SIE_PERF_RUNLOOP_1     -28      /* run_sie runloop 1         */
-#define SIE_PERF_RUNLOOP_2     -27      /* run_sue runloop 2         */
-#define SIE_PERF_INTCHECK      -26      /* run_sie intcheck          */
-#define SIE_PERF_EXEC          -25      /* run_sie execute inst      */
-#define SIE_PERF_EXEC_U        -24      /* run_sie unrolled exec     */
-#endif /*defined(SIE_DEBUG_PERFMON)*/
+#if defined( SIE_DEBUG_PERFMON )
+#define SIE_PERF_ENTER         ( 0 )    /* SIE performance monitor   */
+#define SIE_PERF_ENTER_F       (-31)    /* Enter Fast (retain state) */
+#define SIE_PERF_EXIT          (-30)    /* SIE exit                  */
+#define SIE_PERF_RUNSIE        (-29)    /* run_sie entered           */
+#define SIE_PERF_RUNLOOP_1     (-28)    /* run_sie runloop 1         */
+#define SIE_PERF_RUNLOOP_2     (-27)    /* run_sue runloop 2         */
+#define SIE_PERF_INTCHECK      (-26)    /* run_sie intcheck          */
+#define SIE_PERF_EXEC          (-25)    /* run_sie execute inst      */
+#define SIE_PERF_EXEC_U        (-24)    /* run_sie unrolled exec     */
+#endif
 
 /*-------------------------------------------------------------------*/
-/* Definitions for CTC protocol types                                */
+/*             Definitions for CTC protocol types                    */
 /*-------------------------------------------------------------------*/
 #define CTC_LCS                 1       /* LCS device                */
 #define CTC_CTCI                2       /* CTC link to TCP/IP stack  */
@@ -468,5 +463,128 @@
 /*-------------------------------------------------------------------*/
 
 #define WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS  (20)
+
+/*-------------------------------------------------------------------*/
+/*       Definitions for "OSTAILOR" command/statement                */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  MOST  significant bit  =  Monitor event         (code 0x0040)    */
+/*  LEAST significant bit  =  Operation exception   (code 0x0001)    */
+/*                                                                   */
+/*  An 'ON'  bit means the Program Interrupt *WILL* be traced.       */
+/*  An 'OFF' bit means the Program Interrupt will *NOT* be traced.   */
+/*                                                                   */
+/*  The 'pgmtrace' command can be used to display the bit setting.   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#define PGMBIT( pgm_code )   (1ULL << (pgm_code-1)) /* helper macro  */
+
+#define    OS_QUIET         (0x0000000000000000ULL) /* Trace none    */
+#define    OS_NULL          (0xFFFFFFFFFFFFFFFFULL) /* Trace all     */
+#define    OS_DEFAULT       (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+#define    OS_OS390         (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_ASTE_VALIDITY_EXCEPTION               )        \
+        | PGMBIT(  PGM_ASTE_SEQUENCE_EXCEPTION               )        \
+        | PGMBIT(  PGM_STACK_FULL_EXCEPTION                  )        \
+        | PGMBIT(  PGM_STACK_EMPTY_EXCEPTION                 )        \
+        | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+#define    OS_ZOS           (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
+        | PGMBIT(  PGM_DATA_EXCEPTION                        )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_ASTE_VALIDITY_EXCEPTION               )        \
+        | PGMBIT(  PGM_ASTE_SEQUENCE_EXCEPTION               )        \
+        | PGMBIT(  PGM_STACK_FULL_EXCEPTION                  )        \
+        | PGMBIT(  PGM_STACK_EMPTY_EXCEPTION                 )        \
+        | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
+        | PGMBIT(  PGM_ASCE_TYPE_EXCEPTION                   )        \
+        | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+#define    OS_VSE           (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_ASTE_VALIDITY_EXCEPTION               )        \
+        | PGMBIT(  PGM_ASTE_SEQUENCE_EXCEPTION               )        \
+        | PGMBIT(  PGM_STACK_FULL_EXCEPTION                  )        \
+        | PGMBIT(  PGM_STACK_EMPTY_EXCEPTION                 )        \
+        | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+#define    OS_VM            (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
+        | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+#if !defined( NO_IEEE_SUPPORT )
+
+#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_REGION_FIRST_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_REGION_SECOND_TRANSLATION_EXCEPTION   )        \
+        | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+
+#else // defined( NO_IEEE_SUPPORT )
+
+#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
+        | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
+        | PGMBIT(  PGM_SPECIFICATION_EXCEPTION               )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
+        | PGMBIT(  PGM_REGION_FIRST_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_REGION_SECOND_TRANSLATION_EXCEPTION   )        \
+        | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_MONITOR_EVENT                         )        \
+     ))
+
+#endif
+#define    OS_OPENSOLARIS   (0xFFFFFFFFFFFFFFFFULL &                  \
+    ~(0ULL                                                            \
+        | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
+        | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
+        | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
+        | PGMBIT(  PGM_TRACE_TABLE_EXCEPTION                 )        \
+        | PGMBIT(  PGM_REGION_FIRST_TRANSLATION_EXCEPTION    )        \
+        | PGMBIT(  PGM_REGION_SECOND_TRANSLATION_EXCEPTION   )        \
+        | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
+     ))
 
 #endif // _HCONSTS_H

@@ -705,7 +705,7 @@ int     rc;
                                 sysblk.cpuserial, 0 );
 
     /* set default Program Interrupt Trace to NONE */
-    sysblk.pgminttr = OS_NONE;
+    sysblk.pgminttr = OS_DEFAULT;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
