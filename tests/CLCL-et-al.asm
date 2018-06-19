@@ -432,7 +432,12 @@ TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          MVI   TESTNUM,X'91'
          MVI   SUBTEST,X'01'
 *
-**       First, time the overhead...
+**       First, make sure we start clean!
+*
+         LM    R10,R13,CLCL256        (Yes, "CLCL256", not "CLC256"!)
+         MVC   0(256,R10),0(R12)      (forces full equal comparison)
+*
+**       Next, time the overhead...
 *
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
@@ -445,7 +450,6 @@ TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
 **       Now do the actual timing run...
 *
          L     R5,NUMLOOPS
-         LM    R10,R13,CLCL256
          STCK  BEGCLOCK
          BALR  R6,0
          CLC   0(256,R10),0(R12)
@@ -578,16 +582,21 @@ TEST92   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          MVI   TESTNUM,X'92'
          MVI   SUBTEST,X'01'
 *
-**       First, time the overhead...
+**       First, make sure we start clean!
+*
+         LM    R10,R13,CLCL256
+         MVC   0(256,R10),0(R12)          (forces full comparison)
+*
+**       Next, time the overhead...
 *
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
          LM    R10,R13,CLCL256
          LM    R10,R13,CLCL256
-         LM    R10,R13,CLCL256
 *        .........ETC.........
          PRINT OFF
+         LM    R10,R13,CLCL256
          LM    R10,R13,CLCL256
          LM    R10,R13,CLCL256
          LM    R10,R13,CLCL256
@@ -700,8 +709,6 @@ TEST92   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          CLCL  R10,R12
          LM    R10,R13,CLCL256
          CLCL  R10,R12
-         LM    R10,R13,CLCL256
-         CLCL  R10,R12
 *        .........ETC.........
          PRINT OFF
          LM    R10,R13,CLCL256
@@ -894,9 +901,11 @@ TEST92   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          CLCL  R10,R12
          LM    R10,R13,CLCL256
          CLCL  R10,R12
-         PRINT ON
          LM    R10,R13,CLCL256
          CLCL  R10,R12
+         LM    R10,R13,CLCL256
+         CLCL  R10,R12
+         PRINT ON
          LM    R10,R13,CLCL256
          CLCL  R10,R12
          BCTR  R5,R6
@@ -916,7 +925,12 @@ TEST93   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          MVI   TESTNUM,X'93'
          MVI   SUBTEST,X'01'
 *
-**       First, time the overhead...
+**       First, make sure we start clean!
+*
+         LM    R10,R13,INV256
+         MVC   0(256,R13),MVCININ     (doesn't really matter, but...)
+*
+**       Next, time the overhead...
 *
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
@@ -928,8 +942,6 @@ TEST93   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
 *
 **       Now do the actual timing run...
 *
-         LM    R10,R13,INV256
-         MVC   0(256,R13),MVCININ
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
@@ -1053,7 +1065,14 @@ TEST94   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          MVI   TESTNUM,X'94'
          MVI   SUBTEST,X'01'
 *
-**       First, time the overhead...
+**       First, make sure we start clean!
+*
+         L     R10,=A(00+(5*K64))
+         MVC   0(256,R10),TRTOP10
+         L     R12,=A(MB+(5*K64))
+         MVC   0(256,R12),TRTOP20     (no stop = full op1 processing)
+*
+**       Next, time the overhead...
 *
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
@@ -1065,10 +1084,6 @@ TEST94   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
 *
 **       Now do the actual timing run...
 *
-         L     R10,=A(00+(5*K64))
-         MVC   0(256,R10),TRTOP10
-         L     R12,=A(MB+(5*K64))
-         MVC   0(256,R12),TRTOP20
          L     R5,NUMLOOPS
          STCK  BEGCLOCK
          BALR  R6,0
@@ -1189,6 +1204,11 @@ TEST94   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
 TEST95   MVI   TESTNUM,X'95'
          MVI   SUBTEST,X'00'
 *
+**       First, make sure we start clean!
+*
+         LM    R10,R13,CLCLPF     Retrieve CLCL PF test parameters
+         MVCL  R10,R12            (forces full comparison)
+*
 **       Initialize Dynamic Address Translation tables...
 *
          L     R10,=A(SEGTABLS)   Segment Tables Origin
@@ -1222,6 +1242,7 @@ PAGELOOP ST    R0,0(,R12)         Page Table Entry = Page Frame Address
          MVI   SUBTEST,X'04'
          AL    R5,=A(PAGETABS)    R5 --> Page Table Entry
          OI    2(R5),X'04'        Mark this page invalid
+                                                                EJECT
 *
 **       Install program check routine to catch the page fault
 *
@@ -1230,7 +1251,6 @@ PAGELOOP ST    R0,0(,R12)         Page Table Entry = Page Frame Address
          LA    R0,MYPGMNEW        Point to temporary Pgm New routine
          ST    R0,PGMNPSW+4       Point Program New PSW to our routine
          MVI   PGMNPSW+1,X'08'    Make it a non-disabled-wait PSW!
-                                                                EJECT
 *
 **       Run the test: should cause a page fault
 *
@@ -1263,6 +1283,7 @@ MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
          MVI   SUBTEST,X'11'
          CLI   PGMICODE+1,X'11'   Verify it's a Page Fault interrupt
          BNE   FAILTEST           If not then something is VERY WRONG!
+                                                                EJECT
 *
 **       Verify Page Fault occurred on expected Page
 *
@@ -1276,7 +1297,6 @@ MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
                                                                 SPACE
          CLR   R0,R6              Page Fault occur on expected Page?
          BNE   FAILTEST           No? Then something is very wrong!
-                                                                EJECT
 *
 **       Verify CLCL instruction registers were updated as expected
 *

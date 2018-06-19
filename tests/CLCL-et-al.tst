@@ -10,7 +10,7 @@ loadcore    "$(testpath)/CLCL-et-al.core"
 
 runtest     2         # (NON-timing test duration)
 ##r           21fd=ff   # (enable timing tests too!)
-##runtest     150       # (TIMING too test duration)
+##runtest     300       # (TIMING too test duration)
 
 *Compare
 r 21fe.2
