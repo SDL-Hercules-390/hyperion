@@ -1697,13 +1697,8 @@ BYTE    dbyte = 0, sbyte = 0;           /* Byte work areas           */
     /* Copy operand-1 data to work area */
     ARCH_DEP( vfetchc )( op1, len, addr1, b1, regs );
 
-    /* Determine how much of op2 we need to fetch */
-    for (i=0; i <= len; i++)
-        if (op1[i] > dbyte)
-            dbyte = op1[i];
-
     /* Copy operand-2 data to work area */
-    ARCH_DEP( vfetchc )( op2, dbyte, addr2, b2, regs );
+    ARCH_DEP( vfetchc )( op2, 256-1, addr2, b2, regs );
 
     /* Process first operand from left to right */
     for (i=0; i <= len && sbyte == 0; i++)
