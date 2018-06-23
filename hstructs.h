@@ -1562,6 +1562,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdlcount;              /* Locate record count       */
         BYTE    ckdreserved1;           /* Alignment                 */
         void   *cckd_ext;               /* -> CCKD_EXT, else NULL    */
+        BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
                                            1 = device cache on       */
         u_int   ckd3990:1;              /* 1=Control unit is 3990    */
@@ -1908,7 +1909,6 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
 
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
-                         cckd64:1,      /* 1=CCKD64/CFBA64           */
                          cckdioact:1,   /* 1=Channel program active  */
                          bufused:1,     /* 1=newbuf was used         */
                          updated:1,     /* 1=Update occurred         */

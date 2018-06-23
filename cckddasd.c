@@ -26,7 +26,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 //#define DEBUG_FREESPACE
 
-#ifdef DEBUG_FREESPACE
+#if defined( DEBUG_FREESPACE )
   #define CCKD_CHK_SPACE(_dev)      cckd_chk_space(_dev)
 #else
   #define CCKD_CHK_SPACE(_dev)
@@ -1947,7 +1947,7 @@ int cckd_writer_scan (int *o, int ix, int i, void *data)
     return 0;
 }
 
-#ifdef DEBUG_FREESPACE
+#if defined( DEBUG_FREESPACE )
 /*-------------------------------------------------------------------*/
 /* Debug routine for checking the free space array                   */
 /*-------------------------------------------------------------------*/
@@ -1966,25 +1966,25 @@ off_t           fpos;
 
     p = -1;
     fpos = cckd->cdevhdr[sfx].free_off;
-    for (i = cckd->free_idx1st; i >= 0; i = cckd->free_off[i].next)
+    for (i = cckd->free_idx1st; i >= 0; i = cckd->ifb[i].ifb_idxnxt)
     {
-        n++; total += cckd->free_off[i].L2_len;
+        n++; total += cckd->ifb[i].ifb_len;
         if (n > cckd->free_count) break;
-        if (cckd->free_off[i].prev != p)
+        if (cckd->ifb[i].ifb_idxprv != p)
             err = 1;
-        if (cckd->free_off[i].next >= 0)
+        if (cckd->ifb[i].ifb_idxnxt >= 0)
         {
-            if (fpos + cckd->free_off[i].L2_len > cckd->free_off[i].pos)
+            if (fpos + cckd->ifb[i].ifb_len > cckd->ifb[i].ifb_offnxt)
                 err = 1;
         }
         else
         {
-            if (fpos + cckd->free_off[i].L2_len > cckd->cdevhdr[sfx].cdh_size)
+            if (fpos + cckd->ifb[i].ifb_len > cckd->cdevhdr[sfx].cdh_size)
                 err = 1;
         }
-        if (cckd->ifb[i].ifb_pending == 0 && cckd->free_off[i].L2_len > largest)
-            largest = cckd->free_off[i].L2_len;
-        fpos = cckd->free_off[i].pos;
+        if (cckd->ifb[i].ifb_pending == 0 && cckd->ifb[i].ifb_len > largest)
+            largest = cckd->ifb[i].ifb_len;
+        fpos = cckd->ifb[i].ifb_offnxt;
         p = i;
     }
 
@@ -2005,23 +2005,23 @@ off_t           fpos;
                     cckd->cdevhdr[sfx].free_total,cckd->cdevhdr[sfx].free_imbed,
                     cckd->cdevhdr[sfx].free_largest);
         cckd_trace (dev, "free %p nbr %d 1st %d last %d avail %d",
-                    cckd->free_off,cckd->free_count,cckd->free_idx1st,
+                    cckd->ifb,cckd->free_count,cckd->free_idx1st,
                     cckd->free_idxlast,cckd->free_idxavail);
         cckd_trace (dev, "found nbr %d total %ld largest %ld",n,(long)total,(long)largest);
         fpos = cckd->cdevhdr[sfx].free_off;
-        for (n = 0, i = cckd->free_idx1st; i >= 0; i = cckd->free_off[i].next)
+        for (n = 0, i = cckd->free_idx1st; i >= 0; i = cckd->ifb[i].ifb_idxnxt)
         {
             if (++n > cckd->free_count) break;
             cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %16.16"PRIx64" len %8d %16.16"PRIx64" pend %d",
-                        n, i, cckd->free_off[i].prev, cckd->free_off[i].next,
-                        fpos, cckd->free_off[i].L2_len,
-                        fpos + cckd->free_off[i].L2_len, cckd->ifb[i].ifb_pending);
-            fpos = cckd->free_off[i].pos;
+                        n, i, cckd->ifb[i].ifb_idxprv, cckd->ifb[i].ifb_idxnxt,
+                        fpos, cckd->ifb[i].ifb_len,
+                        fpos + cckd->ifb[i].ifb_len, cckd->ifb[i].ifb_pending);
+            fpos = cckd->ifb[i].ifb_offnxt;
         }
         cckd_print_itrace();
     }
 } /* end function cckd_chk_space */
-#endif // DEBUG_FREESPACE
+#endif // defined( DEBUG_FREESPACE )
 
 /*-------------------------------------------------------------------*/
 /* Get file space                                                    */

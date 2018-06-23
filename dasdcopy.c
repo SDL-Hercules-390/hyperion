@@ -35,8 +35,9 @@
 #define UTILITY_NAME    "dasdcopy"
 #define UTILITY_DESC    "DASD copy/convert"
 
-#define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
-#define FBA_BLKS_PER_GRP        120     /* Blocks per group          */
+#define FBA_SETOR_SIZE          512
+#define FBA_BLKS_PER_GRP        120
+#define FBA_BLKGRP_SIZE         (FBA_BLKS_PER_GRP * FBA_SETOR_SIZE)
 
 int syntax( const char* pgm );
 void status (int, int);
