@@ -16,6 +16,7 @@
 #include "hercules.h"
 
 #define UTILITY_NAME    "dmap2hrc"
+#define UTILITY_DESC    "Convert P/390 DEVMAP to Hercules"
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for DEVMAP controller record                 */
@@ -71,8 +72,7 @@ char           *output_filename;        /* -> filename to print      */
 int             more_devices;           /* More devices this ctlr?   */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY( UTILITY_NAME,
-        "Convert P/390 DEVMAP to Hercules", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* The only argument is the DEVMAP file name */
     if (argc == 2 && argv[1] != NULL)

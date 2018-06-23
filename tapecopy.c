@@ -22,6 +22,8 @@
 #include "scsitape.h"
 
 #define UTILITY_NAME    "tapecopy"
+#define UTILITY_DESC    "Copy SCSI tape to/from AWS tape file"
+
 char* pgm;
 
 /*-------------------------------------------------------------------*/
@@ -521,7 +523,7 @@ struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
 struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "copy SCSI tape to/from AWS tape file", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* The first argument is the input file name
        (either AWS disk file or SCSI tape device)

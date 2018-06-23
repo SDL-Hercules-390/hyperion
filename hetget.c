@@ -26,6 +26,7 @@
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "hetget"
+#define UTILITY_DESC    "Extract Files from AWS, HET or FAKETAPE"
 
 /*
 || Local volatile data
@@ -665,7 +666,7 @@ main( int argc, char *argv[] )
     int             i;
     char            pathname[MAX_PATH];
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Extract Files from AWS, HET or FAKETAPE", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /*
     || Process option switches

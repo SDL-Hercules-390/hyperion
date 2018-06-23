@@ -21,6 +21,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdisup"
+#define UTILITY_DESC    "IEHIOSUP"
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -109,7 +110,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "IEHIOSUP", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Check the number of arguments */
     if (argc < 2 || argc > 3)

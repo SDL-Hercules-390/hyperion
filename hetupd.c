@@ -29,6 +29,7 @@
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "hetupd"
+#define UTILITY_DESC    "HET Copy/Update"
 
 /*-------------------------------------------------------------------*/
 /* Maximum sized tape I/O buffer...                                  */
@@ -377,7 +378,7 @@ main( int argc, char *argv[] )
     char   toname[ MAX_PATH ];
     int    rc;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "HET Copy/Update", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     while( TRUE )
     {

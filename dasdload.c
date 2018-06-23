@@ -24,6 +24,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdload"
+#define UTILITY_DESC    "Build DASD from TSO XMIT files"
 
 /*-------------------------------------------------------------------*/
 /* Internal table sizes                                              */
@@ -4305,7 +4306,7 @@ int             lfs = 0;                /* 1 = Large file            */
 char            pathname[MAX_PATH];     /* cfname in host path format*/
 char           *strtok_str = NULL;      /* last token position       */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Build DASD from TSO XMIT files", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)

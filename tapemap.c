@@ -16,6 +16,7 @@
 #include "tapedev.h"
 
 #define UTILITY_NAME    "tapemap"
+#define UTILITY_DESC    "tape map"
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -52,7 +53,7 @@ BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "tape map", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* The only argument is the tape image file name */
     if (argc == 2 && argv[1] != NULL)

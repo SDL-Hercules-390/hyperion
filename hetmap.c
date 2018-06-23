@@ -28,6 +28,7 @@
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "hetmap"
+#define UTILITY_DESC    "AWS, HET and FakeTape map program"
 
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
 
@@ -218,7 +219,7 @@ main( int argc, char *argv[] )
     SInt32  lResidue    = max_bytes_dsply;  /* amount of space left to print */
     char *pgm;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "AWS, HET and FakeTape map program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
 #define O_ALL               0xC0
 #define O_FILES             0X80

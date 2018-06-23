@@ -24,6 +24,7 @@
 #endif
 
 #define UTILITY_NAME    "dasdcat"
+#define UTILITY_DESC    "DASD cat program"
 
 /* Option flags */
 #define OPT_ASCIIFY         0x01
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
  char           *fn;
  char           *sfn;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "DASD cat program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     if (argc < 2)
     {

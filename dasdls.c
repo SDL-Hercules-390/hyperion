@@ -21,6 +21,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdls"
+#define UTILITY_DESC    "List DASD image file contents"
 
 /* function prototypes */
 void pdate               (BYTE* value, int runflgs);
@@ -59,7 +60,7 @@ char           *pgm;            /* less any extension (.ext)         */
 int             rc = 0;
 char           *fn, *sfn;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "List DASD image file contents", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     if (argc < 2)
     {

@@ -32,6 +32,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdseq"
+#define UTILITY_DESC    "Sequential DSN unload"
 
 //---------------------------------------------------------------------
 //                          Structs
@@ -1428,7 +1429,7 @@ int main(int argc, char **argv)
     int             rc;
     char            pathname[MAX_PATH];
 
-    INITIALIZE_UTILITY( UTILITY_NAME,  "Sequential DSN unload", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     if (debug) WRMSG( HHC02677, "D", "DEBUG enabled" );
 

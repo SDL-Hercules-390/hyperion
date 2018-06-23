@@ -26,6 +26,7 @@
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "hetinit"
+#define UTILITY_DESC    "HET IEHINITT"
 
 /*
 || Prints usage information
@@ -67,7 +68,7 @@ main( int argc, char *argv[] )
     char           *o_owner;
     char           *o_volser;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "HET IEHINITT", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     hetb = NULL;
     fetb = NULL;

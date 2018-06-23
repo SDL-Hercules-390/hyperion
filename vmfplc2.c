@@ -15,6 +15,7 @@
 #include "herc_getopt.h"
 
 #define UTILITY_NAME    "vmfplc2"
+#define UTILITY_DESC    "VM/CMS VMFPLC2 Utility"
 
 /*-------------------------------------------------------------------*/
 /* Maximum sized tape I/O buffers...                                 */
@@ -971,7 +972,7 @@ int main(int argc,char **argv)
     int             rc;
     struct options  opts;
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "VM/CMS VMFPLC2 Utility", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     if(parse_parms(argc,argv,&opts)!=0)
     {

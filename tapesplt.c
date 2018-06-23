@@ -17,6 +17,7 @@
 #include "tapedev.h"
 
 #define UTILITY_NAME    "tapesplt"
+#define UTILITY_DESC    "Split AWS tape into pieces"
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -59,7 +60,7 @@ BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Split AWS tape into pieces", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* The only argument is the tape image file name */
     if (argc > 3 && argv[1] != NULL)

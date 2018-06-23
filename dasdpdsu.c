@@ -26,6 +26,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdpdsu"
+#define UTILITY_DESC    "PDS unload"
 
 static int process_member( CIFBLK *, int, DSXTENT *, char *, BYTE * );
 static int process_dirblk( CIFBLK *, int, DSXTENT *, BYTE * );
@@ -58,7 +59,7 @@ BYTE           *blkptr;                 /* -> PDS directory block    */
 BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 
-    INITIALIZE_UTILITY( UTILITY_NAME,  "PDS unload", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)
