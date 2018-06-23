@@ -30,7 +30,6 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "dasdblks.h"
 #include "opcode.h"
@@ -144,13 +143,13 @@ int             lfs = 0;                /* 1 = Build large file      */
     if (argv[1] == NULL || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(ifname)-1)
         argexit(1, pgm);
-    strcpy (ifname, argv[1]);
+    STRLCPY( ifname, argv[1] );
 
     /* The second argument is the output file name */
     if (argv[2] == NULL || strlen(argv[2]) == 0
         || strlen(argv[2]) > sizeof(ofname)-1)
         argexit(2, pgm);
-    strcpy (ofname, argv[2]);
+    STRLCPY( ofname, argv[2] );
 
     /* Read the first track of the input file, and determine
        the device type and size from the track header */
@@ -506,7 +505,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                      H30CKD_TRKHDR_SIZE);
 
     /* Initialize the volume serial number */
-    strcpy ((char *)volser, "(NONE)");
+    strlcpy( (char*) volser, "(NONE)", 6+1 );
 
     /* Search for volume label in record 3 of first track */
     pbuf = itrkbuf + H30CKD_TRKHDR_SIZE;
@@ -858,7 +857,7 @@ U32             trksize;                /* AWSCKD image track length */
     EXTGUIMSG( "CYLS=%u\n", volcyls );
 
     /* Copy the unsuffixed AWSCKD image file name */
-    strcpy (sfname, ofname);
+    STRLCPY( sfname, ofname );
     suffix = NULL;
 
     /* Create the suffixed file name if volume will exceed 2GB */
@@ -873,8 +872,8 @@ U32             trksize;                /* AWSCKD image track length */
         s = strchr (s, '.');
         if (s != NULL)
         {
-            i = s - ofname;
-            strcpy (sfname + i, "_1");
+            i = (int) (s - ofname);
+            strlcpy( sfname + i, "_1", sizeof( sfname ) - i );
             STRLCAT( sfname, ofname + i );
             suffix = sfname + i + 1;
         }

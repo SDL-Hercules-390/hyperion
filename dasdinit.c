@@ -84,7 +84,7 @@ U16     devtype = 0;                    /* Device type               */
 BYTE    comp = 0xff;                    /* Compression algoritm      */
 BYTE    type = 0;                       /* C=CKD, F=FBA              */
 char    fname[1024];                    /* File name                 */
-char    volser[7];                      /* Volume serial number      */
+char    volser[6+1];                    /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
@@ -135,7 +135,7 @@ int     rc;                             /* Return code               */
         || strlen(argv[1]) > sizeof(fname)-1)
         argexit(1, argv[1]);
 
-    strcpy (fname, argv[1]);
+    STRLCPY( fname, argv[1] );
 
     /* The second argument is the device type.
        Model number may also be specified */
@@ -182,7 +182,7 @@ int     rc;                             /* Return code               */
             || strlen(argv[3]) > sizeof(volser)-1)
             argexit(3, argv[3]);
 
-        strcpy (volser, argv[3]);
+        STRLCPY( volser, argv[3] );
         string_to_upper (volser);
     }
 
