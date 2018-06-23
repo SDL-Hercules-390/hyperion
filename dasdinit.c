@@ -59,6 +59,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "dasdinit"
+#define UTILITY_DESC    "DASD image file creation program"
 
 static void argexit ( int code, char *m );
 
@@ -91,7 +92,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKD_NULLTRK_FMT1;     /* Null track format type    */
 int     rc;                             /* Return code               */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "DASD image file creation program", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Display help if needed or requested */
     if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))

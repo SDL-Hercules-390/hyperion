@@ -36,6 +36,7 @@
 #include "opcode.h"
 
 #define UTILITY_NAME    "dasdconv"
+#define UTILITY_DESC    "DASD CKD image conversion"
 
 /*-------------------------------------------------------------------*/
 /* Definition of HDR-30 CKD image headers                            */
@@ -119,7 +120,7 @@ char            ofname[256];            /* Output file name          */
 BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 int             lfs = 0;                /* 1 = Build large file      */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "DASD CKD image conversion", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Process the options in the argument list */
     for (; argc > 1; argc--, argv++)

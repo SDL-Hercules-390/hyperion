@@ -14,6 +14,7 @@
 #include "dasdblks.h"
 
 #define UTILITY_NAME    "cckdswap"
+#define UTILITY_DESC    "Swap 'endianess' of a CCKD file"
 
 /*-------------------------------------------------------------------*/
 /* Swap the `endianess' of  cckd file                                */
@@ -34,7 +35,7 @@ int             bigend;                 /* 1=big-endian file         */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "Swap 'endianess' of a CCKD file", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)

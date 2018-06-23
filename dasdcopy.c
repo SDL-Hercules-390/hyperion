@@ -33,6 +33,7 @@
 #include "opcode.h"
 
 #define UTILITY_NAME    "dasdcopy"
+#define UTILITY_DESC    "DASD copy/convert"
 
 #define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 #define FBA_BLKS_PER_GRP        120     /* Blocks per group          */
@@ -79,7 +80,7 @@ size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKD_NULLTRK_FMT0; /* Null track format     */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "DASD copy/convert", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     if (strcasecmp(pgm, "ckd2cckd") == 0)
     {

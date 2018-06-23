@@ -15,6 +15,7 @@
 #include "hercules.h"
 
 #define UTILITY_NAME    "cckdcdsk"
+#define UTILITY_DESC    "DASD CCKD image verification"
 
 int syntax( const char* pgm );
 
@@ -33,7 +34,7 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
-    INITIALIZE_UTILITY( UTILITY_NAME, "DASD CCKD image verification", &pgm );
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
