@@ -592,15 +592,60 @@ do { \
   (((_addr1) <= ((_low) & MAXADDRESS)) && (_addr2) >= ((_high) & MAXADDRESS)) :  \
   (((_addr2) >= ((_low) & MAXADDRESS)) || (_addr1) <= ((_high) & MAXADDRESS)) )
 
+/*-------------------------------------------------------------------*/
+/*                   Byte swapping macros                            */
+/*-------------------------------------------------------------------*/
+/* The "CSWAPxx()" macros CONDITIONALLY swap the endianess of the    */
+/* given argument depending on the endianess of the current host,    */
+/* much like the "htonl()" networking API functions. If this build   */
+/* of Hercules is for running on a big endian host, then CSWAPxx()   */
+/* will do absolutely nothing since the argument should already be   */
+/* in big endian format. If this build of Hercules is for running    */
+/* on a little endian host however, it will perform the byte swap    */
+/* so that the result is a big endian value (since z/Architecture    */
+/* is big endian).                                                   */
+/*                                                                   */
+/* The "SWAPxx()" macros however, UNCONDITIONALLY swap the endianess */
+/* of the specified value *regardless* of the endianess Hercules was */
+/* built for or the endianess of the host it is running on. It is    */
+/* designed for situations such as what might exist when a number    */
+/* is read or written to/from disk in a format different from the    */
+/* format of the Hercules build or the host it is running on (such   */
+/* as what occurs with Hercules's emulated dasd files). In such a    */
+/* situation the device driver detects the endianess of the system   */
+/* it is running on differs from the endianess that the DASD file    */
+/* was written in, thereby requiring it to *UNCONDITIONALLY* swap    */
+/* the value that was read from disk, REGARDLESS of the endianess    */
+/* of the Hercules build or the host it is currently running on.     */
+/*-------------------------------------------------------------------*/
+
 #ifdef WORDS_BIGENDIAN
- #define CSWAP16(_x)    (_x)
- #define CSWAP32(_x)    (_x)
- #define CSWAP64(_x)    (_x)
+ #define CSWAP16(_x)    (_x)            // (result ALWAYS big endian)
+ #define CSWAP32(_x)    (_x)            // (result ALWAYS big endian)
+ #define CSWAP64(_x)    (_x)            // (result ALWAYS big endian)
 #else
- #define CSWAP16(_x)    bswap_16(_x)
- #define CSWAP32(_x)    bswap_32(_x)
- #define CSWAP64(_x)    bswap_64(_x)
+ #define CSWAP16(_x)    bswap_16(_x)    // (result ALWAYS big endian)
+ #define CSWAP32(_x)    bswap_32(_x)    // (result ALWAYS big endian)
+ #define CSWAP64(_x)    bswap_64(_x)    // (result ALWAYS big endian)
 #endif
+
+ #define SWAP16(_x)     bswap_16(_x)    // (result OPPOSITE of input)
+ #define SWAP32(_x)     bswap_32(_x)    // (result OPPOSITE of input)
+ #define SWAP64(_x)     bswap_64(_x)    // (result OPPOSITE of input)
+
+ #define SWAP_OFF_T(o)  (sizeof(o) <= 4 ? SWAP32((U32)o) : SWAP64(o))
+
+/*-------------------------------------------------------------------*/
+/*             Guest storage FETCH/STORE macros                      */
+/*-------------------------------------------------------------------*/
+/* The following macros fetch a value from emulated guest storage    */
+/* into a local work variable or store a local work variable into    */
+/* emulated guest storage, performing a CONDITIONAL swap in between  */
+/* (via the "CSWAPxx()" macro) to ensure the value placed into guest */
+/* storage is always big endian or that the local work variable is   */
+/* always in the expected big or little endian format (depending on  */
+/* which endianess Hercules was built for).                          */
+/*-------------------------------------------------------------------*/
 
 #define FETCH_HW(_value, _storage)   (_value) = fetch_hw(_storage)
 #define FETCH_FW(_value, _storage)   (_value) = fetch_fw(_storage)

@@ -534,6 +534,7 @@ AH_TEMPLATE( [C11_ATOMIC_LONG_LOCK_FREE],    [Define to 'stdatomics.h' ATOMIC_*_
 AH_TEMPLATE( [C11_ATOMIC_LLONG_LOCK_FREE],   [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 AH_TEMPLATE( [C11_ATOMIC_POINTER_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 AH_TEMPLATE( [HAVE_ATOMIC_INTRINSICS],       [Define if '__atomic_xor_fetch' and friends are available] )
+AH_TEMPLATE( [HAVE_SWAP_BUILTINS],           [Define if '__builtin_bswap32' and friends are available] )
 AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
 
 ###############################################################################
@@ -1301,6 +1302,34 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
         else
             hc_cv_is_gcc_2_96=no
         fi
+    ]
+)
+
+#---------------------------------------------------#
+#  Check if 'bswapxx' builtins are available        #
+#---------------------------------------------------#
+
+# Note: We purposely do *NOT* check for GCC. We don't
+# care if the compiler is GCC or CLANG. Either is ok.
+
+AC_CACHE_CHECK( [if '_bswap' builtins are available],
+
+    [hc_cv_swap_builtins_available],
+    [
+        AC_COMPILE_IFELSE(
+        [
+            static unsigned short     _16 = 0;
+            static unsigned long      _32 = 0;
+            static unsigned long long _64 = 0;
+            void main()
+            {
+                _16 = __builtin_bswap16( _16 );
+                _32 = __builtin_bswap32( _32 );
+                _64 = __builtin_bswap64( _64 );
+            }
+        ],
+        [hc_cv_swap_builtins_available=yes],
+        [hc_cv_swap_builtins_available=no] )
     ]
 )
 
@@ -2760,6 +2789,7 @@ test "$hc_cv_have_partial_keepalive"      = "yes"  &&  AC_DEFINE(HAVE_PARTIAL_KE
 test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
 test "$hc_cv_c11_atomics_available"       = "yes"  &&  AC_DEFINE(C11_ATOMICS_AVAILABLE)
 test "$hc_cv_atomic_intrinsics_available" = "yes"  &&  AC_DEFINE(HAVE_ATOMIC_INTRINSICS)
+test "$hc_cv_swap_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SWAP_BUILTINS)
 test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILTINS)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
 test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)

@@ -743,7 +743,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /* swap num_L1tab if needed */
     num_L1tab = cdevhdr.num_L1tab;
     if (swapend)
-        cckd_swapend4( (char*) &num_L1tab );
+        num_L1tab = SWAP32( num_L1tab ); // CCKD64FIXME!
 
     L1tab = makbuf( num_L1tab * CCKD_L1ENT_SIZE, "L1TAB" );
 
@@ -835,7 +835,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     L2taboff = L1tab[ L1ndx ];
 
     if (swapend)
-        cckd_swapend4( (char*) &L2taboff );
+        L2taboff = SWAP_OFF_T( L2taboff );
 
     /*---------------------------------------------------------------*/
     /* Display CKD CCHH or relative track or FBA relative block data */
@@ -885,8 +885,8 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
         if (swapend)
         {
-            cckd_swapend4((char *)&trkhdroff);
-            cckd_swapend4((char *)&imglen);
+            trkhdroff = SWAP_OFF_T( trkhdroff );
+            imglen = SWAP32( imglen );
         }
 
         // "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"

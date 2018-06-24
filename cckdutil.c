@@ -267,81 +267,54 @@ cswp_error:
 /*-------------------------------------------------------------------*/
 /* Swap endian - compressed device header                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend_chdr (CCKD_DEVHDR *cdevhdr)
+DLL_EXPORT void cckd_swapend_chdr( CCKD_DEVHDR* cdevhdr )
 {
     /* fix the compressed ckd header */
     cdevhdr->opts ^= CCKD_BIGENDIAN;
-    cckd_swapend4 ((char *) &cdevhdr->num_L1tab);
-    cckd_swapend4 ((char *) &cdevhdr->num_L2tab);
-    cckd_swapend4 ((char *) &cdevhdr->cdh_size);
-    cckd_swapend4 ((char *) &cdevhdr->cdh_used);
-    cckd_swapend4 ((char *) &cdevhdr->free_off);
-    cckd_swapend4 ((char *) &cdevhdr->free_total);
-    cckd_swapend4 ((char *) &cdevhdr->free_largest);
-    cckd_swapend4 ((char *) &cdevhdr->free_num);
-    cckd_swapend4 ((char *) &cdevhdr->free_imbed);
-    cckd_swapend2 ((char *) &cdevhdr->cmp_parm);
+
+    cdevhdr->num_L1tab    = SWAP32( cdevhdr->num_L1tab    ); // CCKD64FIXME!
+    cdevhdr->num_L2tab    = SWAP32( cdevhdr->num_L2tab    ); // CCKD64FIXME!
+    cdevhdr->cdh_size     = SWAP32( cdevhdr->cdh_size     ); // CCKD64FIXME!
+    cdevhdr->cdh_used     = SWAP32( cdevhdr->cdh_used     ); // CCKD64FIXME!
+    cdevhdr->free_off     = SWAP32( cdevhdr->free_off     ); // CCKD64FIXME!
+    cdevhdr->free_total   = SWAP32( cdevhdr->free_total   ); // CCKD64FIXME!
+    cdevhdr->free_largest = SWAP32( cdevhdr->free_largest ); // CCKD64FIXME!
+    cdevhdr->free_num     = SWAP32( cdevhdr->free_num     ); // CCKD64FIXME!
+    cdevhdr->free_imbed   = SWAP32( cdevhdr->free_imbed   ); // CCKD64FIXME!
+    cdevhdr->cmp_parm     = SWAP16( cdevhdr->cmp_parm     ); // CCKD64FIXME!
 }
 
 /*-------------------------------------------------------------------*/
 /* Swap endian - level 1 table                                       */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend_l1 (CCKD_L1ENT *l1, int n)
+DLL_EXPORT void cckd_swapend_l1( CCKD_L1ENT* l1, int n )
 {
-int i;                                  /* Index                     */
-
+    int  i;
     for (i = 0; i < n; i++)
-        cckd_swapend4 ((char *) &l1[i]);
+        l1[i] = SWAP32( l1[i] ); // CCKD64FIXME!
 }
 
 /*-------------------------------------------------------------------*/
 /* Swap endian - level 2 table                                       */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend_l2 (CCKD_L2ENT *l2)
+DLL_EXPORT void cckd_swapend_l2( CCKD_L2ENT* l2 )
 {
-int i;                                  /* Index                     */
-
+    int  i;
     for (i = 0; i < 256; i++)
     {
-        cckd_swapend4 ((char *) &l2[i].L2_trkoff);
-        cckd_swapend2 ((char *) &l2[i].L2_len);
-        cckd_swapend2 ((char *) &l2[i].L2_size);
+        l2[i].L2_trkoff = SWAP32( l2[i].L2_trkoff ); // CCKD64FIXME!
+        l2[i].L2_len    = SWAP16( l2[i].L2_len    ); // CCKD64FIXME!
+        l2[i].L2_size   = SWAP16( l2[i].L2_size   ); // CCKD64FIXME!
     }
 }
 
 /*-------------------------------------------------------------------*/
 /* Swap endian - free space entry                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend_free (CCKD_FREEBLK *fb)
+DLL_EXPORT void cckd_swapend_free( CCKD_FREEBLK* fb )
 {
-    cckd_swapend4 ((char *) &fb->fb_offnxt);
-    cckd_swapend4 ((char *) &fb->fb_len);
-}
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 4 bytes                                             */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend4 (char *c)
-{
- char temp[4];
-
-    memcpy (&temp, c, 4);
-    c[0] = temp[3];
-    c[1] = temp[2];
-    c[2] = temp[1];
-    c[3] = temp[0];
-}
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 2 bytes                                             */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd_swapend2 (char *c)
-{
- char temp[2];
-
-    memcpy (&temp, c, 2);
-    c[0] = temp[1];
-    c[1] = temp[0];
+    fb->fb_offnxt = SWAP32( fb->fb_offnxt ); // CCKD64FIXME!
+    fb->fb_len    = SWAP32( fb->fb_len    ); // CCKD64FIXME!
 }
 
 /*-------------------------------------------------------------------*/

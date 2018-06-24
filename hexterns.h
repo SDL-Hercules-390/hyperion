@@ -332,12 +332,11 @@ CCKD_DLL_IMPORT void    cckd_sf_parse_sfn( DEVBLK* dev, char* sfn );
 
 /* Functions in module cckdutil.c */
 CCDU_DLL_IMPORT int     cckd_swapend (DEVBLK *);
-CCDU_DLL_IMPORT void    cckd_swapend_chdr (CCKD_DEVHDR *);
-CCDU_DLL_IMPORT void    cckd_swapend_l1 (CCKD_L1ENT *, int);
-CCDU_DLL_IMPORT void    cckd_swapend_l2 (CCKD_L2ENT *);
-CCDU_DLL_IMPORT void    cckd_swapend_free (CCKD_FREEBLK *);
-CCDU_DLL_IMPORT void    cckd_swapend4 (char *);
-CCDU_DLL_IMPORT void    cckd_swapend2 (char *);
+CCDU_DLL_IMPORT void    cckd_swapend_chdr ( CCKD_DEVHDR* );
+CCDU_DLL_IMPORT void    cckd_swapend_l1   ( CCKD_L1ENT*, int );
+CCDU_DLL_IMPORT void    cckd_swapend_l2   ( CCKD_L2ENT* );
+CCDU_DLL_IMPORT void    cckd_swapend_free ( CCKD_FREEBLK* );
+
 CCDU_DLL_IMPORT int     cckd_endian ();
 CCDU_DLL_IMPORT int     cckd_comp (DEVBLK *);
 CCDU_DLL_IMPORT int     cckd_chkdsk (DEVBLK *, int);

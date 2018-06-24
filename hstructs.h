@@ -1633,12 +1633,12 @@ struct CKD_DEVHDR                       /* Device header             */
                                            (bytes in reverse order)  */
 
         BYTE    dvtyp;                  /* Low byte of hex device type
-                                           (0x80=3380, 0x90=3390)    */
+                                           (x80=3380, x90=3390, etc) */
 
         BYTE    fileseq;                /* CKD: image file sequence no.
-                                           (0x00=only file, 0x01=first
-                                           file of multiple files)
-                                           CFBA: 0x00 (not used)     */
+                                           (0=only file, 1=first file
+                                           of multiple files)
+                                           CFBA: 0 (not used)        */
 
         HWORD   highcyl;                /* CKD: Highest cylinder number
                                            on this file, or zero if this
