@@ -656,25 +656,28 @@ do { \
 #define SIGNAL_CONSOLE_THREAD()            SEND_PIPE_SIGNAL( sysblk.cnslwpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
 #define SIGNAL_SOCKDEV_THREAD()            SEND_PIPE_SIGNAL( sysblk.sockwpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
 
-
 /*********************************************************************/
 /*               Define compiler error bypasses                      */
 /*********************************************************************/
-/*
- *      MS VC Bug ID 363375 Bypass
- *      Note: This error, or similar, also occurs w/VS2010 and VS2012.
- *      TODO: Verify if fixed in VS2013 or later.
- */
 
-# define ENABLE_VS_BUG_ID_363375_BYPASS         \
-                                                \
-    __pragma( optimize( "", off ) )             \
-    __pragma( optimize( "t", on ) )
+#ifdef _MSVC_
+
+    /*
+     *  MS VC Bug ID 363375 Bypass
+     *  Note: This error, or similar, also occurs w/VS2010 and VS2012.
+     *  TODO: Verify if fixed in VS2013 or later.
+     */
+
+    # define ENABLE_VS_BUG_ID_363375_BYPASS         \
+                                                    \
+        __pragma( optimize( "", off ))              \
+        __pragma( optimize( "t", on ))
 
 
-# define DISABLE_VS_BUG_ID_363375_BYPASS        \
-                                                \
-    __pragma( optimize( "", on ) )
+    # define DISABLE_VS_BUG_ID_363375_BYPASS        \
+                                                    \
+        __pragma( optimize( "", on ))
 
+#endif // _MSVC_
 
 #endif // _HMACROS_H

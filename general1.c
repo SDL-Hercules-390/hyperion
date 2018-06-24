@@ -2884,8 +2884,11 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
 #undef   MAX_CPU_AMT
 #define  MAX_CPU_AMT        (32 * 1024) // (purely arbitrary)
 
+#ifndef CLCL_ONETIME
+#define CLCL_ONETIME
 CASSERT( CHUNK_AMT      <   (PAGEFRAME_PAGESIZE), general1_c );
 CASSERT( MAX_CPU_AMT    >   (PAGEFRAME_PAGESIZE), general1_c );
+#endif
 
 DEF_INST( compare_logical_character_long )
 {
