@@ -1480,13 +1480,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
     DWORD             dw;
     PGNSI             pgnsi;
     LPFN_GLPI         glpi;
+    PGPI              pgpi;
+
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = NULL;
     PCACHE_DESCRIPTOR Cache;
-
-#if _MSC_VER >= VS2008 // && defined(PRODUCT_ULTIMATE_E)
-    PGPI              pgpi;
-#endif /* VS9 && SDK7 */
 
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     ZeroMemory(&vi, sizeof(OSVERSIONINFOEX));
@@ -1557,15 +1555,11 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     pHostInfo->num_physical_cpu++;
                     pHostInfo->num_logical_cpu += CountSetBits(ptr->ProcessorMask);
                 }
-                else
-#if _MSC_VER >= VS2008
-                if ( ptr->Relationship == RelationProcessorPackage )
+                else if ( ptr->Relationship == RelationProcessorPackage )
                 {
                     pHostInfo->num_packages++;
                 }
-                else
-#endif
-                if ( ptr->Relationship == RelationCache )
+                else if ( ptr->Relationship == RelationCache )
                 {
                     Cache = &ptr->Cache;
 
@@ -1660,8 +1654,9 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "9x";
             break;
         case VER_PLATFORM_WIN32_NT:
-#if _MSC_VER >= VS2008 // && defined(PRODUCT_ULTIMATE_E)
-// This list is current as of 2010-03-13 using V7.0 MS SDK
+
+            // This list is current as of 2010-03-13 using V7.0 MS SDK
+
             if ( vi.dwMajorVersion == 6 )
             {
                 pgpi = (PGPI) GetProcAddress(
@@ -1690,10 +1685,10 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
                     case PRODUCT_ULTIMATE:
 #if defined(PRODUCT_ULTIMATE_E)
                     case PRODUCT_ULTIMATE_E:
-#endif // defined(PRODUCT_ULTIMATE_E)
+#endif
 #if defined(PRODUCT_ULTIMATE_N)
                     case PRODUCT_ULTIMATE_N:
-#endif // defined(PRODUCT_ULTIMATE_N)
+#endif
                         prod_id = "Ultimate Edition";
                         break;
 #if defined(PRODUCT_PROFESSIONAL) || defined(PRODUCT_PROFESSIONAL_E) || defined(PRODUCT_PROFESSION_N)
@@ -2070,11 +2065,6 @@ DLL_EXPORT void w32_init_hostinfo( HOST_INFO* pHostInfo )
             psz = "unknown";
             prod_id = "";
             break;
-#else /* !(VS9 && SDK7) */
-        psz = "NT";
-        prod_id = "";
-        prod_proc = "";
-#endif /* VS9 && SDK7 */
     }
 
 #if defined(__MINGW32_VERSION)
