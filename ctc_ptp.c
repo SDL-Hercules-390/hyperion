@@ -1663,6 +1663,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
 // Note: The caller must hold the PTPBLK->ReadBufferLock.
 
 ENABLE_VS_BUG_ID_363375_BYPASS
+
 void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
                         int     iCCWSeq,   BYTE*   pIOBuf,
                         BYTE*   pMore,     BYTE*   pUnitStat,
@@ -1849,6 +1850,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
 
     return;
 }   /* End function  read_read_buffer() */
+
 DISABLE_VS_BUG_ID_363375_BYPASS
 
 

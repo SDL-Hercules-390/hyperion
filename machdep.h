@@ -81,7 +81,7 @@
     #define MSC_X86_64BIT
   #endif
 
-  #if defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
+  #if defined( GEN_MSC_ASSISTS ) && (defined( MSC_X86_32BIT ) || defined( MSC_X86_64BIT ))
 
     // Any X86 at all (both 32/64-bit)
 
@@ -91,52 +91,15 @@
     #define  cmpxchg4(  x, y, z )  cmpxchg4_x86( x, y, z )
     #define  cmpxchg8(  x, y, z )  cmpxchg8_x86( x, y, z )
 
-    #if ( _MSC_VER < VS2005 )
+    #pragma intrinsic ( _InterlockedCompareExchange64 )
 
-      // PROGRAMMING NOTE: compiler versions earlier than VS8 2005
-      // do not have the _InterlockedCompareExchange64 intrinsic so
-      // we use our own hand-coded inline assembler routine instead.
-      // Also note that we can't use __fastcall here since doing so
-      // would interfere with our register usage.
-
-      static __inline BYTE cmpxchg8_x86 ( U64 *pOldVal, U64 u64NewVal, volatile void *pTarget )
-      {
-          // returns 0 == success, 1 otherwise
-          BYTE  rc;
-          U32   u32NewValHigh = u64NewVal >> 32;
-          U32   u32NewValLow  = u64NewVal & 0xffffffff;
-          __asm
-          {
-              mov    esi, [pOldVal]
-              mov    eax, [esi + 0]
-              mov    edx, [esi + 4]
-              mov    ebx, [u32NewValLow]
-              mov    ecx, [u32NewValHigh]
-              mov    esi, [pTarget]
-         lock cmpxchg8b  qword ptr [esi]
-              setne  rc
-              jz     success
-              mov    esi, [pOldVal]
-              mov    [esi + 0], eax
-              mov    [esi + 4], edx
-          };
-      success:
-          return rc;
-      }
-
-    #else // ( _MSC_VER >= VS2005 )
-
-      #pragma intrinsic ( _InterlockedCompareExchange64 )
-
-      static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 unew, volatile void *ptr )
-      {
-          // returns 0 == success, 1 otherwise
-          U64 tmp = *old;
-          *old = _InterlockedCompareExchange64( ptr, unew, *old );
-          return ((tmp == *old) ? 0 : 1);
-      }
-
-    #endif // ( _MSC_VER >= VS2005 )
+    static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 unew, volatile void *ptr )
+    {
+        // returns 0 == success, 1 otherwise
+        U64 tmp = *old;
+        *old = _InterlockedCompareExchange64( ptr, unew, *old );
+        return ((tmp == *old) ? 0 : 1);
+    }
 
     static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 unew, volatile void *ptr )
     {
@@ -170,7 +133,7 @@
         return cc;
     }
 
-    #if defined(MSC_X86_32BIT)
+    #if defined( MSC_X86_32BIT )
 
       #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
       // (must follow cmpxchg8 since it uses it)
@@ -188,13 +151,13 @@
         U64 orig = *(U64*)ptr;
         while ( cmpxchg8( &orig, value, (U64*)ptr ) );
       }
-    #endif /* defined(MSC_X86_32BIT) */
+    #endif /* defined( MSC_X86_32BIT ) */
 
-  #endif // defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
+  #endif // defined( GEN_MSC_ASSISTS ) && (defined( MSC_X86_32BIT ) || defined( MSC_X86_64BIT ))
 
   // ------------------------------------------------------------------
 
-  #if defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
+  #if defined( GEN_MSC_ASSISTS ) && defined( MSC_X86_IA64 )
 
     // (64-bit Itanium assists only)
 
@@ -240,7 +203,7 @@
         return code;
     }
 
-  #endif // defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
+  #endif // defined( GEN_MSC_ASSISTS ) && defined( MSC_X86_IA64 )
 
 #else // !defined( _MSVC_ )
 /*-------------------------------------------------------------------

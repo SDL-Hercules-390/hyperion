@@ -66,9 +66,7 @@
 #define _WIN32_WINNT    WINNT_VISTA     /* Windows Vista             */
 #define  WINVER         WINNT_VISTA     /* Windows Vista             */
 #define _WIN32_IE       IE_VISTA        /* Windows Vista             */
-#if ( _MSC_VER  >=  VS2008 )            /* If VS2008 or greater,     */
 #include <SDKDDKVer.h>                  /* then need this header.    */
-#endif
 #endif
 
 /* Report Target Platform = whichever _WIN32_WINNT value we're using */

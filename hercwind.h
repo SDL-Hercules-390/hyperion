@@ -24,8 +24,8 @@
   #error This file is only for building Hercules with MSVC
 #endif
 
-#if defined( _MSC_VER ) && (_MSC_VER < VS2002)
-  #error MSVC compiler versions less than 13.0 (Visual Studio 2002) not supported.
+#if defined( _MSC_VER ) && (_MSC_VER < VS2008)
+  #error MSVC compiler versions less than Visual Studio 2008 not supported.
 #endif
 
 #pragma intrinsic( memset, memcmp, memcpy )

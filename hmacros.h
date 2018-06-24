@@ -300,19 +300,13 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 
 #ifdef _MSVC_
   /* "Native" 64-bit Large File Support */
-  #define    off_t              __int64
-  #if (_MSC_VER >= VS2005)
-    #define  ftruncate          _chsize_s
-    #define  ftell              _ftelli64
-    #define  fseek              _fseeki64
-  #else // (_MSC_VER < VS2005)
-    #define  ftruncate          w32_ftrunc64
-    #define  ftell              w32_ftelli64
-    #define  fseek              w32_fseeki64
-  #endif
-  #define    lseek              _lseeki64
-  #define    fstat              _fstati64
-  #define    stat               _stati64
+  #define  off_t                __int64
+  #define  ftruncate            _chsize_s
+  #define  ftell                _ftelli64
+  #define  fseek                _fseeki64
+  #define  lseek                _lseeki64
+  #define  fstat                _fstati64
+  #define  stat                 _stati64
 #elif defined(_LFS_LARGEFILE) || ( defined(SIZEOF_OFF_T) && SIZEOF_OFF_T > 4 )
   /* Native 64-bit Large File Support */
   #if defined(HAVE_FSEEKO)
@@ -664,31 +658,23 @@ do { \
 
 
 /*********************************************************************/
-/*                                                                   */
-/*  Define compiler error bypasses                                   */
-/*                                                                   */
+/*               Define compiler error bypasses                      */
 /*********************************************************************/
-
-
-/*      MS VC Bug ID 363375 Bypass
- *
- *      Note: This error, or similar, also occurs at VS 2010 and
- *            VS 2012.
- *
- *      TODO: Verify if fixed in VS 2013 and/or VS 2014.
- *
+/*
+ *      MS VC Bug ID 363375 Bypass
+ *      Note: This error, or similar, also occurs w/VS2010 and VS2012.
+ *      TODO: Verify if fixed in VS2013 or later.
  */
 
-#if defined( _MSC_VER ) && ( _MSC_VER >= VS2008 )
-# define ENABLE_VS_BUG_ID_363375_BYPASS                                 \
-  __pragma( optimize( "", off ) )                                       \
-  __pragma( optimize( "t", on ) )
-# define DISABLE_VS_BUG_ID_363375_BYPASS                                \
-  __pragma( optimize( "", on ) )
-#else
-# define ENABLE_VS_BUG_ID_363375_BYPASS
-# define DISABLE_VS_BUG_ID_363375_BYPASS
-#endif
+# define ENABLE_VS_BUG_ID_363375_BYPASS         \
+                                                \
+    __pragma( optimize( "", off ) )             \
+    __pragma( optimize( "t", on ) )
+
+
+# define DISABLE_VS_BUG_ID_363375_BYPASS        \
+                                                \
+    __pragma( optimize( "", on ) )
 
 
 #endif // _HMACROS_H
