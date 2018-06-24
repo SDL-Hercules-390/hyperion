@@ -39,8 +39,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
 
-#if defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
-
 static void DummyCRTInvalidParameterHandler
 (
     const wchar_t*  expression,
@@ -78,8 +76,6 @@ DLL_EXPORT void EnableInvalidParameterHandling()
     _CrtSetReportMode( _CRT_ASSERT, prev_rm );
 #endif
 }
-
-#endif // defined( _MSC_VER ) && ( _MSC_VER >= VS2005 )
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -215,175 +211,6 @@ DLL_EXPORT DWORD w32_NtStatusToLastError( NTSTATUS ntStatus )
     SetLastError( dwOrigError );    // (restore original value)
     return dwLastError;             // (return converted result)
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Large File Support...
-
-#if (_MSC_VER < VS2005)
-
-//----------------------------------------------------------------------------------------
-
-#if defined( _POSIX_ )
-  // (promote/demote long to/from __int64)
-  #define FPOS_T_TO_INT64(pos)      ((__int64)(pos))
-  #define INT64_TO_FPOS_T(i64,pos)  ((pos) = (long)(i64))
-  #if _INTEGRAL_MAX_BITS < 64
-    WARNING( "fseek/ftell use offset arguments of insufficient size" )
-  #endif
-#else
-  #if !__STDC__ && _INTEGRAL_MAX_BITS >= 64
-    // (already __int64!)
-    #define FPOS_T_TO_INT64(pos)      (pos)
-    #define INT64_TO_FPOS_T(i64,pos)  ((pos) = (i64))
-  #else
-    // (construct an __int64 from fpos_t structure members and vice-versa)
-    #define FPOS_T_TO_INT64(pos)      ((__int64)(((unsigned __int64)(pos).hipart << 32) | \
-                                                  (unsigned __int64)(pos).lopart))
-    #define INT64_TO_FPOS_T(i64,pos)  ((pos).hipart = (int)((i64) >> 32), \
-                                       (pos).lopart = (unsigned int)(i64))
-  #endif
-#endif
-
-//----------------------------------------------------------------------------------------
-
-DLL_EXPORT __int64 w32_ftelli64 ( FILE* stream )
-{
-    fpos_t pos; if ( fgetpos( stream, &pos ) != 0 )
-    return -1; else return FPOS_T_TO_INT64( pos );
-}
-
-//----------------------------------------------------------------------------------------
-
-DLL_EXPORT int w32_fseeki64 ( FILE* stream, __int64 offset, int origin )
-{
-    __int64  offset_from_beg;
-    fpos_t   pos;
-
-    if (SEEK_CUR == origin)
-    {
-        if ( (offset_from_beg = w32_ftelli64( stream )) < 0 )
-            return -1;
-        offset_from_beg += offset;
-    }
-    else if (SEEK_END == origin)
-    {
-        struct stat fst;
-        if ( fstat( fileno( stream ), &fst ) != 0 )
-            return -1;
-        offset_from_beg = (__int64)fst.st_size + offset;
-    }
-    else if (SEEK_SET == origin)
-    {
-        offset_from_beg = offset;
-    }
-    else
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    INT64_TO_FPOS_T( offset_from_beg, pos );
-    return fsetpos( stream, &pos );
-}
-
-//----------------------------------------------------------------------------------------
-
-DLL_EXPORT int w32_ftrunc64 ( int fd, __int64 new_size )
-{
-    HANDLE  hFile;
-    int rc = 0, save_errno;
-    __int64 old_pos, old_size;
-
-    if ( new_size < 0 )
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    hFile  = (HANDLE)  _get_osfhandle( fd );
-
-    if ( (HANDLE) -1 == hFile )
-    {
-        errno = EBADF;  // (probably not a valid opened file descriptor)
-        return -1;
-    }
-
-    // The value of the seek pointer shall not be modified by a call to ftruncate().
-
-    if ( ( old_pos = _telli64( fd ) ) < 0 )
-        return -1;
-
-    // PROGRAMMING NOTE: from here on, all errors
-    // need to goto error_return to restore the original
-    // seek pointer...
-
-    if ( ( old_size = _lseeki64( fd, 0, SEEK_END ) ) < 0 )
-    {
-        rc = -1;
-        goto error_return;
-    }
-
-    // pad with zeros out to new_size if needed
-
-    rc = 0;  // (think positively)
-
-    if ( new_size > old_size )
-    {
-#define            ZEROPAD_BUFFSIZE  ( 128 * 1024 )
-        BYTE zeros[ZEROPAD_BUFFSIZE];
-        size_t write_amount = sizeof(zeros);
-        memset( zeros, 0, sizeof(zeros) );
-
-        do
-        {
-            write_amount = min( sizeof(zeros), ( new_size - old_size ) );
-
-            if ( !WriteFile( hFile, zeros, write_amount, NULL, NULL ) )
-            {
-                errno = (int) GetLastError();
-                rc = -1;
-                break;
-            }
-        }
-        while ( ( old_size += write_amount ) < new_size );
-
-        save_errno = errno;
-        ASSERT( old_size == new_size || rc < 0 );
-        errno = save_errno;
-    }
-
-    if ( rc < 0 )
-        goto error_return;
-
-    // set the new file size (eof)
-
-    if ( _lseeki64( fd, new_size, SEEK_SET ) < 0 )
-    {
-        rc = -1;
-        goto error_return;
-    }
-
-    if ( !SetEndOfFile( hFile ) )
-    {
-        errno = (int) GetLastError();
-        rc = -1;
-        goto error_return;
-    }
-
-    rc = 0; // success!
-
-error_return:
-
-    // restore the original seek pointer and return
-
-    save_errno = errno;
-    _lseeki64( fd, old_pos, SEEK_SET );
-    errno = save_errno;
-
-    return rc;
-}
-
-#endif // (_MSC_VER < VS2005)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
