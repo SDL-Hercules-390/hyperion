@@ -668,15 +668,20 @@ do { \
      *  TODO: Verify if fixed in VS2013 or later.
      */
 
-    # define ENABLE_VS_BUG_ID_363375_BYPASS         \
+    #define ENABLE_VS_BUG_ID_363375_BYPASS          \
                                                     \
         __pragma( optimize( "", off ))              \
         __pragma( optimize( "t", on ))
 
 
-    # define DISABLE_VS_BUG_ID_363375_BYPASS        \
+    #define DISABLE_VS_BUG_ID_363375_BYPASS         \
                                                     \
         __pragma( optimize( "", on ))
+
+#else // Linux
+
+    #define ENABLE_VS_BUG_ID_363375_BYPASS      /* (nothing) */
+    #define DISABLE_VS_BUG_ID_363375_BYPASS     /* (nothing) */
 
 #endif // _MSVC_
 
