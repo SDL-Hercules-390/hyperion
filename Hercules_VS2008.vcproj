@@ -1476,11 +1476,11 @@
 						Name="crypto"
 						>
 						<File
-							RelativePath=".\crypto\LICENSE.txt"
+							RelativePath=".\crypto\crypto.LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\crypto\README.txt"
+							RelativePath=".\crypto\crypto.README.txt"
 							>
 						</File>
 						<Filter
@@ -1572,15 +1572,15 @@
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\ERRATA"
+							RelativePath=".\decNumber\decnumber.ERRATA"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\ICU-license.html"
+							RelativePath=".\decNumber\decnumber.ICU-license.html"
 							>
 						</File>
 						<File
-							RelativePath=".\decNumber\readme.txt"
+							RelativePath=".\decNumber\decnumber.readme.txt"
 							>
 						</File>
 						<Filter
@@ -1676,15 +1676,15 @@
 						Name="SoftFloat"
 						>
 						<File
-							RelativePath=".\SoftFloat\LICENSE.txt"
+							RelativePath=".\SoftFloat\softfloat.LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\README.html"
+							RelativePath=".\SoftFloat\softfloat.README.html"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat\README.txt"
+							RelativePath=".\SoftFloat\softfloat.README.txt"
 							>
 						</File>
 						<Filter
@@ -1776,11 +1776,11 @@
 						Name="telnet"
 						>
 						<File
-							RelativePath=".\telnet\LICENSE.txt"
+							RelativePath=".\telnet\telnet.LICENSE.txt"
 							>
 						</File>
 						<File
-							RelativePath=".\telnet\README.txt"
+							RelativePath=".\telnet\telnet.README.txt"
 							>
 						</File>
 						<Filter
