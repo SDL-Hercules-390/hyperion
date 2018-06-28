@@ -24,7 +24,7 @@
 			OutputDirectory="./msvc.debug.dllmod.bin"
 			IntermediateDirectory="./msvc.debug.dllmod.obj"
 			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)BuildLog-$(PlatformName)-$(ConfigurationName).htm"
+			BuildLogFile="$(OutDir)/BuildLog-$(PlatformName)-$(ConfigurationName).htm"
 			>
 			<Tool
 				Name="VCNMakeTool"
@@ -45,7 +45,7 @@
 			OutputDirectory="./msvc.debug.AMD64.bin"
 			IntermediateDirectory="./msvc.debug.AMD64.bin"
 			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)BuildLog-$(PlatformName)-$(ConfigurationName).htm"
+			BuildLogFile="$(OutDir)/BuildLog-$(PlatformName)-$(ConfigurationName).htm"
 			>
 			<Tool
 				Name="VCNMakeTool"
@@ -66,7 +66,7 @@
 			OutputDirectory="./msvc.dllmod.bin"
 			IntermediateDirectory="./msvc.dllmod.obj"
 			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)BuildLog-$(PlatformName)-$(ConfigurationName).htm"
+			BuildLogFile="$(OutDir)/BuildLog-$(PlatformName)-$(ConfigurationName).htm"
 			>
 			<Tool
 				Name="VCNMakeTool"
@@ -87,7 +87,7 @@
 			OutputDirectory="./msvc.AMD64.bin"
 			IntermediateDirectory="./msvc.AMD64.bin"
 			ConfigurationType="0"
-			BuildLogFile="$(SolutionDir)BuildLog-$(PlatformName)-$(ConfigurationName).htm"
+			BuildLogFile="$(OutDir)/BuildLog-$(PlatformName)-$(ConfigurationName).htm"
 			>
 			<Tool
 				Name="VCNMakeTool"

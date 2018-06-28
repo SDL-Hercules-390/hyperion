@@ -228,52 +228,52 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|Win32'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-All|x64'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|Win32'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-All|x64'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='All-All|Win32'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='All-All|x64'">
     <BuildLog>
-      <Path>$(SolutionDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
+      <Path>$(OutDir)BuildLog-$(Platform)-$(Configuration).txt</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
