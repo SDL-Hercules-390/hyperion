@@ -501,15 +501,15 @@
     <None Include="CHANGES" />
     <None Include="configure.ac" />
     <None Include="COPYRIGHT" />
-    <None Include="crypto\LICENSE.txt" />
-    <None Include="crypto\README.txt" />
+    <None Include="crypto\crypto.LICENSE.txt" />
+    <None Include="crypto\crypto.README.txt" />
     <None Include="debug-all.jobs" />
     <None Include="debug-all.msbuild.jobs" />
     <None Include="decNumber\decnumber.pdf" />
-    <None Include="decNumber\ERRATA" />
-    <None Include="decNumber\ICU-license.html" />
-    <None Include="telnet\README.txt" />
-    <None Include="telnet\LICENSE.txt" />
+    <None Include="decNumber\decNumber.ERRATA" />
+    <None Include="decNumber\decNumber.ICU-license.html" />
+    <None Include="telnet\telnet.README.txt" />
+    <None Include="telnet\telnet.LICENSE.txt" />
     <None Include="dynmake.bat" />
     <None Include="hercules.cnf" />
     <None Include="hercules.cnf.rexx" />
@@ -696,7 +696,7 @@
     <None Include="SoftFloat\doc\SoftFloat-history.html" />
     <None Include="SoftFloat\doc\SoftFloat-source.html" />
     <None Include="SoftFloat\doc\SoftFloat.html" />
-    <None Include="SoftFloat\README.html" />
+    <None Include="SoftFloat\softfloat.README.html" />
     <None Include="tests\1403.tst" />
     <None Include="tests\3211.asm" />
     <None Include="tests\3211.core" />
@@ -1080,11 +1080,11 @@
     <ClInclude Include="zfcp.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="decNumber\readme.txt" />
+    <Text Include="decNumber\decNumber.readme.txt" />
     <Text Include="herclogo.txt" />
     <Text Include="license_dyn76.txt" />
-    <Text Include="SoftFloat\LICENSE.txt" />
-    <Text Include="SoftFloat\README.txt" />
+    <Text Include="SoftFloat\softfloat.LICENSE.txt" />
+    <Text Include="SoftFloat\softfloat.README.txt" />
     <Text Include="tests\alsi.txt" />
     <Text Include="tests\axtr.txt" />
     <Text Include="tests\brc.txt" />

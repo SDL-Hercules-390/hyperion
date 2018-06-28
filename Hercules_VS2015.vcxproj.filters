@@ -821,28 +821,28 @@
     <None Include="telnet\lib\libtelnet64d.a">
       <Filter>Source Files\Hercules\ExtPkgs\telnet\lib</Filter>
     </None>
-    <None Include="crypto\LICENSE.txt">
+    <None Include="crypto\crypto.LICENSE.txt">
       <Filter>Source Files\Hercules\ExtPkgs\crypto</Filter>
     </None>
-    <None Include="crypto\README.txt">
+    <None Include="crypto\crypto.README.txt">
       <Filter>Source Files\Hercules\ExtPkgs\crypto</Filter>
     </None>
     <None Include="decNumber\decnumber.pdf">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
-    <None Include="decNumber\ERRATA">
+    <None Include="decNumber\decnumber.ERRATA">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
-    <None Include="decNumber\ICU-license.html">
+    <None Include="decNumber\decnumber.ICU-license.html">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </None>
-    <None Include="telnet\README.txt">
+    <None Include="telnet\telnet.README.txt">
       <Filter>Source Files\Hercules\ExtPkgs\telnet</Filter>
     </None>
-    <None Include="telnet\LICENSE.txt">
+    <None Include="telnet\telnet.LICENSE.txt">
       <Filter>Source Files\Hercules\ExtPkgs\telnet</Filter>
     </None>
-    <None Include="SoftFloat\README.html">
+    <None Include="SoftFloat\softfloat.README.html">
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </None>
     <None Include="SoftFloat\doc\SoftFloat-history.html">
@@ -2622,13 +2622,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="decNumber\readme.txt">
+    <Text Include="decNumber\decnumber.readme.txt">
       <Filter>Source Files\Hercules\ExtPkgs\decNumber</Filter>
     </Text>
-    <Text Include="SoftFloat\LICENSE.txt">
+    <Text Include="SoftFloat\softfloat.LICENSE.txt">
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </Text>
-    <Text Include="SoftFloat\README.txt">
+    <Text Include="SoftFloat\softfloat.README.txt">
       <Filter>Source Files\Hercules\ExtPkgs\SoftFloat</Filter>
     </Text>
     <Text Include="_TODO.txt">
