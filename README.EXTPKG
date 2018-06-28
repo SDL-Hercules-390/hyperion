@@ -9,32 +9,33 @@
 This version of Hercules 4.0 Hyperion links with several "external package"
 static libraries.
 
-In most situations, unless you have a need to modify or debug an external
-package or your system is "unusual" in some way, you should *NOT* need to
-build any of the external packages in order to build Hercules. Just build
-Hercules like normal. Hercules is distributed with pre-built external packages
-as part of its source code repository that ideally SHOULD (but in certain
-situations, may not) work just fine for most people as-is, thus eliminating
-the need to build any of the external packages yourself. Just build Hercules
-and you're done.
+Hercules comes distributed with pre-built external packages as part of its
+source code repository that were built, at the timeof this writing, using
+the latest version of Visual Studio Studio (2017) that ideally SHOULD work
+fine for most people as-is, thus eliminating the need to build any of the
+external packages yourself.  Just build Hercules normally and you're done.
 
-In some unusual situations however, you MIGHT need to rebuild ALL existing
-external packages for your particular system. Exactly what those situations
-are and what causes them to occur is unclear, but one thing is certain: it
-will never hurt to build all of the external packages anyway just to be safe.
+In some situations however you might need (or want) to rebuild one or more
+of the external packagesfor your sysyem.  Some (but certainly not all) of
+those situations include (but are not limited to) the following:
+
+  1. Developing or Debugging a new/existing version of an external package.
+  2. Building an external package for a different version of Visual Studio.
+  3. Building an external package for a different processor architecture.
 
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
 hosts the package's static library (along with a few accompanying files) in
-a separate external package subdirectory. All of the package's source code
+a separate external package subdirectory.  All of the package's source code
 is kept in its own separate source code repository.  The Hercules repository
-no longer contains any source code for these external packages; only their
-static link libraries and whatever header files may be needed to call into
-the package's functions.
+no longer contains any source code for these external packages.  The Hercules
+repository only contains the package's static link libraries and whatever
+header files the package requires to call into its functions.
 
 Each external package is built separately from the Hercules emulator and then
-"installed" into the appropriate Hercules repository subdirectory.  Building
-Hercules itself should not change.
+"installed" into a directory of your choosing.  This "installation directory"
+should then be specified in your "LIB" environment variable so that Hercules
+can then find your custom built external package static libraries.
 
 Currently, there are four such external packages this Hercules 4.0 Hyperion
 links with.  These packages are the "crypto", "decNumber", "SoftFloat", and
@@ -45,13 +46,6 @@ external package repositories, eventually reducing the Hercules emulator to
 just its core functionality: accurate emulation of the System/370, ESA/390,
 and z architectures.
 
-If you wish to build a non-Intel x86 architecture version of Hercules, you
-will need to build and install all external packages for your architecture
-first, before building Hercules. For instructions on how to do this, refer
-to the BUILDING document in each package's source code repository.
-
-The procedure for building each of the external packages is outlined below.
-
 The four repositories for the external packages can be located at these URLs:
 
 
@@ -61,8 +55,9 @@ The four repositories for the external packages can be located at these URLs:
     https://github.com/Fish-Git/telnet
 
 
-More information about each of these packages can be found within each of
-the individual repositories.
+The procedure for building each of the external packages is outlined further
+below.  More information about each of the packages can be found in a README
+document within each of their respective repositories.
 
 -------------------------------------------------------------------------------
 
@@ -92,15 +87,20 @@ Windows and that you need both the x86 and x64 builds of the external packages.
 
   1.  Download and install CMake.
   2.  Make the directories to hold the source repositories.
-  3.  Download each of the four external package source repositories.
-  4.  Make work directories for each package to be used for building.
-  5.  Build and install each external package via the 'build' command.
+  3.  Make a directory where all packages should be installed into.
+  4.  Download each of the four external package source repositories.
+  5.  Make work directories for each package to be used for building.
+  6.  Build and install each external package via the 'build' command,
+      installing each of them into the directory created in step 3.
+  7.  Update your 'LIB' environment variable to point to the directory
+      where your packages where installed to.
+  8.  Build Hercules as normal.
 
 
 For the purposes of this example, it is presumed that you have downloaded the
 Hyperion repository and placed it into the \hyperion directory.  Then we will
-follow the process to build the external packages and have them installed into
-\hyperion. 
+follow the process to build the external packages and have them all installed
+into the common \extpkgs installation directory.
 
 
                             DETAILED INSTRUCTIONS
@@ -129,14 +129,20 @@ follow the process to build the external packages and have them installed into
       mkdir  \telnet
 
 
-2. Download each of the four external package source repositories from the URLs
+3. Make a directory where all packages should be installed into.
+
+      chdir  \
+      mkdir  \extpkgs
+
+
+4. Download each of the four external package source repositories from the URLs
    above.  In this example, the .zip file will be downloaded for each package.
 
    Then unzip each of the repository .zip downloads into the correspondingly
    named source repository directory you just created.
 
 
-4. Make the work directories that the build process will use:
+5. Make the work directories that the build process will use:
 
       chdir  \
       mkdir  \work
@@ -148,43 +154,52 @@ follow the process to build the external packages and have them installed into
       mkdir  \telnet
 
 
-5.  Now build each external package by making the package's "work" directory
-    become the current directory and then issuing the "build" command(*) plus
-    a few parameters, in order to build and install the package:
+6.  Now build each external package by making the package's "work" directory
+    become the current directory and then issuing the "build" command(*) to
+    build and install the package into the desired installation directory:
 
 
         chdir  \work\crypto
 
-        \repo\crypto\build  --all  --install  \hyperion\crypto
+        \repo\crypto\build  --rebuild  --all  --install  \extpkgs
 
 
     Some output will be generated, but in a few moments it will be completed.
-    OK, crypto is done!  Now simply repeat step 5 for each of the remaining
+    OK, crypto is done!  Now simply do the very same thing for all remaining
     external packages:
 
 
         chdir \work\decNumber
-        \repo\decNumber\build --all --install \hyperion\decNumber
+        \repo\decNumber\build  --rebuild  --all --install  \extpkgs
 
 
         chdir \work\SoftFloat
-        \repo\SoftFloat\build --all --install \hyperion\Softfloat
+        \repo\SoftFloat\build  --rebuild  --all --install  \extpkgs
 
 
         chdir \work\telnet
-        \repo\telnet\build --all --install \hyperion\telnet
+        \repo\telnet\build  --rebuild  --all --install  \extpkgs
+
+
+7.  Update your 'LIB' environment variable (if neccessary) to point to the
+    directory where your packages where installed into:
+
+
+        setx LIB "\extpkgs;%LIB%"
+
+
+8.  Build Hercules as normal.  (Self explanatory)
 
 
 That concludes the necessary steps to build the external packages.  You now
 have the 32-bit and 64-bit versions of the Debug and Release builds of the
 external packages.  If you desire, you may delete both the \repo and \work
-directories as they are no longer needed.
+directories as they are no longer needed.  You only need to keep the \extpkgs
+directory needed by Hercules (pointed to by your 'LIB' environment variable).
 
 If you clone the \hyperion directory or download a newer Hyperion repository
-in the future however, be sure to copy over the contents of the external
-package directories inside \hyperion to your new clone so you won't have to
-rebuild them again.  You would only need to rebuild an external package when
-it is updated or changed which they rarely are since they are fairly stable.
+in the future, there is nothing extra you need to do.  You do *NOT* need to
+rebuild the external packages ever again (unless they are updated of course). 
 
 
 ---------------
