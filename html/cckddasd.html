@@ -218,15 +218,31 @@ the other 3 space types.
 <br>
 
 The very first 512 bytes of a compressed DASD file is the <b>device header</b>.
+The device header contains an "eye-catcher" that identifies the file type
+(CKD or FBA and base or shadow):
 
 <p>
 
-The device header contains an "eye-catcher" that identifies the file type
-(CKD or FBA and base or shadow).  The device type and file size information
+<blockquote><blockquote>
+<table>
+<tr><th> Device-id <th> Dasd image type </tr>
+<tr><td> CKD_P370 <td> &nbsp;&nbsp;&nbsp; Normal (plain) CKD dasd image </tr>
+<tr><td> CKD_C370 <td> &nbsp;&nbsp;&nbsp; Compressed CKD dasd image </tr>
+<tr><td> CKD_S370 <td> &nbsp;&nbsp;&nbsp; Compressed CKD dasd Shadow file </tr>
+<tr><td> FBA_P370 <td> &nbsp;&nbsp;&nbsp; Normal (plain) FBA dasd image </tr>
+<tr><td> FBA_C370 <td> &nbsp;&nbsp;&nbsp; Compressed FBA dasd image </tr>
+<tr><td> FBA_S370 <td> &nbsp;&nbsp;&nbsp; Compressed FBA dasd Shadow file </tr>
+</table>
+</blockquote></blockquote>
+
+<p><br>
+
+The device type and file size information
 is also specified in this header.  The header is identical to the header used
 for uncompressed CKD files except for the eye-catcher:
 
 <p>
+
 <table border=1 width="70%">
 
 <tr><th width="100%" colspan="16">CKD_DEVHDR</th></tr>
