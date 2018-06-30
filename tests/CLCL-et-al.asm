@@ -381,6 +381,7 @@ TST4LOOP EQU   *
 *
          L     R7,EXLEN           (len-1)
          L     R11,FAILMASK       (failure CC)
+         SLL   R11,4              (shift to BC instr CC position)
 
          MVI   SUBTEST,X'00'      (primary TRT)
          EX    R7,TRT             TRT...
