@@ -1691,26 +1691,73 @@ int     len;                            /* Length - 1                */
 int     i;                              /* work variable             */
 int     cc = 0;                         /* Condition code            */
 BYTE    dbyte = 0, sbyte = 0;           /* Byte work areas           */
+bool    op1cpb, op2cpb;                 /* Operand crosses Page Bdy  */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-    /* Copy operand-1 data to work area */
-    ARCH_DEP( vfetchc )( op1, len, addr1, b1, regs );
+    op1cpb = ((addr1 & PAGEFRAME_PAGEMASK) != ((addr1+(len+1)) & PAGEFRAME_PAGEMASK));
+    op2cpb = ((addr2 & PAGEFRAME_PAGEMASK) != ((addr2+256)     & PAGEFRAME_PAGEMASK));
 
-    /* Copy operand-2 data to work area */
-    ARCH_DEP( vfetchc )( op2, 256-1, addr2, b2, regs );
+    /* Copy operand-1 data to work area if within same page */
+    if (!op1cpb)
+        ARCH_DEP( vfetchc )( op1, len, addr1, b1, regs );
+
+    /* Copy operand-2 data to work area if within same page */
+    if (!op2cpb)
+        ARCH_DEP( vfetchc )( op2, 256-1, addr2, b2, regs );
 
     /* Process first operand from left to right */
-    for (i=0; i <= len && sbyte == 0; i++)
+    if (unlikely( op1cpb ))
     {
-        dbyte = op1[i];
-        sbyte = op2[ dbyte ];
+        /* Operand-1 crosses a page boundary */
+
+        if (unlikely( op2cpb ))
+        {
+            /* WORST case: BOTH operands cross a page boundary */
+            for (i=0; i <= len; i++)
+            {
+                dbyte = ARCH_DEP( vfetchb )( addr1+i,     b1, regs );
+                sbyte = ARCH_DEP( vfetchb )( addr2+dbyte, b2, regs );
+                if (sbyte) break;
+            }
+        }
+        else /* Only operand-1 crosses a page boundary */
+        {
+            for (i=0; i <= len; i++)
+            {
+                dbyte = ARCH_DEP( vfetchb )( addr1+i, b1, regs );
+                sbyte = op2[ dbyte ];
+                if (sbyte) break;
+            }
+        }
+    }
+    else /* Operand-1 does NOT cross a page boundary */
+    {
+       if (unlikely( op2cpb ))
+       {
+            /* But operand-2 DOES cross a page boundary */
+            for (i=0; i <= len; i++)
+            {
+                dbyte = op1[i];
+                sbyte = ARCH_DEP( vfetchb )( addr2+dbyte, b2, regs );
+                if (sbyte) break;
+            }
+       }
+       else /* BEST case: NEITHER operand crosses a page boundary */
+       {
+            for (i=0; i <= len; i++)
+            {
+                dbyte = op1[i];
+                sbyte = op2[ dbyte ];
+                if (sbyte) break;
+            }
+       }
     }
 
     /* Test for non-zero function byte */
     if (sbyte != 0)
     {
-        addr1 += i - 1;
+        addr1 += i;
         addr1 &= ADDRESS_MAXWRAP( regs );
 
         /* Store address of argument byte in register 1 */
