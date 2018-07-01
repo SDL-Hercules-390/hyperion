@@ -795,6 +795,14 @@
   "             The default temporary model is \"\" (null string).\n"
 
 #define modpath_cmd_desc        "Set module load path"
+#define modpath_cmd_help        \
+                                \
+  "Format:      MODPATH   <path>\n"                                             \
+  "\n"                                                                          \
+  "Where <path> specifies the relative or absolute path of the directory\n"     \
+  "where dynamic modules should be loaded from. Only one directory may be\n"    \
+  "specified. Enclose the path within double quotes if it contains blanks.\n"
+
 #define mtapeinit_cmd_desc      "Control tape initialization"
 #define mtapeinit_cmd_help      \
                                 \
@@ -1763,7 +1771,7 @@ COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )
 COMMAND( "memfree",                 memfree_cmd,            SYSCONFIG,          NULL,                   NULL                )
 #endif /*defined(HAVE_MLOCKALL)*/
-COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       NULL                )
+COMMAND( "modpath",                 modpath_cmd,            SYSCONFIG,          modpath_cmd_desc,       modpath_cmd_help    )
 COMMAND( "ldmod",                   ldmod_cmd,              SYSCMDNOPER,        ldmod_cmd_desc,         ldmod_cmd_help      )
 COMMAND( "lsdep",                   lsdep_cmd,              SYSCMDNOPER,        lsdep_cmd_desc,         NULL                )
 COMMAND( "lsequ",                   lsequ_cmd,              SYSCMDNOPER,        lsequ_cmd_desc,         NULL                )

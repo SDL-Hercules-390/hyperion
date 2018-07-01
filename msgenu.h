@@ -1097,7 +1097,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01527 "HDL: module %s loaded"
 #define HHC01528 "HDL: unloading module %s..."
 #define HHC01529 "HDL: module %s unloaded"
-#define HHC01530 "HDL: usage: %s <path>"
+#define HHC01530 "HDL: incorrect syntax. Enter \"help %s\" for assistance"
 #define HHC01531 "HDL: name = %s, type = %s, flags = (%sunloadable, %sforced)"
 #define HHC01532 "HDL:  symbol = %s, loadcount = %d%s, owner = %s"
 #define HHC01533 "HDL:  devtypes = %s"

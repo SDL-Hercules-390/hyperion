@@ -242,7 +242,7 @@ To start Hercules enter this command at the host's command prompt:
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
               [ -d ]                    |  [ --daemon ]
               [ -e ]                    |  [ --externalgui ]
-              [ -p <em>dyndir</em> ]             |  [ --modpath=<em>dyndir</em> ]
+              [ -p <em>modpath</em> ]            |  [ --modpath=<em>modpath</em> ]
               [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
               [ -s <em>symbol=value</em> ] ...   |  [ --defsym=<em>symbol=value</em> ] ...
               [ -v ]                    |  [ --verbose ]
@@ -282,11 +282,14 @@ where:
 
             indicates Hercules is to be controlled by an External GUI.
         <p>
-        <dt><code><em>dyndir</em></code><p><dd>
+        <dt><code><em>modpath</em></code><p><dd>
 
             is the directory from which dynamic modules are to be loaded.
-            The default depends on the host platform on which Hercules
-            is being run. This option overrides the default.
+            This option overrides both the
+            <code><a href="hercconf.html#MODPATH">MODPATH</a></code>
+            configuration file statement and system defaults.
+            The system default varies depending on the host platform
+            where Hercules is being run.
         <p>
         <dt><code><em>modname</em></code><p><dd>
 

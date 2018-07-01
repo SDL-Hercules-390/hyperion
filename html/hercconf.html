@@ -1139,14 +1139,13 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MODPATH"></a>
 <dt><code>MODPATH &nbsp; <em>path</em></code>
 <dd><p>
-    Specifies the path where dynamic modules are loaded from. When a modpath
-    statement is specified, the path on the modpath statement is searched before
-    the default path is searched. When a relative path is specified is interpreted
-    as a relative path within the default search path, if an absolute path is
-    specified is interpreted as such.
+    Specifies the relative or absolute path of the directory where dynamic
+    modules should be loaded from. Only one directory may be specified. The
+    path should be enclosed within double quotes if it contains any blanks.
     <p>
-    The default MODPATH is hercules, which means modules are loaded from the
-    directory hercules within the default LD_LIBRARY_PATH.
+    When a modpath statement is specified, the path on the modpath statement
+    is searched before the default path is searched. The system default varies
+    depending on the host platform where Hercules is being run.
     <p>
 
 <a name="MOUNTED_TAPE_REINIT"></a>

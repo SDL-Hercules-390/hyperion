@@ -7461,7 +7461,7 @@ int modpath_cmd( int argc, char* argv[], char* cmdline )
 
     if (argc > 2)
     {
-        // "HDL: usage: %s <path>"
+        // "HDL: incorrect syntax. Enter \"help %s\" for assistance"
         WRMSG( HHC01530, "E", argv[0] );
         return -1;
     }
