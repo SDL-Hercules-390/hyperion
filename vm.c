@@ -647,7 +647,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         if (dev->ccwtrace || dev->ccwstep)
         {
             WRMSG(HHC01952, "I",
-                    SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    LCSS_DEVNUM,
                     (ioparm.type == HCPSBIOP_WRITE ? "WRITE" : "READ"),
                     blknum, absadr, blksize);
         }

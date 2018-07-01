@@ -175,7 +175,7 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
       // HHC03991 "%1d:%04X %s: %s"
-      WRMSG( HHC03991, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+      WRMSG( HHC03991, "D", LCSS_DEVNUM, dev->typname,
              buf );
       va_end( vargs );
     }
@@ -204,7 +204,7 @@ static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* f
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
       // HHC03991 "%1d:%04X %s: %s"
-      WRMSG( HHC03991, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+      WRMSG( HHC03991, "D", LCSS_DEVNUM, dev->typname,
              buf );
       va_end( vargs );
       if (what == 3) {
@@ -543,7 +543,7 @@ char charmac[24];
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03801 "%1d:%04X %s: Register guest MAC address %s"
-            WRMSG(HHC03801, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG(HHC03801, "I", LCSS_DEVNUM, dev->typname,
                       charmac );
             return 0;
         }
@@ -553,7 +553,7 @@ char charmac[24];
               "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
     // HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
-    WRMSG(HHC03802, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG(HHC03802, "E", LCSS_DEVNUM, dev->typname,
               charmac );
     return -1;
 }
@@ -581,7 +581,7 @@ UNREFERENCED(type);
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03803 "%1d:%04X %s: Unregistered guest MAC address %s"
-            WRMSG(HHC03803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG(HHC03803, "I", LCSS_DEVNUM, dev->typname,
                       charmac );
             return 0;
         }
@@ -593,7 +593,7 @@ UNREFERENCED(type);
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
         // HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
-        WRMSG(HHC03804, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG(HHC03804, "W", LCSS_DEVNUM, dev->typname,
                   charmac );
     }
     return 1;
@@ -676,14 +676,14 @@ char charip4[48];
         grp->ipaddr4[0].type = IPV4_TYPE_INUSE;
         hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
         // HHC03805 "%1d:%04X %s: Register guest IP address %s"
-        WRMSG(HHC03805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname,
                 charip4 );
         return 0;
     }
     /* Oh dear, the table of IPv4 addresses is full. */
     hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
     // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
-    WRMSG(HHC03806, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname,
             charip4 );
     return -1;
 }
@@ -705,14 +705,14 @@ char charip4[48];
         memset(grp->ipaddr4[0].addr, 0, 4);
         hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
         // HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
-        WRMSG(HHC03807, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname,
                 charip4 );
         return 0;
     }
     /* Oh dear, the IPv4 address wasn't registered. */
     hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
     // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
-    WRMSG(HHC03808, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname,
           charip4 );
     return 1;
 }
@@ -759,7 +759,7 @@ char charip6[48];
             grp->ipaddr6[i].type = IPV6_TYPE_INUSE;
             hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
             // HHC03805 "%1d:%04X %s: Registered guest IP address %s"
-            WRMSG(HHC03805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname,
                     charip6 );
             return 0;
         }
@@ -767,7 +767,7 @@ char charip6[48];
     /* Oh dear, the IPv6 address table is full. */
     hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
     // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
-    WRMSG(HHC03806, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname,
           charip6 );
     return -1;
 }
@@ -792,7 +792,7 @@ char charip6[48];
             memset(grp->ipaddr6[i].addr, 0, 16);
             hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
             // HHC03807 "%1d:%04X %s: Unregistered guest IP address %s"
-            WRMSG(HHC03807, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname,
                     charip6 );
             return 0;
         }
@@ -800,7 +800,7 @@ char charip6[48];
     /* Oh dear, the IPv6 address wasn't registered. */
     hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
     // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
-    WRMSG(HHC03808, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname,
             charip6 );
     return 1;
 }
@@ -933,13 +933,13 @@ static int qeth_errnum_msg( DEVBLK* dev, OSA_GRP* grp,
 
     // HHC03996 "%1d:%04X %s: %s: %s"
     if (str_caseless_eq( "E", msgcode ))
-        WRMSG( HHC03996, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC03996, "E", LCSS_DEVNUM,
             dev->typname, grp->ttifname, msgbuf );
     else if (str_caseless_eq( "W", msgcode ))
-        WRMSG( HHC03996,      "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC03996,      "W", LCSS_DEVNUM,
             dev->typname, grp->ttifname, msgbuf );
     else
-        WRMSG( HHC03996, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC03996, "I", LCSS_DEVNUM,
             dev->typname, grp->ttifname, msgbuf );
 
     return errnum;
@@ -955,36 +955,36 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
     STRLCPY( not, grp->enabled ? "" : "not " );
 
     // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-    WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+    WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
         grp->ttifname, not, "MAC address", grp->tthwaddr );
 
     if (grp->l3 && grp->ttipaddr)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
              grp->ttifname, not, "IP address", grp->ttipaddr );
 
         if(grp->ttnetmask)
         {
-            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
                 grp->ttifname, not, "subnet mask", grp->ttnetmask );
         }
     }
 
     if (grp->l3 && grp->ttipaddr6)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
             grp->ttifname, not, "IP address", grp->ttipaddr6 );
 
         if(grp->ttpfxlen6)
         {
-            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
                 grp->ttifname, not, "prefix length", grp->ttpfxlen6 );
         }
     }
 
     if (grp->ttmtu)
     {
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
             grp->ttifname, not, "MTU", grp->ttmtu );
     }
 
@@ -992,10 +992,10 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
     if (grp->l3 && grp->enabled)
     {
         // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
             grp->ttifname, not, "drive MAC address", grp->szDriveMACAddr );
         // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
             grp->ttifname, not, "drive IP address", grp->szDriveLLAddr6 );
     }
 #endif /* defined(ENABLE_IPV6) */
@@ -1203,7 +1203,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             if (uMTU > grp->uMTU)
             {
                 // "%1d:%04X %s: %s: Requested MTU %s too large; decreasing to %s bytes"
-                WRMSG( HHC03809, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC03809, "W", LCSS_DEVNUM,
                     dev->typname, grp->ttifname, ttmtu, grp->ttmtu );
                 free( ttmtu );
                 ttmtu = NULL;
@@ -1353,7 +1353,7 @@ U16 offph;
 
             default:
                 // HHC03991 "%1d:%04X %s: %s"
-                WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG( HHC03991, "W", LCSS_DEVNUM, dev->typname,
                     "Unknown PUK_TYPE_xxx (CM Unknown)" );
                 net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
                 rsp_bhr = NULL;
@@ -1419,7 +1419,7 @@ U16 offph;
 
             default:
                 // HHC03991 "%1d:%04X %s: %s"
-                WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG( HHC03991, "W", LCSS_DEVNUM, dev->typname,
                     "Unknown PUK_TYPE_xxx (ULP Unknown)" );
                 net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
                 rsp_bhr = NULL;
@@ -2337,7 +2337,7 @@ U16 offph;
 
     default:
         // HHC03991 "%1d:%04X %s: %s"
-        WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03991, "W", LCSS_DEVNUM, dev->typname,
                "Unknown RHH_TYPE_xxx" );
         net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
 
@@ -2458,7 +2458,7 @@ U16 reqtype;
     default:
 
         // HHC03991 "%1d:%04X %s: %s"
-        WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG( HHC03991, "W", LCSS_DEVNUM, dev->typname,
                "Unknown IDX_ACT_TYPE_xxx" );
         net_data_trace( dev, (BYTE*)iea, ieasize, FROM_GUEST, 'I', "IEA?", 0 );
 
@@ -2548,7 +2548,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
         sbal->sbale[sb].flags[3]);
 
     // HHC03985 "%1d:%04X %s: %s"
-    WRMSG( HHC03985, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG( HHC03985, "E", LCSS_DEVNUM,
         dev->typname, errmsg );
 
     return qrc;
@@ -2697,7 +2697,7 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
         else
         {
             // HHC00912 "%1d:%04X %s: error reading from device %s: %d %s"
-            WRMSG(HHC00912, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC00912, "E", LCSS_DEVNUM,
                 dev->typname, grp->ttifname, errnum, strerror( errnum ));
             errno = errnum;
             PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EIOERR );
@@ -2740,7 +2740,7 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
     }
 
     // HHC00911 "%1d:%04X %s: error writing to device %s: %d %s"
-    WRMSG(HHC00911, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG(HHC00911, "E", LCSS_DEVNUM,
         dev->typname, grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
     PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_EIOERR );
@@ -3017,7 +3017,7 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
             else                                      STRLCPY( cPktType, "unknown" );
 
             // "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
-            WRMSG( HHC00986, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC00986, "D", LCSS_DEVNUM,
                 dev->typname, dev->buflen, cPktType, grp->ttifname );
             net_data_trace( dev, (BYTE*) &o2hdr, sizeof( o2hdr ), TO_GUEST, 'D', "L2 hdr", 0 );
             net_data_trace( dev,    dev->buf,     dev->buflen,    TO_GUEST, 'D', "Frame ", 0 );
@@ -3102,7 +3102,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         if (grp->debugmask & DBGQETHPACKET)
         {
             // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
-            WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            WRMSG(HHC00913, "D", LCSS_DEVNUM, dev->typname,
                             cPktType, dev->buflen, grp->ttifname );
 /*          net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );        */
             net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Packet", 0 );
@@ -3195,7 +3195,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
             if (grp->debugmask & DBGQETHPACKET)
             {
                 // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
-                WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00913, "D", LCSS_DEVNUM, dev->typname,
                                 cPktType, datalen, "layer 3 response" );
 /*              net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );    */
                 net_data_trace( dev, bufdata, datalen, TO_GUEST, 'D', "Packet", 0 );
@@ -3273,7 +3273,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
            header to not span multiple Storage Blocks so we should
            should probably support it, but at the moment we do not. */
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
-            WRMSG( HHC03983, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG( HHC03983, "W", LCSS_DEVNUM,
                 dev->typname, "** FIXME ** OSA_HDR spans multiple storage blocks." );
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
@@ -3387,7 +3387,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 else                                      STRLCPY( cPktType, "unknown" );
 
                 // HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
-                WRMSG(HHC00985, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00985, "D", LCSS_DEVNUM, dev->typname,
                                      pktlen, cPktType, grp->ttifname );
                 net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Frame ", 0 );
             }
@@ -3400,7 +3400,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 else                   STRLCPY( cPktType, " ????" );
 
                 // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
-                WRMSG( HHC00910, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC00910, "D", LCSS_DEVNUM,
                     dev->typname, cPktType, pktlen, grp->ttifname );
                 net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Packet", 0 );
             }
@@ -3572,7 +3572,7 @@ int did_read = 0;                       /* Indicates some data read  */
             if (grp->debugmask & DBGQETHDROP)
             {
                 // "%1d:%04X %s: %s: Input dropped: %s"
-                WRMSG( HHC03810, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC03810, "W", LCSS_DEVNUM,
                     dev->typname, grp->ttifname, "No available buffers" );
             }
         }
@@ -3984,7 +3984,7 @@ U32 mask4;
         else
         {
             // HHC00918 "%1d:%04X %s: option %s unknown or specified incorrectly"
-            WRMSG(HHC00918, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, argv[i] );
+            WRMSG(HHC00918, "E", LCSS_DEVNUM, dev->typname, argv[i] );
         }
     }
 
@@ -4006,13 +4006,13 @@ U32 mask4;
         if (!grp->ttipaddr)
         {
             // "%1d:%04X %s: Required parameter '%s' missing"
-            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "ipaddr" );
+            WRMSG( HHC00917, "E", LCSS_DEVNUM, dev->typname, "ipaddr" );
             retcode = -1;
         }
         if (!grp->ttnetmask && !grp->ttpfxlen)
         {
             // "%1d:%04X %s: Required parameter '%s' missing"
-            WRMSG( HHC00917, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, "netmask" );
+            WRMSG( HHC00917, "E", LCSS_DEVNUM, dev->typname, "netmask" );
             retcode = -1;
         }
 #endif /*defined( OPTION_W32_CTCI )*/
@@ -4028,7 +4028,7 @@ U32 mask4;
                 memcmp( mac, zeromac, IFHWADDRLEN ) == 0)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "hwaddr", grp->tthwaddr );
                 retcode = -1;
                 free(grp->tthwaddr);
@@ -4052,7 +4052,7 @@ U32 mask4;
             else
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 retcode = -1;
                 free(grp->ttipaddr);
@@ -4085,7 +4085,7 @@ U32 mask4;
             if (netmask2prefix( grp->ttnetmask, &new_ttpfxlen ) != 0)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "netmask", grp->ttnetmask );
                 retcode = -1;
                 free( grp->ttnetmask );
@@ -4103,7 +4103,7 @@ U32 mask4;
                     strcmp( new_ttpfxlen, grp->ttpfxlen ) != 0)
                 {
                     // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
-                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    WRMSG(HHC03998, "W", LCSS_DEVNUM, dev->typname,
                         "prefix length", "netmask" );
                 }
                 /* Use consistent prefix length */
@@ -4118,7 +4118,7 @@ U32 mask4;
             if (prefix2netmask( grp->ttpfxlen, &new_ttnetmask ) != 0)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 retcode = -1;
                 free( grp->ttpfxlen  );
@@ -4136,7 +4136,7 @@ U32 mask4;
                     strcmp( new_ttnetmask, grp->ttnetmask ) != 0)
                 {
                     // HHC03998 "%1d:%04X %s: %s inconsistent with %s"
-                    WRMSG(HHC03998, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    WRMSG(HHC03998, "W", LCSS_DEVNUM, dev->typname,
                         "netmask", "prefix length" );
                 }
                 /* Use consistent netmask */
@@ -4162,7 +4162,7 @@ U32 mask4;
             else
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "ipaddr6", grp->ttipaddr6 );
                 retcode = -1;
                 free( grp->ttipaddr6 );
@@ -4182,7 +4182,7 @@ U32 mask4;
             if (work_rc != 0 || pfxlen > 128 )
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "ipaddr6", grp->ttpfxlen6 );
                 retcode = -1;
                 free( grp->ttpfxlen6 );
@@ -4200,7 +4200,7 @@ U32 mask4;
             if (uMTU < QETH_MIN_MTU)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG( HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                WRMSG( HHC00916, "E", LCSS_DEVNUM,
                     dev->typname, "mtu", grp->ttmtu );
                 retcode = -1;
                 free( grp->ttmtu );
@@ -4214,7 +4214,7 @@ U32 mask4;
             if(sscanf(grp->ttchpid, "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                WRMSG(HHC00916, "E", LCSS_DEVNUM, dev->typname,
                                      "chpid", grp->ttchpid );
                 retcode = -1;
                 free(grp->ttchpid);
@@ -4507,7 +4507,7 @@ U32 num;                                /* Number of bytes to move   */
     if (grp->debugmask & DBGQETHCCW)
     {
         // "%1d:%04X %s: Code %02X: Flags %02X: Chained %02X: Count %08X: PrevCode %02X: CCWseq %d"
-        WRMSG( HHC03992, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC03992, "D", LCSS_DEVNUM,
             dev->typname, code, flags, chained, count, prevcode, ccwseq );
     }
 
@@ -4775,7 +4775,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", LCSS_DEVNUM,
                 dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
 //          MPC_DUMP_DATA( "SID", iobuf, num, ' ' );
         }
@@ -4803,7 +4803,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", LCSS_DEVNUM,
                 dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
 //          MPC_DUMP_DATA( "RCD", iobuf, num, ' ' );
         }
@@ -4923,7 +4923,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "D", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "D", LCSS_DEVNUM,
                 dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
 //          MPC_DUMP_DATA( "RNI", iobuf, num, ' ' );
         }
@@ -5130,7 +5130,7 @@ U32 num;                                /* Number of bytes to move   */
                         if (grp->debugmask & DBGQETHDROP)
                         {
                             // "%1d:%04X %s: %s: Input dropped: %s"
-                            WRMSG( HHC03810, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            WRMSG( HHC03810, "W", LCSS_DEVNUM,
                                 dev->typname, grp->ttifname, "No available queues" );
                         }
                     }
@@ -5190,7 +5190,7 @@ U32 num;                                /* Number of bytes to move   */
     if (grp->debugmask & DBGQETHCCW)
     {
         // "%1d:%04X %s: More %02X: Status %02X: Residual %08X"
-        WRMSG( HHC03993, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC03993, "D", LCSS_DEVNUM,
             dev->typname, *more, *unitstat, *residual );
     }
 
@@ -6144,7 +6144,7 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &buflen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
-        WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        WRMSG(HHC00900, "E", LCSS_DEVNUM, dev->typname,
                              etext, strerror(errno) );
         return NULL;
     }

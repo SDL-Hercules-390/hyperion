@@ -866,7 +866,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
         if (sysblk.sysgdev != NULL)
         {
             // "%1d:%04X COMM: duplicate SYSG console definition"
-            WRMSG( HHC01025, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            WRMSG( HHC01025, "E", LCSS_DEVNUM );
             return -1;
         }
     }
@@ -916,7 +916,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
             )
             {
                 // "%1d:%04X COMM: %s has an invalid GROUP name length or format; must be a valid luname or poolname"
-                WRMSG( HHC01091, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, argv[ac] );
+                WRMSG( HHC01091, "E", LCSS_DEVNUM, argv[ac] );
                 return -1;
             }
             else
@@ -936,7 +936,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                 else
                 {
                     // "%1d:%04X COMM: %s has an invalid GROUP name length or format; must be a valid luname or poolname"
-                    WRMSG(HHC01091, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, argv[ac] );
+                    WRMSG(HHC01091, "E", LCSS_DEVNUM, argv[ac] );
                     return -1;
                 }
             }
@@ -950,7 +950,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
             if ((dev->acc_ipaddr = inet_addr( argv[ac] )) == (in_addr_t)(-1))
             {
                 // "%1d:%04X COMM: option %s value %s invalid"
-                WRMSG( HHC01007, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01007, "E", LCSS_DEVNUM,
                       "IP address", argv[ac] );
                 return -1;
             }
@@ -966,7 +966,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
                     {
                         // "%1d:%04X COMM: option %s value %s invalid"
-                        WRMSG( HHC01007, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01007, "E", LCSS_DEVNUM,
                               "mask value", argv[ac] );
                         return -1;
                     }
@@ -977,7 +977,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     if (argc > 0)   // too many args?
                     {
                         // "%1d:%04X COMM: unrecognized parameter %s"
-                        WRMSG( HHC01019, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01019, "E", LCSS_DEVNUM,
                               argv[ac] );
                         return -1;
                     }
@@ -1073,7 +1073,7 @@ static int  constty_init_handler( DEVBLK* dev, int argc, char* argv[] )
             if ((dev->acc_ipaddr = inet_addr( argv[ac] )) == (in_addr_t)(-1))
             {
                 // "%1d:%04X COMM: option %s value %s invalid"
-                WRMSG( HHC01007, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, "IP address", argv[ac] );
+                WRMSG( HHC01007, "E", LCSS_DEVNUM, "IP address", argv[ac] );
                 return -1;
             }
             else
@@ -1088,7 +1088,7 @@ static int  constty_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     if ((dev->acc_ipmask = inet_addr( argv[ac] )) == (in_addr_t)(-1))
                     {
                         // "%1d:%04X COMM: option %s value %s invalid"
-                        WRMSG( HHC01007, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, "mask value", argv[ac] );
+                        WRMSG( HHC01007, "E", LCSS_DEVNUM, "mask value", argv[ac] );
                         return -1;
                     }
 
@@ -1098,7 +1098,7 @@ static int  constty_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     if (argc > 0)   // too many args?
                     {
                         // "%1d:%04X COMM: unrecognized parameter %s"
-                        WRMSG( HHC01019, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, argv[ac] );
+                        WRMSG( HHC01019, "E", LCSS_DEVNUM, argv[ac] );
                         return -1;
                     }
                 }
@@ -2019,7 +2019,7 @@ static int  loc3270_hresume( DEVBLK* dev, void* file )
                 char buf[40];
                 MSGBUF( buf, "malloc(%d)", (int) len );
                 // "%1d:%04X COMM: error in function %s: %s"
-                WRMSG( HHC01000, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, buf,
+                WRMSG( HHC01000, "E", LCSS_DEVNUM, buf,
                       strerror( errno ));
                 return 0;
             }
@@ -2390,7 +2390,7 @@ static void loc3270_input( TELNET* tn, const BYTE* buffer, U32 size )
     {
         char clientid[32];
         MSGBUF( clientid, "%1d:%04X",
-            SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            LCSS_DEVNUM );
         // "%s COMM: buffer overflow"
         WRMSG( HHC02912, "E", clientid );
         tn->overflow = TRUE;
@@ -2432,7 +2432,7 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
         {
             char clientid[32];
             MSGBUF( clientid, "%1d:%04X",
-                SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                LCSS_DEVNUM );
             // "%s COMM: buffer overflow"
             WRMSG( HHC02912, "E", clientid );
             tn->overflow = TRUE;
@@ -2491,7 +2491,7 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
     {
         char clientid[32];
         MSGBUF( clientid, "%1d:%04X",
-            SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            LCSS_DEVNUM );
         // "%s COMM: buffer overrun"
         WRMSG( HHC02913, "E", clientid );
         tn->overrun = TRUE;
@@ -2547,7 +2547,7 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
     {
         if (HSO_ECONNRESET == HSO_errno)
             // "%1d:%04X COMM: client %s devtype %4.4X: connection reset"
-            WRMSG( HHC01090, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG( HHC01090, "I", LCSS_DEVNUM,
                   inet_ntoa(dev->ipaddr), dev->devtype );
         else
             // "%s COMM: recv() failed: %s"
@@ -2560,7 +2560,7 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
     if (rc == 0)
     {
         // "%1d:%04X COMM: client %s devtype %4.4X: connection closed by client"
-        WRMSG( HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG( HHC01022, "I", LCSS_DEVNUM,
               inet_ntoa(dev->ipaddr), dev->devtype );
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
@@ -2718,7 +2718,7 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
     /* If zero bytes were received then client has closed connection */
     if (num == 0)
     {
-        WRMSG( HHC01022, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG( HHC01022, "I", LCSS_DEVNUM,
                inet_ntoa(dev->ipaddr), dev->devtype );
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
@@ -2983,7 +2983,7 @@ size_t                  logoheight;     /* Logo file number of lines */
         dev->tn = tn;       /* tn  <--  dev */
 
         STRLCPY( orig_cid, tn->clientid );
-        MSGBUF( tn->clientid, "%1d:%04X", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        MSGBUF( tn->clientid, "%1d:%04X", LCSS_DEVNUM );
         // "%s COMM: %s negotiations complete; ttype = '%s'"
         WRMSG( HHC02914, "I", tn->clientid, orig_cid, tn->ttype );
 
@@ -3093,7 +3093,7 @@ size_t                  logoheight;     /* Logo file number of lines */
     // "%1d:%04X COMM: client %s devtype %4.4X: connected"
     // (Note: "MSG_C" used so message does NOT end with newline)
     MSGBUF( devmsg, MSG_C( HHC01018, "I",
-              SSID_TO_LCSS(dev->ssid), dev->devnum, clientip, dev->devtype ));
+              LCSS_DEVNUM, clientip, dev->devtype ));
     LOGMSG( "%s\n", devmsg );
 
     /* Negotiations are complete; we can begin accepting data now */
@@ -4285,7 +4285,7 @@ BYTE    stat;                           /* Unit status               */
                 snprintf( (char*)dev->buf, dev->bufsize,
                         // "%1d:%04X COMM: enter console input"
                         // (Note: "MSG" macro used so message DOES end with newline)
-                        MSG( HHC01026, "A", SSID_TO_LCSS( dev->ssid ), dev->devnum)
+                        MSG( HHC01026, "A", LCSS_DEVNUM)
                 );
                 len = (int) strlen( (char*)dev->buf );
 

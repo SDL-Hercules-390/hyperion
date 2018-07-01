@@ -482,7 +482,7 @@ DLL_EXPORT int hdl_freemod( const char* name )
                         release_lock( &hdl_lock );
                         // "HDL: module %s bound to device %1d:%04X"
                         WRMSG( HHC01522, "E", (*ppmod)->name,
-                            SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                            LCSS_DEVNUM );
                         return -1;
                     }
                 }

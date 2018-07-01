@@ -1027,7 +1027,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "I", LCSS_DEVNUM,
                 dev->typname, "SID", FormatSID( iobuf, num, buf, sizeof( buf )));
         }
         break;
@@ -1054,7 +1054,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "I", LCSS_DEVNUM,
                 dev->typname, "RCD", FormatRCD( iobuf, num, buf, sizeof( buf )));
         }
         break;
@@ -1156,7 +1156,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
-            WRMSG(HHC03995, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG(HHC03995, "I", LCSS_DEVNUM,
                 dev->typname, "RNI", FormatRNI( iobuf, num, buf, sizeof( buf )));
         }
         break;

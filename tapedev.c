@@ -673,7 +673,7 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
                 if (dev->tmh->tapeloaded( dev, NULL, 0 ))
                 {
                     release_lock( &dev->lock );
-                    WRMSG( HHC02243, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    WRMSG( HHC02243, "E", LCSS_DEVNUM );
                     return -1;
                 }
             }
@@ -1011,7 +1011,7 @@ int gettapetype_byname (DEVBLK *dev)
         {
             regerror (rc, &regwrk, errbfr, 1024);
             // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
-            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regcomp()", errbfr);
+            WRMSG(HHC00205, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), "regcomp()", errbfr);
             return -1;
         }
 
@@ -1021,7 +1021,7 @@ int gettapetype_byname (DEVBLK *dev)
             regerror (rc, &regwrk, errbfr, 1024);
             regfree ( &regwrk );
             // "%1d:%04X Tape file '%s', type '%s': error in function '%s': '%s'"
-            WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), "regexec()", errbfr);
+            WRMSG(HHC00205, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), "regexec()", errbfr);
             return -1;
         }
 
@@ -1193,7 +1193,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
         if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
         {
             // "%1d:%04X Tape file '%s', type '%s': format type is not determinable, presumed '%s'"
-            WRMSG(HHC00220, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), fmttab[i].short_descr );
+            WRMSG(HHC00220, "W", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), fmttab[i].short_descr );
         }
     }
 
@@ -1205,7 +1205,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
     {
         // "%1d:%04X Tape file '%s', type '%s': format type '%s'"
-        WRMSG(HHC00221, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), descr);
+        WRMSG(HHC00221, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), descr);
     }
 
     return 0;   // (success)
@@ -1383,7 +1383,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 #endif
 
 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-#define  _HHC00223E() WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], msg)
+#define  _HHC00223E() WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], msg)
 
     /* Process remaining options */
     rc = 0;
@@ -1394,7 +1394,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         {
         case TDPARM_NONE:
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "unrecognized");
+            WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "unrecognized");
             optrc = -1;
             break;
 
@@ -1440,7 +1440,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "method out of range");
+                WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "method out of range");
                 optrc = -1;
                 break;
             }
@@ -1459,7 +1459,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "level out of range");
+                WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "level out of range");
                 optrc = -1;
                 break;
             }
@@ -1478,7 +1478,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
                 // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-                WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "chunksize out of range");
+                WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "chunksize out of range");
                 optrc = -1;
                 break;
             }
@@ -1696,7 +1696,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
         default:
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
-            WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "parse error");
+            WRMSG(HHC00223, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "parse error");
             optrc = -1;
             break;
 
@@ -1707,7 +1707,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         else
         {
             // "%1d:%04X Tape file '%s', type '%s': option '%s' accepted"
-            WRMSG(HHC00222, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
+            WRMSG(HHC00222, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), argv[i]);
         }
 
     } // end for (i = 1; i < argc; i++)
@@ -1933,7 +1933,7 @@ void UpdateDisplay( DEVBLK *dev )
         dev->prev_tapemsg = strdup( msgbfr );
 
         // "%1d:%04X Tape file '%s', type '%s': display '%s'"
-        WRMSG(HHC00224, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), msgbfr );
+        WRMSG(HHC00224, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), msgbfr );
     }
 #if defined(OPTION_SCSI_TAPE)
     else
@@ -2158,13 +2158,13 @@ void ReqAutoMount( DEVBLK *dev )
         if ( unmountreq )
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
-            WRMSG(HHC00226, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00226, "I", LCSS_DEVNUM, dev->filename,
                             TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
         if ( mountreq )
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
-            WRMSG(HHC00227, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00227, "I", LCSS_DEVNUM, dev->filename,
                             TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
         }
     }

@@ -237,7 +237,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRMSG (HHC00701, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00701, "W", LCSS_DEVNUM, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -254,7 +254,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00702, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00702, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->ckdcyls = fetch_fw (cyls);
@@ -266,7 +266,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRMSG (HHC00703, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00703, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->numdevchar = rc;
@@ -283,7 +283,7 @@ init_retry:
         dev->devtype = fetch_hw (dev->devchar + 3);
     else if (dev->devtype != fetch_hw (dev->devchar + 3))
     {
-        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
+        WRMSG (HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
     }
 
@@ -294,7 +294,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRMSG (HHC00705, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00705, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->numdevid = rc;
@@ -310,7 +310,7 @@ init_retry:
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRMSG (HHC00706, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+        WRMSG (HHC00706, "S", LCSS_DEVNUM, dev->devtype);
         return -1;
     }
 
@@ -321,7 +321,7 @@ init_retry:
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRMSG (HHC00707, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, cu ? cu : dev->ckdtab->cu);
+        WRMSG (HHC00707, "S", LCSS_DEVNUM, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
 
@@ -341,7 +341,7 @@ init_retry:
 
     /* Log the device geometry */
     if (!dev->batch)
-    WRMSG (HHC00708, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, dev->ckdcyls,
+    WRMSG (HHC00708, "I", LCSS_DEVNUM, dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
     dev->connecting = 0;
@@ -482,7 +482,7 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRMSG (HHC00701, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG (HHC00701, "W", LCSS_DEVNUM, dev->filename);
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -496,7 +496,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00709, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00709, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->fbaorigin = fetch_fw (origin);
@@ -507,7 +507,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00710, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00710, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->fbanumblk = fetch_fw (numblks);
@@ -518,7 +518,7 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00711, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00711, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->fbablksiz = fetch_fw (blksiz);
@@ -531,7 +531,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRMSG (HHC00705, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00705, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->numdevid = rc;
@@ -539,7 +539,7 @@ init_retry:
     /* Check the device type */
     if (dev->devtype != fetch_hw (dev->devid + 4))
     {
-        WRMSG (HHC00704, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
+        WRMSG (HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw (dev->devid + 4));
         return -1;
     }
 
@@ -550,7 +550,7 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRMSG (HHC00703, "S", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00703, "S", LCSS_DEVNUM);
         return -1;
     }
     dev->numdevchar = rc;
@@ -566,7 +566,7 @@ init_retry:
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        WRMSG (HHC00706, "S", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+        WRMSG (HHC00706, "S", LCSS_DEVNUM, dev->devtype);
         return -1;
     }
 
@@ -574,7 +574,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    WRMSG (HHC00712, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, (int)dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00712, "I", LCSS_DEVNUM, dev->filename, (int)dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
 
@@ -618,7 +618,7 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
                         SHRD_START, 0, &code, NULL);
     if (rc < 0)
     {
-        WRMSG(HHC00713, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC00713, "E", LCSS_DEVNUM);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -674,7 +674,7 @@ int      rc;                            /* Return code               */
     rc = clientRequest (dev, NULL, 0, SHRD_END, 0, NULL, NULL);
     if (rc < 0)
     {
-        WRMSG(HHC00714, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC00714, "E", LCSS_DEVNUM);
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -778,7 +778,7 @@ read_retry:
     {
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00715, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, trk);
+        WRMSG(HHC00715, "E", LCSS_DEVNUM, trk);
         return -1;
     }
 
@@ -790,7 +790,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00715, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, trk);
+        WRMSG(HHC00715, "E", LCSS_DEVNUM, trk);
         return -1;
     }
 
@@ -993,7 +993,7 @@ read_retry:
     {
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00716, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp);
+        WRMSG(HHC00716, "E", LCSS_DEVNUM, blkgrp);
         return -1;
     }
 
@@ -1005,7 +1005,7 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00716, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, blkgrp);
+        WRMSG(HHC00716, "E", LCSS_DEVNUM, blkgrp);
         return -1;
     }
 
@@ -1092,7 +1092,7 @@ FWORD    usage;                         /* Usage buffer              */
     rc = clientRequest (dev, usage, 4, SHRD_USED, 0, NULL, NULL);
     if (rc != 4)
     {
-        WRMSG (HHC00717, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00717, "E", LCSS_DEVNUM);
         return -1;
     }
     return fetch_fw (usage);
@@ -1162,7 +1162,7 @@ write_retry:
     rc = clientSend (dev, hdr, dev->buf + dev->bufupdlo, len);
     if (rc < 0)
     {
-        WRMSG(HHC00718, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur);
+        WRMSG(HHC00718, "E", LCSS_DEVNUM, dev->bufcur);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1174,7 +1174,7 @@ write_retry:
     if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR))
     {
         if (rc < 0 && retries--) goto write_retry;
-        WRMSG(HHC00719, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bufcur, code, status);
+        WRMSG(HHC00719, "E", LCSS_DEVNUM, dev->bufcur, code, status);
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1258,7 +1258,7 @@ HWORD              comp;                /* Returned compression parm */
 #endif // defined( HAVE_SYS_UN_H )
             if (dev->fd < 0)
             {
-                WRMSG (HHC00720, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socket()", strerror(HSO_errno));
+                WRMSG (HHC00720, "E", LCSS_DEVNUM, "socket()", strerror(HSO_errno));
                 return -1;
             }
 #if defined( HAVE_SYS_UN_H )
@@ -1273,7 +1273,7 @@ HWORD              comp;                /* Returned compression parm */
             dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
             if (dev->fd < 0)
             {
-                WRMSG (HHC00720, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socket()", strerror(HSO_errno));
+                WRMSG (HHC00720, "E", LCSS_DEVNUM, "socket()", strerror(HSO_errno));
                 return -1;
             }
             iserver.sin_family      = AF_INET;
@@ -1290,7 +1290,7 @@ HWORD              comp;                /* Returned compression parm */
         if (rc >= 0)
         {
             if (!dev->batch)
-              WRMSG(HHC00721, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+              WRMSG(HHC00721, "I", LCSS_DEVNUM, dev->filename);
 
             /* Request device connection */
             flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
@@ -1323,7 +1323,7 @@ HWORD              comp;                /* Returned compression parm */
 
         }
         else if (!retry)
-            WRMSG(HHC00722, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, strerror(HSO_errno));
+            WRMSG(HHC00722, "E", LCSS_DEVNUM, dev->filename, strerror(HSO_errno));
 
         if (rc < 0 && retry) usleep (20000);
 
@@ -1493,7 +1493,7 @@ retry:
     /* Process return code */
     if (rc < 0)
     {
-        WRMSG(HHC00723, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, cmd, flag, strerror(HSO_errno));
+        WRMSG(HHC00723, "E", LCSS_DEVNUM, cmd, flag, strerror(HSO_errno));
         return -1;
     }
 
@@ -1519,7 +1519,7 @@ int      len;                           /* Response length           */
     /* Return error if not connected */
     if (dev->fd < 0)
     {
-        WRMSG(HHC00724, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+        WRMSG(HHC00724, "E", LCSS_DEVNUM, dev->filename);
         return -1;
     }
 
@@ -1528,7 +1528,7 @@ int      len;                           /* Response length           */
     if (rc < 0)
     {
         if (rc != -ENOTCONN)
-            WRMSG(HHC00725, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, strerror(-rc));
+            WRMSG(HHC00725, "E", LCSS_DEVNUM, strerror(-rc));
         return rc;
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
@@ -1539,7 +1539,7 @@ int      len;                           /* Response length           */
     /* Handle remote logical error */
     if (code & SHRD_ERROR)
     {
-        WRMSG(HHC00726, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, code, status, buf);
+        WRMSG(HHC00726, "E", LCSS_DEVNUM, code, status, buf);
         len = 0;
     }
 
@@ -2249,7 +2249,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Process return code */
     if (rc < 0)
     {
-        WRMSG(HHC00729, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, id, strerror(HSO_errno));
+        WRMSG(HHC00729, "E", LCSS_DEVNUM, id, strerror(HSO_errno));
         dev->shrd[ix]->disconnect = 1;
     }
 
@@ -2287,7 +2287,7 @@ int i;                                  /* Loop index                */
        This is *not* a good situation */
     if (dev->shioactive == id)
     {
-        WRMSG(HHC00730, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, id, dev->reserved ? "reserved" : "");
+        WRMSG(HHC00730, "W", LCSS_DEVNUM, id, dev->reserved ? "reserved" : "");
 
         /* Call the I/O release exit if reserved by this client */
         if (dev->reserved && dev->hnd->release)
@@ -2318,7 +2318,7 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->shiocond);
     }
 
-    WRMSG(HHC00731, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, id);
+    WRMSG(HHC00731, "I", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, id);
 
     /* Release the SHRD block */
     close_socket (dev->shrd[ix]->fd);
@@ -2467,7 +2467,7 @@ char            threadname[40];
     dev->shrdconn++;
     SHRD_SET_HDR (dev->shrd[ix]->hdr, cmd, flag, devnum, id, len);
 
-    WRMSG (HHC00733, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, ipaddr, id);
+    WRMSG (HHC00733, "I", LCSS_DEVNUM, ipaddr, id);
 
     /* Return if device thread already active */
     if (dev->shrdtid)
@@ -2482,7 +2482,7 @@ char            threadname[40];
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    MSGBUF(threadname, "Shared device(%1d:%04X)", SSID_TO_LCSS(dev->ssid), dev->devnum);
+    MSGBUF(threadname, "Shared device(%1d:%04X)", LCSS_DEVNUM);
     WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
 
     while (dev->shrdconn)
@@ -2584,7 +2584,7 @@ char            threadname[40];
             rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
             if (rc < 0)
             {
-                WRMSG(HHC00734, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
+                WRMSG(HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
                 obtain_lock (&dev->lock);

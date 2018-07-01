@@ -777,7 +777,7 @@ int     i;                              /* Loop index                */
 
     DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
-        DelDevnumFastLookup(SSID_TO_LCSS(dev->ssid),dev->devnum);
+        DelDevnumFastLookup(LCSS_DEVNUM);
 
     /* Close file or socket */
     if ((dev->fd > 2) || dev->console)
@@ -790,7 +790,7 @@ int     i;                              /* Loop index                */
         if (MLVL(DEBUG))
         {
             // "%1d:%04X %s detached"
-            WRMSG (HHC01465, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msg);
+            WRMSG (HHC01465, "I", LCSS_DEVNUM, msg);
         }
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
@@ -875,7 +875,7 @@ int     cpu;
         if (dev->allocated)
         {
             if (sysblk.arch_mode == ARCH_370_IDX)
-                detach_device(SSID_TO_LCSS(dev->ssid), dev->devnum);
+                detach_device(LCSS_DEVNUM);
             else
                 detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan, dev->devnum);
         }

@@ -494,7 +494,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
     if ((flags & CCW_FLAGS_CD) &&
         !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
-        WRMSG(HHC00212, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), code);
+        WRMSG(HHC00212, "E", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), code);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         return;
     }
@@ -1636,7 +1636,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             /* (because i hate typing) */
 #define  _HHC00205E(_file,_reason) \
             { \
-                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
+                WRMSG(HHC00205, "E", LCSS_DEVNUM, _file, TTYPSTR(dev->tapedevt), "auto-mount", _reason); \
                 build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
                 release_lock (&dev->lock); \
                 break; \
@@ -1695,7 +1695,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            WRMSG(HHC00214, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->tapedevt));
+            WRMSG(HHC00214, "E", LCSS_DEVNUM, newfile, TTYPSTR(dev->tapedevt));
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);
             break;
@@ -1737,7 +1737,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             {
                 /* (an error message explaining the reason for the
                     failure should hopefully already have been issued) */
-                WRMSG(HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile,
+                WRMSG(HHC00205, "E", LCSS_DEVNUM, newfile,
                       TTYPSTR(dev->tapedevt), "auto-unmount", "see previous message");
             }
             else
@@ -1751,9 +1751,9 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                WRMSG(HHC00216, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, newfile, TTYPSTR(dev->tapedevt));
+                WRMSG(HHC00216, "I", LCSS_DEVNUM, newfile, TTYPSTR(dev->tapedevt));
             else
-                WRMSG(HHC00215, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt));
+                WRMSG(HHC00215, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt));
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1890,7 +1890,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
-            WRMSG(HHC00217, "I", SSID_TO_LCSS(dev->ssid), dev->devnum
+            WRMSG(HHC00217, "I", LCSS_DEVNUM
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
                 ,TTYPSTR(dev->tapedevt)
                 ,locblock
@@ -3444,7 +3444,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             STRLCPY( dev->tapemsg1, msg1 );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
+                WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
         break;
@@ -3469,7 +3469,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             STRLCPY( dev->tapemsg1, msg1 );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
+                WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
         break;
@@ -3521,7 +3521,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00219, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1, dev->tapemsg2 );
+                WRMSG(HHC00219, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1, dev->tapemsg2 );
         }
         else
         {
@@ -3529,7 +3529,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                WRMSG(HHC00218, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg2 );
+                WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg2 );
         }
 
         break;

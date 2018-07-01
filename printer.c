@@ -174,7 +174,7 @@ int rc;
                 dev->fd = -1;
                 close_socket( fd );
                 // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
-                WRMSG( HHC01100, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01100, "I", LCSS_DEVNUM,
                     dev->bs->clientname, dev->bs->clientip, dev->bs->spec );
             }
 
@@ -189,7 +189,7 @@ int rc;
         if ((rc = write( dev->fd, buf, len )) < len)
         {
             // "%1d:%04X %s: error in function %s: %s"
-            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01250, "E", LCSS_DEVNUM,
                    "Printer", "write()",
                    rc < 0 ? strerror( errno )
                           : "incomplete record written");
@@ -542,7 +542,7 @@ static void* spthread (void* arg)
         char thread_name[32];
         thread_name[sizeof(thread_name)-1] = 0;
         snprintf( thread_name, sizeof(thread_name),
-            "spthread %1d:%04X", SSID_TO_LCSS(dev->ssid), dev->devnum );
+            "spthread %1d:%04X", LCSS_DEVNUM );
         SET_THREAD_NAME( thread_name );
     }
 
@@ -613,7 +613,7 @@ static void* spthread (void* arg)
         dev->fd = -1;
         close_socket( fd );
         // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
-        WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC01100, "I", LCSS_DEVNUM,
                dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
     }
 
@@ -681,7 +681,7 @@ static void on_new_fcb( DEVBLK* dev )
     if (!chan1line)
     {
         // "%1d:%04X Printer: channel 1 is undefined"
-        WRMSG( HHC01111, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01111, "W", LCSS_DEVNUM );
     }
 }
 
@@ -709,7 +709,7 @@ static void on_new_cctape( DEVBLK* dev )
     if (!chan1line)
     {
         // "%1d:%04X Printer: channel 1 is undefined"
-        WRMSG( HHC01111, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01111, "W", LCSS_DEVNUM );
     }
 }
 
@@ -888,7 +888,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     if (argc == 0 || strlen( argv[0] ) >= sizeof( dev->filename ))
     {
         // "%1d:%04X Printer: file name missing or invalid"
-        WRMSG( HHC01101, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01101, "E", LCSS_DEVNUM );
         return -1;
     }
 
@@ -904,7 +904,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     )
     {
         // "%1d:%04X Printer: unsupported device type %04X"
-        WRMSG( HHC01105, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01105, "E", LCSS_DEVNUM,
             dev->devtype );
         return -1;
     }
@@ -974,7 +974,7 @@ int   fcbsize;                          /* FCB size for this devtype */
             if (dev->devtype != 0x1403)
             {
                 // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01109, "E", LCSS_DEVNUM,
                     "option 'cctape'", dev->devtype );
                 return -1;
             }
@@ -1008,7 +1008,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                 {
                     j = 8;
                     // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    WRMSG( HHC01103, "E", LCSS_DEVNUM,
                         iarg + 1, argv[ iarg ], j );
                     return -1;
                 }
@@ -1031,7 +1031,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = ptr+1 - argv[ iarg ];
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1053,7 +1053,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                             {
                                 j = ptr+1 - argv[ iarg ];
                                 // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                                WRMSG( HHC01103, "E", LCSS_DEVNUM,
                                     iarg + 1, argv[ iarg ], j );
                                 return -1;
                             }
@@ -1068,7 +1068,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                         {
                             j = ptr+1 - argv[iarg];
                             // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            WRMSG( HHC01103, "E", LCSS_DEVNUM,
                                 iarg + 1, argv[ iarg ], j );
                             return -1;
                         }
@@ -1086,7 +1086,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                         {
                             j = ptr+1 - argv[ iarg ];
                             // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            WRMSG( HHC01103, "E", LCSS_DEVNUM,
                                 iarg + 1, argv[ iarg ], j );
                             return -1;
                         }
@@ -1102,7 +1102,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                 {
                     j = ptr+1 - argv[ iarg ];
                     // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                    WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                    WRMSG( HHC01103, "E", LCSS_DEVNUM,
                         iarg + 1, argv[ iarg ], j );
                     return -1;
                 }
@@ -1123,7 +1123,7 @@ int   fcbsize;                          /* FCB size for this devtype */
             if (dev->devtype == 0x1403)
             {
                 // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01109, "E", LCSS_DEVNUM,
                     "option 'fcb'", dev->devtype );
                 return -1;
             }
@@ -1154,7 +1154,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = ptr+1 - argv[ iarg ];
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1175,7 +1175,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = ptr+1 - argv[ iarg ];
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1222,7 +1222,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = ptr+1 - argv[iarg];
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1245,7 +1245,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = ptr+1 - argv[iarg];
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1266,7 +1266,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                         {
                             j = ptr+1 - argv[ iarg ];
                             // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            WRMSG( HHC01103, "E", LCSS_DEVNUM,
                                 iarg + 1, argv[ iarg ], j );
                             return -1;
                         }
@@ -1275,7 +1275,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                         {
                             j = ptr+1 - argv[ iarg ];
                             // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                            WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                            WRMSG( HHC01103, "E", LCSS_DEVNUM,
                                 iarg + 1, argv[ iarg ], j );
                             return -1;
                         }
@@ -1288,7 +1288,7 @@ int   fcbsize;                          /* FCB size for this devtype */
                     {
                         j = 5;
                         // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                        WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC01103, "E", LCSS_DEVNUM,
                             iarg + 1, argv[ iarg ], j );
                         return -1;
                     }
@@ -1304,13 +1304,13 @@ int   fcbsize;                          /* FCB size for this devtype */
             if (dev->devtype == 0x1403)
             {
                 // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01109, "E", LCSS_DEVNUM,
                     "option 'fcbcheck'", dev->devtype );
                 return -1;
             }
 
             // "%1d:%04X %s: option '%s' has been deprecated"
-            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01251, "W", LCSS_DEVNUM,
                 "Printer", "fcbcheck" );
 
             dev->fcbcheck = 1;
@@ -1322,7 +1322,7 @@ int   fcbsize;                          /* FCB size for this devtype */
             if (dev->devtype == 0x1403)
             {
                 // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01109, "E", LCSS_DEVNUM,
                     "option 'index'", dev->devtype );
                 return -1;
             }
@@ -1339,14 +1339,14 @@ int   fcbsize;                          /* FCB size for this devtype */
             {
                 j = ptr+1 - argv[iarg];
                 // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01103, "E", LCSS_DEVNUM,
                     iarg + 1, argv[ iarg ], j );
                 return -1;
             }
             if (dev->devtype == 0x3203)
             {
                 // "%1d:%04X Printer: Indexing accepted and ignored for 3203-5"
-                WRMSG( HHC01110, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC01110, "W", LCSS_DEVNUM );
             }
             continue;
         }
@@ -1365,7 +1365,7 @@ int   fcbsize;                          /* FCB size for this devtype */
             {
                 j = ptr+1 - argv[iarg];
                 // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01103, "E", LCSS_DEVNUM,
                     iarg + 1, argv[ iarg ], j );
                 return -1;
             }
@@ -1386,7 +1386,7 @@ int   fcbsize;                          /* FCB size for this devtype */
             {
                 j = ptr + 1 - argv[ iarg ];
                 // "%1d:%04X Printer: argument %d parameter '%s' position %d is invalid"
-                WRMSG( HHC01103, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01103, "E", LCSS_DEVNUM,
                     iarg + 1, argv[ iarg ], j );
                 return -1;
             }
@@ -1397,7 +1397,7 @@ int   fcbsize;                          /* FCB size for this devtype */
         {
             dev->append = 1;
             // "%1d:%04X %s: option '%s' has been deprecated"
-            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01251, "W", LCSS_DEVNUM,
                 "Printer", "noclear" );
             continue;
         }
@@ -1408,13 +1408,13 @@ int   fcbsize;                          /* FCB size for this devtype */
             if (dev->devtype == 0x1403)
             {
                 // HHC01109 "%1d:%04X Printer: option %s incompatible with device type %04X"
-                WRMSG( HHC01109, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01109, "E", LCSS_DEVNUM,
                     "option 'nofcbcheck'", dev->devtype );
                 return -1;
             }
 
             // "%1d:%04X %s: option '%s' has been deprecated"
-            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01251, "W", LCSS_DEVNUM,
                 "Printer", "nofcbcheck" );
 
             //dev->fcbcheck = 0;      // IGNORED
@@ -1434,7 +1434,7 @@ int   fcbsize;                          /* FCB size for this devtype */
         }
 
         // "%1d:%04X Printer: argument %d parameter '%s' is invalid"
-        WRMSG( HHC01102, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01102, "E", LCSS_DEVNUM,
             iarg + 1, argv[ iarg ]);
         return -1;
 
@@ -1460,7 +1460,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     if (sockdev && dev->crlf)
     {
         // "%1d:%04X Printer: option %s is incompatible"
-        WRMSG( HHC01104, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01104, "E", LCSS_DEVNUM,
             "sockdev/crlf" );
         return -1;
     }
@@ -1468,7 +1468,7 @@ int   fcbsize;                          /* FCB size for this devtype */
     if (sockdev && dev->append)
     {
         // "%1d:%04X Printer: option %s is incompatible"
-        WRMSG( HHC01104, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01104, "E", LCSS_DEVNUM,
             "sockdev/noclear" );
         return -1;
     }
@@ -1538,7 +1538,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         if ((fd = HOPEN( dev->filename, open_flags, S_IRUSR | S_IWUSR | S_IRGRP )) < 0)
         {
             // "%1d:%04X %s: error in function %s: %s"
-            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01250, "E", LCSS_DEVNUM,
                 "Printer", "HOPEN()", strerror( errno ));
             return -1;
         }
@@ -1548,7 +1548,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
             if ((filesize = lseek( fd, 0, SEEK_END )) < 0)
             {
                 // "%1d:%04X %s: error in function %s: %s"
-                WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01250, "E", LCSS_DEVNUM,
                     "Printer", "lseek()", strerror( errno ));
                 return -1;
             }
@@ -1573,13 +1573,13 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     if (pid < 0)
     {
         // "%1d:%04X %s: error in function %s: %s"
-        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01250, "E", LCSS_DEVNUM,
             "Printer", "fork()", strerror( errno ));
         return -1;
     }
 
     // "%1d:%04X Printer: pipe receiver with pid %d starting"
-    WRMSG( HHC01106, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, pid );
+    WRMSG( HHC01106, "I", LCSS_DEVNUM, pid );
     dev->ptpcpid = pid;
 
 #else /* !defined( _MSVC_ ) */
@@ -1588,7 +1588,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     if ((rc = create_pipe( pipefd )) < 0)
     {
         // "%1d:%04X %s: error in function %s: %s"
-        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01250, "E", LCSS_DEVNUM,
             "Printer", "create_pipe()", strerror( errno ));
         return -1;
     }
@@ -1597,7 +1597,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     if ((pid = fork()) < 0)
     {
         // "%1d:%04X COMM: outgoing call failed during %s command: %s"
-        WRMSG( HHC01005, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01005, "E", LCSS_DEVNUM,
             "fork()", strerror( errno ));
         close_pipe( pipefd[0] );
         close_pipe( pipefd[1] );
@@ -1608,7 +1608,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     if (pid == 0)
     {
         // "%1d:%04X Printer: pipe receiver with pid %d starting"
-        WRMSG( HHC01106, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, getpid() );
+        WRMSG( HHC01106, "I", LCSS_DEVNUM, getpid() );
 
         /* Close the write end of the pipe */
         close_pipe( pipefd[1] );
@@ -1619,7 +1619,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
             if ((rc = dup2( pipefd[0], STDIN_FILENO )) != STDIN_FILENO)
             {
                 // "%1d:%04X %s: error in function %s: %s"
-                WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01250, "E", LCSS_DEVNUM,
                     "Printer", "dup2()", strerror( errno ));
                 close_pipe( pipefd[0] );
                 _exit( 127 );
@@ -1641,13 +1641,13 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         if (rc == 0)
         {
             // "%1d:%04X Printer: pipe receiver with pid %d terminating"
-            WRMSG( HHC01107, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01107, "I", LCSS_DEVNUM,
                 getpid() );
         }
         else
         {
             // "%1d:%04X Printer: unable to execute file %s: %s"
-            WRMSG( HHC01108, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01108, "E", LCSS_DEVNUM,
                 dev->filename+1, strerror( errno ));
         }
 
@@ -1694,7 +1694,7 @@ int fd = dev->fd;
         close (fd);
 #endif /* defined( _MSVC_ ) */
         // "%1d:%04X Printer: pipe receiver with pid %d terminating"
-        WRMSG (HHC01107, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->ptpcpid);
+        WRMSG (HHC01107, "I", LCSS_DEVNUM, dev->ptpcpid);
         dev->ptpcpid = 0;
     }
     else
@@ -1703,7 +1703,7 @@ int fd = dev->fd;
         {
             close_socket (fd);
             // "%1d:%04X Printer: client %s, IP %s disconnected from device %s"
-            WRMSG (HHC01100, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
+            WRMSG (HHC01100, "I", LCSS_DEVNUM, dev->bs->clientname, dev->bs->clientip, dev->bs->spec);
         }
         else
         {

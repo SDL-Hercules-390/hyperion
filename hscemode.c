@@ -1398,32 +1398,32 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             // "device %1d:%04X: status %s"
             MSGBUF(buf, "busy %s", sysid);
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, buf);
         }
         if (dev->reserved)
         {
             MSGBUF(buf, "reserved %s", sysid);
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, buf);
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, buf);
         }
         if (dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "suspended" );
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, "suspended" );
         }
         if ((dev->scsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "I/O pending" );
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, "I/O pending" );
         }
         if ((dev->pciscsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "PCI pending" );
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, "PCI pending" );
         }
         if ((dev->attnscsw.flag3 & SCSW3_SC_PEND) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "Attn pending" );
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, "Attn pending" );
         }
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
         {
-            WRMSG(HHC00880, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "lock held" );
+            WRMSG(HHC00880, "I", LCSS_DEVNUM, "lock held" );
         }
     }
 

@@ -522,7 +522,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 
     len+=snprintf(buf+len,buflen-len,
         "%s%1d:%04X D/T%04X\n",
-        hdr, SSID_TO_LCSS(dev->ssid), dev->devnum, dev->devtype);
+        hdr, LCSS_DEVNUM, dev->devtype);
 
     if (ARCH_370_IDX == sysblk.arch_mode)
     {

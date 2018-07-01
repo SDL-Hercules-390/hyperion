@@ -791,7 +791,7 @@ BYTE    area[64];                       /* Data display area         */
         format_iobuf_data (addr, area, dev, count);
 
     // "%1d:%04X CHAN: ccw %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s"
-    WRMSG (HHC01315, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC01315, "I", LCSS_DEVNUM,
             ccw[0], ccw[1], ccw[2], ccw[3],
             ccw[4], ccw[5], ccw[6], ccw[7], area);
 
@@ -831,7 +831,7 @@ static void display_sense( const DEVBLK* dev )
         );
 
     // "%1d:%04X CHAN: sense %s"
-    WRMSG( HHC01314, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, snsbuf );
+    WRMSG( HHC01314, "I", LCSS_DEVNUM, snsbuf );
 }
 
 /*-------------------------------------------------------------------*/
@@ -848,15 +848,15 @@ BYTE    area[64];                       /* Data display area         */
     switch(type)
     {
         case PF_IDAW1:
-            WRMSG (HHC01302, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG (HHC01302, "I", LCSS_DEVNUM,
                                   (U32)addr, count, area);
             break;
         case PF_IDAW2:
-            WRMSG (HHC01303, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG (HHC01303, "I", LCSS_DEVNUM,
                                   (U64)addr, count, area);
             break;
         case PF_MIDAW:
-            WRMSG (HHC01301, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG (HHC01301, "I", LCSS_DEVNUM,
                                   flag, count, (U64)addr, area);
     }
 }
@@ -868,7 +868,7 @@ BYTE    area[64];                       /* Data display area         */
 static void
 display_csw (const DEVBLK *dev, const BYTE csw[])
 {
-    WRMSG (HHC01316, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC01316, "I", LCSS_DEVNUM,
             csw[0],
             csw[4], csw[5], csw[6], csw[7],
             csw[1], csw[2], csw[3]);
@@ -894,7 +894,7 @@ display_scsw (const DEVBLK *dev, const SCSW scsw)
         }
 
         default:
-            WRMSG (HHC01317, "I", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            WRMSG (HHC01317, "I", LCSS_DEVNUM,
                    scsw.flag0, scsw.flag1, scsw.flag2, scsw.flag3,
                    scsw.unitstat, scsw.chanstat,
                    scsw.count[0], scsw.count[1],
@@ -1155,7 +1155,7 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
         cc = 0;         /* Available */
 
     if (CCW_TRACE_OR_STEP( dev ))
-        WRMSG (HHC01318, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
+        WRMSG (HHC01318, "I", LCSS_DEVNUM, cc);
 
     /* Complete unlock sequence */
     release_lock(&dev->lock);
@@ -1179,7 +1179,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
 
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: halt I/O"
-        WRMSG( HHC01329, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01329, "I", LCSS_DEVNUM );
 
     OBTAIN_INTLOCK( regs );
     obtain_lock( &dev->lock );
@@ -1256,7 +1256,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             // "%1d:%04X CHAN: HIO modification executed: cc=1"
-            WRMSG( HHC01330, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            WRMSG( HHC01330, "I", LCSS_DEVNUM );
             display_csw( dev, psa->csw );
         }
     }
@@ -1631,7 +1631,7 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     /* Display the condition code */
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: test I/O: cc=%d"
-        WRMSG( HHC01318, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, cc );
+        WRMSG( HHC01318, "I", LCSS_DEVNUM, cc );
 
     /* Release remaining locks */
     release_lock(&dev->lock);
@@ -1705,7 +1705,7 @@ perform_clear_subchan (DEVBLK *dev)
 
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: clear completed"
-        WRMSG( HHC01308, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01308, "I", LCSS_DEVNUM );
 
 #if defined( OPTION_SHARED_DEVICES )
     /* Wake up any waiters if the device isn't reserved */
@@ -1732,7 +1732,7 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: clear subchannel"
-        WRMSG( HHC01331, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01331, "I", LCSS_DEVNUM );
 
 #if defined( _FEATURE_IO_ASSIST )
     if (1
@@ -1882,7 +1882,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     /* Trace HALT */
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: halt subchannel: cc=%d"
-        WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 0 );
+        WRMSG( HHC01300, "I", LCSS_DEVNUM, 0 );
 
     /* Queue pending I/O interrupt and update status */
     queue_io_interrupt_and_update_status_locked(dev,TRUE);
@@ -1932,7 +1932,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
 
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: halt subchannel"
-        WRMSG( HHC01332, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01332, "I", LCSS_DEVNUM );
 
     OBTAIN_INTLOCK( regs );
     obtain_lock( &dev->lock );
@@ -1965,7 +1965,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     {
         if (CCW_TRACE_OR_STEP( dev ))
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
-            WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 1 );
+            WRMSG( HHC01300, "I", LCSS_DEVNUM, 1 );
         release_lock( &dev->lock );
         RELEASE_INTLOCK( regs );
         return 1;
@@ -1978,7 +1978,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     {
         if (CCW_TRACE_OR_STEP( dev ))
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
-            WRMSG( HHC01300, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, 2 );
+            WRMSG( HHC01300, "I", LCSS_DEVNUM, 2 );
         release_lock( &dev->lock );
         RELEASE_INTLOCK( regs );
         return 2;
@@ -2747,7 +2747,7 @@ int cc;                                 /* Return code               */
 
     /* If tracing, write trace message */
     if (CCW_TRACE_OR_STEP( dev ))
-        WRMSG (HHC01333, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, cc);
+        WRMSG (HHC01333, "I", LCSS_DEVNUM, cc);
 
     release_lock (&dev->lock);
 
@@ -3868,7 +3868,7 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 
     if (CCW_TRACE_OR_STEP( dev ))
         // "%1d:%04X CHAN: attention"
-        WRMSG( HHC01305, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01305, "I", LCSS_DEVNUM );
 
     /*****************************************************************/
     /* The release and obtain locks around OBTAIN_INTOCK have been   */
@@ -4054,7 +4054,7 @@ int     rc;                             /* Return code               */
         char msgbuf[128] = {0};
         FormatORB( orb, msgbuf, sizeof( msgbuf ));
         // HHC01334 "%1d:%04X CHAN: ORB: %s"
-        WRMSG( HHC01334, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum, msgbuf );
+        WRMSG( HHC01334, "I", LCSS_DEVNUM, msgbuf );
     }
 
     /* Set I/O priority */
@@ -4236,13 +4236,13 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
                  * to asynchronous for 370 mode.
                  */
                 // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation successful"
-                WRMSG( HHC01321, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC01321, "I", LCSS_DEVNUM );
             }
             else
             {
                 /* Trace I/O resumption */
                 // "%1d:%04X CHAN: resumed"
-                WRMSG (HHC01311, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG (HHC01311, "I", LCSS_DEVNUM );
             }
         }
 
@@ -4394,7 +4394,7 @@ execute_halt:
 
             if (tracethis && !dev->ccwstep)
                 // "%1d:%04X CHAN: halt completed"
-                WRMSG( HHC01309, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC01309, "I", LCSS_DEVNUM );
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4413,7 +4413,7 @@ execute_halt:
 
             if (CCW_TRACING_ACTIVE( dev, tracethis ))
                 // "%1d:%04X CHAN: attention completed"
-                WRMSG( HHC01307, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC01307, "I", LCSS_DEVNUM );
 
             return execute_ccw_chain_fast_return( iobuf, &iobuf_initial, NULL );
 
@@ -4770,7 +4770,7 @@ execute_halt:
                 /* Trace suspension point */
                 if (unlikely( CCW_TRACING_ACTIVE( dev, tracethis )))
                     // "%1d:%04X CHAN: suspended"
-                    WRMSG( HHC01310, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    WRMSG( HHC01310, "I", LCSS_DEVNUM );
 
                 /* Present the interrupt and return */
                 if (dev->scsw.flag3 & SCSW3_SC_PEND)
@@ -4877,7 +4877,7 @@ execute_halt:
             /* State converting from SIO synchronous to asynchronous */
             if (CCW_TRACING_ACTIVE( dev, tracethis ))
                 // "%1d:%04X CHAN: start I/O S/370 conversion to asynchronous operation started"
-                WRMSG( HHC01320, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC01320, "I", LCSS_DEVNUM );
 
             /* Update local copy of ORB */
             STORE_FW(dev->orb.ccwaddr, (ccwaddr-8));
@@ -4938,7 +4938,7 @@ execute_halt:
 
                 if (CCW_TRACING_ACTIVE( dev, tracethis ))
                     // "%1d:%04X CHAN: initial status interrupt"
-                    WRMSG( HHC01306, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    WRMSG( HHC01306, "I", LCSS_DEVNUM );
             }
         }
 
@@ -5416,7 +5416,7 @@ breakchain:
             /* Display status and residual byte count */
 
             // "%1d:%04X CHAN: stat %2.2X%2.2X, count %4.4X%s"
-            WRMSG( HHC01312, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01312, "I", LCSS_DEVNUM,
                 unitstat, chanstat, residual, area );
 
             /* Display sense bytes if unit check is indicated */
@@ -5425,7 +5425,7 @@ breakchain:
                 register BYTE* sense = dev->sense;
 
                 // "%1d:%04X CHAN: sense %2.2X%2.2X%2.2X%2.2X ...
-                WRMSG( HHC01313, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                WRMSG( HHC01313, "I", LCSS_DEVNUM,
                         sense[ 0], sense[ 1], sense[ 2], sense[ 3],
                         sense[ 4], sense[ 5], sense[ 6], sense[ 7],
                         sense[ 8], sense[ 9], sense[10], sense[11],

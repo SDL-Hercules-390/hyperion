@@ -262,7 +262,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     if (csock == -1)
     {
-        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "accept()", strerror(HSO_errno));
+        WRMSG (HHC01000, "E", LCSS_DEVNUM, "accept()", strerror(HSO_errno));
         return;
     }
 
@@ -295,7 +295,7 @@ void socket_device_connection_handler (bind_struct* bs)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         close_socket( csock );
-        WRMSG (HHC01037, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
+        WRMSG (HHC01037, "E", LCSS_DEVNUM, clientname, clientip, bs->spec);
         release_lock (&dev->lock);
         return;
     }
@@ -305,7 +305,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->fd != -1)
     {
         close_socket( csock );
-        WRMSG (HHC01038, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec,
+        WRMSG (HHC01038, "E", LCSS_DEVNUM, clientname, clientip, bs->spec,
             bs->clientname, bs->clientip);
         release_lock (&dev->lock);
         return;
@@ -328,12 +328,12 @@ void socket_device_connection_handler (bind_struct* bs)
         /* Callback says it can't accept it */
         close_socket( dev->fd );
         dev->fd = -1;
-        WRMSG (HHC01039, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
+        WRMSG (HHC01039, "E", LCSS_DEVNUM, clientname, clientip, bs->spec);
         release_lock (&dev->lock);
         return;
     }
 
-    WRMSG (HHC01040, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, clientname, clientip, bs->spec);
+    WRMSG (HHC01040, "I", LCSS_DEVNUM, clientname, clientip, bs->spec);
 
     release_lock (&dev->lock);
     device_attention (dev, CSW_DE);
@@ -447,7 +447,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     /* Error if device already bound */
     if (dev->bs)
     {
-        WRMSG (HHC01041, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->spec);
+        WRMSG (HHC01041, "E", LCSS_DEVNUM, dev->bs->spec);
         return 0;   /* (failure) */
     }
 
@@ -458,7 +458,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     {
         char buf[40];
         MSGBUF( buf, "malloc(%d)", (int)sizeof(bind_struct));
-        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
+        WRMSG (HHC01000, "E", LCSS_DEVNUM, buf, strerror(errno));
         return 0;   /* (failure) */
     }
 
@@ -469,7 +469,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     if (!(bs->spec = strdup(spec)))
     {
-        WRMSG (HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "strdup()", strerror(errno) );
+        WRMSG (HHC01000, "E", LCSS_DEVNUM, "strdup()", strerror(errno) );
         free (bs);
         return 0;   /* (failure) */
     }
@@ -519,7 +519,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
 
     release_lock( &bind_lock );
 
-    WRMSG (HHC01042, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->spec);
+    WRMSG (HHC01042, "I", LCSS_DEVNUM, dev->bs->spec);
 
     return 1;   /* (success) */
 }
@@ -538,7 +538,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     /* Error if device not bound */
     if (!(bs = dev->bs))
     {
-        WRMSG (HHC01043, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC01043, "E", LCSS_DEVNUM);
         return 0;   /* (failure) */
     }
 
@@ -551,13 +551,13 @@ int unbind_device_ex (DEVBLK* dev, int forced)
             /* Yes. Then do so... */
             close_socket( dev->fd );
             dev->fd = -1;
-            WRMSG (HHC01044, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip,
+            WRMSG (HHC01044, "I", LCSS_DEVNUM, dev->bs->clientip,
                    dev->bs->clientname, dev->bs->spec);
         }
         else
         {
             /* No. Then fail the request. */
-            WRMSG (HHC01045, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->bs->clientip,
+            WRMSG (HHC01045, "E", LCSS_DEVNUM, dev->bs->clientip,
                    dev->bs->clientname, dev->bs->spec);
             return 0;   /* (failure) */
         }
@@ -570,7 +570,7 @@ int unbind_device_ex (DEVBLK* dev, int forced)
     SIGNAL_SOCKDEV_THREAD();
     release_lock( &bind_lock );
 
-    WRMSG (HHC01046, "I",SSID_TO_LCSS(dev->ssid), dev->devnum, bs->spec);
+    WRMSG (HHC01046, "I",LCSS_DEVNUM, bs->spec);
 
     if (bs->sd != -1)
         close_socket (bs->sd);

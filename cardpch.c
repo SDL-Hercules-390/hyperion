@@ -36,7 +36,7 @@ int             rc;                     /* Return code               */
     if (rc < len)
     {
         // "%1d:%04X %s: error in function %s: %s"
-        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01250, "E", LCSS_DEVNUM,
                "Card", "write()", errno == 0 ? "incomplete"
                                              : strerror( errno ));
         dev->sense[0] = SENSE_EC;
@@ -70,14 +70,14 @@ int     i;                              /* Array subscript           */
     if (argc == 0)
     {
         // "%1d:%04X Card: filename is missing"
-        WRMSG( HHC01208, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01208, "E", LCSS_DEVNUM );
         return -1;
     }
 
     if (strlen( argv[0] ) >= sizeof( dev->filename ))
     {
         // "%1d:%04X Card: filename %s too long, maximum length is %d"
-        WRMSG( HHC01201, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, argv[0], (int) sizeof( dev->filename ) - 1 );
+        WRMSG( HHC01201, "E", LCSS_DEVNUM, argv[0], (int) sizeof( dev->filename ) - 1 );
         return -1;
     }
 
@@ -153,13 +153,13 @@ int     i;                              /* Array subscript           */
         {
             dev->append = 1;
             // "%1d:%04X %s: option '%s' has been deprecated"
-            WRMSG( HHC01251, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01251, "W", LCSS_DEVNUM,
                 "Card", "noclear" );
             continue;
         }
 
         // "%1d:%04X Card: parameter %s in argument %d is invalid"
-        WRMSG( HHC01209, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, argv[i], i+1 );
+        WRMSG( HHC01209, "E", LCSS_DEVNUM, argv[i], i+1 );
         return -1;
     }
 
@@ -206,7 +206,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
     if ((dev->fd = HOPEN( dev->filename, open_flags, S_IRUSR | S_IWUSR | S_IRGRP )) < 0)
     {
         // "%1d:%04X %s: error in function %s: %s"
-        WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC01250, "E", LCSS_DEVNUM,
             "Card", "HOPEN()", strerror( errno ));
         return -1;
     }
@@ -216,7 +216,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
         if ((filesize = lseek( dev->fd, 0, SEEK_END )) < 0)
         {
             // "%1d:%04X %s: error in function %s: %s"
-            WRMSG( HHC01250, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC01250, "E", LCSS_DEVNUM,
                 "Card", "lseek()", strerror( errno ));
             return -1;
         }

@@ -1784,7 +1784,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         else
         {
             MSGBUF( buf, "no requests pending for drive %u:%4.4X = %s.",
-                SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
+                LCSS_DEVNUM, dev->filename );
             WRMSG(HHC02275, "I", buf);
         }
     }
@@ -2459,7 +2459,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                                 grp->mac[i].addr[4],
                                 grp->mac[i].addr[5] );
                       // "%s device %1d:%04X group has registered MAC address %s"
-                      WRMSG(HHC02344, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                      WRMSG(HHC02344, "I", dev->typname, LCSS_DEVNUM,
                                 charaddr );
                       numaddr++;
                     }
@@ -2470,7 +2470,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                   {
                     hinet_ntop( AF_INET, grp->ipaddr4[0].addr, charaddr, sizeof(charaddr) );
                     // "%s device %1d:%04X group has registered IP address %s"
-                    WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    WRMSG(HHC02345, "I", dev->typname, LCSS_DEVNUM,
                             charaddr );
                     numaddr++;
                   }
@@ -2482,7 +2482,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                     {
                       hinet_ntop( AF_INET6, grp->ipaddr6[i].addr, charaddr, sizeof(charaddr) );
                       // "%s device %1d:%04X group has registered IP address %s"
-                      WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                      WRMSG(HHC02345, "I", dev->typname, LCSS_DEVNUM,
                               charaddr );
                       numaddr++;
                     }
@@ -2492,7 +2492,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                   if (numaddr == 0)
                   {
                   // "%s device %1d:%04X group has no registered MAC or IP addresses"
-                  WRMSG(HHC02346, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                  WRMSG(HHC02346, "I", dev->typname, LCSS_DEVNUM);
                   }
                 }
               }
@@ -5542,7 +5542,7 @@ int qd_cmd( int argc, char* argv[], char* cmdline )
             for (j=0; j < dev->numdevid; j++)
             {
                 if (j == 0)
-                    len = MSGBUF( buf, "%1d:%04X SNSID 00 ", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    len = MSGBUF( buf, "%1d:%04X SNSID 00 ", LCSS_DEVNUM );
                 else if (j % 16 == 0)
                 {
                     // "%s" // qd command
@@ -5563,7 +5563,7 @@ int qd_cmd( int argc, char* argv[], char* cmdline )
             for (j=0; j < dev->numdevchar; j++)
             {
                 if (j == 0)
-                    len = MSGBUF( buf, "%1d:%04X RDC   00 ", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    len = MSGBUF( buf, "%1d:%04X RDC   00 ", LCSS_DEVNUM );
                 else if (j % 16 == 0)
                 {
                     // "%s" // qd command
@@ -5586,7 +5586,7 @@ int qd_cmd( int argc, char* argv[], char* cmdline )
             for (j=0; j < num; j++)
             {
                 if (j == 0)
-                    len = sprintf( buf, "%1d:%04X RCD   00 ", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    len = sprintf( buf, "%1d:%04X RCD   00 ", LCSS_DEVNUM );
                 else if (j % 16 == 0)
                 {
                     len += sprintf( buf + len, " |%s|", cbuf );
@@ -5610,7 +5610,7 @@ int qd_cmd( int argc, char* argv[], char* cmdline )
             for (j=0; j < num; j++)
             {
                 if (j == 0)
-                    len = sprintf( buf, "%1d:%04X SNSS  00 ", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    len = sprintf( buf, "%1d:%04X SNSS  00 ", LCSS_DEVNUM );
                 else if (j % 16 == 0)
                 {
                     // "%s" // qd command
@@ -6305,7 +6305,7 @@ BYTE     unitstat, code = 0;
     if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
     {
         release_lock (&dev->lock);
-        WRMSG(HHC02298, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC02298, "E", LCSS_DEVNUM);
         return -1;
     }
 
@@ -6405,7 +6405,7 @@ BYTE     unitstat, code = 0;
 
                 if (!sLABEL)
                 {
-                    WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], "Out of memory" );
+                    WRMSG( HHC02801, "E", LCSS_DEVNUM, argv[2], "Out of memory" );
                     msg = FALSE;
                 }
                 else
@@ -6441,15 +6441,15 @@ BYTE     unitstat, code = 0;
                                             strlen(owner) == 0? "": "\"",
                                             a ? " (ASCII LABELED) ": "" );
 
-                            WRMSG( HHC02805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, msgbuf );
+                            WRMSG( HHC02805, "I", LCSS_DEVNUM, msgbuf );
                             msg = FALSE;
                         }
                         else
-                            WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                            WRMSG( HHC02806, "I", LCSS_DEVNUM );
                     }
                     else
                     {
-                        WRMSG( HHC02806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                        WRMSG( HHC02806, "I", LCSS_DEVNUM );
                     }
 
                     rc = dev->tmh->rewind( dev, &unitstat, code);
@@ -6459,7 +6459,7 @@ BYTE     unitstat, code = 0;
             }
             else
             {
-                WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], "Tape not at BOT" );
+                WRMSG( HHC02801, "E", LCSS_DEVNUM, argv[2], "Tape not at BOT" );
                 msg = FALSE;
             }
         }
@@ -6468,7 +6468,7 @@ BYTE     unitstat, code = 0;
     {
         if ( dev->readonly || dev->tdparms.logical_readonly )
         {
-            WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
+            WRMSG( HHC02804, "E", LCSS_DEVNUM );
             msg = FALSE;
         }
         else
@@ -6501,7 +6501,7 @@ BYTE     unitstat, code = 0;
         {
             if ( dev->readonly || dev->tdparms.logical_readonly )
             {
-                WRMSG( HHC02804, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG( HHC02804, "E", LCSS_DEVNUM );
                 msg = FALSE;
             }
             else
@@ -6517,20 +6517,20 @@ BYTE     unitstat, code = 0;
     {
         if ( rc >= 0 )
         {
-            WRMSG( HHC02800, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2] );
+            WRMSG( HHC02800, "I", LCSS_DEVNUM, argv[2] );
         }
         else
         {
             char msgbuf[32];
             MSGBUF( msgbuf, "rc = %d", rc );
-            WRMSG( HHC02801, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[2], msgbuf );
+            WRMSG( HHC02801, "E", LCSS_DEVNUM, argv[2], msgbuf );
         }
     }
 
     release_lock (&dev->lock);
 
-    WRMSG( HHC02802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->curfilen );
-    WRMSG( HHC02803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->blockid  );
+    WRMSG( HHC02802, "I", LCSS_DEVNUM, dev->curfilen );
+    WRMSG( HHC02803, "I", LCSS_DEVNUM, dev->blockid  );
 
     return 0;
 }

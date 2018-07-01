@@ -441,7 +441,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             dev->commadpt->in_textmode?"YES":"NO",
             dev->commadpt->in_xparmode?"YES":"NO",
             dev->commadpt->xparwwait?"YES":"NO");
-    WRMSG(HHC01049, "D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,(u_int)sz,(u_int)sz);
+    WRMSG(HHC01049, "D",LCSS_DEVNUM,txt,(u_int)sz,(u_int)sz);
     buf[0] = 0;
     for( i=0; i<sz; i++ )
     {
@@ -449,7 +449,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         {
             if( i !=0 )
             {
-                WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+                WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
                 buf[0] = 0;
             }
             MSGBUF(buf, ": %04X", (unsigned) i);
@@ -461,7 +461,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         MSGBUF(byte, "%02X",bfr[i]);
         STRLCAT( buf, byte );
     }
-    WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+    WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
 }
 
 /*-------------------------------------------------------------------*/
@@ -643,7 +643,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)sizeof(COMMADPT));
-        WRMSG(HHC01000, "E",SSID_TO_LCSS(dev->ssid),dev->devnum, buf, strerror(errno));
+        WRMSG(HHC01000, "E",LCSS_DEVNUM, buf, strerror(errno));
         return -1;
     }
     memset(dev->commadpt, 0, sizeof(COMMADPT) );
@@ -2067,19 +2067,19 @@ static BYTE commadpt_halt_or_clear( DEVBLK* dev )
 static void msg01007e(DEVBLK *dev,char *kw,char *kv)
 {
     // "%1d:%04X COMM: option %s value %s invalid"
-    WRMSG(HHC01007, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,kw,kv);
+    WRMSG(HHC01007, "E",LCSS_DEVNUM,kw,kv);
 }
 static void msg01008e(DEVBLK *dev,char *dialt,char *kw)
 {
     // "%1d:%04X COMM: missing parameter: DIAL(%s) and %s not specified"
-    WRMSG(HHC01008, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw);
+    WRMSG(HHC01008, "E",LCSS_DEVNUM,dialt,kw);
 }
 static void msg01009w(DEVBLK *dev,char *dialt,char *kw,char *kv)
 {
     // "%1d:%04X COMM: conflicting parameter: DIAL(%s) and %s=%s specified"
-    WRMSG(HHC01009, "W",SSID_TO_LCSS(dev->ssid),dev->devnum,dialt,kw,kv);
+    WRMSG(HHC01009, "W",LCSS_DEVNUM,dialt,kw,kv);
     // "%1d:%04X COMM: RPORT parameter ignored"
-    WRMSG(HHC01010, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
+    WRMSG(HHC01010, "I",LCSS_DEVNUM);
 }
 
 /*-------------------------------------------------------------------*/
@@ -2109,18 +2109,18 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     dev->devtype=0x2703;
     if(dev->ccwtrace)
     {
-        WRMSG(HHC01058,"D",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01058,"D",LCSS_DEVNUM);
     }
 
     rc=commadpt_alloc_device(dev);
     if(rc<0)
     {
-        WRMSG(HHC01011, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01011, "I",LCSS_DEVNUM);
         return(-1);
     }
     if(dev->ccwtrace)
     {
-        WRMSG(HHC01059,"D",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01059,"D",LCSS_DEVNUM);
     }
     errcnt=0;
     /*
@@ -2166,13 +2166,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         pc=parser(ptab,argv[i],&res);
         if(pc<0)
         {
-            WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
+            WRMSG(HHC01012, "E",LCSS_DEVNUM,argv[i]);
             errcnt++;
             continue;
         }
         if(pc==0)
         {
-            WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,argv[i]);
+            WRMSG(HHC01012, "E",LCSS_DEVNUM,argv[i]);
             errcnt++;
             continue;
         }
@@ -2442,7 +2442,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                     dev->commadpt->dialout=1;
                     break;
                 }
-                WRMSG(HHC01013, "E",SSID_TO_LCSS(dev->ssid),dev->devnum,res.text);
+                WRMSG(HHC01013, "E",LCSS_DEVNUM,res.text);
                 dev->commadpt->dialin=0;
                 dev->commadpt->dialout=0;
                 break;
@@ -2599,7 +2599,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     }
     if(errcnt>0)
     {
-        WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01014, "I",LCSS_DEVNUM);
         return -1;
     }
     in_temp.s_addr=dev->commadpt->lhost;
@@ -2674,7 +2674,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     commadpt_wait(dev);
     if(dev->commadpt->curpending!=COMMADPT_PEND_IDLE)
     {
-        WRMSG(HHC01015, "E",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01015, "E",LCSS_DEVNUM);
         /* Release the CA lock */
         release_lock(&dev->commadpt->lock);
         return -1;
@@ -2719,7 +2719,7 @@ static int commadpt_close_device( DEVBLK* dev )
     if (dev->ccwtrace)
     {
         // "%1d:%04X COMM: closing down"
-        WRMSG( HHC01060, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01060, "D", LCSS_DEVNUM );
     }
 
     /* Terminate current I/O thread if necessary */
@@ -2752,7 +2752,7 @@ static int commadpt_close_device( DEVBLK* dev )
     if (dev->ccwtrace)
     {
         // "%1d:%04X COMM: closed down"
-        WRMSG( HHC01061, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01061, "D", LCSS_DEVNUM );
     }
     return 0;
 }
@@ -2783,7 +2783,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
      */
     if(dev->ccwtrace)
     {
-        WRMSG(HHC01063,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,code);
+        WRMSG(HHC01063,"D",LCSS_DEVNUM,code);
     }
     obtain_lock(&dev->commadpt->lock);
     if(code != 0x06) /* for any command other than PREPARE */
@@ -2916,7 +2916,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
             *unitstat=CSW_CE|CSW_DE;
             if(dev->ccwtrace)
             {
-                WRMSG(HHC01084,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
+                WRMSG(HHC01084,"D",LCSS_DEVNUM,iobuf[0]&0x40 ? "EIB":"NO EIB");
             }
             dev->commadpt->eibmode=(iobuf[0]&0x40)?1:0;
             break;

@@ -834,8 +834,8 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
     {
         return;
     }
-    WRMSG(HHC01048,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt);
-    WRMSG(HHC01049,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,(u_int)sz,(u_int)sz);
+    WRMSG(HHC01048,"D",LCSS_DEVNUM,txt);
+    WRMSG(HHC01049,"D",LCSS_DEVNUM,txt,(u_int)sz,(u_int)sz);
     buf[0] = 0;
     for(i=0;i<sz;i++)
     {
@@ -843,7 +843,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         {
             if(i!=0)
             {
-                WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+                WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
                 buf[0] = 0;
             }
             MSGBUF(buf, ": %04X:", (unsigned) i);
@@ -855,7 +855,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         MSGBUF(byte, "%02X", bfr[i]);
         STRLCAT( buf, byte );
     }
-    WRMSG(HHC01050,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,txt,buf);
+    WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
     buf[0] = 0;
     for(i=0;i<sz;i++)
     {
@@ -863,14 +863,14 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
         {
             if(i!=0)
             {
-                WRMSG(HHC01051,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,buf);
+                WRMSG(HHC01051,"D",LCSS_DEVNUM,buf);
                 buf[0] = 0;
             }
         }
         MSGBUF(byte, "%c",(bfr[i] & 0x7f) < 0x20 ? '.' : (bfr[i] & 0x7f));
         STRLCAT( buf, byte );
     }
-    WRMSG(HHC01051,"D",SSID_TO_LCSS(dev->ssid),dev->devnum,buf);
+    WRMSG(HHC01051,"D",LCSS_DEVNUM,buf);
 }
 
 static void put_bufpool(void ** anchor, BYTE * ele) {
@@ -956,7 +956,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)sizeof(COMMADPT));
-        WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf, strerror(errno));
+        WRMSG(HHC01000, "E", LCSS_DEVNUM, buf, strerror(errno));
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
@@ -1294,7 +1294,7 @@ static BYTE commadpt_halt_or_clear( DEVBLK* dev )
 /* that is issued on multiple situations              */
 static void msg013e(DEVBLK *dev,char *kw,char *kv)
 {
-    WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,kw,kv);
+    WRMSG(HHC01007, "E", LCSS_DEVNUM,kw,kv);
 }
 /*-------------------------------------------------------------------*/
 /* Device Initialization                                             */
@@ -1321,7 +1321,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     if(dev->ccwtrace)
     {
         WRMSG(HHC01058,"D",
-            SSID_TO_LCSS(dev->ssid), dev->devnum);
+            LCSS_DEVNUM);
     }
 
     if(dev->commadpt!=NULL)
@@ -1331,13 +1331,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     rc=commadpt_alloc_device(dev);
     if(rc<0)
     {
-        WRMSG(HHC01011, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC01011, "I", LCSS_DEVNUM);
         return(-1);
     }
     if(dev->ccwtrace)
     {
         WRMSG(HHC01059,"D",
-            SSID_TO_LCSS(dev->ssid), dev->devnum);
+            LCSS_DEVNUM);
     }
     errcnt=0;
     /*
@@ -1353,13 +1353,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         pc=parser(ptab,argv[i],&res);
         if(pc<0)
         {
-            WRMSG(HHC01012, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+            WRMSG(HHC01012, "E",LCSS_DEVNUM,argv[i]);
             errcnt++;
             continue;
         }
         if(pc==0)
         {
-            WRMSG(HHC01019, "E",SSID_TO_LCSS(dev->ssid), dev->devnum,argv[i]);
+            WRMSG(HHC01019, "E",LCSS_DEVNUM,argv[i]);
             errcnt++;
             continue;
         }
@@ -1404,7 +1404,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
     }
     if(errcnt>0)
     {
-        WRMSG(HHC01014, "I",SSID_TO_LCSS(dev->ssid),dev->devnum);
+        WRMSG(HHC01014, "I",LCSS_DEVNUM);
         return -1;
     }
     dev->bufsize=256;
@@ -1486,7 +1486,7 @@ static int commadpt_close_device( DEVBLK* dev )
     if (dev->ccwtrace)
     {
         // "%1d:%04X COMM: closing down"
-        WRMSG( HHC01060, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01060, "D", LCSS_DEVNUM );
     }
 
     obtain_lock( &dev->commadpt->lock );
@@ -1508,7 +1508,7 @@ static int commadpt_close_device( DEVBLK* dev )
     if (dev->ccwtrace)
     {
         // "%1d:%04X COMM: closed down"
-        WRMSG( HHC01061, "D", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+        WRMSG( HHC01061, "D", LCSS_DEVNUM );
     }
     return 0;
 }
@@ -2118,7 +2118,7 @@ int     llsize;
     if(dev->ccwtrace)
     {
         WRMSG(HHC01063,"D",
-            SSID_TO_LCSS(dev->ssid), dev->devnum,code);
+            LCSS_DEVNUM,code);
     }
     obtain_lock(&dev->commadpt->lock);
     switch (code) {

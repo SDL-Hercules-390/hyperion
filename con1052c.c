@@ -210,7 +210,7 @@ static int con1052_init_handler( DEVBLK *dev, int argc, char *argv[] )
         if (!p)
         {
             // "%1d:%04X COMM: default command prefixes exhausted"
-            WRMSG( HHC01085, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+            WRMSG( HHC01085, "E", LCSS_DEVNUM );
             return -1;
         }
 
@@ -449,7 +449,7 @@ BYTE    c;                              /* Print character           */
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
                 // "Enter input for console %1d:%04X"
-                WRMSG( HHC00010, "A", SSID_TO_LCSS(dev->ssid), dev->devnum );
+                WRMSG( HHC00010, "A", LCSS_DEVNUM );
 
             obtain_lock( &dev->lock );
             {

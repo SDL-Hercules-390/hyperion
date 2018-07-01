@@ -37,7 +37,7 @@ void close_awstape (DEVBLK *dev)
 {
     if( dev->fd >= 0 )
     {
-        WRMSG (HHC00201, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws");
+        WRMSG (HHC00201, "I", LCSS_DEVNUM, dev->filename, "aws");
         close(dev->fd);
     }
     STRLCPY( dev->filename, TAPE_UNLOADED );
@@ -179,7 +179,7 @@ int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
     if (rc < 0)
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG( HHC00205, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+        WRMSG( HHC00205, "E", LCSS_DEVNUM,
             dev->filename, "aws", "open()", strerror( errno ));
 
         STRLCPY( dev->filename, TAPE_UNLOADED );
@@ -212,7 +212,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -225,7 +225,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "read()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -235,7 +235,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "readhdr_awstape()", blkpos, "end of file (uninitialized tape)");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "readhdr_awstape()", blkpos, "end of file (uninitialized tape)");
 
         /* Set unit exception with tape indicate (end of tape) */
         build_senseX(TAPE_BSENSE_EMPTYTAPE,dev,unitstat,code);
@@ -245,7 +245,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "readhdr_awstape()", blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "readhdr_awstape()", blkpos, "unexpected end of file");
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
         return -1;
@@ -297,7 +297,7 @@ U16             seglen;                 /* Data length of segment    */
         if (blklen + seglen > MAX_BLKLEN)
         {
             // "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x%16.16"PRIX64
-            WRMSG (HHC00202, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws",
+            WRMSG (HHC00202, "E", LCSS_DEVNUM, dev->filename, "aws",
                     (int)MAX_BLKLEN, blkpos);
 
             /* Set unit check with data check */
@@ -310,7 +310,7 @@ U16             seglen;                 /* Data length of segment    */
             && blklen + seglen > 0)
         {
             // "%1d:%04X Tape file %s, type %s: invalid tapemark at offset 0x%16.16"PRIX64
-            WRMSG (HHC00203, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", blkpos);
+            WRMSG (HHC00203, "E", LCSS_DEVNUM, dev->filename, "aws", blkpos);
 
             /* Set unit check with data check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -328,7 +328,7 @@ U16             seglen;                 /* Data length of segment    */
         if (rc < 0)
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
-            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read()", blkpos, strerror(errno));
+            WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "read()", blkpos, strerror(errno));
 
             /* Set unit check with equipment check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -339,7 +339,7 @@ U16             seglen;                 /* Data length of segment    */
         if (rc < seglen)
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
-            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "read_awstape()", blkpos, "end of file within data block");
+            WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "read_awstape()", blkpos, "end of file within data block");
 
             /* Set unit check with data check and partial record */
             build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -414,7 +414,7 @@ U16             prvblkl;                /* Length of previous chunk  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -458,7 +458,7 @@ U16             prvblkl;                /* Length of previous chunk  */
         if (rc < (int)sizeof(awshdr))
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
-            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename,
                 "aws", "write()", blkpos, strerror(errno));
             if (ENOSPC == errno)
             {
@@ -477,7 +477,7 @@ U16             prvblkl;                /* Length of previous chunk  */
         if (rc < (int)chksize)
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
-            WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename,
                 "aws", "write()", blkpos + sizeof(awshdr), strerror(errno));
             if (ENOSPC == errno)
             {
@@ -516,7 +516,7 @@ U16             prvblkl;                /* Length of previous chunk  */
     if (rc != 0)
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s, offset 0x%16.16"PRIX64": %s"
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename,
             "aws", "ftruncate()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -567,7 +567,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "lseek()", blkpos, strerror(errno));
 
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
@@ -596,7 +596,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc < (int)sizeof(awshdr))
     {
         /* Handle write error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "write()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "write()", blkpos, strerror(errno));
 
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;
@@ -615,7 +615,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rc != 0)
     {
         /* Handle write error condition */
-        WRMSG (HHC00204, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "ftruncate()", blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "aws", "ftruncate()", blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
@@ -646,7 +646,7 @@ int sync_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
     if (fdatasync( dev->fd ) < 0)
     {
         /* Log the error */
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "aws", "fdatasync()", strerror(errno));
+        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "aws", "fdatasync()", strerror(errno));
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;

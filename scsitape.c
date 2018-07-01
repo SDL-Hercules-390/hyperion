@@ -143,7 +143,7 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
     if (dev->fd < 0)
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "open_tape()", strerror(errno));
         build_senseX( TAPE_BSENSE_ITFERROR, dev, unitstat, code );
         return -1; // (FATAL error; device cannot be opened)
@@ -259,7 +259,7 @@ int finish_scsitape_open( DEVBLK *dev, BYTE *unitstat, BYTE code )
         close_tape( rc );
         errno = save_errno;
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "finish_scsitape_open(reopen)",
                 strerror(errno));
         build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
@@ -296,7 +296,7 @@ int finish_scsitape_open( DEVBLK *dev, BYTE *unitstat, BYTE code )
         close_tape( rc );
         errno = save_errno;
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTSETBLK)", strerror(errno));
         build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
         return -1; /* (fatal error) */
@@ -365,7 +365,7 @@ void close_scsitape(DEVBLK *dev)
             if ((rc = ioctl_tape ( dev->fd, MTIOCTOP, (char*)&opblk)) != 0)
             {
                 // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-                WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                WRMSG (HHC00205, "E", LCSS_DEVNUM,
                         dev->filename, "scsi", "ioctl_tape(MTREW)", strerror(errno));
             }
         }
@@ -416,7 +416,7 @@ int  rc;
     /* Handle read error condition */
 
     // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00205, "E", LCSS_DEVNUM,
             dev->filename, "scsi", "read_tape()", strerror(errno));
 
     if ( STS_NOT_MOUNTED( dev ) )
@@ -486,7 +486,7 @@ int  save_errno;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "write_tape()", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
@@ -562,7 +562,7 @@ int  rc, save_errno;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "write_scsimark()", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
@@ -697,7 +697,7 @@ struct mtop opblk;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
             dev->filename, "scsi", "ioctl_tape(MTWEOF)", strerror(errno));
 
         int_scsi_status_update( dev, 0 );
@@ -784,7 +784,7 @@ struct mtop opblk;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTFSR)", strerror(errno));
     }
     errno = save_errno;
@@ -961,7 +961,7 @@ struct mtget starting_mtget;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTBSR)", strerror(errno));
     }
     errno = save_errno;
@@ -1022,7 +1022,7 @@ struct mtop opblk;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTFSF)", strerror(errno));
     }
     errno = save_errno;
@@ -1126,7 +1126,7 @@ struct mtop opblk;
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTBSF)", strerror(errno));
     }
     errno = save_errno;
@@ -1178,7 +1178,7 @@ struct mtop opblk;
     dev->curfilen = -1;     // (because the rewind failed)
 
     // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00205, "E", LCSS_DEVNUM,
             dev->filename, "scsi", "ioctl_tape(MTREW)", strerror(errno));
 
     if ( STS_NOT_MOUNTED( dev ) )
@@ -1210,7 +1210,7 @@ struct mtop opblk;
 
         if ( dev->ccwtrace || dev->ccwstep )
             // "%1d:%04X Tape file %s, type %s: tape unloaded"
-            WRMSG (HHC00210, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, "scsi");
+            WRMSG (HHC00210, "I", LCSS_DEVNUM, dev->filename, "scsi");
 
         // PR# tape/88: no sense with 'close_scsitape'
         // attempting a rewind if the tape is unloaded!
@@ -1227,7 +1227,7 @@ struct mtop opblk;
     dev->blockid  = -1; // (because the rewind-unload failed)
 
     // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-    WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    WRMSG (HHC00205, "E", LCSS_DEVNUM,
             dev->filename, "scsi", "ioctl_tape(MTOFFL)", strerror( errno ) );
 
     if ( STS_NOT_MOUNTED( dev ) )
@@ -1287,7 +1287,7 @@ int rc;
             if ( rc < 0)
             {
                 // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-                WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                WRMSG (HHC00205, "E", LCSS_DEVNUM,
                         dev->filename, "scsi", "ioctl_tape(MTERASE)", strerror(errno));
                 build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
                 return -1;
@@ -1324,7 +1324,7 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
     if ( ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+        WRMSG (HHC00205, "E", LCSS_DEVNUM,
                 dev->filename, "scsi", "ioctl_tape(MTERASE)", strerror(errno));
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;
@@ -2006,7 +2006,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
             if ( dev->ccwtrace || dev->ccwstep )
             {
                 // "%1d:%04X Tape status retrieval timeout"
-                WRMSG( HHC00243, "W", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                WRMSG( HHC00243, "W", LCSS_DEVNUM );
             }
         }
     }
@@ -2173,7 +2173,7 @@ void *scsi_tapemountmon_thread( void *notused )
                     if (fd < 0)
                     {
                         // "%1d:%04X Tape file %s, type %s: Error opening: errno=%d: %s"
-                        WRMSG( HHC00213, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+                        WRMSG( HHC00213, "E", LCSS_DEVNUM,
                                 dev->filename, "scsi", errno, strerror( errno ));
                         continue; // (go on to next drive)
                     }

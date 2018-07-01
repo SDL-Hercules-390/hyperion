@@ -453,7 +453,7 @@ int i;
         }
         else
             if(dev->ccwtrace)
-                WRMSG(HHC00826, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+                WRMSG(HHC00826, "E", LCSS_DEVNUM);
         return;
     }
 
