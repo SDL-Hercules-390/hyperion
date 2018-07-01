@@ -70,7 +70,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if ((dev->fd = HOPEN( dev->filename, O_RDWR | O_BINARY )) < 0)
         {
             // "%1d:%04X CCKD file %s: error in function %s: %s"
-            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            FWRMSG( stderr, HHC00354, "E", LCSS_DEVNUM,
                 dev->filename, "open()", strerror( errno ));
             continue;
         }
@@ -79,7 +79,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if ((rc = read( dev->fd, &devhdr, CKD_DEVHDR_SIZE )) < CKD_DEVHDR_SIZE)
         {
             // "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
-            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM,
                 dev->filename, "read()", (U64) 0, rc < 0 ? strerror( errno ) : "incomplete" );
             close( dev->fd );
             continue;
@@ -88,7 +88,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         if (!is_devhdrid_typ( devhdr.devhdrid, ANY32_CMP_OR_SF_TYP ))
         {
             // "%1d:%04X CCKD file %s: not a compressed dasd file"
-            FWRMSG( stderr, HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum, dev->filename );
+            FWRMSG( stderr, HHC00356, "E", LCSS_DEVNUM, dev->filename );
             close( dev->fd );
             continue;
         }
@@ -96,7 +96,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* read the compressed CKD device header */
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
-            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                     "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
             close (dev->fd);
             continue;
@@ -105,7 +105,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* Check the OPENED bit */
         if (!force && (cdevhdr.opts & CCKD_OPENED))
         {
-            FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
+            FWRMSG( stderr, HHC00352, "E", LCSS_DEVNUM, dev->filename );
             close (dev->fd);
             continue;
         }
@@ -116,7 +116,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
         {
-            FWRMSG( stderr, HHC00353, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
+            FWRMSG( stderr, HHC00353, "E", LCSS_DEVNUM, dev->filename );
             close (dev->fd);
             continue;
         }
@@ -124,14 +124,14 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* re-read the compressed CKD device header */
         if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
         {
-            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                     "lseek()", (U64)CCKD_DEVHDR_POS, strerror( errno ));
             close (dev->fd);
             continue;
         }
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
         {
-            FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                     "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
             close (dev->fd);
             continue;
@@ -140,10 +140,10 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         /* swap the byte order of the file if chkdsk didn't do it for us */
         if (bigend == (cdevhdr.opts & CCKD_BIGENDIAN))
         {
-            WRMSG( HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
                     cckd_endian() ? "big-endian" : "little-endian" );
             if (cckd_swapend (dev) < 0)
-                FWRMSG( stderr, HHC00378, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
+                FWRMSG( stderr, HHC00378, "E", LCSS_DEVNUM, dev->filename );
 
         }
 

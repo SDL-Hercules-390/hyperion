@@ -37,8 +37,6 @@
 #include "sr.h"
 #include "dasdblks.h"
 
-#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
-
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
 /*-------------------------------------------------------------------*/

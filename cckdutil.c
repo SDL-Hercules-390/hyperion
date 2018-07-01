@@ -213,37 +213,37 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* error exits */
 cswp_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                 "fstat()", strerror(errno)));
     else
-        WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
               "fstat()", strerror(errno));
     goto cswp_error;
 
 cswp_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "lseek()", off, strerror(errno)));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "lseek()", off, strerror(errno));
     goto cswp_error;
 
 cswp_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cswp_error;
 
 cswp_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cswp_error;
 
@@ -252,10 +252,10 @@ cswp_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     buf, strerror(errno)));
         else
-             WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                    buf, strerror(errno));
         goto cswp_error;
     }
@@ -396,7 +396,7 @@ BYTE            buf[65536*4];           /* Buffer                    */
             fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
                 dev->devnum, dev->filename ));
         else
-            WRMSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC00356, "E", LCSS_DEVNUM,
                 dev->filename );
         goto comp_error;
     }
@@ -420,10 +420,10 @@ comp_restart:
     if ((cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian())
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
                     cckd_endian() ? "big-endian" : "little-endian"));
         else
-            WRMSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
                   cckd_endian() ? "big-endian" : "little-endian");
         if (cckd_swapend (dev) < 0)
             goto comp_error;
@@ -581,9 +581,9 @@ comp_restart:
         if (spctab[i].spc_typ == SPCTAB_EOF)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00358, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+                fprintf(stdout, MSG(HHC00358, "I", LCSS_DEVNUM, dev->filename));
             else
-                WRMSG(HHC00358, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                WRMSG(HHC00358, "I", LCSS_DEVNUM, dev->filename);
             goto comp_return_ok;
         }
     }
@@ -803,17 +803,17 @@ comp_restart:
     {
         VERIFY(!ftruncate (fd, off));
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00359, "I", LCSS_DEVNUM, dev->filename,
                     fst.st_size - off));
         else
-            WRMSG(HHC00359, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, fst.st_size - off);
+            WRMSG(HHC00359, "I", LCSS_DEVNUM, dev->filename, fst.st_size - off);
     }
     else
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00360, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+            fprintf(stdout, MSG(HHC00360, "I", LCSS_DEVNUM, dev->filename));
         else
-            WRMSG(HHC00360, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG(HHC00360, "I", LCSS_DEVNUM, dev->filename);
     }
 
     /*---------------------------------------------------------------
@@ -847,37 +847,37 @@ comp_return:
 
 comp_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                 "fstat()", strerror(errno)));
     else
-        WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
               "fstat()", strerror(errno));
     goto comp_error;
 
 comp_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "lseek()", off, strerror(errno)));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "lseek()", off, strerror(errno));
     goto comp_error;
 
 comp_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto comp_error;
 
 comp_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto comp_error;
 
@@ -886,10 +886,10 @@ comp_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     buf, strerror(errno)));
         else
-            WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                   buf, strerror(errno));
         goto comp_error;
     }
@@ -898,10 +898,10 @@ comp_calloc_error:
         char buf[64];
         MSGBUF( buf, "calloc(%d)", n * len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     buf, strerror(errno)));
         else
-            WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                   buf, strerror(errno));
         goto comp_error;
     }
@@ -1052,7 +1052,7 @@ BYTE            buf[4*65536];           /* buffer                    */
             fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
                 dev->devnum, dev->filename ));
         else
-            WRMSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum,
+            WRMSG( HHC00356, "E", LCSS_DEVNUM,
                 dev->filename );
         goto cdsk_error;
     }
@@ -1077,10 +1077,10 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (!ro)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
                         cckd_endian() ? "big-endian" : "little-endian"));
             else
-                WRMSG(HHC00357, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
                       cckd_endian() ? "big-endian" : "little-endian");
             if (cckd_swapend (dev) < 0)
                 goto cdsk_error;
@@ -1116,10 +1116,10 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (ckd == NULL)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00361, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00361, "E", LCSS_DEVNUM, dev->filename,
                         devhdr.dvtyp, cyls));
             else
-                WRMSG(HHC00361, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00361, "E", LCSS_DEVNUM, dev->filename,
                       devhdr.dvtyp, cyls);
              goto cdsk_error;
         }
@@ -1133,10 +1133,10 @@ BYTE            buf[4*65536];           /* buffer                    */
         if ((int)trksz != n)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                         "track size", trksz, n));
             else
-                WRMSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                       "track size", trksz, n);
              goto cdsk_error;
         }
@@ -1145,10 +1145,10 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (heads != ckd->heads)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                         "number of heads", heads, ckd->heads));
             else
-                WRMSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                       "number of heads", heads, ckd->heads);
              goto cdsk_error;
         }
@@ -1181,10 +1181,10 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (cdevhdr.num_L1tab != n && cdevhdr.num_L1tab != n + 1)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                     "num_L1tab", cdevhdr.num_L1tab, n));
         else
-            WRMSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                   "num_L1tab", cdevhdr.num_L1tab, n);
         goto cdsk_error;
     }
@@ -1192,10 +1192,10 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (CCKD_L1TAB_POS + l1size > fst.st_size)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                     "file length to contain L1 table", (int)fst.st_size, (int)CCKD_L1TAB_POS + l1size));
         else
-            WRMSG(HHC00362, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
                   "file length to contain L1 table", (int)fst.st_size, (int)CCKD_L1TAB_POS + l1size);
         goto cdsk_error;
     }
@@ -1205,9 +1205,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         level = 2;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level));
+            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
         else
-            WRMSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level);
+            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* cdevhdr inconsistencies check */
@@ -1227,16 +1227,16 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (hdrerr != 0)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00363, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, hdrerr));
+            fprintf(stdout, MSG(HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr));
         else
-            WRMSG(HHC00363, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, hdrerr);
+            WRMSG(HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
         if (level < 1)
         {
             level = 1;
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level));
+                fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
             else
-                WRMSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level);
+                WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         }
     }
 
@@ -1245,9 +1245,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         level = 1;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level));
+            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
         else
-            WRMSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level);
+            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* Additional checking if last opened for read/write */
@@ -1495,19 +1495,19 @@ BYTE            buf[4*65536];           /* buffer                    */
             if (!valid)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00365, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    fprintf(stdout, MSG(HHC00365, "W", LCSS_DEVNUM, dev->filename,
                             space1, spctab[i].spc_off, spctab[i].spc_siz));
                 else
-                    WRMSG(HHC00365, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    WRMSG(HHC00365, "W", LCSS_DEVNUM, dev->filename,
                           space1, spctab[i].spc_off, spctab[i].spc_siz);
             }
             else
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00366, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    fprintf(stdout, MSG(HHC00366, "W", LCSS_DEVNUM, dev->filename,
                             space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off));
                 else
-                    WRMSG(HHC00366, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    WRMSG(HHC00366, "W", LCSS_DEVNUM, dev->filename,
                           space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off);
             }
 
@@ -1541,10 +1541,10 @@ BYTE            buf[4*65536];           /* buffer                    */
 
             /* issue error message */
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00367, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00367, "W", LCSS_DEVNUM, dev->filename,
                         spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz));
             else
-                WRMSG(HHC00367, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00367, "W", LCSS_DEVNUM, dev->filename,
                       spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz);
 
             /* setup recovery */
@@ -1563,9 +1563,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         level = 3;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level));
+            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
         else
-            WRMSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level);
+            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* Rebuild free space if any errors */
@@ -1671,9 +1671,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (fsperr)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00368, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+            fprintf(stdout, MSG(HHC00368, "W", LCSS_DEVNUM, dev->filename));
         else
-            WRMSG(HHC00368, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG(HHC00368, "W", LCSS_DEVNUM, dev->filename);
     }
 
     /*---------------------------------------------------------------
@@ -1709,11 +1709,11 @@ cdsk_space_check:
              || trk != spctab[i].spc_val)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    fprintf(stdout, MSG(HHC00369, "W", LCSS_DEVNUM, dev->filename,
                             spaces[trktyp], spctab[i].spc_val, off,
                             buf[0],buf[1],buf[2],buf[3],buf[4]));
                 else
-                    WRMSG(HHC00369, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    WRMSG(HHC00369, "W", LCSS_DEVNUM, dev->filename,
                           spaces[trktyp], spctab[i].spc_val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
@@ -1726,10 +1726,10 @@ cdsk_space_check:
                 {
                     level = 3;
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM,
                                 dev->filename, level));
                     else
-                        WRMSG(HHC00364, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, level);
+                        WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
                     goto cdsk_space_check;
                 }
                 continue;
@@ -1740,10 +1740,10 @@ cdsk_space_check:
             {
                 comperrs = 1;
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00370, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    fprintf(stdout, MSG(HHC00370, "W", LCSS_DEVNUM, dev->filename,
                             spaces[trktyp], trk, comps[compmask[comp]]));
                 else
-                    WRMSG(HHC00370, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                    WRMSG(HHC00370, "W", LCSS_DEVNUM, dev->filename,
                           spaces[trktyp], trk, comps[compmask[comp]]);
                 continue;
             }
@@ -1754,10 +1754,10 @@ cdsk_space_check:
                 if (!cdsk_valid_trk (trk, buf, heads, len))
                 {
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00371, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        fprintf(stdout, MSG(HHC00371, "W", LCSS_DEVNUM, dev->filename,
                                 spaces[trktyp], trk, off, len));
                     else
-                        WRMSG(HHC00371, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        WRMSG(HHC00371, "W", LCSS_DEVNUM, dev->filename,
                               spaces[trktyp], trk, off, len);
 
                     /* recover this track */
@@ -1960,10 +1960,10 @@ cdsk_recovery:
 
 cdsk_ckd_recover:
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        fprintf(stdout, MSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
                                 spaces[trktyp], trk, off + i, l));
                     else
-                        WRMSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        WRMSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
                               spaces[trktyp], trk, off + i, l);
                     n--;
                     rcvtab[trk] = 2;
@@ -2188,10 +2188,10 @@ cdsk_ckd_recover:
 
 cdsk_fba_recover:
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        fprintf(stdout, MSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
                                 spaces[trktyp], blkgrp, off + i, l));
                     else
-                        WRMSG(HHC00372, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                        WRMSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
                               spaces[trktyp], blkgrp, off + i, l);
                     n--;
                     rcvtab[blkgrp] = 2;
@@ -2228,10 +2228,10 @@ cdsk_fba_recover:
                 n++;
 
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00373, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00373, "I", LCSS_DEVNUM, dev->filename,
                     n, spaces[trktyp]));
         else
-            WRMSG(HHC00373, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            WRMSG(HHC00373, "I", LCSS_DEVNUM, dev->filename,
                   n, spaces[trktyp]);
 
         /*-----------------------------------------------------------
@@ -2318,9 +2318,9 @@ cdsk_fba_recover:
             if (spctab[j].spc_typ == SPCTAB_EOF)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00374, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+                    fprintf(stdout, MSG(HHC00374, "E", LCSS_DEVNUM, dev->filename));
                 else
-                    WRMSG(HHC00374, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+                    WRMSG(HHC00374, "E", LCSS_DEVNUM, dev->filename);
                 goto cdsk_error;
             }
 
@@ -2347,20 +2347,20 @@ cdsk_fba_recover:
         if (ro)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00375, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
                         "file opened read-only"));
             else
-                WRMSG(HHC00375, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
                       "file opened read-only");
               goto cdsk_error;
         }
         if (comperrs)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00375, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                fprintf(stdout, MSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
                         "missing compression"));
             else
-                WRMSG(HHC00375, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                WRMSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
                       "missing compression");
             goto cdsk_error;
         }
@@ -2415,9 +2415,9 @@ cdsk_fba_recover:
     if (fsperr && ro)
     {
         if(dev->batch)
-              fprintf(stdout, MSG(HHC00376, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+              fprintf(stdout, MSG(HHC00376, "W", LCSS_DEVNUM, dev->filename));
           else
-              WRMSG(HHC00376, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+              WRMSG(HHC00376, "W", LCSS_DEVNUM, dev->filename);
     }
     else if (fsperr)
     {
@@ -2626,9 +2626,9 @@ cdsk_fsperr_retry:
         rc = ftruncate (fd, off);
 
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00377, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename));
+            fprintf(stdout, MSG(HHC00377, "I", LCSS_DEVNUM, dev->filename));
         else
-            WRMSG(HHC00377, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename);
+            WRMSG(HHC00377, "I", LCSS_DEVNUM, dev->filename);
 
     } /* if (fsperr) */
 
@@ -2688,37 +2688,37 @@ cdsk_return:
 
 cdsk_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                 "fstat()", strerror(errno)));
     else
-        WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
               "fstat()", strerror(errno));
     goto cdsk_error;
 
 cdsk_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "lseek()", off, strerror(errno)));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "lseek()", off, strerror(errno));
     goto cdsk_error;
 
 cdsk_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "read()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cdsk_error;
 
 cdsk_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
                 "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
     else
-        WRMSG(HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
               "write()", off, rc < 0 ? strerror(errno) : "incomplete");
     goto cdsk_error;
 
@@ -2727,10 +2727,10 @@ cdsk_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     buf, strerror(errno)));
         else
-             WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                    buf, strerror(errno));
     }
     goto cdsk_error;
@@ -2740,10 +2740,10 @@ cdsk_calloc_error:
         char buf[64];
         MSGBUF( buf, "calloc(%d)", n * len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     buf, strerror(errno)));
         else
-             WRMSG(HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
                    buf, strerror(errno));
     }
     goto cdsk_error;

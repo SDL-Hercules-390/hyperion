@@ -577,3 +577,7 @@ DUT_DLL_IMPORT U32          devhdrid_typ( BYTE* devhdrid );
 DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, U32 typmsk );
 
 /*-------------------------------------------------------------------*/
+
+#define CCKD_DEP( _func )       (dev->cckd64?_func:_func##64)
+
+/*-------------------------------------------------------------------*/

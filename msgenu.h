@@ -121,6 +121,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define  PWRMSG(  pan,    id, sev, ... ) PLOGMSG(    pan,    #id "%s " id "\n", sev, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
+/* helper macro for device messages                                  */
+/*-------------------------------------------------------------------*/
+
+#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
+
+/*-------------------------------------------------------------------*/
 /* ckddasd.c/fbadasd.c dasd I/O tracing helper macro                 */
 /*-------------------------------------------------------------------*/
 #define LOGDEVTR( id, sev, ... )                                \

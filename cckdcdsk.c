@@ -73,7 +73,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         dev->fd = HOPEN (dev->filename, ro ? O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
-            FWRMSG( stderr, HHC00354, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+            FWRMSG( stderr, HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     "open()", strerror( errno ));
             continue;
         }
@@ -83,21 +83,21 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         {
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
-                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                         "lseek()", (U64)CCKD_DEVHDR_POS, strerror( errno ));
                 close (dev->fd);
                 continue;
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
-                FWRMSG( stderr, HHC00355, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename,
+                FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                         "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
                 close (dev->fd);
                 continue;
             }
             if (cdevhdr.opts & CCKD_OPENED)
             {
-                FWRMSG( stderr, HHC00352, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename );
+                FWRMSG( stderr, HHC00352, "E", LCSS_DEVNUM, dev->filename );
                 close (dev->fd);
                 continue;
             }

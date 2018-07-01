@@ -26,8 +26,6 @@
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
-
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent file mask                       */
 /*-------------------------------------------------------------------*/
