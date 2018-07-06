@@ -2424,17 +2424,12 @@ u_int   waitcount = 0;                  /* Wait counter              */
             /* Set thread id */
             dev->tid = thread_id();
 
-#if defined(_MSVC_)
             /* Set thread name */
             {
-                char    thread_name[32];
-
-                MSGBUF( thread_name,
-                        "device %4.4X thread", dev->devnum );
-                thread_name[sizeof(thread_name)-1]=0;
-                SET_THREAD_NAME(thread_name);
+                char thread_name[16];
+                MSGBUF( thread_name, "dev %4.4X thrd", dev->devnum );
+                SET_THREAD_NAME( thread_name );
             }
-#endif
 
             release_lock (&sysblk.ioqlock);
 
@@ -2475,7 +2470,7 @@ u_int   waitcount = 0;                  /* Wait counter              */
         /* Show thread as idle */
         waitcount++;
         sysblk.devtwait++;
-        SET_THREAD_NAME("idle device thread");  /* If _MSVC_ defined */
+        SET_THREAD_NAME( "idle dev thrd" );
 
         /* Wait for work to arrive */
         rc = timed_wait_condition_relative_usecs (&sysblk.ioqcond,

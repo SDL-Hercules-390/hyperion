@@ -26,7 +26,6 @@
 // ====================================================================
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-  /* Why tun0 rather than the clone device /dev/tun? jph             */
   #define  HERCTUN_DEV  "/dev/tun"     // Default TUN/TAP char dev
 #else
   #define  HERCTUN_DEV  "/dev/net/tun"  // Default TUN/TAP char dev

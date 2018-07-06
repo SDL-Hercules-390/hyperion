@@ -191,7 +191,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     // "Thread id "TIDPAT", prio %2d, name %s started"
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), "Timer" );
 
-    SET_THREAD_NAME_ID( -1, "CPU Timer" );
+    SET_THREAD_NAME( "CPU Timer" );
 
     then = host_tod();
 

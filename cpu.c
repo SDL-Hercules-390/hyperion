@@ -43,8 +43,6 @@
 #include "opcode.h"
 #include "inline.h"
 
-// #define JPHTEST
-
 /*-------------------------------------------------------------------*/
 /* Put a CPU in check-stop state                                     */
 /* Must hold the system intlock                                      */
@@ -1269,7 +1267,7 @@ void *cpu_thread (void *ptr)
 {
 REGS *regs = NULL;
 int   cpu  = *(int*)ptr;
-char  cpustr[40];
+char  thread_name[16];
 int   rc;
 
     OBTAIN_INTLOCK(NULL);
@@ -1298,9 +1296,10 @@ int   rc;
     set_thread_priority(0, sysblk.cpuprio);
 
     /* Display thread started message on control panel */
-    MSGBUF( cpustr, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), cpustr);
-    SET_THREAD_NAME_ID(-1, cpustr);
+
+    MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), thread_name );
+    SET_THREAD_NAME( thread_name );
 
     /* Execute the program in specified mode */
     do {
@@ -1324,7 +1323,7 @@ int   rc;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRMSG(HHC00101, "I", thread_id(),  get_thread_priority(0), cpustr);
+    WRMSG(HHC00101, "I", thread_id(),  get_thread_priority(0), thread_name);
 
     RELEASE_INTLOCK(NULL);
 

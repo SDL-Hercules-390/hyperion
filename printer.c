@@ -539,10 +539,8 @@ static void* spthread (void* arg)
 
     /* Fix thread name */
     {
-        char thread_name[32];
-        thread_name[sizeof(thread_name)-1] = 0;
-        snprintf( thread_name, sizeof(thread_name),
-            "spthread %1d:%04X", LCSS_DEVNUM );
+        char    thread_name[16];
+        MSGBUF( thread_name, "spthread %1d:%04X", LCSS_DEVNUM );
         SET_THREAD_NAME( thread_name );
     }
 
