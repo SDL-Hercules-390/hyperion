@@ -1631,3 +1631,20 @@ DLL_EXPORT char* trim( char* str, const char* dlm )   // (trim both)
 {
     return rtrim( ltrim( str, dlm ), dlm );
 }
+
+#if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
+/*-------------------------------------------------------------------*/
+/* Set thead name           (nonstandard GNU extension)              */
+/*                          (note: retcode is error code, NOT errno) */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
+{
+    int rc = 0;
+    char threadname[16];
+    STRLCPY( threadname, name );
+    rc = pthread_setname_np( tid, threadname );
+    /* Ignore any error; it either worked or it didn't */
+    return rc;
+}
+
+#endif // !defined( _MSVC_ )

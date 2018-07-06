@@ -286,4 +286,12 @@ HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
 #define RTRIM( str )  rtrim ( (str), WHITESPACE )
 #define  TRIM( str )   trim ( (str), WHITESPACE )
 
+#if defined( HAVE_PTHREAD_SETNAME_NP ) // !defined( _MSVC_ ) implied
+/*-------------------------------------------------------------------*/
+/* Set thead name           (nonstandard GNU extension)              */
+/*                          (note: retcode is error code, NOT errno) */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );
+#endif
+
 #endif /* __HSCUTL_H__ */

@@ -495,12 +495,15 @@ typedef int CMPFUNC(const void*, const void*);
 /*      Assign name to thread           (debugging aid)              */
 /*-------------------------------------------------------------------*/
 
-#ifdef _MSVC_
+#if defined( _MSVC_ )
   #define  SET_THREAD_NAME_ID(t,n)  w32_set_thread_name((t),(n))
   #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(GetCurrentThreadId(),(n))
+#elif defined( HAVE_PTHREAD_SETNAME_NP )
+  #define  SET_THREAD_NAME_ID(t,n)  nix_set_thread_name((t),(n))
+  #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(pthread_self(),(n))
 #else
-  #define  SET_THREAD_NAME_ID(t,n)
-  #define  SET_THREAD_NAME(n)
+  #define  SET_THREAD_NAME_ID(t,n)  /* nothing */
+  #define  SET_THREAD_NAME(n)       /* nothing */
 #endif
 
 #if !defined(NO_SETUID)
