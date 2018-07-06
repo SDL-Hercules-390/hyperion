@@ -755,7 +755,6 @@ typedef struct _ftCallThreadParms
 {
     PFT_THREAD_FUNC  pfnTheirThreadFunc;
     void*            pvTheirThreadArgs;
-    const char*      pszTheirThreadName;
     FTHREAD*         pFTHREAD;
 }
 FT_CALL_THREAD_PARMS;
@@ -777,9 +776,6 @@ static DWORD  __stdcall  FTWin32ThreadFunc
     pfnTheirThreadFunc = pCallTheirThreadParms->pfnTheirThreadFunc;
     pvTheirThreadArgs  = pCallTheirThreadParms->pvTheirThreadArgs;
     pFTHREAD           = pCallTheirThreadParms->pFTHREAD;
-
-    // PROGRAMMING NOTE: -1 == "current calling thread"
-    SET_THREAD_NAME_ID ( -1, pCallTheirThreadParms->pszTheirThreadName );
 
     free ( pCallTheirThreadParms );
 
@@ -857,8 +853,7 @@ int  fthread_create
     fthread_t*       pdwThreadID,
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
-    void*            pvThreadArgs,
-    const char*      pszThreadName
+    void*            pvThreadArgs
 )
 {
     static BOOL            bDidInit = FALSE;
@@ -918,7 +913,6 @@ int  fthread_create
 
     pCallTheirThreadParms->pfnTheirThreadFunc = pfnThreadFunc;
     pCallTheirThreadParms->pvTheirThreadArgs  = pvThreadArgs;
-    pCallTheirThreadParms->pszTheirThreadName = pszThreadName;
     pCallTheirThreadParms->pFTHREAD           = pFTHREAD;
 
     InitializeListLink(&pFTHREAD->ThreadListLink);

@@ -49,7 +49,6 @@ typedef struct PTTCL PTTCL;
 /*-------------------------------------------------------------------*/
 HLOCK      pttlock;                     /* Pthreads trace lock       */
 DLL_EXPORT U64 pttclass  = 0;           /* Pthreads trace class      */
-DLL_EXPORT int pttthread = 0;           /* pthreads is active        */
 int        pttracen      = 0;           /* Number of table entries   */
 int        pttracex      = 0;           /* Index of current entry    */
 PTT_TRACE *pttrace       = NULL;        /* Pointer to current entry  */
@@ -201,13 +200,16 @@ static void ptt_showparms()
 /*-------------------------------------------------------------------*/
 static void* ptt_timeout( void* arg )
 {
+    static const char* thread_name = "ptt_timeout";
     struct timeval  now;
     struct timespec tm;
 
     UNREFERENCED( arg );
 
+    SET_THREAD_NAME( thread_name );
+
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0),"PTT timeout timer");
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), thread_name );
 
     hthread_mutex_lock( &ptttolock );
 
@@ -231,7 +233,7 @@ static void* ptt_timeout( void* arg )
     hthread_mutex_unlock( &ptttolock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "PTT timeout timer");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), thread_name );
 
     return NULL;
 }
@@ -359,13 +361,13 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
         /* start timeout thread if positive to= specified */
         if (to > 0)
         {
-            hthread_mutex_lock (&ptttolock);
+            hthread_mutex_lock( &ptttolock );
             ptttotid = 0;
-            rc = hthread_create (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
+            rc = hthread_create( &ptttotid, NULL, ptt_timeout, NULL );
             if (rc)
                 // "Error in function create_thread(): %s"
-                WRMSG(HHC00102, "E", strerror(rc));
-            hthread_mutex_unlock (&ptttolock);
+                WRMSG( HHC00102, "E", strerror( rc ));
+            hthread_mutex_unlock( &ptttolock );
         }
 
         if (showparms)

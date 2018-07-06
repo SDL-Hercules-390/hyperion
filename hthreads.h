@@ -124,7 +124,7 @@ typedef fthread_mutex_t         HLOCK;
 #define hthread_attr_setdetachstate( pat, s )   fthread_attr_setdetachstate( (pat), (s) )
 #define hthread_attr_destroy( pat )             fthread_attr_destroy( pat )
 
-#define hthread_create( pt, pa, fn, ar, nm )    fthread_create( (hthread_t*)(pt), (pa), (fn), (ar), (nm) )
+#define hthread_create( pt, pa, fn, ar )        fthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
 #define hthread_detach( tid )                   fthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                fthread_join( (hthread_t)(tid), (prc) )
 #define hthread_kill( tid, sig )                fthread_kill( (hthread_t)(tid), (sig) )
@@ -188,7 +188,7 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_attr_setdetachstate( pat, s )   pthread_attr_setdetachstate( (pat), (s) )
 #define hthread_attr_destroy( pat )             pthread_attr_destroy( pat )
 
-#define hthread_create( pt, pa, fn, ar, nm )    pthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
+#define hthread_create( pt, pa, fn, ar )        pthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
 #define hthread_detach( tid )                   pthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                pthread_join( (hthread_t)(tid), (prc) )
 #define hthread_kill( tid, sig )                pthread_kill( (hthread_t)(tid), (sig) )

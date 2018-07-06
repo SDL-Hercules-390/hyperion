@@ -123,7 +123,6 @@ PTT_DLL_IMPORT int  ptt_cmd           ( int argc, char* argv[], char* cmdline );
 PTT_DLL_IMPORT void ptt_pthread_trace ( U64, const char*, const void*, const void*, const char*, int, TIMEVAL* );
 PTT_DLL_IMPORT int  ptt_pthread_print ();/* rc = #of entries printed */
 PTT_DLL_IMPORT U64  pttclass;
-PTT_DLL_IMPORT int  pttthread;
 
 /*-------------------------------------------------------------------*/
 /*                      Misc Helper Macro                            */

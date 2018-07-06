@@ -772,9 +772,11 @@ static void* hthread_func( void* arg2 )
 {
     THREAD_FUNC*  pfn  = (THREAD_FUNC*) *((void**)arg2+0);
     void*         arg  = (void*)        *((void**)arg2+1);
+    const char*   name = (const char*)  *((void**)arg2+2);
     TID           tid  = hthread_self();
     void*         rc;
     free( arg2 );
+    SET_THREAD_NAME_ID( tid, name );
     rc = pfn( arg );
     hthread_list_abandoned_locks( tid, NULL );
     return rc;
@@ -789,12 +791,11 @@ DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
 {
     int rc;
     void** arg2;
-    UNREFERENCED( name );               /* unref'ed on non-Windows   */
-    pttthread = 1;                      /* Set a mark on the wall    */
-    arg2 = malloc( 2 * sizeof( void* ));
+    arg2 = malloc( 3 * sizeof( void* ));
     *(arg2+0) = (void*) pfn;
     *(arg2+1) = (void*) arg;
-    rc = hthread_create( ptid, pat, hthread_func, arg2, name );
+    *(arg2+2) = (void*) name;
+    rc = hthread_create( ptid, pat, hthread_func, arg2 );
     PTTRACE( "create", (void*)*ptid, NULL, location, rc );
     return rc;
 }
