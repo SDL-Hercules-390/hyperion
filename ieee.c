@@ -103,8 +103,8 @@
 #define _IEEE_C_
 #define _HENGINE_DLL_
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
+#if !defined( _MSVC_ ) && !defined( _GNU_SOURCE )
+#error '_GNU_SOURCE' required for ieee.c!
 #endif
 
 #include "hercules.h"

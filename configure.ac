@@ -203,8 +203,13 @@ fi
 
 if test "$GCC" = "yes"; then
 
-  # Show us everything
+  # We would like to use some GNU extensions if they're available
+  CFLAGS="${CFLAGS} -D_GNU_SOURCE"
 
+  # We require the '-pthread' option for threading to work properly
+  CFLAGS="${CFLAGS} -pthread"
+
+  # Show us everything
   CFLAGS="${CFLAGS} -W -Wall"
 
   # We prefer -O3 (the highest optimization level possible)
@@ -536,6 +541,7 @@ AH_TEMPLATE( [C11_ATOMIC_POINTER_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_
 AH_TEMPLATE( [HAVE_ATOMIC_INTRINSICS],       [Define if '__atomic_xor_fetch' and friends are available] )
 AH_TEMPLATE( [HAVE_SWAP_BUILTINS],           [Define if '__builtin_bswap32' and friends are available] )
 AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
+AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' is available] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -980,27 +986,21 @@ AC_CACHE_SAVE()
 #  keep the below check for 'dlopen' anyway since we prefer that libtool use it
 #  instead of its own equivalent (lt_dlopen) if it's available.
 
-AC_CHECK_LIB( msvcrt, _pipe          )
-AC_CHECK_LIB( dl,     dlopen         )
-AC_CHECK_LIB( m,      sqrt           )
-AC_CHECK_LIB( socket, connect        )
-AC_CHECK_LIB( nsl,    gethostbyname  )
-AC_CHECK_LIB( resolv, inet_aton      )
-AC_CHECK_LIB( z,      uncompress,
-            [ hc_cv_have_libz=yes ],
-            [ hc_cv_have_libz=no  ] )
-AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
-            [ hc_cv_have_libbz2=yes ],
-            [ hc_cv_have_libbz2=no  ] )
+AC_CHECK_LIB( msvcrt, _pipe         )
+AC_CHECK_LIB( dl,     dlopen        )
+AC_CHECK_LIB( m,      sqrt          )
+AC_CHECK_LIB( socket, connect       )
+AC_CHECK_LIB( nsl,    gethostbyname )
+AC_CHECK_LIB( resolv, inet_aton     )
+
+AC_CHECK_LIB( z,   uncompress,                 [ hc_cv_have_libz=yes ],
+                                               [ hc_cv_have_libz=no  ] )
+
+AC_CHECK_LIB( bz2, BZ2_bzBuffToBuffDecompress, [ hc_cv_have_libbz2=yes ],
+                                               [ hc_cv_have_libbz2=no  ] )
+
 # jbs 10/15/2003 Solaris requires -lrt for sched_yield() and fdatasync()
-AC_CHECK_LIB( rt,     sched_yield    )
-# rbowler 2008/03/10 rev 1.196 Solaris 2.9 requires -lpthread
-# jj 18sep2011 The below checklib forces a -lpthread to be included which
-#              appears to break the latest combination of the pthread library
-#              and libtool on linux-64; it is at this stage unclear where the
-#              error lies or if the statement is still required for Solaris
-#              To be further investigate...
-# AC_CHECK_LIB( pthread,pthread_create )
+AC_CHECK_LIB( rt, sched_yield )
 
 AC_CACHE_SAVE()
 
@@ -1012,6 +1012,9 @@ AC_CACHE_SAVE()
 #   defined gets added to the LIBS library search variable...
 ###############################################################################
 
+AC_CHECK_FUNCS( pthread_setname_np,
+    [hc_cv_have_pthread_setname_np=yes],
+    [hc_cv_have_pthread_setname_np=no] )
 AC_CHECK_FUNCS( memrchr )
 AC_CHECK_FUNCS( getopt_long )
 AC_CHECK_FUNCS( sqrtl ldexpl fabsl fmodl frexpl )
@@ -1041,20 +1044,17 @@ AC_CHECK_FUNCS( valloc )
 AC_CHECK_FUNCS( posix_memalign )
 
 AC_CHECK_FUNCS( vsscanf,
-               [hc_cv_have_vsscanf=yes],
-               [hc_cv_have_vsscanf=no]
-)
+    [hc_cv_have_vsscanf=yes],
+    [hc_cv_have_vsscanf=no] )
 
 AC_CHECK_FUNCS( setresuid getresuid,
-               [hc_cv_have_getset_uid=yes],
-               [hc_cv_have_getset_uid=no; break]
-)
+              [hc_cv_have_getsetuid=yes],
+              [hc_cv_have_getsetuid=no] )
 
-if test "$hc_cv_have_getset_uid" != "yes"; then
+if test "$hc_cv_have_getsetuid" != "yes"; then
     AC_CHECK_FUNCS( setreuid geteuid getuid,
-                    [hc_cv_have_getset_uid=yes],
-                    [hc_cv_have_getset_uid=no; break]
-    )
+                 [hc_cv_have_getsetuid=yes],
+                 [hc_cv_have_getsetuid=no] )
 fi
 
 
@@ -1949,21 +1949,6 @@ esac
 
 AC_MSG_RESULT( [$hc_cv_asm_byteswap] )
 
-#----------------------------------------------#
-#  Check whether -pthread needed for pthreads  #
-#----------------------------------------------#
-
-AC_MSG_CHECKING( [whether ${CC-cc} accepts -pthread] )
-
-echo 'void f(){}' >conftest.c
-if test -z "`${CC-cc} -pthread -c conftest.c 2>&1`"; then
-    hc_cv_dash_pthread_needed=yes
-else
-    hc_cv_dash_pthread_needed=no
-fi
-
-AC_MSG_RESULT( [$hc_cv_dash_pthread_needed] )
-
 #------------------------------------------------------------------
 #  The logic to test whether optreset is needed for getopt use is
 #  defined in the 'HC_CHECK_NEED_GETOPT_OPTRESET' macro in the
@@ -2776,7 +2761,7 @@ test "$hc_cv_opt_cckd_bzip2"              = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
 test "$hc_cv_opt_het_bzip2"               = "yes"  &&  AC_DEFINE(HET_BZIP2)
 test "$hc_cv_timespec_in_sys_types_h"     = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
 test "$hc_cv_timespec_in_time_h"          = "yes"  &&  AC_DEFINE(TIMESPEC_IN_TIME_H)
-test "$hc_cv_have_getset_uid"            != "yes"  &&  AC_DEFINE(NO_SETUID)
+test "$hc_cv_have_getsetuid"             != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
@@ -2791,6 +2776,7 @@ test "$hc_cv_c11_atomics_available"       = "yes"  &&  AC_DEFINE(C11_ATOMICS_AVA
 test "$hc_cv_atomic_intrinsics_available" = "yes"  &&  AC_DEFINE(HAVE_ATOMIC_INTRINSICS)
 test "$hc_cv_swap_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SWAP_BUILTINS)
 test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILTINS)
+test "$hc_cv_have_pthread_setname_np"     = "yes"  &&  AC_DEFINE(HAVE_PTHREAD_SETNAME_NP)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
 test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
@@ -2864,14 +2850,10 @@ test "x$hc_cv_optimization_flags" !=  "x" &&  CFLAGS="$CFLAGS $hc_cv_optimizatio
 #  LIBS  (linker flags)                            #
 #--------------------------------------------------#
 
-test  "$hc_cv_dash_pthread_needed" =  "yes"  &&  LIBS="$LIBS -pthread"
-test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
-test  "$hc_cv_have_libz"           =  "yes"  &&  LIBS="$LIBS -lz"
-
-#      ---------------------- MINGW32 ----------------------
-
-test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
-test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lws2_32"
+test  "$hc_cv_have_libbz2" =  "yes"  &&  LIBS="$LIBS -lbz2"
+test  "$hc_cv_have_libz"   =  "yes"  &&  LIBS="$LIBS -lz"
+test  "$hc_cv_is_mingw"    =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
+test  "$hc_cv_is_mingw"    =  "yes"  &&  LIBS="$LIBS -lws2_32"
 
 #------------------------------------------------------#
 #  Construct cpu-bitness + build-configuration suffix  #
