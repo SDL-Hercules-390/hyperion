@@ -63,7 +63,7 @@ commands:
 
 This will enable all currently defined backported instructions to then be
 available in System/370 mode.  For the current list of affected instructions
-refer to the "BEG_DIS_FAC_INS_FUNC( herc37X )" section of the 'archlvl.c'
+refer to the "BEG_DIS_FAC_INS_FUNC( herc37X )" section of the 'facility.c'
 source file.
 
 
