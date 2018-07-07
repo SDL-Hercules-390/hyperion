@@ -388,6 +388,7 @@ Procfile            text
 *.ac                text    eol=lf
 *.am                text    eol=lf
 _dynamic_version    text    eol=lf
+configure           text    eol=lf
 makefile*.msvc      text    eol=crlf
 
 
