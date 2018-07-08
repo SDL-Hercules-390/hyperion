@@ -978,13 +978,7 @@ DLL_EXPORT  int hopen( const char* path, int oflag, ... )
 /* (returns 1==true running elevated, 0==false otherwise) */
 bool are_elevated()
 {
-    // TODO: figure out how to do this on on non-Windows platforms!
-
-    // PROGRAMMING NOTE: until this function is properly coded,
-    // there is no practical default value that we can return.
-    // No matter what we return it will almost surely be wrong.
-
-    return false;   // (see above TODO and PROGRAMMING NOTE)
+    return (sysblk.euid == 0) ? true : false;
 }
 
 #endif // !defined(_MSVC_)

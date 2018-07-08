@@ -866,13 +866,11 @@ int     rc;
     display_extpkg_vers   ( stdout, 0 );
 
     /* Report whether Hercules is running in "elevated" mode or not */
-#if defined( _MSVC_ ) // (remove this test once non-Windows version of "are_elevated()" is coded)
     // HHC00018 "Hercules is %srunning in elevated mode"
     if (are_elevated())
         WRMSG( HHC00018, "I", "" );
     else
         WRMSG( HHC00018, "W", "NOT " );
-#endif // defined( _MSVC_ )
 
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
