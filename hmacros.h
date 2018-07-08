@@ -506,150 +506,217 @@ typedef int CMPFUNC(const void*, const void*);
   #define  SET_THREAD_NAME(n)       /* nothing */
 #endif
 
-#if !defined(NO_SETUID)
+/*-------------------------------------------------------------------*/
+/*            ROOT privilege and capabilities macros                 */
+/*-------------------------------------------------------------------*/
+#if defined( NO_SETUID )
 
-/* SETMODE(INIT)
- *   sets the saved uid to the effective uid, and
- *   sets the effective uid to the real uid, such
- *   that the program is running with normal user
- *   attributes, other then that it may switch to
- *   the saved uid by SETMODE(ROOT). This call is
- *   usually made upon entry to the setuid program.
- *
- * SETMODE(ROOT)
- *   sets the saved uid to the real uid, and
- *   sets the real and effective uid to the saved uid.
- *   A setuid root program will enter 'root mode' and
- *   will have all the appropriate access.
- *
- * SETMODE(USER)
- *   sets the real and effective uid to the uid of the
- *   caller.  The saved uid will be the effective uid
- *   upon entry to the program (as before SETMODE(INIT))
- *
- * SETMODE(TERM)
- *   sets real, effective and saved uid to the real uid
- *   upon entry to the program.  This call will revoke
- *   any setuid access that the thread/process has.  It
- *   is important to issue this call before an exec to a
- *   shell or other program that could introduce integrity
- *   exposures when running with root access.
- */
+  #define DROP_PRIVILEGES( _capa )      // (do nothing)
+  #define DROP_ALL_CAPS()               // (do nothing)
+  #define SETMODE( _func )              // (do nothing)
 
-#if defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES)
+#else // !defined( NO_SETUID )
 
-#define SETMODE(_x)
-#define DROP_PRIVILEGES(_capa) drop_privileges(_capa)
-#define DROP_ALL_CAPS() drop_all_caps()
+  #if defined( HAVE_SYS_CAPABILITY_H ) && defined( HAVE_SYS_PRCTL_H ) && defined( OPTION_CAPABILITIES )
 
-#else
+    #define DROP_PRIVILEGES(_capa)      drop_privileges(_capa)
+    #define DROP_ALL_CAPS()             drop_all_caps()
+    #define SETMODE(_x)                 // (do nothing)
 
-#define DROP_PRIVILEGES(_capa)
-#define DROP_ALL_CAPS()
+  #else // !defined( HAVE_SYS_CAPABILITY_H ) || !defined( HAVE_SYS_PRCTL_H ) || !defined( OPTION_CAPABILITIES )
 
-#if defined(HAVE_SETRESUID)
+    /* SETMODE( INIT )
+     *
+     *   Sets the saved uid to the effective uid, and sets the
+     *   effective uid to the real uid, such that the program
+     *   is running with normal user attributes, other than it
+     *   may switch to the saved uid via SETMODE( ROOT ). This
+     *   call is usually made upon entry to the setuid program.
+     *
+     * SETMODE( ROOT )
+     *
+     *   Sets the saved uid to the real uid, and sets the real and
+     *   effective uid to the saved uid. A setuid root program will
+     *   enter 'root mode' and will have all the appropriate access.
+     *
+     * SETMODE( USER )
+     *
+     *   Sets the real and effective uid to the uid of the caller.
+     *   The saved uid will be the effective uid that was active
+     *   upon entry to the program (before SETMODE( INIT )).
+     *
+     * SETMODE( TERM )
+     *
+     *   Sets real, effective and saved uid to the real uid upon
+     *   entry to the program.  This call will revoke any setuid
+     *   access that the thread/process has.  It is important to
+     *   issue this call BEFORE an exec to a shell or other program
+     *   that could introduce integrity exposures when running with
+     *   root access.
+     */
 
-#define _SETMODE_INIT \
-do { \
-    VERIFY(!getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid)); \
-    VERIFY(!getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid)); \
-    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid)); \
-    VERIFY(!setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid)); \
-} while(0)
+    #define DROP_PRIVILEGES(_capa)      // (do nothing)
+    #define DROP_ALL_CAPS()             // (do nothing)
+    #define SETMODE(_func)              _SETMODE_ ## _func
 
-#define _SETMODE_ROOT \
-do { \
-    VERIFY(!setresuid(sysblk.suid,sysblk.suid,sysblk.ruid)); \
-} while(0)
+    #if defined( HAVE_SETRESUID )
 
-#define _SETMODE_USER \
-do { \
-    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid)); \
-} while(0)
+      #define _SETMODE_INIT                                                         \
+                                                                                    \
+          do                                                                        \
+          {                                                                         \
+              VERIFY( getresuid( &sysblk.ruid, &sysblk.euid, &sysblk.suid ) == 0 ); \
+              VERIFY( getresgid( &sysblk.rgid, &sysblk.egid, &sysblk.sgid ) == 0 ); \
+              VERIFY( setresuid(  sysblk.ruid,  sysblk.ruid,  sysblk.euid ) == 0 ); \
+              VERIFY( setresgid(  sysblk.rgid,  sysblk.rgid,  sysblk.egid ) == 0 ); \
+          }                                                                         \
+          while(0)
 
-#define _SETMODE_TERM \
-do { \
-    VERIFY(!setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid)); \
-    VERIFY(!setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid)); \
-} while(0)
 
-#elif defined(HAVE_SETREUID)
+      #define _SETMODE_ROOT                                                         \
+                                                                                    \
+          do                                                                        \
+          {                                                                         \
+              VERIFY(!setresuid(sysblk.suid,sysblk.suid,sysblk.ruid));              \
+          }                                                                         \
+          while(0)
 
-#define _SETMODE_INIT \
-do { \
-    sysblk.ruid = getuid(); \
-    sysblk.euid = geteuid(); \
-    sysblk.rgid = getgid(); \
-    sysblk.egid = getegid(); \
-    VERIFY(!setreuid(sysblk.euid, sysblk.ruid)); \
-    VERIFY(!setregid(sysblk.egid, sysblk.rgid)); \
-} while (0)
 
-#define _SETMODE_ROOT \
-do { \
-    VERIFY(!setreuid(sysblk.ruid, sysblk.euid)); \
-    VERIFY(!setregid(sysblk.rgid, sysblk.egid)); \
-} while (0)
+      #define _SETMODE_USER                                                         \
+                                                                                    \
+          do                                                                        \
+          {                                                                         \
+              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.suid ) == 0 );    \
+          }                                                                         \
+          while(0)
 
-#define _SETMODE_USER \
-do { \
-    VERIFY(!setregid(sysblk.egid, sysblk.rgid)); \
-    VERIFY(!setreuid(sysblk.euid, sysblk.ruid)); \
-} while (0)
 
-#define _SETMODE_TERM \
-do { \
-    VERIFY(!setuid(sysblk.ruid)); \
-    VERIFY(!setgid(sysblk.rgid)); \
-} while (0)
+      #define _SETMODE_TERM                                                         \
+                                                                                    \
+          do                                                                        \
+          {                                                                         \
+              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.ruid ) == 0 );    \
+              VERIFY( setresgid( sysblk.rgid, sysblk.rgid, sysblk.rgid ) == 0 );    \
+          }                                                                         \
+          while(0)
 
-#else /* defined(HAVE_SETRESUID) || defined(HAVE_SETEREUID) */
+    #elif defined( HAVE_SETREUID )
 
-#error Cannot figure out how to swap effective UID/GID, maybe you should define NO_SETUID?
+      #define _SETMODE_INIT                                         \
+                                                                    \
+          do                                                        \
+          {                                                         \
+              sysblk.ruid = getuid();                               \
+              sysblk.euid = geteuid();                              \
+              sysblk.rgid = getgid();                               \
+              sysblk.egid = getegid();                              \
+                                                                    \
+              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
+              VERIFY( setregid( sysblk.egid, sysblk.rgid ) == 0 );  \
+          }                                                         \
+          while(0)
 
-#endif /* defined(HAVE_SETREUID) || defined(HAVE_SETRESUID) */
 
-#define SETMODE(_func) _SETMODE_ ## _func
+      #define _SETMODE_ROOT                                         \
+                                                                    \
+          do                                                        \
+          {                                                         \
+              VERIFY( setreuid( sysblk.ruid, sysblk.euid ) == 0 );  \
+              VERIFY( setregid( sysblk.rgid, sysblk.egid ) == 0 );  \
+          }                                                         \
+          while(0)
 
-#endif /* !defined(HAVE_SYS_CAPABILITY_H) */
 
-#else /* !defined(NO_SETUID) */
+      #define _SETMODE_USER                                         \
+                                                                    \
+          do                                                        \
+          {                                                         \
+              VERIFY( setregid( sysblk.egid, sysblk.rgid ) == 0 );  \
+              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
+          }                                                         \
+          while(0)
 
-#define SETMODE(_func)
-#define DROP_PRIVILEGES(_capa)
-#define DROP_ALL_CAPS()
 
-#endif /* !defined(NO_SETUID) */
+      #define _SETMODE_TERM                                         \
+                                                                    \
+          do                                                        \
+          {                                                         \
+              VERIFY( setuid( sysblk.ruid ) == 0 );                 \
+              VERIFY( setgid( sysblk.rgid ) == 0 );                 \
+          }                                                         \
+          while(0)
+
+    #else // !defined( HAVE_SETRESUID ) && !defined( HAVE_SETEREUID )
+
+      #error Cannot figure out how to swap effective UID/GID! Maybe you should #define NO_SETUID?
+
+    #endif // defined( HAVE_SETREUID ) || defined( HAVE_SETRESUID )
+
+  #endif // defined( HAVE_SYS_CAPABILITY_H ) && defined( HAVE_SYS_PRCTL_H ) && defined( OPTION_CAPABILITIES )
+
+#endif // defined( NO_SETUID )
 
 /*-------------------------------------------------------------------*/
 /*      Pipe signaling            (thread signaling via pipe)        */
 /*-------------------------------------------------------------------*/
 
-#define RECV_PIPE_SIGNAL( rfd, lock, flag ) \
-  do { \
-    int f; int saved_errno=get_HSO_errno(); BYTE c=0; \
-    obtain_lock(&(lock)); \
-    if ((f=(flag))>=1) (flag)=0; \
-    release_lock(&(lock)); \
-    if (f>=1) \
-      VERIFY(read_pipe((rfd),&c,1)==1); \
-    set_HSO_errno(saved_errno); \
-  } while (0)
+#define RECV_PIPE_SIGNAL( rfd, lock, flag )                         \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int f, saved_errno; BYTE c=0;                               \
+                                                                    \
+        saved_errno = get_HSO_errno();                              \
+        {                                                           \
+            obtain_lock( &(lock) );                                 \
+            {                                                       \
+                if ((f = (flag)) >= 1)                              \
+                         (flag)   = 0;                              \
+            }                                                       \
+            release_lock( &(lock) );                                \
+                                                                    \
+            if (f >= 1)                                             \
+                VERIFY( read_pipe( (rfd), &c, 1 ) == 1);            \
+        }                                                           \
+        set_HSO_errno( saved_errno );                               \
+    }                                                               \
+    while(0)
 
-#define SEND_PIPE_SIGNAL( wfd, lock, flag ) \
-  do { \
-    int f; int saved_errno=get_HSO_errno(); BYTE c=0; \
-    obtain_lock(&(lock)); \
-    if ((f=(flag))<=0) (flag)=1; \
-    release_lock(&(lock)); \
-    if (f<=0) \
-      VERIFY(write_pipe((wfd),&c,1)==1); \
-    set_HSO_errno(saved_errno); \
-  } while (0)
 
-#define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset ) \
-  FD_SET((pipe_rfd),(prset)); \
-  (maxfd)=(maxfd)>(pipe_rfd)?(maxfd):(pipe_rfd)
+#define SEND_PIPE_SIGNAL( wfd, lock, flag )                         \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int f, saved_errno; BYTE c=0;                               \
+                                                                    \
+        saved_errno = get_HSO_errno();                              \
+        {                                                           \
+            obtain_lock( &(lock) );                                 \
+            {                                                       \
+                if ((f = (flag)) <= 0)                              \
+                         (flag)   = 1;                              \
+            }                                                       \
+            release_lock( &(lock) );                                \
+                                                                    \
+            if (f <= 0)                                             \
+                VERIFY( write_pipe( (wfd), &c, 1 ) == 1);           \
+        }                                                           \
+        set_HSO_errno( saved_errno );                               \
+    }                                                               \
+    while(0)
+
+
+#define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset )    \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        FD_SET( (pipe_rfd), (prset) );                              \
+                                                                    \
+        (maxfd) = (maxfd) > (pipe_rfd) ? (maxfd)                    \
+                                       : (pipe_rfd);                \
+    }                                                               \
+    while(0)
+
 
 #define SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.cnslrpipe, (maxfd), (prset) )
 #define SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.sockrpipe, (maxfd), (prset) )
