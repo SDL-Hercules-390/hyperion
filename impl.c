@@ -416,7 +416,7 @@ static void* watchdog_thread( void* arg )
        inoperable cpu
     */
     if (sysblk.cpuprio >= 0)
-        set_thread_priority( 0, sysblk.cpuprio + 1 );
+        set_thread_priority( sysblk.cpuprio + 1 );
 
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         savecount[ cpu ] = -1;

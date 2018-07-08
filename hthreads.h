@@ -320,8 +320,10 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* locatio
 #if defined(_MSVC_)
 #define win_thread_handle( tid )                hthread_win_thread_handle( tid )
 #endif
-#define set_thread_priority( tid, prio )        hthread_set_thread_prio( (tid), (prio), PTT_LOC )
-#define get_thread_priority( tid )              hthread_get_thread_prio( (tid), PTT_LOC )
+#define set_thread_priority( prio )             hthread_set_thread_prio( thread_id(), (prio), PTT_LOC )
+#define get_thread_priority()                   hthread_get_thread_prio( thread_id(), PTT_LOC )
+#define set_thread_priority_id( tid, prio )     hthread_set_thread_prio( (tid), (prio), PTT_LOC )
+#define get_thread_priority_id( tid )           hthread_get_thread_prio( (tid), PTT_LOC )
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */

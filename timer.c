@@ -186,10 +186,10 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     UNREFERENCED( argp );
 
     /* Set timer thread priority */
-    set_thread_priority( 0, sysblk.todprio );
+    set_thread_priority( sysblk.todprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), "Timer" );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), "Timer" );
 
     SET_THREAD_NAME( "CPU Timer" );
 
@@ -283,7 +283,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     sysblk.todtid = 0;
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "Timer" );
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), "Timer" );
 
     return NULL;
 

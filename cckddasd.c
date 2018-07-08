@@ -1508,17 +1508,17 @@ void* cckd_ra (void* arg)
         {
             signal_condition(&cckdblk.termcond);
             if (!cckdblk.batch || cckdblk.batchml > 1)
-                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
-                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), ra, cckdblk.ramax);
+                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(), ra, cckdblk.ramax);
         release_lock(&cckdblk.ralock);
         return NULL;
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
 
     while (ra <= cckdblk.ramax)   /* continue until ramax=0 (shutdown) or max reduced by command line */
     {
@@ -1586,7 +1586,7 @@ void* cckd_ra (void* arg)
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), threadname);
     --cckdblk.ras;
     --cckdblk.raa;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
@@ -1741,7 +1741,7 @@ int             rc;
     /* Set writer priority just below cpu priority to mimimize the
        compression effect */
     if(cckdblk.wrprio >= 0)
-        set_thread_priority(0, cckdblk.wrprio);
+        set_thread_priority( cckdblk.wrprio);
 #endif
 
     obtain_lock (&cckdblk.wrlock);
@@ -1758,17 +1758,17 @@ int             rc;
         {
             signal_condition(&cckdblk.termcond);  /* shutting down */
             if (!cckdblk.batch || cckdblk.batchml > 1)
-              WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+              WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
-                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), writer, cckdblk.wrmax);
+                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(), writer, cckdblk.wrmax);
         release_lock (&cckdblk.wrlock);
         return NULL;
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG ( HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+        WRMSG ( HHC00100, "I", thread_id(), get_thread_priority(), threadname);
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
     {
@@ -1929,7 +1929,7 @@ int             rc;
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), threadname);
     cckdblk.wrs--;
     cckdblk.wra--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
@@ -4599,17 +4599,17 @@ int             gctab[5]= {             /* default gcol parameters   */
         {
             signal_condition(&cckdblk.termcond);  /* signal if last gcol thread ending before init. */
             if (!cckdblk.batch || cckdblk.batchml > 1)
-                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "Garbage collector");
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
-                WRMSG(HHC00108, "W", thread_id(), "cckd_gcol()", get_thread_priority(0), cckdblk.gcs, cckdblk.gcmax);
+                WRMSG(HHC00108, "W", thread_id(), "cckd_gcol()", get_thread_priority(), cckdblk.gcs, cckdblk.gcmax);
         release_lock (&cckdblk.gclock);
         return NULL;        /* back to the shadows again  */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "Garbage collector");
 
     while (gcol <= cckdblk.gcmax)
     {
@@ -4719,7 +4719,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), "Garbage collector");
 
     cckdblk.gcs--;
     cckdblk.gca--;

@@ -3196,10 +3196,10 @@ TELNET                *tn;              /* Telnet Control Block      */
     UNREFERENCED( arg );
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority( 0, sysblk.srvprio );
+    set_thread_priority( sysblk.srvprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0),
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(),
         "Console connection" );
 
     /* Get information about this system */
@@ -3722,7 +3722,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     close_socket( lsock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), "Console connection");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), "Console connection");
 
     return NULL;
 

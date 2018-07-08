@@ -1307,10 +1307,10 @@ static void *commadpt_thread(void *vca)
     init_signaled=0;
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority(0, sysblk.srvprio);
+    set_thread_priority( sysblk.srvprio);
 
     MSGBUF(threadname, "%1d:%04X communication thread", SSID_TO_LCSS(ca->dev->ssid), devnum);
-    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(), threadname);
 
     pollact=0;  /* Initialise Poll activity flag */
 
@@ -2004,7 +2004,7 @@ static void *commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
     release_lock(&ca->lock);
     return NULL;
 }

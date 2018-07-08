@@ -342,7 +342,7 @@ static void* logger_thread( void* arg )
     UNREFERENCED( arg );
 
     /* Set device thread priority; ignore any errors */
-    set_thread_priority( 0, sysblk.devprio );
+    set_thread_priority( sysblk.devprio );
 
 #if !defined( _MSVC_ )
     logger_redirect();

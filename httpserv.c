@@ -863,10 +863,10 @@ struct timeval      timeout;            /* timeout value             */
     hdl_addshut("http_shutdown",http_shutdown, NULL);
 
     /* Set server thread priority; ignore any errors */
-    set_thread_priority(0, sysblk.srvprio);
+    set_thread_priority( sysblk.srvprio);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "HTTP server");
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "HTTP server");
 
     /* make sure root path is built */
     if ( http_root() == NULL )
@@ -986,7 +986,7 @@ http_server_stop:
         hdl_delshut(http_shutdown, NULL);
 
     /* Display thread started message on control panel */
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "HTTP server");
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "HTTP server");
 
     sysblk.httptid = 0;
 

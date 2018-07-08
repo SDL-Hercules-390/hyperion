@@ -986,7 +986,7 @@ int cpu;
     sysblk.cpuprio = prio;
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.cputid[cpu])
-            set_thread_priority(sysblk.cputid[cpu], prio);
+            set_thread_priority_id( sysblk.cputid[cpu], prio );
     return 0;
 }
 
@@ -1000,7 +1000,7 @@ int configure_tod_priority(int prio)
 {
     sysblk.todprio = prio;
     if(sysblk.todtid)
-        set_thread_priority(sysblk.todtid, prio);
+        set_thread_priority_id( sysblk.todtid, prio );
     return 0;
 }
 

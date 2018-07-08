@@ -2483,7 +2483,7 @@ char            threadname[40];
 
     /* This thread will be the shared device thread */
     MSGBUF(threadname, "Shared device(%1d:%04X)", LCSS_DEVNUM);
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
 
     while (dev->shrdconn)
     {
@@ -2614,7 +2614,7 @@ char            threadname[40];
     dev->shrdtid = 0;
     release_lock (&dev->lock);
 
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
 
     return NULL;
 
@@ -2706,7 +2706,7 @@ char                    threadname[40];
     MSGBUF(threadname, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
 
     /* Obtain a internet socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
@@ -2892,7 +2892,7 @@ char                    threadname[40];
 
     sysblk.shrdtid = 0;
 
-    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), threadname);
 
     return NULL;
 

@@ -1639,10 +1639,8 @@ size_t  loopcount;                      /* Number of iterations done */
 
     SET_THREAD_NAME("panel_display");
 
-    set_thread_priority(0,0);     /* (don't actually change priority)*/
-
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Control panel");
+    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "Control panel");
 
     hdl_addshut("panel_cleanup",panel_cleanup, NULL);
 
@@ -3193,7 +3191,7 @@ FinishShutdown:
 
     sysblk.panel_init = 0;
 
-    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Control panel");
+    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), "Control panel");
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

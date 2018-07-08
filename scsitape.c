@@ -1694,21 +1694,16 @@ static void* get_stape_status_thread  ( void* notused );
 /*-------------------------------------------------------------------*/
 /* get_stape_status_thread                                           */
 /*-------------------------------------------------------------------*/
-static
-void* get_stape_status_thread( void* notused )
+static void* get_stape_status_thread( void* notused )
 {
+    static const char* thread_name = "scsitape status";
     LIST_ENTRY*   pListEntry;
     STSTATRQ*     req;
     DEVBLK*       dev = NULL;
     struct mtget  mtget;
     int           timeout;
-    char          buf[64];
 
-    UNREFERENCED(notused);
-    MSGBUF( buf, "SCSI-TAPE status monitor");
-
-    // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), buf );
+    UNREFERENCED( notused );
 
     // PROGRAMMING NOTE: it is EXTREMELY IMPORTANT that the status-
     // retrieval thread (i.e. ourselves) be set to a priority that
@@ -1734,7 +1729,10 @@ void* get_stape_status_thread( void* notused )
     // set to the next higher slot). If this ever changes then the
     // below code will need to be adjusted appropriately. -- Fish
 
-    set_thread_priority( 0, (sysblk.devprio - 10) );
+    set_thread_priority( sysblk.devprio - 10 );
+
+    // "Thread id "TIDPAT", prio %2d, name %s started"
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -1828,7 +1826,7 @@ void* get_stape_status_thread( void* notused )
     }
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), buf);
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
 
     sysblk.stape_getstat_busy = 0;
     sysblk.stape_getstat_tid = 0;
@@ -2120,7 +2118,7 @@ void *scsi_tapemountmon_thread( void *notused )
     MSGBUF( buf, "SCSI-TAPE mount monitor");
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), buf );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), buf );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -2261,7 +2259,7 @@ void *scsi_tapemountmon_thread( void *notused )
     }
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), buf);
+    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), buf);
 
     sysblk.stape_mountmon_tid = 0;  // (we're going away)
     release_lock( &sysblk.stape_lock );

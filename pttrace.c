@@ -209,7 +209,7 @@ static void* ptt_timeout( void* arg )
     SET_THREAD_NAME( thread_name );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(0), thread_name );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
 
     hthread_mutex_lock( &ptttolock );
 
@@ -233,7 +233,7 @@ static void* ptt_timeout( void* arg )
     hthread_mutex_unlock( &ptttolock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(0), thread_name );
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
 
     return NULL;
 }
