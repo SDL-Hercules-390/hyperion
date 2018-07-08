@@ -113,16 +113,14 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>The sequence of certain system parameters may be important
+  <dt>The sequence of certain configuration file statements is important
   <dd>
   <p>
-    The sequence of certain configuration file system parameter statements
-    may be important. Specifically, the
-    <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
-    statement (previously called <code>ARCHMODE</code>, and defines the
-    initial architectural mode of the system) should generally <i>precede</i>
-    (come before) any <code>FACILITY</code> statements that enable
-    or disable a given architectural feature.
+    The <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
+    statement (previously called <code>ARCHMODE</code> for example, defines
+    the initial architectural mode of the system) should generally <i>precede</i>
+    (come before) any <code>FACILITY</code> statements that enable or disable
+    a given architectural feature.
   </p>
   <p>
     For example: on certain IBM operating systems the z/Architecture "PFPO
@@ -147,9 +145,15 @@ Hercules: Release Notes
     (which is usually not the case).
   </p>
   <p>
-    The <code>ARCHLVL</code> and <code>LPARNUM</code> statements are currently
-    the only two system parameter configuration file statements whose sequence
-    matters. The order of all other configuration file system parameter statements
+    The configuration file statements that define the priorities of various
+    internal threads (<code><a href="hercconf.html#TODPRIO">TODPRIO</a></code>,
+    <code><a href="hercconf.html#DEVPRIO">DEVPRIO</a></code>,
+    <code><a href="hercconf.html#CPUPRIO">CPUPRIO</a></code>,
+    <code><a href="hercconf.html#SRVPRIO">SRVPRIO</a></code>) also should    <i>precede</i> whatever statement(s) cause their corresponding thread(s)    to be started. The <code>SRVPRIO</code> statement for example, must precede    the <code><a href="hercconf.html#HTTPSTRT">HTTP START</a></code> statement,    since it is the <code>HTTP START</code> statement that starts the HTTP    Server thread whose priority is set to the <code>SRVPRIO</code> value.  </p>
+  <p>
+    The <code>ARCHLVL</code>, <code>LPARNUM</code> and <code>xxxPRIO</code>
+    statements are currently the only known configuration file statements
+    whose sequence matters. The order of all other configuration file statements
     should not currently matter. This may change in the future however, so be
     sure to always carefully read through the RELEASE NOTES (this document) with
     each new update to Hercules.
