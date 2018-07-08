@@ -16,7 +16,7 @@ for most everyone as-is, thereby eliminating the need to build any of the
 external packages yourself.  Just build Hercules normally and you're done.
 
 In some situations however you might need (or want) to rebuild one or more
-of the external packages for your sysyem.  Some (but certainly not all) of
+of the external packages for your system.  Some (but certainly not all) of
 those situations include (but are not limited to) the following:
 
   1. Developing or Debugging a new/existing version of an external package.
