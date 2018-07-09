@@ -14,6 +14,8 @@
 #ifndef _HSTDINC_H
 #define _HSTDINC_H
 
+#define SDL_HYPERION            /* Distinguish ourselves from others */
+
 #ifdef HAVE_CONFIG_H
   #ifndef    _CONFIG_H
   #define    _CONFIG_H
