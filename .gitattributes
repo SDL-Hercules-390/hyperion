@@ -86,9 +86,10 @@ TODO.*              text
 *.cmake             text
 *.ninja             text
 .ninja_*            text
-Makefile            text
-makefile            text
-
+Makefile            text    eol=lf
+Makefile.in         text    eol=lf
+makefile            text    eol=lf
+config.h.in         text    eol=lf
 
 # General Configuration
 *.cnf               text
