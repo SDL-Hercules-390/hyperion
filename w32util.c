@@ -1048,7 +1048,7 @@ int DoGetRUsage( const int who, const int whotype, struct rusage* r_usage )
             CloseHandle( whoHandle );
             break;
         case rusage_type_thread:
-            whoHandle = win_thread_handle( who );
+            whoHandle = hthread_get_handle( who );
             if ( whoHandle == NULL )
                 return rusage_failure( r_usage );
             result = GetThreadTimes( whoHandle, &ftCreation, &ftExit, &ftKernel, &ftUser );

@@ -97,38 +97,19 @@
 #endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
 #ifdef _MSVC_
-
   #ifndef HAVE_ID_T
   #define HAVE_ID_T
     typedef unsigned long id_t;
   #endif
-
-  HU2_DLL_IMPORT int getpriority(int, id_t);
-  HU2_DLL_IMPORT int setpriority(int, id_t, int);
-
   #ifndef HAVE_SYS_RESOURCE_H
     #define  PRIO_PROCESS  0
     #define  PRIO_PGRP     1
     #define  PRIO_USER     2
   #endif
-
-  // Win32 'winbase.h' updates
-
-  //        REALTIME_PRIORITY_CLASS        256      //   -20
-  //        HIGH_PRIORITY_CLASS            128      //   -15
-
-  #ifndef   ABOVE_NORMAL_PRIORITY_CLASS
-    #define ABOVE_NORMAL_PRIORITY_CLASS  32768      //    -8
-  #endif
-
-  //        NORMAL_PRIORITY_CLASS           32      //     0
-
-  #ifndef   BELOW_NORMAL_PRIORITY_CLASS
-    #define BELOW_NORMAL_PRIORITY_CLASS  16384      //     8
-  #endif
-  //        IDLE_PRIORITY_CLASS             64      //    15
-
 #endif // _MSVC_
+
+/* Set the PROCESS "nice" value (NOT thread priority!) */
+HU2_DLL_IMPORT int set_herc_nice( int which, id_t who, int nice );
 
 #if !defined(HAVE_STRLCPY)
 /* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */

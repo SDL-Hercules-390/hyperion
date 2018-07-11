@@ -96,13 +96,6 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
 static LIST_ENTRY  locklist;        /* Internal Locks list anchor    */
 static HLOCK       listlock;        /* Lock for accessing Locks list */
 static int         lockcount;       /* Number of locks in our list   */
-static int         herc_policy;     /* Herc scheduling policy        */
-static int         herc_low_pri;    /* Herc policy minimum priority  */
-static int         herc_pri_amt;    /* Herc policy priority range    */
-static int         herc_pri_rvrsd;  /* More negative is higher prio  */
-static int         host_low_pri;    /* Host policy minimim priority  */
-static int         host_pri_amt;    /* Host policy priority range    */
-static int         host_pri_rvrsd;  /* More negative is higher prio  */
 
 /*-------------------------------------------------------------------*/
 /* Internal macros to control access to our internal locks list      */
@@ -111,16 +104,16 @@ static int         host_pri_rvrsd;  /* More negative is higher prio  */
 #define UnlockLocksList()       hthread_mutex_unlock( &listlock )
 
 /*-------------------------------------------------------------------*/
-/* Initialize internal locks list                                    */
+/* Initialize HTHTREADS package                                      */
 /*-------------------------------------------------------------------*/
-static void hthreads_internal_init()
+DLL_EXPORT void hthreads_internal_init()
 {
     static BYTE bDidInit = FALSE;
 
     if (!bDidInit)
     {
-    MATTR attr;
-    int rc, herc_high_pri, host_high_pri;
+        MATTR attr;
+        int rc;
 
         /* Initialize our internal lock */
 
@@ -145,25 +138,6 @@ static void hthreads_internal_init()
         InitializeListHead( &locklist );
         lockcount = 0;
 
-        /* Initialize thread scheduling variables */
-
-        herc_policy = HTHREAD_SCHED_DEF;
-
-        herc_low_pri  = HTHREAD_MIN_PRI;
-        herc_high_pri = HTHREAD_MAX_PRI;
-
-        host_low_pri  = hthread_sched_get_priority_min( herc_policy );
-        host_high_pri = hthread_sched_get_priority_max( herc_policy );
-
-        herc_pri_rvrsd = (herc_high_pri < herc_low_pri);
-        host_pri_rvrsd = (host_high_pri < host_low_pri);
-
-        herc_pri_amt = herc_pri_rvrsd ? (herc_low_pri - herc_high_pri)
-                                      : (herc_high_pri - herc_low_pri);
-
-        host_pri_amt = host_pri_rvrsd ? (host_low_pri - host_high_pri)
-                                      : (host_high_pri - host_low_pri);
-
         /* One-time initialization completed */
 
         bDidInit = TRUE;
@@ -173,7 +147,6 @@ fatal:
         perror( "Fatal error in hthreads_internal_init function" );
         exit(1);
     }
-    return;
 }
 
 /*-------------------------------------------------------------------*/
@@ -183,8 +156,6 @@ static ILOCK* hthreads_get_ILOCK( void* addr, const char* name )
 {
     ILOCK*       ilk;               /* Pointer to ILOCK structure    */
     LIST_ENTRY*  ple;               /* Ptr to LIST_ENTRY structure   */
-
-    hthreads_internal_init();
 
     /* Search list to see if this lock has already been allocated */
 
@@ -868,133 +839,67 @@ DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location 
     return rc;
 }
 
-#if defined(_MSVC_)
-/*-------------------------------------------------------------------*/
-/* Return Windows thread HANDLE                                      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT HANDLE hthread_win_thread_handle( TID tid )
-{
-    return hthread_get_handle( tid );
-}
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Convert Hercules thread scheduling priority to host value         */
-/*-------------------------------------------------------------------*/
-static int herc2host( int herc_pri )
-{
-    double pct;
-    int host_pri;
-
-    if (0
-        || (!herc_pri_rvrsd && (herc_pri < herc_low_pri ||
-                               (herc_pri - herc_low_pri) > herc_pri_amt))
-        || ( herc_pri_rvrsd && (herc_pri > herc_low_pri ||
-                               (herc_low_pri - herc_pri) > herc_pri_amt))
-    )
-        return INT_MAX;
-
-    pct = herc_pri_rvrsd ? ((double)(herc_low_pri - herc_pri) / (double)herc_pri_amt)
-                         : ((double)(herc_pri - herc_low_pri) / (double)herc_pri_amt);
-
-    host_pri = host_pri_rvrsd ? host_low_pri - (int)((pct * (double)host_pri_amt) + 0.5)
-                              : host_low_pri + (int)((pct * (double)host_pri_amt) + 0.5);
-    return host_pri;
-}
-
-/*-------------------------------------------------------------------*/
-/* Convert Host thread scheduling priority to Hercules value         */
-/*-------------------------------------------------------------------*/
-static int host2herc( int host_pri )
-{
-    double pct;
-    int herc_pri;
-
-    if (0
-        || (!host_pri_rvrsd && (host_pri < host_low_pri ||
-                               (host_pri - host_low_pri) > host_pri_amt))
-        || ( host_pri_rvrsd && (host_pri > host_low_pri ||
-                               (host_low_pri - host_pri) > host_pri_amt))
-    )
-        return INT_MAX;
-
-    pct = host_pri_rvrsd ? ((double)(host_low_pri - host_pri) / (double)host_pri_amt)
-                         : ((double)(host_pri - host_low_pri) / (double)host_pri_amt);
-
-    herc_pri = herc_pri_rvrsd ? herc_low_pri - (int)((pct * (double)herc_pri_amt) + 0.5)
-                              : herc_low_pri + (int)((pct * (double)herc_pri_amt) + 0.5);
-    return herc_pri;
-}
-
-/*-------------------------------------------------------------------*/
-/* Change a thread's dispatching priority      (host function)       */
-/*-------------------------------------------------------------------*/
-static int  hthread_setschedprio( TID tid, int prio, const char* location )
-{
-    int rc;
-    struct sched_param param;
-
-    memset( &param, 0, sizeof( param ));
-    if (equal_threads(tid,0))
-        tid = thread_id();
-    param.sched_priority = prio;
-    rc = hthread_setschedparam( tid, herc_policy, &param );
-    if (rc != 0 && EPERM != rc)
-        // "'%s' failed at loc=%s: rc=%d: %s"
-        WRMSG( HHC90020, "W", "set_thread_priority",
-            TRIMLOC( location ), rc, strerror( rc ));
-    return rc;
-}
-
 /*-------------------------------------------------------------------*/
 /* Change a thread's dispatching priority    (HTHREADS function)     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_set_thread_prio( TID tid, int prio, const char* location )
+DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location )
 {
-    int host_prio, rc;
-    host_prio = herc2host( prio );
-    SETMODE(ROOT);
-    rc = hthread_setschedprio( tid, host_prio, location );
-    SETMODE(USER);
-    return rc;
-}
-
-/*-------------------------------------------------------------------*/
-/* Retrieve a thread's dispatching priority     (host function)      */
-/*-------------------------------------------------------------------*/
-static int  hthread_getschedprio( TID tid, const char* location )
-{
-    int rc, prio, dummy;
-    struct sched_param  param;
-    memset( &param, 0, sizeof( param ));
-    if (equal_threads(tid,0))
-        tid = thread_id();
-    rc = hthread_getschedparam( tid, &dummy, &param );
-    if (rc == 0)
-        prio = param.sched_priority;
-    else
+    int rc;
+    struct sched_param param = {0};
+    if (0
+        || prio < HTHREAD_MIN_PRI
+        || prio > HTHREAD_MAX_PRI
+    )
     {
-        prio = INT_MAX;
-        // "'%s' failed at loc=%s: rc=%d: %s"
-        WRMSG( HHC90020, "W", "get_thread_priority",
-            TRIMLOC( location ), rc, strerror( rc ));
+        errno = EINVAL;
+        return -1;
     }
-    return prio;
+    param.sched_priority = prio;
+    if (equal_threads( tid, 0 ))
+        tid = thread_id();
+    SETMODE( ROOT );
+    {
+        rc = hthread_setschedparam( tid, HTHREAD_POLICY, &param );
+    }
+    SETMODE( USER );
+    if (rc < 0)
+    {
+        if (EPERM != rc)
+        {
+            // "'%s' failed at loc=%s: rc=%d: %s"
+            WRMSG( HHC90020, "W", "hthread_setschedparam()",
+                TRIMLOC( location ), rc, strerror( rc ));
+        }
+    }
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Retrieve a thread's dispatching priority   (HTHREADS function)    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_get_thread_prio( TID tid, const char* location )
+DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
 {
-    int host_prio, herc_prio;
-    SETMODE(ROOT);
-    host_prio = hthread_getschedprio( tid, location );
-    SETMODE(USER);
-    if (INT_MAX == host_prio)
-        return INT_MAX;
-    herc_prio = host2herc( host_prio );
-    return herc_prio;
+    int rc, policy;
+    struct sched_param  param = {0};
+    if (equal_threads( tid, 0 ))
+        tid = thread_id();
+    SETMODE( ROOT );
+    {
+        rc = hthread_getschedparam( tid, &policy, &param );
+    }
+    SETMODE( USER );
+    if (rc < 0)
+    {
+        param.sched_priority = rc;
+
+        if (EPERM != rc)
+        {
+            // "'%s' failed at loc=%s: rc=%d: %s"
+            WRMSG( HHC90020, "W", "hthread_getschedparam()",
+                TRIMLOC( location ), rc, strerror( rc ));
+        }
+    }
+    return param.sched_priority;
 }
 
 /*-------------------------------------------------------------------*/

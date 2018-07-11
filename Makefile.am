@@ -938,6 +938,10 @@ endif
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc
 endif
+if OPTION_CAPABILITIES
+	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))
+	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./herclin$(EXEEXT))
+endif
 
 uninstall-local:
 

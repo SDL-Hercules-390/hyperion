@@ -2280,7 +2280,7 @@ AC_ARG_ENABLE( capabilities,
              ;;
         esac
     ],
-    [hc_cv_opt_capabilities=hc_cv_have_sys_capability]
+    [hc_cv_opt_capabilities=hc_cv_have_sys_capa_h]
 )
 
 # Only include libcap if needed and then force
@@ -2876,6 +2876,7 @@ AC_CACHE_SAVE()
 AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
 AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
+AM_CONDITIONAL( OPTION_CAPABILITIES, [ test "$hc_cv_opt_capabilities" = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
 AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
 AM_CONDITIONAL( APPLE,               [ test "$hc_cv_is_darwin"        = "yes" ] )

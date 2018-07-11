@@ -1254,11 +1254,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02022 "SR: error loading CRW queue: not enough memory for %d CRWs"
 //efine HHC02023 - HHC02099 (available)
 
-// reserve 021xx for logger.c
+// reserve 021xx: misc
 #define HHC02100 "Logger: log not active"
 #define HHC02101 "Logger: log closed"
 #define HHC02102 "Logger: error in function %s: %s"
-#define HHC02103 "Logger: logger thread terminating"
+//efine HHC02103 (available)
 #define HHC02104 "Logger: log switched to %s"
 #define HHC02105 "Logger: log to %s"
 #define HHC02106 "Logger: log switched off"

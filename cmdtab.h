@@ -309,7 +309,6 @@
 
 #define cpuidfmt_cmd_desc       "Set format BASIC/0/1 STIDP generation"
 #define cpumodel_cmd_desc       "Set CPU model number"
-#define cpuprio_cmd_desc        "Set/Display cpuprio parameter"
 #define cpuserial_cmd_desc      "Set CPU serial number"
 #define cpuverid_cmd_desc       "Set CPU verion number"
 #define cr_cmd_desc             "Display or alter control registers"
@@ -378,7 +377,6 @@
   "\n"                                                                           \
   "If no arguments are given then all devices will be listed.\n"
 
-#define devprio_cmd_desc        "Set/Display devprio parameter"
 #define devtmax_cmd_desc        "Display or set max device threads"
 #define devtmax_cmd_help        \
                                 \
@@ -563,7 +561,36 @@
   "terminal sessions. If no filename is specified, the built-in logo\n"          \
   "is used instead.\n"
 
-#define hercprio_cmd_desc       "Set/Display hercprio parameter"
+#define hercnice_cmd_desc       "Set/Display Hercules process NICE value"
+#define hercnice_cmd_help       \
+                                \
+  "Format: \"hercnice [nnn]\". Sets (if argument given) or displays (if no\n"   \
+  "argument given) the 'nice' value for the Hercules process. Note that\n"      \
+  "a processes 'nice' value is not the same as its priority. Valid 'nice'\n"    \
+  "values range from -20 to +19.\n"                                             \
+  "\n"                                                                          \
+  "CAUTION! The value you choose for your 'nice' value could have an impact\n"  \
+  "on how a processes internal thread priorities are interpreted. You should\n" \
+  "never modify one without understanding the impact doing so might have on\n"  \
+  "the other.\n"
+
+#define hercprio_cmd_desc       "Set/Display Hercules main thread priority"
+#define cpuprio_cmd_desc        "Set/Display CPU threads priority"
+#define devprio_cmd_desc        "Set/Display Device threads priority"
+#define srvprio_cmd_desc        "Set/Display Server threads priority"
+#define todprio_cmd_desc        "Set/Display TOD Clock/Timer threads priority"
+
+#define xxxprio_cmd_help        \
+                                \
+  "Sets (if argument given) or displays (if no argument given) the internal\n"  \
+  "relative priority of the corresponding thread(s). The relative priority\n"   \
+  "of Hercules threads currently ranges from 1 (lowest or least important)\n"   \
+  "to 7 (highest or most important).\n"                                         \
+  "\n"                                                                          \
+  "CAUTION! thread priorities could be interpreted differently based on your\n" \
+  "processes 'nice' value. You should not modify a thread's priority setting\n" \
+  "without first reviewing your processes 'nice' value.\n"
+
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
                                 \
@@ -1341,7 +1368,6 @@
 #define shrdport_cmd_desc       "Set shrdport value"
 #define sizeof_cmd_desc         "Display size of structures"
 #define spm_cmd_desc            "SIE performance monitor"
-#define srvprio_cmd_desc        "Set/Display srvprio parameter"
 #define ssd_cmd_desc            "Signal shutdown"
 #define ssd_cmd_help            \
                                 \
@@ -1474,7 +1500,6 @@
 
 #define tlb_cmd_desc            "Display TLB tables"
 #define toddrag_cmd_desc        "Display or set TOD clock drag factor"
-#define todprio_cmd_desc        "Set/Display todprio parameter"
 #define traceopt_cmd_desc       "Instruction and/or CCW trace display option"
 #define traceopt_cmd_help       \
                                 \
@@ -1674,13 +1699,10 @@ COMMAND( "sysreset",                sysreset_cmd,           SYSCMDNDIAG8,       
 COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       cnslport_cmd_desc,      NULL                )
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )
-COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       cpuprio_cmd_desc,       NULL                )
 COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       cpuserial_cmd_desc,     NULL                )
 COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
-COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       NULL                )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
-COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       hercprio_cmd_desc,      NULL                )
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
 COMMAND( "lparnum",                 lparnum_cmd,            SYSCFGNDIAG8,       lparnum_cmd_desc,       lparnum_cmd_help    )
 COMMAND( "mainsize",                mainsize_cmd,           SYSCFGNDIAG8,       mainsize_cmd_desc,      mainsize_cmd_help   )
@@ -1688,12 +1710,17 @@ CMDABBR( "manufacturer",    8,      stsi_manufacturer_cmd,  SYSCFGNDIAG8,       
 COMMAND( "model",                   stsi_model_cmd,         SYSCFGNDIAG8,       model_cmd_desc,         model_cmd_help      )
 COMMAND( "plant",                   stsi_plant_cmd,         SYSCFGNDIAG8,       plant_cmd_desc,         NULL                )
 COMMAND( "shcmdopt",                shcmdopt_cmd,           SYSCFGNDIAG8,       shcmdopt_cmd_desc,      shcmdopt_cmd_help   )
-COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       srvprio_cmd_desc,       NULL                )
 COMMAND( "sysepoch",                sysepoch_cmd,           SYSCFGNDIAG8,       sysepoch_cmd_desc,      NULL                )
-COMMAND( "todprio",                 todprio_cmd,            SYSCFGNDIAG8,       todprio_cmd_desc,       NULL                )
 COMMAND( "tzoffset",                tzoffset_cmd,           SYSCFGNDIAG8,       tzoffset_cmd_desc,      NULL                )
 COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       xpndsize_cmd_desc,      xpndsize_cmd_help   )
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )
+
+COMMAND( "hercnice",                hercnice_cmd,           SYSCFGNDIAG8,       hercnice_cmd_desc,      hercnice_cmd_help   )
+COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       hercprio_cmd_desc,      xxxprio_cmd_help    )
+COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       cpuprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       srvprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "todprio",                 todprio_cmd,            SYSCFGNDIAG8,       todprio_cmd_desc,       xxxprio_cmd_help    )
 
 COMMAND( "archlvl",                 archlvl_cmd,            SYSCMDNOPERNDIAG8,  archlvl_cmd_desc,       archlvl_cmd_help    )
 CMDABBR( "facility",        3,      facility_cmd,           SYSCMDNOPERNDIAG8,  facility_cmd_desc,      facility_cmd_help   )

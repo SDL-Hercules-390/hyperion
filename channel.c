@@ -2392,10 +2392,11 @@ u_int   waitcount = 0;                  /* Wait counter              */
 
     UNREFERENCED(arg);
 
+    /* Automatically adjust to priority change if needed */
     current_priority = get_thread_priority();
     if (current_priority != sysblk.devprio)
     {
-        set_thread_priority( sysblk.devprio);
+        set_thread_priority( sysblk.devprio );
         current_priority = sysblk.devprio;
     }
 

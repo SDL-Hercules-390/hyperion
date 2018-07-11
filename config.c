@@ -968,43 +968,51 @@ int rc;
 /*                   configure priority functions                    */
 /*-------------------------------------------------------------------*/
 
-int configure_herc_priority(int prio)
+int configure_herc_nice( int nice )         // (Herc PROCESS priority)
 {
-int rc;
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-    /* Set Hercules base priority */
-    rc = setpriority(PRIO_PROCESS, 0, (sysblk.hercprio = prio));
-    /* Back to user mode */
-    SETMODE(USER);
+    int rc;
+    rc = set_herc_nice( PRIO_PROCESS, 0, nice );
+    if (rc == 0)
+        sysblk.hercnice = nice;
     return rc;
 }
 
-int configure_cpu_priority(int prio)
+int configure_herc_priority( int prio )     // (main THREAD priority)
 {
-int cpu;
+    int rc = set_thread_priority_id( sysblk.impltid, prio );
+    if (rc == 0)
+        sysblk.hercprio = prio;
+    return rc;
+}
+
+int configure_cpu_priority( int prio )
+{
+    int cpu, rc;
+    for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+        if (sysblk.cputid[ cpu ])
+            if ((rc = set_thread_priority_id( sysblk.cputid[ cpu ], prio )) != 0)
+                return rc;
     sysblk.cpuprio = prio;
-    for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.cputid[cpu])
-            set_thread_priority_id( sysblk.cputid[cpu], prio );
     return 0;
 }
 
-int configure_dev_priority(int prio)
+int configure_dev_priority( int prio )
 {
     sysblk.devprio = prio;
     return 0;
 }
 
-int configure_tod_priority(int prio)
+int configure_tod_priority( int prio )
 {
-    sysblk.todprio = prio;
-    if(sysblk.todtid)
-        set_thread_priority_id( sysblk.todtid, prio );
-    return 0;
+    int rc = -1;
+    if (sysblk.todtid)
+        rc = set_thread_priority_id( sysblk.todtid, prio );
+    if (rc == 0)
+        sysblk.todprio = prio;
+    return rc;
 }
 
-int configure_srv_priority(int prio)
+int configure_srv_priority( int prio )
 {
     sysblk.srvprio = prio;
     return 0;

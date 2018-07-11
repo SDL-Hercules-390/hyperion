@@ -48,6 +48,8 @@ static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
 static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
 static char  logger_filename[MAX_PATH];
 
+static const char* thread_name = "logger thread";
+
 /*********************************************************************/
 /*              log_read  -  read system log                         */
 /*********************************************************************/
@@ -266,8 +268,8 @@ static void logger_term(void *arg)
         */
         if (!daemon_task)
         {
-            // "Logger: logger thread terminating"
-            FWRMSG( stderr, HHC02103, "I" );
+            // "Thread id "TIDPAT", prio %2d, name %s ended"
+            FWRMSG( stderr, HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
             fflush( stderr );
         }
     }
@@ -275,8 +277,8 @@ static void logger_term(void *arg)
 
 static void logger_logfile_write( const void* pBuff, size_t nBytes )
 {
-    char* pLeft = (char*)pBuff;
-    int   nLeft = (int)nBytes;
+    char* pLeft = (char*) pBuff;
+    int   nLeft = (int)   nBytes;
 
     /* daemon_mode only (wherein both stdout/stderr have both
        been redirected): don't write to hardcopy during shutdown
@@ -298,8 +300,8 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
         fwrite( pLeft, nLeft, 1, logger_hrdcpy );
     }
 
-    if ( sysblk.shutdown )
-        fflush ( logger_hrdcpy );
+    if (sysblk.shutdown)
+        fflush( logger_hrdcpy );
 }
 
 /* ZZ FIXME:
@@ -341,8 +343,16 @@ static void* logger_thread( void* arg )
 
     UNREFERENCED( arg );
 
-    /* Set device thread priority; ignore any errors */
-    set_thread_priority( sysblk.devprio );
+    /* Set server thread priority; ignore any errors */
+    set_thread_priority( sysblk.srvprio );
+
+    // "Thread id "TIDPAT", prio %2d, name %s started"
+    if (logger_hrdcpy)
+    {
+        char buf[128];
+        MSGBUF( buf, MSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name ));
+        logger_timestamped_logfile_write( buf, strlen( buf ));
+    }
 
 #if !defined( _MSVC_ )
     logger_redirect();
@@ -489,9 +499,9 @@ static void* logger_thread( void* arg )
         /* Write final message to hardcopy file */
         if (logger_hrdcpy)
         {
-            char buf[64];
-            // "Logger: logger thread terminating"
-            MSGBUF( buf, MSG( HHC02103, "I" ));
+            char buf[128];
+            // "Thread id "TIDPAT", prio %2d, name %s ended"
+            MSGBUF( buf, MSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name ));
             logger_timestamped_logfile_write( buf, strlen( buf ));
         }
 

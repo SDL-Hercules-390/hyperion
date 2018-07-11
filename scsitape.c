@@ -1707,29 +1707,22 @@ static void* get_stape_status_thread( void* notused )
 
     // PROGRAMMING NOTE: it is EXTREMELY IMPORTANT that the status-
     // retrieval thread (i.e. ourselves) be set to a priority that
-    // is AT LEAST one priority slot ABOVE what the device-threads
-    // are currently set to in order to prevent their request for
-    // new/updated status from erroneously timing out (thereby mis-
-    // leading them to mistakenly believe no tape is mounted when
-    // in acuality there is!). The issue is, the caller only waits
-    // for so long for us to return the status to them so we better
-    // ensure we return it to them in a timely fashion else they be
-    // mislead to believe there's no tape mounted (since, by virtue
-    // of their request having timed out, they presume no tape is
-    // mounted since the retrieval took too long (which only occurs
-    // whenever (duh!) there's no tape mounted!)). Thus, if there
-    // *is* a tape mounted, we better be DARN sure to return them
-    // the status as quickly as possible in order to prevent their
-    // wait from timing out. We ensure this by setting our own pri-
-    // ority HIGHER than theirs.
+    // is HIGHER than what the device-threads are currently set to
+    // in order to prevent their request for new/updated status from
+    // erroneously timing out (thereby misleading them to mistakenly
+    // believe no tape is mounted when in acuality there is!). The
+    // issue is, the caller only waits for so long for us to return
+    // the status to them so we better ensure we return it to them
+    // in a timely fashion else they be mislead to believe there's
+    // no tape mounted (since, by virtue of their request having
+    // timed out, they presume no tape is mounted since the retrieval
+    // took too long (which only occurs whenever (duh!) there's no
+    // tape mounted!)). Thus, if there *is* a tape mounted, we better
+    // be DARN sure to return them the status as quickly as possible
+    // in order to prevent their wait from timing out. We ensure this
+    // by setting our own priority HIGHER than theirs.
 
-    // PROGRAMMING NOTE: currently, it looks like each priority slot
-    // differs from each other priority slot by '8' units, which is
-    // why we use the value '10' here (to ensure OUR priority gets
-    // set to the next higher slot). If this ever changes then the
-    // below code will need to be adjusted appropriately. -- Fish
-
-    set_thread_priority( sysblk.devprio - 10 );
+    set_thread_priority( sysblk.devprio + 1 );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );

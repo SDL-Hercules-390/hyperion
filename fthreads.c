@@ -819,7 +819,7 @@ static DWORD  __stdcall  FTWin32ThreadFunc
 DLL_EXPORT
 HANDLE fthread_get_handle
 (
-    fthread_t       dwThreadID             // Thread ID
+    fthread_t       dwThreadID              // Thread ID
 )
 {
     FTHREAD*      pFTHREAD = NULL;          // Local pointer storage
@@ -1757,52 +1757,40 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 // Thread Execution Scheduling...
 
-DLL_EXPORT int fthread_get_min_prio( int policy )
-{
-    if (FTHREAD_SCHED_POLICY != policy)
-        return RC(ENOTSUP);
-    return FTHREAD_MIN_PRI;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-
-DLL_EXPORT int fthread_get_max_prio( int policy )
-{
-    if (FTHREAD_SCHED_POLICY != policy)
-        return RC(ENOTSUP);
-    return FTHREAD_MAX_PRI;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
 // (HELPER): Convert Windows priority to Fthread priority
 
-static int W2FPriority( int nPriority )
+static int W2FPriority( int nWindowsPriority )
 {
-    switch (nPriority)
+    switch (nWindowsPriority)
     {
-        case    THREAD_PRIORITY_TIME_CRITICAL:  return -20;
-        case    THREAD_PRIORITY_HIGHEST:        return -15;
-        case    THREAD_PRIORITY_ABOVE_NORMAL:   return  -8;
+        case    THREAD_PRIORITY_IDLE:           return 1;
+        case    THREAD_PRIORITY_LOWEST:         return 2;
+        case    THREAD_PRIORITY_BELOW_NORMAL:   return 3;
         default:
-        case    THREAD_PRIORITY_NORMAL:         return   0;
-        case    THREAD_PRIORITY_BELOW_NORMAL:   return   8;
-        case    THREAD_PRIORITY_LOWEST:         return  15;
-        case    THREAD_PRIORITY_IDLE:           return  20;
+        case    THREAD_PRIORITY_NORMAL:         return 4;
+        case    THREAD_PRIORITY_ABOVE_NORMAL:   return 5;
+        case    THREAD_PRIORITY_HIGHEST:        return 6;
+        case    THREAD_PRIORITY_TIME_CRITICAL:  return 7;
     }
+    UNREACHABLE_CODE( return THREAD_PRIORITY_NORMAL );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // (HELPER): Convert Fthread priority to Windows priority
 
-static int F2WPriority( int nPriority )
+static int F2WPriority( int nFthreadPriority )
 {
-    if      (nPriority < -15) return THREAD_PRIORITY_TIME_CRITICAL;
-    else if (nPriority <  -8) return THREAD_PRIORITY_HIGHEST;
-    else if (nPriority <   0) return THREAD_PRIORITY_ABOVE_NORMAL;
-    else if (nPriority <   8) return THREAD_PRIORITY_NORMAL;
-    else if (nPriority <  15) return THREAD_PRIORITY_BELOW_NORMAL;
-    else if (nPriority <  20) return THREAD_PRIORITY_LOWEST;
-    else                      return THREAD_PRIORITY_IDLE;
+    switch (nFthreadPriority)
+    {
+        case 1: return THREAD_PRIORITY_IDLE;
+        case 2: return THREAD_PRIORITY_LOWEST;
+        case 3: return THREAD_PRIORITY_BELOW_NORMAL;
+        default:
+        case 4: return THREAD_PRIORITY_NORMAL;
+        case 5: return THREAD_PRIORITY_ABOVE_NORMAL;
+        case 6: return THREAD_PRIORITY_HIGHEST;
+        case 7: return THREAD_PRIORITY_TIME_CRITICAL;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1810,18 +1798,18 @@ static int F2WPriority( int nPriority )
 DLL_EXPORT int fthread_getschedparam( fthread_t dwThreadID, int* pnPolicy, struct sched_param* pSCHPARM )
 {
     HANDLE  hThread;
-    int     nPriority;
+    int     nWindowsPriority;
 
     if (0
         || !pnPolicy
         || !pSCHPARM
         || !(hThread = fthread_get_handle( dwThreadID ))
-        || THREAD_PRIORITY_ERROR_RETURN == (nPriority = GetThreadPriority( hThread ))
+        || THREAD_PRIORITY_ERROR_RETURN == (nWindowsPriority = GetThreadPriority( hThread ))
     )
         return RC(EINVAL);
 
-    *pnPolicy = FTHREAD_SCHED_POLICY;
-    pSCHPARM->sched_priority = W2FPriority( nPriority );
+    *pnPolicy = FTHREAD_POLICY;
+    pSCHPARM->sched_priority = W2FPriority( nWindowsPriority );
 
     return 0;
 }
@@ -1832,30 +1820,19 @@ DLL_EXPORT int fthread_setschedparam( fthread_t dwThreadID, int nPolicy, const s
 {
     HANDLE  hThread;
 
-    if (nPolicy != FTHREAD_SCHED_POLICY)
+    if (nPolicy != FTHREAD_POLICY)
         return RC(ENOTSUP);
 
     if (0
         || !pSCHPARM
-        ||  pSCHPARM->sched_priority > FTHREAD_MIN_PRI  // (reversed)
-        ||  pSCHPARM->sched_priority < FTHREAD_MAX_PRI  // (reversed)
+        ||  pSCHPARM->sched_priority < FTHREAD_MIN_PRI
+        ||  pSCHPARM->sched_priority > FTHREAD_MAX_PRI
         || !(hThread = fthread_get_handle( dwThreadID ))
         || !SetThreadPriority( hThread, F2WPriority( pSCHPARM->sched_priority ))
     )
         return RC(EINVAL);
 
     return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-
-DLL_EXPORT int fthread_setschedprio( fthread_t dwThreadID, int nPriority )
-{
-    int rc;
-    struct sched_param param;
-    param.sched_priority = nPriority;
-    rc = fthread_setschedparam( dwThreadID, FTHREAD_SCHED_POLICY, &param );
-    return rc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

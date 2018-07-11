@@ -135,8 +135,6 @@ typedef fthread_mutex_t         HLOCK;
 /* Thread scheduling functions */
 #define hthread_getschedparam( tid, po, sc )    fthread_getschedparam( (hthread_t)(tid), (po), (sc) )
 #define hthread_setschedparam( tid, po, sc )    fthread_setschedparam( (hthread_t)(tid), (po), (sc) )
-#define hthread_sched_get_priority_min( po )    fthread_get_min_prio( po )
-#define hthread_sched_get_priority_max( po )    fthread_get_max_prio( po )
 
 #endif /* defined( OPTION_FTHREADS ) */
 
@@ -199,8 +197,6 @@ typedef pthread_rwlock_t        HRWLOCK;
 /* Thread scheduling functions */
 #define hthread_getschedparam( tid, po, sc )    pthread_getschedparam( (hthread_t)(tid), (po), (sc) )
 #define hthread_setschedparam( tid, po, sc )    pthread_setschedparam( (hthread_t)(tid), (po), (sc) )
-#define hthread_sched_get_priority_min( po )    sched_get_priority_min( po )
-#define hthread_sched_get_priority_max( po )    sched_get_priority_max( po )
 
 #endif /* !defined( OPTION_FTHREADS ) */
 
@@ -218,9 +214,24 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #else
   #define FEAT_ROBUST_MUTEX             /* Robust mutex ARE supported*/
 #endif
-#define HTHREAD_SCHED_DEF   SCHED_RR    /* Default scheduling policy */
-#define HTHREAD_MIN_PRI     (+20)       /* (as in *nix "nice" value) */
-#define HTHREAD_MAX_PRI     (-20)       /* (as in *nix "nice" value) */
+
+/*-------------------------------------------------------------------*/
+/*          Hercules thread scheduling/priority constants            */
+/*-------------------------------------------------------------------*/
+#define HTHREAD_POLICY      SCHED_RR    /* Round-Robin scheduling    */
+
+/* Note that thread priorities are not absolute but rather relative  */
+/* only to other threads within the same process.                    */
+
+#define HTHREAD_MIN_PRI         1       /* Lowest hthread priority   */
+//efine DEFAULT_XXX_PRIO        1       /* WatchDog thread priority  */
+#define DEFAULT_CPU_PRIO        2       /* CPU threads priority      */
+#define DEFAULT_DEV_PRIO        3       /* Device threads priority   */
+#define DEFAULT_SRV_PRIO        4       /* Server threads priority   */
+#define DEFAULT_HERCPRIO        5       /* Main Herc thread priority */
+//efine DEFAULT_XXX_PRIO        6       /* (not used)                */
+#define DEFAULT_TOD_PRIO        7       /* TOD Clock/Timer priority  */
+#define HTHREAD_MAX_PRI         7       /* Highest hthread priority  */
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */
@@ -240,6 +251,7 @@ typedef struct RWLOCK RWLOCK;
 /*-------------------------------------------------------------------*/
 /*                  hthreads exported functions                      */
 /*-------------------------------------------------------------------*/
+HT_DLL_IMPORT void hthreads_internal_init();
 HT_DLL_IMPORT int  locks_cmd( int argc, char* argv[], char* cmdline );
 
 HT_DLL_IMPORT int  hthread_initialize_lock        ( LOCK* plk, const char* name, const char* location );
@@ -275,9 +287,6 @@ HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char
 HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
-#if defined(_MSVC_)
-HT_DLL_IMPORT HANDLE hthread_win_thread_handle    ( TID tid );
-#endif
 HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio, const char* location );
 HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* location );
 
@@ -317,9 +326,6 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* locatio
 #define thread_id()                             hthread_thread_id( PTT_LOC )
 #define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )
-#if defined(_MSVC_)
-#define win_thread_handle( tid )                hthread_win_thread_handle( tid )
-#endif
 #define set_thread_priority( prio )             hthread_set_thread_prio( thread_id(), (prio), PTT_LOC )
 #define get_thread_priority()                   hthread_get_thread_prio( thread_id(), PTT_LOC )
 #define set_thread_priority_id( tid, prio )     hthread_set_thread_prio( (tid), (prio), PTT_LOC )

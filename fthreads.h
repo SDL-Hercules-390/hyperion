@@ -411,26 +411,20 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 // Thread Scheduling...
 
-#define SCHED_FIFO       0          // First in, first out (FIFO) scheduling policy.
-#define SCHED_RR         1          // Round robin scheduling policy.
-#define SCHED_SPORADIC   2          // Sporadic server scheduling policy.
-#define SCHED_OTHER      3          // Another scheduling policy.
-
-#define FTHREAD_SCHED_POLICY    SCHED_RR    // Our only valid scheduling policy
-#define FTHREAD_MIN_PRI         (+20)       // Same as Hercules
-#define FTHREAD_MAX_PRI         (-20)       // Same as Hercules
+#define SCHED_RR            (1)     // Same as Hercules
+#define FTHREAD_POLICY    SCHED_RR  // Our only valid scheduling policy
+#define FTHREAD_MIN_PRI     (1)     // Same as Hercules
+#define FTHREAD_DEF_PRI     (5)     // DEFAULT_HERCPRIO
+#define FTHREAD_MAX_PRI     (7)     // Same as Hercules
 
 struct sched_param                  // Scheduling parameters structure...
 {
-    int  sched_priority;            // Thread priority (see fthreads.c for range)
+    int  sched_priority;            // fthread priority
 };
 typedef struct sched_param sched_param;
 
 FT_DLL_IMPORT  int  fthread_getschedparam ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
 FT_DLL_IMPORT  int  fthread_setschedparam ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
-FT_DLL_IMPORT  int  fthread_setschedprio  ( fthread_t dwThreadID, int nPriority );
-FT_DLL_IMPORT  int  fthread_get_min_prio  ( int nPolicy );
-FT_DLL_IMPORT  int  fthread_get_max_prio  ( int nPolicy );
 
 ////////////////////////////////////////////////////////////////////////////////////
 

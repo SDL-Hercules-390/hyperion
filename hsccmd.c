@@ -3296,230 +3296,120 @@ u_int   locktype = 0;
 }
 
 /*-------------------------------------------------------------------*/
-/* hercprio command                                                  */
+/* primary set_xxx_cmd / hercnice_cmd helper                         */
 /*-------------------------------------------------------------------*/
-int hercprio_cmd(int argc, char *argv[], char *cmdline)
+typedef int CONFIG_PRIO_FUNC( int prio );
+static int set_xxx_cmd( int oldval, int minval, int maxval,
+                        CONFIG_PRIO_FUNC* func, const char* funcname,
+                        int argc, char* argv[] )
 {
-int hercprio;
-BYTE c;
-
-    UNREFERENCED(cmdline);
+    int newval;
+    BYTE c;
 
     UPPER_ARGV_0( argv );
 
-    if ( argc == 1 )
+    if (argc == 1)
     {
         char msgbuf[8];
-
-        VERIFY( MSGBUF( msgbuf, "%d", sysblk.hercprio ) != -1);
+        VERIFY( MSGBUF( msgbuf, "%d", oldval ) != -1);
+        // "%-14s: %s"
         WRMSG( HHC02203, "I", argv[0], msgbuf );
+        return 0;
     }
-    else
 
-    /* Parse priority value */
-    if ( argc == 2 )
+    if (argc != 2)
     {
-        if (sscanf(argv[1], "%d%c", &hercprio, &c) != 1)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            if(configure_herc_priority(hercprio))
-            {
-                WRMSG(HHC00136, "W", "setpriority()", strerror(errno));
-                return -1;
-            }
-
-            if (MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else
-    {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return  -1;
     }
 
+    if (0
+        || sscanf( argv[1], "%d%c", &newval, &c ) != 1
+        || newval < minval
+        || newval > maxval
+    )
+    {
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if (func( newval ))
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00136, "W", funcname, strerror( errno ));
+        return -1;
+    }
+
+    if (MLVL( VERBOSE ))
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], argv[1] );
+
     return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* hercnice command                                                  */
+/*-------------------------------------------------------------------*/
+int hercnice_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+    return set_xxx_cmd( sysblk.hercnice, -20, +19,
+        configure_herc_nice, "configure_herc_nice()", argc, argv );
+}
+
+/*-------------------------------------------------------------------*/
+/* xxxprio_cmd helper macro                                          */
+/*-------------------------------------------------------------------*/
+
+#define SET_PRIO_COMMAND( _old, _func )                     \
+    set_xxx_cmd( (_old), HTHREAD_MIN_PRI, HTHREAD_MAX_PRI,  \
+                 (_func), #_func "()", argc, argv )
+
+/*-------------------------------------------------------------------*/
+/* hercprio command                                                  */
+/*-------------------------------------------------------------------*/
+int hercprio_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+    return SET_PRIO_COMMAND( sysblk.hercprio, configure_herc_priority );
 }
 
 /*-------------------------------------------------------------------*/
 /* cpuprio command                                                   */
 /*-------------------------------------------------------------------*/
-int cpuprio_cmd(int argc, char *argv[], char *cmdline)
+int cpuprio_cmd( int argc, char* argv[], char* cmdline )
 {
-int cpuprio;
-BYTE c;
-
-    UNREFERENCED(cmdline);
-
-    UPPER_ARGV_0( argv );
-
-    if ( argc == 1 )
-    {
-        char msgbuf[8];
-
-        VERIFY( MSGBUF( msgbuf, "%d", sysblk.cpuprio ) != -1);
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
-    }
-    else
-
-    /* Parse priority value */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%d%c", &cpuprio, &c) != 1)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            configure_cpu_priority(cpuprio);
-            if (MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
-
-    return 0;
+    UNREFERENCED( cmdline );
+    return SET_PRIO_COMMAND( sysblk.cpuprio, configure_cpu_priority );
 }
 
 /*-------------------------------------------------------------------*/
 /* devprio command                                                  */
 /*-------------------------------------------------------------------*/
-int devprio_cmd(int argc, char *argv[], char *cmdline)
+int devprio_cmd( int argc, char* argv[], char* cmdline )
 {
-S32 devprio;
-BYTE c;
-
-    UNREFERENCED(cmdline);
-
-    UPPER_ARGV_0( argv );
-
-    if ( argc == 1 )
-    {
-        char msgbuf[8];
-        VERIFY( MSGBUF( msgbuf, "%d", sysblk.devprio ) != -1);
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
-    }
-    else
-
-    /* Parse priority value */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%d%c", &devprio, &c) != 1)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            configure_dev_priority(devprio);
-            if (MLVL(VERBOSE))
-                WRMSG(HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
-
-    return 0;
+    UNREFERENCED( cmdline );
+    return SET_PRIO_COMMAND( sysblk.devprio, configure_dev_priority );
 }
 
 /*-------------------------------------------------------------------*/
 /* todprio command                                                  */
 /*-------------------------------------------------------------------*/
-int todprio_cmd(int argc, char *argv[], char *cmdline)
+int todprio_cmd( int argc, char* argv[], char* cmdline )
 {
-S32 todprio;
-BYTE c;
-
-    UNREFERENCED(cmdline);
-
-    UPPER_ARGV_0( argv );
-
-    if ( argc == 1 )
-    {
-        char msgbuf[8];
-
-        VERIFY( MSGBUF( msgbuf, "%d", sysblk.todprio ) != -1);
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
-    }
-    else
-
-     /* Parse priority value */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%d%c", &todprio, &c) != 1)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            configure_tod_priority(todprio);
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
-
-    return 0;
+    UNREFERENCED( cmdline );
+    return SET_PRIO_COMMAND( sysblk.todprio, configure_tod_priority );
 }
 
 /*-------------------------------------------------------------------*/
 /* srvprio command                                                  */
 /*-------------------------------------------------------------------*/
-int srvprio_cmd(int argc, char *argv[], char *cmdline)
+int srvprio_cmd( int argc, char* argv[], char* cmdline )
 {
-S32 srvprio;
-BYTE c;
-
-    UNREFERENCED(cmdline);
-
-    UPPER_ARGV_0( argv );
-
-    /* Parse priority value */
-    if ( argc == 2 )
-    {
-        if (sscanf(argv[1], "%d%c", &srvprio, &c) != 1)
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return -1;
-        }
-        else
-        {
-            configure_srv_priority(srvprio);
-            if (MLVL(VERBOSE))
-                WRMSG( HHC02204, "I", argv[0], argv[1] );
-        }
-    }
-    else if ( argc == 1 )
-    {
-        char msgbuf[8];
-
-        VERIFY( MSGBUF( msgbuf, "%d", sysblk.srvprio ) != -1);
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
-    }
-    else
-    {
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
-
-    return 0;
+    UNREFERENCED( cmdline );
+    return SET_PRIO_COMMAND( sysblk.srvprio, configure_srv_priority );
 }
 
 /*-------------------------------------------------------------------*/

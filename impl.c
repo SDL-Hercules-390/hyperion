@@ -411,12 +411,10 @@ static void* watchdog_thread( void* arg )
 
     UNREFERENCED( arg );
 
-    /* Set watchdog priority just below cpu priority
-       such that it will not invalidly detect an
-       inoperable cpu
+    /* Set watchdog priority LOWER than the cpu thread priority
+       such that it will not invalidly detect an inoperable cpu
     */
-    if (sysblk.cpuprio >= 0)
-        set_thread_priority( sysblk.cpuprio + 1 );
+    set_thread_priority( sysblk.cpuprio - 1 );
 
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         savecount[ cpu ] = -1;
@@ -607,6 +605,9 @@ int     rc;
         argc--;
     }
 
+    /* Initialize Hercules Threading package */
+    hthreads_internal_init();
+
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
 
@@ -710,30 +711,26 @@ int     rc;
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
     /* set default thread priorities */
-    sysblk.hercprio = DEFAULT_HERCPRIO;
-    sysblk.todprio  = DEFAULT_TOD_PRIO;
-    sysblk.cpuprio  = DEFAULT_CPU_PRIO;
-    sysblk.devprio  = DEFAULT_DEV_PRIO;
-    sysblk.srvprio  = DEFAULT_SRV_PRIO;
+    sysblk.cpuprio  = DEFAULT_CPU_PRIO;     /* (lowest)  */
+    sysblk.devprio  = DEFAULT_DEV_PRIO;     /*     |     */
+    sysblk.srvprio  = DEFAULT_SRV_PRIO;     /*     |     */
+    sysblk.hercprio = DEFAULT_HERCPRIO;     /*     V     */
+    sysblk.todprio  = DEFAULT_TOD_PRIO;     /* (highest) */
 
-    /* Cap the default priorities at zero if setuid not available */
+    /* Cap the default nice value to zero if setuid is not available */
 #if !defined( _MSVC_ )
-  #if !defined(NO_SETUID)
+  #if !defined( NO_SETUID )
     if (sysblk.suid)
   #endif
     {
-        if (sysblk.hercprio < 0)
-            sysblk.hercprio = 0;
-        if (sysblk.todprio < 0)
-            sysblk.todprio = 0;
-        if (sysblk.cpuprio < 0)
-            sysblk.cpuprio = 0;
-        if (sysblk.devprio < 0)
-            sysblk.devprio = 0;
-        if (sysblk.srvprio < 0)
-            sysblk.srvprio = 0;
+        if (sysblk.hercnice < 0)
+            sysblk.hercnice = 0;
     }
 #endif
+
+    /* Now that all the priorities have been defined,
+       set the priority of the main Hercules thread. */
+    set_thread_priority( sysblk.hercprio );
 
 #if defined(_FEATURE_ECPSVM)
     sysblk.ecpsvm.available = 0;

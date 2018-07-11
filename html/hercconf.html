@@ -93,11 +93,12 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
 
-    <a href="#HERCPRIO">HERCPRIO</a>   0
-    <a href="#TODPRIO">TODPRIO</a>    -20
-    <a href="#DEVPRIO">DEVPRIO</a>    8
-    <a href="#CPUPRIO">CPUPRIO</a>    15
+    <a href="#HERCNICE">HERCNICE</a>   0
+    <a href="#CPUPRIO">CPUPRIO</a>    2
+    <a href="#DEVPRIO">DEVPRIO</a>    3
     <a href="#SRVPRIO">SRVPRIO</a>    4
+    <a href="#HERCPRIO">HERCPRIO</a>   5
+    <a href="#TODPRIO">TODPRIO</a>    7
 
     <a href="#TIMERINT">TIMERINT</a>   DEFAULT
     <a href="#TODDRAG">TODDRAG</a>    1.0
@@ -631,17 +632,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUPRIO"></a>
-<dt><code>CPUPRIO &nbsp; <u>15</u> &#124; <em>nn</em></code>
+<dt><code>CPUPRIO &nbsp; <u>2</u> &#124; <em>nn</em></code>
 <dd><p>
-    Specifies the priority of the CPU thread.  Default is a nice value
-    of 15, which means a low priority such that I/O can be scheduled and
-    completed in favour of CPU cycles being burned. On Multi-CPU
-    systems, a real CPU can be "dedicated" to Hercules, by giving the
-    CPU thread a very high dispatching priority (-20).
-    See <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
+    Specifies the internal priority of the CPU threads. The default value 
+    is 2, which allows I/O to be scheduled and completed in favour of CPU
+    cycles being burned.
+    See <a href="#thread_priorities">"Thread Priorities"</a> further below
+    for more information.
     <p>
-
     <i><b>Caution:</b> &nbsp;CPUPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     </ol>
@@ -689,13 +687,13 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DEVPRIO"></a>
-<dt><code>DEVPRIO &nbsp; <u>8</u> &#124; <em>nn</em></code>
+<dt><code>DEVPRIO &nbsp; <u>3</u> &#124; <em>nn</em></code>
 <dd><p>
-    Specifies the priority of the device threads.  The default value is 8.
-    See <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
+    Specifies the internal priority of the device threads.
+    The default value is 3.
+    See <a href="#thread_priorities">"Thread Priorities"</a> further below
+    for more information.
     <p>
-
     <i><b>Caution:</b> &nbsp;DEVPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     <p>
@@ -858,12 +856,33 @@ a real System/390.  The configuration file is an ASCII text file.
     or the default mode if there was no preceding ARCHLVL statement.
    <p>
 
-<a name="HERCPRIO"></a>
-<dt><code>HERCPRIO &nbsp; <u>0</u> &#124; <em>nn</em></code>
+<a name="HERCNICE"></a>
+<dt><code>HERCNICE &nbsp; <u>0</u> &#124; <em>nn</em></code>
 <dd><p>
-    Specifies the process priority for Hercules.  The default is 0.
-    See <a href="#process_priorities">"Process Priorities"</a>
-    below for more information.
+    Specifies the '<a href="https://en.wikipedia.org/wiki/Nice_(Unix)">nice</a>'
+    value of the Hercules process.  The default is 0. A processes
+    '<a href="https://en.wikipedia.org/wiki/Nice_(Unix)">nice</a>' value is
+    <i>not</i> the same as its priority. Nice values range from -20 to +19.
+    See <a href="#process_priorities">"Process Priorities"</a> further below
+    for more information.
+    <p>
+    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root or
+    defined as a setuid root program before it will be allowed to set its nice
+    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
+    chmod +s hercules</code>).
+    <p>
+
+<a name="HERCPRIO"></a>
+<dt><code>HERCPRIO &nbsp; <u>5</u> &#124; <em>nn</em></code>
+<dd><p>
+    Specifies the internal priority of the main Hercules thread.
+    The default value is 5.
+    See <a href="#thread_priorities">"Thread Priorities"</a> further below
+    for more information.
+    <p>
+    <i><b>Caution:</b> &nbsp;HERCPRIO should be given a dispatching priority
+    greater than, or equal to, all other threads except the TOD Clock and Timer
+    thread.</i>
     <p>
 
 <a name="HTTPPORT"></a>
@@ -1383,11 +1402,12 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="SRVPRIO"></a>
 <dt><code>SRVPRIO &nbsp; <u>4</u> &#124; <em>nn</em></code>
 <dd><p>
-    Specifies the priority of the server threads.  The default value is 4.
-    See <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
-    <p>
 
+    Specifies the internal priority of the server threads.
+    The default value is 4.
+    See <a href="#thread_priorities">"Thread Priorities"</a> further below
+    for more information.
+    <p>
     <i><b>Caution:</b> &nbsp;SRVPRIO should not have a higher dispatching
     priority than the TOD Clock and timer thread.</i>
     <p>
@@ -1427,11 +1447,11 @@ a real System/390.  The configuration file is an ASCII text file.
     increase the accuracy of your guest's TOD Clock and CPU Timer values,
     it could also have a severe negative impact on the overall performance
     of your host operating system. This is especially true when a low TIMERINT
-    value is coupled with a high <a href="#HERCPRIO">HERCPRIO</a> and
-    <a href="#TODPRIO">TODPRIO</a> priority setting. Exercise extreme caution
-    when choosing your desired TIMERINT in relationship to your chosen
-    <a href="#HERCPRIO">HERCPRIO</a> and <a href="#TODPRIO">TODPRIO</a>
-    priority settings.
+    value is coupled with a high <a href="#HERCNICE">HERCNICE</a> and
+    <a href="#TODPRIO">TODPRIO</a> setting. Exercise extreme caution when
+    choosing your desired TIMERINT in relationship to your chosen
+    <a href="#HERCNICE">HERCNICE</a> and <a href="#TODPRIO">TODPRIO</a>
+    settings.
     </i>
     <p>
 
@@ -1449,16 +1469,15 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="TODPRIO"></a>
-<dt><code>TODPRIO &nbsp; <u>-20</u> &#124; <em>nn</em></code>
+<dt><code>TODPRIO &nbsp; <u>7</u> &#124; <em>nn</em></code>
 <dd><p>
-    Specifies the priority of the TOD Clock and timer thread.  The
-    default value is -20.  See
-    <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
+    Specifies the priority of the TOD Clock and timer thread.
+    The default value  is 7.
+    See <a href="#thread_priorities">"Thread Priorities"</a> further below
+    for more information.
     <p>
-
     <i><b>Caution:</b> &nbsp;TODPRIO should be given a dispatching
-    priority equal to or higher than any other thread within Hercules.</i>
+    priority greater than, or equal to, any other thread within Hercules.</i>
     <p>
 
 <a name="TRACEOPT"></a>
@@ -1705,32 +1724,27 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="process_priorities"></a>
 <h4>Process Priorities</h4>
 <P>
-    <B>Note:</B> Under Linux, a process is a thread and
-    <a href="#thread_priorities">thread priority</a> information
-    applies instead.
-<P>
     For Windows, the following conversions are used for translating Unix
-    process priorities to Windows process priority classes:
+    process 'nice' values to Windows process priority classes:
 <P>
-<BR>
 <table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
     <TR>
-        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">Unix<br>Priority</TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">'Nice'<br>value</TH>
         <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Windows Process<br>Priority Class</TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%"><br>Meaning</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Windows Process<br>Priority Class</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%"><br>Meaning</TH>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-20 to -16</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Real-time</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Real-time</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process that has the highest possible priority. The threads of the process
             preempt the threads of all other processes, including operating system processes
             performing important tasks. For example, a real-time process that executes for
@@ -1741,14 +1755,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-15 to -9</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">High</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">High</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process that performs time-critical tasks that must be executed immediately.
             The threads of the process preempt the threads of normal or idle priority class
             processes. An example is the Task List, which must respond quickly when called
@@ -1760,56 +1774,56 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-8 to -1</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Above Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Above Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process that has priority above the Normal class but below the High class.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">0 to 7</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">0 to +7</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process with no special scheduling needs.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">8 to 14</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">+8 to +14</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Below Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Below Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process that has priority above the Idle class but below the Normal class.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">15 to 20</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">+15 to +19</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Idle</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Idle</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Process whose threads run only when the system is idle. The threads of the
             process are preempted by the threads of any process running in a higher priority
             class. An example is a screen saver. The idle-priority class is inherited by
@@ -1821,12 +1835,16 @@ a real System/390.  The configuration file is an ASCII text file.
 <p>
 <blockquote>
     <i>
-    <b>Caution:</b> &nbsp;On Windows, the value you choose for your
-    <a href="#HERCPRIO">Process Priority</a>
-    has a direct impact on how your
-    <a href="#thread_priorities">Thread Priorities</a> are interpreted!
-    You should never modify one without understanding what impact your doing so
-    might have on the other!
+    <b>Caution!</b>&nbsp;
+    The '<a href="#HERCNICE">nice</a>' value assigned to a process could have an impact
+    on how its internal <a href="#thread_priorities">thread priorities</a> are interpreted.
+    You should never modify one without understanding the impact that doing so
+    might have on the other.
+    <p>
+    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root
+    or defined as a setuid root program before it will be allowed to set its nice
+    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
+    chmod +s hercules</code>).
     </i>
 </blockquote>
 
@@ -1835,120 +1853,136 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="thread_priorities"></a>
 <h4>Thread Priorities</h4>
 <P>
-    On a Linux/Unix host, Hercules needs to be a setuid root
-    program to allow it to reset its dispatching priority to a high
-    (negative) value
-    (i.e., <code>chown root.root hercules; chmod +s hercules</code>).
+    The following are the currently assigned internal relative thread priorities
+    for Hercules:
 <P>
-    For Windows, the following conversions are used for translating
-    Linux/Unix thread priorities to Windows thread priorities:
-<P><BR>
 
 <table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
     <TR>
-        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">Unix<br>Priority</TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">Relative<br>priority</TH>
         <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Windows<br>Thread Priority</TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%"><br>Meaning</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Thread<br>Type</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%"><br>Description</TH>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-20 to -16</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">1</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Time Critical</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Base priority of 15 for Idle, Below Normal, Normal, Above Normal, or High
-            class processes, and a base priority of 31 for Realtime class processes.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">(watchdog)</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            The "watch dog" thread is the internal Hercules thread that monitors
+            all CPU threads for a  malfunctioning CPU (i.e. one that, due to a bug,
+            has stopped executing instructions). The watch dog thread is always
+            set to a relative priority one less than the priority assigned to
+            the CPU threads.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-15 to -9</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">2</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Highest</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Priority 2 points above the priority class.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#CPUPRIO">CPUPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            The CPU threads are those within Hercules that actually execute the emulated
+            System/370, ESA/390, or z/Architecture instructions. There is one CPU thread
+            for each defined ENGINE. Except for the watch dog thread, CPU threads are always
+            assigned the lowest relative priority of any thread within Hercules. This
+            allows I/O, for example, to be scheduled and completed in favour of CPU cycles
+            being burned.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-8 to -1</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">3</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Above Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Priority 1 point above the priority class.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#DEVPRIO">DEVPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            Device threads within Hercules manage the I/O requests to emulated devices.
+            Assigning the internal relative priority of device threads to be higher than
+            that of the CPU threads ensures no compute-bound CPU thread impacts Hercules's
+            ability to start and complete its I/O requests to its emulated devices.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">0 to 7</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">4</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Normal priority for the priority class.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#SRVPRIO">SRVPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            Server threads are those threads that provide a service to either the user or
+            to other threads internal to Hercules. Threads that monitor for incoming
+            emulated display terminal connection requests for example (or the internal
+            logger thread that manages the passing of messages between threads) are two
+            examples of server threads. Such threads must react to connection requests
+            and/or internal messages quickly since other threads are waiting for them
+            to complete their task before they themselves can proceed.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">8 to 14</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">5</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Below Normal</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Priority 1 point below the priority class.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#HERCPRIO">HERCPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            The main Hercules thread is the one that reads commands from the keyboard and
+            displays messages on the screen. Except for the TOD Clock and Timer thread, it
+            should normally be the highest priority of any thread within Hercules.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">15 to 19</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">6</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Lowest</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Priority 2 points below the priority class.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">(unused)</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            ---
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">20</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">7</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Idle</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
-            Base priority of 1 for Idle, Below Normal, Normal, Above Normal, or High
-            class processes, and a base priority of 16 for Realtime class processes.
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#TODPRIO">TODPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
+            TOD Clock and Timer thread is the thread which manages the internal emulated
+            TOD Clock and CPU Timer components of your emulated mainframe. In order to
+            ensure accurate time of day and elapsed and/or CPU time measurement, it
+            should always be the very highest priority thread within Hercules.
         </TD>
     </TR>
 </TABLE>
@@ -1956,10 +1990,15 @@ a real System/390.  The configuration file is an ASCII text file.
 <p>
 <blockquote>
     <i>
-    <b>Caution:</b> &nbsp;On Windows, your Thread Priority is interpreted
-    differently based on your chosen <a href="#HERCPRIO">Process Priority</a> setting!
-    You should never modify your Thread Priority settings without first reviewing your
-    chosen <a href="#HERCPRIO">Process Priority</a> setting!
+    <b>Caution:</b>&nbsp;
+    Relative thread priorities could be interpreted differently based on a processes
+    '<a href="#HERCNICE">nice</a>' value. You should never modify a thread priority
+    without first reviewing the processes '<a href="#HERCNICE">nice</a>' value.
+    <p>
+    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root or
+    defined as a setuid root program before it will be allowed to set its nice
+    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
+    chmod +s hercules</code>).
     </i>
 </blockquote>
 

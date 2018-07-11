@@ -25,7 +25,7 @@
 
 #include "hercules.h"
 
-#if defined(WIN32)
+#if defined( WIN32 )
 
 /**********************************************************************/
 /*                                                                    */
@@ -33,8 +33,7 @@
 /*                                                                    */
 /*  The following functional equivalents are provided for Windows:    */
 /*                                                                    */
-/*      int getpriority( int which, id_t who );                       */
-/*      int setpriority( int which, id_t who, int prio );             */
+/*      int set_herc_nice( int which, id_t who, int nice );           */
 /*                                                                    */
 /*  Limitations:                                                      */
 /*                                                                    */
@@ -43,7 +42,7 @@
 /*                                                                    */
 /*      2. The only 'who' value supported is 0 (current process).     */
 /*                                                                    */
-/*      3. The 'prio' value is translated from Unix to Windows        */
+/*      3. The 'nice' value is translated from Unix to Windows        */
 /*         and vice-versa according to the following table:           */
 /*                                                                    */
 /*                                      Windows   Unix                */
@@ -56,52 +55,24 @@
 /*                                                                    */
 /**********************************************************************/
 
-DLL_EXPORT int
-getpriority( int which, id_t who )
+DLL_EXPORT int set_herc_nice( int which , id_t who , int nice )
 {
-    HANDLE process;
-    DWORD  priority;
+    HANDLE hProcess;
+    DWORD  dwClass;
 
     if (PRIO_PROCESS != which || 0 != who)
         return EINVAL;
 
-    process = (HANDLE) -1;      /* I.e. current process */
-    priority = GetPriorityClass (process);
+    hProcess = (HANDLE) -1;      /* I.e. current process */
 
-    switch (priority)
-    {
-        case REALTIME_PRIORITY_CLASS:     return -20;
-        case HIGH_PRIORITY_CLASS:         return -15;
-        case ABOVE_NORMAL_PRIORITY_CLASS: return  -8;
-        case NORMAL_PRIORITY_CLASS:       return   0;
-        case BELOW_NORMAL_PRIORITY_CLASS: return   8;
-        case IDLE_PRIORITY_CLASS:         return  15;
-        case 0:
-        default:
-            errno = EACCES;     /* (presumed) */
-            return -1;
-    }
-}
+    if      (nice < -15) dwClass = REALTIME_PRIORITY_CLASS;
+    else if (nice <  -8) dwClass = HIGH_PRIORITY_CLASS;
+    else if (nice <   0) dwClass = ABOVE_NORMAL_PRIORITY_CLASS;
+    else if (nice <   8) dwClass = NORMAL_PRIORITY_CLASS;
+    else if (nice <  15) dwClass = BELOW_NORMAL_PRIORITY_CLASS;
+    else                 dwClass = IDLE_PRIORITY_CLASS;
 
-DLL_EXPORT int
-setpriority( int which , id_t who , int prio )
-{
-    HANDLE process;
-    DWORD  priority;
-
-    if (PRIO_PROCESS != which || 0 != who)
-        return EINVAL;
-
-    process = (HANDLE) -1;      /* I.e. current process */
-
-    if      (prio < -15) priority = REALTIME_PRIORITY_CLASS;
-    else if (prio <  -8) priority = HIGH_PRIORITY_CLASS;
-    else if (prio <   0) priority = ABOVE_NORMAL_PRIORITY_CLASS;
-    else if (prio <   8) priority = NORMAL_PRIORITY_CLASS;
-    else if (prio <  15) priority = BELOW_NORMAL_PRIORITY_CLASS;
-    else                 priority = IDLE_PRIORITY_CLASS;
-
-    if (!SetPriorityClass (process, priority))
+    if (!SetPriorityClass( hProcess, dwClass ))
     {
         errno = EACCES;     /* (presumed) */
         return -1;
@@ -109,4 +80,17 @@ setpriority( int which , id_t who , int prio )
     return 0;
 }
 
-#endif // defined(WIN32)
+#else // !defined( WIN32 )
+
+DLL_EXPORT int set_herc_nice( int which , id_t who , int nice )
+{
+    int rc;
+    SETMODE( ROOT );
+    {
+        rc = setpriority( PRIO_PROCESS, 0, nice );
+    }
+    SETMODE( USER );
+    return rc;
+}
+
+#endif // defined( WIN32 )

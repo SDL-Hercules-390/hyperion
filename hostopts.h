@@ -197,12 +197,6 @@
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #undef  MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" same as "fOo"!!)   */
 
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
-
 #define CASELESS_SYMBOLS
 
 #ifdef _MSVC_
@@ -254,11 +248,6 @@
 #define DLL_EXPORT
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
@@ -280,11 +269,6 @@
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
@@ -304,11 +288,6 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 #undef  OPTION_EXTCURS                  /* Normal cursor handling    */
@@ -330,11 +309,6 @@
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 
 #if defined( HAVE_FORK )
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
@@ -362,11 +336,6 @@
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
 #define MAX_DEVICE_THREADS        255   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 #if defined( HAVE_FORK )
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
 #else
@@ -394,11 +363,6 @@ WARNING( "unknown target platform: defaulting to generic platform settings" )
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
-#define DEFAULT_HERCPRIO    0
-#define DEFAULT_TOD_PRIO  -20
-#define DEFAULT_CPU_PRIO   15
-#define DEFAULT_DEV_PRIO    8
-#define DEFAULT_SRV_PRIO    4
 #if defined( HAVE_FORK )
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
 #else
