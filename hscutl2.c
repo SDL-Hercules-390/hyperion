@@ -87,7 +87,7 @@ DLL_EXPORT int set_herc_nice( int which , id_t who , int nice )
     int rc;
     SETMODE( ROOT );
     {
-        rc = setpriority( PRIO_PROCESS, 0, nice );
+        rc = setpriority( which, who, nice );
     }
     SETMODE( USER );
     return rc;
