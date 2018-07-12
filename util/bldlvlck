@@ -14,8 +14,6 @@ use strict;
 #    Facility, required level, special flag, download URL
 
 my @req = qw(
-     autoconf    2.64   0  http://www.gnu.org/directory/autoconf.html
-     automake    1.9    0  http://www.gnu.org/directory/automake.html
      flex        2.5    0  http://www.gnu.org/directory/flex.html
      gawk        3.0    0  http://www.gnu.org/directory/gawk.html
      gcc         3      0  http://www.gnu.org/directory/gcc.html
