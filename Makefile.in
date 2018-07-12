@@ -2448,6 +2448,8 @@ install-exec-hook:
 @SETUID_HERCIFC_TRUE@	chmod 0750 $(DESTDIR)$(bindir)/hercifc
 @SETUID_HERCIFC_TRUE@	chmod +s   $(DESTDIR)$(bindir)/hercifc
 @SETUID_HERCIFC_TRUE@	rm                             hercifc
+@OPTION_CAPABILITIES_TRUE@	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))
+@OPTION_CAPABILITIES_TRUE@	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./herclin$(EXEEXT))
 
 uninstall-local:
 
