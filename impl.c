@@ -806,9 +806,9 @@ int     rc;
     */
     logger_init();
 
-
     /* Setup the default codepage */
     set_codepage( NULL );
+
     /* Initialize default HDL modules load directory */
     hdl_initpath( NULL );
 
@@ -851,6 +851,16 @@ int     rc;
         sysblk.hercprio = sysblk.minprio;  /*     V     */
         sysblk.todprio  = sysblk.minprio;  /* (highest) */
     }
+
+    /* PROGRAMMING NOTE: we defer setting the logger_thread's priority
+       until AFTER the sysblk's default thread priority fields have
+       been properly initialized, and defer logging its thread started
+       message until after it has been initialized since it is the
+       logger_thread itself that processes all WRMSG() calls.
+    */
+    set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
+    WRMSG( HHC00100, "I", sysblk.loggertid,
+        get_thread_priority_id( sysblk.loggertid ), LOGGER_THREAD_NAME );
 
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)

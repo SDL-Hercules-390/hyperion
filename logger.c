@@ -29,7 +29,6 @@
 
 static COND  logger_cond;
 static LOCK  logger_lock;
-static TID   logger_tid;
 
 static int   logger_init_flg = FALSE;   /* reset by logger_init()    */
 
@@ -47,8 +46,6 @@ static FILE *logger_syslog[2];          /* Syslog read/write pipe    */
 static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
 static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
 static char  logger_filename[MAX_PATH];
-
-static const char* thread_name = "logger thread";
 
 /*********************************************************************/
 /*              log_read  -  read system log                         */
@@ -241,15 +238,15 @@ static void logger_term(void *arg)
         log_wakeup(NULL);
         usleep(1000);
 
-        if (logger_tid != 0 && !sysblk.shutdown)
+        if (sysblk.loggertid != 0 && !sysblk.shutdown)
         {
             sleep(2);
             /* Logger is now terminating */
             obtain_lock(&logger_lock);
 
             /* Wait for the logger to terminate */
-            join_thread( logger_tid, NULL );
-            detach_thread( logger_tid );
+            join_thread( sysblk.loggertid, NULL );
+            detach_thread( sysblk.loggertid );
 
             release_lock(&logger_lock);
 
@@ -269,7 +266,7 @@ static void logger_term(void *arg)
         if (!daemon_task)
         {
             // "Thread id "TIDPAT", prio %2d, name %s ended"
-            FWRMSG( stderr, HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
+            FWRMSG( stderr, HHC00101, "I", thread_id(), get_thread_priority(), LOGGER_THREAD_NAME );
             fflush( stderr );
         }
     }
@@ -342,17 +339,6 @@ static void* logger_thread( void* arg )
     int bytes_read;
 
     UNREFERENCED( arg );
-
-    /* Set server thread priority; ignore any errors */
-    set_thread_priority( sysblk.srvprio );
-
-    // "Thread id "TIDPAT", prio %2d, name %s started"
-    if (logger_hrdcpy)
-    {
-        char buf[128];
-        MSGBUF( buf, MSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name ));
-        logger_timestamped_logfile_write( buf, strlen( buf ));
-    }
 
 #if !defined( _MSVC_ )
     logger_redirect();
@@ -491,7 +477,7 @@ static void* logger_thread( void* arg )
     } /* end while(logger_active) */
 
     logger_active = 0;
-    logger_tid = 0;
+    sysblk.loggertid = 0;
 
     /* Logger is now terminating */
     obtain_lock( &logger_lock );
@@ -501,7 +487,7 @@ static void* logger_thread( void* arg )
         {
             char buf[128];
             // "Thread id "TIDPAT", prio %2d, name %s ended"
-            MSGBUF( buf, MSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name ));
+            MSGBUF( buf, MSG( HHC00101, "I", thread_id(), get_thread_priority(), LOGGER_THREAD_NAME ));
             logger_timestamped_logfile_write( buf, strlen( buf ));
         }
 
@@ -622,8 +608,8 @@ DLL_EXPORT void logger_init( void )
 
     setvbuf( logger_syslog[ LOG_WRITE ], NULL, _IONBF, 0 );
 
-    rc = create_thread( &logger_tid, JOINABLE,
-                        logger_thread, NULL, "logger_thread" );
+    rc = create_thread( &sysblk.loggertid, JOINABLE,
+                        logger_thread, NULL, LOGGER_THREAD_NAME );
     if (rc)
     {
         fprintf( stderr, MSG( HHC00102, "E", strerror( rc )));
