@@ -1636,7 +1636,17 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
     int rc = 0;
     char threadname[16];
     STRLCPY( threadname, name );
+
+    /* Some platforms (e.g. Mac) can only set name of current thread */
+
+#if defined( PTHREAD_SET_NAME_ONLY )
+    if (!pthread_equal( tid, pthread_self()))
+        return EINVAL;
+    rc = pthread_setname_np( threadname );
+#else
     rc = pthread_setname_np( tid, threadname );
+#endif
+
     /* Ignore any error; it either worked or it didn't */
     return rc;
 }

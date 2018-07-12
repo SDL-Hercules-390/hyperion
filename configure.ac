@@ -542,6 +542,7 @@ AH_TEMPLATE( [HAVE_ATOMIC_INTRINSICS],       [Define if '__atomic_xor_fetch' and
 AH_TEMPLATE( [HAVE_SWAP_BUILTINS],           [Define if '__builtin_bswap32' and friends are available] )
 AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
 AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' is available] )
+AH_TEMPLATE( [PTHREAD_SET_NAME_ONLY],        [Define if 'pthread_setname_np()' takes only name argument] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1824,6 +1825,31 @@ else
     hc_cv_pp_macro_arg_counting_broke=no
 fi
 
+#-------------------------------------------------#
+#  Check if 'pthread_setname_np' takes only name  #
+#-------------------------------------------------#
+
+if test "$hc_cv_have_pthread_setname_np" = "yes"; then
+
+  AC_CACHE_CHECK( [if 'pthread_setname_np' takes only name],
+
+      [hc_cv_pthread_set_name_only],
+      [
+          AC_COMPILE_IFELSE(
+          [
+              #include <pthread.h>
+              void main()
+              {
+                  pthread_setname_np("foo");
+              }
+          ],
+          [hc_cv_pthread_set_name_only=yes],
+          [hc_cv_pthread_set_name_only=no] )
+      ]
+  )
+
+fi
+
 #------------------------------------------------------#
 #  Test for GCC strict aliasing insanity               #
 #------------------------------------------------------#
@@ -2777,6 +2803,7 @@ test "$hc_cv_atomic_intrinsics_available" = "yes"  &&  AC_DEFINE(HAVE_ATOMIC_INT
 test "$hc_cv_swap_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SWAP_BUILTINS)
 test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILTINS)
 test "$hc_cv_have_pthread_setname_np"     = "yes"  &&  AC_DEFINE(HAVE_PTHREAD_SETNAME_NP)
+test "$hc_cv_pthread_set_name_only"       = "yes"  &&  AC_DEFINE(PTHREAD_SET_NAME_ONLY)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
 test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
