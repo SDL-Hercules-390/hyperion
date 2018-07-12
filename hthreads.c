@@ -113,7 +113,7 @@ DLL_EXPORT void hthreads_internal_init()
     if (!bDidInit)
     {
         MATTR attr;
-        int rc;
+        int rc, minprio, maxprio;
 
         /* Initialize our internal lock */
 
@@ -137,6 +137,17 @@ DLL_EXPORT void hthreads_internal_init()
 
         InitializeListHead( &locklist );
         lockcount = 0;
+
+        /* Retrieve the minimum/maximum scheduling priority */
+
+        minprio = hthread_get_priority_min( HTHREAD_POLICY );
+        maxprio = hthread_get_priority_max( HTHREAD_POLICY );
+
+        if (minprio >= 0 && maxprio >= 0 && maxprio >= minprio)
+        {
+            sysblk.minprio = minprio;
+            sysblk.maxprio = maxprio;
+        }
 
         /* One-time initialization completed */
 
@@ -847,8 +858,8 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
     int rc;
     struct sched_param param = {0};
     if (0
-        || prio < HTHREAD_MIN_PRI
-        || prio > HTHREAD_MAX_PRI
+        || prio < sysblk.minprio
+        || prio > sysblk.maxprio
     )
     {
         errno = EINVAL;

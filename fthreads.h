@@ -413,9 +413,8 @@ int fthread_mutexattr_settype
 
 #define SCHED_RR            (1)     // Same as Hercules
 #define FTHREAD_POLICY    SCHED_RR  // Our only valid scheduling policy
-#define FTHREAD_MIN_PRI     (1)     // Same as Hercules
-#define FTHREAD_DEF_PRI     (5)     // DEFAULT_HERCPRIO
-#define FTHREAD_MAX_PRI     (7)     // Same as Hercules
+#define FTHREAD_MIN_PRIO    (1)     // Same as Hercules
+#define FTHREAD_MAX_PRIO    (7)     // Same as Hercules
 
 struct sched_param                  // Scheduling parameters structure...
 {
@@ -425,6 +424,8 @@ typedef struct sched_param sched_param;
 
 FT_DLL_IMPORT  int  fthread_getschedparam ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
 FT_DLL_IMPORT  int  fthread_setschedparam ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
+FT_DLL_IMPORT  int  fthread_get_priority_min( int nPolicy );
+FT_DLL_IMPORT  int  fthread_get_priority_max( int nPolicy );
 
 ////////////////////////////////////////////////////////////////////////////////////
 

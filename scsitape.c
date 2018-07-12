@@ -1722,7 +1722,7 @@ static void* get_stape_status_thread( void* notused )
     // in order to prevent their wait from timing out. We ensure this
     // by setting our own priority HIGHER than theirs.
 
-    set_thread_priority( sysblk.devprio + 1 );
+    set_thread_priority( MIN( sysblk.maxprio, sysblk.devprio + 1 ));
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );

@@ -135,6 +135,8 @@ typedef fthread_mutex_t         HLOCK;
 /* Thread scheduling functions */
 #define hthread_getschedparam( tid, po, sc )    fthread_getschedparam( (hthread_t)(tid), (po), (sc) )
 #define hthread_setschedparam( tid, po, sc )    fthread_setschedparam( (hthread_t)(tid), (po), (sc) )
+#define hthread_get_priority_min( po )          fthread_get_priority_min( po )
+#define hthread_get_priority_max( po )          fthread_get_priority_max( po )
 
 #endif /* defined( OPTION_FTHREADS ) */
 
@@ -197,7 +199,8 @@ typedef pthread_rwlock_t        HRWLOCK;
 /* Thread scheduling functions */
 #define hthread_getschedparam( tid, po, sc )    pthread_getschedparam( (hthread_t)(tid), (po), (sc) )
 #define hthread_setschedparam( tid, po, sc )    pthread_setschedparam( (hthread_t)(tid), (po), (sc) )
-
+#define hthread_get_priority_min( po )          sched_get_priority_min( po )
+#define hthread_get_priority_max( po )          sched_get_priority_max( po )
 #endif /* !defined( OPTION_FTHREADS ) */
 
 /*-------------------------------------------------------------------*/
@@ -223,15 +226,18 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 /* Note that thread priorities are not absolute but rather relative  */
 /* only to other threads within the same process.                    */
 
-#define HTHREAD_MIN_PRI         1       /* Lowest hthread priority   */
 //efine DEFAULT_XXX_PRIO        1       /* WatchDog thread priority  */
 #define DEFAULT_CPU_PRIO        2       /* CPU threads priority      */
 #define DEFAULT_DEV_PRIO        3       /* Device threads priority   */
 #define DEFAULT_SRV_PRIO        4       /* Server threads priority   */
-#define DEFAULT_HERCPRIO        5       /* Main Herc thread priority */
+#define DEFAULT_HERC_PRIO       5       /* Main Herc thread priority */
 //efine DEFAULT_XXX_PRIO        6       /* (not used)                */
 #define DEFAULT_TOD_PRIO        7       /* TOD Clock/Timer priority  */
-#define HTHREAD_MAX_PRI         7       /* Highest hthread priority  */
+
+/* (not really part of hthreads but a convenient place for #define)  */
+
+#define MIN_NICE_VALUE        -20       /* Minimum 'nice' value      */
+#define MAX_NICE_VALUE        +19       /* Maximum 'nice' value      */
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

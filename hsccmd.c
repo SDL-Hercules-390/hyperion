@@ -3355,7 +3355,7 @@ static int set_xxx_cmd( int oldval, int minval, int maxval,
 int hercnice_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
-    return set_xxx_cmd( sysblk.hercnice, -20, +19,
+    return set_xxx_cmd( sysblk.hercnice, MIN_NICE_VALUE, MAX_NICE_VALUE,
         configure_herc_nice, "configure_herc_nice()", argc, argv );
 }
 
@@ -3364,7 +3364,7 @@ int hercnice_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 
 #define SET_PRIO_COMMAND( _old, _func )                     \
-    set_xxx_cmd( (_old), HTHREAD_MIN_PRI, HTHREAD_MAX_PRI,  \
+    set_xxx_cmd( (_old), sysblk.minprio, sysblk.maxprio,    \
                  (_func), #_func "()", argc, argv )
 
 /*-------------------------------------------------------------------*/

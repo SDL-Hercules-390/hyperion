@@ -414,7 +414,7 @@ static void* watchdog_thread( void* arg )
     /* Set watchdog priority LOWER than the cpu thread priority
        such that it will not invalidly detect an inoperable cpu
     */
-    set_thread_priority( sysblk.cpuprio - 1 );
+    set_thread_priority( MAX( sysblk.minprio, sysblk.cpuprio - 1 ));
 
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
         savecount[ cpu ] = -1;
@@ -710,56 +710,33 @@ int     rc;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
-    /* set default thread priorities */
-    sysblk.cpuprio  = DEFAULT_CPU_PRIO;     /* (lowest)  */
-    sysblk.devprio  = DEFAULT_DEV_PRIO;     /*     |     */
-    sysblk.srvprio  = DEFAULT_SRV_PRIO;     /*     |     */
-    sysblk.hercprio = DEFAULT_HERCPRIO;     /*     V     */
-    sysblk.todprio  = DEFAULT_TOD_PRIO;     /* (highest) */
-
-    /* Cap the default nice value to zero if setuid is not available */
-#if !defined( _MSVC_ )
-  #if !defined( NO_SETUID )
-    if (sysblk.suid)
-  #endif
-    {
-        if (sysblk.hercnice < 0)
-            sysblk.hercnice = 0;
-    }
-#endif
-
-    /* Now that all the priorities have been defined,
-       set the priority of the main Hercules thread. */
-    set_thread_priority( sysblk.hercprio );
-
-#if defined(_FEATURE_ECPSVM)
+#if defined( _FEATURE_ECPSVM )
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
 #endif
 
-#ifdef PANEL_REFRESH_RATE
+#if defined( PANEL_REFRESH_RATE )
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
     sysblk.shrdport = 0;
 #endif
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
+#if defined( ENABLE_BUILTIN_SYMBOLS )
     /* setup defaults for CONFIG symbols  */
     {
         char buf[8];
 
-        set_symbol("LPARNAME", str_lparname());
-        set_symbol("LPARNUM", "1");
-        set_symbol("CPUIDFMT", "0");
+        set_symbol( "LPARNAME", str_lparname());
+        set_symbol( "LPARNUM",  "1" );
+        set_symbol( "CPUIDFMT", "0" );
 
         MSGBUF( buf, "%06X", sysblk.cpuserial );
         set_symbol( "CPUSERIAL", buf );
 
         MSGBUF( buf, "%04X", sysblk.cpumodel );
         set_symbol( "CPUMODEL", buf );
-
     }
 #endif
 
@@ -768,20 +745,22 @@ int     rc;
 #endif
 
     /* Initialize locks, conditions, and attributes */
-    initialize_lock (&sysblk.config);
-    initialize_lock (&sysblk.todlock);
-    initialize_lock (&sysblk.mainlock);
-    sysblk.mainowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.intlock);
-    initialize_lock (&sysblk.iointqlk);
-    sysblk.intowner = LOCK_OWNER_NONE;
-    initialize_lock (&sysblk.sigplock);
-    initialize_lock (&sysblk.scrlock);
-    initialize_condition (&sysblk.scrcond);
-    initialize_lock (&sysblk.crwlock);
-    initialize_lock (&sysblk.ioqlock);
-    initialize_condition (&sysblk.ioqcond);
+    initialize_lock( &sysblk.config   );
+    initialize_lock( &sysblk.todlock  );
+    initialize_lock( &sysblk.mainlock );
+    initialize_lock( &sysblk.intlock  );
+    initialize_lock( &sysblk.iointqlk );
+    initialize_lock( &sysblk.sigplock );
+    initialize_lock( &sysblk.scrlock  );
+    initialize_lock( &sysblk.crwlock  );
+    initialize_lock( &sysblk.ioqlock  );
     initialize_lock( &sysblk.dasdcache_lock );
+
+    initialize_condition( &sysblk.scrcond );
+    initialize_condition( &sysblk.ioqcond );
+
+    sysblk.mainowner = LOCK_OWNER_NONE;
+    sysblk.intowner  = LOCK_OWNER_NONE;
 
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
@@ -827,13 +806,51 @@ int     rc;
     */
     logger_init();
 
-    /*
-       Setup the initial codepage
-    */
-    set_codepage(NULL);
 
+    /* Setup the default codepage */
+    set_codepage( NULL );
     /* Initialize default HDL modules load directory */
     hdl_initpath( NULL );
+
+    /* Cap the default nice value to zero if setuid is not available */
+#if !defined( _MSVC_ )
+  #if !defined( NO_SETUID )
+    if (sysblk.suid)
+  #endif
+    {
+        if (sysblk.hercnice < 0)
+            sysblk.hercnice = 0;
+    }
+#endif
+
+    /* Initialize default thread priorities */
+    sysblk.cpuprio  = DEFAULT_CPU_PRIO;  /* (lowest)  */
+    sysblk.devprio  = DEFAULT_DEV_PRIO;  /*     |     */
+    sysblk.srvprio  = DEFAULT_SRV_PRIO;  /*     |     */
+    sysblk.hercprio = DEFAULT_HERC_PRIO  /*     V     */;
+    sysblk.todprio  = DEFAULT_TOD_PRIO;  /* (highest) */
+
+    MINMAX( sysblk.cpuprio,  sysblk.minprio, sysblk.maxprio );  /* (lowest)  */
+    MINMAX( sysblk.devprio,  sysblk.minprio, sysblk.maxprio );  /*     |     */
+    MINMAX( sysblk.srvprio,  sysblk.minprio, sysblk.maxprio );  /*     |     */
+    MINMAX( sysblk.hercprio, sysblk.minprio, sysblk.maxprio );  /*     V     */
+    MINMAX( sysblk.todprio,  sysblk.minprio, sysblk.maxprio );  /* (highest) */
+
+    /* Set the priority of the main Hercules thread */
+    if ((rc = set_thread_priority( sysblk.hercprio )) < 0)
+    {
+        // "set_thread_priority( %d ) failed: %s"
+        WRMSG( HHC00109, "E", sysblk.hercprio, strerror( rc ));
+
+        // "Defaulting all threads to priority %d"
+        WRMSG( HHC00110, "W", sysblk.minprio );
+
+        sysblk.cpuprio  = sysblk.minprio;  /* (lowest)  */
+        sysblk.devprio  = sysblk.minprio;  /*     |     */
+        sysblk.srvprio  = sysblk.minprio;  /*     |     */
+        sysblk.hercprio = sysblk.minprio;  /*     V     */
+        sysblk.todprio  = sysblk.minprio;  /* (highest) */
+    }
 
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)

@@ -562,17 +562,19 @@
   "is used instead.\n"
 
 #define hercnice_cmd_desc       "Set/Display Hercules process NICE value"
-#define hercnice_cmd_help       \
-                                \
+#define hercnice_cmd_help2( a, b )                                              \
+                                                                                \
   "Format: \"hercnice [nnn]\". Sets (if argument given) or displays (if no\n"   \
   "argument given) the 'nice' value for the Hercules process. Note that\n"      \
   "a processes 'nice' value is not the same as its priority. Valid 'nice'\n"    \
-  "values range from -20 to +19.\n"                                             \
+  "values range from " QSTR(a) " to " QSTR(b) ".\n"                             \
   "\n"                                                                          \
   "CAUTION! The value you choose for your 'nice' value could have an impact\n"  \
   "on how a processes internal thread priorities are interpreted. You should\n" \
   "never modify one without understanding the impact doing so might have on\n"  \
   "the other.\n"
+
+#define hercnice_cmd_help       hercnice_cmd_help2( MIN_NICE_VALUE, MAX_NICE_VALUE )
 
 #define hercprio_cmd_desc       "Set/Display Hercules main thread priority"
 #define cpuprio_cmd_desc        "Set/Display CPU threads priority"

@@ -289,7 +289,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
-//efine HHC00109 - HHC00129 (available)
+#define HHC00109 "set_thread_priority( %d ) failed: %s"
+#define HHC00110 "Defaulting all threads to priority %d"
+//efine HHC00111 - HHC00129 (available)
 
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
