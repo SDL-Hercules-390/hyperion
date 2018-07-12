@@ -852,12 +852,15 @@ int     rc;
         sysblk.todprio  = sysblk.minprio;  /* (highest) */
     }
 
-    /* PROGRAMMING NOTE: we defer setting the logger_thread's priority
-       until AFTER the sysblk's default thread priority fields have
-       been properly initialized, and defer logging its thread started
-       message until after it has been initialized since it is the
-       logger_thread itself that processes all WRMSG() calls.
+    /* PROGRAMMING NOTE: we defer setting thread priorities until AFTER
+       the sysblk's default thread priority fields have been properly
+       initialized, just as we also defer logging any thread started
+       messages until after the logger has been initialized, since it
+       is the logger that processes all WRMSG() calls.
     */
+#define HERC_THREAD_NAME    "Hercules main"
+    SET_THREAD_NAME( HERC_THREAD_NAME );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HERC_THREAD_NAME );
     set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
     WRMSG( HHC00100, "I", sysblk.loggertid,
         get_thread_priority_id( sysblk.loggertid ), LOGGER_THREAD_NAME );

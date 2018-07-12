@@ -1637,11 +1637,6 @@ U32     aaddr;                          /* Absolute address for STO  */
 char    buf[1024];                      /* Buffer workarea           */
 size_t  loopcount;                      /* Number of iterations done */
 
-    SET_THREAD_NAME("panel_display");
-
-    /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "Control panel");
-
     hdl_addshut("panel_cleanup",panel_cleanup, NULL);
 
     history_init();
