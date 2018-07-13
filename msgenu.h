@@ -1327,7 +1327,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02253 "All CPU's must be stopped %s"
 //efine HHC02254 (available)
 //efine HHC02255 (available)
-#define HHC02256 "Command %s is deprecated, use %s instead"
+#define HHC02256 "Command '%s' is deprecated; use '%s' instead"
 #define HHC02257 "%s%7d"
 //efine HHC02258 (available)
 #define HHC02259 "Script %d aborted: %s"
@@ -2252,7 +2252,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC17011 (available)
 #define HHC17012 "MSGLEVEL = %s"
 #define HHC17013 "Process ID = %d"
-#define HHC17014 "Specified value is invalid or outside of range %d to %d"
+#define HHC17014 "%s value is invalid; valid range is %d - %d"
 #define HHC17015 "%s support not included in this engine build"
 //efine HHC17016 - HHC17099 (available)
 

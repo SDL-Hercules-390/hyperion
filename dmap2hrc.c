@@ -12,7 +12,6 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 
 #define UTILITY_NAME    "dmap2hrc"

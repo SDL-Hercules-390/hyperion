@@ -277,6 +277,12 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 /*-------------------------------------------------------------------*/
 /*      Some handy memory/string comparison macros                   */
 /*-------------------------------------------------------------------*/
+
+#if defined( _MSVC_ )
+#define strcasecmp                  _stricmp
+#define strncasecmp                 _strnicmp
+#endif
+
 #define mem_eq(_a,_b,_n)            (!memcmp(_a,_b,_n))
 #define mem_ne(_a,_b,_n)            ( memcmp(_a,_b,_n))
 

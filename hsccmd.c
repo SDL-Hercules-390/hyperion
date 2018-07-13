@@ -3301,12 +3301,13 @@ u_int   locktype = 0;
 typedef int CONFIG_PRIO_FUNC( int prio );
 static int set_xxx_cmd( int oldval, int minval, int maxval,
                         CONFIG_PRIO_FUNC* func, const char* funcname,
-                        int argc, char* argv[] )
+                        int argc, char* argv[], char* cmdline )
 {
     int newval;
     BYTE c;
 
     UPPER_ARGV_0( argv );
+    UNREFERENCED( cmdline );
 
     if (argc == 1)
     {
@@ -3324,14 +3325,48 @@ static int set_xxx_cmd( int oldval, int minval, int maxval,
         return  -1;
     }
 
-    if (0
-        || sscanf( argv[1], "%d%c", &newval, &c ) != 1
-        || newval < minval
-        || newval > maxval
-    )
+    if (sscanf( argv[1], "%d%c", &newval, &c ) != 1)
     {
-        // "Invalid value %s specified for %s"
-        WRMSG( HHC01451, "E", argv[1], argv[0] );
+        // "Invalid syntax %s for %s"
+        WRMSG( HHC01456, "E", argv[1], argv[0] );
+        return -1;
+    }
+
+    if (newval < minval || newval > maxval)
+    {
+        // "%s value is invalid; valid range is %d - %d"
+        WRMSG( HHC17014, "E", argv[0], minval, maxval );
+
+
+
+#if 1 // FIXME! (transitional helper; remove on/after August 2019)
+        if (func != configure_herc_nice)
+        {
+            int  instead;
+            bool depmsg = true;
+
+                 if (str_caseless_eq( "cpuprio",  argv[0] )) { instead = DEFAULT_CPU_PRIO; }
+            else if (str_caseless_eq( "devprio",  argv[0] )) { instead = DEFAULT_DEV_PRIO; }
+            else if (str_caseless_eq( "srvprio",  argv[0] )) { instead = DEFAULT_SRV_PRIO; }
+            else if (str_caseless_eq( "hercprio", argv[0] )) { instead = DEFAULT_HERC_PRIO;}
+            else if (str_caseless_eq( "todprio",  argv[0] )) { instead = DEFAULT_TOD_PRIO; }
+            else depmsg = false;
+
+            if (depmsg)
+            {
+                char oldbuf[16], newbuf[16];
+
+                MSGBUF( oldbuf, "%s %s", argv[0], argv[1] );
+                MSGBUF( newbuf, "%s %d", argv[0], instead );
+
+                // "Command '%s' is deprecated; use '%s' instead"
+                WRMSG( HHC02256, "W", oldbuf, newbuf );
+            }
+        }
+#endif // FIXME! (transitional helper; remove on/after August 2019)
+
+
+
         return -1;
     }
 
@@ -3354,9 +3389,8 @@ static int set_xxx_cmd( int oldval, int minval, int maxval,
 /*-------------------------------------------------------------------*/
 int hercnice_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED( cmdline );
     return set_xxx_cmd( sysblk.hercnice, MIN_NICE_VALUE, MAX_NICE_VALUE,
-        configure_herc_nice, "configure_herc_nice()", argc, argv );
+        configure_herc_nice, "configure_herc_nice()", argc, argv, cmdline );
 }
 
 /*-------------------------------------------------------------------*/
@@ -3365,52 +3399,13 @@ int hercnice_cmd( int argc, char* argv[], char* cmdline )
 
 #define SET_PRIO_COMMAND( _old, _func )                     \
     set_xxx_cmd( (_old), sysblk.minprio, sysblk.maxprio,    \
-                 (_func), #_func "()", argc, argv )
+                 (_func), #_func "()", argc, argv, cmdline )
 
-/*-------------------------------------------------------------------*/
-/* hercprio command                                                  */
-/*-------------------------------------------------------------------*/
-int hercprio_cmd( int argc, char* argv[], char* cmdline )
-{
-    UNREFERENCED( cmdline );
-    return SET_PRIO_COMMAND( sysblk.hercprio, configure_herc_priority );
-}
-
-/*-------------------------------------------------------------------*/
-/* cpuprio command                                                   */
-/*-------------------------------------------------------------------*/
-int cpuprio_cmd( int argc, char* argv[], char* cmdline )
-{
-    UNREFERENCED( cmdline );
-    return SET_PRIO_COMMAND( sysblk.cpuprio, configure_cpu_priority );
-}
-
-/*-------------------------------------------------------------------*/
-/* devprio command                                                  */
-/*-------------------------------------------------------------------*/
-int devprio_cmd( int argc, char* argv[], char* cmdline )
-{
-    UNREFERENCED( cmdline );
-    return SET_PRIO_COMMAND( sysblk.devprio, configure_dev_priority );
-}
-
-/*-------------------------------------------------------------------*/
-/* todprio command                                                  */
-/*-------------------------------------------------------------------*/
-int todprio_cmd( int argc, char* argv[], char* cmdline )
-{
-    UNREFERENCED( cmdline );
-    return SET_PRIO_COMMAND( sysblk.todprio, configure_tod_priority );
-}
-
-/*-------------------------------------------------------------------*/
-/* srvprio command                                                  */
-/*-------------------------------------------------------------------*/
-int srvprio_cmd( int argc, char* argv[], char* cmdline )
-{
-    UNREFERENCED( cmdline );
-    return SET_PRIO_COMMAND( sysblk.srvprio, configure_srv_priority );
-}
+int hercprio_cmd ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.hercprio, configure_herc_priority ); }
+int cpuprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.cpuprio,  configure_cpu_priority  ); }
+int devprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.devprio,  configure_dev_priority  ); }
+int todprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.todprio,  configure_tod_priority  ); }
+int srvprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.srvprio,  configure_srv_priority  ); }
 
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
@@ -7395,7 +7390,7 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
         || CMD( argv[0], ecps:vm, 7 )
     )
     {
-        // "Command %s is deprecated, use %s instead"
+        // "Command '%s' is deprecated; use '%s' instead"
         WRMSG( HHC02256, "W", argv[0], "ecpsvm" );
         // (fall through to process their command anyway)
     }

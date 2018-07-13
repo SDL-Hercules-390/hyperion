@@ -18,6 +18,7 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
+#include "hercules.h"
 
 #define PGMNAME  "conspawn"
 

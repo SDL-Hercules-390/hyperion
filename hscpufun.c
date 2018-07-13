@@ -1078,19 +1078,14 @@ char   *archlvl_func;
         return -1;
     }
 
-    // HHC02256 "Command %s is deprecated, use %s instead"
-
-    if (argc == 1)
-    {
-        archlvl_func = "query";
-    }
-    else /* (argc == 2) */
-    {
-        archlvl_func = argv[1];
-    }
+    if      (argc == 1)    { archlvl_func = "query"; }
+    else /* (argc == 2) */ { archlvl_func = argv[1]; }
 
     MSGBUF( buffer, "archlvl %s asn_lx_reuse", archlvl_func );
+
+    // "Command '%s' is deprecated; use '%s' instead"
     WRMSG( HHC02256, "W", "ALRF", buffer );
+
     return InternalHercCmd( buffer );
 }
 #endif /* defined( _FEATURE_006_ASN_LX_REUSE_FACILITY ) */
@@ -1144,9 +1139,9 @@ int cmpscpad_cmd( int argc, char* argv[], char* cmdline )
         )
         {
             RELEASE_INTLOCK( NULL );
-            // "Specified value is invalid or outside of range %d to %d"
-            WRMSG( HHC17014 , "E", MIN_CMPSC_ZP_BITS,
-                                   MAX_CMPSC_ZP_BITS );
+            // "%s value is invalid; valid range is %d - %d"
+            WRMSG( HHC17014 , "E", argv[0],
+                MIN_CMPSC_ZP_BITS, MAX_CMPSC_ZP_BITS );
             return HERROR;
         }
 

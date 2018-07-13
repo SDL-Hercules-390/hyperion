@@ -1,10 +1,24 @@
-#
-#       Sample configuration file for Hercules ESA/390 emulator
-#
+#------------------------------------------------------------------------------
+#         Sample configuration file for Hercules ESA/390 emulator
+#------------------------------------------------------------------------------
+
+  MSGLEVEL  VERBOSE                   # normal/verbose/debug
+# MODPATH   /usr/local/lib/hercules   # Where to search for modules
+
+
+#-------------------------------------------------------------------------------
+#                 Advanced Hercules Performance Tailoring
+#-------------------------------------------------------------------------------
+
+# CPUPRIO     2                 # CPU thread(s) run at the Lowest priority
+# DEVPRIO     3                 # Device thread(s) run at Below Normal priority
+# SRVPRIO     4                 # TCP/IP Server Thread(s), HTTP, CONSOLE, etc.
+# HERCPRIO    5                 # Hercules main runs at Normal priority
+# TODPRIO     7                 # TOD Clock and timer thread are Time Critical
 
 
 #------------------------------------------------------------------------------
-#       CPU Configuration
+#                      Guest CPU Configuration
 #------------------------------------------------------------------------------
 
   CPUSERIAL 002623              # CPU serial number
@@ -22,11 +36,6 @@
   ARCHLVL   z/Arch              # Architecture mode S/370, ESA/390 or z/Arch
   FACILITY  DISABLE 006_ASN_LX_REUSE   # ASN-and-LX-Reuse facility
 # ECPSVM    DISABLE             # VM Assist : NO or Level (20 recommended)
-
-#------------------------------------------------------------------------------
-#       OS Tailoring
-#------------------------------------------------------------------------------
-
   LOADPARM  0120....            # IPL parameter
   OSTAILOR  LINUX               # OS tailoring
   SYSEPOCH  1900                # Base year for initial TOD clock
@@ -37,53 +46,28 @@
 #       Hercules Service Processor and Hercules Application Window
 #------------------------------------------------------------------------------
 
-# MODPATH   /usr/local/lib/hercules     # Where to search for modules
-
-
-#------------------------------------------------------------------------------
-#       Hercules Service Processor and Hercules Application Window
-#------------------------------------------------------------------------------
-
   CODEPAGE  default                     # CodePage conversion table
-  DIAG8CMD  disable                     # OS may not issue commands via DIAG 8
+  SHCMDOPT  disable  nodiag8            # No shell commands from Herc cmdline
+  DIAG8CMD  disable  noecho             # OS may not issue commands via DIAG 8
 
-  HTTP      PORT  8081 noauth                 # HTTP server port
+# HTTP      PORT  8081 noauth                 # HTTP server port
 # HTTP      ROOT  /usr/local/share/hercules/  # HTTP root directory
-  HTTP      START                             # HTTP Start Server
+# HTTP      START                             # HTTP Start Server
 
   PANRATE   FAST                        # Panel refresh rate
 
-
 #-------------------------------------------------------------------------------
-#       Advanced Hercules Performance Tailoring
-#
-#       +----------------------------------------------------------------+
-#       | Caution:  Modification of these parameters may adversely       |
-#       |           affect the performance of the host system            |
-#       |           and/or Hercules.                                     |
-#       +----------------------------------------------------------------+
+#                   Integrated Hercules I/O Controller
 #-------------------------------------------------------------------------------
-
-# HERCPRIO    0                 # Hercules process runs at Normal priority
-# CPUPRIO    15                 # CPU thread(s) run at Low priority
-# DEVPRIO     8                 # Device thread(s) run at Below Normal priority
-# TODPRIO   -20                 # TOD Clock and timer thread are Time Critical
-# SRVPRIO     4                 # TCP/IP Server Thread(s), HTTP, CONSOLE, etc.
-
-
-#-------------------------------------------------------------------------------
-#       Integrated Hercules I/O Controller
-#
 
 # DEVTMAX      0                # Device threads, 8 on Windows, else unlimited
   CNSLPORT  3270                # TCP port number to which consoles connect
-# SHRDPORT  3990                # TCP port number for sharing DASD images on
-                                # this instance of Hercules (inactive)
+# SHRDPORT  3990                # TCP port number for sharing DASD images
+                                # on this instance of Hercules (inactive)
 
-#------------------------------------------------------------------------------
-#       Message level
-#------------------------------------------------------------------------------
-  MSGLEVEL  VERBOSE            # normal/verbose/debug
+#-------------------------------------------------------------------------------
+#                             Devices
+#-------------------------------------------------------------------------------
 
 
 #   .-----------------------Device number

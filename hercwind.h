@@ -71,9 +71,6 @@ struct dirent
 #define W_OK            2
 #define R_OK            4
 
-#define strcasecmp      _stricmp
-#define strncasecmp     _strnicmp
-
 #if !defined(_TRUNCATE)
 #define _TRUNCATE ((size_t)-1)      // normally #defined in <crtdefs.h>
 #endif
