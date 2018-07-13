@@ -77,6 +77,27 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>Priority settings changes
+  <dd>
+  <p>
+    Previously, the various commands/statements supporting the tweaking of
+    Hercules's internal thread dispatching priorities
+    (<a href="hercconf.html#HERCPRIO">HERCPRIO</a>,
+    <a href="hercconf.html#CPUPRIO">CPUPRIO</a>, etc)
+    required an argument in the range of -20 to +19. Hyperion's thread priority
+    handling was redesigned to be more "generic" in nature and the previously
+    mentioned statements now take an argument in the range of 1 to 7, and a new
+    <a href="hercconf.html#HERCNICE">HERCNICE</a> command/statement has been
+    introduced to set the Hercules <i>processes</i>
+    <a href="https://en.wikipedia.org/wiki/Nice_(Unix)">"nice" value</a>
+    instead (which requires an argument in the range of -20 to +19; priorities
+    are not "nice" values and vice versa). Refer to the
+    "<a href="hercconf.html#process_priorities">Process Priorities</a>"
+    and "<a href="hercconf.html#thread_priorities">Thread Priorities</a>"
+    sections of the documentation for more information.
+  </p>
+
+
   <dt>MAXCPU and NUMCPU statements
   <dd>
   <p>
@@ -410,6 +431,8 @@ Hercules: Release Notes
 
 </dl>
 
+<!-- --------------------------------------------------------------------------------- -->
+
 <hr>
 <h2>Release notes for release 3.06</h2>
 <p>
@@ -458,8 +481,7 @@ Hercules: Release Notes
   </p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <hr>
 <h2>Release notes for release 3.05</h2>
@@ -604,8 +626,7 @@ Hercules: Release Notes
   </p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <hr>
 <h2>Release notes for release 3.03</h2>
@@ -621,8 +642,7 @@ hercules console. Commands are sent to the console by means of a command charact
 <p>Starting from release 3.03 the glibcrypt library is no longer needed.</p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <hr>
 <h2>Release notes for release 3.02</h2>
@@ -636,8 +656,7 @@ the so-called "Driver 55" fixes. To avoid such problems, specify
 <code>ASN_AND_LX_REUSE DISABLE</code> in the configuration file. </p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <hr>
 <h2>Release notes for release 3.01</h2>
@@ -686,8 +705,7 @@ to define BOTH devices, just like you did with versions prior to 3.00.
 Once again, starting with version 3.01, you **MUST** define BOTH DEVICES.</p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <hr>
 <h2>Release notes for release 3.00</h2>
@@ -781,8 +799,7 @@ the command</p>
 <p>before starting Hercules.</p>
 </dl>
 
-
-
+<!-- --------------------------------------------------------------------------------- -->
 
 <p><center><hr width=15% noshade></center>
 <p>

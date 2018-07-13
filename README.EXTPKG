@@ -20,8 +20,9 @@ of the external packages for your system.  Some (but certainly not all) of
 those situations include (but are not limited to) the following:
 
   1. Developing or Debugging a new/existing version of an external package.
-  2. Building an external package for a different version of Visual Studio.
-  3. Building an external package for a different processor architecture.
+  2. Building Hercules for a different version of Visual Studio.
+  3. Building Hercules for a different processor architecture or for an
+     unusual non-mainstream *Nix platform (Apple Mac, Raspberry Pi, etc).
 
 Each package is maintained in its own unique source code repository separate
 from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only

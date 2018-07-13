@@ -88,10 +88,7 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 <br />
 <br />
 <li>Use these commands to install pre-requisite software:<br />
-<br><code>brew install autoconf</code>
-<br><code>brew install automake</code>
 <br><code>brew install gnu-sed</code>
-<br><code>automake --add-missing</code>
 <br />
 <br />
 <li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.<br /><br />
@@ -159,26 +156,6 @@ For more detailed External Package build information please refer to the
 <a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
 document.
 
-<p><li>Build the ./configure script (recommended):
-
-    <p><code>sh ./autogen.sh</code>
-
-    <p>
-    Most projects that are built from source do so from the official
-    distribution tarball which comes with its own pre-built ./configure
-    scipt. When you are building directly from the repository source
-    code however, you will need to create (or recreate) it yourself.
-    <p>
-    Also note you will need to re-run <code>autogen.sh</code> again
-    each time the "configure.ac" or "makefile.am" files change. This
-    means if you do a "git pull" to update your source with changes
-    that were recently made to the repository, you <i>may</i> need
-    to recreate your configure script again if either configure.ac
-    <i>or</i> makefile.am was updated.
-    <p>
-    Thus the safest course of action is to <i>always</i> run autogen.sh
-    immediately before running ./configure. (see next step below)
-
 <p><li>Configure Hercules for your system:
 
     <p><code>./configure</code>
@@ -197,7 +174,10 @@ document.
 
     <p><code>make</code>
 
-<p><li>(Optional) Install the programs: as root: <p><code>make install</code><br />
+<p><li>(Optional) Install the programs:
+    <p>
+        <code>sudo make install</code>
+    <br />
 
 <p>
 
@@ -205,6 +185,22 @@ This is an optional step because once Hercules is built, you should be able to
 run Hercules directly from the Hercules build directory itself without needing
 to install anything beforehand. But if you want to officially install it somewhere,
 then by all means do so.
+
+<p>
+
+It should be mentioned however, that if you do decide to run directly out of the
+build directory, you should first set the 'cap_sys_nice' capabilities on the
+Hercules executables and start Hercules as root. This will allow Hercules to
+properly set the priorities of its internal threads:
+<pre>
+sudo setcap 'cap_sys_nice=eip' ./hercules
+sudo setcap 'cap_sys_nice=eip' ./herclin
+</pre>
+
+You <i>don't</i> need to do this if you do <code>sudo make install</code> however
+since the makefile does this for you. You only need to do this when you decide
+to <i>not</i> install the results of the build and run directly out of the build
+directory instead.
 
 </ol>
 
