@@ -50,16 +50,22 @@ Hercules: Installation and Operation
 <ol>
 <li>Download the
 <a href="https://github.com/fish-git/hyperion/archive/master.zip">source code .ZIP file</a>
-from Github.
-<br><em>Note:</em> By downloading this file you agree to the terms
+from Github, or even better, <a href="https://github.com/Fish-Git/hyperion">clone the repository</a>.
+<p>
+<em>Note:</em> By downloading this file (or cloning the repostiory) you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
 <br />
-<br />
+
 <li>
-Hercules for Windows is built using the Microsoft Visual C (MSVC) compiler.<br />
+Hercules for Windows is built using the Microsoft Visual C (MSVC) compiler.
 Refer to file <a href="https://github.com/fish-git/hyperion/blob/master/README.WIN64">README.WIN64</a> for details.
-Note: Fish also has instructions<br />
-on his <a href="http://www.softdevlabs.com/hercules-vs2015-build.html">MSVC Hercules Build Instructions</a> web page.<br /><br />
+Note: Fish also has updated VS2015/VS2017 instructions
+on his <a href="http://www.softdevlabs.com/hercules-vs2015-build.html">MSVC Hercules Build Instructions</a> web page.
+<br /><br />
+
+<li>Be sure to read the <a href="https://fish-git.github.io/html/hercrnot.html">Release Notes</a>
+with every new release, which contains important late-breaking information about each new release.
+<br /><br />
 
 </ol>
 </p>
@@ -67,30 +73,36 @@ on his <a href="http://www.softdevlabs.com/hercules-vs2015-build.html">MSVC Herc
 <a name="instbinary"></a>
 <h3>Windows pre-built binaries:</h3>
 <ol>
+
 <li>Download one of the
 <a href="http://www.softdevlabs.com/hyperion.html#prebuilt">pre-built binaries</a>
 from <a href="http://www.softdevlabs.com">SoftDevLabs</a>.
 <br />
 <br />
+
 <li>(Optional) You might also want to install Fish's
 <a href="http://www.softdevlabs.com/hercgui">Hercules GUI for Windows</a>.<br /><br />
 </ol>
 
 <h3>Building from source - Mac OS X</h3>
 <ol>
+
 <li>Install <b>Xcode</b> from the
 <a href="http://itunes.apple.com/app/xcode/id497799835">
 App Store</a>.
 <br />
 <br />
+
 <li>Install <b>Homebrew</b> using the procedure described
 at <a href="http://brew.sh/">http://brew.sh/</a>
 <br />
 <br />
+
 <li>Use these commands to install pre-requisite software:<br />
 <br><code>brew install gnu-sed</code>
 <br />
 <br />
+
 <li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.<br /><br />
 </ol>
 
@@ -106,20 +118,30 @@ compiler and other software levels.<br />
 
 <li>Download the
 <a href="https://github.com/fish-git/hyperion/archive/master.zip">source code .ZIP file</a>
-from Github.
-<br><em>Note:</em> By downloading this file you agree to the terms
+from Github, or even better, <a href="https://github.com/Fish-Git/hyperion">clone the repository</a>.
+<p>
+<em>Note:</em> By downloading this file (or cloning the repostiory) you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
 <br />
 <br />
+
 <li>Use these commands to unzip the distribution file:
 <pre>unzip hyperion-master.zip
 cd hyperion-master</pre>
+
+<li>Be sure to read the <a href="https://fish-git.github.io/html/hercrnot.html">Release Notes</a>
+with every new release, which contains important late-breaking information about each new release.
+<br />
+<br />
+
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
 
     <p><code>./util/bldlvlck</code>
 
-<p><li>Download and build all <b>External Packages</b> if needed:
+<p>
+
+<li>Download and build all <b>External Packages</b> if needed:
 
 <br /><br />
 
@@ -156,7 +178,9 @@ For more detailed External Package build information please refer to the
 <a href="https://github.com/fish-git/hyperion/blob/master/README.EXTPKG">README.EXTPKG</a>
 document.
 
-<p><li>Configure Hercules for your system:
+<p>
+
+<li>Configure Hercules for your system:
 
     <p><code>./configure</code>
 
@@ -170,11 +194,14 @@ document.
     options, run: <code>./configure <nobr>--help=short</nobr></code>.
 
 <br />
+
 <li>Build the executables:
 
     <p><code>make</code>
 
-<p><li>(Optional) Install the programs:
+<p>
+
+<li>(Optional) Install the programs:
     <p>
         <code>sudo make install</code>
     <br />
@@ -1054,12 +1081,17 @@ triggered the command.
 <p>
 The following special variables are recognized:
 <ul>
+
 <li><code>$1</code> to <code>$9</code> -
     the text which matched the 1st to 9th capturing
     group in the target regular expression
+
 <li><code>$`</code> - the text preceding the regular expression match
+
 <li><code>$'</code> - the text following the regular expression match
+
 <li><code>$$</code> - replaced by a single dollar sign
+
 </ul>
 <p>
 Note that substitution of a $<i>n</i> variable does not occur if there are
