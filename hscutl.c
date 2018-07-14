@@ -1369,16 +1369,20 @@ int initialize_utility( int argc, char* argv[],
         }
     }
 
-    /* Initialize a bunch of other stuff... */
-
-    SET_THREAD_NAME( exename );
-
-    memset( &sysblk, 0, sizeof( SYSBLK ));
+    /*
+    **  Initialize a bunch of other stuff...
+    **
+    **  Note that initialization MUST occur in the following order:
+    **  SYSBLK first, then hthreads (since it updates SYSBLK), then
+    **  locks, etc, since they require hthreads.
+    */
+    memset( &sysblk, 0, sizeof( SYSBLK ));      // (must be first)
+    hthreads_internal_init();                   // (must be second)
+    SET_THREAD_NAME( exename );                 // (then other stuff)
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );
     initialize_lock( &sysblk.dasdcache_lock );
-
     set_codepage( NULL );
     init_hostinfo( &hostinfo );
 
