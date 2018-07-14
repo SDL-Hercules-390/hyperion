@@ -1,19 +1,16 @@
 -------------------------------------------------------------------------------
 
 
-                         Building Hercules
+                         BUILDING HERCULES
 
 
-If you are wanting to build the Windows version of Hercules refer to the
-README.WIN64 document for detailed instructions.
+This document describes how to build Hercules on Linux. If you are wanting
+to build the Windows version of Hercules, please refer to the README.WIN64
+document instead.
 
-As for non-Windows *nix builds, if you're simply trying to figure out how to
-build Hercules from the distributed source tarball (i.e. NOT from the source
-directly pulled from the repository), then skip to the "Building Hercules"
-section further below.
 
                         -------------------
-                         BUILD PREPARATION
+                         Build Preparation
                         -------------------
 
 
@@ -29,8 +26,6 @@ by the 'bldlvlck' script in the 'util' subdirectory:
 
      Package   Version  (or greater!)
     ----------------------------------
-     autoconf    2.64   (or greater!)
-     automake    1.9    (or greater!)
      flex        2.5    (or greater!)
      gawk        3.0    (or greater!)
      gcc         3.0    (or greater!)
@@ -56,40 +51,11 @@ All of these tools can be found at www.gnu.org in source code form, and
 are also widely available in packaged form (RPM, DEB, Solaris packages,
 etc.).
 
-Once you have the minimum versions of all of the above tools installed,
-simply enter the following command:
-
-    sh ./autogen.sh
-
-This will, among other things, create you a shell script called "configure".
-The resulting configure script (created by the above 'autogen' command) is
-then what you use to build Hercules with. (It will probably create a bunch
-of other directories and files too, but we're mostly concerned about the
-configure script).
-
 
                         -------------------
-                         BUILDING HERCULES
+                         Building Hercules
                         -------------------
 
-
-Now that a 'configure' script has been built for us, let's use it! :)
-
-(Note: if you're simply trying to build Hercules from the distributed
-tarball (i.e. NOT directly from the pulled respository sources), then just
-use the 'configure' script that should have been included with the source
-distribution tarball.)
-
-    +------------------------------------------------------------+
-    |                                                            |
-    |                      ** NOTE **                            |
-    |                                                            |
-    |  See also refer to instructions in the BUILD PREPARATION   |
-    |  section above regarding the 'bldlvlck' script which can   |
-    |  be used to check to see if you have all of the required   |
-    |  packages installed or not to build Hercules from source.  |
-    |                                                            |
-    +------------------------------------------------------------+
 
 Before you trying using the configure script, you may wish to review
 the information in the INSTALL file. It contains generic installation
@@ -116,12 +82,7 @@ Here's the entire build process step-by-step:
 
         cd hercules
 
-    If you are building directly from repository source, it is a good
-    habit to always recreate the configure script each time you build:
-
-        sh ./autogen.sh
-
-    configure your build options by entering the following command:
+    Configure your build options by entering the following command:
 
         ./configure  ...
 
@@ -139,33 +100,16 @@ Here's the entire build process step-by-step:
     To "install" Hercules into the default package installation
     directory after building it, enter the following command:
 
-        make install
+        sudo make install
 
     That will copy the just built binaries to their proper place.
 
     To uninstall Hercules once it's been installed, simply enter the
     command:
 
-        make uninstall
+        sudo make uninstall
 
     and the previously copied files will be removed (deleted).
 
-
-Note: you may or may not wish to add some additional parameters to
-the above mentioned "configure" command. One of the more common ones
-for those who are building Herc under Cygwin is "--enable-fthreads".
-Enter "./configure --help" for more information regarding the various
-parameters that Hercules's customized "configure" script supports
-for building Hercules.
-
-
---
-original author:
-Matt Zimmerman <mdz@debian.org>
-08 Oct, 2001
-
-
-Updated by many others over the course of time of course.
-Refer to repository commit log if you're that interested.
 
 -------------------------------------------------------------------------------
