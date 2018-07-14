@@ -812,6 +812,7 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 /*              Display External Package versions                    */
 /*-------------------------------------------------------------------*/
 
+//nclude "crypto/include/crypto_version.h"    (handled by dyncrypt.c)
 #include "decNumber/include/decnumber_version.h"
 #include "SoftFloat/include/softfloat_version.h"
 #include "telnet/include/telnet_version.h"
@@ -835,6 +836,7 @@ static void _do_display_extpkg_vers( FILE* f, int httpfd,
 
 DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
 {
+//  _do_display_extpkg_vers( f, httpfd, "decNumber", crypto_version()    );   (handled by dyncrypt.c)
     _do_display_extpkg_vers( f, httpfd, "decNumber", decnumber_version() );
     _do_display_extpkg_vers( f, httpfd, "SoftFloat", softfloat_version() );
     _do_display_extpkg_vers( f, httpfd, "telnet",    telnet_version()    );
