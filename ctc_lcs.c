@@ -447,7 +447,7 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
     // Check if tuntap can handle the multicast assist for us.
 
-#if defined(SIOCGIFHWADDR)
+#if defined( SIOCGIFHWADDR )
     STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
     memcpy( ifr.ifr_hwaddr.sa_data, mac, sizeof( MAC ));
 
@@ -457,7 +457,7 @@ void LCS_Assist( PLCSPORT pLCSPORT )
         pLCSPORT->fDoMCastAssist = 0;   // (tuntap does it for us)
     }
     else
-#endif // !defined(SIOCGIFHWADDR)
+#endif // !defined( SIOCGIFHWADDR )
         pLCSPORT->fDoMCastAssist = 1;   // (we must do it ourself)
 
     // "CTC: lcs device port %2.2X: %s Multicast assist enabled"
@@ -1703,7 +1703,7 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
         STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
 
-#if defined(SIOCGIFHWADDR)
+#if defined( SIOCGIFHWADDR )
         for (i=0, badrc=0; i < numpairs; i++)
         {
             pMAC = &pIPMFrame->IP_MAC_Pair[i].MAC_Address;
@@ -1735,7 +1735,7 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
             WRMSG( HHC00941, "E", what, pLCSPORT->szNetIfName, strerror( errnum ));
             STORE_HW( reply.bLCSCmdHdr.hwReturnCode, 0xFFFF );
         }
-#endif // defined(SIOCGIFHWADDR)
+#endif // defined( SIOCGIFHWADDR )
     }
 
     // Queue response back to caller

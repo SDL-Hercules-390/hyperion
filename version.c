@@ -836,8 +836,9 @@ static void _do_display_extpkg_vers( FILE* f, int httpfd,
 
 DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
 {
+    // FIXME! Find out why the below doesn't work on Apple MacOS!
 //  _do_display_extpkg_vers( f, httpfd, "decNumber", crypto_version()    );   (handled by dyncrypt.c)
-#if !defined(__APPLE__) /* Temporarily to avoid build errors on MacOS */
+#if !defined( __APPLE__ ) /* Temporarily to avoid build errors on MacOS */
     _do_display_extpkg_vers( f, httpfd, "decNumber", decnumber_version() );
     _do_display_extpkg_vers( f, httpfd, "SoftFloat", softfloat_version() );
     _do_display_extpkg_vers( f, httpfd, "telnet",    telnet_version()    );

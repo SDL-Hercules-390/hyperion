@@ -744,7 +744,7 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         if( rc < 0 )
         {
 
-            // We issue the "retry is poosible" message only once, which is when
+            // We issue the "retry is possible" message only once, which is when
             // the ctce_contention_loser variable is still in its initial =1 state.
             if( pDEVBLK->ctce_contention_loser == 1 )
             {
@@ -1323,8 +1323,11 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
         // We issue the "Not all sockets connected" message only when just
         // one socket is not connected; otherwise just once which is when
         // the ctce_contention_loser variable is still in its initial =1 state.
-        if( ( pDEVBLK->ctce_contention_loser == 1 ) ||
-            ( pDEVBLK->fd >= 0 ) || ( pDEVBLK->ctcefd >= 0 ) )
+        if (0
+            || pDEVBLK->ctce_contention_loser == 1
+            || pDEVBLK->fd                    >= 0
+            || pDEVBLK->ctcefd                >= 0
+        )
         {
             WRMSG( HHC05072, "E",  /* CTCE: Not all sockets connected: send=%d, receive=%d */
                 CTCX_DEVNUM( pDEVBLK ), pDEVBLK->fd, pDEVBLK->ctcefd );
@@ -2365,7 +2368,7 @@ int CTCE_Connect_Timeout(int                    sockfd,
             else
             {
                 WRMSG( HHC05080, "S",  /* CTCE: Socket select() with %d usec timeout error : %s */
-                    CTCX_DEVNUM( pDEVBLK ), usec, strerror(HSO_errno) ) ;
+                    CTCX_DEVNUM( pDEVBLK ), usec, strerror( HSO_errno )) ;
             }
         }
     }
