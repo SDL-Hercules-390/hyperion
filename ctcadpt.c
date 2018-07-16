@@ -107,7 +107,8 @@ static void     CTCE_Trace( const DEVBLK*             pDEVBLK,
 static int      CTCE_Connect_Timeout( int                    sockfd,
                                       const struct sockaddr* saptr,
                                       const socklen_t        salen,
-                                      const int              usec );
+                                      const int              usec,
+                                      const DEVBLK*          pDEVBLK );
 
 // --------------------------------------------------------------------
 // CTCE Send-Receive Socket Prefix at the start of the DEVBLK buf
@@ -682,7 +683,6 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             WRMSG( HHC05050, "E",  /* CTCE: Error creating socket: %s */
                 CTCX_DEVNUM( pDEVBLK ), strerror( HSO_errno ) );
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
-            release_lock( &pDEVBLK->lock );
             return;
         }
 
@@ -700,7 +700,6 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             WRMSG( HHC05051, "E",  /* CTCE: TCP_NODELAY error for socket (port %d): %s */
                 CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, strerror(HSO_errno));
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
-            release_lock(&pDEVBLK->lock);
             return;
         }
 #endif
@@ -722,7 +721,6 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
             WRMSG( HHC05052, "E",  /* CTCE: Error binding to socket (port %d): %s */
                 CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, strerror( HSO_errno ) );
             *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
-            release_lock( &pDEVBLK->lock );
             return;
         }
         strcpy( address, inet_ntoa( pDEVBLK->ctce_ipaddr ) );
@@ -737,16 +735,22 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         parm.addr.sin_port = htons(pDEVBLK->ctce_rport + 1 );
         parm.addr.sin_addr = pDEVBLK->ctce_ipaddr;
 
-        // We connect() but with a timeout value of 1000000 usec = 1 sec
+        // We connect() but with a timeout value of 500000 usec = 0.5 sec
         rc = CTCE_Connect_Timeout( parm.listenfd[0],
             ( struct sockaddr * )&parm.addr,
-            sizeof( parm.addr), 1000000 );
+            sizeof( parm.addr), 500000, pDEVBLK );
 
         // if connection was not successful, then we may retry later on when the other side becomes ready.
         if( rc < 0 )
         {
-            WRMSG( HHC05053, "I",  /* CTCE: Connect error :%d -> %s:%d, retry is possible */
-                CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, remaddr, pDEVBLK->ctce_rport + 1 );
+
+            // We issue the "retry is poosible" message only once, which is when
+            // the ctce_contention_loser variable is still in its initial =1 state.
+            if( pDEVBLK->ctce_contention_loser == 1 )
+            {
+                WRMSG( HHC05053, "I",  /* CTCE: Connect error :%d -> %s:%d, retry is possible */
+                    CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, remaddr, pDEVBLK->ctce_rport + 1 );
+            }
         }
         else  // successfully connected to the other end
         {
@@ -758,13 +762,9 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
     }
 
-    // The contention winning CTCE side initially is the first one to
-    // attempt commands; each matching SCB command sent sets this as well.
+    // Intervention required if the device file is not open
     if( ( pDEVBLK->fd < 0 ) || ( pDEVBLK->ctcefd < 0 ) )
     {
-        pDEVBLK->ctce_contention_loser = 0;
-
-        // Intervention required if the device file is not open
         if( !IS_CCW_SENSE( bCode ) &&
             !IS_CCW_CONTROL( bCode ) )
         {
@@ -942,6 +942,13 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     {
         CTCE_Trace( pDEVBLK, sCount, CTCE_Info.sent ? CTCE_SND : CTCE_LCL,
                     &CTCE_Info, pDEVBLK->buf, pUnitStat );
+    }
+
+    // The contention winning CTCE side initially is the first one to
+    // attempt commands; each matching SCB command sent sets this as well.
+    if( ( pDEVBLK->fd < 0 ) || ( pDEVBLK->ctcefd < 0 ) )
+    {
+        pDEVBLK->ctce_contention_loser = 0;
     }
 
     release_lock( &pDEVBLK->lock );
@@ -1312,16 +1319,20 @@ static void   CTCE_Send( DEVBLK* pDEVBLK,   U32        sCount,
     // We only ever Send if the sockets are connected.
     if( ( pDEVBLK->fd < 0 ) || ( pDEVBLK->ctcefd < 0 ) )
     {
-        WRMSG( HHC05072, "S",  /* CTCE: Not all sockets connected: send=%d, receive=%d */
-            CTCX_DEVNUM( pDEVBLK ), pDEVBLK->fd, pDEVBLK->ctcefd );
-/* PJJ VTAM */
+
+        // We issue the "Not all sockets connected" message only when just
+        // one socket is not connected; otherwise just once which is when
+        // the ctce_contention_loser variable is still in its initial =1 state.
+        if( ( pDEVBLK->ctce_contention_loser == 1 ) ||
+            ( pDEVBLK->fd >= 0 ) || ( pDEVBLK->ctcefd >= 0 ) )
+        {
+            WRMSG( HHC05072, "E",  /* CTCE: Not all sockets connected: send=%d, receive=%d */
+                CTCX_DEVNUM( pDEVBLK ), pDEVBLK->fd, pDEVBLK->ctcefd );
+        }
         if( !IS_CTCE_CCW_SCB( pDEVBLK->ctcexCmd ) )
         {
             *pUnitStat = 0;
         }
-/* PJJ VTAM *
-        *pUnitStat = 0;
- * PJJ VTAM */
         return ;
     }
     pCTCE_Info->sent = 1;
@@ -2306,7 +2317,8 @@ Action
 int CTCE_Connect_Timeout(int                    sockfd,
                          const struct sockaddr* saptr,
                          const socklen_t        salen,
-                         const int              usec)
+                         const int              usec,
+                         const DEVBLK*          pDEVBLK)
 {
     int                   rc;                    // connect return code
     fd_set                read_set, write_set;   // socket sets for select
@@ -2328,7 +2340,8 @@ int CTCE_Connect_Timeout(int                    sockfd,
 
         // Then we issue select() until it returns a real error.
         // A zero return code means the select() timed out,
-        // a positive one signifies the connect() took place.
+        // a positive one signifies the connect() took place,
+        // and a negative one signifies a real select() error occurred.
         do
         {
             rc = select( sockfd + 1, &read_set, &write_set, NULL,
@@ -2336,14 +2349,32 @@ int CTCE_Connect_Timeout(int                    sockfd,
         }
         while( (rc < 0) && ( HSO_errno == HSO_EINTR ) );
 
-        if( rc == 0 )
+        // In case no connection took place, either due to timeout (rc=0),
+        // or due to select() error (rc<0), we will close the socket.
+        if( rc <= 0 )
         {
             close_socket( sockfd ) ;
-            rc = -1;
+
+            // A connect timeout (rc=0) will be signalled as non-success with rc=-1.
+            if( rc == 0 )
+            {
+                rc = -1;
+            }
+
+            // A real select error (rc<0) will be reported.
+            else
+            {
+                WRMSG( HHC05080, "S",  /* CTCE: Socket select() with %d usec timeout error : %s */
+                    CTCX_DEVNUM( pDEVBLK ), usec, strerror(HSO_errno) ) ;
+            }
         }
     }
 
-    // Switch back to original non-blocking mode and return
-    socket_set_blocking_mode( sockfd, 1 ) ;
+    // When connected, switch back to original non-blocking mode and return
+    if( rc >= 0 )
+    {
+        socket_set_blocking_mode( sockfd, 1 ) ;
+    }
+
     return rc;
 }
