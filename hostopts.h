@@ -260,6 +260,7 @@
 /*-------------------------------------------------------------------*/
 #elif defined(__APPLE__)                /* "Apple" options           */
 
+#define MACOS_EXTPKG_DISPLAY_VERSION_WORKAROUND_KLUDGE
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
