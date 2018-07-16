@@ -149,7 +149,7 @@ else
     modified_str=""
   else
     # Check for possibly inaccurate results
-    gitvers=$(git --version | egrep -o "([0-9]{1,}\.)+[0-9]{1,}")
+    gitvers=$(git --version | egrep -o "([0-9]{1,}\.)+[0-9]{1,}" | head -n 1)
     if vercomp $gitvers '>' $MIN_GIT_VERSION; then
       modified_str="-modified"
     else
@@ -172,7 +172,7 @@ else
   # note that, unlike many broken implementations that are out there, we
   # correctly use "tformat" and not "format" to ensure an accurate count.
 
-  VERS_BLD=$(git log --pretty=tformat:'' | wc -l)
+  VERS_BLD=$(($(git log --pretty=tformat:'' | wc -l)))
 
 fi
 
