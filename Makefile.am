@@ -818,7 +818,6 @@ noinst_HEADERS =          \
   herror.h                \
   hetlib.h                \
   hexdumpe.h              \
-  hextapi.h               \
   hexterns.h              \
   hifr.h                  \
   hinlines.h              \

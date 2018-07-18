@@ -2449,9 +2449,6 @@
     <ClInclude Include="hexdumpe.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hextapi.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hexterns.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

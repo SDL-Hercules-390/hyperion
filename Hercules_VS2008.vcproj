@@ -1292,10 +1292,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\hextapi.h"
-							>
-						</File>
-						<File
 							RelativePath=".\hexterns.h"
 							>
 						</File>
@@ -1568,15 +1564,15 @@
 						Name="decNumber"
 						>
 						<File
-							RelativePath=".\decNumber\decnumber.pdf"
-							>
-						</File>
-						<File
 							RelativePath=".\decNumber\decnumber.ERRATA"
 							>
 						</File>
 						<File
 							RelativePath=".\decNumber\decnumber.ICU-license.html"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decnumber.pdf"
 							>
 						</File>
 						<File

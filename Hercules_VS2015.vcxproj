@@ -1015,7 +1015,6 @@
     <ClInclude Include="herror.h" />
     <ClInclude Include="hetlib.h" />
     <ClInclude Include="hexdumpe.h" />
-    <ClInclude Include="hextapi.h" />
     <ClInclude Include="hexterns.h" />
     <ClInclude Include="hifr.h" />
     <ClInclude Include="hinlines.h" />

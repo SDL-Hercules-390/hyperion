@@ -18,7 +18,6 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
-#include "hextapi.h"
 
 /**********************************************/
 /* The following function is the LOG callback */
