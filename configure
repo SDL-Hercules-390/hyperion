@@ -857,7 +857,6 @@ LTLIBOBJS
 LIBOBJS
 HQA_INC
 EXTPKG_LDADD
-EXTPKG_LDFLAGS
 EXTPKG_HEADERS
 HERCIFC_GROUPNAME
 APPLE_FALSE
@@ -1011,6 +1010,7 @@ with_pic
 with_tags
 enable_ltdl_install
 enable_largefile
+enable_extpkgs
 enable_hqa
 enable_object_rexx
 enable_regina_rexx
@@ -1687,13 +1687,15 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-ltdl-install   install libltdl
   --disable-largefile     omit support for large files
+  --enable-extpkgs=DIR    define base External Packages installation directory
   --enable-hqa=DIR        define HQA_DIR override directory
   --enable-object-rexx    enable OORexx support
   --enable-regina-rexx    enable regina rexx support
   --enable-ipv6           enable ipv6 support
   --enable-cckd-bzip2     enable bzip2 compression for emulated dasd
   --enable-het-bzip2      enable bzip2 compression for emulated tapes
-  --enable-debug          enable debugging (TRACE/VERIFY/ASSERT macros)
+  --enable-debug          enable unoptimized debug code (and
+                          TRACE/VERIFY/ASSERT macros)
   --enable-optimization=yes|no|FLAGS
                           enable automatic optimization, or specify flags
   --disable-enhanced-configincludes
@@ -5042,7 +5044,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5045 "configure"' > conftest.$ac_ext
+  echo '#line 5047 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8045,11 +8047,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8048: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8050: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8052: \$? = $ac_status" >&5
+   echo "$as_me:8054: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8278,11 +8280,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8281: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8283: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8285: \$? = $ac_status" >&5
+   echo "$as_me:8287: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8345,11 +8347,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8348: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8350: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8352: \$? = $ac_status" >&5
+   echo "$as_me:8354: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10504,7 +10506,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10507 "configure"
+#line 10509 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10602,7 +10604,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10605 "configure"
+#line 10607 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12785,11 +12787,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12788: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12790: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12792: \$? = $ac_status" >&5
+   echo "$as_me:12794: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12852,11 +12854,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12855: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12857: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12859: \$? = $ac_status" >&5
+   echo "$as_me:12861: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14209,7 +14211,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 14212 "configure"
+#line 14214 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14307,7 +14309,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 14310 "configure"
+#line 14312 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -15130,11 +15132,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15133: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15135: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15137: \$? = $ac_status" >&5
+   echo "$as_me:15139: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15197,11 +15199,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15200: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15202: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15204: \$? = $ac_status" >&5
+   echo "$as_me:15206: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17210,11 +17212,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17213: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17215: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17217: \$? = $ac_status" >&5
+   echo "$as_me:17219: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17443,11 +17445,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17446: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17448: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17450: \$? = $ac_status" >&5
+   echo "$as_me:17452: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17510,11 +17512,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17513: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17515: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17517: \$? = $ac_status" >&5
+   echo "$as_me:17519: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19669,7 +19671,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19672 "configure"
+#line 19674 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19767,7 +19769,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19770 "configure"
+#line 19772 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -22092,7 +22094,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 22095 "configure"
+#line 22097 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -47148,6 +47150,27 @@ rm -f confcache
 #  later on), but that approach was rejected since it would tend to make our
 #  configure.ac script less clean (simple and straightforward).
 
+# Check whether --enable-extpkgs was given.
+if test "${enable_extpkgs+set}" = set; then
+  enableval=$enable_extpkgs;
+        hc_cv_extpkg_dir="${enableval}"
+
+        if test -d "${hc_cv_extpkg_dir}"; then
+          { $as_echo "$as_me:$LINENO: Using External Packages override directory ${hc_cv_extpkg_dir} " >&5
+$as_echo "$as_me: Using External Packages override directory ${hc_cv_extpkg_dir} " >&6;}
+        else
+          { $as_echo "$as_me:$LINENO: result: ERROR: --enable-extpkgs directory not found: ${hc_cv_extpkg_dir} " >&5
+$as_echo "ERROR: --enable-extpkgs directory not found: ${hc_cv_extpkg_dir} " >&6; }
+          hc_error=yes
+          hc_cv_extpkg_dir=""
+        fi
+
+else
+  hc_cv_extpkg_dir=""
+
+fi
+
+
 # Check whether --enable-hqa was given.
 if test "${enable_hqa+set}" = set; then
   enableval=$enable_hqa;
@@ -48894,72 +48917,144 @@ fi
 ###############################################################################
 #                       External Packages support
 ###############################################################################
-
-extpkg_ldflags=""
-extpkg_ldadd=""
-
+#
+#  Our first preference for resolving EXTPKG static lib files is whichever
+#  directory was specified by the --enable-extpkgs=DIR configure option. If
+#  that option wasn't specified, then our second preference is whichever of
+#  the directories defined in the LIBRARY_PATH variable is found to contain
+#  our needed EXTPKG static lib file (handled further below).  Our defaults
+#  are the static lib files distributed in our source  code repository (which
+#  should work just fine for most platforms but not necessarily all platforms
+#  which is why we provide multiple different ways to override the default).
+#
+#------------------------------------------------------------------------------
+#                             crypto
 #------------------------------------------------------------------------------
 
-crypto_pkgname=crypto
-crypto_pkgdir=${crypto_pkgname}
-crypto_incdir=${crypto_pkgdir}/include
-crypto_headers="${crypto_incdir}/aes.h     \
-                ${crypto_incdir}/crypto.h  \
-                ${crypto_incdir}/sha1.h    \
-                ${crypto_incdir}/sha256.h  \
+crypto_pkgname="crypto" # case matters!
+crypto_libname="lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a"
+
+if test "${hc_cv_extpkg_dir}" != ""; then
+  crypto_pkgdir="${hc_cv_extpkg_dir}"
+else
+  crypto_pkgdir="${srcdir}/${crypto_pkgname}"
+fi
+
+crypto_incdir="${crypto_pkgdir}/include"
+crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+crypto_headers="${crypto_incdir}/aes.h      \
+                ${crypto_incdir}/crypto.h   \
+                ${crypto_incdir}/sha1.h     \
+                ${crypto_incdir}/sha256.h   \
                 ${crypto_incdir}/sshdes.h"
 
-crypto_libdir=${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-crypto_libname=lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a
-
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${crypto_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${crypto_libdir}/${crypto_libname}"
-
+#------------------------------------------------------------------------------
+#                            decNumber
 #------------------------------------------------------------------------------
 
-decnumber_pkgname=decNumber
-decnumber_pkgdir=${decnumber_pkgname}
-decnumber_incdir=${decnumber_pkgdir}/include
-decnumber_headers="${decnumber_incdir}/decContext.h  \
-                   ${decnumber_incdir}/decimal128.h  \
-                   ${decnumber_incdir}/decimal32.h   \
-                   ${decnumber_incdir}/decimal64.h   \
-                   ${decnumber_incdir}/decNumber.h   \
-                   ${decnumber_incdir}/decPacked.h   \
-                   ${decnumber_incdir}/decQuad.h"
+decnumber_pkgname="decNumber" # case matters!
+decnumber_libname="lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
-decnumber_libdir=${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-decnumber_libname=lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a
+if test "${hc_cv_extpkg_dir}" != ""; then
+  decnumber_pkgdir="${hc_cv_extpkg_dir}"
+else
+  decnumber_pkgdir="${srcdir}/${decnumber_pkgname}"
+fi
 
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${decnumber_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${decnumber_libdir}/${decnumber_libname}"
+decnumber_incdir="${decnumber_pkgdir}/include"
+decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
-#------------------------------------------------------------------------------
-
-softfloat_pkgname=SoftFloat
-softfloat_pkgdir=${softfloat_pkgname}
-softfloat_incdir=${softfloat_pkgdir}/include
-softfloat_headers="${softfloat_incdir}/softfloat.h \
-                   ${softfloat_incdir}/softfloat_types.h"
-
-softfloat_libdir=${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-softfloat_libname=lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a
-
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${softfloat_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${softfloat_libdir}/${softfloat_libname}"
+decnumber_headers="${decnumber_incdir}/aes.h        \
+                   ${decnumber_incdir}/decnumber.h  \
+                   ${decnumber_incdir}/sha1.h       \
+                   ${decnumber_incdir}/sha256.h     \
+                   ${decnumber_incdir}/sshdes.h"
 
 #------------------------------------------------------------------------------
+#                             SoftFloat
+#------------------------------------------------------------------------------
 
-telnet_pkgname=telnet
-telnet_pkgdir=${telnet_pkgname}
-telnet_incdir=${telnet_pkgdir}/include
-telnet_headers="${telnet_incdir}/telnet.h"
+softfloat_pkgname="SoftFloat" # case matters!
+softfloat_libname="lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
-telnet_libdir=${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-telnet_libname=lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a
+if test "${hc_cv_extpkg_dir}" != ""; then
+  softfloat_pkgdir="${hc_cv_extpkg_dir}"
+else
+  softfloat_pkgdir="${srcdir}/${softfloat_pkgname}"
+fi
 
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${telnet_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${telnet_libdir}/${telnet_libname}"
+softfloat_incdir="${softfloat_pkgdir}/include"
+softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+softfloat_headers="${softfloat_incdir}/aes.h        \
+                   ${softfloat_incdir}/softfloat.h  \
+                   ${softfloat_incdir}/sha1.h       \
+                   ${softfloat_incdir}/sha256.h     \
+                   ${softfloat_incdir}/sshdes.h"
+
+#------------------------------------------------------------------------------
+#                             telnet
+#------------------------------------------------------------------------------
+
+telnet_pkgname="telnet" # case matters!
+telnet_libname="lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a"
+
+if test "${hc_cv_extpkg_dir}" != ""; then
+  telnet_pkgdir="${hc_cv_extpkg_dir}"
+else
+  telnet_pkgdir="${srcdir}/${telnet_pkgname}"
+fi
+
+telnet_incdir="${telnet_pkgdir}/include"
+telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+telnet_headers="${telnet_incdir}/aes.h      \
+                ${telnet_incdir}/telnet.h   \
+                ${telnet_incdir}/sha1.h     \
+                ${telnet_incdir}/sha256.h   \
+                ${telnet_incdir}/sshdes.h"
+
+#------------------------------------------------------------------------------
+# Allow any LIBRARY_PATH variable directory to override our repository default.
+#------------------------------------------------------------------------------
+
+if test -z "${hc_cv_extpkg_dir}"; then
+
+  found_crypto=""
+  found_decnumber=""
+  found_softfloat=""
+  found_telnet=""
+
+  while read -d ':' dir; do
+    if test -n "${dir}"; then
+      if test -z   "${found_crypto}"; then
+        if test -r ${dir}/${crypto_libname}; then
+                            crypto_libdir="${dir}"
+                      found_crypto="yes"
+        fi
+      fi
+      if test -z   "${found_decnumber}"; then
+        if test -r ${dir}/${decnumber_libname}; then
+                            decnumber_libdir="${dir}"
+                      found_decnumber="yes"
+        fi
+      fi
+      if test -z   "${found_softfloat}"; then
+        if test -r ${dir}/${softfloat_libname}; then
+                            softfloat_libdir="${dir}"
+                      found_softfloat="yes"
+        fi
+      fi
+      if test -z   "${found_telnet}"; then
+        if test -r ${dir}/${telnet_libname}; then
+                            telnet_libdir="${dir}"
+                      found_telnet="yes"
+        fi
+      fi
+    fi
+  done <<< "${LIBRARY_PATH}:"     # (trailing ':' to ensure last dir processed)
+fi
 
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
@@ -48970,18 +49065,28 @@ extpkg_headers="${crypto_headers}     \
                 ${softfloat_headers}  \
                 ${telnet_headers}"
 
-EXTPKG_HEADERS=$extpkg_headers
+extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+              ${decnumber_libdir}/${decnumber_libname}    \
+              ${softfloat_libdir}/${softfloat_libname}    \
+              ${telnet_libdir}/${telnet_libname}"
+
+##----------------------------------------------------------------
+##                         DEBUGGING
+##----------------------------------------------------------------
+## AC_MSG_NOTICE( [Using crypto_libdir    = ${crypto_libdir}]    )
+## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
+## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
+## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+EXTPKG_HEADERS="${extpkg_headers}"
 
 
-EXTPKG_LDFLAGS=$extpkg_ldflags
-
-
-EXTPKG_LDADD=$extpkg_ldadd
+EXTPKG_LDADD="${extpkg_ldadd}"
 
 
 #------------------------------------------------------------------------------
 
-HQA_INC="$hc_cv_hqa_inc"
+HQA_INC="${hc_cv_hqa_inc}"
 
 
 #------------------------------------------------------------------------------
