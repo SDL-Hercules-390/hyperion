@@ -2016,6 +2016,26 @@ AC_CACHE_SAVE()
 #  later on), but that approach was rejected since it would tend to make our
 #  configure.ac script less clean (simple and straightforward).
 
+AC_ARG_ENABLE( extpkgs,
+
+    AC_HELP_STRING( [--enable-extpkgs=DIR],
+
+        [define base External Packages installation directory]
+    ),
+    [
+        hc_cv_extpkg_dir="${enableval}"
+
+        if test -d "${hc_cv_extpkg_dir}"; then
+          AC_MSG_NOTICE( [Using External Packages override directory ${hc_cv_extpkg_dir}] )
+        else
+          AC_MSG_RESULT( [ERROR: --enable-extpkgs directory not found: ${hc_cv_extpkg_dir}] )
+          hc_error=yes
+          hc_cv_extpkg_dir=""
+        fi
+    ],
+    [hc_cv_extpkg_dir=""]
+)
+
 AC_ARG_ENABLE( hqa,
 
     AC_HELP_STRING( [--enable-hqa=DIR],
@@ -2155,7 +2175,7 @@ AC_ARG_ENABLE( debug,
 
     AC_HELP_STRING( [--enable-debug],
 
-        [enable debugging (TRACE/VERIFY/ASSERT macros)]
+        [enable unoptimized debug code (and TRACE/VERIFY/ASSERT macros)]
     ),
     [
         case "${enableval}" in
@@ -2916,72 +2936,144 @@ fi
 ###############################################################################
 #                       External Packages support
 ###############################################################################
-
-extpkg_ldflags=""
-extpkg_ldadd=""
-
+#
+#  Our first preference for resolving EXTPKG static lib files is whichever
+#  directory was specified by the --enable-extpkgs=DIR configure option. If
+#  that option wasn't specified, then our second preference is whichever of
+#  the directories defined in the LIBRARY_PATH variable is found to contain
+#  our needed EXTPKG static lib file (handled further below).  Our defaults
+#  are the static lib files distributed in our source  code repository (which
+#  should work just fine for most platforms but not necessarily all platforms
+#  which is why we provide multiple different ways to override the default).
+#
+#------------------------------------------------------------------------------
+#                             crypto
 #------------------------------------------------------------------------------
 
-crypto_pkgname=crypto
-crypto_pkgdir=${crypto_pkgname}
-crypto_incdir=${crypto_pkgdir}/include
-crypto_headers="${crypto_incdir}/aes.h     \
-                ${crypto_incdir}/crypto.h  \
-                ${crypto_incdir}/sha1.h    \
-                ${crypto_incdir}/sha256.h  \
+crypto_pkgname="crypto" # case matters!
+crypto_libname="lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a"
+
+if test "${hc_cv_extpkg_dir}" != ""; then
+  crypto_pkgdir="${hc_cv_extpkg_dir}"
+else
+  crypto_pkgdir="${srcdir}/${crypto_pkgname}"
+fi
+
+crypto_incdir="${crypto_pkgdir}/include"
+crypto_libdir="${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+crypto_headers="${crypto_incdir}/aes.h      \
+                ${crypto_incdir}/crypto.h   \
+                ${crypto_incdir}/sha1.h     \
+                ${crypto_incdir}/sha256.h   \
                 ${crypto_incdir}/sshdes.h"
 
-crypto_libdir=${crypto_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-crypto_libname=lib${crypto_pkgname}${hc_cv_pkg_lib_suffix}.a
-
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${crypto_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${crypto_libdir}/${crypto_libname}"
-
+#------------------------------------------------------------------------------
+#                            decNumber
 #------------------------------------------------------------------------------
 
-decnumber_pkgname=decNumber
-decnumber_pkgdir=${decnumber_pkgname}
-decnumber_incdir=${decnumber_pkgdir}/include
-decnumber_headers="${decnumber_incdir}/decContext.h  \
-                   ${decnumber_incdir}/decimal128.h  \
-                   ${decnumber_incdir}/decimal32.h   \
-                   ${decnumber_incdir}/decimal64.h   \
-                   ${decnumber_incdir}/decNumber.h   \
-                   ${decnumber_incdir}/decPacked.h   \
-                   ${decnumber_incdir}/decQuad.h"
+decnumber_pkgname="decNumber" # case matters!
+decnumber_libname="lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
-decnumber_libdir=${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-decnumber_libname=lib${decnumber_pkgname}${hc_cv_pkg_lib_suffix}.a
+if test "${hc_cv_extpkg_dir}" != ""; then
+  decnumber_pkgdir="${hc_cv_extpkg_dir}"
+else
+  decnumber_pkgdir="${srcdir}/${decnumber_pkgname}"
+fi
 
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${decnumber_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${decnumber_libdir}/${decnumber_libname}"
+decnumber_incdir="${decnumber_pkgdir}/include"
+decnumber_libdir="${decnumber_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
 
-#------------------------------------------------------------------------------
-
-softfloat_pkgname=SoftFloat
-softfloat_pkgdir=${softfloat_pkgname}
-softfloat_incdir=${softfloat_pkgdir}/include
-softfloat_headers="${softfloat_incdir}/softfloat.h \
-                   ${softfloat_incdir}/softfloat_types.h"
-
-softfloat_libdir=${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-softfloat_libname=lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a
-
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${softfloat_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${softfloat_libdir}/${softfloat_libname}"
+decnumber_headers="${decnumber_incdir}/aes.h        \
+                   ${decnumber_incdir}/decnumber.h  \
+                   ${decnumber_incdir}/sha1.h       \
+                   ${decnumber_incdir}/sha256.h     \
+                   ${decnumber_incdir}/sshdes.h"
 
 #------------------------------------------------------------------------------
+#                             SoftFloat
+#------------------------------------------------------------------------------
 
-telnet_pkgname=telnet
-telnet_pkgdir=${telnet_pkgname}
-telnet_incdir=${telnet_pkgdir}/include
-telnet_headers="${telnet_incdir}/telnet.h"
+softfloat_pkgname="SoftFloat" # case matters!
+softfloat_libname="lib${softfloat_pkgname}${hc_cv_pkg_lib_suffix}.a"
 
-telnet_libdir=${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}
-telnet_libname=lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a
+if test "${hc_cv_extpkg_dir}" != ""; then
+  softfloat_pkgdir="${hc_cv_extpkg_dir}"
+else
+  softfloat_pkgdir="${srcdir}/${softfloat_pkgname}"
+fi
 
-extpkg_ldflags="$extpkg_ldflags -L${srcdir}/${telnet_libdir}"
-extpkg_ldadd="$extpkg_ldadd ${srcdir}/${telnet_libdir}/${telnet_libname}"
+softfloat_incdir="${softfloat_pkgdir}/include"
+softfloat_libdir="${softfloat_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+softfloat_headers="${softfloat_incdir}/aes.h        \
+                   ${softfloat_incdir}/softfloat.h  \
+                   ${softfloat_incdir}/sha1.h       \
+                   ${softfloat_incdir}/sha256.h     \
+                   ${softfloat_incdir}/sshdes.h"
+
+#------------------------------------------------------------------------------
+#                             telnet
+#------------------------------------------------------------------------------
+
+telnet_pkgname="telnet" # case matters!
+telnet_libname="lib${telnet_pkgname}${hc_cv_pkg_lib_suffix}.a"
+
+if test "${hc_cv_extpkg_dir}" != ""; then
+  telnet_pkgdir="${hc_cv_extpkg_dir}"
+else
+  telnet_pkgdir="${srcdir}/${telnet_pkgname}"
+fi
+
+telnet_incdir="${telnet_pkgdir}/include"
+telnet_libdir="${telnet_pkgdir}/lib${hc_cv_pkg_lib_subdir}"
+
+telnet_headers="${telnet_incdir}/aes.h      \
+                ${telnet_incdir}/telnet.h   \
+                ${telnet_incdir}/sha1.h     \
+                ${telnet_incdir}/sha256.h   \
+                ${telnet_incdir}/sshdes.h"
+
+#------------------------------------------------------------------------------
+# Allow any LIBRARY_PATH variable directory to override our repository default.
+#------------------------------------------------------------------------------
+
+if test -z "${hc_cv_extpkg_dir}"; then
+
+  found_crypto=""
+  found_decnumber=""
+  found_softfloat=""
+  found_telnet=""
+
+  while read -d ':' dir; do
+    if test -n "${dir}"; then
+      if test -z   "${found_crypto}"; then
+        if test -r ${dir}/${crypto_libname}; then
+                            crypto_libdir="${dir}"
+                      found_crypto="yes"
+        fi
+      fi
+      if test -z   "${found_decnumber}"; then
+        if test -r ${dir}/${decnumber_libname}; then
+                            decnumber_libdir="${dir}"
+                      found_decnumber="yes"
+        fi
+      fi
+      if test -z   "${found_softfloat}"; then
+        if test -r ${dir}/${softfloat_libname}; then
+                            softfloat_libdir="${dir}"
+                      found_softfloat="yes"
+        fi
+      fi
+      if test -z   "${found_telnet}"; then
+        if test -r ${dir}/${telnet_libname}; then
+                            telnet_libdir="${dir}"
+                      found_telnet="yes"
+        fi
+      fi
+    fi
+  done <<< "${LIBRARY_PATH}:"     # (trailing ':' to ensure last dir processed)
+fi
 
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
@@ -2992,18 +3084,28 @@ extpkg_headers="${crypto_headers}     \
                 ${softfloat_headers}  \
                 ${telnet_headers}"
 
-EXTPKG_HEADERS=$extpkg_headers
+extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+              ${decnumber_libdir}/${decnumber_libname}    \
+              ${softfloat_libdir}/${softfloat_libname}    \
+              ${telnet_libdir}/${telnet_libname}"
+
+##----------------------------------------------------------------
+##                         DEBUGGING
+##----------------------------------------------------------------
+## AC_MSG_NOTICE( [Using crypto_libdir    = ${crypto_libdir}]    )
+## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
+## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
+## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+EXTPKG_HEADERS="${extpkg_headers}"
 AC_SUBST(EXTPKG_HEADERS)
 
-EXTPKG_LDFLAGS=$extpkg_ldflags
-AC_SUBST(EXTPKG_LDFLAGS)
-
-EXTPKG_LDADD=$extpkg_ldadd
+EXTPKG_LDADD="${extpkg_ldadd}"
 AC_SUBST(EXTPKG_LDADD)
 
 #------------------------------------------------------------------------------
 
-HQA_INC="$hc_cv_hqa_inc"
+HQA_INC="${hc_cv_hqa_inc}"
 AC_SUBST(HQA_INC)
 
 #------------------------------------------------------------------------------

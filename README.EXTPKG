@@ -34,9 +34,11 @@ repository only contains the package's static link libraries and whatever
 header files the package requires to call into its functions.
 
 Each external package is built separately from the Hercules emulator and then
-"installed" into a directory of your choosing.  This "installation directory"
-should then be specified in your "LIB" environment variable so that Hercules
-can then find your custom built external package static libraries.
+"installed" into a directory of your choosing.  On Windows, the 'lib' sub-
+directoty of this external packages "installation directory" should then be
+specified in your "LIB" environment variable so that Hercules can then find
+your custom built external package static libraries. (On *Nix the equivalent
+variable would be the "LIBRARY_PATH" variable.)
 
 Currently, there are four such external packages this Hercules 4.0 Hyperion
 links with.  These packages are the "crypto", "decNumber", "SoftFloat", and
@@ -70,6 +72,10 @@ document within each of their respective repositories.
   but the procedure for Linux is virtually identical.  If you are reasonably
   skilled at Linux you should have no trouble making the needed adjustments.
 
+  One of the adjustments that must be made is to either point your "LIBRARY_
+  PATH" variable to your '/extpkgs/lib' directory or else specify the the top
+  '/extpkgs' directory in your "--enable-extpkgs=DIR" configure option.
+
 
 -------------------------------------------------------------------------------
 
@@ -94,7 +100,7 @@ Windows and that you need both the x86 and x64 builds of the external packages.
   6.  Build and install each external package via the 'build' command,
       installing each of them into the directory created in step 3.
   7.  Update your 'LIB' environment variable to point to the directory
-      where your packages where installed to.
+      where your packages where installed to (e.g. \extpkgs\lib).
   8.  Build Hercules as normal.
 
 
@@ -186,7 +192,7 @@ into the common \extpkgs installation directory.
     directory where your packages where installed into:
 
 
-        setx LIB "\extpkgs;%LIB%"
+        setx LIB "%LIB%;\extpkgs\lib"
 
 
 8.  Build Hercules as normal.  (Self explanatory)

@@ -8,7 +8,6 @@ AUTOMAKE_OPTIONS = foreign 1.5
 #------------------------------------------------------------------------------
 
 extpkg_headers = @EXTPKG_HEADERS@
-extpkg_ldflags = @EXTPKG_LDFLAGS@
 extpkg_ldadd   = @EXTPKG_LDADD@
 hqa_inc        = @HQA_INC@
 lns            = @LN_S@
@@ -148,8 +147,7 @@ DYNMOD_LD_FLAGS =   \
   -no-undefined     \
   $(XSTATIC)        \
   -export-dynamic   \
-  -avoid-version    \
-  $(extpkg_ldflags)
+  -avoid-version
 
 DYNMOD_LD_ADD =     \
   libherc.la        \
