@@ -196,7 +196,6 @@ int             i, j;                   /* Loop indexes              */
     initialize_condition (&cckdblk.termcond);
 
     /* Initialize some variables */
-    cckdblk.wrprio     = 16;
     cckdblk.ranbr      = CCKD_DEF_RA_SIZE;
     cckdblk.ramax      = CCKD_DEF_RA;
     cckdblk.wrmax      = CCKD_DEF_WRITER;
@@ -213,6 +212,12 @@ int             i, j;                   /* Loop indexes              */
 #endif
     cckdblk.comp       = 0xff;
     cckdblk.compparm   = -1;
+
+    /* Set the writer thread's priority just BELOW the CPU threads'
+       in order to minimize any potential impact from compression.
+    */
+    cckdblk.wrprio = sysblk.cpuprio - 1; // (lower than CPU)
+    MINMAX( cckdblk.wrprio, sysblk.minprio, sysblk.maxprio );
 
     /* Initialize the readahead queue */
     cckdblk.ra1st = cckdblk.ralast = -1;
@@ -1737,12 +1742,12 @@ int             rc;
 
     UNREFERENCED(arg);
 
-#ifndef WIN32
-    /* Set writer priority just below cpu priority to mimimize the
-       compression effect */
-    if(cckdblk.wrprio >= 0)
-        set_thread_priority( cckdblk.wrprio);
-#endif
+    /* Set the writer thread's priority just BELOW the CPU threads'
+       in order to minimize any potential impact from compression.
+    */
+    cckdblk.wrprio = sysblk.cpuprio - 1; // (lower than CPU)
+    MINMAX( cckdblk.wrprio, sysblk.minprio, sysblk.maxprio );
+    set_thread_priority( cckdblk.wrprio );
 
     obtain_lock (&cckdblk.wrlock);
 
