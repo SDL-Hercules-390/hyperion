@@ -983,7 +983,8 @@ struct CHPBLK {
 #define TTYPE_LEN TELNET_MAX_TTYPE_LEN  /* (just a shorter name)     */
 struct TELNET {
 
-        char    ttype[TTYPE_LEN+1];     /* Client terminal type      */
+        char    tt1st[TTYPE_LEN+1];     /* Client's first term type  */
+        char    ttype[TTYPE_LEN+1];     /* Negotiated terminal type  */
         char    tgroup[16];             /* Terminal group name       */
         char    clientid[32];           /* Client Id string          */
         int     csock;                  /* Client socket             */

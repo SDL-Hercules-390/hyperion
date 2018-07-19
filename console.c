@@ -2217,6 +2217,80 @@ static void loc3270_query_device( DEVBLK* dev, char** devclass,
 } /* end function loc3270_query_device */
 
 /*-------------------------------------------------------------------*/
+/*                      Terminal Types Table                         */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following table defines the display terminal types that we    */
+/* support and their corresponding model and extended attributes     */
+/* interpretation. For example, during terminal-type negotiations    */
+/* the remote client identifies itself as a "IBM-3477-FC" terminal   */
+/* type, then we know to interpret it as the equivalent of model 5   */
+/* terminal type with 27 rows and 132 columns.                       */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+struct TTTAB                            /* TN3270 Terminal Types     */
+{
+    const char*  ttype;                 /* Telnet Terminal Type      */
+    BYTE         model;                 /* Model (2,3,4,5,X)         */
+    BYTE         extatr;                /* Extended Attributes       */
+};
+typedef struct TTTAB   TTTAB;
+
+// Ref: https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/rzaiw/rzaiwemultypetrouble.htm
+// Ref: https://www.iana.org/assignments/terminal-type-names/terminal-type-names.txt
+
+static TTTAB  tttab[] =
+{
+    {  "IBM-3196-A1",     '2',   FALSE  },
+    {  "IBM-3179-2",      '2',   FALSE  },
+    {  "IBM-3180-2",      '5',   FALSE  },  // Yes, '5' !!
+    {  "IBM-3277-2",      '2',   FALSE  },
+    {  "IBM-3278-2",      '2',   FALSE  },
+    {  "IBM-3278-2-E",    '2',   TRUE   },
+    {  "IBM-3278-3",      '3',   FALSE  },
+    {  "IBM-3278-3-E",    '3',   TRUE   },
+    {  "IBM-3278-4",      '4',   FALSE  },
+    {  "IBM-3278-4-E",    '4',   TRUE   },
+    {  "IBM-3278-5",      '5',   FALSE  },
+    {  "IBM-3278-5-E",    '5',   TRUE   },
+    {  "IBM-3279-2",      '2',   FALSE  },
+    {  "IBM-3279-2-E",    '2',   TRUE   },
+    {  "IBM-3279-3",      '3',   FALSE  },
+    {  "IBM-3279-3-E",    '3',   TRUE   },
+    {  "IBM-3477-FC",     '5',   FALSE  },
+    {  "IBM-3477-FG",     '5',   FALSE  },
+    {  "IBM-3486-BA",     '2',   FALSE  },
+    {  "IBM-3487-HA",     '2',   FALSE  },
+    {  "IBM-3487-HC",     '2',   FALSE  },
+    {  "IBM-5251-11",     '2',   FALSE  },
+    {  "IBM-5291-1",      '2',   FALSE  },
+    {  "IBM-5292-2",      '2',   FALSE  },
+    {  "IBM-5555-B01",    '2',   FALSE  },
+    {  "IBM-5555-C01",    '2',   FALSE  },
+    {  "IBM-5555-G01",    '2',   FALSE  },
+    {  "IBM-5555-G02",    '2',   FALSE  },
+};
+
+/*-------------------------------------------------------------------*/
+/*               Function to search above table                      */
+/*-------------------------------------------------------------------*/
+static bool lookup_ttype( const char* ttype, BYTE* model, BYTE* extatr )
+{
+    size_t i;
+    for (i=0; i < _countof( tttab ); i++)
+    {
+        if (str_caseless_eq( tttab[i].ttype, ttype ))
+        {
+            *model  = tttab[i].model;
+            *extatr = tttab[i].extatr;
+            return true;
+        }
+    }
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
 /*                 Negotiate Client Terminal Type                    */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
@@ -2225,41 +2299,39 @@ static void loc3270_query_device( DEVBLK* dev, char** devclass,
 /* is to be supported as a 3270 display console or as a 1052/3215    */
 /* printer-keyboard console.                                         */
 /*                                                                   */
-/* Valid display terminal types are "IBM-NNNN", "IBM-NNNN-M", and    */
-/* "IBM-NNNN-M-E", where NNNN is 3270, 3277, 3278, 3279, 3178, 3179, */
-/* or 3180, M indicates the screen size (2=25x80, 3=32x80, 4=43x80,  */
-/* 5=27x132, X=determined by Read Partition Query command), and      */
-/* -E is an optional suffix indicating that the terminal supports    */
-/* extended attributes. Displays are negotiated into tn3270 mode.    */
-/*                                                                   */
-/* An optional device number suffix (example: IBM-3270@01F) may      */
-/* be specified to request allocation to a specific device number.   */
-/* Valid 3270 printer type is "IBM-3287-1"                           */
-/*                                                                   */
 /* Terminal types whose first four characters are not "IBM-" are     */
 /* handled as printer-keyboard consoles using telnet line mode.      */
+/* Display terminals are always negotiated into telnet tn3270 mode.  */
+/* The only supported 3270 printer type is "IBM-3287-1".             */
+/*                                                                   */
+/* Valid display terminal types are defined in the preceding table.  */
+/* The model code defines the screen size, where 1=24x80, 2=24x80,   */
+/* 3=32x80, 4=43x80, and 5=27x132.                                   */
+/*                                                                   */
+/* An optional device number suffix (example: IBM-3278@01F) may      */
+/* be specified to request allocation to a specific device number.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static void negotiate_ttype( TELNET* tn )
 {
-    char  *s, c;
-    U16    devnum;
+    char* suffix;
 
-    /* Check terminal type string for device name suffix */
-    s = strchr( tn->ttype, '@' );
-
-    if (s && strlen( s ) < sizeof( tn->tgroup ))
-        STRLCPY( tn->tgroup, &s[1] );
-
-    if (s && sscanf( s, "@%hx%c", &devnum, &c ) == 1)
+    /* Check terminal type for optional device-number/group suffix */
+    tn->devnum = 0xFFFF;
+    if ((suffix = strchr( tn->ttype, '@' )) != NULL)
     {
-        tn->devnum = devnum;
-        tn->tgroup[0] = 0;
-    }
-    else
-        tn->devnum = 0xFFFF;
+        U16   devnum;
+        char  c;
 
-    /* Test for non-display terminal type */
+        *suffix++ = 0;  // (suffix is not part of terminal type)
+
+        if (sscanf( suffix, "%hx%c", &devnum, &c ) == 1)
+            tn->devnum = devnum;
+        else if (strlen( suffix ) < sizeof( tn->tgroup ))
+            STRLCPY( tn->tgroup, suffix );
+    }
+
+    /* Check for non-IBM terminal type (presumed TTY) */
     if (strncasecmp( tn->ttype, "IBM-", 4 ) != 0)
     {
         /* TTY: we don't care about BINARY or EOR mode. We can
@@ -2287,7 +2359,6 @@ static void negotiate_ttype( TELNET* tn )
         */
         telnet_negotiate( tn->ctl, TELNET_WONT, TELNET_TELOPT_ECHO );
         telnet_negotiate( tn->ctl, TELNET_DO,   TELNET_TELOPT_ECHO );
-
         return;
     }
 
@@ -2301,59 +2372,62 @@ static void negotiate_ttype( TELNET* tn )
     telnet_negotiate( tn->ctl, TELNET_WILL, TELNET_TELOPT_EOR );
     telnet_negotiate( tn->ctl, TELNET_DO,   TELNET_TELOPT_EOR );
 
-    /* Determine display terminal model */
-    if (strncasecmp( tn->ttype+4, "DYNAMIC", 7 ) == 0)
+    /* No sense in going any further if TN3270 mode was refused */
+    if (tn->neg_fail)
+        return;
+
+    /* Printer? */
+    if (strcasecmp( tn->ttype, "IBM-3287-1" ) == 0)
     {
-        tn->model  = 'X';
-        tn->extatr = TRUE;
-    }
-    else
-    {
-        if (!(0
-            || strncasecmp( tn->ttype+4, "3277", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3270", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3178", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3278", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3179", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3180", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3287", 4 ) == 0
-            || strncasecmp( tn->ttype+4, "3279", 4 ) == 0
-        ))
-        {
-            // "%s COMM: unsupported terminal type: %s"
-            WRMSG( HHC02910, "E", tn->clientid, tn->ttype );
-            tn->neg_fail = TRUE;
-            return;
-        }
-
-        tn->model  = '2';
-        tn->extatr = FALSE;
-
-        if (tn->ttype[8] == '-')
-        {
-            if (tn->ttype[9] < '1' || tn->ttype[9] > '5')
-            {
-                // "%s COMM: unsupported terminal type: %s"
-                WRMSG( HHC02910, "E", tn->clientid, tn->ttype );
-                tn->neg_fail = TRUE;
-                return;
-            }
-
-            tn->model = tn->ttype[9];
-
-            if (strncasecmp( tn->ttype+4, "328", 3 ) == 0)
-                tn->model = '2';
-
-            if (strncasecmp( tn->ttype+10, "-E", 2 ) == 0)
-                tn->extatr = TRUE;
-        }
-    }
-
-    /* Return display terminal class */
-    if (strncasecmp( tn->ttype+4, "3287", 4 ) == 0)
         tn->devclass = 'P';
-    else
+        tn->model    = '5';     // (132 columns)
+        tn->extatr   = FALSE;
+        return;
+    }
+
+    /* Dynamic? */
+    if (strcasecmp( tn->ttype, "IBM-DYNAMIC" ) == 0)
+    {
         tn->devclass = 'D';
+        tn->model    = 'X';
+        tn->extatr   = TRUE;
+        return;
+    }
+
+    /* Otherwise determine terminal type attributes from our table */
+    if (lookup_ttype( tn->ttype, &tn->model, &tn->extatr ))
+    {
+        tn->devclass = 'D';
+        return;
+    }
+
+    /* The current terminal type wasn't in our table and is therefore
+       unacceptable to us. Tell them to try again by sending us their
+       NEXT terminal type in their list. If NONE of the types in their
+       list are acceptable to us (detected by their wrapping around
+       and sending us the first entry in their list again), then fail
+       the terminal type negotiations.
+    */
+    if (str_caseless_eq( tn->ttype, tn->tt1st ))  /* Tried them all? */
+    {
+        // "%s COMM: No acceptable terminal types"
+        WRMSG( HHC02916, "E", tn->clientid );
+        tn->neg_fail = TRUE;
+        return;
+    }
+
+    // "%s COMM: unsupported terminal type: %s"
+    WRMSG( HHC02910, "W", tn->clientid, tn->ttype );
+
+    /* Save this terminal type if it's the first entry in their list */
+    if (!tn->tt1st[0])
+        STRLCPY( tn->tt1st, tn->ttype );
+
+    /* Continue negotiating... */
+    tn->ttype[0] = 0; // (prevent premature 'connect_client' loop exit)
+
+    /* Tell them to send us the NEXT terminal type in their list... */
+    telnet_ttype_send( tn->ctl );
 
 } /* end function negotiate_ttype */
 

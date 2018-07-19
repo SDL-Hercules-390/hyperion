@@ -2087,7 +2087,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02913 "%s COMM: Buffer overrun"
 #define HHC02914 "%s COMM: %s negotiations complete; ttype = '%s'"
 #define HHC02915 "%s COMM: Connection received"
-//efine HHC02916 - HHC02949 (available)
+#define HHC02916 "%s COMM: No acceptable terminal types"
+//efine HHC02917 - HHC02949 (available)
 
 // range 02950 - 02999 available
 // range 03000 - 03099 available
