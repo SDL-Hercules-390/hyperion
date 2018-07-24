@@ -715,6 +715,7 @@ typedef struct _tagFTHREAD
     HANDLE      hThreadHandle;      // (Win32 thread handle)
     BOOL        bJoinable;          // (whether thread is joinable or detached)
     int         nJoinedCount;       // (#of threads that did join on this one)
+    int         nPriority;          // (HTHREAD priority; -1 if not set yet)
     void*       ExitVal;            // (saved thread exit value)
     jmp_buf     JumpBuf;            // (jump buffer for fthread_exit)
 }
@@ -856,20 +857,12 @@ int  fthread_create
     void*            pvThreadArgs
 )
 {
-    static BOOL            bDidInit = FALSE;
     FT_CALL_THREAD_PARMS*  pCallTheirThreadParms;
     size_t                 nStackSize;
     int                    nDetachState;
     FTHREAD*               pFTHREAD;
     HANDLE                 hThread;
     DWORD                  dwThreadID;
-
-    if ( !bDidInit )
-    {
-        bDidInit = TRUE;
-        InitializeListHead ( &ThreadListHead );
-        InitializeCriticalSection ( &ThreadListLock );
-    }
 
     if (0
         || !pdwThreadID
@@ -921,6 +914,7 @@ int  fthread_create
     pFTHREAD->hThreadHandle = NULL;
     pFTHREAD->bJoinable     = ((FTHREAD_CREATE_JOINABLE == nDetachState) ? (TRUE) : (FALSE));
     pFTHREAD->nJoinedCount  = 0;
+    pFTHREAD->nPriority     = -1;
     pFTHREAD->ExitVal       = NULL;
 
     LockThreadsList();
@@ -1757,47 +1751,45 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 // Thread Execution Scheduling...
 
-// (HELPER): Convert Windows priority to Fthread priority
+// (HELPER): Convert Windows priority to FthreadS priority, and vice-versa.
 
 static int W2FPriority( int nWindowsPriority )
 {
     switch (nWindowsPriority)
     {
-        case    THREAD_PRIORITY_IDLE:           return 1;
-        case    THREAD_PRIORITY_LOWEST:         return 2;
-        case    THREAD_PRIORITY_BELOW_NORMAL:   return 3;
+        case  THREAD_PRIORITY_IDLE:           return  FTHREAD_IDLE;
+        case  THREAD_PRIORITY_LOWEST:         return  FTHREAD_LOWEST;
+        case  THREAD_PRIORITY_BELOW_NORMAL:   return  FTHREAD_BELOW_NORMAL;
+        case  THREAD_PRIORITY_NORMAL:         return  FTHREAD_NORMAL;
+        case  THREAD_PRIORITY_ABOVE_NORMAL:   return  FTHREAD_ABOVE_NORMAL;
+        case  THREAD_PRIORITY_HIGHEST:        return  FTHREAD_HIGHEST;
+        case  THREAD_PRIORITY_TIME_CRITICAL:  return  FTHREAD_TIME_CRITICAL;
         default:
-        case    THREAD_PRIORITY_NORMAL:         return 4;
-        case    THREAD_PRIORITY_ABOVE_NORMAL:   return 5;
-        case    THREAD_PRIORITY_HIGHEST:        return 6;
-        case    THREAD_PRIORITY_TIME_CRITICAL:  return 7;
+        {
+            CRASH();    // (WINDOWS OPERATING SYSTEM BUG!)
+        }
     }
-    UNREACHABLE_CODE( return THREAD_PRIORITY_NORMAL );
+    UNREACHABLE_CODE( return DEFAULT_HERC_PRIO );
 }
-
-// (HELPER): Convert Fthread priority to Windows priority
 
 static int F2WPriority( int nFthreadPriority )
 {
-    switch (nFthreadPriority)
-    {
-        case 1: return THREAD_PRIORITY_IDLE;
-        case 2: return THREAD_PRIORITY_LOWEST;
-        case 3: return THREAD_PRIORITY_BELOW_NORMAL;
-        default:
-        case 4: return THREAD_PRIORITY_NORMAL;
-        case 5: return THREAD_PRIORITY_ABOVE_NORMAL;
-        case 6: return THREAD_PRIORITY_HIGHEST;
-        case 7: return THREAD_PRIORITY_TIME_CRITICAL;
-    }
+    if (nFthreadPriority <= FTHREAD_IDLE         ) return THREAD_PRIORITY_IDLE;
+    if (nFthreadPriority <= FTHREAD_LOWEST       ) return THREAD_PRIORITY_LOWEST;
+    if (nFthreadPriority <= FTHREAD_BELOW_NORMAL ) return THREAD_PRIORITY_BELOW_NORMAL;
+    if (nFthreadPriority <= FTHREAD_NORMAL       ) return THREAD_PRIORITY_NORMAL;
+    if (nFthreadPriority <= FTHREAD_ABOVE_NORMAL ) return THREAD_PRIORITY_ABOVE_NORMAL;
+    if (nFthreadPriority <= FTHREAD_HIGHEST      ) return THREAD_PRIORITY_HIGHEST;
+                                                   return THREAD_PRIORITY_TIME_CRITICAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
 DLL_EXPORT int fthread_getschedparam( fthread_t dwThreadID, int* pnPolicy, struct sched_param* pSCHPARM )
 {
-    HANDLE  hThread;
-    int     nWindowsPriority;
+    FTHREAD*  pFTHREAD;
+    HANDLE    hThread;
+    int       nWindowsPriority;
 
     if (0
         || !pnPolicy
@@ -1808,14 +1800,18 @@ DLL_EXPORT int fthread_getschedparam( fthread_t dwThreadID, int* pnPolicy, struc
         return RC(EINVAL);
 
     *pnPolicy = FTHREAD_POLICY;
-    pSCHPARM->sched_priority = W2FPriority( nWindowsPriority );
-
-    return 0;
+    VERIFY((pFTHREAD = FindFTHREAD( dwThreadID )));
+    pSCHPARM->sched_priority = (pFTHREAD->nPriority < 0)
+                             ? W2FPriority( nWindowsPriority )
+                             : pFTHREAD->nPriority;
+    UnlockThreadsList();
+    return RC(0);
 }
 
 DLL_EXPORT int fthread_setschedparam( fthread_t dwThreadID, int nPolicy, const struct sched_param* pSCHPARM )
 {
-    HANDLE  hThread;
+    FTHREAD*  pFTHREAD;
+    HANDLE    hThread;
 
     if (nPolicy != FTHREAD_POLICY)
         return RC(ENOTSUP);
@@ -1829,7 +1825,10 @@ DLL_EXPORT int fthread_setschedparam( fthread_t dwThreadID, int nPolicy, const s
     )
         return RC(EINVAL);
 
-    return 0;
+    VERIFY((pFTHREAD = FindFTHREAD( dwThreadID )));
+    pFTHREAD->nPriority = pSCHPARM->sched_priority;
+    UnlockThreadsList();
+    return RC(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1846,6 +1845,42 @@ DLL_EXPORT int fthread_get_priority_max( int nPolicy )
     if (nPolicy != FTHREAD_POLICY)
         return RC(ENOTSUP);
     return FTHREAD_MAX_PRIO;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+DLL_EXPORT void fthreads_internal_init()
+{
+    static BOOL bDidThis  = FALSE;
+
+    if (!bDidThis)
+    {
+        FTHREAD* pFTHREAD;
+        bDidThis = TRUE;
+
+        // Global initialization
+
+        InitializeListHead ( &ThreadListHead );
+        InitializeCriticalSection ( &ThreadListLock );
+
+        // Add the current thread (impl = main startup thread) to our list
+        // so fthread_getschedparam/fthread_setschedparam lookup succeeds.
+
+        pFTHREAD = (FTHREAD*) malloc( sizeof( FTHREAD ));
+        memset( pFTHREAD, 0, sizeof( FTHREAD ));
+
+        InitializeListLink( &pFTHREAD->ThreadListLink );
+
+        pFTHREAD->dwThreadID    = GetCurrentThreadId();
+        pFTHREAD->hThreadHandle = GetCurrentThread();
+        pFTHREAD->bJoinable     = FALSE; // (main thread cannot be joined)
+        pFTHREAD->nJoinedCount  = 0;
+        pFTHREAD->nPriority     = -1;
+        pFTHREAD->ExitVal       = NULL;
+
+        // (no need to lock list during initialization)
+        InsertListHead( &ThreadListHead, &pFTHREAD->ThreadListLink );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

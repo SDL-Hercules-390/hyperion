@@ -777,8 +777,8 @@ struct SYSBLK {
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
         int     hercnice;               /* Herc. process NICE value  */
-        int     minprio;                /* Minimum allowed priority  */
-        int     maxprio;                /* Maximum allowed priority  */
+        int     minprio;                /* pthread minimum priority  */
+        int     maxprio;                /* pthread maximum priority  */
         int     hercprio;               /* Hercules THREAD priority  */
         int     todprio;                /* TOD Clock thread priority */
         int     cpuprio;                /* CPU thread priority       */

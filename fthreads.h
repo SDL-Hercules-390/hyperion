@@ -411,21 +411,36 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 // Thread Scheduling...
 
-#define SCHED_RR            (1)     // Same as Hercules
-#define FTHREAD_POLICY    SCHED_RR  // Our only valid scheduling policy
-#define FTHREAD_MIN_PRIO    (1)     // Same as Hercules
-#define FTHREAD_MAX_PRIO    (7)     // Same as Hercules
+#define SCHED_RR                (1)     // Same as Hercules
+#define FTHREAD_POLICY        SCHED_RR  // Our only valid scheduling policy
 
-struct sched_param                  // Scheduling parameters structure...
+// The following relative priority scheme should match hthread's scheme. That
+// is to say, we should have the same number of priority "slots" as hthreads.
+// This allows easy translation of any hthread (pthread) priority value to a
+// Window host priority "slot".
+
+#define FTHREAD_IDLE            (1)     // DEFAULT_XXX_PRIO
+#define FTHREAD_LOWEST          (2)     // DEFAULT_CPU_PRIO
+#define FTHREAD_BELOW_NORMAL    (3)     // DEFAULT_DEV_PRIO
+#define FTHREAD_NORMAL          (4)     // DEFAULT_SRV_PRIO
+#define FTHREAD_ABOVE_NORMAL    (5)     // DEFAULT_HERC_PRIO
+#define FTHREAD_HIGHEST         (6)     // DEFAULT_XXX_PRIO
+#define FTHREAD_TIME_CRITICAL   (7)     // DEFAULT_TOD_PRIO
+
+#define FTHREAD_MIN_PRIO        (0)     // (POSIX Requires at least 32 slots)
+#define FTHREAD_MAX_PRIO       (31)     // (POSIX Requires at least 32 slots)
+
+struct sched_param                      // Scheduling parameters structure...
 {
-    int  sched_priority;            // fthread priority
+    int  sched_priority;                // fthread priority
 };
 typedef struct sched_param sched_param;
 
-FT_DLL_IMPORT  int  fthread_getschedparam ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
-FT_DLL_IMPORT  int  fthread_setschedparam ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
-FT_DLL_IMPORT  int  fthread_get_priority_min( int nPolicy );
-FT_DLL_IMPORT  int  fthread_get_priority_max( int nPolicy );
+FT_DLL_IMPORT  void  fthreads_internal_init   ();
+FT_DLL_IMPORT  int   fthread_getschedparam    ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
+FT_DLL_IMPORT  int   fthread_setschedparam    ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
+FT_DLL_IMPORT  int   fthread_get_priority_min ( int nPolicy );
+FT_DLL_IMPORT  int   fthread_get_priority_max ( int nPolicy );
 
 ////////////////////////////////////////////////////////////////////////////////////
 

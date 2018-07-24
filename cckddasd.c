@@ -216,8 +216,7 @@ int             i, j;                   /* Loop indexes              */
     /* Set the writer thread's priority just BELOW the CPU threads'
        in order to minimize any potential impact from compression.
     */
-    cckdblk.wrprio = sysblk.cpuprio - 1; // (lower than CPU)
-    MINMAX( cckdblk.wrprio, sysblk.minprio, sysblk.maxprio );
+    cckdblk.wrprio = sysblk.cpuprio - 1;
 
     /* Initialize the readahead queue */
     cckdblk.ra1st = cckdblk.ralast = -1;
@@ -1745,8 +1744,7 @@ int             rc;
     /* Set the writer thread's priority just BELOW the CPU threads'
        in order to minimize any potential impact from compression.
     */
-    cckdblk.wrprio = sysblk.cpuprio - 1; // (lower than CPU)
-    MINMAX( cckdblk.wrprio, sysblk.minprio, sysblk.maxprio );
+    cckdblk.wrprio = sysblk.cpuprio - 1;
     set_thread_priority( cckdblk.wrprio );
 
     obtain_lock (&cckdblk.wrlock);

@@ -115,6 +115,9 @@ DLL_EXPORT void hthreads_internal_init()
         MATTR attr;
         int rc, minprio, maxprio;
 
+#if defined( OPTION_FTHREADS )
+        fthreads_internal_init();
+#endif
         /* Initialize our internal lock */
 
         rc = hthread_mutexattr_init( &attr );
@@ -145,6 +148,14 @@ DLL_EXPORT void hthreads_internal_init()
 
         if (minprio >= 0 && maxprio >= 0 && maxprio >= minprio)
         {
+            /* "The Open Group Base Specifications Issue 7"
+               "Scheduling Policies", "SCHED_RR": "[...] Conforming
+               implementations shall provide a priority range of at
+               least 32 priorities for this policy."
+            */
+            if (((maxprio - minprio) + 1) < 32)
+                goto fatal;
+
             sysblk.minprio = minprio;
             sysblk.maxprio = maxprio;
         }
@@ -857,23 +868,20 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
 {
     int rc;
     struct sched_param param = {0};
-    if (0
-        || prio < sysblk.minprio
-        || prio > sysblk.maxprio
-    )
-    {
-        errno = EINVAL;
-        return -1;
-    }
-    param.sched_priority = prio;
+
+    /* Convert hthread priority relative to 0 to pthread priority */
+    param.sched_priority = sysblk.minprio + prio;
+
     if (equal_threads( tid, 0 ))
         tid = thread_id();
+
     SETMODE( ROOT );
     {
         rc = hthread_setschedparam( tid, HTHREAD_POLICY, &param );
     }
     SETMODE( USER );
-    if (rc < 0)
+
+    if (rc != 0)
     {
         if (EPERM != rc)
         {
@@ -890,18 +898,24 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
 {
-    int rc, policy;
+    int rc, policy, prio;
     struct sched_param  param = {0};
+
     if (equal_threads( tid, 0 ))
         tid = thread_id();
+
     SETMODE( ROOT );
     {
         rc = hthread_getschedparam( tid, &policy, &param );
     }
     SETMODE( USER );
-    if (rc < 0)
+
+    /* Convert pthread priority to hthread priority relative to 0 */
+    prio = param.sched_priority - sysblk.minprio;
+
+    if (rc != 0)
     {
-        param.sched_priority = rc;
+        prio = -1;  /* (return negative value to indicate error) */
 
         if (EPERM != rc)
         {
@@ -910,7 +924,7 @@ DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
                 TRIMLOC( location ), rc, strerror( rc ));
         }
     }
-    return param.sched_priority;
+    return prio;
 }
 
 /*-------------------------------------------------------------------*/

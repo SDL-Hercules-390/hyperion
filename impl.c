@@ -830,14 +830,8 @@ int     rc;
     sysblk.hercprio = DEFAULT_HERC_PRIO  /*     V     */;
     sysblk.todprio  = DEFAULT_TOD_PRIO;  /* (highest) */
 
-    MINMAX( sysblk.cpuprio,  sysblk.minprio, sysblk.maxprio );  /* (lowest)  */
-    MINMAX( sysblk.devprio,  sysblk.minprio, sysblk.maxprio );  /*     |     */
-    MINMAX( sysblk.srvprio,  sysblk.minprio, sysblk.maxprio );  /*     |     */
-    MINMAX( sysblk.hercprio, sysblk.minprio, sysblk.maxprio );  /*     V     */
-    MINMAX( sysblk.todprio,  sysblk.minprio, sysblk.maxprio );  /* (highest) */
-
     /* Set the priority of the main Hercules thread */
-    if ((rc = set_thread_priority( sysblk.hercprio )) < 0)
+    if ((rc = set_thread_priority( sysblk.hercprio )) != 0)
     {
         // "set_thread_priority( %d ) failed: %s"
         WRMSG( HHC00109, "E", sysblk.hercprio, strerror( rc ));

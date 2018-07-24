@@ -386,6 +386,8 @@ void* socket_thread( void* arg )
 
     UNREFERENCED( arg );
 
+    set_thread_priority( sysblk.srvprio );
+
     /* Display thread started message on control panel */
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SOCKET_THREAD_NAME );
 
