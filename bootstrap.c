@@ -25,15 +25,15 @@
 /* - initializes the LIBTOOL environment                             */
 /* - passes control to the impl() function in impl.c                 */
 /*-------------------------------------------------------------------*/
-int main(int ac,char *av[])
+int main( int ac, char* av[] )
 {
-    DROP_PRIVILEGES(CAP_SYS_NICE);
-    SET_THREAD_NAME("bootstrap");
+    DROP_PRIVILEGES( CAP_SYS_NICE );
+    SET_THREAD_NAME( BOOTSTRAP_NAME );
 
 #if defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
 #endif
-    exit(impl(ac,av));
+    exit( impl( ac, av ));
 }
 
 #else // defined( _MSVC_ )
@@ -145,11 +145,11 @@ static HWND FindConsoleHandle();
 #include <Mmsystem.h>               // (timeBeginPeriod, timeEndPeriod)
 #pragma comment( lib, "Winmm" )     // (timeBeginPeriod, timeEndPeriod)
 
-int main(int ac,char *av[])
+int main( int ac, char* av[] )
 {
     int rc = 0;
 
-    SET_THREAD_NAME("bootstrap");
+    SET_THREAD_NAME( BOOTSTRAP_NAME );
 
     // Disable default invalid crt parameter handling
 

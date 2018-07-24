@@ -59,7 +59,6 @@ struct SCRCTL {                         /* Script control structure  */
 typedef struct SCRCTL SCRCTL;           /* typedef is easier to use  */
 static LIST_ENTRY scrlist = {0,0};      /* Script list anchor entry  */
 static int scrid = 0;                   /* Script identification no. */
-#define SCRTHREADNAME "Script Thread"   /* Name of processing thread */
 
 /* Forward declarations:                                             */
 static int do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p);
@@ -975,7 +974,7 @@ static void *script_thread( void *arg )
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' started"
     WRMSG( HHC00100, "I", (u_long) tid,
-        get_thread_priority(), SCRTHREADNAME );
+        get_thread_priority(), SCRIPT_THREAD_NAME );
 #endif
 
     /* Retrieve our control entry */
@@ -1000,7 +999,7 @@ static void *script_thread( void *arg )
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' ended"
     WRMSG( HHC00101, "I", (u_long) tid,
-        get_thread_priority(), SCRTHREADNAME );
+        get_thread_priority(), SCRIPT_THREAD_NAME );
 #endif
 
     return NULL;
@@ -1060,7 +1059,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
 
     /* Create the associated script processing thread */
     if ((rc = create_thread( &pCtl->scr_tid, DETACHED,
-        script_thread, NULL, SCRTHREADNAME )) != 0)
+        script_thread, NULL, SCRIPT_THREAD_NAME )) != 0)
     {
         pCtl->scr_tid = 0; /* (deactivate) */
         // "Error in function create_thread(): %s"

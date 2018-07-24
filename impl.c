@@ -570,6 +570,8 @@ TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 int     rc;
 
+    SET_THREAD_NAME( IMPL_THREAD_NAME );
+
     /* Seed the pseudo-random number generator */
     srand( time(NULL) );
 
@@ -595,8 +597,6 @@ int     rc;
 
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
-
-    SET_THREAD_NAME( "impl" );
 
     /* Remain compatible with older external gui versions */
     if (argc >= 1 && strncmp( argv[argc-1], "EXTERNALGUI", 11 ) == 0)
@@ -858,9 +858,10 @@ int     rc;
        messages until after the logger has been initialized, since it
        is the logger that processes all WRMSG() calls.
     */
-#define HERC_THREAD_NAME    "Hercules main"
-    SET_THREAD_NAME( HERC_THREAD_NAME );
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HERC_THREAD_NAME );
+    /* Log our own thread started message (better late than never) */
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), IMPL_THREAD_NAME );
+
+    /* Set the priority of the logger thread and log its started msg */
     set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
     WRMSG( HHC00100, "I", sysblk.loggertid,
         get_thread_priority_id( sysblk.loggertid ), LOGGER_THREAD_NAME );

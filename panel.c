@@ -1637,8 +1637,8 @@ U32     aaddr;                          /* Absolute address for STO  */
 char    buf[1024];                      /* Buffer workarea           */
 size_t  loopcount;                      /* Number of iterations done */
 
-    hdl_addshut("panel_cleanup",panel_cleanup, NULL);
-
+    SET_THREAD_NAME( PANEL_THREAD_NAME );
+    hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
     history_init();
 
 #if defined( ENABLE_BUILTIN_SYMBOLS )
@@ -3186,7 +3186,7 @@ FinishShutdown:
 
     sysblk.panel_init = 0;
 
-    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), "Control panel");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), PANEL_THREAD_NAME );
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

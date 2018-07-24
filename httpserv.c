@@ -866,7 +866,7 @@ struct timeval      timeout;            /* timeout value             */
     set_thread_priority( sysblk.srvprio);
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "HTTP server");
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HTTP_SRVR_THREAD_NAME );
 
     /* make sure root path is built */
     if ( http_root() == NULL )
@@ -965,9 +965,9 @@ struct timeval      timeout;            /* timeout value             */
             }
 
             /* Create a thread to execute the http request */
-            rc = create_thread (&httptid, DETACHED,
+            rc = create_thread( &httptid, DETACHED,
                                 http_request, (void *)(uintptr_t)csock,
-                                "http_request");
+                                HTTP_REQ_THREAD_NAME );
             if(rc)
             {
                 WRMSG(HHC00102, "E", strerror(rc));
@@ -985,8 +985,8 @@ http_server_stop:
     if ( !sysblk.shutdown )
         hdl_delshut(http_shutdown, NULL);
 
-    /* Display thread started message on control panel */
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "HTTP server");
+    /* Display thread ended message on control panel */
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), HTTP_SRVR_THREAD_NAME );
 
     sysblk.httptid = 0;
 
@@ -1037,7 +1037,8 @@ int http_startup(int isconfigcalling)
         {
             int rc_ct;
 
-            rc_ct = create_thread (&sysblk.httptid, DETACHED, http_server, NULL, "http_server");
+            rc_ct = create_thread( &sysblk.httptid, DETACHED,
+                http_server, NULL, HTTP_SRVR_THREAD_NAME );
             if ( rc_ct )
             {
                 WRMSG(HHC00102, "E", strerror(rc));

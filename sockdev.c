@@ -387,7 +387,7 @@ void* socket_thread( void* arg )
     UNREFERENCED( arg );
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "Socket device listener");
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SOCKET_THREAD_NAME );
 
     for (;;)
     {
@@ -421,7 +421,7 @@ void* socket_thread( void* arg )
         check_socket_devices_for_connections( &sockset );
     }
 
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "Socket device listener");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SOCKET_THREAD_NAME );
 
     return NULL;
 }
@@ -502,7 +502,7 @@ int bind_device_ex (DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
     if ( was_list_empty )
     {
         rc = create_thread( &sysblk.socktid, JOINABLE,
-                            socket_thread, NULL, "socket_thread" );
+                            socket_thread, NULL, SOCKET_THREAD_NAME );
         if (rc)
         {
             WRMSG(HHC00102, "E", strerror( rc ) );

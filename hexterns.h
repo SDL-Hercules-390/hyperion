@@ -258,7 +258,7 @@ IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);
 IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
 /* Functions in module timer.c */
-void *timer_update_thread (void *argp);
+void* timer_thread( void* argp );
 
 /* Functions in module clock.c */
 void update_TOD_clock (void);

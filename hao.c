@@ -90,7 +90,7 @@ static int hao_initialize()
     memset( ao_msgbuf, 0, sizeof( ao_msgbuf ));
 
     /* Start message monitoring thread */
-    rc = create_thread( &haotid, JOINABLE, hao_thread, NULL, "hao_thread" );
+    rc = create_thread( &haotid, JOINABLE, hao_thread, NULL, HAO_THREAD_NAME );
     if (rc)
     {
         rc = FALSE;
@@ -580,8 +580,8 @@ static void* hao_thread(void* dummy)
 
     UNREFERENCED(dummy);
 
-    // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(), "Hercules Automatic Operator");
+    // "Thread id "TIDPAT", prio %d, name '%s' started"
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HAO_THREAD_NAME );
 
     /* PROGRAMMING NOTE: because we are dependent on the logger thread (to
      * feed us log messages) we must NOT proceed until the logger facility
@@ -644,8 +644,8 @@ static void* hao_thread(void* dummy)
         }
     }
 
-    // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "Hercules Automatic Operator");
+    // "Thread id "TIDPAT", prio %d, name '%s' ended"
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), HAO_THREAD_NAME );
     return NULL;
 }
 

@@ -752,7 +752,7 @@ int query_tzoffset(void)
 /*                                                                   */
 /* This function updates the TOD clock.                              */
 /*                                                                   */
-/* This function is called by timer_update_thread and by cpu_thread  */
+/* This function is called by timer_thread and by cpu_thread         */
 /* instructions that manipulate any of the timer related entities    */
 /* (clock comparator, cpu timer and interval timer).                 */
 /*                                                                   */

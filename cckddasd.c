@@ -1447,7 +1447,7 @@ int             rc;
 
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.ralock);
-            rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+            rc = create_thread( &tid, JOINABLE, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
             obtain_lock(&cckdblk.ralock);
 
             if (rc)
@@ -1566,7 +1566,7 @@ void* cckd_ra (void* arg)
 
                 /* Release lock across thread create to prevent interlock  */
                 release_lock(&cckdblk.ralock);
-                rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+                rc = create_thread( &tid, JOINABLE, cckd_ra, NULL, CCKD_RA_THREAD_NAME );
                 obtain_lock(&cckdblk.ralock);
 
                 if (rc)
@@ -1632,7 +1632,7 @@ TID             tid;                    /* Writer thread id          */
 
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.wrlock);
-            rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+            rc = create_thread( &tid, JOINABLE, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
             obtain_lock(&cckdblk.wrlock);
 
             if (rc)
@@ -1816,7 +1816,7 @@ int             rc;
 
                 /* Release lock across thread create to prevent interlock  */
                 release_lock(&cckdblk.wrlock);
-                rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+                rc = create_thread( &tid, JOINABLE, cckd_writer, NULL, CCKD_WR_THREAD_NAME );
                 obtain_lock(&cckdblk.wrlock);
 
                 if (rc)
@@ -1901,7 +1901,7 @@ int             rc;
 
             /* Release lock across thread create to prevent interlock  */
             release_lock(&cckdblk.gclock);
-            rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+            rc = create_thread( &tid, JOINABLE, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
 
             if (rc)
             {
@@ -4604,7 +4604,7 @@ int             gctab[5]= {             /* default gcol parameters   */
         {
             signal_condition(&cckdblk.termcond);  /* signal if last gcol thread ending before init. */
             if (!cckdblk.batch || cckdblk.batchml > 1)
-                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), "Garbage collector");
+                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
@@ -4614,7 +4614,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), "Garbage collector");
+        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
 
     while (gcol <= cckdblk.gcmax)
     {
@@ -4724,7 +4724,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), "Garbage collector");
+        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
 
     cckdblk.gcs--;
     cckdblk.gca--;
@@ -5765,7 +5765,7 @@ int   rc;
 
                         /* Release lock across thread create to prevent interlock  */
                         release_lock(&cckdblk.gclock);
-                        rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+                        rc = create_thread( &tid, JOINABLE, cckd_gcol, NULL, CCKD_GC_THREAD_NAME );
 
                         if (rc)
                         {

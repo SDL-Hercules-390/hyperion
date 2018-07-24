@@ -708,7 +708,7 @@ static int  finish_console_init( DEVBLK* dev )
 
         if ((rc = create_thread( &sysblk.cnsltid, JOINABLE,
                                 console_connection_handler, NULL,
-                               "console_connection_handler" )))
+                                CON_CONN_THREAD_NAME )))
         {
             // "Error in function create_thread(): %s"
             WRMSG( HHC00102, "E", strerror( rc ));
@@ -3273,8 +3273,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     set_thread_priority( sysblk.srvprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(),
-        "Console connection" );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
 
     /* Get information about this system */
     init_hostinfo( NULL );
@@ -3599,7 +3598,7 @@ TELNET                *tn;              /* Telnet Control Block      */
                 {
                     /* Create a thread to complete the client connection */
                     rc = create_thread( &tidneg, DETACHED,
-                                connect_client, tn, "connect_client");
+                                connect_client, tn, CONN_CLI_THREAD_NAME );
                     if (rc)
                     {
                         // "Error in function create_thread(): %s"
@@ -3611,7 +3610,6 @@ TELNET                *tn;              /* Telnet Control Block      */
                     }
                 }
             }
-
         } /* end accept incoming client connections */
 
         /* Initialize scan flags */
@@ -3796,7 +3794,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     close_socket( lsock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), "Console connection");
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
 
     return NULL;
 

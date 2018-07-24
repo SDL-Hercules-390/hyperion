@@ -163,7 +163,7 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
 /* if the TOD clock exceeds the clock comparator for any CPU,        */
 /* it signals any waiting CPUs to wake up and process interrupts.    */
 /*-------------------------------------------------------------------*/
-void* timer_update_thread ( void* argp )
+void* timer_thread ( void* argp )
 {
 int     i;                              /* Loop index                */
 REGS   *regs;                           /* -> REGS                   */
@@ -189,9 +189,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     set_thread_priority( sysblk.todprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), "Timer" );
-
-    SET_THREAD_NAME( "CPU Timer" );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), TIMER_THREAD_NAME );
 
     then = host_tod();
 
@@ -283,8 +281,8 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     sysblk.todtid = 0;
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), "Timer" );
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), TIMER_THREAD_NAME );
 
     return NULL;
 
-} /* end function timer_update_thread */
+} /* end function timer_thread */

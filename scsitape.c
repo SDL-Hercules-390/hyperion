@@ -1696,7 +1696,6 @@ static void* get_stape_status_thread  ( void* notused );
 /*-------------------------------------------------------------------*/
 static void* get_stape_status_thread( void* notused )
 {
-    static const char* thread_name = "scsitape status";
     LIST_ENTRY*   pListEntry;
     STSTATRQ*     req;
     DEVBLK*       dev = NULL;
@@ -1722,10 +1721,10 @@ static void* get_stape_status_thread( void* notused )
     // in order to prevent their wait from timing out. We ensure this
     // by setting our own priority HIGHER than theirs.
 
-    set_thread_priority( MIN( sysblk.maxprio, sysblk.devprio + 1 ));
+    set_thread_priority( sysblk.devprio + 1 );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SCSISTAT_THREAD_NAME );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -1819,7 +1818,7 @@ static void* get_stape_status_thread( void* notused )
     }
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SCSISTAT_THREAD_NAME );
 
     sysblk.stape_getstat_busy = 0;
     sysblk.stape_getstat_tid = 0;
@@ -1859,7 +1858,7 @@ int int_scsi_status_wait( DEVBLK* dev, int usecs )
                 JOINABLE,
                 get_stape_status_thread,
                 NULL,
-                "get_stape_status_thread"
+                SCSISTAT_THREAD_NAME
             ))
             == 0
         );
@@ -2070,7 +2069,7 @@ void create_automount_thread( DEVBLK* dev )
                     DETACHED,
                     scsi_tapemountmon_thread,
                     NULL,
-                    "scsi_tapemountmon_thread"
+                    SCSIMOUNT_THREAD_NAME
                 ))
                 == 0
             );
@@ -2105,13 +2104,11 @@ void *scsi_tapemountmon_thread( void *notused )
     LIST_ENTRY*     pListEntry;
     STMNTDRQ*       req;
     DEVBLK*         dev = NULL;
-    char            buf[64];
 
-    UNREFERENCED(notused);
-    MSGBUF( buf, "SCSI-TAPE mount monitor");
+    UNREFERENCED( notused );
 
-    // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), buf );
+    // "Thread id "TIDPAT", prio %d, name '%s' started"
+    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SCSIMOUNT_THREAD_NAME );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -2251,8 +2248,8 @@ void *scsi_tapemountmon_thread( void *notused )
         }
     }
 
-    // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), buf);
+    // "Thread id "TIDPAT", prio %d, name '%s' ended"
+    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SCSIMOUNT_THREAD_NAME );
 
     sysblk.stape_mountmon_tid = 0;  // (we're going away)
     release_lock( &sysblk.stape_lock );

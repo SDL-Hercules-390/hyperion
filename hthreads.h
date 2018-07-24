@@ -223,8 +223,13 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 /*-------------------------------------------------------------------*/
 #define HTHREAD_POLICY      SCHED_RR    /* Round-Robin scheduling    */
 
-/* Note that thread priorities are not absolute but rather relative  */
-/* only to other threads within the same process.                    */
+/* PROGRAMMING NOTE: POSIX Threads (pthreads) provides programmatic  */
+/* control over relative thread priorities (emphasis on relative)    */
+/* and not absolute thread priorities. Hercules hthreads implements  */
+/* a relative priority scheme as well, wherein each priority "slot"  */
+/* is ONE (emphasis on ONE) priority unit different from another.    */
+/* Relative priority 3, for example, is one priority unit (one host  */
+/* priority "slot") above relative priority 2, etc.                  */
 
 //efine DEFAULT_XXX_PRIO        1       /* WatchDog thread priority  */
 #define DEFAULT_CPU_PRIO        2       /* CPU threads priority      */
@@ -238,6 +243,32 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 
 #define MIN_NICE_VALUE        -20       /* Minimum 'nice' value      */
 #define MAX_NICE_VALUE        +19       /* Maximum 'nice' value      */
+
+/*-------------------------------------------------------------------*/
+/*                       Thread Names                                */
+/*-------------------------------------------------------------------*/
+
+/*  Thread names must be less than 16 characters (15 chars + NULL)   */
+
+//                              "1...5...10...15"
+
+#define BOOTSTRAP_NAME          "bootstrap"
+#define IMPL_THREAD_NAME        "impl_thread"
+#define PANEL_THREAD_NAME       "panel_display"
+#define SOCKET_THREAD_NAME      "socket_thread"
+#define LOGGER_THREAD_NAME      "logger_thread"
+#define SCRIPT_THREAD_NAME      "script_thread"
+#define TIMER_THREAD_NAME       "timer_thread"
+#define SCSISTAT_THREAD_NAME    "scsi_status"
+#define SCSIMOUNT_THREAD_NAME   "scsi_mount"
+#define CCKD_RA_THREAD_NAME     "cckd_ra"
+#define CCKD_WR_THREAD_NAME     "cckd_writer"
+#define CCKD_GC_THREAD_NAME     "cckd_gcol"
+#define CON_CONN_THREAD_NAME    "console_connect"
+#define CONN_CLI_THREAD_NAME    "connect_client"
+#define HAO_THREAD_NAME         "hao_thread"
+#define HTTP_SRVR_THREAD_NAME   "http_server"
+#define HTTP_REQ_THREAD_NAME    "http_request"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */

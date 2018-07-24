@@ -1282,12 +1282,12 @@ int   rc;
     /* Start the TOD clock and CPU timer thread */
     if (!sysblk.todtid)
     {
-        rc = create_thread (&sysblk.todtid, DETACHED,
-             timer_update_thread, NULL, "timer_update_thread");
+        rc = create_thread( &sysblk.todtid, DETACHED,
+             timer_thread, NULL, TIMER_THREAD_NAME );
         if (rc)
         {
-            WRMSG(HHC00102, "E", strerror(rc));
-            RELEASE_INTLOCK(NULL);
+            WRMSG( HHC00102, "E", strerror( rc ));
+            RELEASE_INTLOCK( NULL );
             return NULL;
         }
     }
