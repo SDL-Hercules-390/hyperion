@@ -2237,39 +2237,36 @@ struct TTTAB                            /* TN3270 Terminal Types     */
 };
 typedef struct TTTAB   TTTAB;
 
+// Ref: https://www.ibm.com/support/knowledgecenter/en/SSLTBW_2.3.0/com.ibm.zos.v2r3.halz001/telnetdevicestatement.htm
 // Ref: https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/rzaiw/rzaiwemultypetrouble.htm
 // Ref: https://www.iana.org/assignments/terminal-type-names/terminal-type-names.txt
 
 static TTTAB  tttab[] =
 {
-    {  "IBM-3196-A1",     '2',   FALSE  },
+    {  "IBM-DYNAMIC",     'X',   TRUE   },
     {  "IBM-3179-2",      '2',   FALSE  },
     {  "IBM-3180-2",      '5',   FALSE  },  // Yes, '5' !!
     {  "IBM-3277-2",      '2',   FALSE  },
+
     {  "IBM-3278-2",      '2',   FALSE  },
-    {  "IBM-3278-2-E",    '2',   TRUE   },
     {  "IBM-3278-3",      '3',   FALSE  },
-    {  "IBM-3278-3-E",    '3',   TRUE   },
     {  "IBM-3278-4",      '4',   FALSE  },
-    {  "IBM-3278-4-E",    '4',   TRUE   },
     {  "IBM-3278-5",      '5',   FALSE  },
+
+    {  "IBM-3278-2-E",    '2',   TRUE   },
+    {  "IBM-3278-3-E",    '3',   TRUE   },
+    {  "IBM-3278-4-E",    '4',   TRUE   },
     {  "IBM-3278-5-E",    '5',   TRUE   },
+
     {  "IBM-3279-2",      '2',   FALSE  },
-    {  "IBM-3279-2-E",    '2',   TRUE   },
     {  "IBM-3279-3",      '3',   FALSE  },
+    {  "IBM-3279-4",      '4',   FALSE  },
+    {  "IBM-3279-5",      '5',   FALSE  },
+
+    {  "IBM-3279-2-E",    '2',   TRUE   },
     {  "IBM-3279-3-E",    '3',   TRUE   },
-    {  "IBM-3477-FC",     '5',   FALSE  },
-    {  "IBM-3477-FG",     '5',   FALSE  },
-    {  "IBM-3486-BA",     '2',   FALSE  },
-    {  "IBM-3487-HA",     '2',   FALSE  },
-    {  "IBM-3487-HC",     '2',   FALSE  },
-    {  "IBM-5251-11",     '2',   FALSE  },
-    {  "IBM-5291-1",      '2',   FALSE  },
-    {  "IBM-5292-2",      '2',   FALSE  },
-    {  "IBM-5555-B01",    '2',   FALSE  },
-    {  "IBM-5555-C01",    '2',   FALSE  },
-    {  "IBM-5555-G01",    '2',   FALSE  },
-    {  "IBM-5555-G02",    '2',   FALSE  },
+    {  "IBM-3279-4-E",    '4',   TRUE   },
+    {  "IBM-3279-5-E",    '5',   TRUE   },
 };
 
 /*-------------------------------------------------------------------*/
@@ -2382,15 +2379,6 @@ static void negotiate_ttype( TELNET* tn )
         tn->devclass = 'P';
         tn->model    = '5';     // (132 columns)
         tn->extatr   = FALSE;
-        return;
-    }
-
-    /* Dynamic? */
-    if (strcasecmp( tn->ttype, "IBM-DYNAMIC" ) == 0)
-    {
-        tn->devclass = 'D';
-        tn->model    = 'X';
-        tn->extatr   = TRUE;
         return;
     }
 
