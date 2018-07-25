@@ -93,13 +93,6 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
 
-    <a href="#HERCNICE">HERCNICE</a>   0
-    <a href="#CPUPRIO">CPUPRIO</a>    2
-    <a href="#DEVPRIO">DEVPRIO</a>    3
-    <a href="#SRVPRIO">SRVPRIO</a>    4
-    <a href="#HERCPRIO">HERCPRIO</a>   5
-    <a href="#TODPRIO">TODPRIO</a>    7
-
     <a href="#TIMERINT">TIMERINT</a>   DEFAULT
     <a href="#TODDRAG">TODDRAG</a>    1.0
     <a href="#DEVTMAX">DEVTMAX</a>    8
@@ -631,20 +624,6 @@ a real System/390.  The configuration file is an ASCII text file.
     ID) instruction stores, and nothing more.
     <p>
 
-<a name="CPUPRIO"></a>
-<dt><code>CPUPRIO &nbsp; <u>2</u> &#124; <em>nn</em></code>
-<dd><p>
-    Specifies the internal priority of the CPU threads. The default value 
-    is 2, which allows I/O to be scheduled and completed in favour of CPU
-    cycles being burned.
-    See <a href="#thread_priorities">"Thread Priorities"</a> further below
-    for more information.
-    <p>
-    <i><b>Caution:</b> &nbsp;CPUPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.</i>
-    </ol>
-    <p>
-
 <a name="CPUSERIAL"></a>
 <dt><code>CPUSERIAL &nbsp; <u>000001</u> &#124; <em>xxxxxx</em></code>
 <dd><p>
@@ -684,18 +663,6 @@ a real System/390.  The configuration file is an ASCII text file.
     <code><pre>
     DEFSYM FOO $(FOO)</pre></code>
     Will set symbol FOO to &quot;&quot;
-    <p>
-
-<a name="DEVPRIO"></a>
-<dt><code>DEVPRIO &nbsp; <u>3</u> &#124; <em>nn</em></code>
-<dd><p>
-    Specifies the internal priority of the device threads.
-    The default value is 3.
-    See <a href="#thread_priorities">"Thread Priorities"</a> further below
-    for more information.
-    <p>
-    <i><b>Caution:</b> &nbsp;DEVPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.</i>
     <p>
 
 <a name="DEVTMAX"></a>
@@ -855,35 +822,6 @@ a real System/390.  The configuration file is an ASCII text file.
     the value that was set by a preceding <a href="#ARCHLVL">ARCHLVL</a> statement
     or the default mode if there was no preceding ARCHLVL statement.
    <p>
-
-<a name="HERCNICE"></a>
-<dt><code>HERCNICE &nbsp; <u>0</u> &#124; <em>nn</em></code>
-<dd><p>
-    Specifies the '<a href="https://en.wikipedia.org/wiki/Nice_(Unix)">nice</a>'
-    value of the Hercules process.  The default is 0. A processes
-    '<a href="https://en.wikipedia.org/wiki/Nice_(Unix)">nice</a>' value is
-    <i>not</i> the same as its priority. Nice values range from -20 to +19.
-    See <a href="#process_priorities">"Process Priorities"</a> further below
-    for more information.
-    <p>
-    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root or
-    defined as a setuid root program before it will be allowed to set its nice
-    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
-    chmod +s hercules</code>).
-    <p>
-
-<a name="HERCPRIO"></a>
-<dt><code>HERCPRIO &nbsp; <u>5</u> &#124; <em>nn</em></code>
-<dd><p>
-    Specifies the internal priority of the main Hercules thread.
-    The default value is 5.
-    See <a href="#thread_priorities">"Thread Priorities"</a> further below
-    for more information.
-    <p>
-    <i><b>Caution:</b> &nbsp;HERCPRIO should be given a dispatching priority
-    greater than, or equal to, all other threads except the TOD Clock and Timer
-    thread.</i>
-    <p>
 
 <a name="HTTPPORT"></a>
 <dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
@@ -1399,19 +1337,6 @@ a real System/390.  The configuration file is an ASCII text file.
     will not be activated.<br>
     <p>
 
-<a name="SRVPRIO"></a>
-<dt><code>SRVPRIO &nbsp; <u>4</u> &#124; <em>nn</em></code>
-<dd><p>
-
-    Specifies the internal priority of the server threads.
-    The default value is 4.
-    See <a href="#thread_priorities">"Thread Priorities"</a> further below
-    for more information.
-    <p>
-    <i><b>Caution:</b> &nbsp;SRVPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.</i>
-    <p>
-
 <a name="SYSEPOCH"></a>
 <dt><code>SYSEPOCH &nbsp; <em>yyyy</em> [&plusmn;<em>years</em>]</code>
 <dd><p>
@@ -1446,12 +1371,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <i><b>Caution:</b> &nbsp;While a lower TIMERINT value may help
     increase the accuracy of your guest's TOD Clock and CPU Timer values,
     it could also have a severe negative impact on the overall performance
-    of your host operating system. This is especially true when a low TIMERINT
-    value is coupled with a high <a href="#HERCNICE">HERCNICE</a> and
-    <a href="#TODPRIO">TODPRIO</a> setting. Exercise extreme caution when
-    choosing your desired TIMERINT in relationship to your chosen
-    <a href="#HERCNICE">HERCNICE</a> and <a href="#TODPRIO">TODPRIO</a>
-    settings.
+    of your host operating system depending on the priority (or 'nice' value)
+    of the Hercules process itself.
     </i>
     <p>
 
@@ -1466,18 +1387,6 @@ a real System/390.  The configuration file is an ASCII text file.
     A drag factor of 2.0 slows down the clock by 50%. A drag factor of
     0.5 doubles the speed of the clock. A drag factor of 1.01 slows
     down the clock by 1%, and 0.99 speeds up the clock by 1%.
-    <p>
-
-<a name="TODPRIO"></a>
-<dt><code>TODPRIO &nbsp; <u>7</u> &#124; <em>nn</em></code>
-<dd><p>
-    Specifies the priority of the TOD Clock and timer thread.
-    The default value  is 7.
-    See <a href="#thread_priorities">"Thread Priorities"</a> further below
-    for more information.
-    <p>
-    <i><b>Caution:</b> &nbsp;TODPRIO should be given a dispatching
-    priority greater than, or equal to, any other thread within Hercules.</i>
     <p>
 
 <a name="TRACEOPT"></a>
@@ -1716,12 +1625,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 <hr><!-- ---------------------------------------------------------------------------- -->
 
-<a name="process_and_thread_priorities"></a>
 <h3>Process and Thread Priorities</h3>
 
 <p>
 
-<a name="process_priorities"></a>
 <h4>Process Priorities</h4>
 <P>
     For Windows, the following conversions are used for translating Unix
@@ -1836,21 +1743,14 @@ a real System/390.  The configuration file is an ASCII text file.
 <blockquote>
     <i>
     <b>Caution!</b>&nbsp;
-    The '<a href="#HERCNICE">nice</a>' value assigned to a process could have an impact
-    on how its internal <a href="#thread_priorities">thread priorities</a> are interpreted.
-    You should never modify one without understanding the impact that doing so
-    might have on the other.
-    <p>
-    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root
-    or defined as a setuid root program before it will be allowed to set its nice
-    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
-    chmod +s hercules</code>).
+    A high process priority (or low 'nice' value) could have a impact on how
+    Hercules's internal thread priorities are interpreted, thereby impacting
+    the overall performance of your host system.
     </i>
 </blockquote>
 
 <p>
 
-<a name="thread_priorities"></a>
 <h4>Thread Priorities</h4>
 <P>
     The following are the currently assigned internal relative thread priorities
@@ -1891,14 +1791,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">2</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#CPUPRIO">CPUPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">CPU</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             The CPU threads are those within Hercules that actually execute the emulated
             System/370, ESA/390, or z/Architecture instructions. There is one CPU thread
             for each defined ENGINE. Except for the watch dog thread, CPU threads are always
             assigned the lowest relative priority of any thread within Hercules. This
-            allows I/O, for example, to be scheduled and completed in favour of CPU cycles
-            being burned.
+            allows, for example, I/O requests to be scheduled and completed
+            in favour of CPU cycles being burned.
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
@@ -1910,7 +1810,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">3</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#DEVPRIO">DEVPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Device</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Device threads within Hercules manage the I/O requests to emulated devices.
             Assigning the internal relative priority of device threads to be higher than
@@ -1927,7 +1827,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">4</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#SRVPRIO">SRVPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Server</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             Server threads are those threads that provide a service to either the user or
             to other threads internal to Hercules. Threads that monitor for incoming
@@ -1947,7 +1847,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">5</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#HERCPRIO">HERCPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Panel</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             The main Hercules thread is the one that reads commands from the keyboard and
             displays messages on the screen. Except for the TOD Clock and Timer thread, it
@@ -1977,11 +1877,11 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">7</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%"><a href="#TODPRIO">TODPRIO</a></TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">Timer</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
             TOD Clock and Timer thread is the thread which manages the internal emulated
             TOD Clock and CPU Timer components of your emulated mainframe. In order to
-            ensure accurate time of day and elapsed and/or CPU time measurement, it
+            ensure accurate time of day and elapsed time and/or CPU time measurement, it
             should always be the very highest priority thread within Hercules.
         </TD>
     </TR>
@@ -1991,14 +1891,9 @@ a real System/390.  The configuration file is an ASCII text file.
 <blockquote>
     <i>
     <b>Caution:</b>&nbsp;
-    Relative thread priorities could be interpreted differently based on a processes
-    '<a href="#HERCNICE">nice</a>' value. You should never modify a thread priority
-    without first reviewing the processes '<a href="#HERCNICE">nice</a>' value.
-    <p>
-    <b>Note:</b> On a Linux/Unix host, Hercules needs to be either started as root or
-    defined as a setuid root program before it will be allowed to set its nice
-    value to a higher (negative) value. (i.e., <code>chown root.root hercules;
-    chmod +s hercules</code>).
+    Hercules's internal thread priorities could be interpreted differently
+    based on its process priority (or 'nice' value), thereby impacting the
+    overall performance of your host system.
     </i>
 </blockquote>
 

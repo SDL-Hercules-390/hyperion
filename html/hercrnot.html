@@ -39,6 +39,17 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>The ability to define process and thread priorities has been removed
+  <dd>
+  <p>
+    Previously, Hercules supported various commands/statements that allowed the
+    tweaking of Hercules's various internal thread priorities (HERCPRIO, CPUPRIO,
+    TODPRIO, etc). This ability has been removed. Such statements in your
+    configuration file will now cause a "deprecated and ignored" warning message
+    instead. You should remove all such statements from your configuration file.
+  </p>
+
+
   <dt>ARCHLVL and FACILITY command changes
   <dd>
   <p>
@@ -74,26 +85,6 @@ Hercules: Release Notes
     running z/Architecture guest operating systems to have to manually add
     an <code>FACILITY ENABLE 006_ASN_LX_REUSE</code> statement to their
     configuration file. Such statements are now no longer necessary.
-  </p>
-
-
-  <dt>Priority settings changes
-  <dd>
-  <p>
-    Previously, the various commands/statements supporting the tweaking of
-    Hercules's internal thread dispatching priorities
-    (<a href="hercconf.html#HERCPRIO">HERCPRIO</a>, etc)
-    required an argument in the range of -20 to +19. Hyperion's thread priority
-    handling was recently redesigned to be more "generic" in nature and the
-    previously mentioned statements now take an argument in the range of 1 to 7,
-    and a new <a href="hercconf.html#HERCNICE">HERCNICE</a> command/statement
-    has been introduced to set the Hercules <i>processes</i>
-    <a href="https://en.wikipedia.org/wiki/Nice_(Unix)">"nice" value</a>
-    instead (which requires an argument in the range of -20 to +19; priorities
-    are not "nice" values and vice versa). Refer to the
-    "<a href="hercconf.html#process_priorities">Process Priorities</a>"
-    and "<a href="hercconf.html#thread_priorities">Thread Priorities</a>"
-    sections of the documentation for more information.
   </p>
 
 
@@ -165,20 +156,11 @@ Hercules: Release Notes
     (which is usually not the case).
   </p>
   <p>
-    The configuration file statements that define the priorities of various
-    internal threads
-    (<code><a href="hercconf.html#HERCPRIO">HERCPRIO</a></code>,
-    <code><a href="hercconf.html#TODPRIO">TODPRIO</a></code>,
-    <code><a href="hercconf.html#DEVPRIO">DEVPRIO</a></code>,
-    <code><a href="hercconf.html#CPUPRIO">CPUPRIO</a></code>,
-    <code><a href="hercconf.html#SRVPRIO">SRVPRIO</a></code>)    also should <i>precede</i> whatever statement(s) cause their corresponding    thread(s) to be started. The <code>SRVPRIO</code> statement for example,    must precede the <code><a href="hercconf.html#HTTPSTRT">HTTP START</a></code>    statement, since it is the <code>HTTP START</code> statement that starts    the HTTP Server thread whose priority is set to the <code>SRVPRIO</code> value.    The best place to place such statements is at the very beginning of your    configuration file.  </p>
-  <p>
-    The <code>ARCHLVL</code>, <code>LPARNUM</code> and <code>xxxPRIO</code>
-    statements are currently the only known configuration file statements
-    whose sequence matters. The order of all other configuration file statements
-    should not currently matter. This may change in the future however, so be
-    sure to always carefully read through the RELEASE NOTES (this document) with
-    each new update to Hercules.
+    The <code>ARCHLVL</code> and <code>LPARNUM</code> statements are currently
+    the only known configuration file statements whose sequence matters. The
+    order of all other configuration file statements should not currently matter.
+    This may change in the future however, so be sure to always carefully read
+    through the RELEASE NOTES (this document) with each new update to Hercules.
   </p>
 
 
