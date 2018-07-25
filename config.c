@@ -965,60 +965,6 @@ int rc;
 #endif
 
 /*-------------------------------------------------------------------*/
-/*                   configure priority functions                    */
-/*-------------------------------------------------------------------*/
-
-int configure_herc_nice( int nice )         // (Herc PROCESS priority)
-{
-    int rc;
-    rc = set_herc_nice( PRIO_PROCESS, 0, nice );
-    if (rc == 0)
-        sysblk.hercnice = nice;
-    return rc;
-}
-
-int configure_herc_priority( int prio )     // (main THREAD priority)
-{
-    int rc = set_thread_priority_id( sysblk.impltid, prio );
-    if (rc == 0)
-        sysblk.hercprio = prio;
-    return rc;
-}
-
-int configure_cpu_priority( int prio )
-{
-    int cpu, rc;
-    for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if (sysblk.cputid[ cpu ])
-            if ((rc = set_thread_priority_id( sysblk.cputid[ cpu ], prio )) != 0)
-                return rc;
-    sysblk.cpuprio = prio;
-    return 0;
-}
-
-int configure_dev_priority( int prio )
-{
-    sysblk.devprio = prio;
-    return 0;
-}
-
-int configure_tod_priority( int prio )
-{
-    int rc = -1;
-    if (sysblk.todtid)
-        rc = set_thread_priority_id( sysblk.todtid, prio );
-    if (rc == 0)
-        sysblk.todprio = prio;
-    return rc;
-}
-
-int configure_srv_priority( int prio )
-{
-    sysblk.srvprio = prio;
-    return 0;
-}
-
-/*-------------------------------------------------------------------*/
 /* Check if we're a CPU thread or not.       (boolean function)      */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT BYTE are_cpu_thread( int* cpunum )

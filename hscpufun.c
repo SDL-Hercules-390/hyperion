@@ -1063,28 +1063,28 @@ int stop_cmd_cpu( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* alrf command - display or set asn_and_lx_reuse                    */
 /*-------------------------------------------------------------------*/
-int alrf_cmd(int argc, char *argv[], char *cmdline)
+int alrf_cmd( int argc, char* argv[], char* cmdline )
 {
-char    buffer[128] = {0};
-char   *archlvl_func;
+    char   buffer[128] = {0};
+    char*  archlvl_func;
 
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
-
-    UNREFERENCED(cmdline);
 
     if (argc < 1 || argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if      (argc == 1)    { archlvl_func = "query"; }
-    else /* (argc == 2) */ { archlvl_func = argv[1]; }
+    if      (argc == 1)    archlvl_func = "QUERY";
+    else /* (argc == 2) */ archlvl_func = STR2UPPER( argv[1] );
 
-    MSGBUF( buffer, "archlvl %s asn_lx_reuse", archlvl_func );
+    MSGBUF( buffer, "; use 'ARCHLVL %s 006_ASN_LX_REUSE' instead", archlvl_func );
 
-    // "Command '%s' is deprecated; use '%s' instead"
-    WRMSG( HHC02256, "W", "ALRF", buffer );
+    // "Command '%s' is deprecated%s"
+    WRMSG( HHC02256, "W", argv[0], buffer );
 
     return InternalHercCmd( buffer );
 }

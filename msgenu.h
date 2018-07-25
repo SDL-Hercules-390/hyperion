@@ -1329,7 +1329,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02253 "All CPU's must be stopped %s"
 //efine HHC02254 (available)
 //efine HHC02255 (available)
-#define HHC02256 "Command '%s' is deprecated; use '%s' instead"
+#define HHC02256 "Command '%s' is deprecated%s"
 #define HHC02257 "%s%7d"
 //efine HHC02258 (available)
 #define HHC02259 "Script %d aborted: %s"

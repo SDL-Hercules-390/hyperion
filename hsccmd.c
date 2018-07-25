@@ -3296,116 +3296,28 @@ u_int   locktype = 0;
 }
 
 /*-------------------------------------------------------------------*/
-/* primary set_xxx_cmd / hercnice_cmd helper                         */
+/* Deprecated 'xxxPRIO' and HERCNICE commands                        */
 /*-------------------------------------------------------------------*/
-typedef int CONFIG_PRIO_FUNC( int prio );
-static int set_xxx_cmd( int oldval, int minval, int maxval,
-                        CONFIG_PRIO_FUNC* func, const char* funcname,
-                        int argc, char* argv[], char* cmdline )
+static int deprecated_cmd( char* argv0 )
 {
-    int newval;
-    BYTE c;
-
-    UPPER_ARGV_0( argv );
-    UNREFERENCED( cmdline );
-
-    if (argc == 1)
-    {
-        char msgbuf[8];
-        VERIFY( MSGBUF( msgbuf, "%d", oldval ) != -1);
-        // "%-14s: %s"
-        WRMSG( HHC02203, "I", argv[0], msgbuf );
-        return 0;
-    }
-
-    if (argc != 2)
-    {
-        // "Invalid number of arguments for %s"
-        WRMSG( HHC01455, "E", argv[0] );
-        return  -1;
-    }
-
-    if (sscanf( argv[1], "%d%c", &newval, &c ) != 1)
-    {
-        // "Invalid syntax %s for %s"
-        WRMSG( HHC01456, "E", argv[1], argv[0] );
-        return -1;
-    }
-
-    if (newval < minval || newval > maxval)
-    {
-        // "%s value is invalid; valid range is %d - %d"
-        WRMSG( HHC17014, "E", argv[0], minval, maxval );
-
-
-
-#if 1 // FIXME! (transitional helper; remove on/after August 2019)
-        if (func != configure_herc_nice)
-        {
-            int  instead;
-            bool depmsg = true;
-
-                 if (str_caseless_eq( "cpuprio",  argv[0] )) { instead = DEFAULT_CPU_PRIO; }
-            else if (str_caseless_eq( "devprio",  argv[0] )) { instead = DEFAULT_DEV_PRIO; }
-            else if (str_caseless_eq( "srvprio",  argv[0] )) { instead = DEFAULT_SRV_PRIO; }
-            else if (str_caseless_eq( "hercprio", argv[0] )) { instead = DEFAULT_HERC_PRIO;}
-            else if (str_caseless_eq( "todprio",  argv[0] )) { instead = DEFAULT_TOD_PRIO; }
-            else depmsg = false;
-
-            if (depmsg)
-            {
-                char oldbuf[16], newbuf[16];
-
-                MSGBUF( oldbuf, "%s %s", argv[0], argv[1] );
-                MSGBUF( newbuf, "%s %d", argv[0], instead );
-
-                // "Command '%s' is deprecated; use '%s' instead"
-                WRMSG( HHC02256, "W", oldbuf, newbuf );
-            }
-        }
-#endif // FIXME! (transitional helper; remove on/after August 2019)
-
-
-
-        return -1;
-    }
-
-    if (func( newval ))
-    {
-        // "Error in function %s: %s"
-        WRMSG( HHC00136, "W", funcname, strerror( errno ));
-        return -1;
-    }
-
-    if (MLVL( VERBOSE ))
-        // "%-14s set to %s"
-        WRMSG( HHC02204, "I", argv[0], argv[1] );
-
-    return 0;
+    // "Command '%s' is deprecated%s"
+    WRMSG( HHC02256, "W", STR2UPPER( argv0 ), " and ignored." );
+    return 0; // (return success to prevent error message)
 }
 
-/*-------------------------------------------------------------------*/
-/* hercnice command                                                  */
-/*-------------------------------------------------------------------*/
-int hercnice_cmd( int argc, char* argv[], char* cmdline )
-{
-    return set_xxx_cmd( sysblk.hercnice, MIN_NICE_VALUE, MAX_NICE_VALUE,
-        configure_herc_nice, "configure_herc_nice()", argc, argv, cmdline );
-}
+#define DEPRECATED_PRIONICE_CMD( _cmd )                 \
+                                                        \
+    int _cmd( int argc, char* argv[], char* cmdline )   \
+    {                                                   \
+        return deprecated_cmd( argv[0] );               \
+    }
 
-/*-------------------------------------------------------------------*/
-/* xxxprio_cmd helper macro                                          */
-/*-------------------------------------------------------------------*/
-
-#define SET_PRIO_COMMAND( _old, _func )                     \
-    set_xxx_cmd( (_old), sysblk.minprio, sysblk.maxprio,    \
-                 (_func), #_func "()", argc, argv, cmdline )
-
-int hercprio_cmd ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.hercprio, configure_herc_priority ); }
-int cpuprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.cpuprio,  configure_cpu_priority  ); }
-int devprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.devprio,  configure_dev_priority  ); }
-int todprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.todprio,  configure_tod_priority  ); }
-int srvprio_cmd  ( int argc, char* argv[], char* cmdline ) { return SET_PRIO_COMMAND( sysblk.srvprio,  configure_srv_priority  ); }
+DEPRECATED_PRIONICE_CMD( hercnice_cmd );
+DEPRECATED_PRIONICE_CMD( hercprio_cmd );
+DEPRECATED_PRIONICE_CMD( cpuprio_cmd  );
+DEPRECATED_PRIONICE_CMD( devprio_cmd  );
+DEPRECATED_PRIONICE_CMD( todprio_cmd  );
+DEPRECATED_PRIONICE_CMD( srvprio_cmd  );
 
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
@@ -7390,8 +7302,8 @@ int ecpsvm_cmd( int argc, char *argv[], char *cmdline )
         || CMD( argv[0], ecps:vm, 7 )
     )
     {
-        // "Command '%s' is deprecated; use '%s' instead"
-        WRMSG( HHC02256, "W", argv[0], "ecpsvm" );
+        // "Command '%s' is deprecated%s"
+        WRMSG( HHC02256, "W", argv[0], "; use ECPSVM instead" );
         // (fall through to process their command anyway)
     }
 

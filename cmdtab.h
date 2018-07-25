@@ -561,37 +561,10 @@
   "terminal sessions. If no filename is specified, the built-in logo\n"          \
   "is used instead.\n"
 
-#define hercnice_cmd_desc       "Set/Display Hercules process NICE value"
-#define hercnice_cmd_help2( a, b )                                              \
-                                                                                \
-  "Format: \"hercnice [nnn]\". Sets (if argument given) or displays (if no\n"   \
-  "argument given) the 'nice' value for the Hercules process. Note that\n"      \
-  "a processes 'nice' value is not the same as its priority. Valid 'nice'\n"    \
-  "values range from " QSTR(a) " to " QSTR(b) ".\n"                             \
-  "\n"                                                                          \
-  "CAUTION! The value you choose for your 'nice' value could have an impact\n"  \
-  "on how a processes internal thread priorities are interpreted. You should\n" \
-  "never modify one without understanding the impact doing so might have on\n"  \
-  "the other.\n"
-
-#define hercnice_cmd_help       hercnice_cmd_help2( MIN_NICE_VALUE, MAX_NICE_VALUE )
-
-#define hercprio_cmd_desc       "Set/Display Hercules main thread priority"
-#define cpuprio_cmd_desc        "Set/Display CPU threads priority"
-#define devprio_cmd_desc        "Set/Display Device threads priority"
-#define srvprio_cmd_desc        "Set/Display Server threads priority"
-#define todprio_cmd_desc        "Set/Display TOD Clock/Timer threads priority"
-
+#define xxxprio_cmd_desc        "(deprecated)"
 #define xxxprio_cmd_help        \
                                 \
-  "Sets (if argument given) or displays (if no argument given) the internal\n"  \
-  "relative priority of the corresponding thread(s). The relative priority\n"   \
-  "of Hercules threads currently ranges from 1 (lowest or least important)\n"   \
-  "to 7 (highest or most important).\n"                                         \
-  "\n"                                                                          \
-  "CAUTION! thread priorities could be interpreted differently based on your\n" \
-  "processes 'nice' value. You should not modify a thread's priority setting\n" \
-  "without first reviewing your processes 'nice' value.\n"
+  "This command is no longer supported and and will be removed in the future.\n"
 
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
@@ -1717,12 +1690,12 @@ COMMAND( "tzoffset",                tzoffset_cmd,           SYSCFGNDIAG8,       
 COMMAND( "xpndsize",                xpndsize_cmd,           SYSCFGNDIAG8,       xpndsize_cmd_desc,      xpndsize_cmd_help   )
 COMMAND( "yroffset",                yroffset_cmd,           SYSCFGNDIAG8,       yroffset_cmd_desc,      NULL                )
 
-COMMAND( "hercnice",                hercnice_cmd,           SYSCFGNDIAG8,       hercnice_cmd_desc,      hercnice_cmd_help   )
-COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       hercprio_cmd_desc,      xxxprio_cmd_help    )
-COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       cpuprio_cmd_desc,       xxxprio_cmd_help    )
-COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       devprio_cmd_desc,       xxxprio_cmd_help    )
-COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       srvprio_cmd_desc,       xxxprio_cmd_help    )
-COMMAND( "todprio",                 todprio_cmd,            SYSCFGNDIAG8,       todprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "hercnice",                hercnice_cmd,           SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "hercprio",                hercprio_cmd,           SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "cpuprio",                 cpuprio_cmd,            SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "devprio",                 devprio_cmd,            SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "srvprio",                 srvprio_cmd,            SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
+COMMAND( "todprio",                 todprio_cmd,            SYSCFGNDIAG8,       xxxprio_cmd_desc,       xxxprio_cmd_help    )
 
 COMMAND( "archlvl",                 archlvl_cmd,            SYSCMDNOPERNDIAG8,  archlvl_cmd_desc,       archlvl_cmd_help    )
 CMDABBR( "facility",        3,      facility_cmd,           SYSCMDNOPERNDIAG8,  facility_cmd_desc,      facility_cmd_help   )

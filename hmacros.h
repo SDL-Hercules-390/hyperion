@@ -286,6 +286,8 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 #define mem_eq(_a,_b,_n)            (!memcmp(_a,_b,_n))
 #define mem_ne(_a,_b,_n)            ( memcmp(_a,_b,_n))
 
+// PROGRAMMING NOTE: see also header "extstring.h"
+
 #define str_eq(_a,_b)               (!strcmp(_a,_b))
 #define str_ne(_a,_b)               ( strcmp(_a,_b))
 

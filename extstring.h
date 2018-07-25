@@ -123,6 +123,11 @@ static INLINE u_int strcaseabbrev(const char *string, const char *abbrev, const 
 /* n in strnlower and strnupper. Returns &result.                    */
 /*-------------------------------------------------------------------*/
 
+
+#define STR2UPPER(_s)  strupper((_s),(_s))  /* (in-place conversion) */
+#define STR2LOWER(_s)  strlower((_s),(_s))  /* (in-place conversion) */
+
+
 static INLINE char* strlower(char *result, char *string)
 {
     register char *r = result;
