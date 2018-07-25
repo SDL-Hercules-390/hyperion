@@ -3309,6 +3309,8 @@ static int deprecated_cmd( char* argv0 )
                                                         \
     int _cmd( int argc, char* argv[], char* cmdline )   \
     {                                                   \
+        UNREFERENCED( argc );                           \
+        UNREFERENCED( cmdline );                        \
         return deprecated_cmd( argv[0] );               \
     }
 
