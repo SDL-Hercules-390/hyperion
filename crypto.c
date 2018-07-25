@@ -94,11 +94,19 @@ bool hopen_CSRNG()
 
         sysblk.wkrandhand = DUMMY_CYRPTO_HANDLE;
 
-#elif defined( USE_DEV_RANDOM )
+#elif defined( USE_DEV_URANDOM )
 
         int fd, rc;
 
-        do fd = open( "/dev/random", O_RDONLY );
+        /* PROGRAMMING NOTE: we purposely use "dev/urandom" and NOT
+           "/dev/random" in order to to prevent us from blocking while
+           we wait for entropy, and doing so is *NOT* any less secure
+           than always using "/dev/random"! (for our purposes)
+
+           Ref:   "Myths about /dev/urandom"
+                   https://www.2uo.de/myths-about-urandom/
+        */
+        do fd = open( "/dev/urandom", O_RDONLY );
         while (fd < 0 && errno == EINTR);
 
         if (0
@@ -123,7 +131,10 @@ bool hopen_CSRNG()
             pfd.fd      = fd;
             pfd.events  = POLLIN;
 
-            do rc = poll( &pfd, 1, -1 );
+            /* Wait one millisecond and try again
+               until we get all the entropy we need.
+            */
+            do rc = poll( &pfd, 1, 1 );
             while
             (0
                 || (rc < 0 && (errno == EINTR || errno == EAGAIN))
@@ -173,7 +184,7 @@ bool hclose_CSRNG()
 {
     if (sysblk.wkrandhand)
     {
-#if defined( USE_DEV_RANDOM )
+#if defined( USE_DEV_URANDOM )
 
         int rc, fd = sysblk.wkrandhand;
 
@@ -242,7 +253,7 @@ bool hget_random_bytes( BYTE* buf, size_t amt )
         amt     -=  rc;
     }
 
-#elif defined( USE_DEV_RANDOM )
+#elif defined( USE_DEV_URANDOM )
 
     size_t   chunk, offset = 0;
     ssize_t  rc;

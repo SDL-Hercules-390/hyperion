@@ -41,11 +41,11 @@
 
   #else
 
-    #define USE_DEV_RANDOM          // read from /dev/random
+    #define USE_DEV_URANDOM         // read from /dev/urandom
     #define NEED_CSRNG_INIT         // wait for entropy
 
     #define MAX_CSRNG_BYTES         SSIZE_MAX
-    #define MIN_ENTROPY_BITS        128     // (is this enough?)
+    #define MIN_ENTROPY_BITS        128  // ALWAYS! (apparently!)
 
   #endif
 
