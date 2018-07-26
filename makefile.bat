@@ -372,20 +372,9 @@
     %exit%
   )
 
-  ::  Dump all environment variables...
+  ::  Dump environment variables...
 
-  echo.
-  echo --------------------------- ENVIRONMENT POOL ---------------------------
-  echo.
-  set
-
-  ::  Format the PATH, LIB and INCLUDE variables for easier reading
-
-  echo.
-  echo -------------------------- PATH, LIB, INCLUDE --------------------------
-  call :fxxx PATH
-  call :fxxx LIB
-  call :fxxx INCLUDE
+  call :dump_env
 
   echo.
   echo ------------------------------ WIN32.MAK -------------------------------
@@ -795,6 +784,27 @@
   :: The following called when set= contains (), which confuses poor windoze
 
   set %~1=%~2
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                              dump_env
+::-----------------------------------------------------------------------------
+:dump_env
+
+  echo.
+  echo --------------------------- ENVIRONMENT POOL ---------------------------
+  echo.
+  set
+
+  ::  Format the PATH, LIB and INCLUDE variables for easier reading
+
+  echo.
+  echo -------------------------- PATH, LIB, INCLUDE --------------------------
+  call :fxxx PATH
+  call :fxxx LIB
+  call :fxxx INCLUDE
+
   %return%
 
 
