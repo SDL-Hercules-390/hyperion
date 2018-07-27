@@ -84,6 +84,9 @@ bool hopen_CSRNG()
 
         int i, randval;
 
+        // "Crypto: **WARNING** Default insecure 'rand()' API being used"
+        WRMSG( HHC01495, "W" );
+
         srand( (unsigned) time(0) );
 
         for (i=0; i < 256; i++)
@@ -379,7 +382,7 @@ void renew_wrapping_keys()
 
     /* Display wrapping keys if debugging... */
 
-#if defined( WRAPPINGKEYS_DEBUG )  // (see beginning of source modue)
+#if defined( WRAPPINGKEYS_DEBUG )  // (see beginning of source module)
 
     {
         char  buf[128] = {0};
