@@ -30,14 +30,14 @@
 
 #elif defined( __linux__ )
 
-  #define RNDGETENTCNT              0x80045200
+  #define RNDGETENTCNT              0x80045200  // entropy count ioctl
 
   #if defined( SYS_getrandom )      // syscall( SYS_getrandom ) ??
 
     #define USE_SYS_GETRANDOM       // syscall( SYS_getrandom ) !!
     #undef  NEED_CSRNG_INIT         // (no init needed)
 
-    #define MAX_CSRNG_BYTES         ((32 * (1024 * 2014)) - 1)
+    #define MAX_CSRNG_BYTES         ((32*(1024*1024))-1)  // 32MB-1
 
   #else
 
