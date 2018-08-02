@@ -40,6 +40,6 @@ For licensing information please refer to the LICENSE.txt document.
 For information on building the Crypto external package, refer to the BUILDING
 document in the external package's source repository at:
 
-                  https://github.com/Fish-Git/crypto
+               https://github.com/sdl-hercules-390/crypto
 
 ===============================================================================
