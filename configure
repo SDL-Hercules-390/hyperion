@@ -571,66 +571,6 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
 as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
 
 
-as_awk_strverscmp='
-  # Use only awk features that work with 7th edition Unix awk (1978).
-  # My, what an old awk you have, Mr. Solaris!
-  END {
-    while (length(v1) && length(v2)) {
-      # Set d1 to be the next thing to compare from v1, and likewise for d2.
-      # Normally this is a single character, but if v1 and v2 contain digits,
-      # compare them as integers and fractions as strverscmp does.
-      if (v1 ~ /^[0-9]/ && v2 ~ /^[0-9]/) {
-	# Split v1 and v2 into their leading digit string components d1 and d2,
-	# and advance v1 and v2 past the leading digit strings.
-	for (len1 = 1; substr(v1, len1 + 1) ~ /^[0-9]/; len1++) continue
-	for (len2 = 1; substr(v2, len2 + 1) ~ /^[0-9]/; len2++) continue
-	d1 = substr(v1, 1, len1); v1 = substr(v1, len1 + 1)
-	d2 = substr(v2, 1, len2); v2 = substr(v2, len2 + 1)
-	if (d1 ~ /^0/) {
-	  if (d2 ~ /^0/) {
-	    # Compare two fractions.
-	    while (d1 ~ /^0/ && d2 ~ /^0/) {
-	      d1 = substr(d1, 2); len1--
-	      d2 = substr(d2, 2); len2--
-	    }
-	    if (len1 != len2 && ! (len1 && len2 && substr(d1, 1, 1) == substr(d2, 1, 1))) {
-	      # The two components differ in length, and the common prefix
-	      # contains only leading zeros.  Consider the longer to be less.
-	      d1 = -len1
-	      d2 = -len2
-	    } else {
-	      # Otherwise, compare as strings.
-	      d1 = "x" d1
-	      d2 = "x" d2
-	    }
-	  } else {
-	    # A fraction is less than an integer.
-	    exit 1
-	  }
-	} else {
-	  if (d2 ~ /^0/) {
-	    # An integer is greater than a fraction.
-	    exit 2
-	  } else {
-	    # Compare two integers.
-	    d1 += 0
-	    d2 += 0
-	  }
-	}
-      } else {
-	# The normal case, without worrying about digits.
-	d1 = substr(v1, 1, 1); v1 = substr(v1, 2)
-	d2 = substr(v2, 1, 1); v2 = substr(v2, 2)
-      }
-      if (d1 < d2) exit 1
-      if (d1 > d2) exit 2
-    }
-    # Beware Solaris /usr/xgp4/bin/awk (at least through Solaris 10),
-    # which mishandles some comparisons of empty strings to integers.
-    if (length(v2)) exit 1
-    if (length(v1)) exit 2
-  }
-'
 
 
 # Check that we are running under the correct shell.
@@ -785,6 +725,66 @@ fi
 tagnames=${tagnames+${tagnames},}CXX
 
 tagnames=${tagnames+${tagnames},}F77
+as_awk_strverscmp='
+  # Use only awk features that work with 7th edition Unix awk (1978).
+  # My, what an old awk you have, Mr. Solaris!
+  END {
+    while (length(v1) && length(v2)) {
+      # Set d1 to be the next thing to compare from v1, and likewise for d2.
+      # Normally this is a single character, but if v1 and v2 contain digits,
+      # compare them as integers and fractions as strverscmp does.
+      if (v1 ~ /^[0-9]/ && v2 ~ /^[0-9]/) {
+	# Split v1 and v2 into their leading digit string components d1 and d2,
+	# and advance v1 and v2 past the leading digit strings.
+	for (len1 = 1; substr(v1, len1 + 1) ~ /^[0-9]/; len1++) continue
+	for (len2 = 1; substr(v2, len2 + 1) ~ /^[0-9]/; len2++) continue
+	d1 = substr(v1, 1, len1); v1 = substr(v1, len1 + 1)
+	d2 = substr(v2, 1, len2); v2 = substr(v2, len2 + 1)
+	if (d1 ~ /^0/) {
+	  if (d2 ~ /^0/) {
+	    # Compare two fractions.
+	    while (d1 ~ /^0/ && d2 ~ /^0/) {
+	      d1 = substr(d1, 2); len1--
+	      d2 = substr(d2, 2); len2--
+	    }
+	    if (len1 != len2 && ! (len1 && len2 && substr(d1, 1, 1) == substr(d2, 1, 1))) {
+	      # The two components differ in length, and the common prefix
+	      # contains only leading zeros.  Consider the longer to be less.
+	      d1 = -len1
+	      d2 = -len2
+	    } else {
+	      # Otherwise, compare as strings.
+	      d1 = "x" d1
+	      d2 = "x" d2
+	    }
+	  } else {
+	    # A fraction is less than an integer.
+	    exit 1
+	  }
+	} else {
+	  if (d2 ~ /^0/) {
+	    # An integer is greater than a fraction.
+	    exit 2
+	  } else {
+	    # Compare two integers.
+	    d1 += 0
+	    d2 += 0
+	  }
+	}
+      } else {
+	# The normal case, without worrying about digits.
+	d1 = substr(v1, 1, 1); v1 = substr(v1, 2)
+	d2 = substr(v2, 1, 1); v2 = substr(v2, 2)
+      }
+      if (d1 < d2) exit 1
+      if (d1 > d2) exit 2
+    }
+    # Beware Solaris /usr/xgp4/bin/awk (at least through Solaris 10),
+    # which mishandles some comparisons of empty strings to integers.
+    if (length(v2)) exit 1
+    if (length(v1)) exit 2
+  }
+'
 
 exec 7<&0 </dev/null 6>&1
 
@@ -859,8 +859,6 @@ HQA_INC
 EXTPKG_LDADD
 EXTPKG_HEADERS
 HERCIFC_GROUPNAME
-APPLE_FALSE
-APPLE_TRUE
 HERCIFC_GROUPSET_FALSE
 HERCIFC_GROUPSET_TRUE
 SETUID_HERCIFC_FALSE
@@ -871,8 +869,6 @@ BUILD_HERCIFC_FALSE
 BUILD_HERCIFC_TRUE
 BUILD_FTHREADS_FALSE
 BUILD_FTHREADS_TRUE
-USE_DLLTOOL_FALSE
-USE_DLLTOOL_TRUE
 HQA_DIR
 LIBTOOL_DEPS
 LIBADD_DL
@@ -2895,6 +2891,68 @@ test -n "$target_alias" &&
 #   Programs section...
 ###############################################################################
 
+DEPDIR="${am__leading_dot}deps"
+
+ac_config_commands="$ac_config_commands depfiles"
+
+
+am_make=${MAKE-make}
+cat > confinc << 'END'
+am__doit:
+	@echo this is the am__doit target
+.PHONY: am__doit
+END
+# If we don't find an include directive, just comment out the code.
+{ $as_echo "$as_me:$LINENO: checking for style of include used by $am_make" >&5
+$as_echo_n "checking for style of include used by $am_make... " >&6; }
+am__include="#"
+am__quote=
+_am_result=none
+# First try GNU make style include.
+echo "include confinc" > confmf
+# Ignore all kinds of additional output from `make'.
+case `$am_make -s -f confmf 2> /dev/null` in #(
+*the\ am__doit\ target*)
+  am__include=include
+  am__quote=
+  _am_result=GNU
+  ;;
+esac
+# Now try BSD make style include.
+if test "$am__include" = "#"; then
+   echo '.include "confinc"' > confmf
+   case `$am_make -s -f confmf 2> /dev/null` in #(
+   *the\ am__doit\ target*)
+     am__include=.include
+     am__quote="\""
+     _am_result=BSD
+     ;;
+   esac
+fi
+
+
+{ $as_echo "$as_me:$LINENO: result: $_am_result" >&5
+$as_echo "$_am_result" >&6; }
+rm -f confinc confmf
+
+# Check whether --enable-dependency-tracking was given.
+if test "${enable_dependency_tracking+set}" = set; then
+  enableval=$enable_dependency_tracking;
+fi
+
+if test "x$enable_dependency_tracking" != xno; then
+  am_depcomp="$ac_aux_dir/depcomp"
+  AMDEPBACKSLASH='\'
+fi
+ if test "x$enable_dependency_tracking" != xno; then
+  AMDEP_TRUE=
+  AMDEP_FALSE='#'
+else
+  AMDEP_TRUE='#'
+  AMDEP_FALSE=
+fi
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3827,68 +3885,6 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
-DEPDIR="${am__leading_dot}deps"
-
-ac_config_commands="$ac_config_commands depfiles"
-
-
-am_make=${MAKE-make}
-cat > confinc << 'END'
-am__doit:
-	@echo this is the am__doit target
-.PHONY: am__doit
-END
-# If we don't find an include directive, just comment out the code.
-{ $as_echo "$as_me:$LINENO: checking for style of include used by $am_make" >&5
-$as_echo_n "checking for style of include used by $am_make... " >&6; }
-am__include="#"
-am__quote=
-_am_result=none
-# First try GNU make style include.
-echo "include confinc" > confmf
-# Ignore all kinds of additional output from `make'.
-case `$am_make -s -f confmf 2> /dev/null` in #(
-*the\ am__doit\ target*)
-  am__include=include
-  am__quote=
-  _am_result=GNU
-  ;;
-esac
-# Now try BSD make style include.
-if test "$am__include" = "#"; then
-   echo '.include "confinc"' > confmf
-   case `$am_make -s -f confmf 2> /dev/null` in #(
-   *the\ am__doit\ target*)
-     am__include=.include
-     am__quote="\""
-     _am_result=BSD
-     ;;
-   esac
-fi
-
-
-{ $as_echo "$as_me:$LINENO: result: $_am_result" >&5
-$as_echo "$_am_result" >&6; }
-rm -f confinc confmf
-
-# Check whether --enable-dependency-tracking was given.
-if test "${enable_dependency_tracking+set}" = set; then
-  enableval=$enable_dependency_tracking;
-fi
-
-if test "x$enable_dependency_tracking" != xno; then
-  am_depcomp="$ac_aux_dir/depcomp"
-  AMDEPBACKSLASH='\'
-fi
- if test "x$enable_dependency_tracking" != xno; then
-  AMDEP_TRUE=
-  AMDEP_FALSE='#'
-else
-  AMDEP_TRUE='#'
-  AMDEP_FALSE=
-fi
-
-
 
 depcc="$CC"   am_compiler_list=
 
@@ -4016,7 +4012,15 @@ else
   am__fastdepCC_FALSE=
 fi
 
-                  # (back to using this again)
+
+
+
+
+
+    # Set 'CFLAGS' variable to its initial value...
+
+    CFLAGS=$ac_env_CFLAGS_value       # (init to environment variable value!)
+                  # (REQUIRED due to our auto-optimization logic!)
 
 ###############################################################################
 #   OS-specific settings that we can't figure out any other way (yet)
@@ -4155,60 +4159,42 @@ hc_gcc_level="`${CC} -dumpversion`"
 { $as_echo "$as_me:$LINENO: Detected GCC equivalent level for ${CC} : ${hc_gcc_level} " >&5
 $as_echo "$as_me: Detected GCC equivalent level for ${CC} : ${hc_gcc_level} " >&6;}
 
-#------------------------------------------#
-#  Check for broken '-O3' version of GCC   #
-#------------------------------------------#
+#----------------------------------------------------------------------#
+#                                                                      #
+#                         Initialize CFLAGS                            #
+#                                                                      #
+#  Note that we specify our flags BEFORE any already existing CFLAGS   #
+#  in case the user specified their own CFLAGS=.  This ensures we do   #
+#  not override their flags and allows them to easily override ours.   #
+#                                                                      #
+#----------------------------------------------------------------------#
 
 if test "$GCC" = "yes"; then
 
-    { $as_echo "$as_me:$LINENO: checking if this is GCC with broken '-O3' option" >&5
-$as_echo_n "checking if this is GCC with broken '-O3' option... " >&6; }
-if test "${hc_cv_broken_gcc_O3+set}" = set; then
-  $as_echo_n "(cached) " >&6
-else
-
-            as_arg_v1=$hc_gcc_level
-as_arg_v2="4.9.2"
-awk "$as_awk_strverscmp" v1="$as_arg_v1" v2="$as_arg_v2" /dev/null
-case $? in
-1) hc_cv_broken_gcc_O3=no;;
-0) hc_cv_broken_gcc_O3=yes;;
-2) hc_cv_broken_gcc_O3=no ;;
-esac
-
-
-fi
-{ $as_echo "$as_me:$LINENO: result: $hc_cv_broken_gcc_O3" >&5
-$as_echo "$hc_cv_broken_gcc_O3" >&6; }
-else
-    hc_cv_broken_gcc_O3=no
-fi
-
-#------------------------#
-#  Fix CFLAGS if needed  #
-#------------------------#
-
-if test "$GCC" = "yes"; then
 
   # We would like to use some GNU extensions if they're available
-  CFLAGS="${CFLAGS} -D_GNU_SOURCE"
+
+  CFLAGS="-D_GNU_SOURCE  ${CFLAGS}"
+
 
   # We require the '-pthread' option for threading to work properly
-  CFLAGS="${CFLAGS} -pthread"
 
-  # Show us everything
-  CFLAGS="${CFLAGS} -W -Wall"
+  CFLAGS="-pthread  ${CFLAGS}"
 
-  # We prefer -O3 (the highest optimization level possible)
-  # as long as we can trust GCC to implement it correctly.
 
-  if test "$hc_cv_broken_gcc_O3" = "yes"; then
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O3//'`"
-    CFLAGS="${CFLAGS} -O2"
-  else
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
-    CFLAGS="${CFLAGS} -O3"
-  fi
+  # We would like to see EXTRA warnings too (i.e. as many as possible).
+  # Note that in newer versions of gcc this option is called '-Wextra'
+  # but we use '-W' instead (which is still supported) to support older
+  # versions of gcc too.
+
+  CFLAGS="-W  ${CFLAGS}"
+
+
+  # We would like to see more than the usual number of warnings please
+  # (Note that '-Wall' also enables '-Wformat')
+
+  CFLAGS="-Wall  ${CFLAGS}"
+
 fi
 
 #-------------------------------------------------------#
@@ -5044,7 +5030,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5047 "configure"' > conftest.$ac_ext
+  echo '#line 5033 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8047,11 +8033,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8050: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8036: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8054: \$? = $ac_status" >&5
+   echo "$as_me:8040: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8280,11 +8266,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8283: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8269: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8287: \$? = $ac_status" >&5
+   echo "$as_me:8273: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8347,11 +8333,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8350: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8336: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8354: \$? = $ac_status" >&5
+   echo "$as_me:8340: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10506,7 +10492,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10509 "configure"
+#line 10495 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10604,7 +10590,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10607 "configure"
+#line 10593 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12787,11 +12773,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12790: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12776: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12794: \$? = $ac_status" >&5
+   echo "$as_me:12780: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12854,11 +12840,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12857: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12843: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12861: \$? = $ac_status" >&5
+   echo "$as_me:12847: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14211,7 +14197,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 14214 "configure"
+#line 14200 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14309,7 +14295,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 14312 "configure"
+#line 14298 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -15132,11 +15118,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15135: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15121: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15139: \$? = $ac_status" >&5
+   echo "$as_me:15125: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15199,11 +15185,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15202: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15188: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15206: \$? = $ac_status" >&5
+   echo "$as_me:15192: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17212,11 +17198,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17215: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17201: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17219: \$? = $ac_status" >&5
+   echo "$as_me:17205: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17445,11 +17431,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17448: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17434: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17452: \$? = $ac_status" >&5
+   echo "$as_me:17438: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17512,11 +17498,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17515: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17501: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17519: \$? = $ac_status" >&5
+   echo "$as_me:17505: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19671,7 +19657,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19674 "configure"
+#line 19660 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19769,7 +19755,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19772 "configure"
+#line 19758 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -22094,7 +22080,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 22097 "configure"
+#line 22083 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -45968,6 +45954,35 @@ else
     hc_cv_pp_macro_arg_counting_broke=no
 fi
 
+#------------------------------------------#
+#  Check for broken '-O3' version of GCC   #
+#------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    { $as_echo "$as_me:$LINENO: checking if this is GCC with broken '-O3' option" >&5
+$as_echo_n "checking if this is GCC with broken '-O3' option... " >&6; }
+if test "${hc_cv_broken_gcc_O3+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+            as_arg_v1=$hc_gcc_level
+as_arg_v2="4.9.2"
+awk "$as_awk_strverscmp" v1="$as_arg_v1" v2="$as_arg_v2" /dev/null
+case $? in
+1) hc_cv_broken_gcc_O3=no;;
+0) hc_cv_broken_gcc_O3=yes;;
+2) hc_cv_broken_gcc_O3=no ;;
+esac
+
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $hc_cv_broken_gcc_O3" >&5
+$as_echo "$hc_cv_broken_gcc_O3" >&6; }
+else
+    hc_cv_broken_gcc_O3=no
+fi
+
 #-------------------------------------------------#
 #  Check if 'pthread_setname_np' takes only name  #
 #-------------------------------------------------#
@@ -48112,16 +48127,12 @@ rm -f confcache
 #   Act on the results of all of the above...
 ###############################################################################
 
-#        AUTOMATIC DETERMINATION OF OPTIMIZATION FLAGS
-#
-#  If they specified 'no' then don't optimize.
-#  If they specified 'yes' then determine what flags we should use.
-#  If they didn't specify, then optimize only if this is NOT a debug build.
-#  Otherwise use whatever flags they specified as-is.
+# Automatic determination of what optimization flags to use...
 
 { $as_echo "$as_me:$LINENO: checking for what optimization flags to use " >&5
 $as_echo_n "checking for what optimization flags to use ... " >&6; }
 
+hc_cv_auto_optimize=""
 hc_cv_optimization_flags=""
 
 if test "$GCC" = "yes"; then
@@ -48135,11 +48146,22 @@ if test "$GCC" = "yes"; then
     hc_cv_optimization_flags="$hc_cv_optimization_flags -ggdb3" # Include gdb debugger symbols
 fi
 
+#  Check their "--enable-optimization" option: Did they say "yes" or "no"
+#  or let it default?  Or did they specify their own optimization flags?
+#
+#  If they specified 'no' then don't optimize.
+#  If they specified 'yes' then determine what flags we should use.
+#  If they didn't specify the option at all (they want the default),
+#  then optimize only if this is NOT a debug build.
+#
+#  Otherwise use whatever flags they specified as-is.
+
 case "$hc_cv_opt_optimization" in
 
     no)
 
         hc_cv_auto_optimize=no
+        hc_cv_optimization_flags=""     # (as requested!)
         ;;
 
     yes)
@@ -48729,28 +48751,45 @@ fi
 #--------------------------------------------------#
 #  CFLAGS  (compiler flags)                        #
 #--------------------------------------------------#
+#                                                  #
+#  Note that for most options we specify our flags #
+#  BEFORE any already existing CFLAGS in case the  #
+#  user specified their own CFLAGS= option.  This  #
+#  ensures we do not override their flags while    #
+#  still allowing them to easily override ours.    #
+#                                                  #
+#--------------------------------------------------#
 
 if test "$hc_cv_is_windows"             = "yes"; then
 
     if test "$hc_cv_have_pthread_h"         = "yes" &&
        test "x$hc_cv_alt_pthread_location" != "x";  then
 
+      # PROGRAMMING NOTE: the '-I' header include directory
+      # option is an exception to the above rule: we must
+      # specify our '-I' option AFTER any already existing
+      # CFLAGS value since the compiler always searches '-I'
+      # directories in the order they are specified on the
+      # command line and we want to ensure that any '-I'
+      # option they may have specified in their CFLAGS value
+      # is always searched ahead of our own '-I' directory.
+
         CFLAGS="$CFLAGS -I${hc_cv_alt_pthread_location}"
     fi
 
-    CFLAGS="$CFLAGS -Wno-format"
+    CFLAGS="-Wno-format  ${CFLAGS}"
 fi
 
 if test "$hc_cv_byte_structs_aligned_and_rounded_by_default" = "yes"; then
 
-    #===============================================================
-    # the following requests 8-bit (byte) struct boundary alignment
-    #===============================================================
+    # Request 8-bit (byte) struct boundary alignment
 
-    CFLAGS="$CFLAGS -mstructure-size-boundary=8"
+    CFLAGS="-mstructure-size-boundary=8  ${CFLAGS}"
 fi
 
-test "x$hc_cv_optimization_flags" !=  "x" &&  CFLAGS="$CFLAGS $hc_cv_optimization_flags"
+if test  "${hc_cv_optimization_flags}" != ""; then
+  CFLAGS="${hc_cv_optimization_flags}  ${CFLAGS}"
+fi
 
 #--------------------------------------------------#
 #  LIBS  (linker flags)                            #
@@ -48852,14 +48891,6 @@ rm -f confcache
 
 # Note: Building of shared libraries is forced, and we force use of libtool too.
 
- if  test "$hc_cv_is_windows"       = "yes"  ; then
-  USE_DLLTOOL_TRUE=
-  USE_DLLTOOL_FALSE='#'
-else
-  USE_DLLTOOL_TRUE='#'
-  USE_DLLTOOL_FALSE=
-fi
-
  if  test "$hc_cv_opt_fthreads"     = "yes"  ; then
   BUILD_FTHREADS_TRUE=
   BUILD_FTHREADS_FALSE='#'
@@ -48898,14 +48929,6 @@ fi
 else
   HERCIFC_GROUPSET_TRUE='#'
   HERCIFC_GROUPSET_FALSE=
-fi
-
- if  test "$hc_cv_is_darwin"        = "yes"  ; then
-  APPLE_TRUE=
-  APPLE_FALSE='#'
-else
-  APPLE_TRUE='#'
-  APPLE_FALSE=
 fi
 
 
@@ -49316,13 +49339,6 @@ Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-if test -z "${USE_DLLTOOL_TRUE}" && test -z "${USE_DLLTOOL_FALSE}"; then
-  { { $as_echo "$as_me:$LINENO: error: conditional \"USE_DLLTOOL\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-$as_echo "$as_me: error: conditional \"USE_DLLTOOL\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
 if test -z "${BUILD_FTHREADS_TRUE}" && test -z "${BUILD_FTHREADS_FALSE}"; then
   { { $as_echo "$as_me:$LINENO: error: conditional \"BUILD_FTHREADS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -49355,13 +49371,6 @@ if test -z "${HERCIFC_GROUPSET_TRUE}" && test -z "${HERCIFC_GROUPSET_FALSE}"; th
   { { $as_echo "$as_me:$LINENO: error: conditional \"HERCIFC_GROUPSET\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 $as_echo "$as_me: error: conditional \"HERCIFC_GROUPSET\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${APPLE_TRUE}" && test -z "${APPLE_FALSE}"; then
-  { { $as_echo "$as_me:$LINENO: error: conditional \"APPLE\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-$as_echo "$as_me: error: conditional \"APPLE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
