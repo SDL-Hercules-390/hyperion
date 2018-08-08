@@ -1626,7 +1626,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
 
 #if 0
-   logmsg(_("(d250_list32) BIOE's processed: %d\n"),block);
+   LOGMSG( "(d250_list32) BIOE's processed: %d\n", block );
 #endif
 
    /* Restore device to guest ownership */
@@ -1828,8 +1828,8 @@ int     rc2;
    /* Fetch the address of the BIO entry list from the BIOPL */
    FETCH_DW(ioctl.listaddr,&biopl->bioeladr);
 #if 0
-   logmsg (_("(d250_iorq64) ioctl.listaddr=%16.16X,\n"),
-           ioctl.listaddr);
+   LOGMSG( "(d250_iorq64) ioctl.listaddr=%16.16X,\n",
+           ioctl.listaddr );
 #endif
 
    /* Extract the storage key from the BIOPL */
@@ -2202,7 +2202,7 @@ RADR   bufend;    /* Last byte read or written                 */
 
 #if 0
    /* remove after testing */
-   logmsg(_("(d250_list64) BIOE's processed: %d\n"),block);
+   LOGMSG( "(d250_list64) BIOE's processed: %d\n", block );
 #endif
 
    /* Restore device to guest ownership */

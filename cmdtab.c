@@ -168,21 +168,23 @@ int i;
                             cmdent->type &= ~SYSCMD;
                         else
                         {
-                            logmsg(_("Invalid arg: %s: %s %s [(No)Cfg|(No)Cmd]\n"),argv[i],argv[0],argv[1]);
+                            LOGMSG( "Invalid arg: %s: %s %s [(No)Cfg|(No)Cmd]\n",
+                                argv[i], argv[0], argv[1] );
                             return -1;
                         }
                     }
                 else
-                    logmsg(_("%s: %s(%sCfg,%sCmd)\n"),argv[0],cmdent->statement,
-                      (cmdent->type&SYSCONFIG)?"":"No",(cmdent->type&SYSCMD)?"":"No");
+                    LOGMSG( "%s: %s(%sCfg,%sCmd)\n", argv[0], cmdent->statement,
+                      (cmdent->type & SYSCONFIG) ? "" : "No",
+                      (cmdent->type & SYSCMD)    ? "" : "No" );
                 return 0;
             }
         }
-        logmsg(_("%s: %s not in command table\n"),argv[0],argv[1]);
+        LOGMSG( "%s: %s not in command table\n", argv[0], argv[1] );
         return -1;
     }
     else
-        logmsg(_("Usage: %s <command> [(No)Cfg|(No)Cmd]\n"),argv[0]);
+        LOGMSG( "Usage: %s <command> [(No)Cfg|(No)Cmd]\n", argv[0] );
     return -1;
 }
 

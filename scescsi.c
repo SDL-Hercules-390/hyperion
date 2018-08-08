@@ -125,27 +125,6 @@ static TID   hwl_tid;                   /* Thread id of the hardware
                                            loader                    */
 static char  *hwl_fn[HWL_MAXFILETYPE];  /* Files by type             */
 
-#if 0
-all of this is dead code
-#if 1
-static inline void DUMP(char* name, void* ptr, int len)
-{
-int i;
-
-    logmsg(_("DATA: %4.4X %s"), len, name);
-    for(i = 0; i < len; i++)
-    {
-        if(!(i & 15))
-            logmsg(_("\n%4.4X:"), i);
-        logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
-    }
-    logmsg(_("\n"));
-}
-#else
- #define DUMP(_name, _ptr, _len)
-#endif
-#endif
-
 #endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 
 #endif /*!defined(_SCEHWL_C)*/
@@ -165,12 +144,12 @@ int fd;
     fd = open (hwl_fn[hwl_bk->file], O_RDONLY|O_BINARY);
     if (fd < 0)
     {
-        logmsg (_("HHCHL002I %s open error: %s\n"),
-            hwl_fn[hwl_bk->file], strerror(errno));
+        LOGMSG( "HHCHL002I %s open error: %s\n",
+            hwl_fn[hwl_bk->file], strerror( errno ));
         return;
     }
 //  else
-//      logmsg(_("HHCHL004I Loading %s\n"),hwl_fn[hwl_bk->file]);
+//      LOGMSG( "HHCHL004I Loading %s\n", hwl_fn[ hwl_bk->file ]);
 
     FETCH_FW(size,hwl_bk->size);
 
@@ -277,8 +256,8 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
                     STORE_FW(hwl_bk->size,size);
                 }
                 else
-                    logmsg(_("HHCHL001I Hardware loader %s: %s\n"),
-                                                hwl_fn[hwl_bk->file],strerror(errno));
+                    LOGMSG( "HHCHL001I Hardware loader %s: %s\n",
+                        hwl_fn[ hwl_bk->file ], strerror( errno ));
             }
             break;
 
@@ -297,8 +276,8 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
 
     }
 //  else
-//      logmsg(_("HHCHL005I Hardware loader file type %d not not supported\n"),
-//             hwl_bk->file);
+//      LOGMSG( "HHCHL005I Hardware loader file type %d not not supported\n",
+//             hwl_bk->file );
 
     hwl_tid = 0;
 
@@ -382,8 +361,8 @@ static int hwl_pending;
 
 
     default:
-        logmsg(_("HHCHL003I Unknown hardware loader request type %2.2X\n"),
-                                                        hwl_bk->type);
+        LOGMSG( "HHCHL003I Unknown hardware loader request type %2.2X\n",
+            hwl_bk->type );
         return -1;
     }
 }
@@ -560,7 +539,7 @@ void ARCH_DEP(sdias_store_status)(REGS *regs)
     if(sdias_hsa)
         memcpy(sdias_hsa,sysblk.mainstor,sdias_size);
     else
-        logmsg(_("HHCSB010 Store Status save to HSA failed\n"));
+        LOGMSG( "HHCSB010 Store Status save to HSA failed\n" );
 }
 #endif /*defined(_FEATURE_HARDWARE_LOADER)*/
 
@@ -657,8 +636,8 @@ int bootfile;
 
     if( ARCH_DEP(load_main) (hwl_fn[bootfile], 0, 0) < 0)
     {
-        logmsg(_("HHCSB010 Cannot load bootstrap loader %s: %s\n"),
-          hwl_fn[bootfile],strerror(errno));
+        LOGMSG( "HHCSB010 Cannot load bootstrap loader %s: %s\n",
+            hwl_fn[ bootfile ], strerror( errno ));
         return -1;
     }
     sysblk.main_clear = sysblk.xpnd_clear = 0;
@@ -729,7 +708,7 @@ int n;
         {
             if(!ntf->name)
             {
-                logmsg(_("HHCSB001 Invalid file %s\n"),argv[1]);
+                LOGMSG( "HHCSB001 Invalid file %s\n", argv[1] );
                 return -1;
             }
         }
@@ -749,14 +728,14 @@ int n;
         }
         else
         {
-            logmsg(_("%-8s %s\n"),file2name(file),hwl_fn[file]);
+            LOGMSG( "%-8s %s\n", file2name( file ), hwl_fn[ file ]);
             return 0;
         }
     }
     else
         for(file = 0; file < HWL_MAXFILETYPE; file++)
             if(hwl_fn[file])
-                logmsg(_("%-8s %s\n"),file2name(file),hwl_fn[file]);
+                LOGMSG( "%-8s %s\n", file2name( file ), hwl_fn[ file ]);
 
     return 0;
 }
@@ -785,25 +764,25 @@ int  ldind;  /* Load / Dump indicator */
             if(!strcasecmp("portname",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_wwpn[ldind], &c) != 1)
-                    logmsg(_("HHCSB002 Invalid PORTNAME\n"));
+                    LOGMSG( "HHCSB002 Invalid PORTNAME\n" );
                 continue;
             }
             else if(!strcasecmp("lun",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_lun[ldind], &c) != 1)
-                    logmsg(_("HHCSB003 Invalid LUN\n"));
+                    LOGMSG( "HHCSB003 Invalid LUN\n" );
                 continue;
             }
             else if(!strcasecmp("bootprog",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx32"%c", &scsi_lddev_prog[ldind], &c) != 1)
-                    logmsg(_("HHCSB004 Invalid BOOTPROG\n"));
+                    LOGMSG( "HHCSB004 Invalid BOOTPROG\n" );
                 continue;
             }
             else if(!strcasecmp("br_lba",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_brlba[ldind], &c) != 1)
-                    logmsg(_("HHCSB005 Invalid BR_LBA\n"));
+                    LOGMSG( "HHCSB005 Invalid BR_LBA\n" );
                 continue;
             }
             else if(!strcasecmp("scpdata",argv[i]) && (i+1) < argc)
@@ -818,7 +797,7 @@ int  ldind;  /* Load / Dump indicator */
             }
             else
             {
-                logmsg(_("HHCSB006 Invalid option %s\n"),argv[i]);
+                LOGMSG( "HHCSB006 Invalid option %s\n", argv[i] );
                 return -1;
             }
         }
@@ -826,15 +805,15 @@ int  ldind;  /* Load / Dump indicator */
     else
     {
         if(scsi_lddev_wwpn[ldind])
-            logmsg(_("portname %16.16"PRIx64"\n"),scsi_lddev_wwpn[ldind]);
+            LOGMSG( "portname %16.16"PRIx64"\n", scsi_lddev_wwpn[ ldind ]);
         if(scsi_lddev_lun[ldind])
-            logmsg(_("lun      %16.16"PRIx64"\n"),scsi_lddev_lun[ldind]);
+            LOGMSG( "lun      %16.16"PRIx64"\n", scsi_lddev_lun[ ldind ]);
         if(scsi_lddev_prog[ldind])
-            logmsg(_("bootprog %8.8x\n"),scsi_lddev_prog[ldind]);
+            LOGMSG( "bootprog %8.8x\n", scsi_lddev_prog[ ldind ]);
         if(scsi_lddev_brlba[ldind])
-            logmsg(_("br_lba   %16.16"PRIx64"\n"),scsi_lddev_brlba[ldind]);
+            LOGMSG( "br_lba   %16.16"PRIx64"\n", scsi_lddev_brlba[ ldind ]);
         if(scsi_lddev_scpdata[ldind])
-            logmsg(_("scpdata  %s\n"),scsi_lddev_scpdata[ldind]);
+            LOGMSG( "scpdata  %s\n", scsi_lddev_scpdata[ ldind ]);
     }
     return 0;
 }

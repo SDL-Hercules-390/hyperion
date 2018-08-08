@@ -1264,7 +1264,7 @@ DEF_INST( operation_exception )
 
 DEF_INST( dummy_instruction )
 {
-//  logmsg(_("Dummy instruction: ")); ARCH_DEP( display_inst ) (regs, inst);
+//  LOGMSG("Dummy instruction: "); ARCH_DEP( display_inst ) (regs, inst);
     INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
 

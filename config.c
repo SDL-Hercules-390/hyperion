@@ -600,7 +600,7 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
     unsigned int schw;
 #if 0
-    logmsg(_("DEBUG : DSFL Removing %d\n"),subchan);
+    LOGMSG( "DEBUG : DSFL Removing %d\n", subchan );
 #endif
     if(sysblk.subchan_fl==NULL)
     {

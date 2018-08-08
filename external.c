@@ -186,8 +186,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ logmsg (_("External interrupt: Malfuction Alert from CPU %d\n"),
-// /*debug*/    cpuad);
+// /*debug*/ LOGMSG( "External interrupt: Malfuction Alert from CPU %d\n",
+// /*debug*/    cpuad );
 
         /* Reset the indicator for the CPU which was found */
         regs->malfcpu[cpuad] = 0;
@@ -226,8 +226,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ logmsg (_("External interrupt: Emergency Signal from CPU %d\n"),
-// /*debug*/    cpuad);
+// /*debug*/ LOGMSG( "External interrupt: Emergency Signal from CPU %d\n",
+// /*debug*/    cpuad );
 
         /* Reset the indicator for the CPU which was found */
         regs->emercpu[cpuad] = 0;
@@ -255,8 +255,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if external call is pending */
     if (OPEN_IC_EXTCALL(regs))
     {
-//  /*debug*/logmsg (_("External interrupt: External Call from CPU %d\n"),
-//  /*debug*/       regs->extccpu);
+//  /*debug*/ LOGMSG( "External interrupt: External Call from CPU %d\n",
+//  /*debug*/       regs->extccpu );
 
         /* Reset external call pending */
         OFF_IC_EXTCALL(regs);

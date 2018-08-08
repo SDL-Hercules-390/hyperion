@@ -425,7 +425,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     if (!extgui)
         if (!quiet)
-            printf (_("\r"));
+            printf ( "\r" );
 
     // "DASD operation completed"
     WRMSG( HHC02423, "I" );

@@ -3054,11 +3054,11 @@ int  xdigit;                       /* digit lost by addend shifting */
 
     /* Convert separate high/low fractions to contiguous U128 */
 #if FLOAT_DEBUG
-    logmsg (_("Prod Frac: %16.16llX %16.16llX\n"),
-               prod_fl->ms_fract, prod_fl->ls_fract);
+    LOGMSG( "Prod Frac: %16.16llX %16.16llX\n",
+               prod_fl->ms_fract, prod_fl->ls_fract );
 
-    logmsg (_("Adnd Frac: %16.16llX %16.16llX\n"),
-               add_fl->ms_fract, add_fl->ls_fract);
+    LOGMSG( "Adnd Frac: %16.16llX %16.16llX\n",
+               add_fl->ms_fract, add_fl->ls_fract );
 #endif
 
     result_fl->ms_fract = 0;
@@ -3104,8 +3104,8 @@ int  xdigit;                       /* digit lost by addend shifting */
         }
     }
 #if FLOAT_DEBUG
-    logmsg (_("Shft Frac: %16.16llX %16.16llX\n"),
-               add_fl->ms_fract, add_fl->ls_fract);
+    LOGMSG( "Shft Frac: %16.16llX %16.16llX\n",
+               add_fl->ms_fract, add_fl->ls_fract );
 #endif
 
     /* Step 2 - Do algebraic addition of aligned fractions */
@@ -3149,8 +3149,8 @@ int  xdigit;                       /* digit lost by addend shifting */
                sub_U128(result_fl->ms_fract, result_fl->ls_fract,
                         (U64)0, (U64)1);
 #if FLOAT_DEBUG
-               logmsg (_("Barw Frac: %16.16llX %16.16llX\n"),
-                      result_fl->ms_fract, result_fl->ls_fract);
+               LOGMSG( "Barw Frac: %16.16llX %16.16llX\n",
+                      result_fl->ms_fract, result_fl->ls_fract );
 #endif
                /* Due to participation of right shifted digits           */
                /* result fraction NOT zero, so true zero will not result */
@@ -3161,8 +3161,8 @@ int  xdigit;                       /* digit lost by addend shifting */
            sub_U128(result_fl->ms_fract, result_fl->ls_fract,
                     add_fl->ms_fract, add_fl->ls_fract);
 #if FLOAT_DEBUG
-           logmsg (_("P-A  Frac: %16.16llX %16.16llX\n"),
-                      result_fl->ms_fract, result_fl->ls_fract);
+           LOGMSG( "P-A  Frac: %16.16llX %16.16llX\n",
+                      result_fl->ms_fract, result_fl->ls_fract );
 #endif
            /* result sign already set to product sign above as default */
         }
@@ -3177,15 +3177,15 @@ int  xdigit;                       /* digit lost by addend shifting */
            sub_U128(result_fl->ms_fract, result_fl->ls_fract,
                     prod_fl->ms_fract, prod_fl->ls_fract);
 #if FLOAT_DEBUG
-           logmsg (_("A-P  Frac: %16.16llX %16.16llX\n"),
-                      result_fl->ms_fract, result_fl->ls_fract);
+           LOGMSG( "A-P  Frac: %16.16llX %16.16llX\n",
+                      result_fl->ms_fract, result_fl->ls_fract );
 #endif
            result_fl->sign = add_fl->sign;
         }
     }
 #if FLOAT_DEBUG
-    logmsg (_("Resl Frac: %16.16llX %16.16llX\n"),
-               result_fl->ms_fract, result_fl->ls_fract);
+    LOGMSG( "Resl Frac: %16.16llX %16.16llX\n",
+               result_fl->ms_fract, result_fl->ls_fract );
 #endif
 
     /* result exponent always the same as the product */

@@ -2008,8 +2008,8 @@ void  Initialize ()
     if (!(pszInputBuff = (char *) malloc( nInputBuffSize )))
     {
         fprintf(stderr,
-            _("HHC90000D DBG: malloc() pszInputBuff failed: %s\n")
-            ,strerror(errno));
+            "HHC90000D DBG: malloc() pszInputBuff failed: %s\n",
+            strerror( errno ));
         exit(0);
     }
 
@@ -2021,8 +2021,8 @@ void  Initialize ()
     if (!(pszCommandBuff = (char *) malloc( nCommandBuffSize )))
     {
         fprintf(stderr,
-            _("HHC90000D DBG: malloc() pszCommandBuff failed: %s\n")
-            ,strerror(errno));
+            "HHC90000D DBG: malloc() pszCommandBuff failed: %s\n",
+            strerror( errno ));
         exit(0);
     }
 

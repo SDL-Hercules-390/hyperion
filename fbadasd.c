@@ -1123,8 +1123,8 @@ int     repcnt;                         /* Replication count         */
 //      /* Verify that bytes 1-3 are zeroes */
 //      if (iobuf[1] != 0 || iobuf[2] != 0 || iobuf[3] != 0)
 //      {
-//          logmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
-//                  iobuf[1], iobuf[2], iobuf[3]);
+//          LOGMSG( "fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n",
+//                  iobuf[1], iobuf[2], iobuf[3] );
 //          dev->sense[0] = SENSE_CR;
 //          *unitstat = CSW_CE | CSW_DE | CSW_UC;
 //          break;

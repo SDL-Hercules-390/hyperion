@@ -139,34 +139,14 @@ static BYTE zfcp_immed_commands [256] =
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
 
 
-#if defined(ZFCP_DEBUG)
-#if 0
-dead code
-static inline void DUMP(DEVBLK *dev, char* name, void* ptr, int len)
-{
-int i;
-
-    if(!((ZFCP_GRP*)(dev->group->grp_data))->debug)
-        return;
-
-    logmsg(_("DATA: %4.4X %s"), len, name);
-    for(i = 0; i < len; i++)
-    {
-        if(!(i & 15))
-            logmsg(_("\n%4.4X:"), i);
-        logmsg(_(" %2.2X"), ((BYTE*)ptr)[i]);
-    }
-    logmsg(_("\n"));
-}
-#endif
-#define DBGTRC(_dev, ...)                          \
-do {                                               \
-  if(((ZFCP_GRP*)((_dev)->group->grp_data))->debug) \
-        TRACE(__VA_ARGS__);                        \
+#if defined( ZFCP_DEBUG )
+#define DBGTRC( _dev, ... )                             \
+do {                                                    \
+  if (((ZFCP_GRP*)((_dev)->group->grp_data))->debug)    \
+        TRACE( __VA_ARGS__ );                           \
 } while(0)
 #else
- #define DBGTRC(_dev, ...)
- #define DUMP(_dev, _name, _ptr, _len)
+ #define DBGTRC( _dev, ... )
 #endif
 
 
@@ -187,25 +167,6 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
     }
 }
 
-#if 0
-dead code
-/*-------------------------------------------------------------------*/
-/* Clear Adapter Local Summary Indicator bits                        */
-/*-------------------------------------------------------------------*/
-static inline void clr_alsi(DEVBLK *dev, BYTE bits)
-{
-    if(dev->qdio.alsi)
-    {
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
-
-        obtain_lock(&sysblk.mainlock);
-        *alsi &= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
-    }
-}
-#endif
-
 
 /*-------------------------------------------------------------------*/
 /* Set Device State Change Indicator bits                            */
@@ -225,28 +186,7 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
-
-
-#if 0
-dead code
-/*-------------------------------------------------------------------*/
-/* Clear Device State Change Indicator bits                          */
-/*-------------------------------------------------------------------*/
-static inline void clr_dsci(DEVBLK *dev, BYTE bits)
-{
-    if(dev->qdio.dsci)
-    {
-    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
-
-        obtain_lock(&sysblk.mainlock);
-        *dsci &= bits;
-        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
-    }
-}
-#endif
 #endif /*defined(_FEATURE_QDIO_THININT)*/
-
 
 
 /*-------------------------------------------------------------------*/
@@ -254,7 +194,7 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 static void raise_adapter_interrupt(DEVBLK *dev)
 {
-    DBGTRC(dev, _("Adapter Interrupt dev(%4.4x)\n"),dev->devnum);
+    DBGTRC( dev, "Adapter Interrupt dev(%4.4x)\n", dev->devnum );
 
     obtain_lock(&dev->lock);
     dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
@@ -308,7 +248,7 @@ int mq = dev->qdio.i_qcnt;
                 int tlen = 0;
                 int ns;
 
-                    DBGTRC(dev, _("Input Queue(%d) Buffer(%d)\n"),iq,ib);
+                    DBGTRC( dev, "Input Queue(%d) Buffer(%d)\n", iq, ib );
 
                     FETCH_DW(sa,sl->sbala[ib]);
                     if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
@@ -319,7 +259,7 @@ int mq = dev->qdio.i_qcnt;
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%16.16"PRIx64"), key(%2.2x)\n"),sa,dev->qdio.i_slk[iq]);
+                        DBGTRC( dev, "STORCHK ERROR sa(%16.16"PRIx64"), key(%2.2x)\n", sa, dev->qdio.i_slk[ iq ]);
                         return;
                     }
                     sbal = (QDIO_SBAL*)(dev->mainstor + sa);
@@ -338,7 +278,7 @@ int mq = dev->qdio.i_qcnt;
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%16.16"PRIx64"), len(%d), key(%2.2x)\n"),la,len,dev->qdio.i_sbalk[iq]);
+                            DBGTRC( dev, "STORCHK ERROR la(%16.16"PRIx64"), len(%d), key(%2.2x)\n", la, len, dev->qdio.i_sbalk[ iq ]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
@@ -423,7 +363,7 @@ int mq = dev->qdio.o_qcnt;
                 QDIO_SBAL *sbal;
                 int ns;
 
-                    DBGTRC(dev, _("Output Queue(%d) Buffer(%d)\n"),oq,ob);
+                    DBGTRC( dev, "Output Queue(%d) Buffer(%d)\n", oq, ob );
 
                     FETCH_DW(sa,sl->sbala[ob]);
                     if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
@@ -434,7 +374,7 @@ int mq = dev->qdio.o_qcnt;
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
-                        DBGTRC(dev, _("STORCHK ERROR sa(%16.16"PRIx64"), key(%2.2x)\n"),sa,dev->qdio.o_slk[oq]);
+                        DBGTRC( dev, "STORCHK ERROR sa(%16.16"PRIx64"), key(%2.2x)\n", sa, dev->qdio.o_slk[ oq ]);
                         return;
                     }
                     sbal = (QDIO_SBAL*)(dev->mainstor + sa);
@@ -453,7 +393,7 @@ int mq = dev->qdio.o_qcnt;
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                             grp->reqpci = TRUE;
-                            DBGTRC(dev, _("STORCHK ERROR la(%16.16"PRIx64"), len(%d), key(%2.2x)\n"),la,len,dev->qdio.o_sbalk[oq]);
+                            DBGTRC( dev, "STORCHK ERROR la(%16.16"PRIx64"), len(%d), key(%2.2x)\n", la, len, dev->qdio.o_sbalk[ oq ]);
                             return;
                         }
                         buf = (BYTE*)(dev->mainstor + la);
@@ -572,7 +512,7 @@ ZFCP_GRP *grp;
 int grouped;
 int i;
 
-logmsg(_("ZFCP Experimental Driver - Incomplete - Work In Progress\n"));
+    LOGMSG( "ZFCP Experimental Driver - Incomplete - Work In Progress\n" );
 
     if(!dev->group)
     {
@@ -642,7 +582,7 @@ logmsg(_("ZFCP Experimental Driver - Incomplete - Work In Progress\n"));
             int chpid;
             char c;
             if(sscanf(argv[++i], "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
-                logmsg(_("ZFCP: Invalid channel path id %s for device %4.4X\n"),argv[i],dev->devnum);
+                LOGMSG( "ZFCP: Invalid channel path id %s for device %4.4X\n", argv[i], dev->devnum );
 
             else
                 dev->pmcw.chpid[0] = chpid;
@@ -663,7 +603,7 @@ logmsg(_("ZFCP Experimental Driver - Incomplete - Work In Progress\n"));
         }
         else
 #endif
-            logmsg(_("ZFCP: Invalid option %s for device %4.4X\n"),argv[i],dev->devnum);
+            LOGMSG( "ZFCP: Invalid option %s for device %4.4X\n", argv[i], dev->devnum );
 
     }
 
@@ -1313,7 +1253,7 @@ U32 num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, _("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
+        DBGTRC( dev, "Unkown CCW dev(%4.4x) code(%2.2x)\n", dev->devnum, code );
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1331,7 +1271,7 @@ static int zfcp_initiate_input(DEVBLK *dev, U32 qmask)
 ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
 int noselrd;
 
-    DBGTRC(dev, _("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC( dev, "SIGA-r dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -1372,7 +1312,7 @@ static int zfcp_initiate_output(DEVBLK *dev, U32 qmask)
 {
 ZFCP_GRP *grp = (ZFCP_GRP*)dev->group->grp_data;
 
-    DBGTRC(dev, _("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC( dev, "SIGA-w dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
@@ -1412,7 +1352,7 @@ static int zfcp_do_sync(DEVBLK *dev, U32 oqmask, U32 iqmask)
     UNREFERENCED(oqmask);       /* unreferenced for non-DEBUG builds */
     UNREFERENCED(iqmask);       /* unreferenced for non-DEBUG builds */
 
-    DBGTRC(dev, _("SIGA-s dev(%4.4x) oqmask(%8.8x) iqmask(%8.8x)\n"),
+    DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x) iqmask(%8.8x)\n",
         dev->devnum, oqmask, iqmask );
 
     return 0;
@@ -1424,7 +1364,7 @@ static int zfcp_do_sync(DEVBLK *dev, U32 oqmask, U32 iqmask)
 /*-------------------------------------------------------------------*/
 static int zfcp_initiate_output_mult(DEVBLK *dev, U32 qmask)
 {
-    DBGTRC(dev, _("SIGA-m dev(%4.4x) qmask(%8.8x)\n"),dev->devnum,qmask);
+    DBGTRC( dev, "SIGA-m dev(%4.4x) qmask(%8.8x)\n", dev->devnum, qmask );
 
     return zfcp_initiate_output(dev, qmask);
 }
