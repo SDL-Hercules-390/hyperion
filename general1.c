@@ -4219,9 +4219,9 @@ BYTE   *ip;                             /* -> executed instruction   */
     regs->exrl = 0;
     regs->ip -= ILC(regs->exinst[0]);
 
-    //regs->instcount++;
     EXECUTE_INSTRUCTION(regs->ARCH_DEP(runtime_opcode_xxxx), regs->exinst, regs);
     regs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     /* Leave execflag on if pending PER so ILC will reflect EX */
     if (!OPEN_IC_PER(regs))
@@ -4315,9 +4315,9 @@ DEF_INST( execute_relative_long )
     regs->exrl     = 1;
     regs->ip      -= ILC( regs->exinst[0] );
 
-    //regs->instcount++;
-    EXECUTE_INSTRUCTION(regs->ARCH_DEP(runtime_opcode_xxxx), regs->exinst, regs);
+    EXECUTE_INSTRUCTION( regs->ARCH_DEP( runtime_opcode_xxxx ), regs->exinst, regs );
     regs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */
     if (!OPEN_IC_PER( regs ))

@@ -1163,9 +1163,9 @@ static int ARCH_DEP( run_sie )( REGS* regs )
 
                 SIE_PERFMON( SIE_PERF_EXEC );
 
-                //regs->instcount++;
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
                 regs->instcount++;
+                UPDATE_SYSBLK_INSTCOUNT( 1 );
 
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 

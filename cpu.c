@@ -415,6 +415,7 @@ static char *pgmintname[] = {
 
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     /* Release any locks */
     if (sysblk.intowner == realregs->cpuad)
