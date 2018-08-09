@@ -3081,12 +3081,7 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
                 *unitstat=CSW_CE|CSW_DE|CSW_UX;
                 break;
             }
-#if 0
-        // MHP TEST 2740
-            *residual=count;
-            *unitstat=CSW_CE|CSW_DE;
-            break;
-#endif
+
             if(dev->commadpt->datalostcond)
             {
                 dev->commadpt->datalostcond=0;

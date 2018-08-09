@@ -436,28 +436,8 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
         release_lock(&sysblk.mainlock);
     }
 }
+
 #define SET_ALSI(_dev,_bits)    set_alsi((_dev),(_bits))
-
-
-#if 0
-dead code and also over in zfcp.c
-/*-------------------------------------------------------------------*/
-/* Clear Adapter Local Summary Indicator bits                        */
-/*-------------------------------------------------------------------*/
-static inline void clr_alsi(DEVBLK *dev, BYTE bits)
-{
-    if(dev->qdio.alsi)
-    {
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
-
-        obtain_lock(&sysblk.mainlock);
-        *alsi &= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
-    }
-}
-#endif
-#define CLR_ALSI(_dev,_bits)    clr_alsi((_dev),(_bits))
 
 
 /*-------------------------------------------------------------------*/
@@ -480,33 +460,10 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 }
 #define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
 
-
-#if 0
-dead code and also over in zfcp.c
-/*-------------------------------------------------------------------*/
-/* Clear Device State Change Indicator bits                          */
-/*-------------------------------------------------------------------*/
-static inline void clr_dsci(DEVBLK *dev, BYTE bits)
-{
-    if(dev->qdio.dsci)
-    {
-    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
-
-        obtain_lock(&sysblk.mainlock);
-        *dsci &= bits;
-        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
-    }
-}
-#endif
-#define CLR_DSCI(_dev,_bits)    clr_dsci((_dev),(_bits))
-
 #else /*!defined(_FEATURE_QDIO_THININT)*/
 
 #define SET_ALSI(_dev,_bits)    /* (do nothing) */
-#define CLR_ALSI(_dev,_bits)    /* (do nothing) */
 #define SET_DSCI(_dev,_bits)    /* (do nothing) */
-#define CLR_DSCI(_dev,_bits)    /* (do nothing) */
 
 #endif /*defined(_FEATURE_QDIO_THININT)*/
 
@@ -4417,18 +4374,11 @@ U16 opc;
     else
         dev->qdio.thinint = 0;
 
-#if 0
-    dev->pmcw.flag4 &= ~PMCW4_ISC;
-    dev->pmcw.flag4 |= (req21->isc & CHSC_REQ21_ISC_MASK) << 3;
-    dev->pmcw.flag25 &= ~PMCW25_VISC;
-    dev->pmcw.flag25 |= (req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
-#endif
-
     dev->qdio.alsi = alsi;
-    dev->qdio.ks = ks;
+    dev->qdio.ks   = ks;
 
     dev->qdio.dsci = dsci;
-    dev->qdio.kc = kc;
+    dev->qdio.kc   = kc;
 
     return 0;
 }

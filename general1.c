@@ -4229,57 +4229,82 @@ BYTE   *ip;                             /* -> executed instruction   */
 }
 
 
-#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C6_0 EXRL  - Execute Relative Long                          [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(execute_relative_long)
+DEF_INST( execute_relative_long )
 {
-int     r1;                             /* Register number           */
-BYTE   *ip;                             /* -> executed instruction   */
+    int    r1;                          /* Register number           */
+    BYTE*  ip;                          /* -> executed instruction   */
 
-    RIL_A(inst, regs, r1, regs->ET);
+    RIL_A( inst, regs, r1, regs->ET );
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
-       the interrupt is intercepted */
-    memset(regs->exinst, 0, 8);
-#endif /*defined(_FEATURE_SIE)*/
+       the interrupt is intercepted.
+    */
+    memset( regs->exinst, 0, 8 );
+#endif
 
     /* Fetch target instruction from operand address */
-    ip = INSTRUCTION_FETCH(regs, 1);
-    if (ip != regs->exinst)
-        memcpy (regs->exinst, ip, 8);
+    ip = INSTRUCTION_FETCH( regs, 1 );
 
-#if 0
+    if (ip != regs->exinst)
+        memcpy( regs->exinst, ip, 8 );
+
+#if 0 // debugging
     /* Display target instruction if stepping or tracing */
-    if (CPU_STEPPING_OR_TRACING(regs, 6))
+    if (CPU_STEPPING_OR_TRACING( regs, 6 ))
     {
-        int n, ilc;
-        char buf[256];
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        n = sprintf (buf, "EXRL target  ADDR="F_VADR"    ", regs->ET);
+        int ilc;
+        char buf[128];
+        char buf2[128];
+        char work[8];
+
+        ilc = ILC( ip[0] );
+
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+        MSGBUF( buf, "EXRL target  ADDR="F_VADR"     INST=", regs->ET );
       #else
-        n = sprintf (buf, "EXRL  ADDR="F_VADR"  ", regs->ET);
+        MSGBUF( buf, "EXRL  ADDR="F_VADR"   INST=",          regs->ET );
       #endif
-        ilc = ILC(ip[0]);
-        n += sprintf (buf+n, " INST=%2.2X%2.2X", ip[0], ip[1]);
-        if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", ip[2], ip[3]);
-        if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", ip[4], ip[5]);
-        logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
-        DISASM_INSTRUCTION(ip,buf);
-        logmsg ("%s\n", buf);
+
+//      if (ilc > 0)
+        {
+            MSGBUF( work, "%2.2X%2.2X", ip[0], ip[1] );
+            STRLCAT( buf, work );
+        }
+        if (ilc > 2)
+        {
+            MSGBUF( work, "%2.2X%2.2X", ip[2], ip[3] );
+            STRLCAT( buf, work );
+        }
+        if (ilc > 4)
+        {
+            MSGBUF( work, "%2.2X%2.2X", ip[4], ip[5] );
+            STRLCAT( buf, work );
+        }
+
+        STRLCAT( buf, " " );
+
+        if (ilc < 6) STRLCAT( buf, "    " );
+        if (ilc < 4) STRLCAT( buf, "    " );
+
+        DISASM_INSTRUCTION( ip, buf2 );
+
+        LOGMSG( "%s%s\n", buf, buf2 );
     }
 #endif
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44 ||
-         (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)) )
-        regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
+    if (regs->exinst[0] == 0x44 ||
+       (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)))
+        regs->program_interrupt( regs, PGM_EXECUTE_EXCEPTION );
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
-    regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
+    regs->exinst[1] |= r1 ? regs->GR_LHLCL( r1 ) : 0;
 
     /*
      * Turn execflag on indicating this instruction is EXecuted.
@@ -4287,15 +4312,15 @@ BYTE   *ip;                             /* -> executed instruction   */
      * be incremented back by the instruction decoder.
      */
     regs->execflag = 1;
-    regs->exrl = 1;
-    regs->ip -= ILC(regs->exinst[0]);
+    regs->exrl     = 1;
+    regs->ip      -= ILC( regs->exinst[0] );
 
     //regs->instcount++;
     EXECUTE_INSTRUCTION(regs->ARCH_DEP(runtime_opcode_xxxx), regs->exinst, regs);
     regs->instcount++;
 
     /* Leave execflag on if pending PER so ILC will reflect EXRL */
-    if (!OPEN_IC_PER(regs))
+    if (!OPEN_IC_PER( regs ))
         regs->execflag = 0;
 }
 #endif /* defined(FEATURE_EXECUTE_EXTENSION_FACILITY) */

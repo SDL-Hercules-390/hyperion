@@ -1853,29 +1853,6 @@ do { \
 }
 #endif /* #ifdef OPTION_OPTINST */
 
-
-#if 0
-/* RSE register and storage with extended op code and additional
-   R3 or M3 field (note, this is NOT the ESA/390 vector RSE format) */
-/* Note: Effective June 2003, RSE is retired and replaced by RSY */
-#undef RSE
-#define RSE(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
-            (_r1) = (temp >> 20) & 0xf; \
-            (_r3) = (temp >> 16) & 0xf; \
-            (_b2) = (temp >> 12) & 0xf; \
-            (_effective_addr2) = temp & 0xfff; \
-        if((_b2) != 0) \
-        { \
-        (_effective_addr2) += (_regs)->GR((_b2)); \
-        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-        } \
-            INST_UPDATE_PSW((_regs), 6, 6); \
-    }
-#endif
-
 /* RSY register and storage with extended op code, long displacement,
    and additional R3 or M3 field */
 #undef RSY

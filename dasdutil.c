@@ -38,10 +38,6 @@ static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
 static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 static int  nextnum = 0;
 
-#if 0
-SYSBLK sysblk; /* Currently required for shared.c */
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
 /*-------------------------------------------------------------------*/

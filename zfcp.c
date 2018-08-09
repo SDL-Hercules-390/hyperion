@@ -705,18 +705,11 @@ U16 opc;
     else
         dev->qdio.thinint = 0;
 
-#if 0
-    dev->pmcw.flag4 &= ~PMCW4_ISC;
-    dev->pmcw.flag4 |= (req21->isc & CHSC_REQ21_ISC_MASK) << 3;
-    dev->pmcw.flag25 &= ~PMCW25_VISC;
-    dev->pmcw.flag25 |= (req21->isc & CHSC_REQ21_VISC_MASK) >> 4;
-#endif
-
     dev->qdio.alsi = alsi;
-    dev->qdio.ks = ks;
+    dev->qdio.ks   = ks;
 
     dev->qdio.dsci = dsci;
-    dev->qdio.kc = kc;
+    dev->qdio.kc   = kc;
 
     return 0;
 }
@@ -734,11 +727,6 @@ static int zfcp_ssqd_desc ( DEVBLK *dev, void *desc )
 
     if(dev->pmcw.flag4 & PMCW4_Q)
     {
-#if 0
-rsp24->pcnt = 0x10;
-rsp24->icnt = 0x01;
-rsp24->ocnt = 0x20;
-#endif
         rsp24->flags |= ( CHSC_FLAG_QDIO_CAPABILITY | CHSC_FLAG_VALIDITY );
 
         rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
@@ -901,13 +889,10 @@ U32 num;                                /* Number of bytes to move   */
         // disabled wait, we are going to temporarily treat it
         // as a valid command until we can positively determine
         // whether or not it is a bona fide valid OSA command.
-#if 0
-        /* We currently do not support emulated 3088 CTCA mode */
-        dev->sense[0] = SENSE_CR;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-#else
+
         /* The Sense Command Byte command returns a single byte
            being the CCW opcode from the other end of the CTCA */
+
         static const U32 len = 1;               /* cmd length */
         static const BYTE opcode = 0x03;        /* CCW opcode */
 
@@ -921,7 +906,6 @@ U32 num;                                /* Number of bytes to move   */
 
         /* Return normal i/o completion status */
         *unitstat = CSW_CE | CSW_DE;
-#endif
         break;
     }
 

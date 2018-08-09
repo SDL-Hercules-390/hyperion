@@ -1666,13 +1666,6 @@ int     r1, unused;                     /* Value of R field          */
 
     PRIV_CHECK(regs);
 
-#if 0
-#if defined(_FEATURE_ZSIE)
-    if(SIE_STATB(regs, LCTL1, CR8))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_ZSIE)*/
-#endif
-
     regs->GR_LHH(r1) = regs->CR_LHH(8);
     regs->CR_LHH(8) = regs->GR_LHL(r1);
 
@@ -5621,12 +5614,12 @@ int     cc;                             /* Condition code            */
         cc = 3;
     }
 
-#if 0
-    logmsg ("STFL=%2.2X %2.2X %2.2X %2.2X\n",
+#if 0 // (debug)
+    LOGMSG( "STFL=%2.2X %2.2X %2.2X %2.2X\n",
             regs->facility_list[0],
             regs->facility_list[1],
             regs->facility_list[2],
-            regs->facility_list[3]);
+            regs->facility_list[3] );
 #endif
 
     /* Store facility list at operand location */

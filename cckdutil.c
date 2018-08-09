@@ -2642,16 +2642,8 @@ cdsk_return_ok:
 
     if (!ro && (cdevhdr.opts & (CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS)))
     {
-        /*
-         * Leave the ORDWR bit on for now.  This will prevent
-         * old-format free space releases from doing a -1 check
-         * on a file that has new-format free space
-         */
-#if 0
-        cdevhdr.opts &= ~(CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS);
-#else
         cdevhdr.opts &= ~(CCKD_OPENED|CCKD_SPERRS);
-#endif
+
         /* Set version.release.modlvl */
         cdevhdr.vrm[0] = CCKD_VERSION;
         cdevhdr.vrm[1] = CCKD_RELEASE;

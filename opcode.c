@@ -1627,14 +1627,6 @@ int r1,b2,d2;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     DISASM_PRINT("%d,%d(%d)",r1,d2,b2)
 
-DISASM_TYPE(RSE);
-int r1,r3,b2,d2;
-    r1 = inst[1] >> 4;
-    r3 = inst[1] & 0x0F;
-    b2 = inst[2] >> 4;
-    d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
-
 DISASM_TYPE(RSY);
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;

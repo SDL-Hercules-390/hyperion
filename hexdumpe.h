@@ -134,6 +134,7 @@ void hexdumpew( const char *pfx, char **buf, const char *dat, size_t skp,
 /*********************************************************************/
 /*               EBCDIC/ASCII Translation Tables                     */
 /*********************************************************************/
+#if 0 // (Hercules uses its own translation tables)
 static const char
 _a2e_tab[] = { /* ASCII code page 1252 to EBCDIC code page 1140 */
 /*      x0   x1   x2   x3   x4   x5   x6   x7   x8   x9   xA   xB   xC   xD   xE   xF*/
@@ -174,6 +175,7 @@ _e2a_tab[] = { /* EBCDIC code page 1140 to ASCII code page 1252 */
 /*Ex*/0x5C,0xF7,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5A,0xB2,0xD4,0xD6,0xD2,0xD3,0xD5,
 /*Fx*/0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39,0xB3,0xDB,0xDC,0xD9,0xDA,0x9F,
 };/*    x0   x1   x2   x3   x4   x5   x6   x7   x8   x9   xA   xB   xC   xD   xE   xF*/
+#endif // (Hercules uses its own translation tables)
 
 /*********************************************************************/
 /*              EBCDIC/ASCII Translation Functions                   */
@@ -181,13 +183,13 @@ _e2a_tab[] = { /* EBCDIC code page 1140 to ASCII code page 1252 */
 /*
 **              Get pointer to translation table
 */
-#if 0 // (Hercules needs to use its own translation tables)
-static INLINE  const char*  a2etab()    { return _a2e_tab; }
-static INLINE  const char*  e2atab()    { return _e2a_tab; }
-#else // (Hercules needs to use its own translation tables)
-static INLINE  const char*  a2etab()    { return (const char*) h2g_tab(); }
-static INLINE  const char*  e2atab()    { return (const char*) g2h_tab(); }
-#endif // (Hercules needs to use its own translation tables)
+#if 0 // (Hercules uses its own translation tables)
+static INLINE  const char*  a2etab()  { return _a2e_tab; }
+static INLINE  const char*  e2atab()  { return _e2a_tab; }
+#else // (Hercules uses its own translation tables)
+static INLINE  const char*  a2etab()  { return (const char*) h2g_tab(); }
+static INLINE  const char*  e2atab()  { return (const char*) g2h_tab(); }
+#endif // (Hercules uses its own translation tables)
 /*
 **                  Translate single byte
 */

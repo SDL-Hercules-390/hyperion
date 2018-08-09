@@ -143,10 +143,6 @@ int cache_lookup (int ix, U64 key, int *oldest_entry)
     {
         cacheblk[ix].misses++;
     }
-    if (i < 0 && oldest_entry && *oldest_entry < 0)
-        cache_adjust(ix, 1);
-    else
-        cache_adjust(ix, 0);
     return i;
 }
 
@@ -184,8 +180,6 @@ int cache_wait(int ix)
 {
     if (cache_check_ix(ix)) return -1;
     if (cacheblk[ix].busy < cacheblk[ix].nbr)
-        return 0;
-    if (cache_adjust(ix, 1))
         return 0;
 
     cacheblk[ix].waiters++; cacheblk[ix].waits++;
@@ -564,103 +558,6 @@ static int cache_isempty(int ix, int i)
          && cacheblk[ix].cache[i].flag == 0
          && cacheblk[ix].cache[i].age  == 0);
 }
-
-static int cache_adjust(int ix, int n)
-{
-#if 0
-    time_t now;
-    int    busypct, hitpct, nbr, empty, sz;
-
-    now = time(NULL);
-    busypct = cache_busy_percent(ix);
-    hitpct = cache_hit_percent(ix);
-    nbr = cacheblk[ix].nbr;
-    empty = cache_empty(ix);
-    sz = cacheblk[ix].size;
-
-    if (n == 0) {
-        /* Normal adjustments */
-        if (now - cacheblk[ix].atime < CACHE_ADJUST_INTERVAL) return 0;
-        cacheblk[ix].atime = now;
-
-        /* Increase cache if a lot of busy entries */
-        if (((nbr <= CACHE_ADJUST_NUMBER || sz < CACHE_ADJUST_SIZE) && busypct >= CACHE_ADJUST_BUSY1)
-         || busypct > CACHE_ADJUST_BUSY2)
-            return cache_resize(ix, CACHE_ADJUST_RESIZE);
-
-        /* Decrease cache if too many empty entries */
-        if (nbr > CACHE_ADJUST_NUMBER && empty >= CACHE_ADJUST_EMPTY)
-            return cache_resize(ix, -CACHE_ADJUST_RESIZE);
-
-        /* Increase cache if hit percentage is too low */
-        if (hitpct > 0) {
-            if ((nbr <= CACHE_ADJUST_NUMBER && hitpct < CACHE_ADJUST_HIT1)
-             || hitpct < CACHE_ADJUST_HIT2)
-                return cache_resize(ix, CACHE_ADJUST_RESIZE);
-        }
-
-        /* Decrease cache if hit percentage is ok and not many busy */
-        if (hitpct >= CACHE_ADJUST_HIT3 && busypct <= CACHE_ADJUST_BUSY3
-         && cacheblk[ix].size >= CACHE_ADJUST_SIZE)
-            return cache_resize(ix, -CACHE_ADJUST_RESIZE);
-    } else {
-        /* All cache entries are busy */
-        if (nbr <= CACHE_ADJUST_NUMBER)
-            return cache_resize(ix, CACHE_ADJUST_RESIZE);
-
-        /* Increase cache if previous wait within this interval */
-        if (now - cacheblk[ix].wtime <= CACHE_ADJUST_WAITTIME) {
-            return cache_resize(ix, CACHE_ADJUST_RESIZE);
-        }
-        cacheblk[ix].wtime = now;
-    }
-#else
-    UNREFERENCED(ix);
-    UNREFERENCED(n);
-#endif
-    return 0;
-}
-
-#if 0
-static int cache_resize (int ix, int n)
-{
-    CACHE *cache;
-    int    i;
-
-    if (n == 0) return 0;
-    else if (n > 0) {
-        /* Increase cache size */
-        cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr + n) * sizeof(CACHE));
-        if (cache == NULL) {
-            WRMSG (HHC00011, "E", "realloc() increase", ix, (cacheblk[ix].nbr + n) * sizeof(CACHE), errno, strerror(errno));
-            return 0;
-        }
-        cacheblk[ix].cache = cache;
-        for (i = cacheblk[ix].nbr; i < cacheblk[ix].nbr +n; i++)
-            memset(&cacheblk[ix].cache[i], 0, sizeof(CACHE));
-        cacheblk[ix].nbr += n;
-        cacheblk[ix].empty += n;
-        cacheblk[ix].adjusts++;
-    } else if (n < 0) {
-        /* Decrease cache size */
-        for (i = cacheblk[ix].nbr - 1; i >= cacheblk[ix].nbr + n; i--)
-            if (cache_isbusy(ix, i)) break;
-            else cache_release(ix, i, CACHE_FREEBUF);
-        n = cacheblk[ix].nbr - i + 1;
-        if (n == 0) return 0;
-        cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr - n) * sizeof(CACHE));
-        if (cache == NULL) {
-            WRMSG (HHC00011, "E", "realloc() decrease", ix, (cacheblk[ix].nbr - n) * sizeof(CACHE), errno, strerror(errno));
-            return 0;
-        }
-        cacheblk[ix].cache = cache;
-        cacheblk[ix].nbr -= n;
-        cacheblk[ix].empty -= n;
-        cacheblk[ix].adjusts++;
-    }
-    return 1;
-}
-#endif
 
 static void cache_allocbuf(int ix, int i, int len)
 {

@@ -67,12 +67,6 @@ int   nleft, nread;
 
     } /* end of do while */
 
-#if 0 // (who's "BOB"?)
-    if (nleft != 0)
-        LOGMSG( "BOB123 read_socket: Read of %d bytes requested, %d bytes actually read\n",
-            nbytes, nbytes - nleft );
-#endif // BOB?!
-
     return (nbytes - nleft);    /* return number of bytes read */
 
 } /* end of read_socket */

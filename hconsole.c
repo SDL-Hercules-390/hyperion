@@ -386,16 +386,10 @@ void translate_keystroke( char kbbuf[], int* pkblen )
 
                 default:
                 {
-#if 0
-                    kbbuf[0] = '\x1B';
-                    kbbuf[1] = ch2;
-                    kbbuf[2] = 0;
-#else
                     /* EAT IT */
                     kbbuf[0] = 0;
                     kbbuf[1] = 0;
                     kbbuf[2] = 0;
-#endif
                     break;
 
                 } // end default

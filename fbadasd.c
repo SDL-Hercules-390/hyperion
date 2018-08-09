@@ -1355,9 +1355,6 @@ DLL_EXPORT void fbadasd_write_block (
 {
 int     rc;           /* Return code from write function             */
 int     sector;       /* First sector being read                     */
-#if 0
-U64     rba;          /* Large file size offset                      */
-#endif
 
     /* Unit check if block number is invalid */
     sector = blknum * blkfactor;

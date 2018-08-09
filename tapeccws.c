@@ -2071,7 +2071,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
                break;
             }
 
-            /* Enable/Disabled Forced Error Logging as requested... */
+            /* Enable/Disable Forced Error Logging as requested... */
 
 #if 0 // (implicit enabling for all devices not currently supported; treat as explicit instead)
             if (PSF_ACTION_FEL_IMPLICIT == parm)

@@ -275,11 +275,6 @@ typedef struct _BIOE64 {
 /* I/O Request Control Structures and Flags                          */
 /*-------------------------------------------------------------------*/
 
-#if 0
-#define ADDR32 0  /* 32-bit addressing fields being used  */
-#define ADDR64 1  /* 64-bit addressing fields being used  */
-#endif
-
 #define SYNC   0  /* Synchronous request being processed  */
 #define ASYNC  1  /* Asynchronous request being processed */
 
@@ -999,38 +994,38 @@ int     cc;                            /* condition code             */
     rc = RC_ERROR; /* Initialize the return code to error */
     cc = CC_FAILED; /* Failure assumed unless otherwise successful */
 
-#if 0
+#if 0 // debug
     if (sizeof(BIOPL) != 64)
     {
-            logmsg("BIOPL size not 64: %d\n",sizeof(BIOPL));
+            LOGMSG( "BIOPL size not 64: %d\n", sizeof( BIOPL ));
     }
     if (sizeof(BIOPL_INIT32) != 64)
     {
-            logmsg("BIOPL_INIT32 size not 64: %d\n",sizeof(BIOPL_INIT32));
+            LOGMSG( "BIOPL_INIT32 size not 64: %d\n", sizeof( BIOPL_INIT32 ));
     }
     if (sizeof(BIOPL_INIT64) != 64)
     {
-            logmsg("BIOPL_INIT64 size not 64: %d\n",sizeof(BIOPL_INIT64));
+            LOGMSG( "BIOPL_INIT64 size not 64: %d\n", sizeof( BIOPL_INIT64 ));
     }
     if (sizeof(BIOPL_IORQ32) != 64)
     {
-            logmsg("BIOPL_IORQ32 size not 64: %d\n",sizeof(BIOPL_IORQ32));
+            LOGMSG( "BIOPL_IORQ32 size not 64: %d\n", sizeof( BIOPL_IORQ32 ));
     }
     if (sizeof(BIOPL_REMOVE) != 64)
     {
-            logmsg("BIOPL_REMOVE size not 64: %d\n",sizeof(BIOPL_REMOVE));
+            LOGMSG( "BIOPL_REMOVE size not 64: %d\n", sizeof( BIOPL_REMOVE ));
     }
     if (sizeof(BIOPL_IORQ64) != 64)
     {
-            logmsg("BIOPL_IORQ64 size not 64: %d\n",sizeof(BIOPL_IORQ64));
+            LOGMSG( "BIOPL_IORQ64 size not 64: %d\n", sizeof( BIOPL_IORQ64 ));
     }
     if (sizeof(BIOE32) != 16)
     {
-            logmsg("BIOE32 size not 16: %d\n",sizeof(BIOE32));
+            LOGMSG( "BIOE32 size not 16: %d\n", sizeof( BIOE32 ));
     }
     if (sizeof(BIOE64) != 24)
     {
-            logmsg("BIOE64 size not 24: %d\n",sizeof(BIOE64));
+            LOGMSG( "BIOE64 size not 24: %d\n", sizeof( BIOE64 ));
     }
 #endif
 
@@ -1624,7 +1619,6 @@ RADR   bufend;    /* Last byte read or written                 */
       bioebeg &= AMASK31;
    } /* end of for loop */
 
-
 #if 0
    LOGMSG( "(d250_list32) BIOE's processed: %d\n", block );
 #endif
@@ -1779,7 +1773,7 @@ IOCTL64 *asyncp;     /* Pointer to async thread's free standing storage */
 int     rc2;
 
 #if 0
-   logmsg("(d250_iorq64) Entered\n");
+   LOGMSG( "(d250_iorq64) Entered\n" );
 #endif
 
    /* Clear the reserved BIOPL */
@@ -1813,9 +1807,9 @@ int     rc2;
 
    /* Fetch the block count from the BIOPL */
    FETCH_FW(ioctl.blkcount,&biopl->blkcount);
+
 #if 0
-   logmsg("(d250_iorq64) ioctl.blkcount=%d,\n",
-           ioctl.blkcount);
+   LOGMSG( "(d250_iorq64) ioctl.blkcount=%d,\n", ioctl.blkcount );
 #endif
 
    /* Block count must be between 1 and 256, inclusive */
@@ -1827,9 +1821,9 @@ int     rc2;
 
    /* Fetch the address of the BIO entry list from the BIOPL */
    FETCH_DW(ioctl.listaddr,&biopl->bioeladr);
+
 #if 0
-   LOGMSG( "(d250_iorq64) ioctl.listaddr=%16.16X,\n",
-           ioctl.listaddr );
+   LOGMSG( "(d250_iorq64) ioctl.listaddr=%16.16X,\n", ioctl.listaddr );
 #endif
 
    /* Extract the storage key from the BIOPL */
@@ -2200,8 +2194,7 @@ RADR   bufend;    /* Last byte read or written                 */
       bioebeg &= AMASK64;
    } /* end of for loop */
 
-#if 0
-   /* remove after testing */
+#if 0 // remove after testing
    LOGMSG( "(d250_list64) BIOE's processed: %d\n", block );
 #endif
 

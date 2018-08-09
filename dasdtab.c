@@ -260,8 +260,7 @@ static FBADEV fbatab[] = {
 
 #if defined(FEATURE_VM_BLOCKIO)
 static BLKTAB blktab[] = {
-#if 0
-   /* Remove conditional compilation when CKD devices supported */
+#if 0 /* Remove conditional compilation when CKD devices supported */
    CKDIOT("2305",0x2305,15,10,5,3),
    CKDIOT("2311",0x2311,6,3,1,0),
    CKDIOT("2314",0x2314,11,6,3,1),

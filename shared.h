@@ -459,17 +459,6 @@ static int     shared_ckd_read (DEVBLK *dev, int trk, BYTE *unitstat);
 static int     shared_ckd_write (DEVBLK *dev, int trk, int off,
                       BYTE *buf, int len, BYTE *unitstat);
 static int     shared_ckd_trklen (DEVBLK *dev, BYTE *buf);
-
-#if 0
-Not called
-#if defined( OPTION_SHARED_DEVICES ) && defined(FBA_SHARED)
-static int     shared_fba_read (DEVBLK *dev, int blkgrp, BYTE *unitstat);
-static int     shared_fba_write (DEVBLK *dev, int blkgrp, int off,
-                      BYTE *buf, int len, BYTE *unitstat);
-static int     shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp);
-#endif
-#endif
-
 static int     shared_used (DEVBLK *dev);
 static void    shared_reserve (DEVBLK *dev);
 static void    shared_release (DEVBLK *dev);
