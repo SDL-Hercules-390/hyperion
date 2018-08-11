@@ -522,7 +522,7 @@ U32  *ptr4, val4, old4, new4;
  #endif
 #endif
 */
-/* PER C11 standard, unaligned storage accesses have an undefined behavior so...  */
+/* Per C11 standard, unaligned storage accesses have an undefined behavior so...  */
 #define OPTION_STRICT_ALIGNMENT
 
 /*-------------------------------------------------------------------

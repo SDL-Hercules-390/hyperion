@@ -499,6 +499,14 @@
  #define    _FEATURE_PER2
 #endif
 
+#if defined( FEATURE_PER3 )
+ #define    _FEATURE_PER3
+#endif
+
+#if defined( FEATURE_PER ) && !defined( FEATURE_PER2 ) && !defined( FEATURE_PER3 )
+ #define     FEATURE_PER1
+#endif
+
 #if defined( FEATURE_QDIO_TDD )
  #define    _FEATURE_QDIO_TDD
 #endif
@@ -977,6 +985,10 @@
 
 #if defined( FEATURE_PER3 ) && !defined( FEATURE_PER )
  #error FEATURE_PER must be defined when using FEATURE_PER3
+#endif
+
+#if defined( FEATURE_PER1 ) && (defined( FEATURE_PER2 ) || defined( FEATURE_PER3 ))
+ #error FEATURE_PER1 cannot be defined if FEATURE_PER2 or FEATURE_PER3 is defined
 #endif
 
 #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
