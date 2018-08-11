@@ -307,6 +307,7 @@
 #undef  FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS  // 'N' instructions
 #undef  FEATURE_PAGE_PROTECTION
 #undef  FEATURE_PER
+#undef  FEATURE_PER1
 #undef  FEATURE_PER2
 #undef  FEATURE_PER3                                            /*@Z9*/
 #undef  FEATURE_PERFORM_LOCKED_OPERATION
