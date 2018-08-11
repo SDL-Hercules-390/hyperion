@@ -979,6 +979,10 @@
  #error MCDS requires Storage key assist
 #endif
 
+#if defined( FEATURE_PER1 ) && !defined( FEATURE_PER )
+ #error FEATURE_PER must be defined when using FEATURE_PER1
+#endif
+
 #if defined( FEATURE_PER2 ) && !defined( FEATURE_PER )
  #error FEATURE_PER must be defined when using FEATURE_PER2
 #endif
