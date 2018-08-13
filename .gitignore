@@ -10,6 +10,7 @@
 .deps/
 .libs/
 Makefile
+Makefile.in
 autogen.log
 config.log
 autoconf/compile
@@ -24,8 +25,10 @@ autoconf/compile
 /ckd2cckd
 /config.cache
 /config.h
+/config.h.in
 /config.h.in~
 /config.status
+/configure
 /dasdcat
 /dasdconv
 /dasdcopy
