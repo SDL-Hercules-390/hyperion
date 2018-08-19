@@ -165,6 +165,7 @@ add_library( dyndev STATIC
   qeth.c
   resolve.c
   scsitape.c
+  scsiutil.c
   sllib.c
   sockdev.c
   tapeccws.c
@@ -353,18 +354,23 @@ target_link_libraries(hetupd dyndev)
 # tapecopy
 add_executable(tapecopy tapecopy.c)
 target_link_libraries(tapecopy hercd)
+target_link_libraries(tapecopy dyndev)
 
 # tapemap
 add_executable(tapemap tapemap.c)
 target_link_libraries(tapemap hercd)
+target_link_libraries(tapemap dyndev)
 
 # tapesplt
 add_executable(tapesplt tapesplt.c)
 target_link_libraries(tapesplt hercd)
+target_link_libraries(tapesplt dyndev)
 
 # vmfplc2
 add_executable(vmfplc2 vmfplc2.c)
 target_link_libraries(vmfplc2 hercd)
+target_link_libraries(vmfplc2 hercu)
+target_link_libraries(vmfplc2 core)
 target_link_libraries(vmfplc2 dyndev)
 
 # hercules
