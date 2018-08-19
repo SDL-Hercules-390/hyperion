@@ -30,6 +30,7 @@ INCLUDE (CheckSymbolExists)
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckFunctionExists)
 INCLUDE (CheckStructHasMember)
+INCLUDE (CheckTypeSize)
 
 # -------------------
 # Set version
@@ -135,6 +136,40 @@ add_library( libhercd STATIC
 target_link_libraries(libhercd libhercs)
 target_link_libraries(libhercd libhercu)
 
+# DYNDEV subsystem
+
+add_library( dyndev STATIC
+  awstape.c
+  cardpch.c
+  cardrdr.c
+  comm3705.c
+  commadpt.c
+  con1052c.c
+  console.c
+  ctc_ctci.c
+  ctc_lcs.c
+  ctc_ptp.c
+  ctcadpt.c
+  faketape.c
+  ftlib.c
+  hchan.c
+  hetlib.c
+  hettape.c
+  mpc.c
+  netsupp.c
+  omatape.c
+  printer.c
+  qeth.c
+  resolve.c
+  scsitape.c
+  sllib.c
+  sockdev.c
+  tapeccws.c
+  tapedev.c
+  tuntap.c
+  zfcp.c
+)
+
 
 if (BZIP2_FOUND)
   target_link_libraries(libhercd ${BZIP2_LIBRARIES})
@@ -144,8 +179,99 @@ endif()
 # Misc utilities
 # --------------
 
+# cckdcdsk
+add_executable(cckdcdsk cckdcdsk.c)
+target_link_libraries(cckdcdsk libhercd)
+
+# cckdcomp
+add_executable(cckdcomp cckdcomp.c)
+target_link_libraries(cckdcomp libhercd)
+
+# cckddiag
+add_executable(cckddiag cckddiag.c)
+target_link_libraries(cckddiag libhercd)
+
+# cckdswap
+add_executable(cckdswap cckdswap.c)
+target_link_libraries(cckdswap libhercd)
+
 # dasdcat
 add_executable(dasdcat dasdcat.c)
 target_link_libraries(dasdcat libhercd)
+
+# dasdconv
+add_executable(dasdconv dasdconv.c)
+target_link_libraries(dasdconv libhercd)
+
+# dasdcopy
+add_executable(dasdcopy dasdcopy.c)
+target_link_libraries(dasdcopy libhercd)
+
+# dasdinit
+add_executable(dasdinit dasdinit.c)
+target_link_libraries(dasdinit libhercd)
+
+# dasdisup
+add_executable(dasdisup dasdisup.c)
+target_link_libraries(dasdisup libhercd)
+
+# dasdload
+add_executable(dasdload dasdload.c)
+target_link_libraries(dasdload libhercd)
+
+# dasdls
+add_executable(dasdls dasdls.c)
+target_link_libraries(dasdls libhercd)
+
+# dasdpdsu
+add_executable(dasdpdsu dasdpdsu.c)
+target_link_libraries(dasdpdsu libhercd)
+
+# dasdseq
+add_executable(dasdseq dasdseq.c)
+target_link_libraries(dasdseq libhercd)
+
+# dmap2hrc
+add_executable(dmap2hrc dmap2hrc.c)
+target_link_libraries(dmap2hrc libhercd)
+
+# hetget
+add_executable(hetget hetget.c)
+target_link_libraries(hetget libhercd)
+target_link_libraries(hetget dyndev)
+
+# hetinit
+add_executable(hetinit hetinit.c)
+target_link_libraries(hetinit libhercd)
+target_link_libraries(hetinit dyndev)
+
+# hetmap
+add_executable(hetmap hetmap.c)
+target_link_libraries(hetmap libhercd)
+target_link_libraries(hetmap dyndev)
+
+# hetupd
+add_executable(hetupd hetupd.c)
+target_link_libraries(hetupd libhercd)
+target_link_libraries(hetupd dyndev)
+
+# tapecopy
+add_executable(tapecopy tapecopy.c)
+target_link_libraries(tapecopy libhercd)
+
+# tapemap
+add_executable(tapemap tapemap.c)
+target_link_libraries(tapemap libhercd)
+
+# tapesplt
+add_executable(tapesplt tapesplt.c)
+target_link_libraries(tapesplt libhercd)
+
+# vmfplc2
+add_executable(vmfplc2 vmfplc2.c)
+target_link_libraries(vmfplc2 libhercd)
+target_link_libraries(vmfplc2 dyndev)
+
+
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )

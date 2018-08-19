@@ -7,5 +7,10 @@ if (APPLE)
   set (PTHREAD_SET_NAME_ONLY 1)
 endif()
 
+# Windows-based defines
+if (WIN32)
+  set(IS_WINDOWS 1)
+endif()
+
 # Store host's architecture
 set(HOST_ARCH "${CMAKE_HOST_SYSTEM_PROCESSOR}")
