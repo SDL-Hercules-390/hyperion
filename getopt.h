@@ -40,6 +40,7 @@
  * SUCH DAMAGE.
  */
 
+#ifndef _GETOPT_H_
 #ifndef __GETOPT_H__
 #define __GETOPT_H__
 #endif /* __GETOPT_H__ */
@@ -65,3 +66,4 @@ struct option {
 
 #endif /* __GETOPT_LONG_H__ */
 #endif /* __UNISTD_GETOPT__ */
+#endif /* _GETOPT_H_ */
