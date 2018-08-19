@@ -320,10 +320,10 @@
 #undef HAVE_MACH_O_DYLD_H
 
 /* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
+#cmakedefine HAVE_MALLOC_H @HAVE_MALLOC_H@
 
 /* Define to 1 if you have the <math.h> header file. */
-#undef HAVE_MATH_H
+#cmakedefine HAVE_MATH_H @HAVE_MATH_H@
 
 /* Define to 1 if you have the `memcpy' function. */
 #cmakedefine HAVE_MEMCPY @HAVE_MEMCPY@

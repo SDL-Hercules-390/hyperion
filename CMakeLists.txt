@@ -170,6 +170,85 @@ add_library( dyndev STATIC
   zfcp.c
 )
 
+# CORE subsystem
+
+add_library(core STATIC
+  _archdep_templ.c
+  archlvl.c
+  assist.c
+  bldcfg.c
+  cgibin.c
+  channel.c
+  chsc.c
+  clock.c
+  cmdtab.c
+  cmpsc_2012.c
+  cmpscdbg.c
+  cmpscdct.c
+  cmpscget.c
+  cmpscmem.c
+  cmpscput.c
+  config.c
+  control.c
+  cpu.c
+  crypto.c
+  dat.c
+  decimal.c
+  dfp.c
+  diagmssf.c
+  diagnose.c
+  dyn76.c
+  ecpsvm.c
+  esame.c
+  external.c
+  facility.c
+  fillfnam.c
+  float.c
+  general1.c
+  general2.c
+  general3.c
+  hao.c
+  hconsole.c
+  hdiagf18.c
+  history.c
+  hRexx.c
+  hRexx_o.c
+  hRexx_r.c
+  hsccmd.c
+  hscemode.c
+  hscloc.c
+  hscmisc.c
+  hscpufun.c
+  httpserv.c
+  ieee.c
+  impl.c
+  io.c
+  ipl.c
+  loadmem.c
+  loadparm.c
+  losc.c
+  machchk.c
+  opcode.c
+  panel.c
+  pfpo.c
+  plo.c
+  qdio.c
+  scedasd.c
+  scescsi.c
+  script.c
+  service.c
+  sie.c
+  sr.c
+  stack.c
+  strsignal.c
+  timer.c
+  trace.c
+  transact.c
+  vector.c
+  vm.c
+  vmd250.c
+  xstore.c
+)
 
 if (BZIP2_FOUND)
   target_link_libraries(libhercd ${BZIP2_LIBRARIES})
@@ -272,6 +351,11 @@ add_executable(vmfplc2 vmfplc2.c)
 target_link_libraries(vmfplc2 libhercd)
 target_link_libraries(vmfplc2 dyndev)
 
-
+# hercules
+set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
+add_executable(hercules bootstrap.c)
+target_link_libraries(hercules core)
+target_link_libraries(hercules dyndev)
+target_link_libraries(hercules libhercd)
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )
