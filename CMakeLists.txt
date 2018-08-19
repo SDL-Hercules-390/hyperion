@@ -251,6 +251,11 @@ add_library(core STATIC
   vm.c
   vmd250.c
   xstore.c
+  ltdl.c
+  memrchr.c
+  dyncrypt.c
+  dyngui.c
+  hdteq.c
 )
 
 if(LIBM_REQUIRED)
