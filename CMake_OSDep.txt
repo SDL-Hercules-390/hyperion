@@ -15,9 +15,15 @@ if (WIN32)
   set(IS_WINDOWS 1)
 endif()
 
-# Check to see if needs to be linked with libm (e.g. on Linux)
-CHECK_FUNCTION_EXISTS(pow LIBM_REQUIRED)
-
+# Check if required to link with libm
+check_include_file(libm/math.h HAVE_LIBM_MATH_H)
+check_library_exists(m log "/lib;/usr/lib;/usr/local/lib" HAVE_M_LIB)
+if (HAVE_M_LIB)
+    set(LIBM_REQUIRED 1)
+    message( STATUS "Linking with libm IS required" )
+else (HAVE_M_LIB)
+    message( STATUS "Linking with libm IS NOT required")
+endif (HAVE_M_LIB)
 
 # Store host's architecture
 set(HOST_ARCH "${CMAKE_HOST_SYSTEM_PROCESSOR}")

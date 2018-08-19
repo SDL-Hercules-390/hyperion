@@ -254,7 +254,6 @@ add_library(core STATIC
 )
 
 if(LIBM_REQUIRED)
-  message( STATUS "Libm required" )
   target_link_libraries(core m)
 endif()
 
