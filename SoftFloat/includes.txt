@@ -4,9 +4,10 @@
 
 include_directories( BEFORE
 
-  ${CMAKE_BINARY_DIR}
-  ${CMAKE_SOURCE_DIR}/source/8086-SSE
-  ${CMAKE_SOURCE_DIR}/source/include
+  ${CMAKE_BINARY_DIR}/SoftFloat
+  ${CMAKE_BINARY_DIR}/SoftFloat/include
+  ${CMAKE_SOURCE_DIR}/SoftFloat/source/8086-SSE
+  ${CMAKE_SOURCE_DIR}/SoftFloat/source/include
 
 )
 

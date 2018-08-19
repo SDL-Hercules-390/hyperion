@@ -5,6 +5,7 @@
 set( EXTPKG_NAME  "SoftFloat"                                   )
 set( EXTPKG_VERS  "3.1.0"                                       )
 set( EXTPKG_DESC  "Berkeley IEEE Binary Floating-Point Library" )
+set( FULLNAME     "${EXTPKG_NAME}"                              )
 
 project( ${EXTPKG_NAME} VERSION ${EXTPKG_VERS} )
 set( PROJECT_DESCRIPTION "${EXTPKG_DESC}" CACHE PATH "Project description" FORCE )

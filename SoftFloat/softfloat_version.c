@@ -1,4 +1,4 @@
-#include "softfloat_version.h"
+#include "include/softfloat_version.h"
 
 #define Q(str)    #str
 #define QSTR(str) Q(str)
