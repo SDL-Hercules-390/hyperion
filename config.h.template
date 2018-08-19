@@ -414,7 +414,7 @@
 #undef HAVE_REALPATH
 
 /* Define to 1 if you have the <regex.h> header file. */
-#undef HAVE_REGEX_H
+#cmakedefine HAVE_REGEX_H @HAVE_REGEX_H@
 
 /* Define to enable Regina Rexx support */
 #undef HAVE_REGINA_REXX
