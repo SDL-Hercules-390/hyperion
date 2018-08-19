@@ -71,14 +71,14 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
 
 #------------------------------------------------------------------------------
 #
-# Macro:  HC_PROG_CC()       ((((( DEPRECATED )))))
+# Macro:  HC_PROG_CC()
 #
 #  Prevents undesired CFLAGS settings set by default AC_PROG_CC macro.
 #
 # Parms:   none
 # Input:   $ac_env_CFLAGS_value
-# Output:  CFLAGS initialized to our desired starting value
-# Note:    use instead of the default AC_PROG_CC macro
+# Output:  CFLAGS initialized to the CFLAGS environment variable value
+# Note:    use instead of the default AC_PROG_CC() macro
 #
 #  AC_PROG_CC (actually _AC_PROC_CC_G) takes it upon itself to put "-g -O2"
 #  in CFLAGS. While this may be good for most packages using autoconf, we
@@ -86,7 +86,8 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
 #
 #  AC_BEFORE emits a warning if AC_PROG_CC was expanded prior to this macro
 #  in case something gets put in configure.ac before us. AC_REQUIRE expands
-#  AC_PROG_CC for us since we need it.
+#  AC_PROG_CC for us since we need it.  (Doing AC_PROG_CC() is required,
+#  but we wish its effects to be overridden. Thus why this macro exists.)
 #
 #------------------------------------------------------------------------------
 
@@ -95,9 +96,9 @@ AC_DEFUN([HC_PROG_CC],
     AC_BEFORE(  [HC_PROG_CC], [AC_PROG_CC] )
     AC_REQUIRE( [AC_PROG_CC] )
 
-    # (set CFLAGS to their initial value)
+    # Set 'CFLAGS' variable to its initial value...
 
-    CFLAGS=$ac_env_CFLAGS_value
+    CFLAGS=$ac_env_CFLAGS_value       # (init to environment variable value!)
 ])
 
 #------------------------------------------------------------------------------

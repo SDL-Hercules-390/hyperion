@@ -43,7 +43,7 @@ AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_o
 #   Programs section...
 ###############################################################################
 
-AC_PROG_CC()                  # (back to using this again)
+HC_PROG_CC()                  # (REQUIRED due to our auto-optimization logic!)
 
 ###############################################################################
 #   OS-specific settings that we can't figure out any other way (yet)
@@ -177,51 +177,42 @@ AC_MSG_RESULT( [${hc_cv_cpu_bits}] )
 hc_gcc_level="`${CC} -dumpversion`"
 AC_MSG_NOTICE( [Detected GCC equivalent level for ${CC} : ${hc_gcc_level}] )
 
-#------------------------------------------#
-#  Check for broken '-O3' version of GCC   #
-#------------------------------------------#
+#----------------------------------------------------------------------#
+#                                                                      #
+#                         Initialize CFLAGS                            #
+#                                                                      #
+#  Note that we specify our flags BEFORE any already existing CFLAGS   #
+#  in case the user specified their own CFLAGS=.  This ensures we do   #
+#  not override their flags and allows them to easily override ours.   #
+#                                                                      #
+#----------------------------------------------------------------------#
 
 if test "$GCC" = "yes"; then
 
-    AC_CACHE_CHECK( [if this is GCC with broken '-O3' option],
-
-        [hc_cv_broken_gcc_O3],
-        [
-            AS_VERSION_COMPARE( $hc_gcc_level, "4.9.2",
-                                [hc_cv_broken_gcc_O3=no],
-                                [hc_cv_broken_gcc_O3=yes],
-                                [hc_cv_broken_gcc_O3=no] )
-        ]
-    )
-else
-    hc_cv_broken_gcc_O3=no
-fi
-
-#------------------------#
-#  Fix CFLAGS if needed  #
-#------------------------#
-
-if test "$GCC" = "yes"; then
 
   # We would like to use some GNU extensions if they're available
-  CFLAGS="${CFLAGS} -D_GNU_SOURCE"
+
+  CFLAGS="-D_GNU_SOURCE  ${CFLAGS}"
+
 
   # We require the '-pthread' option for threading to work properly
-  CFLAGS="${CFLAGS} -pthread"
 
-  # Show us everything
-  CFLAGS="${CFLAGS} -W -Wall"
+  CFLAGS="-pthread  ${CFLAGS}"
 
-  # We prefer -O3 (the highest optimization level possible)
-  # as long as we can trust GCC to implement it correctly.
 
-  if test "$hc_cv_broken_gcc_O3" = "yes"; then
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O3//'`"
-    CFLAGS="${CFLAGS} -O2"
-  else
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
-    CFLAGS="${CFLAGS} -O3"
-  fi
+  # We would like to see EXTRA warnings too (i.e. as many as possible).
+  # Note that in newer versions of gcc this option is called '-Wextra'
+  # but we use '-W' instead (which is still supported) to support older
+  # versions of gcc too.
+
+  CFLAGS="-W  ${CFLAGS}"
+
+
+  # We would like to see more than the usual number of warnings please
+  # (Note that '-Wall' also enables '-Wformat')
+
+  CFLAGS="-Wall  ${CFLAGS}"
+
 fi
 
 #-------------------------------------------------------#
@@ -1825,6 +1816,26 @@ else
     hc_cv_pp_macro_arg_counting_broke=no
 fi
 
+#------------------------------------------#
+#  Check for broken '-O3' version of GCC   #
+#------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [if this is GCC with broken '-O3' option],
+
+        [hc_cv_broken_gcc_O3],
+        [
+            AS_VERSION_COMPARE( $hc_gcc_level, "4.9.2",
+                                [hc_cv_broken_gcc_O3=no],
+                                [hc_cv_broken_gcc_O3=yes],
+                                [hc_cv_broken_gcc_O3=no] )
+        ]
+    )
+else
+    hc_cv_broken_gcc_O3=no
+fi
+
 #-------------------------------------------------#
 #  Check if 'pthread_setname_np' takes only name  #
 #-------------------------------------------------#
@@ -2585,15 +2596,11 @@ AC_CACHE_SAVE()
 #   Act on the results of all of the above...
 ###############################################################################
 
-#        AUTOMATIC DETERMINATION OF OPTIMIZATION FLAGS
-#
-#  If they specified 'no' then don't optimize.
-#  If they specified 'yes' then determine what flags we should use.
-#  If they didn't specify, then optimize only if this is NOT a debug build.
-#  Otherwise use whatever flags they specified as-is.
+# Automatic determination of what optimization flags to use...
 
 AC_MSG_CHECKING( [for what optimization flags to use] )
 
+hc_cv_auto_optimize=""
 hc_cv_optimization_flags=""
 
 if test "$GCC" = "yes"; then
@@ -2607,11 +2614,22 @@ if test "$GCC" = "yes"; then
     hc_cv_optimization_flags="$hc_cv_optimization_flags -ggdb3" # Include gdb debugger symbols
 fi
 
+#  Check their "--enable-optimization" option: Did they say "yes" or "no"
+#  or let it default?  Or did they specify their own optimization flags?
+#
+#  If they specified 'no' then don't optimize.
+#  If they specified 'yes' then determine what flags we should use.
+#  If they didn't specify the option at all (they want the default),
+#  then optimize only if this is NOT a debug build.
+#
+#  Otherwise use whatever flags they specified as-is.
+
 case "$hc_cv_opt_optimization" in
 
     no)
 
         hc_cv_auto_optimize=no
+        hc_cv_optimization_flags=""     # (as requested!)
         ;;
 
     yes)
@@ -2870,28 +2888,45 @@ fi
 #--------------------------------------------------#
 #  CFLAGS  (compiler flags)                        #
 #--------------------------------------------------#
+#                                                  #
+#  Note that for most options we specify our flags #
+#  BEFORE any already existing CFLAGS in case the  #
+#  user specified their own CFLAGS= option.  This  #
+#  ensures we do not override their flags while    #
+#  still allowing them to easily override ours.    #
+#                                                  #
+#--------------------------------------------------#
 
 if test "$hc_cv_is_windows"             = "yes"; then
 
     if test "$hc_cv_have_pthread_h"         = "yes" &&
        test "x$hc_cv_alt_pthread_location" != "x";  then
 
+      # PROGRAMMING NOTE: the '-I' header include directory
+      # option is an exception to the above rule: we must
+      # specify our '-I' option AFTER any already existing
+      # CFLAGS value since the compiler always searches '-I'
+      # directories in the order they are specified on the
+      # command line and we want to ensure that any '-I'
+      # option they may have specified in their CFLAGS value
+      # is always searched ahead of our own '-I' directory.
+
         CFLAGS="$CFLAGS -I${hc_cv_alt_pthread_location}"
     fi
 
-    CFLAGS="$CFLAGS -Wno-format"
+    CFLAGS="-Wno-format  ${CFLAGS}"
 fi
 
 if test "$hc_cv_byte_structs_aligned_and_rounded_by_default" = "yes"; then
 
-    #===============================================================
-    # the following requests 8-bit (byte) struct boundary alignment
-    #===============================================================
+    # Request 8-bit (byte) struct boundary alignment
 
-    CFLAGS="$CFLAGS -mstructure-size-boundary=8"
+    CFLAGS="-mstructure-size-boundary=8  ${CFLAGS}"
 fi
 
-test "x$hc_cv_optimization_flags" !=  "x" &&  CFLAGS="$CFLAGS $hc_cv_optimization_flags"
+if test  "${hc_cv_optimization_flags}" != ""; then
+  CFLAGS="${hc_cv_optimization_flags}  ${CFLAGS}"
+fi
 
 #--------------------------------------------------#
 #  LIBS  (linker flags)                            #
@@ -2920,13 +2955,11 @@ AC_CACHE_SAVE()
 
 # Note: Building of shared libraries is forced, and we force use of libtool too.
 
-AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
 AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( OPTION_CAPABILITIES, [ test "$hc_cv_opt_capabilities" = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
 AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
-AM_CONDITIONAL( APPLE,               [ test "$hc_cv_is_darwin"        = "yes" ] )
 
 if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}

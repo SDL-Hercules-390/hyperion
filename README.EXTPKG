@@ -52,10 +52,10 @@ and z architectures.
 The four repositories for the external packages can be located at these URLs:
 
 
-    https://github.com/Fish-Git/crypto
-    https://github.com/Fish-Git/decNumber-icu-368
-    https://github.com/Fish-Git/SoftFloat-3a
-    https://github.com/Fish-Git/telnet
+    https://github.com/sdl-hercules-390/crypto
+    https://github.com/sdl-hercules-390/decNumber
+    https://github.com/sdl-hercules-390/SoftFloat
+    https://github.com/sdl-hercules-390/telnet
 
 
 The procedure for building each of the external packages is outlined further

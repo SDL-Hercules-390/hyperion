@@ -393,10 +393,10 @@ int     i;                              /* Array subscript           */
     lseaold = lsea;
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: Current stack entry at " F_VADR "\n"), lsea);
-    logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"),
+    LOGMSG( "stack: Current stack entry at " F_VADR "\n", lsea );
+    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
-            lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
+            lsed.rfs[1], lsed.nes[0], lsed.nes[1] );
 #endif /*STACK_DEBUG*/
 
     /* Check whether the current linkage stack section has enough
@@ -416,7 +416,7 @@ int     i;                              /* Array subscript           */
         FETCH_FSHA(fsha, regs->mainstor + abs);
 
 #ifdef STACK_DEBUG
-        logmsg (_("stack: Forward section header addr " F_VADR "\n"), fsha);
+        LOGMSG( "stack: Forward section header addr " F_VADR "\n", fsha );
 #endif /*STACK_DEBUG*/
 
         /* Stack full exception if forward address is not valid */
@@ -478,7 +478,7 @@ int     i;                              /* Array subscript           */
                         regs, ACCTYPE_WRITE);
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: New stack entry at " F_VADR "\n"), lsea);
+    LOGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
 #endif /*STACK_DEBUG*/
 
     /* If a new section then place updated backward stack
@@ -765,10 +765,10 @@ int     i;                              /* Array subscript           */
     memcpy (regs->mainstor+abs, &lsed2, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: New stack entry at " F_VADR "\n"), lsea);
-    logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"),
+    LOGMSG( "stack: New stack entry at " F_VADR "\n", lsea );
+    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed2.uet, lsed2.si, lsed2.rfs[0],
-            lsed2.rfs[1], lsed2.nes[0], lsed2.nes[1]);
+            lsed2.rfs[1], lsed2.nes[0], lsed2.nes[1] );
 #endif /*STACK_DEBUG*/
 
     /* [5.12.3.3] Update the current entry */
@@ -777,18 +777,18 @@ int     i;                              /* Array subscript           */
     memcpy (regs->mainstor+absold, &lsed, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: Previous stack entry updated at A:" F_RADR "\n"),
-            absold);
-    logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"),
+    LOGMSG( "stack: Previous stack entry updated at A:" F_RADR "\n",
+            absold );
+    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
-            lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
+            lsed.rfs[1], lsed.nes[0], lsed.nes[1] );
 #endif /*STACK_DEBUG*/
 
     /* [5.12.3.4] Update control register 15 */
     regs->CR(15) = lsea & CR15_LSEA;
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: CR15=" F_CREG "\n"), regs->CR(15));
+    LOGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
 #endif /*STACK_DEBUG*/
 
 } /* end function ARCH_DEP(form_stack_entry) */
@@ -842,10 +842,10 @@ VADR    bsea;                           /* Backward stack entry addr */
     memcpy (lsedptr, regs->mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: Stack entry located at " F_VADR "\n"), lsea);
-    logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"),
+    LOGMSG( "stack: Stack entry located at " F_VADR "\n", lsea );
+    LOGMSG( "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
-            lsedptr->rfs[1], lsedptr->nes[0], lsedptr->nes[1]);
+            lsedptr->rfs[1], lsedptr->nes[0], lsedptr->nes[1] );
 #endif /*STACK_DEBUG*/
 
     /* Check for a header entry */
@@ -866,7 +866,7 @@ VADR    bsea;                           /* Backward stack entry addr */
         FETCH_BSEA(bsea,regs->mainstor + abs);
 
 #ifdef STACK_DEBUG
-        logmsg (_("stack: Stack entry located at " F_VADR "\n"), bsea);
+        LOGMSG( "stack: Stack entry located at " F_VADR "\n", bsea );
 #endif /*STACK_DEBUG*/
 
         /* Stack empty exception if backward address is not valid */
@@ -1121,8 +1121,8 @@ int     i;                              /* Array subscript           */
                  (lastbyte & PAGEFRAME_PAGEMASK, regs, ACCTYPE_READ);
 
   #ifdef STACK_DEBUG
-    logmsg (_("stack: Unstacking registers %d-%d from " F_VADR "\n"),
-            r1, r2, lsea);
+    LOGMSG( "stack: Unstacking registers %d-%d from " F_VADR "\n",
+            r1, r2, lsea );
   #endif /*STACK_DEBUG*/
 
     /* Load general registers from bytes 0-63 (for ESA/390), or
@@ -1404,7 +1404,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     SET_IC_MASK(regs);
 
 #ifdef STACK_DEBUG
-    logmsg (_("stack: CR15=" F_CREG "\n"), regs->CR(15));
+    LOGMSG( "stack: CR15=" F_CREG "\n", regs->CR( 15 ));
 #endif /*STACK_DEBUG*/
 
     /* Return the entry type of the unstacked state entry */

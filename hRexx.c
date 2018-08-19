@@ -164,25 +164,6 @@ static void ReportVersionSource()
 }
 
 /*-------------------------------------------------------------------*/
-/* Check if package is enabled or not             (boolean function) */
-/*-------------------------------------------------------------------*/
-static BYTE IsEnabled( const char* pkgname )
-{
-    if (pkgname)
-        return (strcasecmp( PackageName, pkgname ) == 0);
-    else
-        return *PackageName ? TRUE : FALSE;
-}
-
-/*-------------------------------------------------------------------*/
-/* Check if package is disabled or not            (boolean function) */
-/*-------------------------------------------------------------------*/
-static BYTE IsDisabled()
-{
-    return !IsEnabled( NULL );
-}
-
-/*-------------------------------------------------------------------*/
 /* Convert Package Name to Package Number                            */
 /*-------------------------------------------------------------------*/
 static BYTE PkgName2Num( const char* pkgname )
@@ -202,6 +183,41 @@ static const char* PkgNum2Name( BYTE pkgnum )
     if (pkgnum < _countof( PkgNames ))
         return PkgNames[ pkgnum ];
     return "??????";
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if valid package name                    (boolean function) */
+/*-------------------------------------------------------------------*/
+static BYTE IsValidPackage( const char* pkgname )
+{
+    if (pkgname)
+    {
+        BYTE pkgnum;
+        for (pkgnum=0; pkgnum < PKGS; pkgnum++)
+            if (strcasecmp( pkgname, PkgNum2Name( pkgnum )) == 0)
+                return TRUE;
+    }
+    return FALSE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if package is enabled or not             (boolean function) */
+/*-------------------------------------------------------------------*/
+static BYTE IsEnabled( const char* pkgname )
+{
+    if (pkgname)
+        return (IsValidPackage( pkgname ) &&
+            strcasecmp( PackageName, pkgname ) == 0);
+    else
+        return IsValidPackage( PackageName ) ? TRUE : FALSE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if package is disabled or not            (boolean function) */
+/*-------------------------------------------------------------------*/
+static BYTE IsDisabled()
+{
+    return !IsEnabled( NULL );
 }
 
 /*-------------------------------------------------------------------*/

@@ -503,32 +503,26 @@ BYTE    buf[512];                       /* Receive buffer            */
 /* Return value:                                                     */
 /*      0=negotiation successful, -1=negotiation error               */
 /*-------------------------------------------------------------------*/
-static int
-negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,char *group)
+static int negotiate( int csock, BYTE* class, BYTE* model, BYTE* extatr, U16* devn, char* group )
 {
 int    rc;                              /* Return code               */
-char  *termtype;                        /* Pointer to terminal type  */
-char  *s;                               /* String pointer            */
+char*  termtype;                        /* Pointer to terminal type  */
+char*  s;                               /* String pointer            */
 BYTE   c;                               /* Trailing character        */
 U16    devnum;                          /* Requested device number   */
 BYTE   buf[512];                        /* Telnet negotiation buffer */
-static BYTE do_term[] = { IAC, DO, TERMINAL_TYPE };
-static BYTE will_term[] = { IAC, WILL, TERMINAL_TYPE };
-static BYTE req_type[] = { IAC, SB, TERMINAL_TYPE, SEND, IAC, SE };
-static BYTE type_is[] = { IAC, SB, TERMINAL_TYPE, IS };
-static BYTE do_eor[] = { IAC, DO, EOR, IAC, WILL, EOR };
-static BYTE will_eor[] = { IAC, WILL, EOR, IAC, DO, EOR };
-static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
-static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
-#if 0
-static BYTE do_tmark[] = { IAC, DO, TIMING_MARK };
-static BYTE will_tmark[] = { IAC, WILL, TIMING_MARK };
-static BYTE wont_sga[] = { IAC, WONT, SUPPRESS_GA };
-static BYTE dont_sga[] = { IAC, DONT, SUPPRESS_GA };
-#endif
-static BYTE wont_echo[] = { IAC, WONT, ECHO_OPTION };
-static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
-static BYTE will_naws[] = { IAC, WILL, NAWS };
+
+static BYTE do_term   [] = { IAC, DO,   TERMINAL_TYPE };
+static BYTE will_term [] = { IAC, WILL, TERMINAL_TYPE };
+static BYTE req_type  [] = { IAC, SB,   TERMINAL_TYPE, SEND, IAC, SE };
+static BYTE type_is   [] = { IAC, SB,   TERMINAL_TYPE, IS };
+static BYTE do_eor    [] = { IAC, DO,   EOR, IAC, WILL, EOR };
+static BYTE will_eor  [] = { IAC, WILL, EOR, IAC, DO,   EOR };
+static BYTE do_bin    [] = { IAC, DO,   BINARY, IAC, WILL, BINARY };
+static BYTE will_bin  [] = { IAC, WILL, BINARY, IAC, DO,   BINARY };
+static BYTE wont_echo [] = { IAC, WONT, ECHO_OPTION };
+static BYTE dont_echo [] = { IAC, DONT, ECHO_OPTION };
+static BYTE will_naws [] = { IAC, WILL, NAWS };
 
     /* Perform terminal-type negotiation */
     rc = send_packet (csock, do_term, sizeof(do_term),
@@ -593,25 +587,6 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
     /* Test for non-display terminal type */
     if (memcmp(termtype, "IBM-", 4) != 0)
     {
-#if 0
-        /* Perform line mode negotiation */
-        rc = send_packet (csock, do_tmark, sizeof(do_tmark),
-                            "IAC DO TIMING_MARK");
-        if (rc < 0) return -1;
-
-        rc = expect (csock, will_tmark, sizeof(will_tmark),
-                            "IAC WILL TIMING_MARK");
-        if (rc < 0) return 0;
-
-        rc = send_packet (csock, wont_sga, sizeof(wont_sga),
-                            "IAC WONT SUPPRESS_GA");
-        if (rc < 0) return -1;
-
-        rc = expect (csock, dont_sga, sizeof(dont_sga),
-                            "IAC DONT SUPPRESS_GA");
-        if (rc < 0) return -1;
-#endif
-
         if (memcmp(termtype, "ANSI", 4) == 0)
         {
             rc = send_packet (csock, wont_echo, sizeof(wont_echo),
@@ -717,30 +692,8 @@ char                    group[16];      /* Console group             */
     /* Log the client's IP address and hostname */
     clientip = strdup(inet_ntoa(client.sin_addr));
 
-#if 0
-    // The following isn't really needed and hangs under unusual
-    // network configuration settings and thus has been removed.
-    {
-        struct hostent*  pHE;           /* Addr of hostent structure */
-        char*            clientname;    /* Addr of client hostname   */
-
-        pHE = gethostbyaddr ((unsigned char*)(&client.sin_addr),
-                            sizeof(client.sin_addr), AF_INET);
-
-        if (pHE != NULL && pHE->h_name != NULL
-        && pHE->h_name[0] != '\0') {
-            clientname = (char*) pHE->h_name;
-        } else {
-            clientname = "host name unknown";
-        }
-
-        TNSDEBUG1("console: DBG018: Received connection from %s (%s)\n",
-                clientip, clientname);
-    }
-#else
     TNSDEBUG1("console: DBG018: Received connection from %s\n",
             clientip );
-#endif
 
     /* Negotiate telnet parameters */
     rc = negotiate (csock, &class, &model, &extended, &devnum, group);
@@ -2019,12 +1972,6 @@ void make_sna_response (BYTE * requestp, COMMADPT *ca) {
     if (requestp[13] == 0x32 && requestp[14] != 0x02) {   /* BIND */
         ca->bindflag = 0;
     }
-#if 0
-    if (requestp[13] == 0x32 && requestp[14] == 0x01 && ca->sfd > 0) {   /* UNBIND */
-        close_socket(ca->sfd);
-        ca->sfd=-1;
-    }
-#endif
 
     /* set length field in TH */
     ru_size += 3;   /* for RH */
@@ -2163,13 +2110,7 @@ int     llsize;
                     format_sna(piudata, "RD", dev->ssid, dev->devnum);
                 put_bufpool(&dev->commadpt->freeq, eleptr);
             }
-            *unitstat=CSW_CE|CSW_DE;
-#if 0
-            if (dev->commadpt->sendq) {
-                *unitstat|=CSW_ATTN;
-            }
-#endif
-            *unitstat|=CSW_UX;
+            *unitstat  = CSW_CE | CSW_DE | CSW_UX;
             break;
 
         /*---------------------------------------------------------------*/
@@ -2197,14 +2138,8 @@ int     llsize;
                 make_sna_response(iobuf, dev->commadpt);
                 make_sna_requests(iobuf, dev->commadpt);
             }
-            *residual=0;
-            *unitstat=CSW_CE|CSW_DE;
-#if 0
-            if (dev->commadpt->sendq) {
-                *unitstat|=CSW_ATTN;
-                *unitstat|=CSW_UX|CSW_ATTN;
-            }
-#endif
+            *residual = 0;
+            *unitstat = CSW_CE | CSW_DE;
             break;
 
         /*---------------------------------------------------------------*/

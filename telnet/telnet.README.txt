@@ -6,7 +6,7 @@
 
  Source code:
   https://github.com/seanmiddleditch/libtelnet
-  https://github.com/Fish-Git/telnet
+  https://github.com/sdl-hercules-390/telnet
 
  Sean Middleditch
  sean@sourcemud.org

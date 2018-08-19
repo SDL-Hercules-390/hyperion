@@ -292,10 +292,6 @@ static int  cache_check_cache(int ix);
 static int  cache_check(int ix, int i);
 static int  cache_isbusy(int ix, int i);
 static int  cache_isempty(int ix, int i);
-static int  cache_adjust(int ix, int n);
-#if 0
-static int  cache_resize (int ix, int n);
-#endif
 static void cache_allocbuf(int ix, int i, int len);
 #endif
 

@@ -9,7 +9,7 @@ Solaris, FreeBSD,
 and Mac OS X.
 
 Hercules is [OSI Certified Open Source Software](http://www.opensource.org/)
-licensed under the terms of the [Q Public Licence](http://fish-git.github.io/html/herclic.html).
+licensed under the terms of the [Q Public Licence](http://sdl-hercules-390.github.io/html/herclic.html).
 
 This version of Hercules 4.0 Hyperion is a SoftDevLabs maintained version
 of the Hercules emulator containing fixes made by myself and others for
@@ -39,4 +39,4 @@ occassionally help out by submitting patches and pull requests. I wish
 there were more! It's more work than one person can handle!
 
 ### To find out more about this particular version of Hercules 4.0 Hyperion,
-follow this link: [Hercules 4.0 (Hyperion)](http://fish-git.github.io/html/)
+follow this link: [Hercules 4.0 (Hyperion)](http://sdl-hercules-390.github.io/html/)

@@ -53,6 +53,7 @@
 /* |E610 | UXCCW | Untranslate CCW                        |*/
 /* |E611 | DISP2 | Dispatcher assist                      |*/
 /* |E612 | STLVL | Store ECPS:VM Level                    |*/
+/* |E613 | LCSPG | Locate changed shared page             |*/
 /* |E614 | FREEX | Allocate CP FREE Storage from subpool  |*/
 /* |E615 | FRETX | Release CP FREE Storage to subpool     |*/
 /* |0A08 | LINK  | CP SVC 8 (LINK) assist                 |*/
@@ -66,14 +67,117 @@
 /* |0A   | SVC   | Virtual SVC Assist                     |*/
 /* |80   | SSM   | Virtual SSM Assist                     |*/
 /* |82   | LPSW  | Virtual LPSW Assist                    |*/
+/* |83   | DIAG  | Virtual DIAG Assist                    |*/
 /* |9C00 | SIO   | Virtual SIO Assist                     |*/
 /* |9C01 | SIOF  | Virtual SIOF Assist                    |*/
 /* |AC   | STNSM | Virtual STNSM Assist                   |*/
 /* |AD   | STOSM | Virtual STOSM Assist                   |*/
 /* |B1   | LRA   | Virtual LRA Assist                     |*/
+/* |B6   | STCTL | Virtual STCTL Assist                   |*/
 /* |B7   | LCTL  | Virtual LCTL Assist                    |*/
 /* +-----+-------+----------------------------------------+*/
 /***********************************************************/
+/*
+
+// $Log$    Update revision number in define variable ECPSCODEVER, below.
+//
+// Revision 1.87  2018/08/05 14:20:00  bobpolmanter
+// CP Assist DFCCW failing on tranbrng error; let CP handle this instead
+//  of transferring control to CCWBAD.
+// SIO Assist giving bogus PIC 04 if PSW key is non-zero at SIO instruction
+//  execution.
+// CP Assist RETRN not completing successfully if SAVEAREA is between
+//  end of nucleus and the dynamic paging area.
+// Add support for DIAG instruction assist.
+// Add support for STCTL instruction assist.
+// Add support for CP assist LCSPG.
+//
+// Revision 1.86  2018/01/23 10:20:00  Peter Jansen
+// CPU Timer fix to stop 2nd Level VM abends  (in SPT macro)
+//
+// Revision 1.85  2017/07/11 08:00:00  bobpolmanter
+// Fix LRA bug with 2K page frames (incorrectly using 'bytemask' value
+//  against CP page table entries),
+// Remove checking for MICBLOK crossing a page boundary (not part of the
+//  specification and causing ECPS to be ignored for some virtual machines).
+//
+// Revision 1.84  2017/07/02 10:50:00  bobpolmanter
+// Fix LRA bug with 2K page frames (frame shift amount incorrect)
+//
+// Revision 1.83  2017/05/25 19:12:00  bobpolmanter/petercoghlan
+// Fix DISP2 incorrect check of VMV370R and mis-loaded control registers;
+// Remove DISP2 debug message causing page faults in CP.
+//
+// Revision 1.82  2017/04/30 13:54:00  bobpolmanter
+// Fix two minor coding errors in the SIO instruction assist.
+//
+// Revision 1.81  2017/04/12 14:10:00  bobpolmanter
+// Add support for LRA instruction assist.
+// Fix two minor issues in DISP0 that did not match DMKDSPCH.
+// Fix DISP0 to set VMPSWAIT on in exit #28.
+//
+// Revision 1.80  2017/02/18 14:05:00  bobpolmanter
+// Add new support for the CCW translation assists
+//  DFCCW, DNCCW, CCWGN, FCCWS, UXCCW.
+//
+// Revision 1.79  2017/02/10 07:25:00  bobpolmanter
+// Add new support for the CP SVC 8/12 LINK/RETURN functions.
+// Add new support for SIO/SIOF VM Assist.
+//
+// Revision 1.78  2017/02/05 08:15:00  bobpolmanter
+// Add new support to allow assists to operate with the CP
+//  FREE/FRET trap in effect.  Support "ECPSVM YES TRAP/NOTRAP".
+//
+// Revision 1.77  2017/02/04 15:45:00  bobpolmanter
+// DISP2 dispatching user that is in virtual wait state;
+//  add check for this condition and let CP handle it.
+//
+// Revision 1.76  2017/01/29 09:55:00  bobpolmanter
+// DISP2 assist not completing for DAT-on guests due to incorrect
+//  checking of shadow table and invalidate page table flags.
+//
+// Revision 1.75  2017/01/28 15:15:00  bobpolmanter
+// Add new support for STNSM/STOSM instruction assists.
+//
+// Revision 1.74  2017/01/27 15:20:00  bobpolmanter
+// Fix the reversed order of the EVM_ST operands in the CPEXBLOK FRET exit
+//  of assist DISP2; was causing CP storage overlays and PRG001 failures.
+//
+// Revision 1.73  2017/01/25 18:22:00  bobpolmanter
+// Generate assist-flagged CP trace table entries as documented by
+//  IBM for FREEX, FRETX, and DISP2 assists.
+//
+// Revision 1.72  2017/01/24 12:53:00  bobpolmanter
+// Instruction assists must go back to CP if virtual PSW in problem state
+//
+// Revision 1.71  2017/01/18 19:33:00  bobpolmanter
+// Offset in PSA for APSTAT2 is incorrect in ecpsvm.h
+//
+// Revision 1.70  2017/01/15 12:00:00  bobpolmanter
+// Add new support for CP Assists VIST and VIPT;
+// Update comments throughout this source to reflect what is and is not supported.
+//
+// Revision 1.69  2017/01/12 12:00:00  bobpolmanter
+// LCTL assist should not load DAS control regs 3-7;
+// Virtual interval timer issue fixed in clock.c
+//
+// Revision 1.68  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
+// Revision 1.67  2007/01/13 07:18:14  bernard
+// backout ccmask
+//
+// Revision 1.66  2007/01/12 15:22:37  bernard
+// ccmask phase 1
+//
+// Revision 1.65  2006/12/31 17:53:48  gsmith
+// 2006 Dec 31 Update ecpsvm.c for new psw IA scheme
+//
+// Revision 1.64  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
+*/
+
 #include "hstdinc.h"
 
 #define _ECPSVM_C_
@@ -88,7 +192,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.85    //  <--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.87    //  <--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -114,9 +218,9 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DEF(STOSM),
     ECPSVM_STAT_DEF(SIO),
     ECPSVM_STAT_DEF(VTIMER),
-    ECPSVM_STAT_DEFU(STCTL),
+    ECPSVM_STAT_DEF(STCTL),
     ECPSVM_STAT_DEF(LCTL),
-    ECPSVM_STAT_DEFU(DIAG),
+    ECPSVM_STAT_DEF(DIAG),
     ECPSVM_STAT_DEFU(IUCV),
     ECPSVM_STAT_DEF(LRA),
 };
@@ -170,7 +274,7 @@ struct _ECPSVM_SASTATS
     ECPSVM_STAT_DEF(FREEX),
     ECPSVM_STAT_DEF(FRETX),
     ECPSVM_STAT_DEFU(PMASS),
-    ECPSVM_STAT_DEFU(LCSPG),
+    ECPSVM_STAT_DEF(LCSPG),
     ECPSVM_STAT_DEF(LINK),
     ECPSVM_STAT_DEF(RETRN),
 };
@@ -583,7 +687,7 @@ DEF_INST(ecpsvm_unlock_page)
                       +16= A(CCWTIC)
                       +20= A(NGCCW)
 */
-int ecpsvm_do_deccw1(REGS *regs, VADR effective_addr1, VADR effective_addr2)
+int ecpsvm_do_deccw1(REGS *regs, VADR effective_addr1, VADR effective_addr2,RADR raddr)
 {
 VADR dl;
 VADR el;
@@ -591,7 +695,6 @@ VADR savearea;
 VADR rcw;
 VADR devtable;
 VADR devrtn;
-RADR raddr;
 int  cc;
 BYTE ccwop;
 BYTE ccwfl;
@@ -600,19 +703,14 @@ BYTE prevccwop;
     dl=effective_addr1;
     el=effective_addr2;
 
-    regs->GR_L(1)=regs->GR_L(9);
-    if(ecpsvm_tranbrng(regs,dl+0,regs->GR_L(1),&raddr)!=0)
-    {
-        UPD_PSW_IA(regs,EVM_L(el+0));           /* bad CCW address; exit to CCWBAD */
-        return(1);
-    }
-
     /* Load required registers:
+       R1 -> virtual CCW address
        R8 -> VDEVBLOK
        R3 contains 1st word of CCW
        R4 contains 2nd word of CCW
        Cache a copy of the CCW opcode and CCW flags
     */
+    regs->GR_L(1)=regs->GR_L(9);
     savearea=regs->GR_L(13);
     regs->GR_L(8)=EVM_L(savearea+SAVER8)+EVM_L(regs->GR_L(11)+VMDVSTRT);
     regs->GR_L(3)=EVM_L(raddr);
@@ -634,6 +732,7 @@ BYTE prevccwop;
     {
         if((ccwop & 0x0F)==0x08)                    /* TIC CCW ? */
         {
+            DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWTIC1"));
             EVM_STC(CDTIC,regs->GR_L(6));
             UPD_PSW_IA(regs,EVM_L(el+8));           /* TIC follows chain data (CD), exit to CCWTIC1 */
             return(1);
@@ -665,6 +764,7 @@ BYTE prevccwop;
     cc=ecpsvm_int_lra(regs,regs->GR_L(1),&raddr);
     if (cc==1)
     {
+        DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit ADDRINVAL"));
         UPD_PSW_IA(regs,EVM_L(el+12));          /* Invalid user data addr, exit to ADDRINVL */
         return(1);
     }
@@ -679,17 +779,20 @@ BYTE prevccwop;
     {
         if(ccwop!=16)                           /* is CCW op not a TIC  (08 x 2) ?  */
         {
+            DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWBAD"));
             regs->GR_L(1)=regs->GR_L(9);
             UPD_PSW_IA(regs,EVM_L(el+0));           /* CCW count is 0; exit to CCWBAD */
             return(1);
         }
         else
         {
+            DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWTIC"));
             regs->GR_L(4)--;
             UPD_PSW_IA(regs,EVM_L(el+16));          /* CCW count is 0, but CCW was a TIC; its ok.  Exit to CCWTIC */
             return(1);
         }
     }
+    DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Complete"));
     regs->GR_L(4)--;
     devtable=EVM_L(savearea+DEVTABLE);
     devrtn=regs->GR_L(12) + EVM_LH(devtable+ccwop);
@@ -722,10 +825,19 @@ DEF_INST(ecpsvm_decode_next_ccw)
 {
 VADR dl;
 VADR el;
+RADR raddr;
+VADR vaddr;
 
     ECPSVM_PROLOG(DNCCW);
     dl=effective_addr1;
     el=effective_addr2;
+
+    vaddr=regs->GR_L(9)+8;
+    if(ecpsvm_tranbrng(regs,dl+0,vaddr,&raddr)!=0)
+    {
+        DEBUG_CPASSISTX(DNCCW,WRMSG(HHC90000, "D", "DNCCW cant translate vaddr; back to CP"));
+        return;
+    }
 
     /* advance virtual CCW addr, real CCW addr.  Save VIRCOMND/VIRFLAG into PRVCOMND/PRVFLAG */
     regs->GR_L(9)+=8;
@@ -735,12 +847,13 @@ VADR el;
     /* See if there is room for one more CCW in RCWTASK.  If not we have to exit */
     if(regs->GR_L(6)+8 > regs->GR_L(7))
     {
+        DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DNCCW - Exit CCWNROOM"));
         UPD_PSW_IA(regs,EVM_L(el+4));           /* Not enough room in RCWTASK; exit to CCWNROOM */
         return;
     }
     /* Go directly into "decode first CCW" assist, and count a call to it */
     ecpsvm_cpstats.DFCCW.call++;
-    ecpsvm_do_deccw1(regs,dl,el);
+    ecpsvm_do_deccw1(regs,dl,el,raddr);
     CPASSIST_HIT(DNCCW);
     return;
 }
@@ -1841,10 +1954,21 @@ DEF_INST(ecpsvm_inval_ptable)
 /* Entry and exit lists are detailed in function "ecpsvm_do_deccw1"  */
 DEF_INST(ecpsvm_decode_first_ccw)
 {
+
+RADR raddr;
+
     ECPSVM_PROLOG(DFCCW);
-    ecpsvm_do_deccw1(regs,effective_addr1,effective_addr2);
+
+    if(ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(9),&raddr)!=0)
+    {
+        DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW cant translate vaddr; back to CP"));
+        return;
+    }
+
+    ecpsvm_do_deccw1(regs,effective_addr1,effective_addr2,raddr);
     return;
 }
+
 
 /* DISP0 Utility functions */
 
@@ -2504,6 +2628,7 @@ BYTE B_VDEVTYPC;
 
     if(EVM_IC(regs->GR_L(6)+RCWFLAG) & IDA)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit DWDIDAL"));
         UPD_PSW_IA(regs,EVM_L(el+0));           /* IDA bit is set in CCW, exit to FWDIDAL */
         return;
     }
@@ -2512,6 +2637,7 @@ BYTE B_VDEVTYPC;
     vstart_page=regs->GR_L(1) & 0x00FFF000;
     if(vstart_page != vlast_page)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWMANYF"));
         UPD_PSW_IA(regs,EVM_L(el+4));           /* CCW data area crosses page boundary, exit CCWMANYF */
         return;
     }
@@ -2529,6 +2655,7 @@ BYTE B_VDEVTYPC;
         rc=ecpsvm_tranbrng(regs,dl+0,regs->GR_L(1),&raddr);
         if(rc)
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Cant bring in the page; back to CP"));
             return;                                /* Cant bring in the page; give it back to CP */
         }
     }
@@ -2555,6 +2682,7 @@ BYTE B_VDEVTYPC;
         cortable+=vstart_page >> 8;
         if(EVM_IC(cortable+CORFLAG) & CORSHARE)
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit SHRDPAGE"));
             UPD_PSW_IA(regs,EVM_L(el+12));      /* exit; CCW data area is in shared page  (SHRDPAGE) */
         }
     }
@@ -2571,6 +2699,7 @@ BYTE B_VDEVTYPC;
     vdev=regs->GR_L(8);
     if(EVM_IC(vdev+VDEVFLAG) & VDEVUC)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNXT10"));
         UPD_PSW_IA(regs,EVM_L(el+16));          /* exit to CCWNXT10 in CP; sense bytes are present */
         return;
     }
@@ -2578,13 +2707,16 @@ BYTE B_VDEVTYPC;
     /* At CCWNXT12 */
     if(B_VMOSTAT & VMSHR)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNXT12"));
         UPD_PSW_IA(regs,EVM_L(el+44));          /* exit to CCWNXT12 in CP; running with shared segments */
+        CPASSIST_HIT(CCWGN);                    /* partial translation was assisted */
         return;
     }
 
     /* At CCWNXT14 */
     if((EVM_IC(savearea+VIRFLAG) & (CD+CC)))
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEXT"));
         UPD_PSW_IA(regs,EVM_L(el+20));          /* exit to CCWNEXT; CD or CC flag set in CCW, get next CCW */
         CPASSIST_HIT(CCWGN);
         return;
@@ -2593,6 +2725,7 @@ BYTE B_VDEVTYPC;
     /* At CCWCHKPV */
     if(EVM_IC(savearea+PRVFLAG) & (SMCOM+FWDTIC))
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEXT(2)"));
         UPD_PSW_IA(regs,EVM_L(el+20));          /* exit to CCWNEXT; previous CCW status modifier or fwd TIC */
         CPASSIST_HIT(CCWGN);
         return;
@@ -2611,12 +2744,14 @@ BYTE B_VDEVTYPC;
     /* At CCWNXT16 */
     if(EVM_IC(savearea+MEMO2) & STRTNEW)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEWV2"));
         UPD_PSW_IA(regs,EVM_L(el+24));          /* exit to CCWNEWV2; start new CCW string */
         CPASSIST_HIT(CCWGN);
         return;
     }
     if(EVM_IC(savearea+MEMO1) & HADUTIC)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit TICSCAN"));
         UPD_PSW_IA(regs,EVM_L(el+28));          /* exit to TICSCAN; unprocessed TICs remain */
         CPASSIST_HIT(CCWGN);
         return;
@@ -2631,6 +2766,7 @@ BYTE B_VDEVTYPC;
 
     if(EVM_L(savearea+DEVTABLE) == EVM_L(dl+4))
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWDIAL"));
         UPD_PSW_IA(regs,EVM_L(el+32));          /* exit to CCWDIAL if dialed line */
         CPASSIST_HIT(CCWGN);
         return;
@@ -2641,12 +2777,14 @@ BYTE B_VDEVTYPC;
     {
         if(!(EVM_IC(vdev+VDEVTYPE) & (TYP3277|TYP3278)))
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWEXIT"));
             UPD_PSW_IA(regs,EVM_L(el+40));      /* Not 3270 device; exit to CCWEXIT; we're done */
             CPASSIST_HIT(CCWGN);
             return;
         }
         if(!(EVM_IC(vdev+VDEVSTAT) & VDEVDED))
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWDIAL(2)"));
             UPD_PSW_IA(regs,EVM_L(el+32));      /* exit to CCWDIAL if i/o to non-dialed 3270 */
             CPASSIST_HIT(CCWGN);
             return;
@@ -2656,12 +2794,14 @@ BYTE B_VDEVTYPC;
     /* At CCWNXT19 */
     if(!(B_VDEVTYPC & CLASDASD))
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWEXIT(2)"));
         UPD_PSW_IA(regs,EVM_L(el+40));          /* Not DASD; exit to CCWEXIT; we're done */
         CPASSIST_HIT(CCWGN);
         return;
     }
     if(EVM_IC(vdev+VDEVFLG2) & VDEVRRF)
     {
+        DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit ITSAREL"));
         UPD_PSW_IA(regs,EVM_L(el+48));          /* DASD w/reserve-release; exit to ITSAREL */
         CPASSIST_HIT(CCWGN);
         return;
@@ -2672,12 +2812,14 @@ BYTE B_VDEVTYPC;
     {
         if(EVM_IC(vdev+VDEVSTAT) & VDEVDED)
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CALLISM"));
             UPD_PSW_IA(regs,EVM_L(el+36));      /* ISAM ok to dedicated DASD; exit to CALLISM */
             CPASSIST_HIT(CCWGN);
             return;
         }
         if(EVM_LH(vdev+VDEVRELN)==0)
         {
+            DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CALLISM(2)"));
             UPD_PSW_IA(regs,EVM_L(el+36));      /* ISAM ok on full-volume MDISK; exit to CALLISM */
             CPASSIST_HIT(CCWGN);
             return;
@@ -2860,10 +3002,82 @@ DEF_INST(ecpsvm_store_level)
 
 /* E613 LCSPG Instruction */
 /* LCSPG : Locate Changed Shared Page */
-/* LCSPG : Not supported */
+/* LCSPG D1(R1,B1),D2(R2,B2) */
+/* 1st operand : Address of VMBLOK */
+/* 2nd operand : ignored */
+
+/* Verify that every page frame that belongs to every shared segment currently   */
+/* loaded by the current user does not have the change bit set in the key.       */
+/* Assists the CP code in DMKVMASH.                                              */
+
 DEF_INST(ecpsvm_loc_chgshrpg)
 {
+
+VADR  vmb;
+VADR  vma;
+VADR  vmseg;
+VADR  shrtable;
+VADR  ste;
+VADR  p_pte;
+VADR  page;
+VADR  page2;
+U32   shrsegct;
+U32   i;
+U32   j;
+U32   segnum;
+U32   pagnum;
+U16   pte;
+
     ECPSVM_PROLOG(LCSPG);
+
+    vmb=effective_addr1;
+    vma=EVM_L(vmb+VMASSIST);
+    vmseg=EVM_L(vmb+VMSEG);
+
+    while(vma)
+    {
+        shrtable=EVM_L(vma+VMASHRBK);
+        shrsegct=EVM_L(shrtable+SHRSEGCT);
+        for (i=0;i<shrsegct;i++)
+        {
+            segnum=EVM_IC(shrtable+SHRSEGNM+i) * 4;
+            ste=EVM_L(vmseg+segnum);                // get the seg table entry for this segment
+            if(!(ste & 0x00000001))                 // if segment is not invalid...
+            {
+                pagnum=ste & 0xf0000000;            // isolate page table length 
+                pagnum=pagnum >> 28;                // compute number of pages in segment
+                pagnum++;                           // make relative to 1
+                p_pte=ste & 0x00fffff8;             // isolate the PTE address
+                for(j=0;j<pagnum;j++)
+                {
+                    pte=EVM_LH(p_pte);
+                    if(!(pte & 0x0008))             // if page is not invalid...
+                    {
+                        page=pte & 0xfff0;          // isolate page index
+                        page=page<< 8;              // compute real page address
+#if defined(FEATURE_2K_STORAGE_KEYS)
+                        page2=page+0x800;
+                        if(0
+                           || (STORAGE_KEY(page,regs) & STORKEY_CHANGE)
+                           || (STORAGE_KEY(page2,regs) & STORKEY_CHANGE))
+#else
+                        if (STORAGE_KEY(page,regs) & STORKEY_CHANGE)
+#endif
+                        {
+                            return;                 // let CP handle if a page is changed
+                        }
+                    } /* if pte... */
+                    p_pte+=2;                       // -> next pte
+                }  /* next j */
+            } /* if ste... */
+        } /* next i */
+        vma=EVM_L(vma+VMAFPNT);                     // -> next VMABLOK
+    } /* while vma != 0 */
+
+    regs->psw.cc=0;                                 // no pages changed in any shared segment
+    BR14;
+    CPASSIST_HIT(LCSPG);
+    return;
 }
 
 /*************************************************************/
@@ -3334,6 +3548,9 @@ int     ecpsvm_doCPretrn(REGS *regs)
 VADR svclist;
 VADR retaddr;
 VADR traceptr;
+U32  svchi;
+U32  svclo;
+U32  slcadr;
 BYTE *work_p;
 
     if(!sysblk.ecpsvm.available)
@@ -3353,19 +3570,34 @@ BYTE *work_p;
     ecpsvm_cpstats.RETRN.call++;
     DEBUG_CPASSISTX(RETRN,WRMSG(HHC90000, "D", "RETRN called"));
 
-    svclist=EVM_L(ASVCLIST);
     if(regs->GR_L(12) >= EVM_L(APAGCP))
     {
+        DEBUG_CPASSISTX(RETRN,WRMSG(HHC90000, "D", "RETRN reject : module not in nucleus"));
         return(1);                      /* returning from a module not in nucleus, let CP do it */
     }
 
-    if(regs->GR_L(12) < EVM_L(svclist+SLCADDR))
+    svclist=EVM_L(ASVCLIST);
+    slcadr=EVM_L(svclist+SLCADDR);
+    svchi=EVM_L(svclist+DMKSVCHI);
+    svclo=EVM_L(svclist+DMKSVCLO);
+
+    if(regs->GR_L(12) < slcadr)
     {
+        DEBUG_CPASSISTX(RETRN,WRMSG(HHC90000, "D", "RETRN reject : exit from V=R"));
         return(1);                      /* exit from V=R storage, let CP do it */
     }
-    if(regs->GR_L(13) < EVM_L(svclist+DMKSVCHI))
+    if(regs->GR_L(13) < svchi)
     {
-        return(1);                      /* Let CP handle if SAVEAREA is in dynamic paging area */
+        if(regs->GR_L(13) > svclo)
+        {
+            DEBUG_CPASSISTX(RETRN,WRMSG(HHC90000, "D", "RETRN reject : savearea in paging area"));
+           return(1);                      /* Let CP handle if SAVEAREA is in dynamic paging area */
+        }
+        if(regs->GR_L(13) < slcadr)
+        {
+            DEBUG_CPASSISTX(RETRN,WRMSG(HHC90000, "D", "RETRN reject : savearea in V=R area"));
+           return(1);                      /* Let CP handle this */
+        }
     }
 
     /* Get return address and unlink the save areas; restore caller's R12/R13 and return */
@@ -3558,6 +3790,92 @@ int ecpsvm_virttmr_ext(REGS *regs)
 }
 #endif // please leave this code in place for reference
 
+/*************************************************************************/
+/* Common routine for SIO/SIOF and DIAG instruction assists              */
+/*************************************************************************/
+/* Change the machine state from running a virtual machine user to       */
+/* that of CP.  This function is required to invoke the SIO and DIAG     */
+/* instruction assists.  The user's state must be saved and the machine  */
+/* placed in supervisor state in order to run CP.                        */
+/*                                                                       */
+/* The functions of DMKPRG and DMKPRV for the SIO/SIOF code path as well */
+/* the DIAG code path are performed per the VM Assist flower boxes in    */
+/* DMKPRG/DMKPRV source.                                                 */
+/*************************************************************************/
+
+int     ecpsvm_ChangeMachineState(REGS *regs, VADR vmb, U32 F_VMINST)
+{
+
+PSA_3XX *psa;
+VADR ia;
+BYTE work;
+
+    /* Store the current PSW in pgmold in order to simulate a privileged operation exception.    */
+    SET_PSW_IA(regs);
+    psa=(PSA_3XX *)MADDR((VADR)0 , USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
+    ARCH_DEP(store_psw) (regs, (BYTE *)&psa->pgmold);
+
+    /* Manipulate the real PSW to resume execution in CP mode: Sup state, disabled, DAT-off, key 0 */
+    regs->psw.sysmask=0;
+    regs->psw.pkey=0;
+    regs->psw.states=BIT(PSW_EC_BIT)         /* ECMODE */
+                   | BIT(PSW_MACH_BIT);      /* MC Enabled */
+    SET_IC_MASK(regs);
+    TEST_SET_AEA_MODE(regs);
+
+    /* Now that the PSW key is 0, store the ILC and INTC for the instruction at location X'8C' */
+    EVM_ST(0x00040002,PGMINT);
+
+    /* Using the VMBLOK of the RUNUSER and stop charging CPU time. Also, save the interval
+       timer value.  (These actions are documented in DMKPRGIN)
+    */
+    STPT(vmb+VMTMOUTQ);
+    SPT(vmb+VMTTIME);
+    EVM_ST(EVM_L(INTTIMER),QUANTUMR);
+
+    /* Set up the virtual PSW to resume at the instruction following the SIO or DIAG instruction.
+       We must properly transfer the ilc and program mask from the real PSW.  The CC should be
+       zero for SIO (per DMKVSI), but transferred for DIAG.
+    */
+    ia=EVM_L(PGMOPSW+4);
+    work=regs->psw.progmask;
+    if ((F_VMINST && 0x83000000) == 0x83000000)
+    {
+        work|=(regs->psw.cc << 4);                  /* for DIAG, preserve CC */
+    }
+    if(EVM_IC(vmb+VMPSW+1) & BIT(PSW_EC_BIT))
+    {
+        EVM_STC(work,vmb+VMPSW+2);                  /* EC mode */
+        EVM_ST(ia,vmb+VMPSW+4);
+    }
+    else
+    {
+        work|=(regs->psw.ilc << 5);                 /* BC mode */
+        EVM_ST((work << 24) | ia, vmb+VMPSW+4);
+    }
+
+    /* Store the VMINST instruction image.  VMPRGIL must contain the ILC   */
+    EVM_ST(F_VMINST,vmb+VMINST);
+    EVM_STH(regs->psw.ilc,vmb+VMPRGIL);
+
+    /* Indicate we are in CP mode, and set the RUNUSER in Instruction Simulation wait.    */
+    EVM_STC(EVM_IC(CPSTATUS)|CPSUPER,CPSTATUS);
+    EVM_STC(EVM_IC(vmb+VMRSTAT)|VMEXWAIT,vmb+VMRSTAT);
+
+    /* Save the RUNUSER's registers in the VMBLOK */
+    for(ia=0;ia<16;ia++)
+    {
+        EVM_ST(regs->GR_L(ia),vmb+VMGPRS+ia*4);
+    }
+    /* Save the RUNUSER's floating pt. registers in the VMBLOK, each half of the register at a time */
+    for(ia=0;ia<8;ia++)
+    {
+        EVM_ST(regs->fpr[ia],vmb+VMFPRS+ia*4);
+    }
+    return 0;
+}
+
+
 /*****************************************/
 /* 9C00-9C01 SIO/SIOF Instruction Assist */
 /*****************************************/
@@ -3580,11 +3898,9 @@ int ecpsvm_virttmr_ext(REGS *regs)
 
 int ecpsvm_dosio(REGS *regs,int b2,VADR e2)
 {
-PSA_3XX *psa;
 VADR vmb;
 VADR vmalist;
 VADR retaddr;
-VADR ia;
 U32  F_VMINST;
 U16  H_VDEVINTS;
 BYTE B_VCHTYPE;
@@ -3605,28 +3921,13 @@ BYTE work;
         DEBUG_SASSISTX( SIO, WRMSG( HHC90000, "D", "SASSIST SIO reject : SIO disabled in MICEVMA" ));
         return(1);
     }
-    /* From this point forward, we are rather committed as we need to change the machine state.
-       This means we cannot just go back to CP when something isn't right because the registers
-       belong to the virtual machine user issuing the SIO.  We must save the user's state and
-       put the machine in supervisor state to run CP.
 
-       We must perform the functions of DMKPRG and DMKPRV for the SIO/SIOF code path, and
-       set things up per the VM Assist flower boxes in DMKPRG/DMKPRV/DMKVSI source.
-
-       Therefore, when something is wrong we must exit to DMKVSIEX with the registers set
-       per the VMA specification.
-
-       If everything goes right, we exit at DMKVSIVS which is the exit point for
-       successful SIO assist.
-    */
-
-    /* Store the current PSW in pgmold in order to simulate a privileged operation exception.
-       Then store the appropriate ILC and INTC for an SIO instruction at location X'8C'
-    */
-    SET_PSW_IA(regs);
-    psa=(PSA_3XX *)MADDR((VADR)0 , USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
-    ARCH_DEP(store_psw) (regs, (BYTE *)&psa->pgmold);
-    EVM_ST(0x00040002,PGMINT);
+    /* VMINST must contain an image of the SIO instruction and the virtual device address.    */
+    F_VMINST=0x9C000000 | e2;
+    
+    /* Switch the machine from running a VM user to CP */
+    vmb=vpswa-0xA8;
+    ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
 
     /* Get pointer to a list of support addresses for the assist.  Set the return addr
        to DMKVSIEX which is where we will return to if there is any problem from here
@@ -3634,66 +3935,6 @@ BYTE work;
     vmalist=EVM_L(AVMALIST);
     retaddr=EVM_L(vmalist+VSIEX);
     UPD_PSW_IA(regs,retaddr);
-
-    /* Locate the VMBLOK of the RUNUSER and stop charging CPU time. Also, save the interval
-       timer value.  (These actions are documented in DMKPRGIN)
-    */
-    vmb=vpswa-0xA8;
-    STPT(vmb+VMTMOUTQ);
-    SPT(vmb+VMTTIME);
-    EVM_ST(EVM_L(INTTIMER),QUANTUMR);
-
-    /* Set up the virtual PSW to resume at the instruction following the SIO instruction.  We
-       must properly transfer the ilc and program mask from the real PSW.  The CC should be
-       zero (as per entry into DMKVSIEX).
-    */
-    ia=EVM_L(PGMOPSW+4);
-    work=regs->psw.progmask;
-    if(EVM_IC(vmb+VMPSW+1) & BIT(PSW_EC_BIT))
-    {
-        EVM_STC(work,vmb+VMPSW+2);                  /* EC mode */
-        EVM_ST(ia,vmb+VMPSW+4);
-    }
-    else
-    {
-        work|=(regs->psw.ilc << 5);                 /* BC mode */
-        EVM_ST((work << 24) | ia, vmb+VMPSW+4);
-    }
-
-    /* VMINST must contain an image of the SIO instruction and the virtual device address.
-       VMPRGIL must contain the ILC for an SIO.
-    */
-    F_VMINST=0x9C000000 | e2;
-    EVM_ST(F_VMINST,vmb+VMINST);
-    EVM_STH(regs->psw.ilc,vmb+VMPRGIL);
-
-    /* Manipulate the real PSW to resume execution in CP mode: Sup state, disabled, DAT-off */
-    regs->psw.sysmask=0;
-    regs->psw.pkey=0;
-    regs->psw.states=BIT(PSW_EC_BIT)         /* ECMODE */
-                   | BIT(PSW_MACH_BIT);      /* MC Enabled */
-    SET_IC_MASK(regs);
-    TEST_SET_AEA_MODE(regs);
-
-    /* Indicate we are in CP mode, and set the RUNUSER in Instruction Simulation wait
-       and turn off TIO busy loop flag.
-    */
-    EVM_STC(EVM_IC(CPSTATUS)|CPSUPER,CPSTATUS);
-    EVM_STC(EVM_IC(vmb+VMRSTAT)|VMEXWAIT,vmb+VMRSTAT);
-    work=EVM_IC(vmb+VMDSTAT);
-    work &= ~VMTIO;
-    EVM_STC(work,vmb+VMDSTAT);
-
-    /* Save the RUNUSER's registers in the VMBLOK */
-    for(ia=0;ia<16;ia++)
-    {
-        EVM_ST(regs->GR_L(ia),vmb+VMGPRS+ia*4);
-    }
-    /* Save the RUNUSER's floating pt. registers in the VMBLOK, each half of the register at a time */
-    for(ia=0;ia<8;ia++)
-    {
-        EVM_ST(regs->fpr[ia],vmb+VMFPRS+ia*4);
-    }
 
     /* Load CP's registers with the values required by DMKVSIEX.  R12=base reg. */
     regs->CR_L(0)=EVM_L(CPCREG0);
@@ -3707,6 +3948,11 @@ BYTE work;
        out a problem, we'll load the pointer to exit to DMKVSIVS with the SIO assist
        completed successfully.
     */
+    
+    work=EVM_IC(vmb+VMDSTAT);
+    work &= ~VMTIO;
+    EVM_STC(work,vmb+VMDSTAT);
+
     if(ecpsvm_do_scnvu(regs,vmb+VMCHTBL,vmb+VMCHSTRT,e2)!=0)
     {
         return(0);        /* exit; no VBLOKS found */
@@ -3909,16 +4155,77 @@ int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
 }
 
 /* B6 - STCTL Instruction Assist */
-/* Not supported */
 int ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 {
+
+    U32 crs[16];        
+    BYTE *ecb_p;
+    VADR F_ECBLOK,vmb;
+    BYTE B_VMPSTAT;
+
+    int i,j,numcrs;
+
     SASSIST_PROLOG(STCTL);
 
-    UNREFERENCED(r1);
-    UNREFERENCED(r3);
-    UNREFERENCED(b2);
-    UNREFERENCED(effective_addr2);
-    return(1);
+    if(effective_addr2 & 0x03)
+    {
+        DEBUG_SASSISTX(STCTL,WRMSG(HHC90000, "D", "SASSIST STCTL Reject : Not aligned"));
+        return(1);
+    }
+
+    vmb=vpswa-0xA8;
+    B_VMPSTAT=EVM_IC(vmb+VMPSTAT);
+
+    if((!(B_VMPSTAT & VMV370R)) && ((r1!=r3) || (r1!=0)))
+    {
+        DEBUG_SASSISTX(STCTL,WRMSG(HHC90000, "D", "SASSIST STCTL Reject : BC Mode VM & STCTL != 0,0"));
+        return(1);
+    }
+
+    /* Load the CRs from the ECBLOK */
+    if(B_VMPSTAT & VMV370R)
+    {
+        F_ECBLOK=fetch_fw(regs->mainstor+vmb+VMECEXT);
+        for(i=0;i<16;i++)
+        {
+             ecb_p=MADDR(F_ECBLOK+(i*4),USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+             crs[i]=fetch_fw(ecb_p);
+        }
+    }
+    else
+    {
+        F_ECBLOK=vmb+VMECEXT;  /* Update ECBLOK ADDRESS for VCR0 Update */
+        ecb_p=MADDR(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+        /* Load OLD CR0 From VMBLOK */
+        crs[0]=fetch_fw(ecb_p);
+    }
+
+    /* Determine the range of CRs to be stored */
+    if(r1>r3)
+    {
+        numcrs=(r3+16)-r1;
+    }
+    else
+    {
+        numcrs=r3-r1;
+    }
+    numcrs++;
+
+    /* store the selected CRs into the user's virtual storage */
+    for(j=r1,i=0;i<numcrs;i++,j++)
+    {
+        if(j>15)
+        {
+            j-=16;
+        }
+        
+        ARCH_DEP(vstore4)(crs[j],effective_addr2+(i*4),b2,regs);
+    }
+
+    DEBUG_SASSISTX(STCTL,MSGBUF(buf, "SASSIST STCTL %d,%d Done",r1,r3));
+    DEBUG_SASSISTX(STCTL,WRMSG(HHC90000, "D", buf));
+    SASSIST_HIT(STCTL);
+    return 0;
 }
 
 /* B7 - LCTL Instruction Assist */
@@ -4127,16 +4434,62 @@ int ecpsvm_doiucv(REGS *regs,int b2,VADR effective_addr2)
     return(1);
 }
 
-/* 83 - DIAGNOSE Instruction Assist */
-/* Not supported */
+/*****************************************/
+/* 83 - DIAGNOSE Instruction Assist      */
+/*****************************************/
+/* The VM Assist for DIAG is a           */
+/* partial assist per the specification. */
+/* This assist avoids a privileged       */
+/* operation exception and a trip        */
+/* through the DMKPRG & DMKPRV code      */
+/* path.                         l       */
+/*                                       */
+/* The actual DIAGNOSE functionality     */
+/* is not assisted; rather, this         */
+/* assist's purpose is only to avoid     */
+/* the overhead of DMKPRG and DMKPRV.    */
+/*****************************************/
+
 int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 {
+
+VADR vmb;
+VADR vmalist;
+VADR retaddr;
+U32  F_VMINST;
+
     SASSIST_PROLOG(DIAG);
-    UNREFERENCED(r1);
-    UNREFERENCED(r3);
     UNREFERENCED(b2);
-    UNREFERENCED(effective_addr2);
-    return(1);
+
+    /* Reject if MICEVMA says not to do DIAG sim */
+    if(!(micevma & MICDIAG))
+    {
+        DEBUG_SASSISTX(DIAG, WRMSG( HHC90000, "D", "SASSIST DIAG reject : DIAG disabled in MICEVMA" ));
+        return(1);
+    }
+
+
+    /* VMINST must contain an image of the DIAG instruction that brought us here.    */
+    F_VMINST=0x83000000 | r1 << 20 | r3 << 16 | effective_addr2;
+    DEBUG_SASSISTX(DIAG,MSGBUF(buf, "SASSIST DIAG : VMINST = %8.8X",F_VMINST));
+    DEBUG_SASSISTX(DIAG,WRMSG(HHC90000, "D", buf));
+
+    /* Switch the machine from running a VM user to CP */
+    vmb=vpswa-0xA8;
+    ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
+ 
+    /* Load CP's registers with the values required by DMKHVCAL.  R12=base reg.    */
+
+    vmalist=EVM_L(AVMALIST);
+    retaddr=EVM_L(vmalist+HVCAL);
+    regs->CR_L(0)=EVM_L(CPCREG0);
+    regs->CR_L(8)=EVM_L(CPCREG8);
+    regs->GR_L(11)=vmb;
+    regs->GR_L(12)=retaddr;
+
+    SASSIST_HIT(DIAG);
+    UPD_PSW_IA(regs,retaddr);
+    return(0);
 }
 
 /*  B1 - LRA Instruction Assist */

@@ -1,3 +1,4 @@
+
 /* HMACROS.H    (C) Copyright Roger Bowler, 1999-2012                */
 /*               Hercules macros...                                  */
 /*                                                                   */
@@ -360,9 +361,6 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 /*-------------------------------------------------------------------*/
 #define MLVL( _lvl) \
     (sysblk.msglvl & (MLVL_ ## _lvl))
-
-/* Obsolete NLS support macro */
-#define _(_string)  _string
 
 /* Opcode routing table function pointer */
 typedef void (ATTR_REGPARM(2)*FUNC)();

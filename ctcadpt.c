@@ -309,13 +309,13 @@ static char *CTCE_StaStr[8] = {"P", "C", "R", "W", "A", "N", "X", "I"};
 /* in the device configuration statement.     */
 #define CTCE_MTU_MIN ( (int)( 61578 + sizeof(CTCE_SOKPFX) + sizeof(U16 /* sCount */) ) )
 
-#define CTCE_RESET_TYPE                                                                                                   \
-      (     ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT                  ) ) )                ? _("Halt Reset")       : _("") \
-    , (     ( pDEVBLK->scsw.flag2 & (                 SCSW2_FC_CLEAR ) ) )                ? _("Clear Reset")      : _("") \
-    , ( ( ! ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT | SCSW2_FC_CLEAR ) ) ) &&                                             \
-          ! ( IS_CTCE_YWK( pDEVBLK->ctcexState ) | IS_CTCE_YWK( pDEVBLK->ctceyState ) ) ) ? _("System Reset")     : _("") \
-    , ( ( ! ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT | SCSW2_FC_CLEAR ) ) ) &&                                             \
-            ( IS_CTCE_YWK( pDEVBLK->ctcexState ) | IS_CTCE_YWK( pDEVBLK->ctceyState ) ) ) ? _("Selective Reset")  : _("")
+#define CTCE_RESET_TYPE                                                                                             \
+      (     ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT                  ) ) )                ? "Halt Reset"      : ""  \
+    , (     ( pDEVBLK->scsw.flag2 & (                 SCSW2_FC_CLEAR ) ) )                ? "Clear Reset"     : ""  \
+    , ( ( ! ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT | SCSW2_FC_CLEAR ) ) ) &&                                       \
+          ! ( IS_CTCE_YWK( pDEVBLK->ctcexState ) | IS_CTCE_YWK( pDEVBLK->ctceyState ) ) ) ? "System Reset"    : ""  \
+    , ( ( ! ( pDEVBLK->scsw.flag2 & ( SCSW2_FC_HALT | SCSW2_FC_CLEAR ) ) ) &&                                       \
+            ( IS_CTCE_YWK( pDEVBLK->ctcexState ) | IS_CTCE_YWK( pDEVBLK->ctceyState ) ) ) ? "Selective Reset" : ""
 
 /**********************************************************************/
 /* A summary of the Channel-to-Channel command operations this CTCE   */
@@ -442,10 +442,10 @@ const CTCE_Fsm[16][8] = {
 #undef  UC
 #undef  UCS
 
-#define CTCE_ACTIONS_PRT(s)     IS_CTCE_WEOF(s)  ? _(" WEOF")  : _("") \
-                              , IS_CTCE_WAIT(s)  ? _(" WAIT")  : _("") \
-                              , IS_CTCE_MATCH(s) ? _(" MATCH") : _("") \
-                              , IS_CTCE_ATTN(s)  ? _(" ATTN")  : _("")
+#define CTCE_ACTIONS_PRT(s)     IS_CTCE_WEOF(s)  ? " WEOF"  : ""  \
+                              , IS_CTCE_WAIT(s)  ? " WAIT"  : ""  \
+                              , IS_CTCE_MATCH(s) ? " MATCH" : ""  \
+                              , IS_CTCE_ATTN(s)  ? " ATTN"  : ""
 
 #define CTCE_X_STATE_FSM_IDX                                                \
     ( ( ( pDEVBLK->ctcexState & 0x04 ) == 0x00 ) ? 0x06 : CTCE_STATE( pDEVBLK->ctceyState ) )

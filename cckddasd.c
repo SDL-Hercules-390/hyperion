@@ -244,7 +244,7 @@ int cckddasd_term ()
     /* Terminate the readahead threads */
     obtain_lock (&cckdblk.ralock);
     cckdblk.ramax = 0;
-    if (cckdblk.ras)
+    while (cckdblk.ras)
     {
         broadcast_condition (&cckdblk.racond);
         wait_condition (&cckdblk.termcond, &cckdblk.ralock);
@@ -256,7 +256,7 @@ int cckddasd_term ()
     /* Terminate the garbage collection threads */
     obtain_lock (&cckdblk.gclock);
     cckdblk.gcmax = 0;
-    if (cckdblk.gcs)
+    while (cckdblk.gcs)
     {
         broadcast_condition (&cckdblk.gccond);
         wait_condition (&cckdblk.termcond, &cckdblk.gclock);
@@ -268,7 +268,7 @@ int cckddasd_term ()
     /* Terminate the writer threads */
     obtain_lock (&cckdblk.wrlock);
     cckdblk.wrmax = 0;
-    if (cckdblk.wrs)
+    while (cckdblk.wrs)
     {
         broadcast_condition (&cckdblk.wrcond);
         wait_condition (&cckdblk.termcond, &cckdblk.wrlock);
