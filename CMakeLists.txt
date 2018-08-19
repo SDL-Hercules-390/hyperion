@@ -330,6 +330,9 @@ target_link_libraries(dasdseq hercd)
 # dmap2hrc
 add_executable(dmap2hrc dmap2hrc.c)
 target_link_libraries(dmap2hrc hercd)
+target_link_libraries(dmap2hrc hercu)
+target_link_libraries(dmap2hrc core)
+target_link_libraries(dmap2hrc dyndev)
 
 # hetget
 add_executable(hetget hetget.c)
@@ -340,6 +343,7 @@ target_link_libraries(hetget core)
 # hetinit
 add_executable(hetinit hetinit.c)
 target_link_libraries(hetinit hercd)
+target_link_libraries(hetinit hercu)
 target_link_libraries(hetinit dyndev)
 target_link_libraries(hetinit core)
 
