@@ -94,12 +94,12 @@ endif()
 # -------------------
 
 # SYS subsystem
-add_library ( libhercs STATIC
+add_library ( hercs STATIC
   hsys.c
 )
 
 # UTIL subsystem
-add_library (libhercu STATIC
+add_library (hercu STATIC
   codepage.c
   hdl.c
   hexdumpe.c
@@ -115,15 +115,16 @@ add_library (libhercu STATIC
   pttrace.c
   version.c
 )
-target_link_libraries(libhercu decNumber)
-target_link_libraries(libhercu SoftFloat)
-target_link_libraries(libhercu crypto)
-target_link_libraries(libhercu telnet)
+target_link_libraries(hercu decNumber)
+target_link_libraries(hercu SoftFloat)
+target_link_libraries(hercu crypto)
+target_link_libraries(hercu telnet)
+target_link_libraries(hercu ${CMAKE_DL_LIBS})
 
 
 
 # DASD subsystem
-add_library( libhercd STATIC
+add_library( hercd STATIC
   cache.c
   cckddasd.c
   cckdutil.c
@@ -133,8 +134,8 @@ add_library( libhercd STATIC
   fbadasd.c
   shared.c
 )
-target_link_libraries(libhercd libhercs)
-target_link_libraries(libhercd libhercu)
+target_link_libraries(hercd hercs)
+target_link_libraries(hercd hercu)
 
 # DYNDEV subsystem
 
@@ -251,11 +252,11 @@ add_library(core STATIC
 )
 
 if (BZIP2_FOUND)
-  target_link_libraries(libhercd ${BZIP2_LIBRARIES})
+  target_link_libraries(hercd ${BZIP2_LIBRARIES})
 endif()
 
 if (ZLIB_FOUND)
-  target_link_libraries(libhercd ${ZLIB_LIBRARIES})
+  target_link_libraries(hercd ${ZLIB_LIBRARIES})
 endif()
 
 # --------------
@@ -264,95 +265,95 @@ endif()
 
 # cckdcdsk
 add_executable(cckdcdsk cckdcdsk.c)
-target_link_libraries(cckdcdsk libhercd)
+target_link_libraries(cckdcdsk hercd)
 
 # cckdcomp
 add_executable(cckdcomp cckdcomp.c)
-target_link_libraries(cckdcomp libhercd)
+target_link_libraries(cckdcomp hercd)
 
 # cckddiag
 add_executable(cckddiag cckddiag.c)
-target_link_libraries(cckddiag libhercd)
+target_link_libraries(cckddiag hercd)
 
 # cckdswap
 add_executable(cckdswap cckdswap.c)
-target_link_libraries(cckdswap libhercd)
+target_link_libraries(cckdswap hercd)
 
 # dasdcat
 add_executable(dasdcat dasdcat.c)
-target_link_libraries(dasdcat libhercd)
+target_link_libraries(dasdcat hercd)
 
 # dasdconv
 add_executable(dasdconv dasdconv.c)
-target_link_libraries(dasdconv libhercd)
+target_link_libraries(dasdconv hercd)
 
 # dasdcopy
 add_executable(dasdcopy dasdcopy.c)
-target_link_libraries(dasdcopy libhercd)
+target_link_libraries(dasdcopy hercd)
 
 # dasdinit
 add_executable(dasdinit dasdinit.c)
-target_link_libraries(dasdinit libhercd)
+target_link_libraries(dasdinit hercd)
 
 # dasdisup
 add_executable(dasdisup dasdisup.c)
-target_link_libraries(dasdisup libhercd)
+target_link_libraries(dasdisup hercd)
 
 # dasdload
 add_executable(dasdload dasdload.c)
-target_link_libraries(dasdload libhercd)
+target_link_libraries(dasdload hercd)
 
 # dasdls
 add_executable(dasdls dasdls.c)
-target_link_libraries(dasdls libhercd)
+target_link_libraries(dasdls hercd)
 
 # dasdpdsu
 add_executable(dasdpdsu dasdpdsu.c)
-target_link_libraries(dasdpdsu libhercd)
+target_link_libraries(dasdpdsu hercd)
 
 # dasdseq
 add_executable(dasdseq dasdseq.c)
-target_link_libraries(dasdseq libhercd)
+target_link_libraries(dasdseq hercd)
 
 # dmap2hrc
 add_executable(dmap2hrc dmap2hrc.c)
-target_link_libraries(dmap2hrc libhercd)
+target_link_libraries(dmap2hrc hercd)
 
 # hetget
 add_executable(hetget hetget.c)
-target_link_libraries(hetget libhercd)
+target_link_libraries(hetget hercd)
 target_link_libraries(hetget dyndev)
 
 # hetinit
 add_executable(hetinit hetinit.c)
-target_link_libraries(hetinit libhercd)
+target_link_libraries(hetinit hercd)
 target_link_libraries(hetinit dyndev)
 
 # hetmap
 add_executable(hetmap hetmap.c)
-target_link_libraries(hetmap libhercd)
+target_link_libraries(hetmap hercd)
 target_link_libraries(hetmap dyndev)
 
 # hetupd
 add_executable(hetupd hetupd.c)
-target_link_libraries(hetupd libhercd)
+target_link_libraries(hetupd hercd)
 target_link_libraries(hetupd dyndev)
 
 # tapecopy
 add_executable(tapecopy tapecopy.c)
-target_link_libraries(tapecopy libhercd)
+target_link_libraries(tapecopy hercd)
 
 # tapemap
 add_executable(tapemap tapemap.c)
-target_link_libraries(tapemap libhercd)
+target_link_libraries(tapemap hercd)
 
 # tapesplt
 add_executable(tapesplt tapesplt.c)
-target_link_libraries(tapesplt libhercd)
+target_link_libraries(tapesplt hercd)
 
 # vmfplc2
 add_executable(vmfplc2 vmfplc2.c)
-target_link_libraries(vmfplc2 libhercd)
+target_link_libraries(vmfplc2 hercd)
 target_link_libraries(vmfplc2 dyndev)
 
 # hercules
@@ -360,7 +361,6 @@ set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
 add_executable(hercules bootstrap.c)
 target_link_libraries(hercules core)
 target_link_libraries(hercules dyndev)
-target_link_libraries(hercules libhercd)
-target_link_libraries(hercules ${CMAKE_DL_LIBS})
+target_link_libraries(hercules hercd)
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )
