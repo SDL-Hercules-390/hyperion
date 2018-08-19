@@ -1,0 +1,28 @@
+#------------------------------------------------------------------------------
+#               Define minimum required Windows platform
+#------------------------------------------------------------------------------
+
+if( WIN32 )
+
+  #  The following macros define the minimum required Windows platform.
+  #
+  #  The minimum required platform is the oldest version of Windows
+  #  and Internet Explorer, etc, that has the necessary features to
+  #  run your application.
+  #
+  #  The macros work by enabling all features available on platform
+  #  versions up to and including the version specified.
+  #
+  #  Refer to the following MSDN web page for the latest information
+  #  on the corresponding values for different platforms:
+  #
+  #  "Using the Windows Headers"
+  #  http://msdn.microsoft.com/en-us/library/windows/desktop/aa383745(v=vs.85).aspx
+
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D _WIN32_WINNT=0x0601" )  # Windows 7 Service Pack 1
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D  WINVER=0x0601"      )  # Windows 7 Service Pack 1
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D _WIN32_IE=0x0800"    )  # Internet Explorer 8.0
+
+endif()
+
+#------------------------------------------------------------------------------

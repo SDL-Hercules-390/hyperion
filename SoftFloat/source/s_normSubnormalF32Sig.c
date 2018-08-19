@@ -34,7 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#ifdef HAVE_PLATFORM_H 
 #include "platform.h" 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 #include "internals.h"
 
 struct exp16_sig32 softfloat_normSubnormalF32Sig( uint_fast32_t sig )

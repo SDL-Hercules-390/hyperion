@@ -37,6 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef primitiveTypes_h
 #define primitiveTypes_h 1
 
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 
 #ifdef SOFTFLOAT_FAST_INT64
 

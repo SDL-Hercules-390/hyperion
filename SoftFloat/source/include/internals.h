@@ -37,6 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef internals_h
 #define internals_h 1
 
+#if !defined(false) 
+#include <stdbool.h> 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 #include "primitives.h"
 #include "softfloat_types.h"
 

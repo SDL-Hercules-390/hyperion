@@ -37,7 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef softfloat_types_h
 #define softfloat_types_h 1
 
-#include "softfloat_stdTypes.h"             /* Include c99 standard types       */
+#if !defined(int32_t)
+#include <stdint.h>             /* C99 standard integers */
+#endif
 
 /*----------------------------------------------------------------------------
 | Types used to pass 32-bit, 64-bit, and 128-bit floating-point arguments and

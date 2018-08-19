@@ -1,0 +1,13 @@
+#------------------------------------------------------------------------------
+#   Update the INCLUDE directories search order
+#------------------------------------------------------------------------------
+
+include_directories( BEFORE
+
+  ${CMAKE_BINARY_DIR}
+  ${CMAKE_SOURCE_DIR}/source/8086-SSE
+  ${CMAKE_SOURCE_DIR}/source/include
+
+)
+
+#------------------------------------------------------------------------------

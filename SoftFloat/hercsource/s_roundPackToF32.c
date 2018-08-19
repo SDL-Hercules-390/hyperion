@@ -51,7 +51,15 @@ Modifications:
     increased in magnitude by rounding.
 =============================================================================*/
 
+#ifdef HAVE_PLATFORM_H 
 #include "platform.h" 
+#endif
+#if !defined(false) 
+#include <stdbool.h> 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 #include "internals.h"
 #include "softfloat.h"
 
@@ -96,8 +104,8 @@ float32_t
     softfloat_raw.Sig0   =  0;                               /* Zero bits 64-128 of rounded result                       */
     softfloat_raw.Exp    =  exp - 126;                       /* Save unbiased exponent (bias  is one less than IBM       */
     softfloat_raw.Sign   =  sign;                            /* Save result sign                                         */
-    softfloat_raw.Inexact = roundBits != 0;                  /* Save inexact status of raw result                        */
-    isTiny = false;                                          /* Assume not a subnormal result for the moment.            */
+    softfloat_raw.Inexact = roundBits;                       /* Save inexact status of raw result                        */
+    isTiny = false;                                         /* Assume not a subnormal result for the moment.            */
 #endif /* IBM_IEEE */
 
     if ( 0xFD <= (uint16_t) exp ) {

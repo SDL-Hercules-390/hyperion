@@ -34,7 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#ifdef HAVE_PLATFORM_H 
 #include "platform.h" 
+#endif
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------

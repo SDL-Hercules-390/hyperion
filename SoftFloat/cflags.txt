@@ -1,0 +1,123 @@
+#------------------------------------------------------------------------------
+#   Adjust needed compile flags for this project/package
+#------------------------------------------------------------------------------
+
+include( targetver.txt )      # Define minimum required Windows platform
+
+
+#------------------------------------------------------------------------------
+#  Little-endian / Big-endian
+#------------------------------------------------------------------------------
+
+set( PKG_C_FLAGS "${PKG_C_FLAGS} -D LITTLE_ENDIAN=1234" )
+set( PKG_C_FLAGS "${PKG_C_FLAGS} -D BIG_ENDIAN=4321"    )
+
+if( IS_BIG_ENDIAN )
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D BYTE_ORDER=BIG_ENDIAN" )
+else()
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D BYTE_ORDER=LITTLE_ENDIAN" )
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D LITTLEENDIAN" )
+endif()
+
+
+#------------------------------------------------------------------------------
+#  Add SoftFloat flags
+#------------------------------------------------------------------------------
+
+set( PKG_C_FLAGS "${PKG_C_FLAGS} -D HAVE_PLATFORM_H"            )
+set( PKG_C_FLAGS "${PKG_C_FLAGS} -D SOFTFLOAT_FAST_INT64"       )
+set( PKG_C_FLAGS "${PKG_C_FLAGS} -D SOFTFLOAT_FAST_DIV64TO32"   )
+
+
+#------------------------------------------------------------------------------
+#                            PROGRAMMING NOTE
+#------------------------------------------------------------------------------
+# Due to SoftFloat's buggy support for function inlining we unfortunately
+# cannot utilize it.  The "primitives.h" header appears to be missing some
+# #defines for some functions intending to be inlined thereby causing the
+# function to be compiled twice: First as a primitives.h inlined function
+# and then again as a normal non-inlined function within one of its source
+# files.
+#
+# As an example, take the "softfloat_sub128" function: it's defined in the
+# "primitives.h" header as a possibly inlined function as follows:
+#
+#
+#     #ifndef softfloat_sub128
+#     /*----------------------------------------------------------------------------
+#     | Returns the difference of the 128-bit integer formed by concatenating `a64'
+#     | and `a0' and the 128-bit integer formed by concatenating `b64' and `b0'.
+#     | The subtraction is modulo 2^128, so any borrow out (carry out) is lost.
+#     *----------------------------------------------------------------------------*/
+#     #if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)
+#     INLINE
+#      struct uint128
+#       softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+#     {
+#         struct uint128 z;
+#         z.v0 = a0 - b0;
+#         z.v64 = a64 - b64;
+#         z.v64 -= (a0 < b0);
+#         return z;
+#     }
+#     #else
+#     struct uint128
+#      softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 );
+#     #endif
+#     #endif
+#
+#
+# Thus, if INLINE_LEVEL is defined to a value greater than 2, it gets defined
+# as an INLINE function within "primitives.h" header.  Unfortunately however,
+# the same function gets defined (compiled) as a normal non-inlined function
+# in source file "s_sub128.c" as follows:
+#
+#
+#     #ifndef softfloat_sub128
+#     struct uint128
+#      softfloat_sub128( uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0 )
+#     {
+#         struct uint128 z;
+#
+#         z.v0 = a0 - b0;
+#         z.v64 = a64 - b64 - (a0 < b0);
+#         return z;
+#
+#     }
+#     #endif
+#
+#
+# Since the "primitives.h" header is missing a #define for "softfloat_sub128"
+# for "#if defined INLINE_LEVEL && (2 <= INLINE_LEVEL)" case, it causes the
+# function to be generated (compiled) TWICE, leading to duplicate definition
+# linker warnings when the library gets created:
+#
+#     s_sub128.c.obj : warning LNK4006: softfloat_sub128 already defined in s_subMagsF128.c.obj; second definition ignored
+#     s_sub128.c.obj : warning LNK4221: no public symbols found; archive member will be inaccessible
+#
+#------------------------------------------------------------------------------
+
+##set( PKG_C_FLAGS "${PKG_C_FLAGS} -D \"INLINE=static __inline\"" )
+##set( PKG_C_FLAGS "${PKG_C_FLAGS} -D INLINE_LEVEL=5"             )
+
+
+#------------------------------------------------------------------------------
+#  Add above package flags
+#------------------------------------------------------------------------------
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          ${PKG_C_FLAGS}" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} ${PKG_C_FLAGS}" )
+set( CMAKE_C_FLAGS                "${CMAKE_C_FLAGS}                ${PKG_C_FLAGS}" )
+
+
+#------------------------------------------------------------------------------
+#  Add other needed flags
+#------------------------------------------------------------------------------
+
+set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D DEBUG" )
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -D VERS_STRING=${VERS_STRING}" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -D VERS_STRING=${VERS_STRING}" )
+set( CMAKE_C_FLAGS                "${CMAKE_C_FLAGS}                -D VERS_STRING=${VERS_STRING}" )
+
+#------------------------------------------------------------------------------

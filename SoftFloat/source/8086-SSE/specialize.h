@@ -52,6 +52,12 @@ Modifications:
 #ifndef specialize_h
 #define specialize_h 1
 
+#if !defined(false) 
+#include <stdbool.h> 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 #include "softfloat_types.h"
 
 #define IBM_IEEE                /* must do here as well as in softfloat.h */   /* @SRO  */
@@ -60,9 +66,9 @@ Modifications:
 | Default value for `softfloat_detectTininess'.
 *----------------------------------------------------------------------------*/
 #ifdef IBM_IEEE
-#define init_detectTininess softfloat_tininess_beforeRounding
+#define init_detectTininess softfloat_tininess_beforeRounding;
 #else
-#define init_detectTininess softfloat_tininess_afterRounding
+#define init_detectTininess softfloat_tininess_afterRounding;
 #endif
 
 /*----------------------------------------------------------------------------

@@ -53,7 +53,15 @@ If the scaled result is to large to fit in the target precision, an SNaN
 is generated with payload 0x0DEAD.  
 =============================================================================*/
 
+#ifdef HAVE_PLATFORM_H 
 #include "platform.h" 
+#endif
+#if !defined(false) 
+#include <stdbool.h> 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
 #include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"

@@ -53,6 +53,12 @@ All such modifications placed in the public domain by Stephen R. Orso
 #ifndef softfloat_h
 #define softfloat_h 1
 
+#if !defined(false)
+#include <stdbool.h>
+#endif
+#if !defined(int32_t)
+#include <stdint.h>             /* C99 standard integers */
+#endif
 
 #include "softfloat_types.h"
 
@@ -78,7 +84,7 @@ All such modifications placed in the public domain by Stephen R. Orso
         defined __ICL ||             /* ..Intel C or                     */      \
         defined __DMC__ ||           /* ..Digital Mars C or              */      \
         defined __BORLANDC__ )       /* ..Borland (Embarcadero) C        */
-#   define SF_THREAD_LOCAL __declspec(thread) 
+#   define SF_THREAD_LOCAL __declspec(thread)
 
 /* note that ICC (linux) and Clang are reportedly covered by __GNUC__   */
 #  elif defined __GNUC__ ||          /* ..GNG C or variants or           */      \
@@ -106,7 +112,7 @@ enum {
 /*----------------------------------------------------------------------------
 | Software floating-point rounding mode.
 *----------------------------------------------------------------------------*/
-#ifdef IBM_IEEE 
+#ifdef IBM_IEEE
 extern SF_THREAD_LOCAL  uint_fast8_t softfloat_roundingMode;
 #else
 extern uint_fast8_t softfloat_roundingMode;
@@ -149,23 +155,23 @@ enum {
 | trappability is dependent on the caller's state, not Softfloat's, these
 | values are generated for every rounding.
 |
-| The 128-bit rounded significand is stored with the binary point between 
-| the second and third bits (from the left).  
+| The 128-bit rounded significand is stored with the binary point between
+| the second and third bits (from the left).
 |
 |                  -----------------------------------------------
 | bit              | 0 1 V 2 3 4 5 6 7 8 9 10 11 12 13 14... 127 |
 | Place value      | 2 1 | fractional portion of significand     |
 |                  -----------------------------------------------
 |
-| Note: place value is one higher than the power of two for that digit position. 
+| Note: place value is one higher than the power of two for that digit position.
 |
 | Examples:
 |   decimal 3 is represented as 11.000000000000000 ... 000
 |   decimal 1 is represented as 01.000000000000000 ... 000
 |
 | The exponent bias is reduced by one to account for this; the leftmost digit
-| appears only when rounding or arithmetic generate a carry into the 2's 
-| position. 
+| appears only when rounding or arithmetic generate a carry into the 2's
+| position.
 |
 | The booleans softfloat_rawInexact and softfloat_rawIncre preserve the
 | status of the original result.  For non-trap results, the original result
@@ -178,7 +184,7 @@ enum {
 | softfloat_exceptionFlags value that reports tiny because that flag is part
 | of the external interface of Softfloat, not part of the internal state.
 |
-| The routines fxxx_returnScaledResult() uses these values to generate 
+| The routines fxxx_returnScaledResult() uses these values to generate
 | scaled results.
 *----------------------------------------------------------------------------*/
 
@@ -209,7 +215,7 @@ float128_t f128_scaledResult(int_fast16_t);     /* return scaled float128 result
 *----------------------------------------------------------------------------*/
 
 /* IBM_IEEE versions of Softfloat do not require function functionality; all
-   traps are detected and managed by the caller.  A macro (above) defines 
+   traps are detected and managed by the caller.  A macro (above) defines
    the logical or that is at the core of softfloat_raiseFlags()              */
 
 #ifndef IBM_IEEE
