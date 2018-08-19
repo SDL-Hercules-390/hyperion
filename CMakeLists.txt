@@ -122,6 +122,10 @@ target_link_libraries(hercu telnet)
 target_link_libraries(hercu ${CMAKE_DL_LIBS})
 target_link_libraries(hercu ${CMAKE_THREAD_LIBS_INIT})
 
+if(LIBM_REQUIRED)
+target_link_libraries(hercu m)
+endif()
+
 
 
 
