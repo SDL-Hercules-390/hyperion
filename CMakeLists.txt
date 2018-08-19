@@ -10,3 +10,6 @@ project( Hyperion VERSION 4.0 LANGUAGES C )
 
 # Add SoftFloat subdirectory
 add_subdirectory(SoftFloat)
+
+# Add crypto subdirectory
+add_subdirectory(crypto)

@@ -1,0 +1,14 @@
+#------------------------------------------------------------------------------
+#   Define additional files to be installed
+#------------------------------------------------------------------------------
+
+install( FILES "crypto.LICENSE.txt" DESTINATION . )
+install( FILES "crypto.README.txt"  DESTINATION . )
+
+#------------------------------------------------------------------------------
+
+if( WIN32 )
+  install( FILES "${CMAKE_BINARY_DIR}/${FULLNAME}.pdb" DESTINATION lib )
+endif()
+
+#------------------------------------------------------------------------------
