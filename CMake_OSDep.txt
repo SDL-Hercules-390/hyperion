@@ -2,7 +2,10 @@
 # OS-specific checks and flags
 #
 
-# Apple's pthread_setname_np only takes one argument
+# Enable IPv6 by default, overrule for individual OS
+set (ENABLE_IPV6 1)
+
+# Apple-specific fixes
 if (APPLE)
   set (PTHREAD_SET_NAME_ONLY 1)
 endif()

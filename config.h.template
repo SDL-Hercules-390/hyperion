@@ -12,7 +12,7 @@
 #cmakedefine DISABLE_IAF2 @HAVE_SYS_CAPABILITY_H@
 
 /* Define to enable IPV6 support */
-#cmakedefine ENABLE_IPV6 @HAVE_IPV6_FOUND@
+#cmakedefine ENABLE_IPV6 @ENABLE_IPV6@
 
 /* Define to 1 if you have the `alphasort' function. */
 #cmakedefine HAVE_ALPHASORT @HAVE_ALPHASORT@
@@ -308,7 +308,7 @@
 #undef HAVE_LINUX_IF_TUN_H
 
 /* Define to 1 if you have the <linux/ipv6.h> header file. */
-#undef HAVE_LINUX_IPV6_H
+#cmakedefine HAVE_LINUX_IPV6_H @HAVE_LINUX_IPV6_H@
 
 /* Define to 1 if you have the <locale.h> header file. */
 #undef HAVE_LOCALE_H
