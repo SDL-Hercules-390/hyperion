@@ -14,3 +14,5 @@ if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
   set(HAVE_ZLIB  1)
 endif(ZLIB_FOUND)
+
+find_package (Threads)

@@ -15,5 +15,18 @@ if (WIN32)
   set(IS_WINDOWS 1)
 endif()
 
+# Check to see if needs to be linked with libm (e.g. on Linux)
+CHECK_FUNCTION_EXISTS(pow RESULT)
+if(NOT RESULT)
+  unset(RESULT)
+  list(APPEND CMAKE_REQUIRED_LIBRARIES m)
+  CHECK_FUNCTION_EXISTS(pow RESULT)
+  if(RESULT)
+    target_link_libraries(yourtarget m)
+  else()
+    message(FATAL_ERROR "No pow() found")
+  endif()
+endif()
+
 # Store host's architecture
 set(HOST_ARCH "${CMAKE_HOST_SYSTEM_PROCESSOR}")
