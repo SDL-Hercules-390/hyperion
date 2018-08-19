@@ -1,0 +1,360 @@
+
+              BUILDING SOFTFLOAT 3A FOR Hercules
+
+Copyright 2016 by Stephen R. Orso.  This work is licensed under the Creative
+Commons Attribution-ShareAlike 4.0 International License.  To view a copy of
+ this license, visit  http://creativecommons.org/licenses/by-sa/4.0/ or send
+ a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+SoftFloat 3a For Hercules can be found on github.com at:
+
+   https://github.com/hercules-390/SoftFloat-3a
+
+
+BUILD INSTRUCTIONS
+
+SoftFloat 3a For Hercules (S3FH) is built from source using the
+following process:
+
+- Install the prerequisite software for your host system, including
+  the correct version of CMake.
+- Clone SoftFloat 3a For Hercules into a directory tree.
+- Position yourself in the top source directory, SoftFloat-3a.
+- Issue "1Stop".  This script performs the following tasks using the defaults.
+        . Create required directory structure.
+        . Configure the build using CMake.
+        . Compile sources into a build directory.
+        . Install the build library, public headers, and license files  into
+          an installation directory.
+- Configure the Hercules Hyperion build to find s3fh in the installation
+  directory, as documented in the Hercules v4 build instructions.
+  (Note: 1Stop places SoftFloat 3a For Hercules in the directory structure
+  expected by the Hercules V4 build process; no configuration is needed.)
+
+1Stop is available for open source and Windows hosts and will build
+SoftFloat 3a For Hercules with the same bit-ness as your host system.
+For Windows users, 1Stop will use the most modern version of Visual Studio
+available on your system with the default c compiler.
+
+If you use the recommended directory structure described below,
+there is no need to configure the Hyperion build.
+
+
+PREREQUISITE SOFTWARE - UNIX
+
+- CMake version 3.2 or better
+- A git command-line tool or better.
+- A c compiler at a level sufficient to build Hyperion.
+
+Note 1.  Git is not required if, instead of cloning SoftFloat 3a For
+         Hercules, you download the .zip file offered by github.com.
+         If you plan to develop, use Git.
+Note 2.  Github.com offers a zip file, not a tar.gz, even when you
+         access the site from a browser on a UNIX graphical desktop.
+         So, although UNIX trades in tar.gz, github.com has not
+         received the memo.  If the ark command on your UNIX does
+         not handle .zip files, 7zip can be used.
+
+
+PREREQUISITE SOFTWARE - Windows
+
+- CMake version 3.2 or better
+- Visual Studio 2015 Community Edition.
+- A Windows SDK compatible with the target Windows version.
+- Posh-git command line github client.
+
+Note 1.  Earlier versions of Visual Studio may be used and should
+         work, but they have not been tested by this author.
+Note 2.  Visual Studio 2015 Community Edition has no license fee when
+         used by individual developers or for qualifying open-source
+         licensed software (OSI-verified).
+Note 3.  Posh-git is installed as part of the Github for Windows
+         GUI client, available at https://desktop.github.com/.  It
+         can also be installed stand-alone from its own git repository,
+         at https://github.com/dahlbyk/posh-git.
+Note 4.  A command-line git client is not required if you are only
+         building; you can download the zip file from github.com.
+         If you are developing, you will need a git client.
+
+(I believe Posh-git is so named because it uses Windows Power Shell,
+not because it is particularly rich or luxurious.)
+
+
+INSTALLING CMAKE
+
+SoftFloat 3a For Hercules requires CMake 3.2 or better.  Pre-built
+binaries are available for Windows, and sources for building on
+open source host systems are available at:
+
+    https://cmake.org/download/
+
+Some open source systems have 3.2 or better in their repositories.
+If your open source host system does not have 3.2 or better available,
+you will have to build CMake from using its bootstrap process.
+
+Instructions for building CMake from scratch can be found in the
+README.rst contained in the source download file.  These instructions
+for CMake 3.7.1 are reproduced here for convenience.  Note that the
+README.rst is authoritative for the build process.
+
+   Building CMake from Scratch
+   ---------------------------
+
+   UNIX/Mac OSX/MinGW/MSYS/Cygwin
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   You need to have a compiler and a make installed.
+   Run the ``bootstrap`` script you find in the source directory of CMake.
+   You can use the ``--help`` option to see the supported options.
+   You may use the ``--prefix=<install_prefix>`` option to specify a custom
+   installation directory for CMake. You can run the ``bootstrap`` script from
+   within the CMake source directory or any other build directory of your
+   choice. Once this has finished successfully, run ``make`` and
+   ``make install``.  In summary::
+
+    $ ./bootstrap && make && make install
+
+   Windows
+   ^^^^^^^
+
+   You need to download and install a binary release of CMake in order to build
+   CMake.  You can get these releases from the `CMake Download Page`_ .  Then
+   proceed with the instructions below.
+
+   .. _`CMake Download Page`: https://cmake.org/cmake/resources/software.html
+
+A documentation page is also available on the cmake.org web site, but it
+is apparently not linked to by any page a rational user would open
+during a search for build instructions.  This author could not find the
+link, anyway, without using the site's search function.
+
+   https://cmake.org/install/
+
+
+RECOMMENDED DIRECTORY STRUCTURE
+
+You can skip this step and the "Prepare" and "Perform" steps below if
+you did the one stop shopping by "/1Stop".
+
+Or read on if you are curious.
+
+The parent directory of the build and install directories, "x86" in
+the example below, enables multiple target systems for builds.
+
+It should be at the same level as the Hyperion source directory, and
+while it may be anything you wish, the following defaults are
+recommended.
+
+- On Windows, use the value of the %PROCESSOR-ARCHITECTURE% environment
+  variable to avoid the need for step 4. above.
+- On UNIX, use the value returned by uname -m.
+
+hercules/hyperion/             # Hyperion source (see Note 1.)
+        /SoftFloat-3a          # SoftFloat 3a For Hercules source
+        /x86/hyperion/         # Hyperion build/install directory
+        /x86/s3fh              # S3FH install dir
+                               # ..includes copyright notices
+        /x86/s3fh/lib          # contains S3FH s3fhFloat.lib
+        /x86/s3fh/include      # contains S3FH public headers
+        /x86/s3fh.release      # S3FH Release build dir
+        /x86/s3fh.debug        # S3FH Debug build dir
+
+Note 1.  The s3fh install, release build, and debug build directories
+must be named as shown above.  Changing these names means you will need
+to configure the Hyperion build to deal with non-standard directory
+names.
+
+Note 2.  When building Hyperion under Windows, the source directory is
+also the build directory and may also be the install directory.
+
+
+PREPARE TO BUILD FROM SOURCE - Windows
+
+1) Open a Visual Studio command prompt from the Windows Start menu.
+   VS2015 offers several; choose from the following
+
+      32-bit Windows "VS2015 x86 Native Tools Command Prompt"
+      64-bit Windows "VS2015 x64 Native Tools Command Prompt"
+
+   Use this command prompt for the remaining steps.
+
+2) Determine the processor architecture
+
+    echo %PROCESSOR_ARCHITECTURE%
+
+3) Build the recommended directory tree.  Substitute the value of
+   %PROCESSOR_ARCHITECTURE% for "x86" in the directory names below.
+
+    mkdir hercules\hyperion
+    mkdir hercules\SoftFloat-3a
+    mkdir hercules\x86\hyperion
+    mkdir hercules\x86\s3fh
+    mkdir hercules\x86\s3fh.release
+    mkdir hercules\x86\s3fh.debug
+
+The remaining directories are built by CMake.
+
+
+PREPARE TO BUILD FROM SOURCE - UNIX
+
+1) Open terminal or console prompt.  You can perform this procedure
+   an SSH connection to the UNIX system used for the build.  Use this
+   command prompt for the remaining steps.
+
+2) Determine the processor architecture
+
+    uname -m
+
+3) Build the recommended directory tree.  Substitute the result
+   returned from uname -m for "amd64" in the directory names below.
+
+    mkdir hercules/hyperion
+    mkdir hercules/SoftFloat-3a
+    mkdir hercules/amd64/hyperion
+    mkdir hercules/amd64/s3fh
+    mkdir hercules/amd64/s3fh.release
+    mkdir hercules/amd64/s3fh.debug
+
+The remaining directories are built by CMake.  You may omit s3fh if you
+do not plan a debug build.  For day-to-day use, a release build is fine.
+
+
+PERFORM THE RELEASE BUILD FROM SOURCE
+
+The same commands are used to perform the build in Windows and in UNIX.
+CMake will translate the forward slashes in its command line to the
+orientation required by the host operating system.
+
+1) Change to the top level in the directory structure
+
+    cd hercules
+
+2) Clone the SoftFloat 3a For Hercules repository
+
+    git clone https://github.com/hercules-390/SoftFloat-3a.git
+
+3) Run cmake to create build and installation control files
+
+      cd x86                   #or whatever the install TLD is
+      cd s3fh.release
+      cmake ../../SoftFloat-3a  # Open source systems
+
+    Windows users will need to add a -G option to generate for the
+    correct bit-ness and Visual Studio version.  For example, for a
+    64-bit build with Visual Studio 2015:
+
+      cmake ../../SoftFloat-3a -G "Visual Studio 14.0 2015 Win64"
+
+    Use cmake --help to match your version of Visual Studio to the
+    option.  For Visual Studio 2015, here are your choices:
+
+      32-bit:  -G "Visual Studio 14.0 2015"
+      64-bit:  -G "Visual Studio 14.0 2015 Win64"
+
+    Recall that 1Stop does all of this for you.
+
+4) Run cmake  to build SoftFloat 3a For Hercules.  This corresponds to
+   a UNIX "make" command, and indeed, if you are building on UNIX, you
+   could use make.  On Windows, you could use Visual Studio 2015 for
+   this step.
+
+    cmake --build . --clean-first --config Release
+
+   Do not forget the dot in the above command.   "--clean-first" is
+   not required on the first build, but will not cause problems.
+
+5) Run cmake to install SoftFloat 3a For Hercules.  This step copies
+   the library, public headers, and license documents into the
+   install directory tree, x86 in the example above.  This corresponds
+   to a UNIX "make install" command, and you can use that command if
+   you prefer.  There is no equivalent way to do this in Visual Studio
+   2015.
+
+    cmake -P cmake_install.cmake
+
+At this point, SoftFloat 3a For Hercules has been built and you may
+continue by building Hercules.
+
+
+PERFORM A DEBUG BUILD FROM SOURCE
+
+Repeat steps 3, 4, and 5 as for a release build with the following
+changes.  A debug build creates the library SoftFloat_D.lib (Windows)
+or libSoftFloat_D.a (non-Windows).  A Hyperion debug build will expect
+the "_D" library.
+
+3. Use directory s3fh.debug instead of s3fh.release
+
+5. Use the following command to install the debug build.
+
+    cmake -DBUILD_TYPE=Debug -P cmake_install.cmake
+
+   If your host system is UNIX-based, you may omit -DBUILD_TYPE=Debug.
+   See the Appendix below on the need for -DBUILD_TYPE=Debug.
+
+
+APPENDIX: DETAILS ON THE NEED FOR -DBUILD_TYPE=Debug
+
+According to the legacy CMake bug tracker, build trees built for Visual
+Studio or OS/X have multiple configurations included in a single tree,
+and the install script needs the BUILD_TYPE passed to it from the
+command line to install the correct configuration.
+
+See the following post to issue 11950 in that bug tracker.  Note that
+the bug under discussion is not related to Windows or OS/X.
+
+  https://public.kitware.com/Bug/view.php?id=11950#c25717
+
+
+APPENDIX: TECHNICAL NOTES ON THE BUILD
+
+The tool chosen to build the package is CMAKE, and the CMakeLists.txt
+file uses the name of the build directory to determine:
+
+- the name of the install directory
+- whether a release or debug build should be done.
+
+As follows:
+
+To build a release configuration to be installed in the "soft"
+directory, the build should take place in a directory named:
+
+      soft.release
+
+The build directory can be located anywhere, in any directory tree,
+so long as you have read/write/execute permissions in the parent
+directory.
+
+For a different naming convention or layout, use the following CMake
+command in the build directory
+
+cmake <path to source> -DINSTALL_PREFIX=<the install prefix>  \
+                       -DBUILD_TYPE=<the build type>
+
+<path to source> may be relative or absolute.
+
+
+APPENDIX: TESTING SOFTFLOAT-3A FOR HERCULES
+
+All testing of SoftFloat-3a is done after Hercules is built; no direct
+test driver has been created for SoftFload 3a For Hercules.
+
+Twenty-three Hercules test cases, all starting with "BFP-", exist in the
+tests subdirectory of Hercules V4.  Four files exist per case:
+
+ .asm    z/Arch assembly-language source code
+ .core   Assembled binary test case code, to be used with the Hercules
+         loadcore command.
+ .lst    Assembly listing, generated by the assembler included with SATK
+ .tst    Test case execution script
+
+The execution script contains statements to run the test case and
+compare its results to those created on a z/Architecture mainframe.
+
+The source code can be modified as needed and reassembled using the
+assembler included in Harold Grovesteen's excellent Stand-Alone Tool
+Kit (SATK).  You can find the complete tool kit, including detailed
+documentation, on github at:
+
+   https://github.com/s390guy/satk
+
