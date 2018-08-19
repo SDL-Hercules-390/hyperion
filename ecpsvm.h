@@ -176,6 +176,8 @@ typedef struct _ECPSVM_MICBLOK
 #define PRVVC 44    /* SCKC COUNT */
 #define RESERVED 48;
 #define PRVVP 52;   /* SPT COUNT */
+#define PRVVD 56    /* DIAG COUNT */
+#define HVCAL 60    /* EP to Diagnose handler DMKHVCAL */
 
 
 /* CP 'SAVEAREA' block definitions */
@@ -414,10 +416,19 @@ typedef struct _ECPSVM_MICBLOK
 #define VMMADDR VMMICRO+1
 
 #define VMPXINT         0x184
+#define VMASSIST        0x19C
 
 #define VMNOECPS        0x1A7
 
 #define VMSTKCNT        0x1CC
+
+/* VMABLOK Key Fields */
+#define VMAFPNT         0x00
+#define VMASHRBK        0x04
+
+/* SHRTABLE Key Fields */
+#define SHRSEGCT        0x14
+#define SHRSEGNM        0x18
 
 /* Virtual Device Blocks Key Fields */
 #define VCHSTAT  0x06
