@@ -1,5 +1,0 @@
-
-* Parallel-build all "Release" Configurations for all Platforms...
-
-MSBUILD   "%ProjectFileName%"  %MSBUILDOPT%  /p:Configuration=Release;Platform=Win32
-MSBUILD   "%ProjectFileName%"  %MSBUILDOPT%  /p:Configuration=Release;Platform=x64

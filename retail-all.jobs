@@ -1,5 +1,0 @@
-
-* Parallel-build all "Release" Configurations for all Platforms...
-
-VCBUILD   %VCBUILDOPT%   "%ProjectFileName%"   "Release|Win32"     /time  /nologo
-VCBUILD   %VCBUILDOPT%   "%ProjectFileName%"   "Release|x64"       /time  /nologo
