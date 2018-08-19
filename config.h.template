@@ -519,7 +519,7 @@
 #cmakedefine HAVE_STRUCT_IN_ADDR_S_ADDR @HAVE_STRUCT_IN_ADDR_S_ADDR@
 
 /* Define to 1 if `mt_gstat' is member of `struct mtget'. */
-#undef HAVE_STRUCT_MTGET_MT_GSTAT
+#cmakedefine HAVE_STRUCT_MTGET_MT_GSTAT @HAVE_STRUCT_MTGET_MT_GSTAT@
 
 /* Define to 1 if `sa_sigaction' is member of `struct sigaction'. */
 #undef HAVE_STRUCT_SIGACTION_SA_SIGACTION
@@ -556,7 +556,7 @@
 #undef HAVE_SYS_MOUNT_H
 
 /* Define to 1 if you have the <sys/mtio.h> header file. */
-#undef HAVE_SYS_MTIO_H
+#cmakedefine HAVE_SYS_MTIO_H @HAVE_SYS_MTIO_H@
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
