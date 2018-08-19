@@ -480,13 +480,13 @@
 #cmakedefine HAVE_STDLIB_H @HAVE_STDLIB_H@
 
 /* Define to 1 if you have the `strchr' function. */
-#undef HAVE_STRCHR
+#cmakedefine HAVE_STRCHR @HAVE_STRCHR@
 
 /* Define to 1 if you have the `strcmp' function. */
-#undef HAVE_STRCMP
+#cmakedefine HAVE_STRCMP @HAVE_STRCMP@
 
 /* Define to 1 if you have the `strerror_r' function. */
-#undef HAVE_STRERROR_R
+#cmakedefine HAVE_STRERROR_R @HAVE_STRERROR_R@
 
 /* Define to 1 if you have the <strings.h> header file. */
 #cmakedefine HAVE_STRINGS_H @HAVE_STRINGS_H@
