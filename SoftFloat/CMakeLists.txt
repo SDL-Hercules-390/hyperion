@@ -135,12 +135,3 @@ install( TARGETS ${FULLNAME}
 #------------------------------------------------------------------------------
 
 include( extra.txt )
-
-
-
-#------------------------------------------------------------------------------
-#   CMake debugging: dump variables at exit
-#------------------------------------------------------------------------------
-
-get_filename_component( CURRENT_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}" NAME )
-vdump( "${CURRENT_LIST_FILE}" "exit" )
