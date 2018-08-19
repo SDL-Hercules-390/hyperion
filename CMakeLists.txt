@@ -13,3 +13,6 @@ add_subdirectory(SoftFloat)
 
 # Add crypto subdirectory
 add_subdirectory(crypto)
+
+# Add decNumber subdirectory
+add_subdirectory(decNumber)
