@@ -335,21 +335,25 @@ target_link_libraries(dmap2hrc hercd)
 add_executable(hetget hetget.c)
 target_link_libraries(hetget hercd)
 target_link_libraries(hetget dyndev)
+target_link_libraries(hetget core)
 
 # hetinit
 add_executable(hetinit hetinit.c)
 target_link_libraries(hetinit hercd)
 target_link_libraries(hetinit dyndev)
+target_link_libraries(hetinit core)
 
 # hetmap
 add_executable(hetmap hetmap.c)
 target_link_libraries(hetmap hercd)
 target_link_libraries(hetmap dyndev)
+target_link_libraries(hetmap core)
 
 # hetupd
 add_executable(hetupd hetupd.c)
 target_link_libraries(hetupd hercd)
 target_link_libraries(hetupd dyndev)
+target_link_libraries(hetupd core)
 
 # tapecopy
 add_executable(tapecopy tapecopy.c)
