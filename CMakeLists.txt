@@ -122,10 +122,6 @@ target_link_libraries(hercu telnet)
 target_link_libraries(hercu ${CMAKE_DL_LIBS})
 target_link_libraries(hercu ${CMAKE_THREAD_LIBS_INIT})
 
-if(LIBM_REQUIRED)
-target_link_libraries(hercu m)
-endif()
-
 
 
 
@@ -256,6 +252,11 @@ add_library(core STATIC
   vmd250.c
   xstore.c
 )
+
+if(LIBM_REQUIRED)
+  message( STATUS "Libm required" )
+  target_link_libraries(core m)
+endif()
 
 if (BZIP2_FOUND)
   target_link_libraries(hercd ${BZIP2_LIBRARIES})
