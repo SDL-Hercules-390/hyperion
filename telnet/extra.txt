@@ -1,0 +1,14 @@
+#------------------------------------------------------------------------------
+#   Define additional files to be installed
+#------------------------------------------------------------------------------
+
+install( FILES "telnet.LICENSE.txt" DESTINATION . )
+install( FILES "telnet.README.txt"  DESTINATION . )
+
+#------------------------------------------------------------------------------
+
+if( WIN32 )
+  install( FILES "${CMAKE_BINARY_DIR}/${FULLNAME}.pdb" DESTINATION lib )
+endif()
+
+#------------------------------------------------------------------------------

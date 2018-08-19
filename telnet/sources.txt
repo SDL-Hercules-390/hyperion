@@ -1,0 +1,20 @@
+#------------------------------------------------------------------------------
+#   Construct a list of this project's source files
+#------------------------------------------------------------------------------
+
+#  PROGRAMMING NOTE: do NOT use GLOB to collect a list of source files from
+#  your source tree because, if no "CMakeLists.txt" file changes when a file
+#  is added or removed from your project, then the previously generated build
+#  system will never know to ask CMake to regenerate itself to reflect the
+#  newly added/removed files(s).
+
+set( ${PROJECT_NAME}_SRCS
+
+     telnet_version.c
+
+     source/telnet.c
+)
+
+list( SORT ${PROJECT_NAME}_SRCS )
+
+#------------------------------------------------------------------------------

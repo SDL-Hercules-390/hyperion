@@ -1,0 +1,28 @@
+#------------------------------------------------------------------------------
+#   Adjust needed compile flags for this project/package
+#------------------------------------------------------------------------------
+
+include( targetver.txt )      # Define minimum required Windows platform
+
+
+#------------------------------------------------------------------------------
+
+if( WIN32 )
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D _CRT_SECURE_NO_WARNINGS" )
+endif()
+
+#------------------------------------------------------------------------------
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          ${PKG_C_FLAGS}" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} ${PKG_C_FLAGS}" )
+set( CMAKE_C_FLAGS                "${CMAKE_C_FLAGS}                ${PKG_C_FLAGS}" )
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -D HAVE_PLATFORM_H -D DEBUG" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -D HAVE_PLATFORM_H" )
+set( CMAKE_C_FLAGS                "${CMAKE_C_FLAGS}                -D HAVE_PLATFORM_H" )
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -D VERS_STRING=${VERS_STRING}" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -D VERS_STRING=${VERS_STRING}" )
+set( CMAKE_C_FLAGS                "${CMAKE_C_FLAGS}                -D VERS_STRING=${VERS_STRING}" )
+
+#------------------------------------------------------------------------------

@@ -16,3 +16,6 @@ add_subdirectory(crypto)
 
 # Add decNumber subdirectory
 add_subdirectory(decNumber)
+
+# Add telnet subdirectory
+add_subdirectory(telnet)
