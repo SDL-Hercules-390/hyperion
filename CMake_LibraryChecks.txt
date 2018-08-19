@@ -1,0 +1,9 @@
+#
+# Library checks for CMake-based build system
+#
+
+find_package (BZip2)
+if (BZIP2_FOUND)
+  include_directories(${BZIP_INCLUDE_DIRS})
+  set(CCKD_BZIP2 1)
+endif (BZIP2_FOUND)

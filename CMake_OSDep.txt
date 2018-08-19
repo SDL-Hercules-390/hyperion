@@ -1,0 +1,11 @@
+#
+# OS-specific checks and flags
+#
+
+# Apple's pthread_setname_np only takes one argument
+if (APPLE)
+  set (PTHREAD_SET_NAME_ONLY 1)
+endif()
+
+# Store host's architecture
+set(HOST_ARCH "${CMAKE_HOST_SYSTEM_PROCESSOR}")
