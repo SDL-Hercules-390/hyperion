@@ -361,5 +361,6 @@ add_executable(hercules bootstrap.c)
 target_link_libraries(hercules core)
 target_link_libraries(hercules dyndev)
 target_link_libraries(hercules libhercd)
+target_link_libraries(hercules ${CMAKE_DL_LIBS})
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )
