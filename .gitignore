@@ -149,3 +149,6 @@ allTests.*
 # Dynamically generated files
 /AutoBuildCount.h
 /_nmake_pjj.bat
+
+# iCloud sync data
+*.icloud
