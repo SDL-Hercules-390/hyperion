@@ -462,22 +462,22 @@
 #undef HAVE_SOCKLEN_T
 
 /* Define to 1 if you have the `sqrtl' function. */
-#undef HAVE_SQRTL
+#cmakedefine HAVE_SQRTL @HAVE_SQRTL@
 
 /* Define to 1 if you have the <stdatomic.h> header file. */
-#undef HAVE_STDATOMIC_H
+#cmakedefine HAVE_STDATOMIC_H @HAVE_STDATOMIC_H@
 
 /* Define to 1 if you have the <stdbool.h> header file. */
-#undef HAVE_STDBOOL_H
+#cmakedefine HAVE_STDBOOL_H @HAVE_STDBOOL_H@
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#cmakedefine HAVE_STDINT_H @HAVE_STDINT_H@
 
 /* Define to 1 if you have the <stdio.h> header file. */
-#undef HAVE_STDIO_H
+#cmakedefine HAVE_STDIO_H @HAVE_STDIO_H@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
+#cmakedefine HAVE_STDLIB_H @HAVE_STDLIB_H@
 
 /* Define to 1 if you have the `strchr' function. */
 #undef HAVE_STRCHR
@@ -638,10 +638,10 @@
 #undef HAVE_VSSCANF
 
 /* Define to enable zlib compression in emulated DASDs */
-#undef HAVE_ZLIB
+#cmakedefine HAVE_ZLIB @HAVE_ZLIB@
 
 /* Define to 1 if you have the <zlib.h> header file. */
-#undef HAVE_ZLIB_H
+#cmakedefine HAVE_ZLIB_H @HAVE_ZLIB_H@
 
 /* Define to 1 if the system has the type `__int128_t'. */
 #undef HAVE___INT128_T
@@ -653,7 +653,7 @@
 #undef HDL_USE_LIBTOOL
 
 /* Define to enable bzip2 compression in emulated tapes */
-#cmakedefine HET_BZIP2 @BZIP2_FOUND@
+#cmakedefine HET_BZIP2 @HET_BZIP2@
 
 
 /* Define as quoted 'target_cpu' value = target host CPU architecture */

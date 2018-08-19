@@ -254,6 +254,10 @@ if (BZIP2_FOUND)
   target_link_libraries(libhercd ${BZIP2_LIBRARIES})
 endif()
 
+if (ZLIB_FOUND)
+  target_link_libraries(libhercd ${ZLIB_LIBRARIES})
+endif()
+
 # --------------
 # Misc utilities
 # --------------
