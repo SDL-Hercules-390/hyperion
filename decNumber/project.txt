@@ -1,0 +1,13 @@
+#------------------------------------------------------------------------------
+#   Define the project
+#------------------------------------------------------------------------------
+
+set( EXTPKG_NAME  "decNumber"                                 )
+set( EXTPKG_VERS  "3.68.0"                                    )
+set( EXTPKG_DESC  "ANSI C General Decimal Arithmetic Library" )
+set( FULLNAME     "${EXTPKG_NAME}"                            )
+
+project( ${EXTPKG_NAME} VERSION ${EXTPKG_VERS} )
+set( PROJECT_DESCRIPTION "${EXTPKG_DESC}" CACHE PATH "Project description" FORCE )
+
+#------------------------------------------------------------------------------

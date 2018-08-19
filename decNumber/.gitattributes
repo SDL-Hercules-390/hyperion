@@ -1,0 +1,206 @@
+#------------------------------------------------------------------------------
+#   .gitattributes - Set default attributes for files controlled by Git.
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Default handling for all file types not specified
+#------------------------------------------------------------------------------
+
+*                   text=auto
+
+
+#------------------------------------------------------------------------------
+#   Documents
+#------------------------------------------------------------------------------
+
+*.doc               binary
+*.DOC               binary
+*.pdf               binary
+*.PDF               binary
+*.rtf               binary
+*.RTF               binary
+
+*.md                text
+*.txt               text
+
+AUTHORS             text
+AUTHORS.*           text
+CHANGELOG           text
+CHANGELOG.*         text
+CHANGES             text
+CHANGES.*           text
+COPYING             text
+COPYING.*           text
+ERRATA              text
+ERRATA.*            text
+INSTALL             text
+INSTALL.*           text
+license             text
+LICENSE             text
+license.*           text
+LICENSE.*           text
+NEWS                text
+NEWS.*              text
+readme              text
+README              text
+readme.*            text
+README.*            text
+TODO                text
+TODO.*              text
+
+#------------------------------------------------------------------------------
+# Script handling
+#------------------------------------------------------------------------------
+
+*.bat               text    eol=crlf
+*.cmd               text    eol=crlf
+*.sh                text    eol=lf
+
+
+#------------------------------------------------------------------------------
+#   Git Specific
+#------------------------------------------------------------------------------
+
+.gitattributes      text
+.gitignore          text
+.gitconfig          text
+
+
+#------------------------------------------------------------------------------
+#   Configuration Related
+#------------------------------------------------------------------------------
+
+*.cmake             text
+Makefile            text
+makefile            text
+*.ac                text
+*.am                text
+
+
+#------------------------------------------------------------------------------
+#   Templates
+#------------------------------------------------------------------------------
+
+*.in                text
+*.in.Linux          text
+*.in.Darwin         text
+*.in.Windows        text
+
+
+#------------------------------------------------------------------------------
+#   Graphics
+#------------------------------------------------------------------------------
+
+*.bmp               binary
+*.gif               binary
+*.ico               binary
+*.jpeg              binary
+*.jpg               binary
+*.png               binary
+*.svg               binary
+*.svgz              binary
+*.tif               binary
+*.tiff              binary
+
+
+#------------------------------------------------------------------------------
+#   Archives and other binary
+#------------------------------------------------------------------------------
+
+*.7z                binary
+*.gz                binary
+*.rar               binary
+*.tar               binary
+*.zip               binary
+*.bz2               binary
+*.tgz               binary
+
+
+#------------------------------------------------------------------------------
+#   C/C++
+#------------------------------------------------------------------------------
+
+#   Sources
+
+*.c                 text
+*.c++               text
+*.cc                text
+*.cpp               text
+*.cxx               text
+*.h                 text
+*.h++               text
+*.hh                text
+*.hpp               text
+
+
+#   Object files
+
+*.slo               binary
+*.lo                text
+*.o                 binary
+*.obj               binary
+
+
+#   Dynamic libraries
+
+*.so                binary
+*.dylib             binary
+*.dll               binary
+
+
+#   Static libraries
+
+*.lai               binary
+*.la                text
+*.a                 binary
+*.lib               binary
+
+
+#------------------------------------------------------------------------------
+#   Scripting
+#------------------------------------------------------------------------------
+
+*.pl                text
+*.py                text
+*.rb                text
+
+
+#------------------------------------------------------------------------------
+#   Rexx
+#------------------------------------------------------------------------------
+
+*.cls               text
+*.rx                text
+*.rex               text
+*.rexx              text
+*.srx               text
+*.scls              text
+*.srex              text
+*.srexx             text
+
+
+#------------------------------------------------------------------------------
+#   Web Projects
+#------------------------------------------------------------------------------
+
+#   Source Code
+
+*.css               text
+*.htm               text
+*.html              text
+
+
+#------------------------------------------------------------------------------
+#   Miscellaneous Configurations
+#------------------------------------------------------------------------------
+
+*.yaml              text
+*.yml               text
+
+
+#------------------------------------------------------------------------------
+#   Project specific files
+#------------------------------------------------------------------------------
+
+build.cmd           text    eol=crlf
+build               text    eol=lf

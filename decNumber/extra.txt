@@ -1,0 +1,16 @@
+#------------------------------------------------------------------------------
+#   Define additional files to be installed
+#------------------------------------------------------------------------------
+
+install( FILES "decnumber.ICU-license.html" DESTINATION . )
+install( FILES "decnumber.pdf"              DESTINATION . )
+install( FILES "decnumber.readme.txt"       DESTINATION . )
+install( FILES "decnumber.ERRATA"           DESTINATION . )
+
+#------------------------------------------------------------------------------
+
+if( WIN32 )
+  install( FILES "${CMAKE_BINARY_DIR}/${FULLNAME}.pdb" DESTINATION lib )
+endif()
+
+#------------------------------------------------------------------------------
