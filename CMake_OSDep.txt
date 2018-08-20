@@ -18,7 +18,7 @@ if (WIN32)
   set(NO_SIGABEND_HANDLER 1)
 
   if (MSVC_TOOLSET_VERSION EQUAL 100)
-    set(VS2010_TOOLSET)
+    set(VS2010_TOOLSET 1)
   endif()
 
   message (STATUS "MSVC Toolset version: ${MSVC_TOOLSET_VERSION}")
