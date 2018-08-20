@@ -16,6 +16,13 @@ if (WIN32)
   set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -D_MSVC_" )
   set(OPTION_FTHREADS 1)
   set(NO_SIGABEND_HANDLER 1)
+
+  if (MSVC_TOOLSET_VERSION EQUALS 100)
+    set(VS2010_TOOLSET)
+  endif()
+
+  message (STATUS "MSVC Toolset version: ${MSVC_TOOLSET_VERSION}")
+
 endif()
 
 # Check if required to link with libm

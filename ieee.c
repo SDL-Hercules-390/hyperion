@@ -675,6 +675,17 @@ enum
     FP_SUBNORMAL    =  3,
     FP_NORMAL       =  4
 };
+#else
+#if defined(VS2010_TOOLSET)
+enum
+{
+    FP_NAN          =  0,
+    FP_INFINITE     =  1,
+    FP_ZERO         =  2,
+    FP_SUBNORMAL    =  3,
+    FP_NORMAL       =  4
+};
+#endif /*defined(VS2010_TOOLSET)*/
 #endif /*!defined(HAVE_MATH_H)*/
 
 /*

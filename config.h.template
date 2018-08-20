@@ -779,3 +779,5 @@
 #define VERS_INT 0
 #define VERS_MIN 0
 #define VERS_BLD 0
+
+#cmakedefine VS2010_TOOLSET @VS2010_TOOLSET@
