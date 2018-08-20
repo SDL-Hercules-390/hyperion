@@ -268,7 +268,7 @@ the same functionality but is never dropped.
 
 
     HREXX.ERRORHANDER
-    
+
 
 defines how errors (non-zero RC) should be handled.  Setting the variable to
 "SYSTEM" requests the Rexx interpreter itself handle any non-zero return code

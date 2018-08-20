@@ -3849,7 +3849,7 @@ int     m1;                             /* Mask value                */
 
 } /* end DEF_INST(branch_prediction_preload) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C5   BPRP  - Branch Prediction Relative Preload             [MII] */
 /*-------------------------------------------------------------------*/
@@ -3864,10 +3864,10 @@ int     m1;                             /* Mask value                */
        all of the branch-attribute codes. For codes that
        are not recognized by the CPU, and for reserved
        codes, the BPRP instruction acts as a no-operation */
-        
+
 } /* end DEF_INST(branch_prediction_relative_preload) */
- 
- 
+
+
 /*-------------------------------------------------------------------*/
 /* B2FA NIAI  - Next Instruction Access Intent                  [IE] */
 /*-------------------------------------------------------------------*/

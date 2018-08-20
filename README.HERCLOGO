@@ -1,9 +1,9 @@
 Customizable hercules 3270 Logo
 
-The initial welcome screen presented when a TN 3270 terminal connects 
+The initial welcome screen presented when a TN 3270 terminal connects
 to a hercules 3270 device can now be customized.
 
-The customized logo is stored in a plain text file which contains 
+The customized logo is stored in a plain text file which contains
 positioning orders, attributes and variable substitutions.
 
 hercules also contains a built-in logo should no suitable file be found.
@@ -16,7 +16,7 @@ the current directory.
 The name of the logo file can also be specified as a startup option by
 using the '-b' flag.
 
-Additionally, the file may also be specified by using the 'HERCLOGO' 
+Additionally, the file may also be specified by using the 'HERCLOGO'
 configuration statement.
 
 (NOTE : The statement was previously LOGOFILE, but LOGOFILE has been
@@ -42,7 +42,7 @@ Set the Highlight and/or Protected attribute
 Forces going to the next line
 
 @ALIGN NONE|LEFT|RIGHT|CENTER
-Specified the text alignement (relative to the left and right borders of the 
+Specified the text alignement (relative to the left and right borders of the
 terminal). When ALIGN is other than "NONE", a new line is automatically
 inserted after each line of text. If ALIGN is "NONE", then the text will
 be written without skipping to the next line.

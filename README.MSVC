@@ -279,7 +279,7 @@ BZIP2 is a freely available (open-source (BSD-style) license), patent free
 (as far as the author knows), high-quality data compressor
 written by Julian R Seward. It typically compresses files to within 10% to
 15% of the best available techniques (the PPM family of statistical compressors),
-whilst being around twice as fast at compression and six times faster at decompression. 
+whilst being around twice as fast at compression and six times faster at decompression.
 
 In source form, the Hercules project does not contain any BZIP2 source code at all.
 

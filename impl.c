@@ -467,7 +467,7 @@ static void* watchdog_thread( void* arg )
                 savecount[ cpu ] = INSTCOUNT( regs );
                 continue;
             }
-               
+
             /*
                Uh oh! We have found a malfunctioning CPU! It has not
                executed any instructions at all within the last check

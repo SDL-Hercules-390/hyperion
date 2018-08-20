@@ -438,7 +438,7 @@
   #else
     #define COD_DLL_IMPORT          extern
   #endif
-#else 
+#else
   #define   COD_DLL_IMPORT          DLL_EXPORT
 #endif
 

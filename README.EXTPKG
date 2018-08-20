@@ -206,7 +206,7 @@ directory needed by Hercules (pointed to by your 'LIB' environment variable).
 
 If you clone the \hyperion directory or download a newer Hyperion repository
 in the future, there is nothing extra you need to do.  You do *NOT* need to
-rebuild the external packages ever again (unless they are updated of course). 
+rebuild the external packages ever again (unless they are updated of course).
 
 
 ---------------

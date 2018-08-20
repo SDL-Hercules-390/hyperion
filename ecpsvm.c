@@ -3044,7 +3044,7 @@ U16   pte;
             ste=EVM_L(vmseg+segnum);                // get the seg table entry for this segment
             if(!(ste & 0x00000001))                 // if segment is not invalid...
             {
-                pagnum=ste & 0xf0000000;            // isolate page table length 
+                pagnum=ste & 0xf0000000;            // isolate page table length
                 pagnum=pagnum >> 28;                // compute number of pages in segment
                 pagnum++;                           // make relative to 1
                 p_pte=ste & 0x00fffff8;             // isolate the PTE address
@@ -3924,7 +3924,7 @@ BYTE work;
 
     /* VMINST must contain an image of the SIO instruction and the virtual device address.    */
     F_VMINST=0x9C000000 | e2;
-    
+
     /* Switch the machine from running a VM user to CP */
     vmb=vpswa-0xA8;
     ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
@@ -3948,7 +3948,7 @@ BYTE work;
        out a problem, we'll load the pointer to exit to DMKVSIVS with the SIO assist
        completed successfully.
     */
-    
+
     work=EVM_IC(vmb+VMDSTAT);
     work &= ~VMTIO;
     EVM_STC(work,vmb+VMDSTAT);
@@ -4158,7 +4158,7 @@ int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
 int ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 {
 
-    U32 crs[16];        
+    U32 crs[16];
     BYTE *ecb_p;
     VADR F_ECBLOK,vmb;
     BYTE B_VMPSTAT;
@@ -4218,7 +4218,7 @@ int ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
         {
             j-=16;
         }
-        
+
         ARCH_DEP(vstore4)(crs[j],effective_addr2+(i*4),b2,regs);
     }
 
@@ -4477,7 +4477,7 @@ U32  F_VMINST;
     /* Switch the machine from running a VM user to CP */
     vmb=vpswa-0xA8;
     ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
- 
+
     /* Load CP's registers with the values required by DMKHVCAL.  R12=base reg.    */
 
     vmalist=EVM_L(AVMALIST);

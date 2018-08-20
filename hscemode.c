@@ -370,7 +370,7 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
             regs = regs->guestregs;
 
             MSGBUF( wrk, "AIV %16.16"PRIx64" aip %p ip %p aie %p"
-                
+
                 , regs->AIV_G
                 , regs->aip
                 , regs->ip

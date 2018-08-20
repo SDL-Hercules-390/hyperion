@@ -203,16 +203,16 @@ VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}-SDL${git_hash}$
 
 if   test "$vers_part" == "VERS_MAJ"; then
                      echo $VERS_MAJ
-                     
+
 elif test "$vers_part" == "VERS_INT"; then
                      echo $VERS_INT
-                     
+
 elif test "$vers_part" == "VERS_MIN"; then
                      echo $VERS_MIN
-                     
+
 elif test "$vers_part" == "VERS_BLD"; then
                      echo $VERS_BLD
-                     
+
 elif test "$vers_part" == "VERSION"; then
                      echo $VERSION
 else

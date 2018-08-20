@@ -349,10 +349,10 @@ CTCE - Enhanced Channel to Channel Emulation via TCP connection
 The CTCE device type will emulate a real 3088 Channel to Channnel
 Adapter also for non-IP traffic, enhancing the CTCT capabilities.
 CTCE connections are also based on TCP/IP between two (or more)
-Hercules instances, and requires an even-odd pair of port numbers 
-per device side. Only the even port numbers are to be configured; 
-the odd numbers are just derived by adding 1 to the (configured) 
-even port numbers.  The socket connection pairs cross-connect, 
+Hercules instances, and requires an even-odd pair of port numbers
+per device side. Only the even port numbers are to be configured;
+the odd numbers are just derived by adding 1 to the (configured)
+even port numbers.  The socket connection pairs cross-connect,
 the arrows showing the send->receive direction :
 
    x-lport-even -> y-rport-odd
@@ -371,10 +371,10 @@ where:
      <raddress> is the IP address on the remote.
 
      <rport>    is the even TCP/IP port on the remote system.
-     
+
      <mtu>      optional mtu buffersize, defaults to 32778
-     
-     <sml>      optional small minimum for mtu, defaults to 8 
+
+     <sml>      optional small minimum for mtu, defaults to 8
 
 A sample CTCE device configuration is shown below:
 
@@ -390,7 +390,7 @@ A sample CTCE device configuration is shown below:
 
 CTCE connected Hercules instances can be hosted on either Unix
 or Windows platforms, both sides do not need to be the same.
- 
+
 
 -----------------------------------------------------------------
 PTP      - MPCPTP/PCPTP6 Channel to Channel link

@@ -1042,8 +1042,8 @@ int configure_cpu( int target_cpu )
 #else
         /* When not supported, we zero the cpuclockid, which will trigger a       */
         /* different approach to obtain the thread CPU time in clock.c            */
-        sysblk.cpuclockid[ target_cpu ] = 0; 	
-	    WRMSG( HHC00112, "W" );
+        sysblk.cpuclockid[ target_cpu ] = 0;
+        WRMSG( HHC00112, "W" );
 #endif
 
         /* Find out if we are a cpu thread */

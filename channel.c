@@ -827,7 +827,7 @@ static void display_sense( const DEVBLK* dev )
             , (dev->sense[1] & SENSE1_NRF) ? "NRF "    : ""
             , (dev->sense[1] & SENSE1_FP ) ? "FP "     : ""
             , (dev->sense[1] & SENSE1_WRI) ? "WRI "    : ""
-            , (dev->sense[1] & SENSE1_IE ) ? "IE "     : "" 
+            , (dev->sense[1] & SENSE1_IE ) ? "IE "     : ""
         );
 
     // "%1d:%04X CHAN: sense %s"

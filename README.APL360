@@ -24,7 +24,7 @@ Connection closed by foreign host.
 0402 2703 dial=in lport=57413 lnctl=ibm1 term=rxvt4apl skip=5EDE code=ebcd iskip=0D0A prepend=16 append=5B1F eol=0A binary=yes crlf=yes sendcr=yes
 
 3. Logon using "314159 (do not use = as in 1052).  For rxvt4apl, use the
-regular right parenthesis.  See also the separate readme file for using 
+regular right parenthesis.  See also the separate readme file for using
 rxvt4apl.
 
 4. Use CTRL-C as usual for 2741 ATTN.

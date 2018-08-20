@@ -13,7 +13,7 @@
 
 /*********************************************************************/
 
-#include <winver.h>                 /* Need VFT_APP constant, etc    */ 
+#include <winver.h>                 /* Need VFT_APP constant, etc    */
 #include "ccfixme.h"                /* Need the "QSTR" macro, etc    */
 
 /*********************************************************************/

@@ -206,7 +206,7 @@
 
   pushd .
   echo.
-  
+
   call "%VCVARSDIR%\vcvarsall.bat"  %vstarget%
 
   @if defined TRACEON (@echo on) else (@echo off)

@@ -282,9 +282,9 @@ END_DEVICE_SECTION;
 /*  The instruction section registers inserts optional instructions,
     or modifies existing instructions.
 
-    Instructions are generally defined with DEF_INST(instname) which results 
+    Instructions are generally defined with DEF_INST(instname) which results
     in an external reference of s370_instname, s390_instname and z900_instname.
-    If an instruction is not defined for a certain architecture mode then 
+    If an instruction is not defined for a certain architecture mode then
     UNDEF_INST(instname) must be used for that given architecture mode.
 
     The instruction section is optional
@@ -551,13 +551,13 @@ int r1, r2;                                     /* register values   */
 #if defined(_ARCH_NUM_1)
  #define  _GEN_ARCH _ARCH_NUM_1
  #include "testins.c"
-#endif 
+#endif
 
 #if defined(_ARCH_NUM_2)
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCH_NUM_2
  #include "testins.c"
-#endif 
+#endif
 
 
 HDL_DEPENDENCY_SECTION;
@@ -626,13 +626,13 @@ following very specific header file #include sequence:
       ... function body ...
     }
 
-    
+
     DLL_EXPORT  int myfunction2 (DEVBLK*, int myarg, int otherarg)
     {
       ... function body ...
     }
 
-    
+
     DLL_EXPORT  int myfunction3 (DEVBLK*, int myarg, int otherarg)
     {
       ... function body ...

@@ -23,7 +23,7 @@ privileges. For hercules, this means the CAP_SYS_NICE capability, and for
 hercifc, this means CAP_NET_ADMIN capability.
 
 This is still not an ideal situation since a setuid 0 hercules will allow
-anyone to modify dispatching/scheduling priority for process it owns 
+anyone to modify dispatching/scheduling priority for process it owns
 beyond what is normally allowed for such a user. This is however less critical
 than having hercules run as a full blown superuser.
 
@@ -32,7 +32,7 @@ case, then hercules won't be able to set the timer thread priority (or any
 other thread priority for that matter) to anything lower than 0 and the user
 will not acquire any further privilege.
 
-Having hercifc setuid root is pretty much mandatory if it is desired to 
+Having hercifc setuid root is pretty much mandatory if it is desired to
 do some networking in the guest. hercifc already restricts on what interface
 a controlling program may act. However, limiting its capabilities to just
 CAP_NET_ADMIN restricts any escalation exploit to just THAT privilege.
@@ -42,7 +42,7 @@ the necessary library) setting hercules setuid root is strongly discouraged
 on a multi user machine (where users have normal access but not access to
 superuser privilege).
 
-On systems that DO have the capabilities feature implemented and enabled, 
+On systems that DO have the capabilities feature implemented and enabled,
 and providing hercules has been built with the support enabled, setting
 hercules setuid root still allows normal users to potentially have the
 capacity to set their own processes to negative nice values. So this also
@@ -61,7 +61,7 @@ Building hercules with capabilities feature :
 A new configure flag has been added : --[enable|disable]-capabilities
 This flag allows building hercules without capabilities features even on a
 system that would allow it. This may be necessary if the intended target may
-be missing the necessary implementation (pre 2.2 linux kernel) and/or library 
+be missing the necessary implementation (pre 2.2 linux kernel) and/or library
 (libcap).
 
 In order for the build to actually implement capabilities, the following files
@@ -69,12 +69,12 @@ are necessary :
 
 libcap.a in the libraries directory
 sys/capability.h in the includes directory
-sys/prctl.h in the includes directory (this one is usually std on 
+sys/prctl.h in the includes directory (this one is usually std on
         linux systems)
 
 In order to run a version of hercules built for capabilities support, the
 following file is necessary :
-libcap.so.x in the libraries directory (x is currently "1" at the time of 
+libcap.so.x in the libraries directory (x is currently "1" at the time of
         writing).
 
 On linux systems, these files usually come with the "libcap1" package for

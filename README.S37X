@@ -30,7 +30,7 @@ runtime.
 
 In Hercules, the fact that such and such facility or feature is built for
 such and such architecture is controlled by a series of C preprocessor macros
-in the feat370.h, feat390.h and feat900.h header files. 
+in the feat370.h, feat390.h and feat900.h header files.
 
 
 Furthermore, the availability of the instructions is controlled by Operation

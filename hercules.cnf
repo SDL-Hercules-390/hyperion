@@ -132,7 +132,7 @@
 #         Device statement
 # 0C00    ZFCP
 #
-#         Specify the location of the scsi bootstrap 
+#         Specify the location of the scsi bootstrap
 #         to be used for an IPL of a FCP device
 # HWLDR   SCSIBOOT /usr/local/share/hercules/scsiboot
 #
