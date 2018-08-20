@@ -257,6 +257,9 @@ add_library(core STATIC
   dyncrypt.c
   dyngui.c
   hdteq.c
+  w32util.c
+  w32ctca.c
+  w32stape.c
 )
 
 if(LIBM_REQUIRED)
