@@ -119,6 +119,7 @@ target_link_libraries(hercu decNumber)
 target_link_libraries(hercu SoftFloat)
 target_link_libraries(hercu crypto)
 target_link_libraries(hercu telnet)
+target_link_libraries(hercu core)
 target_link_libraries(hercu ${CMAKE_DL_LIBS})
 target_link_libraries(hercu ${CMAKE_THREAD_LIBS_INIT})
 

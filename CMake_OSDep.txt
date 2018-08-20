@@ -15,6 +15,7 @@ if (WIN32)
   set(IS_WINDOWS 1)
   set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -D_MSVC_" )
   set(OPTION_FTHREADS 1)
+  set(NO_SIGABEND_HANDLER 1)
 endif()
 
 # Check if required to link with libm

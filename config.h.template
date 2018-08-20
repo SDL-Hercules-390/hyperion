@@ -699,7 +699,7 @@
 #cmakedefine NO_SETUID @NO_SETUID@
 
 /* Define to disable sigabend_handler (please describe this better) */
-#undef NO_SIGABEND_HANDLER
+#cmakedefine NO_SIGABEND_HANDLER @NO_SIGABEND_HANDLER@
 
 /* Define to enable posix draft 1003.1e capabilities */
 #undef OPTION_CAPABILITIES
