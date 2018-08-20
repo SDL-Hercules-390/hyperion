@@ -2185,7 +2185,7 @@ static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*FC*/   GENx370x390x900 (multiply_decimal,SS,"MP"),
  /*FD*/   GENx370x390x900 (divide_decimal,SS,"DP"),
  /*FE*/   GENx___x___x___ ,
- /*FF*/   GENx___x___x___ 
+ /*FF*/   GENx___x___x___
 };
 
 static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =

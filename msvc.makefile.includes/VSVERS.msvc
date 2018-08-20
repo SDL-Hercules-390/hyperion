@@ -9,18 +9,18 @@
 # ***************************************************************************
 
 #-------------------------------------------------------------------
-#                                                                   
-#     The following defines are to more easily test for known        
-#     versions of Microsoft's Visual Studio compiler via e.g.        
-#     !IF $(vsversion) >= $(vers_vs2008)        
-#                                                                   
+#
+#     The following defines are to more easily test for known
+#     versions of Microsoft's Visual Studio compiler via e.g.
+#     !IF $(vsversion) >= $(vers_vs2008)
+#
 #-------------------------------------------------------------------
-#                                                                   
-#     Add support for new Visual Studio versions here...             
-#                                                                   
-#     Don't forget to update the 'vsvers.h' header also!            
-#     Don't forget to update the 'makefile.bat' file too!            
-#                                                                   
+#
+#     Add support for new Visual Studio versions here...
+#
+#     Don't forget to update the 'vsvers.h' header also!
+#     Don't forget to update the 'makefile.bat' file too!
+#
 #-------------------------------------------------------------------
 
 vers_vs2017=15

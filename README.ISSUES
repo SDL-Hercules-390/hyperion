@@ -18,13 +18,13 @@ CE+DE on tape rewind-unload:
 
     Addendum (Ivan 2004/10/02)
                       Final DE on Rewind Unload must be accompanied by UC
-                      (Unit Check) (all D/Ts) and possibly CUE 
-                      (Control Unit End) for 3420 (3803 CU Type, to 
+                      (Unit Check) (all D/Ts) and possibly CUE
+                      (Control Unit End) for 3420 (3803 CU Type, to
                       indicate an end of Control Unit Busy condition). It
                       is possible the CUE should only occur if a BUSY was
                       presented at some point, but I am not 100% sure about
                       that (and that's not supported either - as we don't
-                      support shared CUs). However, VM/370 for example 
+                      support shared CUs). However, VM/370 for example
                       insists that CUE be presented.
                       On the same line, VM/370 DDR is failing on Rewind
                       unload. This could be part of the above problem.
@@ -40,14 +40,14 @@ Incorrect Channel program check reporting (Ivan 2004/10/02)
 
 *** DEVICE HANDLERS ***
 Some units still returning CE+DE+UC on not-ready conditions (Ivan 2004/10/02)
-    
+
     I/O architecture requires non-ready units to return UC only.
-    This is done at the device handler lever and has not been implemented 
+    This is done at the device handler lever and has not been implemented
     in all device handlers
 
 *** TAPE DEVICE HANDLER ***
 AWS handler fails to read FLEX Generated AWS files (Ivan 2004/10/02)
-    
+
     The current AWS handler is not capable of processing multi-segment
     blocks. However, this can be bypassed by forcing the use of the HET
     handler which is backward compatible.
@@ -58,9 +58,9 @@ I/O Subsystem reset/Device reset not always effective (Ivan 2004/10/02)
     The I/O subsystem reset function does not actually send a reset signal
     (as described in 17.2.2.2 in POO) to the device handlers.
     If an I/O is in progress, it will not be terminated.
-    Subsequently, if status is stacked after the I/O reset, the device may 
-    be left in an unusable state, with status pending and E bit off 
-    effectivelly preventing an MSCH to be issued with the E bit on - 
+    Subsequently, if status is stacked after the I/O reset, the device may
+    be left in an unusable state, with status pending and E bit off
+    effectivelly preventing an MSCH to be issued with the E bit on -
     requiring a Power On Reset (hercules stop and start).
     Only ESA/390 and ESAME are affected.
 

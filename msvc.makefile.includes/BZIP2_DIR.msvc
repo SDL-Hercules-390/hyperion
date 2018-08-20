@@ -59,7 +59,7 @@ BZIP2_DIR = $(BZIP2_DIR)\x64
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
-!MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
+!MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)"
 !ELSE
 !MESSAGE BZIP2 support will not be generated
 !ENDIF

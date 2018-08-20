@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 
           ECPS:VM : Extended Control Program Support : VM/370
-                            
+
                             - AND -
 
  Extended VM Assists - Partial Privop Simulation And Virtual Interval Timer
@@ -10,9 +10,9 @@
 
                             CHANGE LOG
 
-08/06/18 : Updated supported functions to include DIAG and STCTL instruction 
+08/06/18 : Updated supported functions to include DIAG and STCTL instruction
            assists; added support for CP assist LCSPG.
-04/12/17 : Updated supported functions to include LRA instruction 
+04/12/17 : Updated supported functions to include LRA instruction
            assist; fixed DISP0 assist issue where VMPSWAIT was not
            being set.
 02/18/17 : Updated supported functions to include CCW translation
@@ -205,7 +205,7 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
     LINK, RETRN             CP SVC 8/12 LINK and RETURN function
     DFCCW, DNCCW, CCWGN     CCW translation
     UXCCW, FCCWS            CCW untranslation
-	LCSPG                   Locate changed shared page
+    LCSPG                   Locate changed shared page
 
   VM ASSISTS:
     Virtual Interval Timer
@@ -217,7 +217,7 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
     STNSM Simulation
     STOSM Simulation
     LRA Simulation
-	DIAG Simulation
+    DIAG Simulation
 
 -------------------------------------------------------------------------------
 

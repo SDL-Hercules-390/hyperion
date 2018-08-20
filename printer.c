@@ -846,7 +846,7 @@ static void format_sense( const DEVBLK* dev, char* buf, size_t bufsz )
         , (dev->sense[1] & SENSE1_FORM) ? "FORMCK " : ""
         , (dev->sense[1] & SENSE1_CS  ) ? "CMDSUP " : ""
         , (dev->sense[1] & SENSE1_MECH) ? "MECHM "  : ""
-        , (dev->sense[1] & SENSE1_IE  ) ? "--- "    : "" 
+        , (dev->sense[1] & SENSE1_IE  ) ? "--- "    : ""
     );
 }
 

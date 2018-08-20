@@ -1631,7 +1631,7 @@ struct CKD_DEVHDR                       /* Device header             */
 
         FWORD   heads;                  /* CKD: heads per cylinder
                                            CFBA: number of sectors
-                                           (bytes in reverse order)  */    
+                                           (bytes in reverse order)  */
 
         FWORD   trksize;                /* CKD: track size
                                            CFBA: sector size

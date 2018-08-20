@@ -314,7 +314,7 @@ CMPFLUSH DS    0H
          SPACE
 CHKOFLOW DS    0H                 check buffer overflow
          LM    R6,R7,PADPARMS     end of buff, pad amt
-*         
+*
          LTR   R7,R7              any padding to check?
          BZR   R14                no, return to caller
 *

@@ -766,9 +766,9 @@ static BYTE hdl_checkpath( const char* path )
 /*            hdl_initpath  --  Initialize module path               */
 /*-------------------------------------------------------------------*/
 /*
-    1) -p from startup 
-    2) HERCULES_LIB environment variable 
-    3) MODULESDIR compile time define 
+    1) -p from startup
+    2) HERCULES_LIB environment variable
+    3) MODULESDIR compile time define
     4) Hercules executable directory
     5) "hercules"
 */

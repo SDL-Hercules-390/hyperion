@@ -27,7 +27,7 @@ HOW TO COMPILE HERCULES FOR AMD64
 4. If you require gzip or bzip2 for disk or tape compression, or if you
    require PCRE for the Hercules Automatic Operator facility, you should
    install the AMD64 versions of these programs in winbuild\zlib\x64
-   winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory. 
+   winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory.
 
    You can override these default directory locations by simply setting
    the following environment variables:
@@ -166,6 +166,6 @@ and/or PCRE_DIR sections of the README.MSVC document for details.
                        option to ensure that a complete rebuild is done.
 
    [{nmake-option}]    Extra nmake option(s).   (e.g. -k, -g, etc...)
-   
+
 
 -------------------------------------------------------------------------------

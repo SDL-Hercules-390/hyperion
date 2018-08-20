@@ -19,7 +19,7 @@
 
 
     2. Enter the configure and make commands to build/install Hercules:
-    
+
           ./configure  &&  make  &&  make install
 
        (or you can run each command separately if you want).

@@ -1,7 +1,7 @@
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   Fish note:
-  
+
     The length of the filename is not limted to 17 characters as the
   below sample states. Rather, the length of the filename is limited
   solely by the host filesystem code. On Windows, filenames can be up

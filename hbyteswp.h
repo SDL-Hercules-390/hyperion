@@ -52,7 +52,7 @@
       #endif
           return x;
       }
-  
+
       static __inline__ uint64_t (ATTR_REGPARM(1) bswap_64 )( uint64_t  x )
       {
       #if defined(__x86_64__)
