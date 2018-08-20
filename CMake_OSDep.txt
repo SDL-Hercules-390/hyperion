@@ -13,6 +13,7 @@ endif()
 # Windows-based defines
 if (WIN32)
   set(IS_WINDOWS 1)
+  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -D_MSVC_" )
 endif()
 
 # Check if required to link with libm
