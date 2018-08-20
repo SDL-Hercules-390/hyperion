@@ -709,7 +709,7 @@
 #undef OPTION_ENHANCED_CONFIG_INCLUDE
 
 /* Define to use included threads implementation (fthreads) */
-#undef OPTION_FTHREADS
+#cmakedefine OPTION_FTHREADS @OPTION_FTHREADS@
 
 /* Define to enable Hercules Automatic Operator feature */
 #undef OPTION_HAO
