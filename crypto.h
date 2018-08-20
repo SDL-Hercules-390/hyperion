@@ -28,7 +28,7 @@
   #define USE_ARC4RANDOM            // (use 'arc4random_buf()' API)
   #undef  NEED_CSRNG_INIT           // (no init needed)
 
-#elif defined( __linux__ ) && !(defined( __ppc__  ))
+#elif defined( __linux__ ) && !(defined( __PPC__  ))
 
   #define RNDGETENTCNT              0x80045200  // entropy count ioctl
 
