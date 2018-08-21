@@ -28,7 +28,7 @@
 
 #undef BREAK_INTO_DEBUGGER
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined( __MINGW32__ )
   #define BREAK_INTO_DEBUGGER()     __debugbreak()
 #else
   #define BREAK_INTO_DEBUGGER()     raise( SIGTRAP )

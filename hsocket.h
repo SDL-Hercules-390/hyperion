@@ -15,7 +15,7 @@
 /* Socket related constants related to 'shutdown' API call           */
 /*-------------------------------------------------------------------*/
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__) 
 
     /* Map SUS\*nix constants to Windows socket equivalents */
 

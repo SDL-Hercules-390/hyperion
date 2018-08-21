@@ -8,7 +8,7 @@
 #ifndef _W32UTIL_H
 #define _W32UTIL_H
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined (__MINGW32__)
 
 #include "hercules.h"
 
@@ -121,7 +121,9 @@ W32_DLL_IMPORT char* strtok_r ( char* s, const char* sep, char** lasts);
   };
   W32_DLL_IMPORT int getrusage ( int who, struct rusage* r_usage );
   W32_DLL_IMPORT int pthread_getcpuclockid ( TID tid, clockid_t* clk_id );
+#ifndef __MINGW32__
   #define _POSIX_THREAD_CPUTIME (1) // Indicate pthread_getcpuclockid() presence
+#endif //__MINGW32__
 #endif
 
 #if !defined(HAVE_DECL_LOGIN_NAME_MAX) || !HAVE_DECL_LOGIN_NAME_MAX

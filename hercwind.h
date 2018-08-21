@@ -20,16 +20,18 @@
 // hurt doing it for the MSVC build either...
 #define NEED_LOGMSG_FFLUSH
 
-#if !defined( _MSVC_ )
-  #error This file is only for building Hercules with MSVC
+#if !defined( _MSVC_ ) && !defined( __MINGW32__ )
+  #error This file is only for building Hercules with MSVC or MingW32
 #endif
 
-#if defined( _MSC_VER ) && (_MSC_VER < VS2008)
+
+#if defined( _MSC_VER ) && (_MSC_VER < VS2008) && !defined( __MINGW32__ )
   #error MSVC compiler versions less than Visual Studio 2008 not supported.
 #endif
 
 #pragma intrinsic( memset, memcmp, memcpy )
 
+#if !defined(__MINGW32__)
 #ifdef                  _MAX_PATH
   #define   PATH_MAX    _MAX_PATH
 #else
@@ -39,12 +41,15 @@
     #define PATH_MAX    260
   #endif
 #endif
+#endif //__MINGW32__
 
+#if !defined(__MINGW32__)
 struct dirent
 {
     long    d_ino;
     char    d_name[FILENAME_MAX + 1];
 };
+#endif // __MINGW32__
 
 #include <io.h>
 #include <share.h>
@@ -56,6 +61,7 @@ struct dirent
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2
 
+#if !defined(__MINGW32__)
 /* Bit settings for open() and stat() functions */
 #define S_IRUSR         _S_IREAD
 #define S_IWUSR         _S_IWRITE
@@ -65,6 +71,7 @@ struct dirent
 #define S_ISDIR(m)      (((m) & _S_IFMT) == _S_IFDIR)
 #define S_ISCHR(m)      (((m) & _S_IFMT) == _S_IFCHR)
 #define S_ISFIFO(m)     (((m) & _S_IFMT) == _S_IFIFO)
+#endif // __MINGW32__
 
 /* Bit settings for access() function */
 #define F_OK            0
@@ -86,7 +93,9 @@ struct dirent
 
 #define HAVE_STRUCT_IN_ADDR_S_ADDR
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
-#define HAVE_ASSERT_H
+#if !defined(__MINGW32__)
+  #define HAVE_ASSERT_H
+#endif
 #if _MSC_VER >= VS2013
 #define HAVE_INTTYPES_H
 #define HAVE_STDINT_H
@@ -116,24 +125,44 @@ struct dirent
   #error ENABLE_BUILTIN_SYMBOLS requires ENABLE_SYMBOLS_SYMBOLS
 #endif
 
-#define OPTION_FTHREADS
-#define HAVE_STRSIGNAL
-#define NO_SETUID
-#define NO_SIGABEND_HANDLER
+#ifndef OPTION_FTHREADS
+  #define OPTION_FTHREADS
+#endif
+
+#ifndef HAVE_STRSIGNAL
+  #define HAVE_STRSIGNAL
+#endif
+
+#ifndef NO_SETUID
+  #define NO_SETUID
+#endif
+
+#ifndef NO_SIGABEND_HANDLER
+  #define NO_SIGABEND_HANDLER
+#endif
 
 #undef  NO_ATTR_REGPARM         // ( ATTR_REGPARM(x) == __fastcall )
 #define HAVE_ATTR_REGPARM       // ( ATTR_REGPARM(x) == __fastcall )
 #define C99_FLEXIBLE_ARRAYS     // ("DEVBLK *memdev[];" supported)
 
 //#include "getopt.h"
-#define HAVE_GETOPT_LONG
+#ifndef HAVE_GETOPT_LONG
+  #define HAVE_GETOPT_LONG
+#endif
 
 #include <math.h>
-#define HAVE_SQRTL
+#ifndef HAVE_SQRTL
+  #define HAVE_SQRTL
+#endif
 #define HAVE_LDEXPL
 #define HAVE_FABSL
-#define HAVE_FMODL
-#define HAVE_FREXPL
+
+#ifndef HAVE_FMODL
+  #define HAVE_FMODL
+#endif
+#ifndef HAVE_FREXPL
+  #define HAVE_FREXPL
+#endif
 
 // The following are needed by 'hostopts.h'...
 

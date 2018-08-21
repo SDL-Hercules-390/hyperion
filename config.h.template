@@ -65,7 +65,7 @@
 
 /* Define to 1 if you have the declaration of `IFNAMSIZ', and to 0 if you
    don't. */
-#undef HAVE_DECL_IFNAMSIZ
+#cmakedefine HAVE_DECL_IFNAMSIZ @HAVE_DECL_IFNAMSIZ@
 
 /* Define to 1 if you have the declaration of `LOGIN_NAME_MAX', and to 0 if
    you don't. */
@@ -459,7 +459,7 @@
 #undef HAVE_SOCKETPAIR
 
 /* Define to 1 if the system has the type `socklen_t'. */
-#undef HAVE_SOCKLEN_T
+#cmakedefine HAVE_SOCKLEN_T @HAVE_SOCKLEN_T@
 
 /* Define to 1 if you have the `sqrtl' function. */
 #cmakedefine HAVE_SQRTL @HAVE_SQRTL@
@@ -507,7 +507,7 @@
 #cmakedefine HAVE_STRSIGNAL @HAVE_STRSIGNAL@
 
 /* Define to 1 if you have the `strtok_r' function. */
-#undef HAVE_STRTOK_R
+#cmakedefine HAVE_STRTOK_R @HAVE_STRTOK_R@
 
 /* Define to 1 if `ifr6_addr' is member of `struct in6_ifreq'. */
 #undef HAVE_STRUCT_IN6_IFREQ_IFR6_ADDR

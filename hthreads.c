@@ -72,7 +72,9 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
         case EPERM:           err_desc = "not owned";        break;
         case EINVAL:          err_desc = "invalid argument"; break;
         case EDEADLK:         err_desc = "deadlock";         break;
+#ifndef __MINGW32__
         case ENOTRECOVERABLE: err_desc = "not recoverable";  break;
+#endif // __MINGW32__
         case EOWNERDEAD:      err_desc = "owner dead";       break;
         case EBUSY:           err_desc = "busy";             break; /* (should not occur) */
         case ETIMEDOUT:       err_desc = "timeout";          break; /* (should not occur) */

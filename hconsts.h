@@ -139,7 +139,7 @@
 
 #define PATH_SEP            "/"
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined (__MINGW32__)
 
 // The following are missing from MINGW32/MSVC...
 

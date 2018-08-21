@@ -34,7 +34,7 @@
 
 #include "ccnowarn.h"           /* suppress compiler warning support */
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #include <winsock2.h>         // Windows Sockets 2
   #include <mstcpip.h>          // (need struct tcp_keepalive)
   #if defined(ENABLE_IPV6)
@@ -47,7 +47,7 @@
   #include <windows.h>
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined (__MINGW32__)
   #include <math.h>             // Must come BEFORE <intrin.h> due to
                                 // MS VC Bug ID 381422
   #include <xmmintrin.h>
@@ -82,7 +82,7 @@
 #include <limits.h>
 #include <time.h>
 #include <sys/stat.h>
-#if !defined(_MSVC_)
+#if !defined(_MSVC_) && !defined(__MINGW32__)
   #include <sched.h>
   #include <sys/time.h>
   #include <sys/ioctl.h>
@@ -173,7 +173,7 @@
 #ifdef HDL_USE_LIBTOOL
   #include "ltdl.h"
 #else
-  #if defined(__MINGW__) || defined(_MSVC_)
+  #if defined(__MINGW__) || defined(_MSVC_) || defined(__MINGW32__)
     #include "w32dl.h"
   #else
     #include <dlfcn.h>

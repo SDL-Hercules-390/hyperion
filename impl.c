@@ -111,7 +111,7 @@ static void delayed_exit (int exit_code)
 
     /* Delay exiting is to give the system
      * time to display the error message. */
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined ( __MINGW32__ )
     SetConsoleCtrlHandler( NULL, FALSE); // disable Ctrl-C intercept
 #endif
     sysblk.shutimmed = TRUE;
@@ -179,7 +179,7 @@ static void sigterm_handler (int signo)
     return;
 } /* end function sigterm_handler */
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined ( __MINGW32__ )
 /*-------------------------------------------------------------------*/
 /* Perform immediate/emergency shutdown                              */
 /*-------------------------------------------------------------------*/
@@ -584,7 +584,7 @@ int     rc;
     */
     MLOCK( &sysblk, sizeof( SYSBLK ));
 
-#if defined (_MSVC_)
+#if defined (_MSVC_) || defined ( __MINGW32__ )
     _setmaxstdio(2048);
 #endif
 
@@ -611,7 +611,7 @@ int     rc;
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
     /* Initialize sockets package */
     VERIFY( socket_init() == 0 );
 #endif
@@ -813,7 +813,7 @@ int     rc;
     hdl_initpath( NULL );
 
     /* Cap the default nice value to zero if setuid is not available */
-#if !defined( _MSVC_ )
+#if !defined( _MSVC_ ) && !defined (__MINGW32__)
   #if !defined( NO_SETUID )
     if (sysblk.suid)
   #endif
@@ -1081,7 +1081,7 @@ int     rc;
         return 1;
     }
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined ( __MINGW32__ )
     /* Register the Window console ctrl handlers */
     if (!IsDebuggerPresent())
     {
@@ -1262,7 +1262,7 @@ int     rc;
     */
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
     SetConsoleCtrlHandler( console_ctrl_handler, FALSE );
     socket_deinit();
 #endif
@@ -1288,7 +1288,7 @@ static void init_progname( int argc, char* argv[] )
     {
         char path[ MAX_PATH ];
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined( __MINGW32__ )
         GetModuleFileName( NULL, path, _countof( path ));
 #else
         STRLCPY( path, argv[0] );

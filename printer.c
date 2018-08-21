@@ -1512,7 +1512,7 @@ static int open_printer( DEVBLK* dev )
 {
 pid_t           pid;                    /* Child process identifier  */
 int             open_flags;             /* File open flags           */
-#if !defined( _MSVC_ )
+#if !defined( _MSVC_ ) && !defined(__MINGW32__)
 int             pipefd[2];              /* Pipe descriptors          */
 #endif
 int             rc;                     /* Return code               */
@@ -1564,7 +1564,7 @@ off_t           filesize = 0;           /* file size for ftruncate   */
 
     /* Filename is in format |xxx, set up pipe to program xxx */
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined( __MINGW32__ )
 
     /* "Poor man's" fork... */
     pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );

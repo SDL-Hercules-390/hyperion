@@ -193,7 +193,7 @@ BOOL tt32_loaddll()
     // few Win32 functions that cannot handle paths with forward slashes in it. For
     // 'open', etc, yeah, forward slashes are fine, but for LoadLibrary they're not!
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
     if ( !_fullpath( tt32_dllname_out_buff, tt32_dllname_in_buff, sizeof(tt32_dllname_out_buff) ) )
         STRLCPY(     tt32_dllname_out_buff, tt32_dllname_in_buff );
 #else // (presumed cygwin)

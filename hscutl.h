@@ -26,7 +26,7 @@
   is defined right here in 'hscutil.c'...
  *********************************************************************/
 
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
 
   /* The w32util.c module will provide the below functionality... */
 
@@ -96,7 +96,7 @@
 
 #endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #ifndef HAVE_ID_T
   #define HAVE_ID_T
     typedef unsigned long id_t;

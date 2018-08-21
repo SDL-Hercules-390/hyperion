@@ -2095,7 +2095,7 @@ size_t  loopcount;                      /* Number of iterations done */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
-#if defined ( _MSVC_ )
+#if defined ( _MSVC_ ) || defined (__MINGW32__)
                 /* Test for PF key  Windows */
                 if ( strlen(kbbuf+i) == 4 && kbbuf[i] == '\x1b' && kbbuf[i+1] == ')' ) /* this is a PF Key */
                 {

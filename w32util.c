@@ -34,7 +34,7 @@
  #include "dbgtrace.h"
 #endif
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined ( __MINGW32__ )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Support for disabling of CRT Invalid Parameter Handler...
@@ -4493,14 +4493,7 @@ DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
     info.dwThreadID = (DWORD)tid;   // (-1 == current thread, else tid)
     info.dwFlags    = 0;
 
-    __try
-    {
-        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR*)&info );
-    }
-    __except ( EXCEPTION_CONTINUE_EXECUTION )
-    {
-        /* (do nothing) */
-    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -4682,12 +4675,12 @@ DLL_EXPORT unsigned long w32_hpagesize()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-DLL_EXPORT int w32_mlock( void* addr, size_t len )
+DLL_EXPORT int w32_mlock(const void* addr, size_t len )
 {
     return VirtualLock( addr, len ) ? 0 : -1;
 }
 
-DLL_EXPORT int w32_munlock( void* addr, size_t len )
+DLL_EXPORT int w32_munlock(const void* addr, size_t len )
 {
     return VirtualUnlock( addr, len ) ? 0 : -1;
 }

@@ -45,7 +45,7 @@
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H
 
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
 #include "hercwind.h"   // (need HAVE_DECL_SIOCSIFHWADDR, etc)
 #endif
 
@@ -185,7 +185,11 @@
 
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
+#if !defined(__MINGW32__)
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
+#else
+#undef OPTION_SCSI_TAPE                 /* SCSI tape support disabled on mingw32 builds */
+#endif
 #ifdef _MSVC_
 #define OPTION_SCSI_ERASE_TAPE          /* SUPPORTED!                */
 #define OPTION_SCSI_ERASE_GAP           /* SUPPORTED!                */
@@ -199,7 +203,7 @@
 
 #define CASELESS_SYMBOLS
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK
   #define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_WINDOWS_NATIVE
   #define OPTION_EXTCURS                /* Extended cursor handling  */
@@ -214,6 +218,11 @@
 #endif
 
 #define IsEventSet(h)   (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
+
+// MinGW32 has some Unix symbols msvc doesn't.
+#if defined(__MINGW32__)
+  #define HAVE_FORK
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Because Fish's TUNTAP emulation isn't seen as a network interface */

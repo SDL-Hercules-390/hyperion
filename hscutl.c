@@ -741,7 +741,7 @@ DLL_EXPORT int timed_wait_condition_relative_usecs
   is defined right here in 'hscutil.c'...
  *********************************************************************/
 
-#if !defined(_MSVC_)
+#if !defined(_MSVC_) && !defined(__MINGW32__)
 
 /* THIS module (hscutil.c) is to provide the below functionality.. */
 

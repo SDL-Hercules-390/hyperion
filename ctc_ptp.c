@@ -9622,7 +9622,7 @@ END_DEPENDENCY_SECTION
 
 HDL_RESOLVER_SECTION;
 {
-   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+   #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
      #undef sysblk
      HDL_RESOLVE_SYMPTR( psysblk, sysblk );
      HDL_RESOLVE( tod_clock );

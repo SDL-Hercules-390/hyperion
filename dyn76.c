@@ -157,7 +157,7 @@ static void nfile_init ()
 #define dolock(l) obtain_lock (&l); /* This ensures we use the correct fn */
 #define unlock(l) release_lock (&l);
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
 #include <io.h>
 #define _open w32_hopen
 #else
@@ -517,7 +517,7 @@ void ARCH_DEP(hdiagf18_FC) (U32 options, VADR cmpb, REGS *regs)
         logmsg("DF18: CFILE - commit file operation\n");
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
 #ifdef DYN76_DEBUG
         logmsg("DF18: CFILE - _commit(%d)\n", handle);
 #endif

@@ -215,6 +215,12 @@ add_library ( hercules_engine SHARED
 # sllib
 
   sllib.c
+
+# win32 support
+  w32util.c
+  fthreads.c
+  w32ctca.c
+
 )
 
 target_link_libraries(hercules_engine decNumber)
@@ -226,7 +232,10 @@ target_link_libraries(hercules_engine ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS hercules_engine DESTINATION lib)
 
-
+if(IS_WINDOWS)
+  target_link_libraries(hercules_engine ws2_32)
+  target_link_libraries(hercules_engine bcrypt)
+endif()
 
 
 if(LIBM_REQUIRED)

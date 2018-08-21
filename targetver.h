@@ -77,6 +77,8 @@
 #define FQP(a,b)        a##b
 #define FQPASTE(a,b)    FQP(a,b)
 
+#if !defined(__MINGW32__)
 #pragma message( "Target platform: " FQPASTE( WINNT_, _WIN32_WINNT ) " (" FQSTR( _WIN32_WINNT ) ")")
+#endif //__MINGW32__
 
 #endif /*_TARGETVER_H_*/

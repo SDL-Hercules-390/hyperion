@@ -168,7 +168,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 /* PROGRAMMING NOTE: the following 'tape' portability macros are
    only for physical (SCSI) tape devices, not emulated aws files */
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define  open_tape            w32_open_tape
   #define  read_tape            w32_read_tape
   #define  write_tape           w32_write_tape
@@ -182,7 +182,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define  close_tape           close
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define  create_pipe(a)       socketpair(AF_INET,SOCK_STREAM,IPPROTO_IP,a)
   #define  read_pipe(f,b,n)     recv(f,b,n,0)
   #define  write_pipe(f,b,n)    send(f,b,(int)n,0)
@@ -194,7 +194,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define  close_pipe(f)        close(f)
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define  socket               w32_socket
   #define  accept               w32_accept
 /* Now defined in hsocket.h
@@ -216,7 +216,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define  hinet_pton           inet_pton
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #undef   FD_SET
   #undef   FD_ISSET
   #define  FD_SET               w32_FD_SET
@@ -234,7 +234,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 #endif
 #endif
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define  fdatasync            _commit
   #define  atoll                _atoi64
 #else /* !_MSVC_ */
@@ -271,7 +271,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 
 // ZZ FIXME: this should probably be handled in configure.ac...
 
-#if !defined(RUSAGE_THREAD) && !defined(_MSVC_)
+#if !defined(RUSAGE_THREAD) && !defined(_MSVC_) && !defined(__MINGW32__)
   #define   RUSAGE_THREAD       thread_id()
 #endif
 
@@ -279,7 +279,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 /*      Some handy memory/string comparison macros                   */
 /*-------------------------------------------------------------------*/
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined(__MINGW32__)
 #define strcasecmp                  _stricmp
 #define strncasecmp                 _strnicmp
 #endif
@@ -307,7 +307,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 /*      Large File Support portability                               */
 /*-------------------------------------------------------------------*/
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   /* "Native" 64-bit Large File Support */
   #define  off_t                __int64
   #define  ftruncate            _chsize_s
@@ -342,7 +342,7 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
 // Hercules low-level file open...
 // PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required for compat-
 //                   ibility with gcc/MSVC compilers and must not be removed
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define   HOPEN(_p,_o,...)    w32_hopen ((_p),(_o), ## __VA_ARGS__)
 #else
   #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o), ## __VA_ARGS__)
@@ -477,7 +477,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*      CRASH                       (with hopefully a dump)          */
 /*-------------------------------------------------------------------*/
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #define CRASH() \
     do { \
       BYTE *p = NULL; \
@@ -501,7 +501,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*      Assign name to thread           (debugging aid)              */
 /*-------------------------------------------------------------------*/
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined (__MINGW32__)
   #define  SET_THREAD_NAME_ID(t,n)  w32_set_thread_name((t),(n))
   #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(GetCurrentThreadId(),(n))
 #elif defined( HAVE_PTHREAD_SETNAME_NP )

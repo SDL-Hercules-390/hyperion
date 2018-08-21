@@ -4,6 +4,7 @@
 
 # Enable IPv6 by default, overrule for individual OS
 set (ENABLE_IPV6 1)
+set (HAVE_DECL_IFNAMSIZ 1)
 
 # Apple-specific fixes
 if (APPLE)
@@ -15,13 +16,11 @@ endif()
 # Windows-based defines
 if (WIN32)
   set(IS_WINDOWS 1)
-  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -D_MSVC_" )
   set(OPTION_FTHREADS 1)
   set(NO_SIGABEND_HANDLER 1)
 
-  if (MSVC_TOOLSET_VERSION EQUAL 100)
-    set(VS2010_TOOLSET 1)
-  endif()
+  set(HAVE_SOCKLEN_T 1)
+  set(HAVE_DECL_IFNAMSIZ 0)
 
   message (STATUS "MSVC Toolset version: ${MSVC_TOOLSET_VERSION}")
 

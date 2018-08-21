@@ -94,7 +94,7 @@
 #include "service.h"
 #include "hsocket.h"
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
   #include "w32mtio.h"    /* mtio.h needed by below "hstructs.h"     */
   #include "sys/locking.h"
 #endif // _MSVC_

@@ -299,7 +299,7 @@ ALIGN_16 char   blkend[16];             /* eye-end                   */ \
 #define  HPC_MAINSTOR     1        /* mainstor being allocated/freed */
 #define  HPC_XPNDSTOR     2        /* xpndstor being allocated/freed */
 
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
     #define  OPTION_CALLOC_GUESTMEM
 #else
     #undef   OPTION_CALLOC_GUESTMEM
@@ -361,7 +361,7 @@ ALIGN_16 char   blkend[16];             /* eye-end                   */ \
   #define      HPCALLOC(t,a)    hpcalloc((t),(a))
   #define      HPCFREE(t,a)     hpcfree((t),(a))
 
-  #if defined(_MSVC_)
+  #if defined(_MSVC_) || defined(__MINGW32__)
 
     #define    HPAGESIZE        w32_hpagesize
     #define    MLOCK            w32_mlock

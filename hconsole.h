@@ -44,7 +44,7 @@
 #define KBD_RIGHT_ARROW2        "\x1BOC"
 #define KBD_LEFT_ARROW2         "\x1BOD"
 
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined (__MINGW32__)
 #define KBD_PF1                 "\x1B"")01"
 #define KBD_PF2                 "\x1B"")02"
 #define KBD_PF3                 "\x1B"")03"

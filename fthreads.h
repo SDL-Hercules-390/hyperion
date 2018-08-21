@@ -42,7 +42,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // (need struct timespec for fthread_cond_timedwait)
 
-#if !defined(TIMESPEC_IN_SYS_TYPES_H) && !defined(TIMESPEC_IN_TIME_H) && (_MSC_VER < VS2015)
+#if !defined(TIMESPEC_IN_SYS_TYPES_H) && !defined(TIMESPEC_IN_TIME_H) && (_MSC_VER < VS2015) && !defined(__MINGW32__)
   // Avoid double definition for VS2015 as it defines timespec in ...\ucrt\time.h(39)
   // (need to define it ourselves)
   struct timespec

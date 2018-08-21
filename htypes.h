@@ -135,7 +135,7 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   typedef  unsigned int     useconds_t;
 #endif
 
-#if !defined( HAVE_STRUCT_IN_ADDR_S_ADDR ) && !defined( _WINSOCK_H )
+#if !defined( HAVE_STRUCT_IN_ADDR_S_ADDR ) && !defined( _WINSOCK_H ) && !defined (__MINGW32__)
   struct in_addr
   {
     in_addr_t  s_addr;
