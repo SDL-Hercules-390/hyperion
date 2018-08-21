@@ -27,7 +27,7 @@
 #if !defined( OPTION_W32_CTCI )
 #if !defined(_AIX)
 #include <ifaddrs.h>
-#endif 
+#endif
 #endif
 
 DISABLE_GCC_UNUSED_SET_WARNING;
@@ -3317,7 +3317,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
 {
 
-#if defined(OPTION_W32_CTCI)
+#if defined(OPTION_W32_CTCI) || defined(_AIX)
     // HHC03965 "%id:%04X %s; Preconfigured interface %s does not exist or is not accessible by Hercules"
     WRMSG(HHC03965, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                          pPTPBLK->szTUNIfName);
