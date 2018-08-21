@@ -178,12 +178,17 @@ static void* hdl_dlopen( const char* filename, int flag )
      *   3.  modpath added if basename( filename )
      *   4.  extension added to #3
      */
+
     if ((ret = dlopen( filename, flag ))) /* try filename as-is first */
         return ret;
 
      //  2.  filename with extension if needed
 
+#if defined (HDL_MODULE_PREFIX)
+    fulllen = strlen( hdl_modpath ) + 1 + strlen(HDL_MODULE_PREFIX) + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
+#else
     fulllen = strlen( hdl_modpath ) + 1 + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
+#endif
     fullname = calloc( 1, fulllen );
 
     if (!fullname)
@@ -209,6 +214,10 @@ static void* hdl_dlopen( const char* filename, int flag )
 
         strlcpy( fullname, hdl_modpath,              fulllen );
         strlcat( fullname, PATHSEPS,                 fulllen );
+#if defined(HDL_MODULE_PREFIX)
+        strlcat( fullname, HDL_MODULE_PREFIX,        fulllen );
+#endif
+
         strlcat( fullname, basename( filenamecopy ), fulllen );
 
         free( filenamecopy );
@@ -244,7 +253,6 @@ static void* hdl_dlopen( const char* filename, int flag )
 DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 {
     /* Called by hsccmd.c's "ldmod_cmd" function */
-
     const char*  modname;
     HDLMOD*      mod;
     HDLMOD*      wrkmod;

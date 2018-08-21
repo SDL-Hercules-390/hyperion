@@ -89,17 +89,18 @@ else()
 endif()
 
 
-# -------------------
-#  Hercules libraries
-# -------------------
+# ------------------------
+#  Hercules shared library
+# ------------------------
 
-# SYS subsystem
-add_library ( hercs STATIC
+# Add all modules to one big shared library to avoid the interdependency and reduce moving parts
+add_library ( hercules_engine SHARED
+# hsys
+
   hsys.c
-)
 
-# UTIL subsystem
-add_library (hercu STATIC
+# utils
+
   codepage.c
   hdl.c
   hexdumpe.c
@@ -114,20 +115,8 @@ add_library (hercu STATIC
   parser.c
   pttrace.c
   version.c
-)
-target_link_libraries(hercu decNumber)
-target_link_libraries(hercu SoftFloat)
-target_link_libraries(hercu crypto)
-target_link_libraries(hercu telnet)
-target_link_libraries(hercu core)
-target_link_libraries(hercu ${CMAKE_DL_LIBS})
-target_link_libraries(hercu ${CMAKE_THREAD_LIBS_INIT})
 
-
-
-
-# DASD subsystem
-add_library( hercd STATIC
+# dasd
   cache.c
   cckddasd.c
   cckdutil.c
@@ -136,48 +125,9 @@ add_library( hercd STATIC
   dasdutil.c
   fbadasd.c
   shared.c
-)
-target_link_libraries(hercd hercs)
-target_link_libraries(hercd hercu)
 
-# DYNDEV subsystem
+# core
 
-add_library( dyndev STATIC
-  awstape.c
-  cardpch.c
-  cardrdr.c
-  comm3705.c
-  commadpt.c
-  con1052c.c
-  console.c
-  ctc_ctci.c
-  ctc_lcs.c
-  ctc_ptp.c
-  ctcadpt.c
-  faketape.c
-  ftlib.c
-  hchan.c
-  hetlib.c
-  hettape.c
-  mpc.c
-  netsupp.c
-  omatape.c
-  printer.c
-  qeth.c
-  resolve.c
-  scsitape.c
-  scsiutil.c
-  sllib.c
-  sockdev.c
-  tapeccws.c
-  tapedev.c
-  tuntap.c
-  zfcp.c
-)
-
-# CORE subsystem
-
-add_library(core STATIC
   _archdep_templ.c
   archlvl.c
   assist.c
@@ -253,27 +203,54 @@ add_library(core STATIC
   vm.c
   vmd250.c
   xstore.c
-  ltdl.c
-  memrchr.c
-  dyncrypt.c
-  dyngui.c
-  hdteq.c
-  w32util.c
-  w32ctca.c
-  w32stape.c
+
+# hetlib
+
+  hetlib.c
+
+# ftlib
+
+  ftlib.c
+
+# sllib
+
+  sllib.c
 )
 
+target_link_libraries(hercules_engine decNumber)
+target_link_libraries(hercules_engine SoftFloat)
+target_link_libraries(hercules_engine crypto)
+target_link_libraries(hercules_engine telnet)
+target_link_libraries(hercules_engine ${CMAKE_DL_LIBS})
+target_link_libraries(hercules_engine ${CMAKE_THREAD_LIBS_INIT})
+
+
+
+
 if(LIBM_REQUIRED)
-  target_link_libraries(core m)
+  target_link_libraries(hercules_engine m)
 endif()
 
 if (BZIP2_FOUND)
-  target_link_libraries(hercd ${BZIP2_LIBRARIES})
+  target_link_libraries(hercules_engine ${BZIP2_LIBRARIES})
 endif()
 
 if (ZLIB_FOUND)
-  target_link_libraries(hercd ${ZLIB_LIBRARIES})
+  target_link_libraries(hercules_engine ${ZLIB_LIBRARIES})
 endif()
+
+# --------------
+# Device drivers
+# --------------
+
+add_library( hdt3270 SHARED console.c)
+add_library( hdt3420 SHARED tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c)
+add_library( hdt3505 SHARED cardrdr.c sockdev.c)
+
+target_link_libraries( hdt3270 hercules_engine )
+target_link_libraries( hdt3420 hercules_engine )
+target_link_libraries( hdt3505 hercules_engine )
+
 
 # --------------
 # Misc utilities
@@ -281,115 +258,99 @@ endif()
 
 # cckdcdsk
 add_executable(cckdcdsk cckdcdsk.c)
-target_link_libraries(cckdcdsk hercd)
+target_link_libraries(cckdcdsk hercules_engine)
 
 # cckdcomp
 add_executable(cckdcomp cckdcomp.c)
-target_link_libraries(cckdcomp hercd)
+target_link_libraries(cckdcomp hercules_engine)
 
 # cckddiag
 add_executable(cckddiag cckddiag.c)
-target_link_libraries(cckddiag hercd)
+target_link_libraries(cckddiag hercules_engine)
 
 # cckdswap
 add_executable(cckdswap cckdswap.c)
-target_link_libraries(cckdswap hercd)
+target_link_libraries(cckdswap hercules_engine)
 
 # dasdcat
 add_executable(dasdcat dasdcat.c)
-target_link_libraries(dasdcat hercd)
+target_link_libraries(dasdcat hercules_engine)
 
 # dasdconv
 add_executable(dasdconv dasdconv.c)
-target_link_libraries(dasdconv hercd)
+target_link_libraries(dasdconv hercules_engine)
 
 # dasdcopy
 add_executable(dasdcopy dasdcopy.c)
-target_link_libraries(dasdcopy hercd)
+target_link_libraries(dasdcopy hercules_engine)
 
 # dasdinit
 add_executable(dasdinit dasdinit.c)
-target_link_libraries(dasdinit hercd)
+target_link_libraries(dasdinit hercules_engine)
 
 # dasdisup
 add_executable(dasdisup dasdisup.c)
-target_link_libraries(dasdisup hercd)
+target_link_libraries(dasdisup hercules_engine)
 
 # dasdload
 add_executable(dasdload dasdload.c)
-target_link_libraries(dasdload hercd)
+target_link_libraries(dasdload hercules_engine)
 
 # dasdls
 add_executable(dasdls dasdls.c)
-target_link_libraries(dasdls hercd)
+target_link_libraries(dasdls hercules_engine)
 
 # dasdpdsu
 add_executable(dasdpdsu dasdpdsu.c)
-target_link_libraries(dasdpdsu hercd)
+target_link_libraries(dasdpdsu hercules_engine)
 
 # dasdseq
 add_executable(dasdseq dasdseq.c)
-target_link_libraries(dasdseq hercd)
+target_link_libraries(dasdseq hercules_engine)
 
 # dmap2hrc
 add_executable(dmap2hrc dmap2hrc.c)
-target_link_libraries(dmap2hrc hercd)
-target_link_libraries(dmap2hrc hercu)
-target_link_libraries(dmap2hrc core)
-target_link_libraries(dmap2hrc dyndev)
+target_link_libraries(dmap2hrc hercules_engine)
 
 # hetget
 add_executable(hetget hetget.c)
-target_link_libraries(hetget hercd)
-target_link_libraries(hetget dyndev)
-target_link_libraries(hetget core)
+target_link_libraries(hetget hercules_engine)
 
 # hetinit
 add_executable(hetinit hetinit.c)
-target_link_libraries(hetinit hercd)
-target_link_libraries(hetinit hercu)
-target_link_libraries(hetinit dyndev)
-target_link_libraries(hetinit core)
+target_link_libraries(hetinit hercules_engine)
 
 # hetmap
 add_executable(hetmap hetmap.c)
-target_link_libraries(hetmap hercd)
-target_link_libraries(hetmap dyndev)
-target_link_libraries(hetmap core)
+target_link_libraries(hetmap hercules_engine)
 
 # hetupd
 add_executable(hetupd hetupd.c)
-target_link_libraries(hetupd hercd)
-target_link_libraries(hetupd dyndev)
-target_link_libraries(hetupd core)
+target_link_libraries(hetupd hercules_engine)
 
 # tapecopy
 add_executable(tapecopy tapecopy.c)
-target_link_libraries(tapecopy hercd)
-target_link_libraries(tapecopy dyndev)
+target_link_libraries(tapecopy hercules_engine)
 
 # tapemap
 add_executable(tapemap tapemap.c)
-target_link_libraries(tapemap hercd)
-target_link_libraries(tapemap dyndev)
+target_link_libraries(tapemap hercules_engine)
 
 # tapesplt
 add_executable(tapesplt tapesplt.c)
-target_link_libraries(tapesplt hercd)
-target_link_libraries(tapesplt dyndev)
+target_link_libraries(tapesplt hercules_engine)
 
 # vmfplc2
 add_executable(vmfplc2 vmfplc2.c)
-target_link_libraries(vmfplc2 hercd)
-target_link_libraries(vmfplc2 hercu)
-target_link_libraries(vmfplc2 core)
-target_link_libraries(vmfplc2 dyndev)
+target_link_libraries(vmfplc2 hercules_engine)
+
+# --------------------
+# Main hercules binary
+# --------------------
 
 # hercules
 set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
 add_executable(hercules bootstrap.c)
-target_link_libraries(hercules core)
-target_link_libraries(hercules dyndev)
-target_link_libraries(hercules hercd)
+target_link_libraries(hercules hercules_engine)
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )

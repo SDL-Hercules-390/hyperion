@@ -249,11 +249,22 @@ HDL_DLL_IMPORT void         hdl_repins   ( bool replace, HDLINS* ins );
   #endif
 #endif
 
+#if defined(__APPLE__)
+  #undef    HDL_MODULE_SUFFIX
+  #define   HDL_MODULE_SUFFIX       ".dylib"
+#endif // __APPLE__
+
+
 #if defined( HDL_MODULE_SUFFIX )
  #define HDL_SUFFIX_LENGTH          (sizeof( HDL_MODULE_SUFFIX ) - 1)
 #else
  #define HDL_SUFFIX_LENGTH          0
 #endif
+
+// if not on Windows, prefix libraries with lib (i.e. libhdt3270)
+#if !defined( _MSVC_ )
+ #define HDL_MODULE_PREFIX          "lib"
+#endif // _MSVC_
 
 /*-------------------------------------------------------------------*/
 /*                   HDL_DEPENDENCY_SECTION                          */
