@@ -176,7 +176,9 @@ int query_tzoffset(void);               /* Report current TzOFFSET   */
 
 ETOD* host_ETOD (ETOD*);                /* Retrieve extended TOD     */
 
+#ifndef _AIX //symbol already exists on AIX
 TOD thread_cputime(const REGS*);        /* Thread real CPU used (TOD)*/
+#endif
 U64 thread_cputime_us(const REGS*);     /* Thread real CPU used (us) */
 
 
