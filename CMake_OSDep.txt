@@ -28,6 +28,7 @@ endif()
 # disable intel assembly optimalisations on powerpc:
 if (CMAKE_HOST_SYSTEM_PROCESSOR EQUAL "powerpc")
   set (NO_ASM_BYTESWAP 1)
+  message( STATUS "Disabling assembly optimalisations.")
 endif()
 
 # Check if required to link with libm
