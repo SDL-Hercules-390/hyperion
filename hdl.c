@@ -224,29 +224,7 @@ static void* hdl_dlopen( const char* filename, int flag )
         free( filenamecopy );
     }
     else
-#if defined(DRIVER_PREFIX)
-    {
-        char* filenamecopy = strdup( filename );
-        free (fullname);
-#if defined (HDL_MODULE_PREFIX)
-        fulllen = strlen( hdl_modpath ) + 1 + strlen(HDL_MODULE_PREFIX) + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
-#else // HDL_MODULE_PREFIX
-        fulllen = strlen( hdl_modpath ) + 1 + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
-#endif // HDL_MODULE_PREFIX
-        fullname = calloc( 1, fulllen );
-
-        strlcpy( fullname, DRIVER_PREFIX,            fulllen );
-        strlcat( fullname, PATHSEPS,                 fulllen );
-#if defined(HDL_MODULE_PREFIX)
-        strlcat( fullname, HDL_MODULE_PREFIX,        fulllen );
-#endif // HDL_MODULE_PREFIX
-
-        strlcat( fullname, basename( filenamecopy ), fulllen );
-        free( filenamecopy );
-    }
-#else // DRIVER_PREFIX
         strlcpy( fullname, filename, fulllen );
-#endif
 
     if ((ret = dlopen( fullname, flag )))
     {
@@ -254,7 +232,36 @@ static void* hdl_dlopen( const char* filename, int flag )
         return ret;
     }
 
-    //  4.  extension added to #3
+    // 4. with modpath set to lib in install prefix
+
+#if defined(DRIVER_PREFIX)
+    char* filenamecopy = strdup( filename );
+    free (fullname);
+#if defined (HDL_MODULE_PREFIX)
+    fulllen = strlen( DRIVER_PREFIX ) + 1 + strlen(HDL_MODULE_PREFIX) + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
+#else // HDL_MODULE_PREFIX
+    fulllen = strlen( DRIVER_PREFIX ) + 1 + strlen( filename ) + HDL_SUFFIX_LENGTH + 1;
+#endif // HDL_MODULE_PREFIX
+    fullname = calloc( 1, fulllen );
+
+    strlcpy( fullname, DRIVER_PREFIX,            fulllen );
+    strlcat( fullname, PATHSEPS,                 fulllen );
+#if defined(HDL_MODULE_PREFIX)
+    strlcat( fullname, HDL_MODULE_PREFIX,        fulllen );
+#endif // HDL_MODULE_PREFIX
+    strlcat( fullname, basename( filenamecopy ), fulllen );
+    free( filenamecopy );
+    printf("dlopen: %s\n", fullname);
+    if ((ret = dlopen( fullname, flag )))
+    {
+        free( fullname );
+        return ret;
+    }
+
+
+#endif // DRIVER_PREFIX
+
+    //  5.  extension added to #3
 
 #if defined( HDL_MODULE_SUFFIX )
 
