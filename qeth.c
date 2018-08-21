@@ -224,7 +224,7 @@ static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* f
 /*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader (HDL)                                     */
 /*-------------------------------------------------------------------*/
-#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -6686,7 +6686,7 @@ END_DEPENDENCY_SECTION
 
 HDL_RESOLVER_SECTION;
 {
-  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
     #undef sysblk
     HDL_RESOLVE_SYMPTR( psysblk, sysblk );
   #else

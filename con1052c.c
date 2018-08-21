@@ -67,7 +67,7 @@ static BYTE  con1052_immed [256] =
 /*-------------------------------------------------------------------*/
 /*  MinGW       (Windows, but *not* MSVC)                            */
 /*-------------------------------------------------------------------*/
-#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
 
         SYSBLK   *psysblk;
 #define sysblk  (*psysblk)
@@ -600,7 +600,7 @@ HDL_DEPENDENCY_SECTION;
 }
 END_DEPENDENCY_SECTION
 
-#if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL ) && !defined(_MSVC_ )
+#if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL ) && !defined(_MSVC_ ) && !defined(__MINGW32__)
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {

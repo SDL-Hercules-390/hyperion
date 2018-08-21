@@ -51,7 +51,7 @@ int   nleft, nread;
 
     while (nleft > 0)           /* while room in i/p buffer remains  */
     {
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
         nread = recv( fd, ptr, nleft, 0 );
 #else
         nread = read( fd, ptr, nleft );
@@ -115,7 +115,7 @@ int  nleft, nwritten;
 
     while (nleft > 0)           /* while bytes remain to be written  */
     {
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
         nwritten = send( fd, ptr, nleft, 0 );
 #else
         nwritten = write( fd, ptr, nleft );

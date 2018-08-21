@@ -23,7 +23,7 @@
 #include "devtype.h"
 #include "hchan.h"
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
@@ -210,7 +210,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
   #undef sysblk
   HDL_RESOLVER_SECTION;
   {

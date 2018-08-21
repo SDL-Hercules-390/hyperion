@@ -162,6 +162,7 @@ DLL_EXPORT int hdl_main
 /*-------------------------------------------------------------------*/
 static void* hdl_dlopen( const char* filename, int flag )
 {
+
     char*   fullname;
     void*   ret;
     size_t  fulllen = 0;
@@ -251,6 +252,7 @@ static void* hdl_dlopen( const char* filename, int flag )
 #endif // HDL_MODULE_PREFIX
     strlcat( fullname, basename( filenamecopy ), fulllen );
     free( filenamecopy );
+
     if ((ret = dlopen( fullname, flag )))
     {
         free( fullname );
@@ -272,7 +274,6 @@ static void* hdl_dlopen( const char* filename, int flag )
         return ret;
     }
 #endif
-
     return NULL;
 }
 
@@ -744,13 +745,13 @@ static BYTE hdl_checkpath( const char* path )
     struct stat statbuf;
     int invalid;
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
     int len; char c;
 #endif
 
     STRLCPY( workpath, path );
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
 
     // stat: If path contains the location of a directory,
     // it cannot contain a trailing backslash. If it does,
@@ -782,7 +783,7 @@ static BYTE hdl_checkpath( const char* path )
         || !S_ISDIR( statbuf.st_mode )
     );
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
 
     // (restore trailing path separator if removed)
 

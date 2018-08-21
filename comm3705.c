@@ -55,7 +55,7 @@
 #include "parser.h"
 #include "comm3705.h"
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -1146,7 +1146,7 @@ static void *telnet_thread(void *vca)
             if (ca->hangup)
                 break;
             /* read_socket has changed from 3.04 to 3.06 - we need old way */
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
             rc=recv(ca->sfd,bfr,256-BUFPD,0);
 #else
             rc=read(ca->sfd,bfr,256-BUFPD);
@@ -2224,7 +2224,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__) 
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {

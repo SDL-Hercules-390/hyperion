@@ -121,7 +121,7 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -231,7 +231,7 @@ END_DEVICE_SECTION
 
 /*-------------------------------------------------------------------*/
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
 
   #undef sysblk
 
@@ -967,7 +967,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
         "SCSI tape"
     },
 
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
 
     /* (same idea but for Windows SCSI tape device names) */
 #undef   SCSITAPE_FMTENTRY
@@ -1080,7 +1080,7 @@ int gettapetype_byname (DEVBLK *dev)
 
         return SCSITAPE_FMTENTRY;
     }
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
     if (1
         && strncasecmp(dev->filename, "\\\\.\\", 4) == 0
         &&           *(dev->filename        +    4) != 0

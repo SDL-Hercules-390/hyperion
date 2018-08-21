@@ -133,7 +133,7 @@
 #include "parser.h"
 #include "commadpt.h"
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -720,7 +720,7 @@ static int commadpt_connout(COMMADPT *ca)
     rc=connect(ca->sfd,(struct sockaddr *)&sin,sizeof(sin));
     if(rc<0)
     {
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined (__MINGW32__)
         if(HSO_errno==HSO_EWOULDBLOCK)
 #else /* defined(_MSVC_) */
         if(HSO_errno==HSO_EINPROGRESS)
@@ -1134,7 +1134,7 @@ int     rc;
             /* is BSC similarly broken? */
             /* --> Yes, it is! I propose to fully remove the if/else construct     */
             /*                 i.e. to handle BSC and async identically here (JW)  */
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
             rc=recv(ca->sfd,bfr,256,0);
 #else
             rc=read(ca->sfd,bfr,256);
@@ -1614,7 +1614,7 @@ static void *commadpt_thread(void *vca)
                     break;
                 }
                 FD_SET(ca->sfd,&wfd);
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined (__MINGW32__)
                 FD_SET(ca->sfd,&xfd);
 #endif /* defined(_MSVC_) */
                 maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
@@ -1656,7 +1656,7 @@ static void *commadpt_thread(void *vca)
                                 /* getsockopt/SOERROR will tell if   */
                                 /* the call was sucessfull or not    */
                                 FD_SET(ca->sfd,&wfd);
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
                                 FD_SET(ca->sfd,&xfd);
 #endif /* defined(_MSVC_) */
                                 maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
@@ -1869,7 +1869,7 @@ static void *commadpt_thread(void *vca)
         }
         if(ca->sfd>=0)
         {
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
             if(FD_ISSET(ca->sfd,&wfd) || FD_ISSET(ca->sfd,&xfd))
 #else /* defined(_MSVC_) */
             if(FD_ISSET(ca->sfd,&wfd))
@@ -1885,7 +1885,7 @@ static void *commadpt_thread(void *vca)
                     case COMMADPT_PEND_ENABLE:  /* Leased line enable call case */
                     soerrsz=sizeof(soerr);
                     getsockopt(ca->sfd,SOL_SOCKET,SO_ERROR,(GETSET_SOCKOPT_T*)&soerr,&soerrsz);
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
                     if(FD_ISSET(ca->sfd,&wfd))
 #else /* defined(_MSVC_) */
                     if(soerr==0)
@@ -1894,7 +1894,7 @@ static void *commadpt_thread(void *vca)
                         ca->connect=1;
                     }
                     else
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
                     if(FD_ISSET(ca->sfd,&xfd))
 #else /* defined(_MSVC_) */
                     if(soerr!=0)
@@ -3751,7 +3751,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_) && !defined(__MINGW32__)
   #undef sysblk
   HDL_RESOLVER_SECTION;
   {

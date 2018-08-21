@@ -609,7 +609,7 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
         signal_thread( tid, SIGUSR2 );   // (for non-Win32 platforms)
 //FIXME signal_thread not working for non-MSVC platforms
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
         join_thread( tid, NULL );       // (wait for thread to end)
 #endif
         detach_thread( tid );           // (wait for thread to end)

@@ -30,7 +30,7 @@
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-#if defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(_MSVC_) && !defined(HDL_USE_LIBTOOL) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif

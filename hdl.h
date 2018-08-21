@@ -254,6 +254,11 @@ HDL_DLL_IMPORT void         hdl_repins   ( bool replace, HDLINS* ins );
   #define   HDL_MODULE_SUFFIX       ".dylib"
 #endif // __APPLE__
 
+#if defined(__MINGW32__)
+  #undef    HDL_MODULE_SUFFIX
+  #define   HDL_MODULE_SUFFIX       ".dll"
+#endif
+
 
 #if defined( HDL_MODULE_SUFFIX )
  #define HDL_SUFFIX_LENGTH          (sizeof( HDL_MODULE_SUFFIX ) - 1)

@@ -62,7 +62,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
   #pragma optimize( "", off )           // disable optimizations for reliable breakpoints
 #endif
 
-#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+#if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
   SYSBLK *psysblk;
   #define sysblk (*psysblk)
 #endif
@@ -1416,7 +1416,7 @@ END_DEPENDENCY_SECTION
 
 HDL_RESOLVER_SECTION;
 {
-  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL )
+  #if defined( WIN32 ) && !defined( _MSVC_ ) && !defined( HDL_USE_LIBTOOL ) && !defined(__MINGW32__)
     #undef sysblk
     HDL_RESOLVE_SYMPTR( psysblk, sysblk );
   #else
