@@ -251,7 +251,6 @@ static void* hdl_dlopen( const char* filename, int flag )
 #endif // HDL_MODULE_PREFIX
     strlcat( fullname, basename( filenamecopy ), fulllen );
     free( filenamecopy );
-    printf("dlopen: %s\n", fullname);
     if ((ret = dlopen( fullname, flag )))
     {
         free( fullname );
