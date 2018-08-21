@@ -16,7 +16,10 @@ CHECK_SYMBOL_EXISTS(in_addr_t "netinet/in.h" HAVE_IN_ADDR_T)
 
 CHECK_SYMBOL_EXISTS(timespec "sys/types.h" TIMESPEC_IN_SYS_TYPES_H)
 CHECK_SYMBOL_EXISTS(timespec "time.h" TIMESPEC_IN_TIME_H)
-CHECK_SYMBOL_EXISTS(socklen_t "netinet/in.h" HAVE_SOCKLEN_T)
+
+if (HAVE_NETINET_IN_H)
+  set(HAVE_SOCKLEN_T 1)
+endif()
 
 CHECK_STRUCT_HAS_MEMBER("struct in_addr" s_addr "netinet/in.h" HAVE_STRUCT_IN_ADDR_S_ADDR)
 CHECK_STRUCT_HAS_MEMBER("struct mtget" mt_gstat "sys/mtio.h" HAVE_STRUCT_MTGET_MT_GSTAT)
