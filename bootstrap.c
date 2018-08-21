@@ -18,7 +18,7 @@
 #include "ltdl.h"
 #endif
 
-#if !defined( _MSVC_ )
+#if !defined( _MSVC_ ) && !defined (__MINGW32__)
 /*-------------------------------------------------------------------*/
 /* For Unix-like platforms, the main() function:                     */
 /* - sets the privilege level                                        */

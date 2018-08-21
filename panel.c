@@ -625,7 +625,7 @@ void set_console_title ( char *status )
             MSGBUF( title, "%s - System Status: %s", sysblk.pantitle, status );
     }
 
-  #if defined( _MSVC_ )
+  #if defined( _MSVC_ ) || defined (__MINGW32__)
     w32_set_console_title( title );
   #else /*!defined(_MSVC_) */
     /* For Unix systems we set the window title by sending a special
@@ -1605,7 +1605,7 @@ REGS *copy_regs(int cpu)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void the_real_panel_display()
 {
-#ifndef _MSVC_
+#if !defined(_MSVC_) && !defined(_MSVC_)
   int     rc;                           /* Return code               */
   int     maxfd;                        /* Highest file descriptor   */
   fd_set  readset;                      /* Select file descriptors   */
@@ -1738,7 +1738,7 @@ size_t  loopcount;                      /* Number of iterations done */
     /* Process messages and commands */
     for (loopcount = 0; ; loopcount++)
     {
-#if defined( _MSVC_ )
+#if defined( _MSVC_ ) || defined (__MINGW32__)
         /* Wait for keyboard input */
         for (i=
 #if defined(PANEL_REFRESH_RATE)

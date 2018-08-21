@@ -23,7 +23,7 @@
 #define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
 #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
 
-#ifdef _MSVC_
+#if defined(_MSVC_) || defined(__MINGW32__)
 #define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(unsigned)(stack),(start),(parm),(flags),(tid)))
 #define MyExitThread(code)                              (_endthreadex((code)))
 #else // (Cygwin)

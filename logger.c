@@ -339,8 +339,7 @@ static void* logger_thread( void* arg )
     int bytes_read;
 
     UNREFERENCED( arg );
-
-#if !defined( _MSVC_ )
+#if !defined( _MSVC_ ) && !defined (__MINGW32__)
     logger_redirect();
 #endif
 
@@ -544,7 +543,6 @@ DLL_EXPORT void logger_init( void )
             {
                 STRLCPY( logger_filename, "STDOUT redirected from command line" );
                 logger_hrdcpyfd = dup( STDOUT_FILENO );
-
                 if (dup2( STDERR_FILENO, STDOUT_FILENO ) == -1)
                 {
                     // "Logger: error in function %s: %s"
@@ -556,7 +554,6 @@ DLL_EXPORT void logger_init( void )
             {
                 STRLCPY( logger_filename, "STDERR redirected from command line" );
                 logger_hrdcpyfd = dup( STDERR_FILENO );
-
                 if (dup2( STDOUT_FILENO, STDERR_FILENO ) == -1)
                 {
                     // "Logger: error in function %s: %s"
@@ -623,7 +620,6 @@ DLL_EXPORT void logger_init( void )
 
     /* call logger_term on system shutdown */
     hdl_addshut( "logger_term", logger_term, NULL );
-
 }
 
 DLL_EXPORT char* log_dsphrdcpy( void )

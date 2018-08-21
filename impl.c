@@ -1016,7 +1016,7 @@ int     rc;
         &ckddasd_device_hndinfo,
         &fbadasd_device_hndinfo
     );
-
+    printf("9");
     if (rc != 0)
     {
         usleep( 100000 );  // (give logger time to display message)

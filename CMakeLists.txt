@@ -235,6 +235,7 @@ install(TARGETS hercules_engine DESTINATION lib)
 if(IS_WINDOWS)
   target_link_libraries(hercules_engine ws2_32)
   target_link_libraries(hercules_engine bcrypt)
+  target_link_libraries(hercules_engine winmm)
 endif()
 
 
