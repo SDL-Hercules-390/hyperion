@@ -336,6 +336,7 @@
 /*-------------------------------------------------------------------*/
 #elif defined(_AIX)                     /* AIX 5.3 options           */
 
+#define NO_ASM_BYTESWAP 
 #define SOL_TCP      IPPROTO_TCP        /* (both mean same thing)    */
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
