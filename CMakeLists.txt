@@ -224,6 +224,8 @@ target_link_libraries(hercules_engine telnet)
 target_link_libraries(hercules_engine ${CMAKE_DL_LIBS})
 target_link_libraries(hercules_engine ${CMAKE_THREAD_LIBS_INIT})
 
+install(TARGETS hercules_engine DESTINATION lib)
+
 
 
 
@@ -273,6 +275,21 @@ target_link_libraries( hdtzfcp  hercules_engine )
 target_link_libraries( hdt1052c hercules_engine )
 target_link_libraries( hdtptp   hercules_engine )
 
+install(TARGETS hdteq    DESTINATION bin)
+install(TARGETS hdt1403  DESTINATION bin)
+install(TARGETS hdt2880  DESTINATION bin)
+install(TARGETS hdt2703  DESTINATION bin)
+install(TARGETS hdt3705  DESTINATION bin)
+install(TARGETS hdt3088  DESTINATION bin)
+install(TARGETS hdt3270  DESTINATION bin)
+install(TARGETS hdt3420  DESTINATION bin)
+install(TARGETS hdt3505  DESTINATION bin)
+install(TARGETS hdt3525  DESTINATION bin)
+install(TARGETS hdtqeth  DESTINATION bin)
+install(TARGETS hdtzfcp  DESTINATION bin)
+install(TARGETS hdt1052c DESTINATION bin)
+install(TARGETS hdtptp   DESTINATION bin)
+
 
 # --------------
 # Misc utilities
@@ -281,90 +298,112 @@ target_link_libraries( hdtptp   hercules_engine )
 # cckdcdsk
 add_executable(cckdcdsk cckdcdsk.c)
 target_link_libraries(cckdcdsk hercules_engine)
+install(TARGETS cckdcdsk DESTINATION bin)
 
 # cckdcomp
 add_executable(cckdcomp cckdcomp.c)
 target_link_libraries(cckdcomp hercules_engine)
+install(TARGETS cckdcomp DESTINATION bin)
 
 # cckddiag
 add_executable(cckddiag cckddiag.c)
 target_link_libraries(cckddiag hercules_engine)
+install(TARGETS cckddiag DESTINATION bin)
 
 # cckdswap
 add_executable(cckdswap cckdswap.c)
 target_link_libraries(cckdswap hercules_engine)
+install(TARGETS cckdswap DESTINATION bin)
 
 # dasdcat
 add_executable(dasdcat dasdcat.c)
 target_link_libraries(dasdcat hercules_engine)
+install(TARGETS dasdcat DESTINATION bin)
 
 # dasdconv
 add_executable(dasdconv dasdconv.c)
 target_link_libraries(dasdconv hercules_engine)
+install(TARGETS dasdconv DESTINATION bin)
 
 # dasdcopy
 add_executable(dasdcopy dasdcopy.c)
 target_link_libraries(dasdcopy hercules_engine)
+install(TARGETS dasdcopy DESTINATION bin)
 
 # dasdinit
 add_executable(dasdinit dasdinit.c)
 target_link_libraries(dasdinit hercules_engine)
+install(TARGETS dasdinit DESTINATION bin)
 
 # dasdisup
 add_executable(dasdisup dasdisup.c)
 target_link_libraries(dasdisup hercules_engine)
+install(TARGETS dasdisup DESTINATION bin)
 
 # dasdload
 add_executable(dasdload dasdload.c)
 target_link_libraries(dasdload hercules_engine)
+install(TARGETS dasdload DESTINATION bin)
 
 # dasdls
 add_executable(dasdls dasdls.c)
 target_link_libraries(dasdls hercules_engine)
+install(TARGETS dasdls DESTINATION bin)
 
 # dasdpdsu
 add_executable(dasdpdsu dasdpdsu.c)
 target_link_libraries(dasdpdsu hercules_engine)
+install(TARGETS dasdpdsu DESTINATION bin)
 
 # dasdseq
 add_executable(dasdseq dasdseq.c)
 target_link_libraries(dasdseq hercules_engine)
+install(TARGETS dasdseq DESTINATION bin)
 
 # dmap2hrc
 add_executable(dmap2hrc dmap2hrc.c)
 target_link_libraries(dmap2hrc hercules_engine)
+install(TARGETS dmap2hrc DESTINATION bin)
 
 # hetget
 add_executable(hetget hetget.c)
 target_link_libraries(hetget hercules_engine)
+install(TARGETS hetget DESTINATION bin)
 
 # hetinit
 add_executable(hetinit hetinit.c)
 target_link_libraries(hetinit hercules_engine)
+install(TARGETS hetinit DESTINATION bin)
 
 # hetmap
 add_executable(hetmap hetmap.c)
 target_link_libraries(hetmap hercules_engine)
+install(TARGETS hetmap DESTINATION bin)
 
 # hetupd
 add_executable(hetupd hetupd.c)
 target_link_libraries(hetupd hercules_engine)
+install(TARGETS hetupd DESTINATION bin)
 
 # tapecopy
 add_executable(tapecopy tapecopy.c)
 target_link_libraries(tapecopy hercules_engine)
+install(TARGETS tapecopy DESTINATION bin)
 
 # tapemap
 add_executable(tapemap tapemap.c)
 target_link_libraries(tapemap hercules_engine)
+install(TARGETS tapemap DESTINATION bin)
 
 # tapesplt
 add_executable(tapesplt tapesplt.c)
 target_link_libraries(tapesplt hercules_engine)
+install(TARGETS tapesplt DESTINATION bin)
 
 # vmfplc2
 add_executable(vmfplc2 vmfplc2.c)
 target_link_libraries(vmfplc2 hercules_engine)
+install(TARGETS vmfplc2 DESTINATION bin)
 
 # --------------------
 # Main hercules binary
@@ -374,5 +413,7 @@ target_link_libraries(vmfplc2 hercules_engine)
 set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
 add_executable(hercules bootstrap.c)
 target_link_libraries(hercules hercules_engine)
+install(TARGETS hercules DESTINATION bin)
+
 
 message( STATUS "Hercules Hyperion version ${DYNAMIC_VERSION} ready to build." )
