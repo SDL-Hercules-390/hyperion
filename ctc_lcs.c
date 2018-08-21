@@ -431,6 +431,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
 void LCS_Assist( PLCSPORT pLCSPORT )
 {
+#ifndef _AIX //blank out function on AIX
     MAC    mac  = { 0x01, 0x00, 0x5e, 0x00, 0x00, 0x01 };
     ifreq  ifr  = {0};
 
@@ -447,7 +448,7 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
     // Check if tuntap can handle the multicast assist for us.
 
-#if defined( SIOCGIFHWADDR ) && !defined(_AIX)
+#if defined( SIOCGIFHWADDR )
     STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
     memcpy( ifr.ifr_hwaddr.sa_data, mac, sizeof( MAC ));
 
@@ -493,6 +494,7 @@ void LCS_Assist( PLCSPORT pLCSPORT )
         // "CTC: lcs device port %2.2X: %s Large Send Offload enabled"
         WRMSG( HHC00938, "I", pLCSPORT->bPort, "tuntap" );
     }
+#endif
 #endif
 }
 
@@ -1495,6 +1497,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
 static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 {
+#ifndef _AIX // blank out code on AIX
     LCSQIPFRM   reply;
     PLCSPORT    pLCSPORT;
 
@@ -1508,6 +1511,7 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     STORE_HW( reply.hwIPVersion,          0x0004 ); // (IPv4 only)
 
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );
+#endif
 }
 
 // ====================================================================
@@ -1516,6 +1520,7 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
 static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 {
+#ifndef _AIX //blank out code on AIX
     LCSLSTFRM  reply;
     PLCSPORT   pLCSPORT;
     int        fd, rc;
@@ -1602,6 +1607,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // FIXME: Really should read /proc/net/dev to retrieve actual stats
 
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );
+#endif
 }
 
 // ====================================================================
@@ -1610,6 +1616,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
 static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 {
+#ifndef _AIX //blank out code on AIX
     const LCSIPMFRM*  pIPMFrame;
     LCSPORT*          pLCSPORT;
     LCSIPMFRM         reply;
@@ -1741,6 +1748,7 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
     // Queue response back to caller
 
     ENQUEUE_REPLY_FRAME( pLCSDEV, reply );
+#endif
 }
 
 // ====================================================================
@@ -1926,6 +1934,7 @@ static int  LCS_DoEnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t 
 
 static void*  LCS_PortThread( void* arg)
 {
+#ifndef _AIX //blank out on AIX
     DEVBLK*     pDEVBLK;
     PLCSPORT    pLCSPORT = (PLCSPORT) arg;
     PLCSDEV     pLCSDev;
@@ -2292,6 +2301,7 @@ static void*  LCS_PortThread( void* arg)
     PTT_DEBUG( "PORTHRD: EXIT     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     return NULL;
+#endif
 
 } // end of LCS_PortThread
 
