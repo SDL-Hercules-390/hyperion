@@ -236,7 +236,7 @@ static void* hdl_dlopen( const char* filename, int flag )
 #if defined( HDL_MODULE_SUFFIX )
 
     strlcat( fullname, HDL_MODULE_SUFFIX, fulllen );
-
+    printf("fullname: %s\n", fullname);
     if ((ret = dlopen( fullname, flag )))
     {
         free( fullname );

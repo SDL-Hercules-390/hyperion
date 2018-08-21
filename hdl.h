@@ -245,7 +245,7 @@ HDL_DLL_IMPORT void         hdl_repins   ( bool replace, HDLINS* ins );
   #elif defined( _MSVC_ )
     #define HDL_MODULE_SUFFIX       ".dll"
   #else
-    #define HDL_MODULE_SUFFIX       ".la"
+    #define HDL_MODULE_SUFFIX       ".so"
   #endif
 #endif
 

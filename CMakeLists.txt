@@ -386,7 +386,7 @@ target_link_libraries(hetupd hercules_engine)
 install(TARGETS hetupd DESTINATION bin)
 
 # tapecopy
-add_executable(tapecopy tapecopy.c)
+add_executable(tapecopy tapecopy.c scsiutil.c)
 target_link_libraries(tapecopy hercules_engine)
 install(TARGETS tapecopy DESTINATION bin)
 
