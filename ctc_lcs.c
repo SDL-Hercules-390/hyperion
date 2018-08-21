@@ -447,7 +447,7 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
     // Check if tuntap can handle the multicast assist for us.
 
-#if defined( SIOCGIFHWADDR )
+#if defined( SIOCGIFHWADDR ) && !defined(_AIX)
     STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
     memcpy( ifr.ifr_hwaddr.sa_data, mac, sizeof( MAC ));
 
