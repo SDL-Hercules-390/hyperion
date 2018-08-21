@@ -38,7 +38,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 
     pHostInfo->valid_cache_nums = TRUE;     /* assume the cache size numbers are good */
 
-#if defined(_MSVC_)
+#if defined(_MSVC_) || defined(__MINGW32__)
     w32_init_hostinfo( pHostInfo );
 #else
    #if defined( HAVE_SYS_UTSNAME_H )
