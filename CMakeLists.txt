@@ -351,7 +351,7 @@ add_executable(hetupd hetupd.c)
 target_link_libraries(hetupd hercules_engine)
 
 # tapecopy
-add_executable(tapecopy tapecopy.c)
+add_executable(tapecopy tapecopy.c scsiutil.c)
 target_link_libraries(tapecopy hercules_engine)
 
 # tapemap
