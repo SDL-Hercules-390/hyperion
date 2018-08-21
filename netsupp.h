@@ -63,8 +63,12 @@ typedef struct eth_hdr          eth_hdr;
 struct ip_hdr
 {
 #ifdef  WORDS_BIGENDIAN
+#ifdef _AIX
+    U8      ip_v_hl;
+#else
     U8      ip_v:4,         // IP version (4)
             ip_hl:4;        // hdr len
+#endif
 #else
     U8      ip_hl:4,        // hdr len
             ip_v:4;         // IP version (4)
@@ -94,8 +98,12 @@ struct tcp_hdr
     U32     th_ack;         // ack num
 
 #ifdef  WORDS_BIGENDIAN
+#ifdef  _AIX
+    BYTE    th_off_x2;
+#else
     BYTE    th_off:4;       // payload offset
     BYTE    th_x2:4;        // (unused)
+#endif
 #else
     BYTE    th_x2:4;        // (unused)
     BYTE    th_off:4;       // payload offset
