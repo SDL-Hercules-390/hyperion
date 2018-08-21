@@ -25,7 +25,9 @@
 #include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
 #if !defined( OPTION_W32_CTCI )
+#if !defined(_AIX)
 #include <ifaddrs.h>
+#endif 
 #endif
 
 DISABLE_GCC_UNUSED_SET_WARNING;
