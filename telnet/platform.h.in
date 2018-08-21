@@ -9,7 +9,7 @@
 /*  Include primary system headers according to build platform.      */
 /*-------------------------------------------------------------------*/
 
-#ifdef _MSC_VER                         /* Microsoft Visual C/C++    */
+#if defined(_MSC_VER) || defined(__MINGW32__)          /* Microsoft Visual C/C++    */
 
   #ifndef   _WIN32_WINNT                /* see cmake's targetver.txt */
     #define _WIN32_WINNT  0x0601        /* Windows 7 Service Pack 1  */
@@ -52,7 +52,7 @@
 #ifdef HAVE_STDBOOL_H
   #include <stdbool.h>
 #else
-  /* minimum stdbool.h #defines needed by package */ 
+  /* minimum stdbool.h #defines needed by package */
   #define false                         0
   #define true                          1
   #define __bool_true_false_are_defined 1
@@ -63,16 +63,16 @@
 #ifdef HAVE_STDINT_H
   #include <stdint.h>
 #else
-  /* minimum stdint.h typedefs needed by package */ 
-  typedef char                          int8_t; 
-  typedef short                         int16_t; 
-  typedef int                           int32_t; 
-  typedef long long                     int64_t; 
+  /* minimum stdint.h typedefs needed by package */
+  typedef char                          int8_t;
+  typedef short                         int16_t;
+  typedef int                           int32_t;
+  typedef long long                     int64_t;
 
-  typedef unsigned char                 uint8_t; 
-  typedef unsigned short                uint16_t; 
-  typedef unsigned int                  uint32_t; 
-  typedef unsigned long long            uint64_t; 
+  typedef unsigned char                 uint8_t;
+  typedef unsigned short                uint16_t;
+  typedef unsigned int                  uint32_t;
+  typedef unsigned long long            uint64_t;
 
   typedef char                          int_fast8_t;
   typedef int                           int_fast16_t;
