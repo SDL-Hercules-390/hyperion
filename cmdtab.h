@@ -27,10 +27,10 @@
 //  -------------- (template for new commands) ----------------
 //  -------------- (template for new commands) ----------------
 
-#define $locate_cmd_desc        "Display sysblk, regs or hostinfo"
+#define locate_cmd_desc        "Display sysblk, regs or hostinfo"
 
-#define $runtest_cmd_desc       "Start the test if test mode is active"
-#define $runtest_cmd_help       \
+#define runtest_cmd_desc       "Start the test if test mode is active"
+#define runtest_cmd_help       \
                                 \
   "Issue 'restart' command and then wait for all processors to load a\n"        \
   "disabled wait PSW. This is a scripting only command and is only valid\n"     \
@@ -40,8 +40,8 @@
   "If not specified then a default value is used. If the test runs longer\n"    \
   "than the expected time an error message is issued and the test aborts.\n"
 
-#define $test_cmd_desc          "Your custom command (*DANGEROUS!*)"
-#define $test_cmd_help          \
+#define test_cmd_desc          "Your custom command (*DANGEROUS!*)"
+#define test_cmd_help          \
                                 \
   "Performs whatever test function *YOU* specifically coded it to do.\n\n"      \
                                                                                 \
@@ -52,8 +52,8 @@
   "don't know it does. It could perform any function at all from crashing\n"    \
   "Hercules to launching a nuclear strike. You have been warned!\n"
 
-#define $zapcmd_cmd_desc        "Enable/disable command (*CAREFUL!*)"
-#define $zapcmd_cmd_help        \
+#define zapcmd_cmd_desc        "Enable/disable command (*CAREFUL!*)"
+#define zapcmd_cmd_help        \
                                 \
   "Format:\n\n"                                                                 \
                                                                                 \
@@ -1549,10 +1549,10 @@
 //MMAND( "x{+/-}zz",  "flag on/off cmd", NULL,        SYSCMDNOPER, NULL )  // 'OnOffCommand'   (special handling)
 
 //       "1...5...9",               function                type flags          description             long help
-CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  $locate_cmd_desc,       NULL                )
-COMMAND( "$runtest",                $runtest_cmd,           SYSPROGDEVELDEBUG,  $runtest_cmd_desc,      $runtest_cmd_help   )
-COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
-CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  $zapcmd_cmd_desc,       $zapcmd_cmd_help    )
+CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  locate_cmd_desc,        NULL                )
+COMMAND( "$runtest",                $runtest_cmd,           SYSPROGDEVELDEBUG,  runtest_cmd_desc,       runtest_cmd_help    )
+COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  test_cmd_desc,          test_cmd_help       )
+CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  zapcmd_cmd_desc,        zapcmd_cmd_help     )
 
 COMMAND( "cckd",                    cckd_cmd,               SYSCONFIG,          cckd_cmd_desc,          cckd_cmd_help       )
 COMMAND( "devtmax",                 devtmax_cmd,            SYSCONFIG,          devtmax_cmd_desc,       devtmax_cmd_help    )
