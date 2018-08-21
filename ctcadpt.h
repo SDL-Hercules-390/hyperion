@@ -434,7 +434,9 @@ struct  _LCSPORT
     MAC         MAC_Address;              // MAC Address of Adapter
     PLCSRTE     pRoutes;                  // -> Routes chain
     PLCSBLK     pLCSBLK;                  // -> LCSBLK
+#ifndef _AIX
     MACTAB      MCastTab[ MACTABMAX ];    // Multicast table
+#endif 
 
     U16         sIPAssistsSupported;      // (See #defines below)
     U16         sIPAssistsEnabled;        // (See #defines below)
