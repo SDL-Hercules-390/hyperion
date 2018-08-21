@@ -5,8 +5,10 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+
 #ifndef _NETSUPP_H_
 #define _NETSUPP_H_
+#ifndef _AIX
 
 #include "hercules.h"
 
@@ -63,12 +65,8 @@ typedef struct eth_hdr          eth_hdr;
 struct ip_hdr
 {
 #ifdef  WORDS_BIGENDIAN
-#ifdef _AIX
-    U8      ip_v_hl;
-#else
     U8      ip_v:4,         // IP version (4)
             ip_hl:4;        // hdr len
-#endif
 #else
     U8      ip_hl:4,        // hdr len
             ip_v:4;         // IP version (4)
@@ -98,12 +96,8 @@ struct tcp_hdr
     U32     th_ack;         // ack num
 
 #ifdef  WORDS_BIGENDIAN
-#ifdef  _AIX
-    BYTE    th_off_x2;
-#else
     BYTE    th_off:4;       // payload offset
     BYTE    th_x2:4;        // (unused)
-#endif
 #else
     BYTE    th_x2:4;        // (unused)
     BYTE    th_off:4;       // payload offset
@@ -160,4 +154,5 @@ extern U16  CheckSum          ( const BYTE* pBuffer, S32 nBytes );
 extern U16  InetCheckSum      ( const BYTE* pBuffer, S32 nBytes );
 extern U16  PseudoHdrCheckSum ( ip_hdr* pIP );
 
+#endif // _AIX
 #endif // _NETSUPP_H_
