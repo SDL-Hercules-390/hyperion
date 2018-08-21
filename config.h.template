@@ -781,3 +781,5 @@
 #define VERS_BLD 0
 
 #cmakedefine VS2010_TOOLSET @VS2010_TOOLSET@
+
+#cmakedefine DRIVER_PREFIX "@DRIVER_PREFIX@"
