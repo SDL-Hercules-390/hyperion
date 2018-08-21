@@ -692,7 +692,7 @@
 #undef NON_UNIQUE_GETTIMEOFDAY
 
 /* Define to disable assembler routines for byte swapping */
-#undef NO_ASM_BYTESWAP
+#cmakedefine NO_ASM_BYTESWAP @NO_ASM_BYTESWAP@
 
 
 /* Define to disable setuid operation */
