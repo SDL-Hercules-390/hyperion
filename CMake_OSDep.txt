@@ -26,7 +26,7 @@ if (WIN32)
 endif()
 
 # disable intel assembly optimalisations on powerpc:
-if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" EQUAL "powerpc")
+if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "powerpc")
   set (NO_ASM_BYTESWAP 1)
   message( STATUS "Disabling assembly optimalisations.")
 else()
