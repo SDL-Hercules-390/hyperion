@@ -766,6 +766,10 @@
 # endif
 #endif
 
+#ifdef _AIX
+  #define WORDS_BIGENDIAN 1
+#endif
+
 /* Define missing macro on apple darwin (osx) platform */
 #undef _BSD_SOCKLEN_T_
 
