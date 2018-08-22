@@ -368,7 +368,6 @@ U64 thread_cputime_us(const REGS *regs)
         rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
     }
     result = (likely(rc == 0)) ? timespec2us(&cputime) : etod2us(host_tod());
-
     return (result);
 }
 

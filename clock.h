@@ -43,7 +43,7 @@ typedef U64     TOD;                            // one microsecond = Bit 51
 #define ETOD_YEAR   (365 * ETOD_DAY)
 #define ETOD_LYEAR  (ETOD_YEAR + ETOD_DAY)
 #define ETOD_4YEARS (1461 * ETOD_DAY)
-#define ETOD_1970   0x007D91048BCA0000ULL       // Extended TOD base for host epoch of 1970
+#define ETOD_1970   35343820800000000ULL       // Extended TOD base for host epoch of 1970
 
 
 #ifdef WORDS_BIGENDIAN
