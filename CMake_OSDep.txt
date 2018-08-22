@@ -36,7 +36,6 @@ else()
   message( STATUS "Not disabling assembly optimalisations for '${CMAKE_HOST_SYSTEM_PROCESSOR}'.")
 endif()
 
-option(OS400 "Cross compile for OS/400 from AIX" OFF)
 
 # Check if building for OS/400
 # (note: you'd have to do cmake -DOS400 on your AIX build host for this to work)

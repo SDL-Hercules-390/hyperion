@@ -50,6 +50,11 @@ else()
 endif()
 
 
+# ------------------------
+# User-defineable settings
+# ------------------------
+
+option(OS400 "Cross compile for OS/400 from AIX" OFF)
 
 # ------------------
 # Check dependencies
