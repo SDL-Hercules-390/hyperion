@@ -1095,3 +1095,12 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
 
     return rc;
 }
+
+/*-------------------------------------------------------------------*/
+/* sched_get_priority_stub - stub used for platforms which lack this */
+/*                           functionality                           */
+/*-------------------------------------------------------------------*/
+
+int sched_get_priority_stub(int policy) {
+	return 1;
+}
