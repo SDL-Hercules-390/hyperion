@@ -41,7 +41,6 @@ endif()
 # (note: you'd have to do cmake -DOS400 on your AIX build host for this to work)
 if (OS400)
   # use fthreads implementation for OS400 because it contains an incomplete implementation of pthreads
-  set(OPTION_FTHREADS 1)
 
   # set IS_OS400 so that a compile-time define of OS400 exists.
   set(IS_OS400 1)
