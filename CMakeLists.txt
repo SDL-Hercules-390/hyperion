@@ -1,4 +1,16 @@
+# --------------------------------------------
+#
+#
+#  CMake-based build system for Hyperion
+#
+#  
+#
+# --------------------------------------------
+
+
+# ------------------------
 # Global settings
+# ------------------------
 
 cmake_minimum_required( VERSION 2.8 )
 cmake_policy(SET CMP0048 NEW)
@@ -8,6 +20,16 @@ set(CMAKE_BUILD_TYPE "Release")
 
 # Define the project
 project( Hyperion VERSION 4.0 LANGUAGES C )
+
+# ------------------------
+# User-defineable settings
+# ------------------------
+
+option(OS400 "Cross compile for OS/400 from AIX" OFF)
+
+# ------------------------
+# Include submodules
+# ------------------------
 
 
 # Add SoftFloat subdirectory
@@ -50,11 +72,6 @@ else()
 endif()
 
 
-# ------------------------
-# User-defineable settings
-# ------------------------
-
-option(OS400 "Cross compile for OS/400 from AIX" OFF)
 
 # ------------------
 # Check dependencies
