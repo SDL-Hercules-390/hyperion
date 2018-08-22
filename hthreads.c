@@ -1101,6 +1101,6 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
 /*                           functionality                           */
 /*-------------------------------------------------------------------*/
 
-int sched_get_priority_stub(int policy) {
-	return 1;
+int sched_get_priority_stub(int policy, int value) {
+	return value;
 }
