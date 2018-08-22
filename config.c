@@ -1034,7 +1034,7 @@ int configure_cpu( int target_cpu )
             return HERRCPUOFF; /* CPU offline; create_thread failed */
         }
 
-#if defined( _POSIX_THREAD_CPUTIME ) && (_POSIX_THREAD_CPUTIME >= 0)
+#if defined( _POSIX_THREAD_CPUTIME ) && (_POSIX_THREAD_CPUTIME >= 0) && !defined(OS400)
         /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
         /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
         pthread_getcpuclockid( sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
