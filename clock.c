@@ -365,13 +365,7 @@ U64 thread_cputime_us(const REGS *regs)
 
     if (sysblk.cpuclockid[regs->cpuad])
     {
-#ifndef OS400
         rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
-#else
-	// timers on OS/400 are broken. Breaking this functionality allows 
-        // hercules to run instead of crash.
-	rc = clock_gettime(CLOCK_REALTIME, &cputime);
-#endif
     }
     result = (likely(rc == 0)) ? timespec2us(&cputime) : etod2us(host_tod());
 
