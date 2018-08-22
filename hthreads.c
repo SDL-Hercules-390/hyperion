@@ -1104,3 +1104,23 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
 int sched_get_priority_stub(int policy, int value) {
 	return value;
 }
+
+/*-------------------------------------------------------------------*/
+/* os400_setschedparam     - stub used for OS/400    which lack this */
+/*                           functionality                           */
+/*-------------------------------------------------------------------*/
+
+int os400_setschedparam(pthread_t thread, int policy,
+                                 const struct sched_param *param) {
+	return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* os400_getschedparam     - stub used for OS/400    which lack this */
+/*                           functionality                           */
+/*-------------------------------------------------------------------*/
+
+int os400_getschedparam(pthread_t thread, int policy,
+                                 const struct sched_param *param) {
+        return 0;
+}

@@ -197,9 +197,9 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_equal( tid1, tid2 )             pthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
 #define hthread_get_handle( tid )               NULL
 /* Thread scheduling functions */
-#define hthread_getschedparam( tid, po, sc )    pthread_getschedparam( (hthread_t)(tid), (po), (sc) )
-#define hthread_setschedparam( tid, po, sc )    pthread_setschedparam( (hthread_t)(tid), (po), (sc) )
 #ifdef OS400 // OS/400's pthread implementation doesn't properly do scheduling
+ #define hthread_getschedparam( tid, po, sc )    os400_getschedparam( (hthread_t)(tid), (po), (sc) )
+ #define hthread_setschedparam( tid, po, sc )    os400_setschedparam( (hthread_t)(tid), (po), (sc) )
  #define hthread_get_priority_min( po )          sched_get_priority_stub( po, 0   )
  #define hthread_get_priority_max( po )          sched_get_priority_stub( po, 100 )
 #else
