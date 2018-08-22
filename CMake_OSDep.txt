@@ -45,6 +45,7 @@ if (OS400)
 
   # set IS_OS400 so that a compile-time define of OS400 exists.
   set(IS_OS400 1)
+  message (STATUS "Cross-compiling for OS/400")
 endif()
 
 # Check if required to link with libm
