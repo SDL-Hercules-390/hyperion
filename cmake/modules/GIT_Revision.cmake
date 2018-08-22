@@ -57,7 +57,6 @@ endif()
 
 
 string( STRIP ${_o} GIT_COMMIT_COUNT )
-trace( GIT_COMMIT_COUNT )
 
 #-----------------
 #     Hash
@@ -76,7 +75,6 @@ if( NOT ${_r} EQUAL 0 )
 endif()
 
 string( SUBSTRING ${_o} 0 7 GIT_HASH7 )
-trace( GIT_HASH7 )
 
 #-----------------
 # Pending changes
@@ -99,6 +97,5 @@ if( "${_o}" STREQUAL "" )
 else()
     set( GIT_MODIFIED "-modified" )
 endif()
-trace( GIT_MODIFIED )
 
 #------------------------------------------------------------------------------

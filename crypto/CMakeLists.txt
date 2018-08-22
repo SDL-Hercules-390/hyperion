@@ -18,7 +18,6 @@ else()
 
     set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules" )
 
-    include( Trace )
 
 endif()
 
@@ -111,8 +110,6 @@ else()
   endif()
 endif()
 
-trace( CMAKE_C_FLAGS_DEBUG )
-trace( CMAKE_C_FLAGS_RELWITHDEBINFO )
 
 
 #------------------------------------------------------------------------------
