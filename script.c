@@ -1078,7 +1078,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* $runtest command - invalid when entered as a Hercules command     */
 /*-------------------------------------------------------------------*/
-int $runtest_cmd(int argc,char *argv[], char *cmdline)
+int runtest_cmd(int argc,char *argv[], char *cmdline)
 {
     UNREFERENCED( argc );
     UNREFERENCED( argv );

@@ -5,8 +5,10 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+
 #ifndef _NETSUPP_H_
 #define _NETSUPP_H_
+#ifndef _AIX
 
 #include "hercules.h"
 
@@ -152,4 +154,5 @@ extern U16  CheckSum          ( const BYTE* pBuffer, S32 nBytes );
 extern U16  InetCheckSum      ( const BYTE* pBuffer, S32 nBytes );
 extern U16  PseudoHdrCheckSum ( ip_hdr* pIP );
 
+#endif // _AIX
 #endif // _NETSUPP_H_

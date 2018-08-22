@@ -10,7 +10,7 @@ set (HAVE_DECL_IFNAMSIZ 1)
 if (APPLE)
   set(PTHREAD_SET_NAME_ONLY 1)
   set(CMAKE_MACOSX_RPATH 1)
-  SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
 # Windows-based defines
@@ -23,7 +23,17 @@ if (WIN32)
   set(HAVE_DECL_IFNAMSIZ 0)
 
   message (STATUS "MSVC Toolset version: ${MSVC_TOOLSET_VERSION}")
+endif()
 
+# fix for AIX
+set(CMAKE_PLATFORM_REQUIRED_RUNTIME_PATH /usr/lib /lib "${CMAKE_INSTALL_PREFIX}/lib")
+
+# disable intel assembly optimalisations on powerpc:
+if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "powerpc")
+  set (NO_ASM_BYTESWAP 1)
+  message( STATUS "Disabling assembly optimalisations.")
+else()
+  message( STATUS "Not disabling assembly optimalisations for '${CMAKE_HOST_SYSTEM_PROCESSOR}'.")
 endif()
 
 # Check if building for OS/400

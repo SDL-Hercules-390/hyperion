@@ -182,12 +182,8 @@
   #define  DLL_IMPORT   extern
   #define  DLL_EXPORT
 #endif
-// disable CTCI on MingW32 for now
-#if !defined(__MINGW32__)
+
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
-#else
-#undef OPTION_W32_CTCI
-#endif
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
 #if !defined(__MINGW32__)
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */

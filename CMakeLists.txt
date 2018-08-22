@@ -248,6 +248,7 @@ if (BZIP2_FOUND)
 endif()
 
 if (ZLIB_FOUND)
+  message(STATUS "ZLIB LIBS: ${ZLIB_LIBRARIES}")
   target_link_libraries(hercules_engine ${ZLIB_LIBRARIES})
 endif()
 

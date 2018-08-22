@@ -21,6 +21,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+#ifndef _AIX
 int  MACTabAdd ( MACTAB* tab, const BYTE* mac, const BYTE flags )
 {
     int  i, n = -1;
@@ -334,3 +335,6 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
 
     } // while (nBytes > ip_hdr_size)
 }
+
+
+#endif
