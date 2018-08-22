@@ -783,3 +783,5 @@
 #cmakedefine VS2010_TOOLSET @VS2010_TOOLSET@
 
 #cmakedefine DRIVER_PREFIX "@DRIVER_PREFIX@"
+
+#cmakedefine OS400 "@IS_OS400@"

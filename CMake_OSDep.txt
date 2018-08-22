@@ -26,6 +26,16 @@ if (WIN32)
 
 endif()
 
+# Check if building for OS/400
+# (note: you'd have to do cmake -DOS400 on your AIX build host for this to work)
+if (OS400)
+  // use fthreads implementation for OS400 because it contains an incomplete implementation of pthreads
+  set(OPTION_FTHREADS 1)
+
+  // set IS_OS400 so that a compile-time define of OS400 exists.
+  set(IS_OS400 1)
+endif()
+
 # Check if required to link with libm
 check_include_file(libm/math.h HAVE_LIBM_MATH_H)
 check_library_exists(m log "/lib;/usr/lib;/usr/local/lib" HAVE_M_LIB)
