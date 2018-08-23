@@ -3839,7 +3839,7 @@ BYTE work;
     */
     ia=EVM_L(PGMOPSW+4);
     work=regs->psw.progmask;
-    if ((F_VMINST && 0x83000000) == 0x83000000)
+    if ((F_VMINST & 0x83000000) == 0x83000000)
     {
         work|=(regs->psw.cc << 4);                  /* for DIAG, preserve CC */
     }
