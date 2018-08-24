@@ -844,7 +844,13 @@ Return
 /*********************************************************************/
 HHC02269I:
 Call HHC022nnI 'General', 'GR', 'R';
-gpr. = xr.
+/*
+    Copy stem variable to another stem variable the HARD way!
+    Doing a simple "foo. = bar." doesn't work with Regina!!!!
+*/
+Do i=0 to 15 by 1
+   gpr.i = xr.i
+End
 Return
 
 /*********************************************************************/
@@ -852,7 +858,13 @@ Return
 /*********************************************************************/
 HHC02271I:
 Call HHC022nnI 'Control', 'CR', 'C';
-cr. = xr.
+/*
+    Copy stem variable to another stem variable the HARD way!
+    Doing a simple "foo. = bar." doesn't work with Regina!!!!
+*/
+Do i=0 to 15 by 1
+   cr.i = xr.i
+End
 Return
 
 /*********************************************************************/

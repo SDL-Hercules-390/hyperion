@@ -14,7 +14,7 @@ do
     exit 0
 end
 
-      rc = stream( filename, "command", "open read binary shared" )
+      rc = stream( filename, "command", "open read" )
 filesize = stream( filename, "command", "query Size" )
       rc = stream( filename, "command", "close" )
 
