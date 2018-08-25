@@ -1,0 +1,51 @@
+os: linux
+dist: trusty
+language: c
+sudo: required
+#
+matrix:
+  include:
+    - name: "gcc 4.8"
+      env: MATRIX_EVAL="CC=gcc && CXX=g++"
+
+    - name: "gcc 5"
+      addons:
+        apt:
+          sources:  ubuntu-toolchain-r-test
+          packages: g++-5
+      env: MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
+    - name: "gcc 6"
+      addons:
+        apt:
+          sources:  ubuntu-toolchain-r-test
+          packages: g++-6
+      env: MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+    - name: "gcc 7"
+      addons:
+        apt:
+          sources:  ubuntu-toolchain-r-test
+          packages: g++-7
+      env: MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    - name: "clang"
+      env: MATRIX_EVAL="CC=clang && CXX=clang++"
+
+#
+before_install:
+  - sudo apt-get install -y regina-rexx libregina3-dev
+  - eval "${MATRIX_EVAL}"
+
+#
+before_script:
+  - util/bldlvlck
+  - ./autogen.sh
+  - ./configure 
+  - bash -c 'echo CC=$CC; echo CXX=$CXX'
+  - bash -c '${CC} --version'
+
+#
+script:
+  - make
+  - make check
