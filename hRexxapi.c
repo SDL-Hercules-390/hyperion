@@ -414,14 +414,14 @@ static HR_EXITHAND_T  ExitHandler
         case RXSIOSAY:      // Perform SAY Clause
         {
             if (MsgPrefix) WRMSG( HHC17540, "I", pb->u_say.strptr );
-            else           logmsg( "%s\n",       pb->u_say.strptr );
+            else           LOGMSG( "%s\n",       pb->u_say.strptr );
         }
         break;
 
         case RXSIOTRC:      // Write Trace Output
         {
             if (ErrPrefix) WRMSG( HHC17541, "D", pb->u_trc.strptr );
-            else           logmsg( "%s\n",       pb->u_trc.strptr );
+            else           LOGMSG( "%s\n",       pb->u_trc.strptr );
         }
         break;
 
