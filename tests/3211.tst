@@ -29,7 +29,11 @@
         # Set needed Hercules Rexx processing options
         rexx mode subroutine msglevel off msgprefix off errprefix off resolver on syspath on extensions .rexx start auto
 
-        # Run the test...
+        # Define the tests we want to be run
+        r ff0=00000000000000000000000000000000    # (start with none)
+        r ff0=00f1f2f3f4f5f6f7f8f9000000000000    # (default = all)
+
+        # Run the tests...
         runtest   0.1               # (plenty of time)
 
         # Clean up afterwards
@@ -55,6 +59,27 @@
         r 1000.10
         *Want "Return Code flags" 00000000 00000000 00000000 00000000
 
+        * *************************************************
+        *  The following should all have valid file sizes.
+        *  (i.e. they should all be numbers, e.g. 38, etc)
+        *  If they are not numbers (e.g. still "aa"), then
+        *  it means the Rexx being used is SEVERLY BROKEN!
+        * *************************************************
+        *
+        *   Test  03   sizes should be the same
+        *   Test  04     "      "   "  DIFFERENT
+        *   Test  09     "      "   "  the same
+        *
+        * *************************************************
+        r 2100.100  #  SIZ03A  (before)
+        r 2200.100  #  SIZ03B  (after) should be SAME
+        * *************************************************
+        r 2300.100  #  SIZ04A  (before)
+        r 2400.100  #  SIZ04B  (after) should be DIFFERENT
+        * *************************************************
+        r 2500.100  #  SIZ09A  (before)
+        r 2600.100  #  SIZ09B  (after) should be SAME
+        * *************************************************
     *Fi
 *Fi
 

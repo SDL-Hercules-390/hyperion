@@ -72,166 +72,9 @@
 *   Refer to comments at label "BEGIN" for register usage.
 *
 ***********************************************************************
-                                                                SPACE 9
+                                                                SPACE 5
          PRINT OFF
          COPY  'satk.mac'
-         MACRO
-&LABEL   RAWIO  &REG,&FAIL=,&CERR=,&UERR=,&SENSE=,&EOF=,&IOSAVE='YES',&CHAN=X'FE'
-.* Performs a low-level in-line I/O operation using a control block based upon the
-.* current I/O architecture as implied by the assembly time architecture level.
-.*
-.* Assembly Requirements:
-.* The macro requires an established base register and addressability to the control
-.* block using the IOCB DSECT and the area defined by ASAREA.
-.*
-.* Run-time Requirements:
-.* General register 1 contains the device identifier:
-.*   - a channel/unit address for channel based I/O or
-.*   - a subchannel subsystem ID for subchannel-based operations.
-.*
-.* Required Parameter Usage:
-.*   &FAIL   Control passes here for a failure to initiate the operation (required).
-.*   &REG    Channel subsystem structure addressing.  Required for subchannel
-.*           operations.  Ignored if provided for channel-based operations.
-.* Optional Parameter Usage:
-.*   &LABLE  Label assigned to start of in-line logic.
-.*   &CERR   Control passes here for a detetected channel error. If ommitted channel
-.*           errors are not checked.
-.*   &UERR   Control passes here for a detetected unit error. If ommitted unit
-.*           errors are not checked.
-.*   &SENSE  Optionally passes control to this label if unit check reported in status.  If ommitted
-.*           Note, if not handled separately unit check should be detected by the
-.*           &UERR parameter.
-.*   &EOF    Optionally passes control to this label if after I/O completed a
-.*           physical end-of-file condition reported by a unit exception status.
-.*   &IOSAVE IOSAVE parameter for CPUWAIT macro.  See CPUWAIT for usage.  Defaults
-.*           to 'YES'.
-.*   &CHAN   PSW channel interruption mask.  Ignored for channel subystem or
-.*           channel I/O system not operating as a System/360 or System/370 in
-.*           BC-mode.  Defaults to X'FE'.
-.* Note: System/370 initializes CR2 to all ones, thereby automatically enabling all
-.* channels for input/output operations.  No explicit system initialization is
-.* therefore required for use.
-.*
-.* Depends upon:
-.*   ARCHLVL macro ininitialized &ARCHLVL symbolic variable
-.*   ARCHIND macro in satk.mac for dynamic instruction selection
-.*   ASAREA macro in satk.mac
-.*   CPUWAIT macro in satk.mac
-         GBLA  &ARCHLVL Current architecture level
-.* Symbols supplied by ARCHIND macro:
-.*         GBLA  &ARCHASZ   Size of an address constant in bytes
-.*         GBLA  &ARCHIRB   Size of an IRB in full words
-.*         GBLA  &ARCHORB   Size of an ORB in full words
-.*         GBLA  &ARCHORX   Size of an extended ORB in full words
-.*         GBLA  &ARCHSCB   Size of a SCHIB in full words
-         GBLB  &ARCHIND   Whether operator synonyms defined
-.*       GBLC  &ARCHATP   Address constant type
-.*       GBLC  &ARCHITP   Integer constant type
-.* Symbol supplied by IOCBDS macro
-         GBLB  &SATKIOB Whether the control block DSECT has been generated
-         LCLB  &BC    Whether basic control mode in use
-         LCLB  &CS    Whether channel subsystem in use
-&BC      SETB  &ARCHLVL EQ 1 OR &ARCHLVL EQ 2
-&CS      SETB  &ARCHLVL GE 5
-         AIF   ('&REG' NE '' OR &ARCHLVL LT 5).DEVGOOD
-         MNOTE 1,'RAWIO - REQUIRED REG PARAMETER MISSING'
-         MEXIT
-.DEVGOOD ANOP
-         AIF   ('&FAIL' NE '').FALGOOD
-         MNOTE 1,'RAWIO - REQUIRED FAIL PARAMETER MISSING'
-         MEXIT
-.FALGOOD ANOP
-         AIF   (&ARCHIND).GEN
-         MNOTE 1,'RAWIO - REQUIRED ARCHIND MACRO OPERATOR SYNONYMS UNDEFINED'
-         MEXIT
-.GEN     ANOP
-         AIF   ('&LABEL' EQ '').NOLBL
-&LABEL   DS    0H
-.NOLBL   ANOP
-         AIF   (NOT &CS).NOSCCLR
-         MVI   IOCBSC,X'00'          Clear SC information
-.NOSCCLR ANOP
-         MVC   IOCBST,IOCBZERO       Clear accumulated status
-         L     1,IOCBDID             Remember the device ID with which I am working
-         AIF   (&CS).DOCSIO
-* Initiate Channel-based input/output operation
-         MVC   CAW,IOCBCAW           Establish CAW
-         SIO   0(1)                  Initiate the I/O operation
-         BC    B'0111',&FAIL         ..Failed to start, report/handle the error
-         AGO   .WAIT
-.DOCSIO  ANOP
-* Initiate Subchannel-based input/output operation
-         $L    &REG,IOCBORB          Locate the ORB for the channel subsystem
-         SSCH  0(&REG)               Initiate the I/O operation
-         $BC   B'0111',&FAIL         ..Start function failed, report/handle the error
-         $L    &REG,IOCBIRB          Locate the IRB storage area
-         USING IRB,&REG              Make it addressable
-.WAIT    ANOP
-         SPACE 1
-* Wait for I/O operation to present status via an interruption
-IOWT&SYSNDX DS 0H  Wait for I/O to complete
-.*         CPUWAIT IO=YES,IOSAVE=&IOSAVE,CHAN=&CHAN
-         CPUWAIT IO=YES,CHAN=&CHAN
-         AIF   (&CS).CKIRB
-         SPACE 1
-* Validate interruption is for the expected device
-         AIF   (&BC).TSTBCDV
-         CH    1,IOICODE             Is this the device for which I am waiting?
-         AGO   .MYIO
-.TSTBCDV ANOP
-         CH    1,BCIOCOD             Is this the device for which I am waiting?
-.MYIO    ANOP
-         BNE   IOWT&SYSNDX           ..No, continue waiting for it
-* Accumulate interruption information from CSW
-         MVC   IOCBSCCW+1(3),CSW+CSWCCW   CCW address
-         MVC   IOCBRCNT,CSW+CSWCNT   Residual count
-         OC    IOCBST,CSW+CSWUS      ..Yes, accumulate unit and channel status
-         AGO   .CHECK
-.CKIRB   ANOP
-* Validate interruption is for the expected subchannel
-         CL    1,IOSSID              Is this the device for which I am waiting?
-         $BNE  IOWT&SYSNDX           ..No, continue waiting for it
-* Accumulate interruption information from IRB
-         TSCH  0(&REG)               Retrive interrupt information
-         $BC   B'0100',IOWT&SYSNDX   CC1 (not status pending), wait for it to arrive
-         $BC   B'0001',&FAIL         CC3 (not operational), an error then
-*                                    CC0 (status was pending), accumulate the status
-         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
-         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
-         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
-         $BNO  IOWT&SYSNDX           ..No, wait for primary status
-         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
-         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
-.CHECK   ANOP
-* Test for errors as specified in the IOCB
-         AIF   ('&CERR' EQ '').NOCERR
-         MVC   IOCBCT,IOCBCS         Move channel status for testing
-         NC    IOCBCT,IOCBCM         Test for errors
-         $BNZ  &CERR                 ..Report/handle the channel error
-.NOCERR  ANOP
-         AIF   ('&UERR' EQ '').NOUERR
-         MVC   IOCBUT,IOCBUS         Move unit status for testing
-         NC    IOCBUT,IOCBUM         Test for errors
-         $BNZ   &UERR                ..Report/handle the device error
-.NOUERR  ANOP
-         AIF   ('&SENSE' EQ '').NOSENSE
-         TM    IOCBDS,CSWUC          Unit check status?
-         $BO   &SENSE                ..Yes, handle the unit check status
-.NOSENSE ANOP
-         TM    IOCBUS,SCSWCE+SCSWDE    Channel end and device end both accumulated?
-         AIF   (&ARCHLVL GE 5).NOCEDE
-         $BNO  IOWT&SYSNDX           ..No, continue waiting for both to show up
-         AGO   .CKEOF
-.NOCEDE  ANOP
-         $BNO  &FAIL                 Hunh? No CE and DE but do have primary status!
-.CKEOF   ANOP
-         AIF   ('&EOF' EQ '').NOEOF
-         TM    IOCBUS,CSWUX          Was physical END-OF-FILE detected?
-         $BO   &EOF                  ..Yes, report/handle end-of-file condition
-.NOEOF   ANOP
-* Input/Output operation successful
-.DONE    MEND
 ***********************************************************************
 *   SETARCH macro for conditionally including an arch change or not
 ***********************************************************************
@@ -262,7 +105,7 @@ INZMODE  DS    0H
 *        SATK prolog stuff...
 ***********************************************************************
                                                                 SPACE
-         ARCHLVL  ZARCH=NO,MNOTE=NO           
+         ARCHLVL  ZARCH=NO,MNOTE=NO
                                                                 EJECT
 ***********************************************************************
 *        Initiate the TEST3211 CSECT in the CODE region
@@ -349,11 +192,11 @@ INIT     DS     0H              Program Initialization
 *        Normal completion or Abnormal termination PSWs
 ***********************************************************************
                                                                 SPACE
-FAIL     DWAIT LOAD=YES,CODE=BAD    Abnormal termination       
+FAIL     DWAIT LOAD=YES,CODE=BAD    Abnormal termination
                                                                 SPACE 2
-FAILD8   DWAIT LOAD=YES,CODE=D8     Diagnose X'008' failed     
+FAILD8   DWAIT LOAD=YES,CODE=D8     Diagnose X'008' failed
                                                                 SPACE 2
-EOJ      DWAITEND LOAD=YES          Normal completion     
+EOJ      DWAITEND LOAD=YES          Normal completion
                                                                 EJECT
 ***********************************************************************
 *        Initialize the CPU for I/O operations
@@ -366,7 +209,7 @@ IOINIT   IOINIT ,
 *        Enable the device, making it ready for use
 ***********************************************************************
                                                                 SPACE
-ENADEV   ENADEV  ENAOKAY,FAIL,REG=4 
+ENADEV   ENADEV  ENAOKAY,FAIL,REG=4
 *
 ENAOKAY  BR    R15            Return to caller if device enabled OK
                                                                 EJECT
@@ -472,8 +315,9 @@ TEST03   CLI   FLAG03,0         Should we do this test?
          LA    R0,DIAG803B      DIAG8 parameters
          BAL   R15,HCMD         Printer file size AFTER skip attempt
                                                                 SPACE
-         CLC   SIZ03B,SIZ03A    Same size?
-         BNER  R14              No, FAIL
+         LM    R11,R12,=A(SIZ03A,SIZ03B)
+         CLC   0(L'SIZ03A,R11),0(R12)     Same size?
+         BNER  R14                        No, FAIL
                                                                 SPACE
          MVI   FLAG03,0         Test successful
          BR    R14              Return to caller
@@ -509,8 +353,9 @@ TEST04   CLI   FLAG04,0         Should we do this test?
          LA    R0,DIAG804B      DIAG8 parameters
          BAL   R15,HCMD         Printer file size AFTER skip attempt
                                                                 SPACE
-         CLC   SIZ04B,SIZ04A    Same size?
-         BER   R14              Yes, FAIL
+         LM    R11,R12,=A(SIZ04A,SIZ04B)
+         CLC   0(L'SIZ04A,R11),0(R12)     Same size?
+         BER   R14                        Yes, FAIL
                                                                 SPACE
          MVI   FLAG04,0         Test successful
          BR    R14              Return to caller
@@ -788,8 +633,9 @@ TEST09   CLI   FLAG09,0         Should we do this test?
          LA    R0,DIAG809B      DIAG8 parameters
          BAL   R15,HCMD         Printer file size AFTER diag write
                                                                 SPACE
-         CLC   SIZ09B,SIZ09A    Same size?
-         BNER  R14              No, FAIL
+         LM    R11,R12,=A(SIZ09A,SIZ09B)
+         CLC   0(L'SIZ09A,R11),0(R12)     Same size?
+         BNER  R14                        No, FAIL
                                                                 SPACE
          CLC   CKRD09B,CKRD09A  Same line position?
          BNER  R14              No, FAIL
@@ -900,25 +746,20 @@ SNS1LPCK EQU   X'10'    Sense byte 1, bit 3: Line Position Check
 SENSEPGM CCW1  SENSECMD,SENSE,SLI,L'SENSE
 SENSE    DC    XL2'0000'
 TESTFCB  DC    X'000100080009000B000C0010'
-HCMDPFSZ DC    C'exec "$(testpath)/3211.rexx" 3211.txt'
                                                                 SPACE
 CKRD01A  DC    X'00'
 CKRD01B  DC    X'00'
                                                                 SPACE
-DIAG803A DC    A(HCMDPFSZ),A(SIZ03A)
-         DC    A(L'HCMDPFSZ),A(L'SIZ03A)
-SIZ03A   DC    CL4'aa'
-DIAG803B DC    A(HCMDPFSZ),A(SIZ03B)
-         DC    A(L'HCMDPFSZ),A(L'SIZ03B)
-SIZ03B   DC    CL4'bb'
+DIAG803A DC    A(RXSAYSIZ),A(SIZ03A)
+         DC    A(L'RXSAYSIZ),A(L'SIZ03A)
+DIAG803B DC    A(RXSAYSIZ),A(SIZ03B)
+         DC    A(L'RXSAYSIZ),A(L'SIZ03B)
                                                                 SPACE
-DIAG804A DC    A(HCMDPFSZ),A(SIZ04A)
-         DC    A(L'HCMDPFSZ),A(L'SIZ04A)
-SIZ04A   DC    CL4'xx'
+DIAG804A DC    A(RXSAYSIZ),A(SIZ04A)
+         DC    A(L'RXSAYSIZ),A(L'SIZ04A)
 PRT04A   DC    C'PRT04A'
-DIAG804B DC    A(HCMDPFSZ),A(SIZ04B)
-         DC    A(L'HCMDPFSZ),A(L'SIZ04B)
-SIZ04B   DC    CL4'xx'
+DIAG804B DC    A(RXSAYSIZ),A(SIZ04B)
+         DC    A(L'RXSAYSIZ),A(L'SIZ04B)
                                                                 SPACE
 PRT05A   DC    C'PRT05A'
                                                                 SPACE
@@ -955,15 +796,33 @@ FCB08C2  DC    XL(L'FCB08C)'00'
 PRT09A   DC    C'PRT09A'
 PLB09A   DC    CL(L'PRT09A)' '
 CKRD09A  DC    X'00'
-DIAG809A DC    A(HCMDPFSZ),A(SIZ09A)
-         DC    A(L'HCMDPFSZ),A(L'SIZ09A)
-SIZ09A   DC    CL4'aa'
+DIAG809A DC    A(RXSAYSIZ),A(SIZ09A)
+         DC    A(L'RXSAYSIZ),A(L'SIZ09A)
 PRT09B   DC    C'PRT09B'
 PLB09B   DC    CL(L'PRT09B)' '
 CKRD09B  DC    X'00'
-DIAG809B DC    A(HCMDPFSZ),A(SIZ09B)
-         DC    A(L'HCMDPFSZ),A(L'SIZ09B)
-SIZ09B   DC    CL4'bb'
+DIAG809B DC    A(RXSAYSIZ),A(SIZ09B)
+         DC    A(L'RXSAYSIZ),A(L'SIZ09B)
+                                                                EJECT
+***********************************************************************
+*        Place LARGE BUFFERS past our test flags
+***********************************************************************
+                                                                SPACE
+SAVEORG  EQU   *                    (save where we are)
+         ORG   TEST3211+4096+4096   (s/b @ X'2000')
+                                                                SPACE
+RXSAYSIZ DC    CL256'exec "$(testpath)/3211.rexx" 3211.txt'
+                                                                SPACE
+SIZ03A   DC    CL256'aa'
+SIZ03B   DC    CL(L'SIZ03A)'bb'
+                                                                SPACE
+SIZ04A   DC    CL256'xx'
+SIZ04B   DC    CL(L'SIZ04A)'xx'
+                                                                SPACE
+SIZ09A   DC    CL256'aa'
+SIZ09B   DC    CL(L'SIZ09A)'bb'
+                                                                SPACE
+         ORG   SAVEORG              (go back to where we were)
                                                                 EJECT
 ***********************************************************************
 *        Test Channel Programs
@@ -1032,6 +891,12 @@ CHPGM09B CCW1  WRITEPLB,PRT09B,CC,L'PRT09B
          CCW1  READPLB,PLB09B,CC+SLI,L'PLB09B
          CCW1  DIAGGATE,*,CC+SLI,1
          CCW1  CHKREAD,CKRD09B,SLI,L'CKRD09B
+                                                                EJECT
+***********************************************************************
+*        Literals Pool                    
+***********************************************************************
+                                                                SPACE
+         LTORG ,
                                                                 EJECT
 ***********************************************************************
 *        Test control flags:   X'00' = skip test, otherwise do test
@@ -1114,7 +979,7 @@ FLAG15   EQU   RCFLAGS+15       TEST15
 *        (other DSECTS needed by SATK)
 ***********************************************************************
                                                                 SPACE
-         DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1)
+         DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
          PRINT ON
                                                                 SPACE 5
 ***********************************************************************
