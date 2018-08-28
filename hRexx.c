@@ -205,11 +205,26 @@ static BYTE IsValidPackage( const char* pkgname )
 /*-------------------------------------------------------------------*/
 static BYTE IsEnabled( const char* pkgname )
 {
-    if (pkgname)
-        return (IsValidPackage( pkgname ) &&
-            strcasecmp( PackageName, pkgname ) == 0);
-    else
-        return IsValidPackage( PackageName ) ? TRUE : FALSE;
+    return
+    (1
+        && PackageName
+        && PackageVersion
+        && PackageSource
+        && ExecCmd
+        && ExecSub
+        && HaltExec
+        && (0
+            || (1
+                && pkgname
+                && IsValidPackage( pkgname )
+                && strcasecmp( PackageName, pkgname ) == 0
+               )
+            || (1
+                && !pkgname
+                && IsValidPackage( PackageName )
+               )
+           )
+    );
 }
 
 /*-------------------------------------------------------------------*/
