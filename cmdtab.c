@@ -652,7 +652,7 @@ int HelpCommand( CMDFUNC_ARGS_PROTO )
 /*-------------------------------------------------------------------*/
 /* Helper function to echo a command to the console       (internal) */
 /*-------------------------------------------------------------------*/
-static void EchoHercCmdLine( const char* cmd )
+static void EchoHercCmdLine( char* cmd )
 {
     BYTE panel = WRMSG_NORMAL;  // (default)
 
@@ -667,7 +667,7 @@ static void EchoHercCmdLine( const char* cmd )
         panel = WRMSG_PANEL;    // (prevent DIAG8 capturing)
     }
 
-    PWRMSG( panel, HHC01603, "I", cmd );    // "%s"
+    PWRMSG( panel, HHC01603, "I", RTRIM( cmd ));    // "%s"
 }
 
 void* FindSCRCTL( TID tid );// (external helper function; see script.c)

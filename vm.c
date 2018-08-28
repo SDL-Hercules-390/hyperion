@@ -1150,7 +1150,7 @@ int     freeresp;                       /* Flag to free resp         */
 
         // "%s guest issued panel command: %s"
         if (sysblk.diag8opt & DIAG8CMD_ECHO)
-            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Starting", cmd );
+            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Starting", RTRIM( cmd ));
 
         /* Issue the command and capture the response */
         if (cmdflags & CMDFLAGS_RESPONSE)
@@ -1169,7 +1169,7 @@ int     freeresp;                       /* Flag to free resp         */
 
         // "%s guest issued panel command: %s"
         if (sysblk.diag8opt & DIAG8CMD_ECHO)
-            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Completed", cmd );
+            PWRMSG( WRMSG_PANEL, HHC01950, "I", "Completed", RTRIM( cmd ));
     }
 #endif // defined( FEATURE_HERCULES_DIAGCALLS )
 
