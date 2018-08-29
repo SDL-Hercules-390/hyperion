@@ -6,7 +6,7 @@ do
     exit 0
 end
 
-filename = arg(1)
+filename = strip( arg(1) )
 
 if length( filename ) = 0 then
 do
