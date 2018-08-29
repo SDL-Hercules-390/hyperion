@@ -222,6 +222,12 @@
     #include <getopt.h>
   #endif
 #endif
+#ifdef WIN32
+  #include <bcrypt.h>               // (CNG = Crypto Next Generation)
+  #pragma comment( lib, "bcrypt" )
+#else
+  #include <poll.h>                 // (need struct pollfd)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Hercules standard headers...           (common Hercules headers)  */

@@ -276,5 +276,15 @@ typedef void*  HDLDBGSCLPUC ( U32 sclp_command, void* sccb, REGS* regs );
 typedef void*  HDLDBGSCLPUE ( void* evd_hdr, void* sccb, REGS* regs );
 
 /*-------------------------------------------------------------------*/
+/*                          crypto                                   */
+/*-------------------------------------------------------------------*/
+
+#if defined( _WIN32 )
+typedef BCRYPT_ALG_HANDLE   HRANDHAND;  /* secure random api handle  */
+#else
+typedef int                 HRANDHAND;  /* secure random api handle  */
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // _HTYPES_H_

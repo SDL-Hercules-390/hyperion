@@ -14,9 +14,6 @@
 
 #if defined( _WIN32 )
 
-  #include <bcrypt.h>               // (CNG = Crypto Next Generation)
-  #pragma comment( lib, "bcrypt" )
-
   #define NEED_CSRNG_INIT           // (BCryptOpenAlgorithmProvider)
 
   #ifndef   NT_SUCCESS
@@ -26,20 +23,19 @@
 #elif defined( BSD )
 
   #define USE_ARC4RANDOM            // (use 'arc4random_buf()' API)
-  #undef  NEED_CSRNG_INIT           // (no init needed)
 
 #elif defined( __linux__ )
 
   #define RNDGETENTCNT              0x80045200  // entropy count ioctl
+  #define RNDGETENTCNT_ALT          0x40045200  // entropy count ioctl
 
   #if defined( SYS_getrandom )      // syscall( SYS_getrandom ) ??
 
     #define USE_SYS_GETRANDOM       // syscall( SYS_getrandom ) !!
-    #undef  NEED_CSRNG_INIT         // (no init needed)
 
     #define MAX_CSRNG_BYTES         ((32*(1024*1024))-1)  // 32MB-1
 
-  #else
+  #else // USE_DEV_URANDOM
 
     #define USE_DEV_URANDOM         // read from /dev/urandom
     #define NEED_CSRNG_INIT         // wait for entropy
@@ -58,13 +54,11 @@
 
 #endif
 
-#if !defined( _WIN32 )
-  #define DUMMY_CYRPTO_HANDLE       0x7FD9D5C7
-  #include <poll.h>                 // (need struct pollfd)
-#endif
 /*-------------------------------------------------------------------*/
 /*                        CRYPTO functions                           */
 /*-------------------------------------------------------------------*/
+
+#define DUMMY_CYRPTO_HANDLE         0x7FD9D5C7
 
 extern bool hopen_CSRNG();
 extern bool hclose_CSRNG();

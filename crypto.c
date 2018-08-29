@@ -70,10 +70,52 @@
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 
 /*-------------------------------------------------------------------*/
+/*              Default CSRNG provider functions                     */
+/*-------------------------------------------------------------------*/
+static bool default_hopen_CSRNG()
+{
+    sysblk.use_def_crypt = true;        /* Default algorithm in use  */
+
+    if (!sysblk.wkrandhand)
+    {
+        int i, randval;
+        // "Crypto: **WARNING** Default insecure 'rand()' API being used"
+        WRMSG( HHC01495, "W" );
+        srand( (unsigned) time(0) );
+        for (i=0; i < 256; i++)
+        {
+            randval = (int) rand() * (int) (host_tod() & 0xFFFFFFFF);
+            srand( (unsigned) randval );
+        }
+        sysblk.wkrandhand = (HRANDHAND) DUMMY_CYRPTO_HANDLE;
+    }
+    return true;
+}
+static bool default_hclose_CSRNG()
+{
+    ASSERT( sysblk.use_def_crypt );
+    if (sysblk.wkrandhand)
+        sysblk.wkrandhand = 0;
+    return true;
+}
+static bool default_hget_random_bytes( BYTE* buf, size_t amt )
+{
+    ASSERT( sysblk.use_def_crypt );
+    if (!sysblk.wkrandhand)
+        VERIFY( default_hopen_CSRNG() );
+    while (amt--)
+        *buf++ = (rand() & 0xFF);
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
 /*           Open and initialize a CSRNG provider                    */
 /*-------------------------------------------------------------------*/
 bool hopen_CSRNG()
 {
+    if (sysblk.use_def_crypt)
+        return default_hopen_CSRNG();
+
     if (!sysblk.wkrandhand)
     {
 #if !defined( NEED_CSRNG_INIT )
@@ -82,24 +124,11 @@ bool hopen_CSRNG()
 
 #elif defined( USE_RAND_API )
 
-        int i, randval;
-
-        // "Crypto: **WARNING** Default insecure 'rand()' API being used"
-        WRMSG( HHC01495, "W" );
-
-        srand( (unsigned) time(0) );
-
-        for (i=0; i < 256; i++)
-        {
-            randval = (int) rand() * (int) (host_tod() & 0xFFFFFFFF);
-            srand( (unsigned) randval );
-        }
-
-        sysblk.wkrandhand = DUMMY_CYRPTO_HANDLE;
+        return default_hopen_CSRNG();
 
 #elif defined( USE_DEV_URANDOM )
 
-        int fd, rc;
+        int fd, ioctl_code, entropy, rc;
 
         /* PROGRAMMING NOTE: we purposely use "dev/urandom" and NOT
            "/dev/random" in order to to prevent us from blocking while
@@ -112,19 +141,39 @@ bool hopen_CSRNG()
         do fd = open( "/dev/urandom", O_RDONLY );
         while (fd < 0 && errno == EINTR);
 
-        if (0
-            || fd < 0
-            || ioctl( fd, RNDGETENTCNT, &rc ) < 0
-        )
+        if (fd < 0)
         {
             // "Crypto: '%s' failed: %s"
-            WRMSG( HHC01494, "E", "ioctl()", strerror( errno ));
-            return false;
+            WRMSG( HHC01494, "E", "open()", strerror( errno ));
+            return default_hopen_CSRNG();
         }
 
-        sysblk.wkrandhand = fd;
+        ioctl_code = RNDGETENTCNT;  /* Try this one first */
+        if ((rc = ioctl( fd, ioctl_code, &entropy )) < 0)
+        {
+            if (ENOTTY != errno)
+            {
+                // "Crypto: '%s' failed: %s"
+                WRMSG( HHC01494, "E", "ioctl()", strerror( errno ));
+                close( fd );
+                return default_hopen_CSRNG();
+            }
 
-        if (rc < MIN_ENTROPY_BITS)
+            // "Crypto: '%s' failed: %s"
+            WRMSG( HHC01494, "W", "ioctl( RNDGETENTCNT )", "Trying RNDGETENTCNT_ALT..." );
+
+            ioctl_code = RNDGETENTCNT_ALT;  /* Try this one next */
+            if ((rc = ioctl( fd, ioctl_code, &entropy )) < 0)
+            {
+                // "Crypto: '%s' failed: %s"
+                WRMSG( HHC01494, "E", "ioctl()", strerror( errno ));
+                close( fd );
+                return default_hopen_CSRNG();
+            }
+        }
+
+        /* Wait for minimum required entropy */
+        while (entropy < MIN_ENTROPY_BITS)
         {
             /* Use poll(), just like libsodium, since
                we do not want to read from the device.
@@ -138,32 +187,37 @@ bool hopen_CSRNG()
                until we get all the entropy we need.
             */
             do rc = poll( &pfd, 1, 1 );
-            while
-            (0
-                || (rc < 0 && (errno == EINTR || errno == EAGAIN))
-                || (1
-                    && ioctl( fd, RNDGETENTCNT, &rc ) >= 0
-                    && rc < MIN_ENTROPY_BITS
-                   )
-            );
+            while (rc < 0 && (EINTR == errno || EAGAIN == errno));
 
             if (rc < 0)
             {
                 // "Crypto: '%s' failed: %s"
                 WRMSG( HHC01494, "E", "poll()", strerror( errno ));
-                hclose_CSRNG();
-                return false;
+                close( fd );
+                return default_hopen_CSRNG();
+            }
+
+            if ((rc = ioctl( fd, ioctl_code, &entropy )) < 0)
+            {
+                // "Crypto: '%s' failed: %s"
+                WRMSG( HHC01494, "E", "ioctl()", strerror( errno ));
+                close( fd );
+                return default_hopen_CSRNG();
             }
         }
 
+        sysblk.wkrandhand = fd;
+
 #else // defined( _WIN32 )
+
+        BCRYPT_ALG_HANDLE  hBCryptAlgHandle;
 
         NTSTATUS  ntStatus  = BCryptOpenAlgorithmProvider
         (
-            (BCRYPT_ALG_HANDLE*) &sysblk.wkrandhand,
+            &hBCryptAlgHandle,
             BCRYPT_RNG_ALGORITHM,
             MS_PRIMITIVE_PROVIDER,
-            0
+            0  // (no flags)
         );
 
         if (!NT_SUCCESS( ntStatus ))
@@ -171,9 +225,10 @@ bool hopen_CSRNG()
             // "Crypto: '%s' failed: %s"
             WRMSG( HHC01494, "E", "BCryptOpenAlgorithmProvider()",
                 strerror( w32_NtStatusToLastError( ntStatus )));
-            sysblk.wkrandhand = 0;
-            return false;
+            return default_hopen_CSRNG();
         }
+
+        sysblk.wkrandhand = hBCryptAlgHandle;
 #endif
     }
 
@@ -185,6 +240,9 @@ bool hopen_CSRNG()
 /*-------------------------------------------------------------------*/
 bool hclose_CSRNG()
 {
+    if (sysblk.use_def_crypt)
+        return default_hclose_CSRNG();
+
     if (sysblk.wkrandhand)
     {
 #if defined( USE_DEV_URANDOM )
@@ -197,8 +255,7 @@ bool hclose_CSRNG()
         if (rc < 0)
         {
             // "Crypto: '%s' failed: %s"
-            WRMSG( HHC01494, "E", "close()", strerror( errno ));
-            return false;
+            WRMSG( HHC01494, "W", "close()", strerror( errno ));
         }
 
 #elif defined( _WIN32 )
@@ -206,19 +263,18 @@ bool hclose_CSRNG()
         NTSTATUS  ntStatus  = BCryptCloseAlgorithmProvider
         (
             sysblk.wkrandhand,
-            0
+            0  // (no flags)
         );
 
         if (!NT_SUCCESS( ntStatus ))
         {
             // "Crypto: '%s' failed: %s"
-            WRMSG( HHC01494, "E", "BCryptCloseAlgorithmProvider()",
+            WRMSG( HHC01494, "W", "BCryptCloseAlgorithmProvider()",
                 strerror( w32_NtStatusToLastError( ntStatus )));
-            return false;
         }
 #endif
 
-        sysblk.wkrandhand = 0;
+        sysblk.wkrandhand = 0;      // (always!)
     }
 
     return true;
@@ -229,71 +285,84 @@ bool hclose_CSRNG()
 /*-------------------------------------------------------------------*/
 bool hget_random_bytes( BYTE* buf, size_t amt )
 {
+    if (sysblk.use_def_crypt)
+        return default_hget_random_bytes( buf, amt );
+
+    if (1
+        && !sysblk.wkrandhand
+        && !hopen_CSRNG()
+    )
+        return false;
+
 #if defined( USE_ARC4RANDOM )
 
-    arc4random_buf( buf, amt );
+    {
+        arc4random_buf( buf, amt );
+    }
 
 #elif defined( USE_SYS_GETRANDOM )
 
-    size_t   chunk, offset = 0;
-    ssize_t  rc;
-
-    while (amt > 0)
     {
-        chunk = (amt <= MAX_CSRNG_BYTES) ? amt : MAX_CSRNG_BYTES;
+        size_t   chunk, offset = 0;
+        ssize_t  rc;
 
-        do rc = syscall( SYS_getrandom, buf + offset, chunk, 0 );
-        while (rc < 0 && errno == EINTR);
-
-        if (rc < 0)
+        while (amt > 0)
         {
-            // "Crypto: '%s' failed: %s"
-            WRMSG( HHC01494, "E", "syscall()", strerror( errno ));
-            return false;
-        }
+            chunk = (amt <= MAX_CSRNG_BYTES) ? amt : MAX_CSRNG_BYTES;
 
-        offset  +=  rc;
-        amt     -=  rc;
+            do rc = syscall( SYS_getrandom, buf + offset, chunk, 0 );
+            while (rc < 0 && errno == EINTR);
+
+            if (rc < 0)
+            {
+                // "Crypto: '%s' failed: %s"
+                WRMSG( HHC01494, "E", "syscall()", strerror( errno ));
+                return false;
+            }
+
+            offset  +=  rc;
+            amt     -=  rc;
+        }
     }
 
 #elif defined( USE_DEV_URANDOM )
 
-    size_t   chunk, offset = 0;
-    ssize_t  rc;
-
-    while (amt > 0)
     {
-        chunk = (amt <= MAX_CSRNG_BYTES) ? amt : MAX_CSRNG_BYTES;
+        size_t   chunk, offset = 0;
+        ssize_t  rc;
 
-        do rc = read( sysblk.wkrandhand, buf + offset, chunk );
-        while (rc < 0 && (errno == EAGAIN || errno == EINTR));
-
-        if (rc < 0)
+        /* Loop while bytes remain to be gotten... */
+        while (amt > 0)
         {
-            // "Crypto: '%s' failed: %s"
-            WRMSG( HHC01494, "E", "read()", strerror( errno ));
-            return false;
+            chunk = (amt <= MAX_CSRNG_BYTES) ? amt : MAX_CSRNG_BYTES;
+
+            do rc = read( sysblk.wkrandhand, buf + offset, chunk );
+            while (rc < 0 && (errno == EAGAIN || errno == EINTR));
+
+            if (rc < 0)
+            {
+                // "Crypto: '%s' failed: %s"
+                WRMSG( HHC01494, "E", "read()", strerror( errno ));
+                return false;
+            }
+
+            offset  +=  rc;
+            amt     -=  rc;
         }
-
-        offset  +=  rc;
-        amt     -=  rc;
     }
-
-#elif defined( USE_RAND_API )
-
-    while (amt--)
-        *buf++ = (rand() & 0xFF);
 
 #else // defined( _WIN32 )
 
-    NTSTATUS ntStatus = BCryptGenRandom( sysblk.wkrandhand, buf, amt, 0 );
-
-    if (!NT_SUCCESS( ntStatus ))
     {
-        // "Crypto: '%s' failed: %s"
-        WRMSG( HHC01494, "E", "BCryptGenRandom()",
-            strerror( w32_NtStatusToLastError( ntStatus )));
-        return false;
+        NTSTATUS ntStatus = BCryptGenRandom( sysblk.wkrandhand, buf, amt, 0 );
+
+        if (!NT_SUCCESS( ntStatus ))
+        {
+            // "Crypto: '%s' failed: %s"
+            WRMSG( HHC01494, "E", "BCryptGenRandom()",
+                strerror( w32_NtStatusToLastError( ntStatus )));
+            return false;
+        }
     }
 
 #endif
