@@ -1155,8 +1155,8 @@ static int REXX_DEP( HaltExec )( pid_t pid, TID tid )
 /*-------------------------------------------------------------------*/
 static BYTE RegisterRexxHandlersAndFunctions()
 {
-    HR_REXXRC_T   rc;                   // Rexx API return code
-    static char*  user_info  = NULL;    // Neither needs extra info
+    static  HR_USERINFO_T  user_info  = NULL;   // No extra info needed
+            HR_REXXRC_T    rc;                  // Rexx API return code
 
     /* Register our Hercules Exit handler */
     rc = REXX_DEP( RegisterExit )
