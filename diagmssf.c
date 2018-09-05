@@ -540,6 +540,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
               STORE_HW(cpuinfo->weight,100);
               STORE_DW(cpuinfo->totdispatch,tCPU[i]);
               STORE_DW(cpuinfo->effdispatch, uCPU[i]);
+              cpuinfo->cflag=0x20;
               cpuinfo += 1;
           }
 
@@ -631,7 +632,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
 
         /* hercules partition */
         partxinfo = (DIAG204_X_PART*)(hdrxinfo + 1);
-        memset(partxinfo, 0, sizeof(DIAG204_PART));
+        memset(partxinfo, 0, sizeof(DIAG204_X_PART));
         partxinfo->partnum = sysblk.lparnum;    /* Hercules partition */
         partxinfo->virtcpu = sysblk.cpus;
         partxinfo->realcpu = hostinfo.num_procs;
@@ -664,6 +665,7 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
 
               STORE_HW(cpuxinfo->pmaweight,1000);
               STORE_HW(cpuxinfo->polarweight,1000);
+              cpuxinfo->cflag=0x20;
 
               cpuxinfo += 1;
           }
