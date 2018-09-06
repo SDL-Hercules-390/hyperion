@@ -669,9 +669,6 @@
     <ClCompile Include="resolve.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rexx.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scedasd.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

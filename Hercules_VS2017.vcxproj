@@ -410,7 +410,6 @@
     <ClCompile Include="qdio.c" />
     <ClCompile Include="qeth.c" />
     <ClCompile Include="resolve.c" />
-    <ClCompile Include="rexx.c" />
     <ClCompile Include="scedasd.c" />
     <ClCompile Include="scescsi.c" />
     <ClCompile Include="script.c" />
