@@ -21,6 +21,13 @@
 #define REXX_PKGNUM         REGINA_PKGNUM
 
 /*-------------------------------------------------------------------*/
+/* Macro to build unique name similar to Hercules ARCH_DEP macro     */
+/*-------------------------------------------------------------------*/
+#define PASTEM( _p, _n )        _p ## _n
+#define REXX_DEP2( _p, _n )     PASTEM( _p, _n )
+#define REXX_DEP( _name )       REXX_DEP2( REXX_PKG, _name )
+
+/*-------------------------------------------------------------------*/
 /* Regina Rexx Support headers                                       */
 /*-------------------------------------------------------------------*/
 #define INCL_REXXSAA
@@ -54,7 +61,7 @@
 #define RXAPI_OK            0                 // (missing from Regina)
 
 /*-------------------------------------------------------------------*/
-/* Regina Rexx library names                                         */
+/* Regina Rexx PRIMARY library names                                 */
 /*-------------------------------------------------------------------*/
 #if defined( _MSVC_ )
   #define REXX_LIBNAME      "regina.dll"
@@ -62,10 +69,26 @@
 #elif defined( __APPLE__ )
   #define REXX_LIBNAME      "libregina.dylib"
   #define REXX_APILIBNAME   ""
-#else
+#else // *nix
   #define REXX_LIBNAME      "libregina.so"
   #define REXX_APILIBNAME   ""
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Regina Rexx EXTRA library names                                   */
+/*-------------------------------------------------------------------*/
+static char*  REXX_DEP( ExtraLibs )[]  =
+{
+  #if defined( _MSVC_ )
+    "regutil.dll"           , 
+  #elif defined( __APPLE__ )
+    "libregutil.dylib"      , 
+  #else
+    "libregutil.so"         , 
+  #endif
+};
+
+#define NUM_EXTRALIBS       _countof( REXX_DEP( ExtraLibs ))
 
 /*-------------------------------------------------------------------*/
 /* Include the remainder of Hercules generic Rexx support functions  */

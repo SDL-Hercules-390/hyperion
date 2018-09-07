@@ -29,13 +29,6 @@
                                 // See PROGRAMMING NOTE above.
 
 /*-------------------------------------------------------------------*/
-/* Macro to build unique name similar to Hercules ARCH_DEP macro     */
-/*-------------------------------------------------------------------*/
-#define PASTEM( _p, _n )        _p ## _n
-#define REXX_DEP2( _p, _n )     PASTEM( _p, _n )
-#define REXX_DEP( _name )       REXX_DEP2( REXX_PKG, _name )
-
-/*-------------------------------------------------------------------*/
 /* Constant (unmodifiable) RXSTRING type                             */
 /*-------------------------------------------------------------------*/
 typedef const RXSTRING          CRXSTRING, *PCRXSTRING;
@@ -1256,10 +1249,49 @@ static BYTE ResolveLibSym ( void** ppfn, char* name, void* lib, BYTE verbose )
 }
 
 /*-------------------------------------------------------------------*/
+/* Load EXTRA Rexx Library(s)                     (boolean function) */
+/*-------------------------------------------------------------------*/
+BYTE REXX_DEP( LoadExtra )( BYTE verbose )
+{
+    BYTE   bSuccess  = TRUE;
+    int    i;
+    char*  libname;
+    void*  libhandle[ NUM_EXTRALIBS ]  = {0};
+
+    for (i=0; i < NUM_EXTRALIBS; ++i)
+    {
+        libname = REXX_DEP( ExtraLibs )[i];
+
+        if (!(libhandle[i] = dlopen( libname, RTLD_NOW )))
+        {
+            bSuccess = FALSE;
+
+            if (verbose)
+            {
+                // "REXX(%s) dlopen '%s' failed: %s"
+                WRMSG( HHC17531, "E", REXX_DEP( PackageName ),
+                    libname, dlerror());
+            }
+        }
+    }
+
+    /* All or nothing! If ANY load fails, then they ALL fail! */
+
+    if (!bSuccess)
+        for (i=0; i < NUM_EXTRALIBS; ++i)
+            if (libhandle[i])
+                dlclose( libhandle[i] );
+
+    return bSuccess;
+}
+
+/*-------------------------------------------------------------------*/
 /* Load Rexx Library(s) and get function pointers (boolean function) */
 /*-------------------------------------------------------------------*/
 BYTE REXX_DEP( Load )( BYTE verbose )
 {
+    /* Load PRIMARY libraries first, and resolve needed entry-points */
+
     if (LibHandle && ApiLibHandle)
         return TRUE; // (we already did this)
 
@@ -1327,6 +1359,40 @@ BYTE REXX_DEP( Load )( BYTE verbose )
         REXX_DEP( FreeMemory       ) = NULL;
         REXX_DEP( SetHalt          ) = NULL;
 
+        return FALSE;
+    }
+
+    /* Load all EXTRA libraries last... */
+
+    /*---------------------------------------------------------------*/
+    /*                                                               */
+    /*                     PROGRAMMING NOTE                          */
+    /*                                                               */
+    /* It is important (at least for Windows OORexx) to also load    */
+    /* all of the extra "Extension" libraries too, in case any of    */
+    /* the scripts we ask rexx to run for us might require them      */
+    /* (such as HOSTEMU.DLL which processes "EXECIO" statements).    */
+    /*                                                               */
+    /* This is important because rexx's automatic library loading    */
+    /* logic might contain a race condition bug in its automatic     */
+    /* library load//unload logic (like OORexx does) where if two    */
+    /* threads both require the same extension DLL (hostemu.dll),    */
+    /* the library ends up being unloaded by the first thread before */
+    /* the second thread has had a chance to excecute, leading to a  */
+    /* fatal Hercules crash when the second thread tries calling a   */
+    /* rexx function within a library that has just been unloaded!   */
+    /*                                                               */
+    /* GitHub issue #140 "Random Hercules crash using OORexx with    */
+    /* HAO": https://github.com/SDL-Hercules-390/hyperion/issues/140 */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+    if (!REXX_DEP( LoadExtra )( verbose ))
+    {
+        dlclose( LibHandle );
+        if (ApiLibHandle != LibHandle)
+            dlclose( ApiLibHandle );
+        LibHandle    = NULL;
+        ApiLibHandle = NULL;
         return FALSE;
     }
 
