@@ -80,11 +80,11 @@
 static char*  REXX_DEP( ExtraLibs )[]  =
 {
   #if defined( _MSVC_ )
-    "regutil.dll"           , 
+    "regutil.dll"           ,
   #elif defined( __APPLE__ )
-    "libregutil.dylib"      , 
+    NULL                    ,
   #else
-    "libregutil.so"         , 
+    NULL                    ,
   #endif
 };
 

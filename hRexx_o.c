@@ -74,18 +74,18 @@
 static char*  REXX_DEP( ExtraLibs )[]  =
 {
   #if defined( _MSVC_ )
-    "hostemu.dll"           , 
-    "oodialog.dll"          , 
-    "orexxole.dll"          , 
-    "rexxutil.dll"          , 
-    "rxmath.dll"            , 
-    "rxregexp.dll"          , 
-    "rxsock.dll"            , 
+    "hostemu.dll"           ,
+    "oodialog.dll"          ,
+    "orexxole.dll"          ,
+    "rexxutil.dll"          ,
+    "rxmath.dll"            ,
+    "rxregexp.dll"          ,
+    "rxsock.dll"            ,
     "rxwinsys.dll"          ,
   #elif defined( __APPLE__ )
-    "librexxutil.dylib"     , 
+    "librexxutil.dylib"     ,
   #else
-    "librexxutil.so"        , 
+    "librexxutil.so"        ,
   #endif
 };
 

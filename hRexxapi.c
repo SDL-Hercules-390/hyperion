@@ -1258,11 +1258,11 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
     char*  libname;
     void*  libhandle[ NUM_EXTRALIBS ]  = {0};
 
-    for (i=0; i < NUM_EXTRALIBS; ++i)
+    for (i=0; i < (int) NUM_EXTRALIBS; ++i)
     {
         libname = REXX_DEP( ExtraLibs )[i];
 
-        if (!(libhandle[i] = dlopen( libname, RTLD_NOW )))
+        if (libname && !(libhandle[i] = dlopen( libname, RTLD_NOW )))
         {
             bSuccess = FALSE;
 
@@ -1278,7 +1278,7 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
     /* All or nothing! If ANY load fails, then they ALL fail! */
 
     if (!bSuccess)
-        for (i=0; i < NUM_EXTRALIBS; ++i)
+        for (i=0; i < (int) NUM_EXTRALIBS; ++i)
             if (libhandle[i])
                 dlclose( libhandle[i] );
 
