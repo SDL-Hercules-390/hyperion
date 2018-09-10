@@ -189,15 +189,22 @@ CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h );
 /*-------------------------------------------------------------------*/
 /* Helper macros to check RDC for feature support / enablement       */
 /*-------------------------------------------------------------------*/
-#define TAPERDC_FEAT( feats, flags )                \
-                                                    \
-    (CSWAP32(*((U32*)((TAPERDC*)&dev->devchar[0])->feats)) & (flags))
+static inline bool is_tape_feat( const BYTE* feats, U32 flags )
+{
+    U32 work;
+    memcpy( &work, feats, sizeof( U32 ));
+    return (CSWAP32( work ) & flags) ? true : false;
+}
 
-#define SIC_SUPPORTED()         TAPERDC_FEAT( feats1, TRDC_SIC    )
-#define IDR_SUPPORTED()         TAPERDC_FEAT( feats1, TRDC_IDR    )
-#define SVF_ENABLED()           TAPERDC_FEAT( feats1, TRDC_SVF    )
-#define RDFWD_SUPPORTED()       TAPERDC_FEAT( feats2, TRDC_RDFWD  )
-#define MEDSNS_SUPPORTED()      TAPERDC_FEAT( feats2, TRDC_MEDSNS )
+#define TAPERDC_FEATS1          &dev->devchar[0] + offsetof( TAPERDC, feats1 )
+#define TAPERDC_FEATS2          &dev->devchar[0] + offsetof( TAPERDC, feats2 )
+
+#define SIC_SUPPORTED()         is_tape_feat( TAPERDC_FEATS1, TRDC_SIC    )
+#define IDR_SUPPORTED()         is_tape_feat( TAPERDC_FEATS1, TRDC_IDR    )
+#define SVF_ENABLED()           is_tape_feat( TAPERDC_FEATS1, TRDC_SVF    )
+#define RDFWD_SUPPORTED()       is_tape_feat( TAPERDC_FEATS2, TRDC_RDFWD  )
+#define MEDSNS_SUPPORTED()      is_tape_feat( TAPERDC_FEATS2, TRDC_MEDSNS )
+
 
 /*-------------------------------------------------------------------*/
 /* Definitions for 3420/3480 sense bytes                             */

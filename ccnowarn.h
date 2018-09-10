@@ -102,6 +102,11 @@
   DISABLE_GCC_WARNING( "-Wmissing-field-initializers" )
   DISABLE_GCC_WARNING( "-Wmissing-braces" )
 
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 40800 /* gcc >= 4.8.0 */
+  /* Silence warnings about CASSERT macro usage within functions too */
+  DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
+  #endif
+
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
   /*-----------------------------------------------------------------*/

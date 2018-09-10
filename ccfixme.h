@@ -18,6 +18,14 @@
 #define _CCFIXME_H_
 
 /*-------------------------------------------------------------------*/
+/* Construct a GCC "version" constant for easier gcc version testing */
+/*-------------------------------------------------------------------*/
+#if defined( __GNUC__ )
+  #define  GCC_VERSION \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+
+/*-------------------------------------------------------------------*/
 /* Macros for issuing compiler messages                              */
 /*-------------------------------------------------------------------*/
 

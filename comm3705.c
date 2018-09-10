@@ -748,7 +748,7 @@ char                    group[16];      /* Console group             */
 
         if (len < sizeof(buf))
         {
-            buf[len++] = IAC;
+            buf[len++] = (char) IAC;
         }
         else
         {
@@ -757,7 +757,7 @@ char                    group[16];      /* Console group             */
 
         if (len < sizeof(buf))
         {
-            buf[len++] = EOR_MARK;
+            buf[len++] = (char) EOR_MARK;
         }
         else
         {
