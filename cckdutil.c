@@ -1264,7 +1264,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     memset (&empty_l2, shadow, CCKD_L2TAB_SIZE);
     if (shadow == 0 && cdevhdr.nullfmt != 0)
         for (i = 0; i < 256; i++)
-            empty_l2[i].L2_size = empty_l2[i].L2_size = cdevhdr.nullfmt;
+            empty_l2[i].L2_len = empty_l2[i].L2_size = cdevhdr.nullfmt;
 
     /*---------------------------------------------------------------
      * read the level 1 table
