@@ -333,8 +333,8 @@
 #define ctc_cmd_help            \
                                 \
   "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"              \
-  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP\n"          \
-  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP device\n"         \
+  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP\n"      \
+  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP device\n"     \
   "groups if <devnum> is not specified or specified as 'ALL'.\n"
 
 #define define_cmd_desc         "Rename device"
@@ -345,13 +345,13 @@
 #define defsym_cmd_desc         "Define symbol"
 #define defsym_cmd_help         \
                                 \
-  "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain\n"      \
-  "value 'value'. The symbol can then be the object of a substitution for\n"     \
-  "later panel commands. If 'value' contains blanks or spaces, then it\n"        \
-  "must be enclosed within quotes or apostrophes. For more detailed\n"           \
-  "information regarding symbol substitution refer to the 'DEFSYM'\n"            \
-  "configuration file statement in Hercules documentation.\n"                    \
-  "Enter \"defsym\" by itself to display the values of all defined\n"            \
+  "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain\n"     \
+  "value 'value'. The symbol can then be the object of a substitution for\n"    \
+  "later panel commands. If 'value' contains blanks or spaces, then it\n"       \
+  "must be enclosed within quotes or apostrophes. For more detailed\n"          \
+  "information regarding symbol substitution refer to the 'DEFSYM'\n"           \
+  "configuration file statement in Hercules documentation.\n"                   \
+  "Enter \"defsym\" by itself to display the values of all defined\n"           \
   "symbols.\n"
 
 #define delsym_cmd_desc         "Delete a symbol"
@@ -372,54 +372,54 @@
 #define devinit_cmd_desc        "Reinitialize device"
 #define devinit_cmd_help        \
                                 \
-  "Format: \"devinit devn [arg...]\"\n"                                          \
-  "If no arguments are given then the same arguments are used\n"                 \
+  "Format: \"devinit devn [arg...]\"\n"                                         \
+  "If no arguments are given then the same arguments are used\n"                \
   "as were used the last time the device was created/initialized.\n"
 
 #define devlist_cmd_desc        "List device, device class, or all devices"
 #define devlist_cmd_help        \
                                 \
-  "Format: \"devlist [devn | devc]\"\n"                                          \
-  "    devn       is a single device address\n"                                  \
-  "    devc       is a single device class. Device classes are CHAN, CON,\n"     \
-  "               CTCA, DASD, DSP, FCP, LINE, OSA, PCH, PRT, RDR, and TAPE.\n"   \
-  "\n"                                                                           \
+  "Format: \"devlist [devn | devc]\"\n"                                         \
+  "    devn       is a single device address\n"                                 \
+  "    devc       is a single device class. Device classes are CHAN, CON,\n"    \
+  "               CTCA, DASD, DSP, FCP, LINE, OSA, PCH, PRT, RDR, and TAPE.\n"  \
+  "\n"                                                                          \
   "If no arguments are given then all devices will be listed.\n"
 
 #define devtmax_cmd_desc        "Display or set max device threads"
 #define devtmax_cmd_help        \
                                 \
-  "Specifies the maximum number of device threads allowed.\n"                    \
-  "\n"                                                                           \
-  "Specify -1 to cause 'one time only' temporary threads to be created\n"        \
-  "to service each I/O request to a device. Once the I/O request is\n"           \
-  "complete, the thread exits. Subsequent I/O to the same device will\n"         \
-  "cause another worker thread to be created again.\n"                           \
-  "\n"                                                                           \
-  "Specify 0 to cause an unlimited number of 'semi-permanent' threads\n"         \
-  "to be created on an 'as-needed' basis. With this option, a thread\n"          \
-  "is created to service an I/O request for a device if one doesn't\n"           \
-  "already exist, but once the I/O is complete, the thread enters an\n"          \
-  "idle state waiting for new work. If a new I/O request for the device\n"       \
-  "arrives before the timeout period expires, the existing thread will\n"        \
-  "be reused. The timeout value is currently hard coded at 5 minutes.\n"         \
-  "Note that this option can cause one thread (or possibly more) to be\n"        \
-  "created for each device defined in your configuration. Specifying 0\n"        \
-  "means there is no limit to the number of threads that can be created.\n"      \
-  "\n"                                                                           \
-  "Specify a value from 1 to nnn  to set an upper limit to the number of\n"      \
-  "threads that can be created to service any I/O request to any device.\n"      \
-  "Like the 0 option, each thread, once done servicing an I/O request,\n"        \
-  "enters an idle state. If a new request arrives before the timeout\n"          \
-  "period expires, the thread is reused. If all threads are busy when a\n"       \
-  "new I/O request arrives however, a new thread is created only if the\n"       \
-  "specified maximum has not yet been reached. If the specified maximum\n"       \
-  "number of threads has already been reached, then the I/O request is\n"        \
-  "placed in a queue and will be serviced by the first available thread\n"       \
-  "(i.e. by whichever thread becomes idle first). This option was created\n"     \
-  "to address a threading issue (possibly related to the cygwin Pthreads\n"      \
-  "implementation) on Windows systems.\n"                                        \
-  "\n"                                                                           \
+  "Specifies the maximum number of device threads allowed.\n"                   \
+  "\n"                                                                          \
+  "Specify -1 to cause 'one time only' temporary threads to be created\n"       \
+  "to service each I/O request to a device. Once the I/O request is\n"          \
+  "complete, the thread exits. Subsequent I/O to the same device will\n"        \
+  "cause another worker thread to be created again.\n"                          \
+  "\n"                                                                          \
+  "Specify 0 to cause an unlimited number of 'semi-permanent' threads\n"        \
+  "to be created on an 'as-needed' basis. With this option, a thread\n"         \
+  "is created to service an I/O request for a device if one doesn't\n"          \
+  "already exist, but once the I/O is complete, the thread enters an\n"         \
+  "idle state waiting for new work. If a new I/O request for the device\n"      \
+  "arrives before the timeout period expires, the existing thread will\n"       \
+  "be reused. The timeout value is currently hard coded at 5 minutes.\n"        \
+  "Note that this option can cause one thread (or possibly more) to be\n"       \
+  "created for each device defined in your configuration. Specifying 0\n"       \
+  "means there is no limit to the number of threads that can be created.\n"     \
+  "\n"                                                                          \
+  "Specify a value from 1 to nnn  to set an upper limit to the number of\n"     \
+  "threads that can be created to service any I/O request to any device.\n"     \
+  "Like the 0 option, each thread, once done servicing an I/O request,\n"       \
+  "enters an idle state. If a new request arrives before the timeout\n"         \
+  "period expires, the thread is reused. If all threads are busy when a\n"      \
+  "new I/O request arrives however, a new thread is created only if the\n"      \
+  "specified maximum has not yet been reached. If the specified maximum\n"      \
+  "number of threads has already been reached, then the I/O request is\n"       \
+  "placed in a queue and will be serviced by the first available thread\n"      \
+  "(i.e. by whichever thread becomes idle first). This option was created\n"    \
+  "to address a threading issue (possibly related to the cygwin Pthreads\n"     \
+  "implementation) on Windows systems.\n"                                       \
+  "\n"                                                                          \
   "The default for Windows is 8. The default for all other systems is 0.\n"
 
 #define diag8_cmd_desc          "Set DIAG 8 instruction options"
@@ -510,64 +510,64 @@
 #define fpc_cmd_desc            "Display or alter floating point control register"
 #define fpc_cmd_help            \
                                 \
-  "Format: \"fpc [xxxxxxxxxxxxxxxx]\" where 'xxxxxxxxxxxxxxxx' is the\n"         \
-  "register value in hexadecimal (1-8 hex digits). Enter \"fpc\" by itself\n"    \
+  "Format: \"fpc [xxxxxxxxxxxxxxxx]\" where 'xxxxxxxxxxxxxxxx' is the\n"        \
+  "register value in hexadecimal (1-8 hex digits). Enter \"fpc\" by itself\n"   \
   "to display the register value without altering it.\n"
 
 #define fpr_cmd_desc            "Display or alter floating point registers"
 #define fpr_cmd_help            \
                                 \
-  "Format: \"fpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the register number\n"    \
-  "(0 to 15 or 0, 2, 4 or 6 depending on the Control Register 0 AFP bit) and\n"  \
-  "'xxxxxxxxxxxxxxxx' is the register value in hexadecimal (1-16 hex digits\n"   \
-  "for 64-bit registers). Enter \"fpr\" by itself to display the register\n"     \
+  "Format: \"fpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the register number\n"   \
+  "(0 to 15 or 0, 2, 4 or 6 depending on the Control Register 0 AFP bit) and\n" \
+  "'xxxxxxxxxxxxxxxx' is the register value in hexadecimal (1-16 hex digits\n"  \
+  "for 64-bit registers). Enter \"fpr\" by itself to display the register\n"    \
   "values without altering them.\n"
 
 #define g_cmd_desc              "Turn off instruction stepping and start all CPUs"
 #define gpr_cmd_desc            "Display or alter general purpose registers"
 #define gpr_cmd_help            \
                                 \
-  "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional\n"           \
-  "register number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register\n"           \
-  "value in hexadecimal (1-8 hex digits for 32-bit registers or 1-16 hex\n"      \
-  "digits for 64-bit registers). Enter \"gpr\" by itself to display the\n"       \
+  "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional\n"          \
+  "register number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register\n"          \
+  "value in hexadecimal (1-8 hex digits for 32-bit registers or 1-16 hex\n"     \
+  "digits for 64-bit registers). Enter \"gpr\" by itself to display the\n"      \
   "register values without altering them.\n"
 
 #define hao_cmd_desc            "Hercules Automatic Operator"
 #define hao_cmd_help            \
                                 \
-  "Format: \"hao  tgt <tgt> | cmd <cmd> | list <n> | del <n> | clear \".\n"      \
-  "  hao tgt <tgt> : define target rule (regex pattern) to react on\n"           \
-  "  hao cmd <cmd> : define command for previously defined rule\n"               \
-  "  hao list <n>  : list all rules/commands or only at index <n>\n"             \
-  "  hao del <n>   : delete the rule at index <n>\n"                             \
+  "Format: \"hao  tgt <tgt> | cmd <cmd> | list <n> | del <n> | clear \".\n"     \
+  "  hao tgt <tgt> : define target rule (regex pattern) to react on\n"          \
+  "  hao cmd <cmd> : define command for previously defined rule\n"              \
+  "  hao list <n>  : list all rules/commands or only at index <n>\n"            \
+  "  hao del <n>   : delete the rule at index <n>\n"                            \
   "  hao clear     : delete all rules (stops automatic operator)\n"
 
 #define help_cmd_desc           "list all commands / command specific help"
 #define help_cmd_help           \
                                 \
-  "Format: \"help [cmd|c*]\".\n"                                                 \
-  "\n"                                                                           \
-  "The command without any options will display a short description\n"           \
-  "of all of the commands available matching the current cmdlevel. You\n"        \
-  "may specify a partial command name followed by an '*' to get a\n"             \
-  "list matching the partial command name. For example 'help msg*'\n"            \
-  "will list all commands beginning with 'msg' and matching the current\n"       \
-  "cmdlevel.\n"                                                                  \
-  "\n"                                                                           \
-  "This command with the 'cmd' option will display a long form of help\n"        \
-  "information associated with that command if the command is available\n"       \
-  "for the current cmdlevel.\n"                                                  \
-  "\n"                                                                           \
-  "Help text may be limited to explaining the general format of the\n"           \
-  "command and its various required or optional parameters and is not\n"         \
+  "Format: \"help [cmd|c*]\".\n"                                                \
+  "\n"                                                                          \
+  "The command without any options will display a short description\n"          \
+  "of all of the commands available matching the current cmdlevel. You\n"       \
+  "may specify a partial command name followed by an '*' to get a\n"            \
+  "list matching the partial command name. For example 'help msg*'\n"           \
+  "will list all commands beginning with 'msg' and matching the current\n"      \
+  "cmdlevel.\n"                                                                 \
+  "\n"                                                                          \
+  "This command with the 'cmd' option will display a long form of help\n"       \
+  "information associated with that command if the command is available\n"      \
+  "for the current cmdlevel.\n"                                                 \
+  "\n"                                                                          \
+  "Help text may be limited to explaining the general format of the\n"          \
+  "command and its various required or optional parameters and is not\n"        \
   "meant to replace the appropriate manual.\n"
 
 #define herclogo_cmd_desc       "Read a new hercules logo file"
 #define herclogo_cmd_help       \
                                 \
-  "Format: \"herclogo [<filename>]\". Load a new logo file for 3270\n"           \
-  "terminal sessions. If no filename is specified, the built-in logo\n"          \
+  "Format: \"herclogo [<filename>]\". Load a new logo file for 3270\n"          \
+  "terminal sessions. If no filename is specified, the built-in logo\n"         \
   "is used instead.\n"
 
 #define xxxprio_cmd_desc        "(deprecated)"
@@ -578,11 +578,11 @@
 #define hst_cmd_desc            "History of commands"
 #define hst_cmd_help            \
                                 \
-  "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"   \
-  "list of last ten commands entered from command line\n"                        \
-  "hst n, where n is a positive number retrieves n-th command from list\n"       \
-  "hst n, where n is a negative number retrieves n-th last command\n"            \
-  "hst without an argument works exactly as hst -1, it retrieves the\n"          \
+  "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"  \
+  "list of last ten commands entered from command line\n"                       \
+  "hst n, where n is a positive number retrieves n-th command from list\n"      \
+  "hst n, where n is a negative number retrieves n-th last command\n"           \
+  "hst without an argument works exactly as hst -1, it retrieves the\n"         \
   "last command\n"
 
 #define http_cmd_desc           "Start/Stop/Modify/Display HTTP Server"
@@ -606,12 +606,12 @@
 #define iodelay_cmd_help        \
                                 \
   "Format:  \"iodelay  n\".\n\n"                                                                                                \
-  "Specifies the amount of time (in microseconds) to wait after an\n"            \
-  "I/O interrupt is ready to be set pending. This value can also be\n"           \
-  "set using the Hercules console. The purpose of this parameter is\n"           \
-  "to bypass a bug in the Linux/390 and zLinux dasd.c device driver.\n"          \
-  "The problem is more apt to happen under Hercules than on a real\n"            \
-  "machine because we may present an I/O interrupt sooner than a\n"              \
+  "Specifies the amount of time (in microseconds) to wait after an\n"           \
+  "I/O interrupt is ready to be set pending. This value can also be\n"          \
+  "set using the Hercules console. The purpose of this parameter is\n"          \
+  "to bypass a bug in the Linux/390 and zLinux dasd.c device driver.\n"         \
+  "The problem is more apt to happen under Hercules than on a real\n"           \
+  "machine because we may present an I/O interrupt sooner than a\n"             \
   "real machine.\n"
 
 #define ipending_cmd_desc       "Display pending interrupts"
@@ -653,31 +653,31 @@
 #define ldmod_cmd_desc          "Load a module"
 #define ldmod_cmd_help          \
                                 \
-  "Format: \"ldmod module ...\"\n"                                               \
-  "Specifies additional modules that are to be loaded by the\n"                  \
+  "Format: \"ldmod module ...\"\n"                                              \
+  "Specifies additional modules that are to be loaded by the\n"                 \
   "Hercules dynamic loader.\n"
 
 #define legacy_cmd_desc         "Set legacysenseid setting"
 #define loadcore_cmd_desc       "Load a core image file"
 #define loadcore_cmd_help       \
                                 \
-  "Format: \"loadcore filename [address]\" where 'address' is the storage\n"     \
-  "address of where to begin loading memory. The file 'filename' is\n"           \
-  "presumed to be a pure binary image file previously created via the\n"         \
-  "'savecore' command. The default for 'address' is 0 (beginning of\n"           \
+  "Format: \"loadcore filename [address]\" where 'address' is the storage\n"    \
+  "address of where to begin loading memory. The file 'filename' is\n"          \
+  "presumed to be a pure binary image file previously created via the\n"        \
+  "'savecore' command. The default for 'address' is 0 (beginning of\n"          \
   "storage).\n"
 
 #define loadparm_cmd_desc       "Set the IPL 'LOADPARM' parameter"
 #define loadparm_cmd_help       \
                                 \
-  "Specifies the eight-character IPL 'LOADPARM' parameter which is used\n"       \
+  "Specifies the eight-character IPL 'LOADPARM' parameter which is used\n"      \
   "by some operating systems to select certain initialization options.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
 #define loadtext_cmd_help       \
                                 \
-  "Format: \"loadtext filename [address]\". This command is essentially\n"       \
-  "identical to the 'loadcore' command except that it loads a text deck\n"       \
+  "Format: \"loadtext filename [address]\". This command is essentially\n"      \
+  "identical to the 'loadcore' command except that it loads a text deck\n"      \
   "file with \"TXT\" and \"END\" 80 byte records (i.e. an object deck).\n"
 
 #define locks_cmd_desc          "Display internal locks list"
@@ -688,35 +688,35 @@
 #define log_cmd_desc            "Direct logger output"
 #define log_cmd_help            \
                                 \
-  "Format: \"log [ OFF | newfile ]\".   Sets log filename or stops\n"            \
+  "Format: \"log [ OFF | newfile ]\".   Sets log filename or stops\n"           \
   "log file output with the \"OFF\" option."
 
 #define logopt_cmd_desc         "Set/Display logging options"
 #define logopt_cmd_help         \
                                 \
-  "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"      \
-  "\"timestamp\" inserts a time stamp in front of each log message.\n"           \
-  "\"notimestamp\" displays log messages with no time stamps.  Entering\n"       \
-  "the command with no arguments displays current logging options.\n"            \
-  "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"           \
+  "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"     \
+  "\"timestamp\" inserts a time stamp in front of each log message.\n"          \
+  "\"notimestamp\" displays log messages with no time stamps.  Entering\n"      \
+  "the command with no arguments displays current logging options.\n"           \
+  "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"          \
   "and \"notime\" respectively.\n"
 
 #define lparname_cmd_desc       "Set LPAR name"
 #define lparname_cmd_help       \
                                 \
-  "Specifies the eight-character LPAR name returned by\n"                        \
+  "Specifies the eight-character LPAR name returned by\n"                       \
   "DIAG X'204'. The default is HERCULES"
 
 #define lparnum_cmd_desc        "Set LPAR identification number"
 #define lparnum_cmd_help        \
                                 \
-   "Specifies the one- or two-digit hexadecimal LPAR identification\n"           \
-   "number stored by the STIDP instruction, or BASIC. If a one-digit\n"          \
-   "hexadecimal number from 1 to F is specified, then STIDP stores a\n"          \
-   "format-0 CPU ID. If a two-digit hexadecimal number is specified,\n"          \
-   "except 10, then STIDP stores a format-1 CPU ID. For LPARNUM 10, \n"          \
-   "STIDP uses the current CPUIDFMT setting. If LPARNUM is BASIC, then\n"        \
-   "STIDP stores a basic-mode CPU ID. The default LPAR identification\n"         \
+   "Specifies the one- or two-digit hexadecimal LPAR identification\n"          \
+   "number stored by the STIDP instruction, or BASIC. If a one-digit\n"         \
+   "hexadecimal number from 1 to F is specified, then STIDP stores a\n"         \
+   "format-0 CPU ID. If a two-digit hexadecimal number is specified,\n"         \
+   "except 10, then STIDP stores a format-1 CPU ID. For LPARNUM 10, \n"         \
+   "STIDP uses the current CPUIDFMT setting. If LPARNUM is BASIC, then\n"       \
+   "STIDP stores a basic-mode CPU ID. The default LPAR identification\n"        \
    "number is 1.\n"
 
 #define lsdep_cmd_desc          "List module dependencies"
@@ -724,33 +724,33 @@
 #define lsmod_cmd_desc          "List dynamic modules"
 #define lsmod_cmd_help          \
                                 \
-  "Format:  lsmod  [ALL]\n"                                                      \
-  "\n"                                                                           \
-  "Lists all dynamically loaded modules and their registered symbols,\n"         \
-  "device-types and instruction overrides. If 'ALL' is specified then\n"         \
+  "Format:  lsmod  [ALL]\n"                                                     \
+  "\n"                                                                          \
+  "Lists all dynamically loaded modules and their registered symbols,\n"        \
+  "device-types and instruction overrides. If 'ALL' is specified then\n"        \
   "registered symbols which are currently unresolved are also listed.\n"
 
 #define mainsize_cmd_desc       "Define/Display mainsize parameter"
 #define mainsize_cmd_help       \
                                 \
-  "Format: mainsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"                         \
-  "        mmmm    - define main storage size mmmm Megabytes\n"                  \
-  "\n"                                                                           \
-  "        nnnS    - define main storage size nnn S where S is the\n"            \
-  "                  multipler:\n"                                               \
-  "                  B = no multiplier\n"                                        \
-  "                  K = 2**10 (kilo/kibi)\n"                                    \
-  "                  M = 2**20 (mega/mebi)\n"                                    \
-  "                  G = 2**30 (giga/gibi)\n"                                    \
-  "                  T = 2**40 (tera/tebi)\n"                                    \
-  "                  P = 2**50 (peta/pebi)\n"                                    \
-  "                  E = 2**60 (exa/exbi)\n"                                     \
-  "\n"                                                                           \
-  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"          \
-  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"              \
-  "\n"                                                                           \
-  "      (none)    - display current mainsize value\n"                           \
-  "\n"                                                                           \
+  "Format: mainsize [ mmmm | nnnS [ lOCK | unlOCK ] ]\n"                        \
+  "        mmmm    - define main storage size mmmm Megabytes\n"                 \
+  "\n"                                                                          \
+  "        nnnS    - define main storage size nnn S where S is the\n"           \
+  "                  multipler:\n"                                              \
+  "                  B = no multiplier\n"                                       \
+  "                  K = 2**10 (kilo/kibi)\n"                                   \
+  "                  M = 2**20 (mega/mebi)\n"                                   \
+  "                  G = 2**30 (giga/gibi)\n"                                   \
+  "                  T = 2**40 (tera/tebi)\n"                                   \
+  "                  P = 2**50 (peta/pebi)\n"                                   \
+  "                  E = 2**60 (exa/exbi)\n"                                    \
+  "\n"                                                                          \
+  "        lOCK    - attempt to lock storage (pages lock by host OS)\n"         \
+  "        unlOCK  - leave storage unlocked (pagable by host OS)\n"             \
+  "\n"                                                                          \
+  "      (none)    - display current mainsize value\n"                          \
+  "\n"                                                                          \
   " Note: Multipliers 'T', 'P', and 'E' are not available on 32bit machines\n"
 
 #define manuf_cmd_desc          "Set STSI manufacturer code"
@@ -758,51 +758,51 @@
 #define maxrates_cmd_desc       "Display highest MIPS/SIOS rate or set interval"
 #define maxrates_cmd_help       \
                                 \
-  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"          \
-  "interval in minutes or 'midnight'. Acceptable values are from\n"              \
-  "1 to 1440. The default is 1440 minutes (one day).\n"                          \
-  "The interval 'midnight' sets the interval to 1440 and aligns the\n"           \
-  "start of the current interval to midnight.\n"                                 \
-  "Entering \"maxrates\" by itself displays the current highest\n"               \
+  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"         \
+  "interval in minutes or 'midnight'. Acceptable values are from\n"             \
+  "1 to 1440. The default is 1440 minutes (one day).\n"                         \
+  "The interval 'midnight' sets the interval to 1440 and aligns the\n"          \
+  "start of the current interval to midnight.\n"                                \
+  "Entering \"maxrates\" by itself displays the current highest\n"              \
   "rates observed during the defined intervals.\n"
 
 #define message_cmd_desc        "Display message on console a la VM"
 #define message_cmd_help        \
                                 \
-  "Format: \"message * text\". The 'text' field is variable in size.\n"          \
-  "A 'VM' formatted similar to \"13:02:41  * MSG FROM HERCULES: hello\" is\n"    \
-  "diplayed on the console panel as a result of the panel command\n"             \
+  "Format: \"message * text\". The 'text' field is variable in size.\n"         \
+  "A 'VM' formatted similar to \"13:02:41  * MSG FROM HERCULES: hello\" is\n"   \
+  "diplayed on the console panel as a result of the panel command\n"            \
   "'message * hello'.\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
 #define model_cmd_help          \
                                 \
-  "Format:\n"                                                                    \
-  "\n"                                                                           \
-  "     model [hardware [capacity [permanent [temporary]]]]\n"                   \
-  "\n"                                                                           \
-  "where:\n"                                                                     \
-  "\n"                                                                           \
-  "<null>       specifies a query of the current model code settings.\n"         \
-  "\n"                                                                           \
-  "hardware     specifies the hardware model setting. Specifying an \"=\"\n"     \
-  "             resets the hardware model to \"EMULATOR\"; specifying an\n"      \
-  "             \"*\" leaves the current hardware model setting intact.\n"       \
-  "             The default hardware model is \"EMULATOR\".\n"                   \
-  "\n"                                                                           \
-  "capacity     specifies the capacity model setting. Specifying an \"=\"\n"     \
-  "             copies the current hardware model; specifying an \"*\" \n"       \
-  "             leaves the current capacity model setting intact. The\n"         \
-  "             default capacity model is \"EMULATOR\".\n"                       \
-  "\n"                                                                           \
-  "permanent    specifies the permanent model setting. Specifying an\n"          \
-  "             \"=\" copies the current capacity model; specifying an\n"        \
-  "             \"*\" leaves the current permanent model setting intact.\n"      \
-  "             The default permanent model is \"\" (null string).\n"            \
-  "\n"                                                                           \
-  "temporary    specifies the temporary model setting. Specifying an\n"          \
-  "             \"=\" copies the current permanent model; specifying an\n"       \
-  "             \"*\" leaves the current temporary model setting intact.\n"      \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "     model [hardware [capacity [permanent [temporary]]]]\n"                  \
+  "\n"                                                                          \
+  "where:\n"                                                                    \
+  "\n"                                                                          \
+  "<null>       specifies a query of the current model code settings.\n"        \
+  "\n"                                                                          \
+  "hardware     specifies the hardware model setting. Specifying an \"=\"\n"    \
+  "             resets the hardware model to \"EMULATOR\"; specifying an\n"     \
+  "             \"*\" leaves the current hardware model setting intact.\n"      \
+  "             The default hardware model is \"EMULATOR\".\n"                  \
+  "\n"                                                                          \
+  "capacity     specifies the capacity model setting. Specifying an \"=\"\n"    \
+  "             copies the current hardware model; specifying an \"*\" \n"      \
+  "             leaves the current capacity model setting intact. The\n"        \
+  "             default capacity model is \"EMULATOR\".\n"                      \
+  "\n"                                                                          \
+  "permanent    specifies the permanent model setting. Specifying an\n"         \
+  "             \"=\" copies the current capacity model; specifying an\n"       \
+  "             \"*\" leaves the current permanent model setting intact.\n"     \
+  "             The default permanent model is \"\" (null string).\n"           \
+  "\n"                                                                          \
+  "temporary    specifies the temporary model setting. Specifying an\n"         \
+  "             \"=\" copies the current permanent model; specifying an\n"      \
+  "             \"*\" leaves the current temporary model setting intact.\n"     \
   "             The default temporary model is \"\" (null string).\n"
 
 #define modpath_cmd_desc        "Set module load path"
@@ -817,42 +817,42 @@
 #define mtapeinit_cmd_desc      "Control tape initialization"
 #define mtapeinit_cmd_help      \
                                 \
-  "Format: \"mounted_tape_reinit [disallow|disable | allow|enable]\"\n"          \
-  "Specifies whether reinitialization of tape drive devices\n"                   \
-  "(via the devinit command, in order to mount a new tape)\n"                    \
-  "should be allowed if there is already a tape mounted on\n"                    \
-  "the drive. The current value is displayed if no operand is\n"                 \
-  "specified\n"                                                                  \
-  "Specifying ALLOW or ENABLE indicates new tapes may be\n"                      \
-  "mounted (via 'devinit nnnn new-tape-filename') irrespective\n"                \
-  "of whether or not there is already a tape mounted on the drive.\n"            \
-  "This is the default state.\n"                                                 \
-  "Specifying DISALLOW or DISABLE prevents new tapes from being\n"               \
-  "mounted if one is already mounted. When DISALLOW or DISABLE has\n"            \
-  "been specified and a tape is already mounted on the drive, it\n"              \
-  "must first be unmounted (via the command 'devinit nnnn *') before\n"          \
-  "the new tape can be mounted. Otherwise the devinit attempt to\n"              \
+  "Format: \"mounted_tape_reinit [disallow|disable | allow|enable]\"\n"         \
+  "Specifies whether reinitialization of tape drive devices\n"                  \
+  "(via the devinit command, in order to mount a new tape)\n"                   \
+  "should be allowed if there is already a tape mounted on\n"                   \
+  "the drive. The current value is displayed if no operand is\n"                \
+  "specified\n"                                                                 \
+  "Specifying ALLOW or ENABLE indicates new tapes may be\n"                     \
+  "mounted (via 'devinit nnnn new-tape-filename') irrespective\n"               \
+  "of whether or not there is already a tape mounted on the drive.\n"           \
+  "This is the default state.\n"                                                \
+  "Specifying DISALLOW or DISABLE prevents new tapes from being\n"              \
+  "mounted if one is already mounted. When DISALLOW or DISABLE has\n"           \
+  "been specified and a tape is already mounted on the drive, it\n"             \
+  "must first be unmounted (via the command 'devinit nnnn *') before\n"         \
+  "the new tape can be mounted. Otherwise the devinit attempt to\n"             \
   "mount the new tape is rejected.\n"
 
 #define msg_cmd_desc            "Alias for message"
 #define msghld_cmd_desc         "Display or set the timeout of held messages"
 #define msghld_cmd_help         \
                                 \
-  "Format: \"msghld [value | info | clear]\".\n"                                 \
-  "value: timeout value of held message in seconds\n"                            \
-  "info:  displays the timeout value\n"                                          \
+  "Format: \"msghld [value | info | clear]\".\n"                                \
+  "value: timeout value of held message in seconds\n"                           \
+  "info:  displays the timeout value\n"                                         \
   "clear: releases the held messages\n"
 
 #define msglevel_cmd_desc       "Display/Set current Message Display output"
 #define msglevel_cmd_help       \
                                 \
-  "Format:  msglevel  [verbose|terse|debug|nodebug|emsgloc|noemsgloc]\n"         \
-  "\n"                                                                           \
-  "   verbose     Display messages during configuration file processing\n"       \
-  "   terse       Do not display configuration file processing messages\n"       \
-  "   debug       Prefix messages with filename and line number\n"               \
-  "   nodebug     Display messages normally\n"                                   \
-  "   emsgloc     Show where error messages originated\n"                        \
+  "Format:  msglevel  [verbose|terse|debug|nodebug|emsgloc|noemsgloc]\n"        \
+  "\n"                                                                          \
+  "   verbose     Display messages during configuration file processing\n"      \
+  "   terse       Do not display configuration file processing messages\n"      \
+  "   debug       Prefix messages with filename and line number\n"              \
+  "   nodebug     Display messages normally\n"                                  \
+  "   emsgloc     Show where error messages originated\n"                       \
   "   noemsgloc   Do not show where error messages originated\n"
 
 #define msglvl_cmd_desc         "Alias for msglevel"
@@ -860,34 +860,34 @@
 #define mt_cmd_desc             "Control magnetic tape operation"
 #define mt_cmd_help             \
                                 \
-  "Format:     \"mt device operation [ 1-9999 ]\".\n"                            \
-  "  Operations below can be used on a valid tape device. The device\n"          \
-  "  must not have any I/O operation in process or pending.\n"                   \
-  "     operation   description\n"                                               \
-  "       rew       rewind tape to the beginning\n"                              \
-  "       asf n     position tape at 'n' file  (default = 1)\n"                  \
-  "       fsf n     forward space 'n' files    (default = 1)\n"                  \
-  "       bsf n     backward space 'n' files   (default = 1)\n"                  \
-  "       fsr n     forward space 'n' records  (default = 1)\n"                  \
-  "       bsr n     backward space 'n' records (default = 1)\n"                  \
-  "       wtm n     write 'n' tapemarks        (default = 1)\n"                  \
-  "       dse       data secure erase\n"                                         \
+  "Format:     \"mt device operation [ 1-9999 ]\".\n"                           \
+  "  Operations below can be used on a valid tape device. The device\n"         \
+  "  must not have any I/O operation in process or pending.\n"                  \
+  "     operation   description\n"                                              \
+  "       rew       rewind tape to the beginning\n"                             \
+  "       asf n     position tape at 'n' file  (default = 1)\n"                 \
+  "       fsf n     forward space 'n' files    (default = 1)\n"                 \
+  "       bsf n     backward space 'n' files   (default = 1)\n"                 \
+  "       fsr n     forward space 'n' records  (default = 1)\n"                 \
+  "       bsr n     backward space 'n' records (default = 1)\n"                 \
+  "       wtm n     write 'n' tapemarks        (default = 1)\n"                 \
+  "       dse       data secure erase\n"                                        \
   "       dvol1     display VOL1 header\n"
 
 #define netdev_cmd_desc         "Set default host networking device"
 #define netdev_cmd_help         \
                                 \
-  "Specifies the name (or for Windows, the IP or MAC address) of the\n"          \
-  "underlying default host network device to be used for all Hercules\n"         \
-  "communications devices unless overridden on the device statement.\n"          \
-  "\n"                                                                           \
-  "The default for Linux (except Apple and FreeBSD) is '/dev/net/tun'.\n"        \
-  "The default for Apple and FreeBSD is '/dev/tun'.\n"                           \
-  "\n"                                                                           \
-  "The default for Windows is whatever SoftDevLabs's CTCI-WIN product\n"         \
-  "returns as its default CTCI-WIN host network adapter, which for older\n"      \
-  "versions of CTCI-WIN (3.5.0) is the first network adapter returned by\n"      \
-  "Windows in its adapter binding order or for newer versions of CTCI-WIN\n"     \
+  "Specifies the name (or for Windows, the IP or MAC address) of the\n"         \
+  "underlying default host network device to be used for all Hercules\n"        \
+  "communications devices unless overridden on the device statement.\n"         \
+  "\n"                                                                          \
+  "The default for Linux (except Apple and FreeBSD) is '/dev/net/tun'.\n"       \
+  "The default for Apple and FreeBSD is '/dev/tun'.\n"                          \
+  "\n"                                                                          \
+  "The default for Windows is whatever SoftDevLabs's CTCI-WIN product\n"        \
+  "returns as its default CTCI-WIN host network adapter, which for older\n"     \
+  "versions of CTCI-WIN (3.5.0) is the first network adapter returned by\n"     \
+  "Windows in its adapter binding order or for newer versions of CTCI-WIN\n"    \
   "(3.6.0) what you defined as your default CTCI-WIN host network adapter.\n"
 
 #define numcpu_cmd_desc         "Set numcpu parameter"
@@ -896,50 +896,50 @@
 #define ostailor_cmd_desc       "Tailor trace information for specific OS"
 #define ostailor_cmd_help       \
                                 \
-  "Format: \"ostailor [quiet|os/390|z/os|vm|vse|z/vse|linux|opensolaris|null]\".\n"    \
-  "Specifies the intended operating system. The effect is to reduce\n"           \
-  "control panel message traffic by selectively suppressing program\n"           \
-  "check trace messages which are considered normal in the specified\n"          \
-  "environment. The option 'quiet' suppresses all exception messages,\n"         \
-  "whereas 'null' suppresses none of them. The other options suppress\n"         \
-  "some messages and not others depending on the specified o/s. Prefix\n"        \
-  "values with '+' to combine them with existing values or '-' to exclude\n"     \
-  "them. SEE ALSO the 'pgmtrace' command which allows you to further fine\n"     \
+  "Format: \"ostailor [quiet|os/390|z/os|vm|vse|z/vse|linux|opensolaris|null]\".\n"  \
+  "Specifies the intended operating system. The effect is to reduce\n"          \
+  "control panel message traffic by selectively suppressing program\n"          \
+  "check trace messages which are considered normal in the specified\n"         \
+  "environment. The option 'quiet' suppresses all exception messages,\n"        \
+  "whereas 'null' suppresses none of them. The other options suppress\n"        \
+  "some messages and not others depending on the specified o/s. Prefix\n"       \
+  "values with '+' to combine them with existing values or '-' to exclude\n"    \
+  "them. SEE ALSO the 'pgmtrace' command which allows you to further fine\n"    \
   "tune the tracing of program interrupt exceptions.\n"
 
 #define panrate_cmd_desc        "Display or set rate at which console refreshes"
 #define panrate_cmd_help        \
                                 \
-  "Format: \"panrate [nnn | fast | slow]\".\n"                                                  \
-  "Sets or displays the panel refresh rate.\n"                                                  \
-  "panrate nnn sets the refresh rate to nnn milliseconds.\n"                                    \
-  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"     \
-  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"     \
+  "Format: \"panrate [nnn | fast | slow]\".\n"                                               \
+  "Sets or displays the panel refresh rate.\n"                                               \
+  "panrate nnn sets the refresh rate to nnn milliseconds.\n"                                 \
+  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"  \
+  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"  \
   "If no operand is specified, panrate displays the current refresh rate.\n"
 
 #define pantitle_cmd_desc       "Display or set console title"
 #define pantitle_cmd_help       \
                                 \
-  "Format: pantitle [\"title string\"]\n"                                        \
-  "        pantitle \"\"\n"                                                      \
-  "\n"                                                                           \
-  "Sets or displays the optional console window title-bar\n"                     \
-  "string to be used in place of the default supplied by\n"                      \
-  "the windowing system. The value should be enclosed within\n"                  \
-  "double quotes if there are embedded blanks.\n"                                \
-  "\n"                                                                           \
-  "An empty string (\"\") will remove the existing console title.\n"             \
-  "\n"                                                                           \
-  "The default console title will be a string consisting of\n"                   \
-  "LPARNAME - SYSTYPE * SYSNAME * SYSPLEX - System Status: color\n"              \
-  "\n"                                                                           \
-  "SYSTYPE, SYSNAME, and SYSPLEX are populated by the system call\n"             \
-  "SCLP Control Program Identification. If a value is blank, then\n"             \
-  "that field is not presented.\n"                                               \
-  "\n"                                                                           \
-  "System Status colors: GREEN  - is every thing working correctly\n"            \
-  "                      YELLOW - one or more CPUs are not running\n"            \
-  "                      RED    - one or more CPUs are in a disabled\n"          \
+  "Format: pantitle [\"title string\"]\n"                                       \
+  "        pantitle \"\"\n"                                                     \
+  "\n"                                                                          \
+  "Sets or displays the optional console window title-bar\n"                    \
+  "string to be used in place of the default supplied by\n"                     \
+  "the windowing system. The value should be enclosed within\n"                 \
+  "double quotes if there are embedded blanks.\n"                               \
+  "\n"                                                                          \
+  "An empty string (\"\") will remove the existing console title.\n"            \
+  "\n"                                                                          \
+  "The default console title will be a string consisting of\n"                  \
+  "LPARNAME - SYSTYPE * SYSNAME * SYSPLEX - System Status: color\n"             \
+  "\n"                                                                          \
+  "SYSTYPE, SYSNAME, and SYSPLEX are populated by the system call\n"            \
+  "SCLP Control Program Identification. If a value is blank, then\n"            \
+  "that field is not presented.\n"                                              \
+  "\n"                                                                          \
+  "System Status colors: GREEN  - is every thing working correctly\n"           \
+  "                      YELLOW - one or more CPUs are not running\n"           \
+  "                      RED    - one or more CPUs are in a disabled\n"         \
   "                               wait state\n"
 
 #define pgmprdos_cmd_desc       "Set LPP license setting"
@@ -956,43 +956,43 @@
 #define pgmtrace_cmd_desc       "Trace program interrupts"
 #define pgmtrace_cmd_help       \
                                 \
-  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"       \
-  "interruption code in the range 0x01 to 0x40. Precede the interrupt\n"         \
-  "code with a '-' to stop tracing of that particular program\n"                 \
+  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"      \
+  "interruption code in the range 0x01 to 0x40. Precede the interrupt\n"        \
+  "code with a '-' to stop tracing of that particular program\n"                \
   "interruption.\n"
 
 #define plant_cmd_desc          "Set STSI plant code"
 #define pr_cmd_desc             "Display or alter prefix register"
 #define pr_cmd_help             \
                                 \
-  "Format: \"pr [value]\" where the optional 'value' operand is the new\n"       \
-  "prefix register value for the current CPU. Enter just 'pr' by itself\n"       \
-  "to display the current value. Use the'cpu' command beforehand to choose\n"    \
+  "Format: \"pr [value]\" where the optional 'value' operand is the new\n"      \
+  "prefix register value for the current CPU. Enter just 'pr' by itself\n"      \
+  "to display the current value. Use the'cpu' command beforehand to choose\n"   \
   "which processor's prefix register should be displayed or altered.\n"
 
 #define psw_cmd_desc            "Display or alter program status word"
 #define psw_cmd_help            \
                                 \
-  "Format: \"psw [operand ...]\" where 'operand ...' is one or more\n"           \
-  "optional parameters which modify the contents of the Program Status\n"        \
-  "Word:\n\n"                                                                    \
-  "  am=24|31|64           addressing mode\n"                                    \
-  "  as=ar|home|pri|sec    address-space\n"                                      \
-  "  cc=n                  condition code       (decimal 0 to 3)\n"              \
-  "  cmwp=x                C/M/W/P bits         (one hex digit)\n"               \
-  "  ia=xxx                instruction address  (1 to 16 hex digits)\n"          \
-  "  pk=n                  protection key       (decimal 0 to 15)\n"             \
-  "  pm=x                  program mask         (one hex digit)\n"               \
-  "  sm=xx                 system mask          (2 hex digits)\n"                \
-  "\n"                                                                           \
+  "Format: \"psw [operand ...]\" where 'operand ...' is one or more\n"          \
+  "optional parameters which modify the contents of the Program Status\n"       \
+  "Word:\n\n"                                                                   \
+  "  am=24|31|64           addressing mode\n"                                   \
+  "  as=ar|home|pri|sec    address-space\n"                                     \
+  "  cc=n                  condition code       (decimal 0 to 3)\n"             \
+  "  cmwp=x                C/M/W/P bits         (one hex digit)\n"              \
+  "  ia=xxx                instruction address  (1 to 16 hex digits)\n"         \
+  "  pk=n                  protection key       (decimal 0 to 15)\n"            \
+  "  pm=x                  program mask         (one hex digit)\n"              \
+  "  sm=xx                 system mask          (2 hex digits)\n"               \
+  "\n"                                                                          \
   "Enter \"psw\" by itself to display the current PSW without altering it.\n"
 
 #define ptp_cmd_desc            "Enable/Disable PTP debugging"
 #define ptp_cmd_help            \
                                 \
-  "Format:  \"ptp  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]\".\n\n"   \
-  "Enables/disables debug tracing for the PTP device group\n"                    \
-  "identified by <devnum>, or for all PTP device groups if\n"                    \
+  "Format:  \"ptp  debug  { on | off } [ [ <devnum> | ALL ] [ mask ] ]\".\n\n"  \
+  "Enables/disables debug tracing for the PTP device group\n"                   \
+  "identified by <devnum>, or for all PTP device groups if\n"                   \
   "<devnum> is not specified or specified as 'ALL'.\n"
 
 #define ptt_cmd_desc            "Activate or display internal trace table"
@@ -1071,60 +1071,60 @@
 #define quiet_cmd_desc          "Toggle automatic refresh of panel display data"
 #define quiet_cmd_help          \
                                 \
-  "'quiet' either disables automatic screen refreshing if it is\n"               \
-  "currently enabled or enables it if it is currently disabled.\n"               \
-  "When disabled you will no be able to see the response of any\n"               \
-  "entered commands nor any messages issued by the system nor be\n"              \
-  "able to scroll the display, etc. Basically all screen updating\n"             \
+  "'quiet' either disables automatic screen refreshing if it is\n"              \
+  "currently enabled or enables it if it is currently disabled.\n"              \
+  "When disabled you will no be able to see the response of any\n"              \
+  "entered commands nor any messages issued by the system nor be\n"             \
+  "able to scroll the display, etc. Basically all screen updating\n"            \
   "is disabled. Entering 'quiet' again re-enables screen updating.\n"
 
 #define quit_cmd_desc          "Terminate the emulator"
 #define quit_cmd_help           \
                                 \
-  "Format: \"quit [force]\"  Terminates the emulator. If the guest OS\n"         \
-  "                        has enabled Signal Shutdown, then a\n"                \
-  "                        signal shutdown request is sent to the\n"             \
-  "                        guest OS and termination will begin\n"                \
-  "                        after guest OS has shutdown.\n"                       \
-  "              force     This option will terminate the emulator\n"            \
+  "Format: \"quit [force]\"  Terminates the emulator. If the guest OS\n"        \
+  "                        has enabled Signal Shutdown, then a\n"               \
+  "                        signal shutdown request is sent to the\n"            \
+  "                        guest OS and termination will begin\n"               \
+  "                        after guest OS has shutdown.\n"                      \
+  "              force     This option will terminate the emulator\n"           \
   "                        immediately.\n"
 
 #define hwldr_cmd_desc          "Specify boot loader filename"
 #define hwldr_cmd_help          \
                                 \
-  "Format: \"hwldr scsiboot [filename]\"  Specifies the bootstrap loader\n"      \
-  "                                     to be used for FCP attached SCSI\n"      \
+  "Format: \"hwldr scsiboot [filename]\"  Specifies the bootstrap loader\n"     \
+  "                                     to be used for FCP attached SCSI\n"     \
   "                                     devices.\n"
 
 #define loaddev_cmd_desc        "Specify bootstrap loader IPL parameters"
 #define loaddev_cmd_help        \
                                 \
-  "Format: \"loaddev [options]\"  Specifies optional parameters to be\n"         \
-  "                             passed to be bootstrap loader.\n"                \
+  "Format: \"loaddev [options]\"  Specifies optional parameters to be\n"        \
+  "                             passed to be bootstrap loader.\n"               \
   "  Valid options are:\n\n"                          \
-  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"    \
-  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"           \
-  "  \"bootprog [number]\"        The boot program number to be loaded\n"        \
-  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"    \
+  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"   \
+  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"          \
+  "  \"bootprog [number]\"        The boot program number to be loaded\n"       \
+  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"   \
   "  \"scpdata  [data]\"          Information to be passed to the OS\n"
 
 #define dumpdev_cmd_desc        "Specify bootstrap loader DUMP parameters"
 #define dumpdev_cmd_help        \
                                 \
-  "Format: \"dumpdev [options]\"  Specifies optional parameters to be\n"         \
-  "                             passed to be bootstrap loader.\n"                \
+  "Format: \"dumpdev [options]\"  Specifies optional parameters to be\n"        \
+  "                             passed to be bootstrap loader.\n"               \
   "  Valid options are:\n\n"                          \
-  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"    \
-  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"           \
-  "  \"bootprog [number]\"        The boot program number to be loaded\n"        \
-  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"    \
+  "  \"portname [16 digit WWPN]\" Fibre Channel Portname of the FCP device\n"   \
+  "  \"lun      [16 digit LUN]\"  Fibre Channel Logical Unit Number\n"          \
+  "  \"bootprog [number]\"        The boot program number to be loaded\n"       \
+  "  \"br_lba   [16 digit LBA]\"  Logical Block Address of the boot record\n"   \
   "  \"scpdata  [data]\"          Information to be passed to the OS\n"
 
 #define r_cmd_desc              "Display or alter real storage"
 #define r_cmd_help              \
                                 \
-  "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display up to 64K\n"        \
-  "of real storage, or \"r addr=value\" to alter up to 32 bytes of real\n"       \
+  "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display up to 64K\n"       \
+  "of real storage, or \"r addr=value\" to alter up to 32 bytes of real\n"      \
   "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
 
 #define restart_cmd_desc        "Generate restart interrupt"
@@ -1134,46 +1134,46 @@
 #define rexx_cmd_desc           "Modify/Display Hercules's Rexx settings"
 #define rexx_cmd_help           \
                                 \
-  "Format:   'rexx [optname optvalue] ...'\n"                                    \
-  "\n"                                                                           \
-  "Ena[ble]/Sta[rt]     Enable/Start a Rexx Package, where package is\n"         \
-  "                     either 'OORexx' (the default) or 'Regina'.\n"            \
-  "                     Use the HREXX_PACKAGE environment variable\n"            \
-  "                     to define your preferred default value. \"auto\"\n"      \
-  "                     will automatically start the default package.\n"         \
-  "                     Use \"none\" to prevent automatic enablement.\n"         \
-  "Disa[ble]/Sto[p]     Disable/Stop the Rexx package.\n"                        \
-  "\n"                                                                           \
-  "RexxP[ath]/Path      List of directories to search for scripts.\n"            \
-  "                     No default. Use the HREXX_PATH environment\n"            \
-  "                     variable to define your preferred default.\n"            \
-  "SysP[ath]            Extend the search to the System Paths too.\n"            \
-  "                     'On' (default) or 'Off'.\n"                              \
-  "Ext[ensions]         List of extensions to use when searching for\n"          \
-  "                     scripts. A search with no extension is always\n"         \
-  "                     done first. The HREXX_EXTENSIONS environment\n"          \
-  "                     can be used to set a different default list.\n"          \
-  "Suf[fixes]           Alias for 'Ext[ensions]'\n"                              \
-  "Resolv[er]           'On' (default): Hercules will resolve the script's\n"    \
-  "                     full path. 'Off': the script name is used as-is.\n"      \
-  "MsgL[evel]           'Off' (default) or 'On' to disable or enable\n"          \
-  "                     Hercules messages HHC17503I and HHC17504I\n"             \
-  "                     that display a script's return code and value\n"         \
-  "                     when it finishes executing.\n"                           \
-  "MsgP[refix]          'Off' (default) or 'On' to disable or enable\n"          \
-  "                     prefixing Rexx script 'say' messages with\n"             \
-  "                     Hercules message number HHC17540I.\n"                    \
-  "ErrP[refix]          'Off' (default) or 'On' to disable or enable\n"          \
-  "                     prefixing Rexx script 'TRACE' messages with\n"           \
-  "                     Hercules message number HHC17541D.\n"                    \
-  "Mode                 Define the preferred argument passing style.\n"          \
-  "                     'Com[mand]' (default) or 'Sub[routine]'. Use\n"          \
-  "                     the HREXX_MODE environment variable to define\n"         \
-  "                     your preferred default mode.\n"                          \
-  "List                 Lists all scripts currently running asynchronously.\n"   \
-  "Cancel               <tid> to halt an asynchronously running script.\n"       \
-  "\n"                                                                           \
-  "Setting any option to 'reset' will reset the option to its default value.\n"  \
+  "Format:   'rexx [optname optvalue] ...'\n"                                   \
+  "\n"                                                                          \
+  "Ena[ble]/Sta[rt]     Enable/Start a Rexx Package, where package is\n"        \
+  "                     either 'OORexx' (the default) or 'Regina'.\n"           \
+  "                     Use the HREXX_PACKAGE environment variable\n"           \
+  "                     to define your preferred default value. \"auto\"\n"     \
+  "                     will automatically start the default package.\n"        \
+  "                     Use \"none\" to prevent automatic enablement.\n"        \
+  "Disa[ble]/Sto[p]     Disable/Stop the Rexx package.\n"                       \
+  "\n"                                                                          \
+  "RexxP[ath]/Path      List of directories to search for scripts.\n"           \
+  "                     No default. Use the HREXX_PATH environment\n"           \
+  "                     variable to define your preferred default.\n"           \
+  "SysP[ath]            Extend the search to the System Paths too.\n"           \
+  "                     'On' (default) or 'Off'.\n"                             \
+  "Ext[ensions]         List of extensions to use when searching for\n"         \
+  "                     scripts. A search with no extension is always\n"        \
+  "                     done first. The HREXX_EXTENSIONS environment\n"         \
+  "                     can be used to set a different default list.\n"         \
+  "Suf[fixes]           Alias for 'Ext[ensions]'\n"                             \
+  "Resolv[er]           'On' (default): Hercules will resolve the script's\n"   \
+  "                     full path. 'Off': the script name is used as-is.\n"     \
+  "MsgL[evel]           'Off' (default) or 'On' to disable or enable\n"         \
+  "                     Hercules messages HHC17503I and HHC17504I\n"            \
+  "                     that display a script's return code and value\n"        \
+  "                     when it finishes executing.\n"                          \
+  "MsgP[refix]          'Off' (default) or 'On' to disable or enable\n"         \
+  "                     prefixing Rexx script 'say' messages with\n"            \
+  "                     Hercules message number HHC17540I.\n"                   \
+  "ErrP[refix]          'Off' (default) or 'On' to disable or enable\n"         \
+  "                     prefixing Rexx script 'TRACE' messages with\n"          \
+  "                     Hercules message number HHC17541D.\n"                   \
+  "Mode                 Define the preferred argument passing style.\n"         \
+  "                     'Com[mand]' (default) or 'Sub[routine]'. Use\n"         \
+  "                     the HREXX_MODE environment variable to define\n"        \
+  "                     your preferred default mode.\n"                         \
+  "List                 Lists all scripts currently running asynchronously.\n"  \
+  "Cancel               <tid> to halt an asynchronously running script.\n"      \
+  "\n"                                                                          \
+  "Setting any option to 'reset' will reset the option to its default value.\n" \
   "Entering the command without any arguments displays the current values.\n"
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
@@ -1182,98 +1182,98 @@
 #define s_cmd_desc              "Instruction stepping"
 #define s_cmd_help              \
                                 \
-  "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"            \
-  "sets the instruction stepping and instruction breaking range,\n"              \
-  "(which is totally separate from the instruction tracing range).\n"            \
-  "With or without a range, the s command displays whether instruction\n"        \
-  "stepping is on or off and the range if any.\n"                                \
-  "The s command by itself does not activate instruction stepping.\n"            \
-  "Use the s+ command to activate instruction stepping.\n"                       \
+  "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"           \
+  "sets the instruction stepping and instruction breaking range,\n"             \
+  "(which is totally separate from the instruction tracing range).\n"           \
+  "With or without a range, the s command displays whether instruction\n"       \
+  "stepping is on or off and the range if any.\n"                               \
+  "The s command by itself does not activate instruction stepping.\n"           \
+  "Use the s+ command to activate instruction stepping.\n"                      \
   "\"s 0\" eliminates the range (all addresses will be stepped).\n"
 
 #define squest_cmd_desc         "Instruction stepping query"
 #define squest_cmd_help         \
                                 \
-  "Format: \"s?\" displays whether instruction stepping is on or off\n"          \
+  "Format: \"s?\" displays whether instruction stepping is on or off\n"         \
   "and the range if any.\n"
 
 #define sdev_cmd_desc           "Turn CCW stepping on/off"
 #define splus_cmd_desc          "Instruction stepping on"
 #define splus_cmd_help          \
                                 \
-  "Format: \"s+\" turns on instruction stepping. A range can be specified\n"     \
-  "as for the \"s\" command, otherwise the existing range is used. If\n"         \
-  "there is no range (or range was specified as 0) then the range\n"             \
-  "includes all addresses. When an instruction within the range is about\n"      \
-  "to be executed, the CPU is temporarily stopped and the next instruction\n"    \
-  "is displayed. You may then examine registers and/or storage, etc,\n"          \
-  "before pressing 'Enter' to execute the instruction and stop at the next\n"    \
-  "instruction. To turn off instruction stepping and continue execution,\n"      \
+  "Format: \"s+\" turns on instruction stepping. A range can be specified\n"    \
+  "as for the \"s\" command, otherwise the existing range is used. If\n"        \
+  "there is no range (or range was specified as 0) then the range\n"            \
+  "includes all addresses. When an instruction within the range is about\n"     \
+  "to be executed, the CPU is temporarily stopped and the next instruction\n"   \
+  "is displayed. You may then examine registers and/or storage, etc,\n"         \
+  "before pressing 'Enter' to execute the instruction and stop at the next\n"   \
+  "instruction. To turn off instruction stepping and continue execution,\n"     \
   "enter the \"g\" command.\n"
 
 #define savecore_cmd_desc       "Save a core image to file"
 #define savecore_cmd_help       \
                                 \
-  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and\n"      \
-  "'end' define the starting and ending addresss of the range of real\n"         \
-  "storage to be saved to file 'filename'. An '*' for either the start\n"        \
-  "address or end address (the default) means: \"the first/last byte of\n"       \
-  "the first/last modified page as determined by the storage-key\n"              \
+  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and\n"     \
+  "'end' define the starting and ending addresss of the range of real\n"        \
+  "storage to be saved to file 'filename'. An '*' for either the start\n"       \
+  "address or end address (the default) means: \"the first/last byte of\n"      \
+  "the first/last modified page as determined by the storage-key\n"             \
   "'changed' bit\".\n"
 
 #define sclproot_cmd_desc       "Set SCLP base directory"
 #define sclproot_cmd_help       \
                                 \
-  "Format: \"sclproot [path|NONE]\"\n"                                           \
-  "Enables SCLP disk I/O for the specified directory path, or disables\n"        \
-  "SCLP disk I/O if NONE is specified. A subsequent list-directed IPL\n"         \
-  "resets the path to the location of the .ins file, and a CCW-type IPL\n"       \
-  "disables SCLP disk I/O. If no operand is specified, sclproot displays\n"      \
+  "Format: \"sclproot [path|NONE]\"\n"                                          \
+  "Enables SCLP disk I/O for the specified directory path, or disables\n"       \
+  "SCLP disk I/O if NONE is specified. A subsequent list-directed IPL\n"        \
+  "resets the path to the location of the .ins file, and a CCW-type IPL\n"      \
+  "disables SCLP disk I/O. If no operand is specified, sclproot displays\n"     \
   "the current setting.\n"
 
 #define scpecho_cmd_desc        "Set/Display option to echo to console and history of scp replys"
 #define scpecho_cmd_help        \
                                 \
-  "Format: \"scpecho [ on | off ]\"\n"                                           \
-  "When scpecho is set ON, scp commands entered on the console are\n"            \
-  "echoed to the console and recorded in the command history.\n"                 \
-  "The default is on. When scpecho is entered without any options,\n"            \
-  "the current state is displayed. This is to help manage passwords\n"           \
+  "Format: \"scpecho [ on | off ]\"\n"                                          \
+  "When scpecho is set ON, scp commands entered on the console are\n"           \
+  "echoed to the console and recorded in the command history.\n"                \
+  "The default is on. When scpecho is entered without any options,\n"           \
+  "the current state is displayed. This is to help manage passwords\n"          \
   "sent to the scp from being displayed and journaled.\n"
 
 #define scpimply_cmd_desc       "Set/Display option to pass non-hercules commands to the scp"
 #define scpimply_cmd_help       \
                                 \
-  "Format: \"scpimply [ on | off ]\"\n"                                          \
-  "When scpimply is set ON, non-hercules commands are passed to\n"               \
-  "the scp if the scp has enabled receipt of scp commands. The\n"                \
-  "default is off. When scpimply is entered without any options,\n"              \
+  "Format: \"scpimply [ on | off ]\"\n"                                         \
+  "When scpimply is set ON, non-hercules commands are passed to\n"              \
+  "the scp if the scp has enabled receipt of scp commands. The\n"               \
+  "default is off. When scpimply is entered without any options,\n"             \
   "the current state is displayed.\n"
 
 #define script_cmd_desc         "Run a sequence of panel commands contained in a file"
 #define script_cmd_help         \
                                 \
-  "Format: \"script [filename [filename] ...]\". Sequentially executes\n"        \
-  "the commands contained within the file 'filename'. The script file\n"         \
-  "may also contain \"script\" commands, but the system ensures that no\n"       \
+  "Format: \"script [filename [filename] ...]\". Sequentially executes\n"       \
+  "the commands contained within the file 'filename'. The script file\n"        \
+  "may also contain \"script\" commands, but the system ensures that no\n"      \
   "more than " QSTR( MAX_SCRIPT_DEPTH ) " levels of script are invoked at any one time.\n\n"  \
-                                                                                 \
+                                                                                \
   "Enter the command with no arguments to list all running scripts.\n"
 
 #define scsimount_cmd_desc      "Automatic SCSI tape mounts"
 #define scsimount_cmd_help      \
                                 \
-  "Format:    \"scsimount [ no | yes | 0-99 ]\".\n"                              \
-  "\n"                                                                           \
-  "Displays or modifies the automatic SCSI tape mounts option.\n\n"              \
-  "When entered without any operands, it displays the current interval\n"        \
-  "and any pending tape mount requests. Entering 'no' (or 0 seconds)\n"          \
-  "disables automount detection.\n"                                              \
-  "\n"                                                                           \
-  "Entering a value between 1-99 seconds (or 'yes') enables the option\n"        \
-  "and specifies how often to query SCSI tape drives to automatically\n"         \
-  "detect when a tape has been mounted (upon which an unsolicited\n"             \
-  "device-attention interrupt will be presented to the guest operating\n"        \
+  "Format:    \"scsimount [ no | yes | 0-99 ]\".\n"                             \
+  "\n"                                                                          \
+  "Displays or modifies the automatic SCSI tape mounts option.\n\n"             \
+  "When entered without any operands, it displays the current interval\n"       \
+  "and any pending tape mount requests. Entering 'no' (or 0 seconds)\n"         \
+  "disables automount detection.\n"                                             \
+  "\n"                                                                          \
+  "Entering a value between 1-99 seconds (or 'yes') enables the option\n"       \
+  "and specifies how often to query SCSI tape drives to automatically\n"        \
+  "detect when a tape has been mounted (upon which an unsolicited\n"            \
+  "device-attention interrupt will be presented to the guest operating\n"       \
   "system). 'yes' is equivalent to specifying a 5 second interval.\n"
 
 #define sfminus_cmd_desc        "Delete shadow file"
@@ -1283,16 +1283,16 @@
 #define sfk_cmd_desc            "Check shadow files"
 #define sfk_cmd_help            \
                                 \
-  "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"   \
-  "where xxxx is the device number (*=all cckd devices)\n"                       \
-  "and n is the optional check level (default is 2):\n"                          \
-  " -1 devhdr, cdevhdr, l1 table\n"                                              \
-  "  0 devhdr, cdevhdr, l1 table, l2 tables\n"                                   \
-  "  1 devhdr, cdevhdr, l1 table, l2 tables, free spaces\n"                      \
-  "  2 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs\n"             \
-  "  3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"             \
-  "  4 devhdr, cdevhdr. Build everything else from recovery\n"                   \
-  "You probably don't want to use `4' unless you have a backup and are\n"        \
+  "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"  \
+  "where xxxx is the device number (*=all cckd devices)\n"                      \
+  "and n is the optional check level (default is 2):\n"                         \
+  " -1 devhdr, cdevhdr, l1 table\n"                                             \
+  "  0 devhdr, cdevhdr, l1 table, l2 tables\n"                                  \
+  "  1 devhdr, cdevhdr, l1 table, l2 tables, free spaces\n"                     \
+  "  2 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs\n"            \
+  "  3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"            \
+  "  4 devhdr, cdevhdr. Build everything else from recovery\n"                  \
+  "You probably don't want to use `4' unless you have a backup and are\n"       \
   "prepared to wait a long time.\n"
 
 #define sh_cmd_desc             "Shell command"
@@ -1355,31 +1355,31 @@
 #define ssd_cmd_desc            "Signal shutdown"
 #define ssd_cmd_help            \
                                 \
-  "The SSD (signal shutdown) command signals an imminent hypervisor\n"           \
-  "shutdown to the guest.  Guests who support this are supposed to\n"            \
-  "perform a shutdown upon receiving this request.\n"                            \
-  "An implicit ssd command is given on a hercules \"quit\" command\n"            \
-  "if the guest supports ssd.  In that case hercules shutdown will\n"            \
-  "be delayed until the guest has shutdown or a 2nd quit command is\n"           \
-  "given. \"ssd now\" will signal the guest immediately, without\n"              \
+  "The SSD (signal shutdown) command signals an imminent hypervisor\n"          \
+  "shutdown to the guest.  Guests who support this are supposed to\n"           \
+  "perform a shutdown upon receiving this request.\n"                           \
+  "An implicit ssd command is given on a hercules \"quit\" command\n"           \
+  "if the guest supports ssd.  In that case hercules shutdown will\n"           \
+  "be delayed until the guest has shutdown or a 2nd quit command is\n"          \
+  "given. \"ssd now\" will signal the guest immediately, without\n"             \
   "asking for confirmation.\n"
 
 #define start_cmd_desc          "Start CPU (or printer/punch device if argument given)"
 #define start_cmd_help          \
                                 \
-  "Entering the 'start' command by itself starts the target cpu if it\n"         \
-  "is currently stopped. Entering the 'start <devn>' command will press\n"       \
-  "the specified printer or punch device's virtual start button. Use the\n"      \
+  "Entering the 'start' command by itself starts the target cpu if it\n"        \
+  "is currently stopped. Entering the 'start <devn>' command will press\n"      \
+  "the specified printer or punch device's virtual start button. Use the\n"     \
   "'cpu' command beforehand to choose which processor you wish to start.\n"
 
 #define startall_cmd_desc       "Start all CPU's"
 #define stop_cmd_desc           "Stop CPU (or printer/punch device if argument given)"
 #define stop_cmd_help           \
                                 \
-  "Entering the 'stop' command by itself stops the target cpu if it is\n"        \
-  "currently running. Entering the 'stop <devn>' command will press the\n"       \
-  "specified printer or punch device's virtual stop button, usually causing\n"   \
-  "an INTREQ (Intervention Required) status. Use the 'cpu' command before\n"     \
+  "Entering the 'stop' command by itself stops the target cpu if it is\n"       \
+  "currently running. Entering the 'stop <devn>' command will press the\n"      \
+  "specified printer or punch device's virtual stop button, usually causing\n"  \
+  "an INTREQ (Intervention Required) status. Use the 'cpu' command before\n"    \
   "issuing the stop command to choose which processor you wish to stop.\n"
 
 #define stopall_cmd_desc        "Stop all CPU's"
@@ -1389,41 +1389,41 @@
 #define sysclear_cmd_desc       "System Clear Reset manual operation"
 #define sysclear_cmd_help       \
                                 \
-  "Performs the System Reset Clear manual control function. Same as\n"           \
-  "the \"sysreset clear\" command. Clears main storage to 0, and all\n"          \
-  "registers, control registers, etc.. are reset to their initial value.\n"      \
-  "At this point, the system is essentially in the same state as it was\n"       \
+  "Performs the System Reset Clear manual control function. Same as\n"          \
+  "the \"sysreset clear\" command. Clears main storage to 0, and all\n"         \
+  "registers, control registers, etc.. are reset to their initial value.\n"     \
+  "At this point, the system is essentially in the same state as it was\n"      \
   "when it was first started.\n"
 
 #define sysepoch_cmd_desc       "Set sysepoch parameter"
 #define sysreset_cmd_desc       "System Reset manual operation"
 #define sysreset_cmd_help       \
                                 \
-  "Performs the System Reset manual control function. Without any arguments\n"   \
-  "or with the \"normal\" argument then only a CPU and I/O subsystem reset\n"    \
-  "are performed. When the \"clear\" argument is given then this command is\n"   \
+  "Performs the System Reset manual control function. Without any arguments\n"  \
+  "or with the \"normal\" argument then only a CPU and I/O subsystem reset\n"   \
+  "are performed. When the \"clear\" argument is given then this command is\n"  \
   "identical in functionality to the \"sysclear\" command.\n"
 
 #define tminus_cmd_desc         "Turn off instruction tracing"
 #define t_cmd_desc              "Set instruction tracing address range"
 #define t_cmd_help              \
                                 \
-  "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"            \
-  "\n"                                                                           \
-  "Sets the instruction tracing address range (which is totally separate\n"      \
-  "from the instruction stepping and breaking address range).\n"                 \
-  "\n"                                                                           \
-  "With or without an address range, the 't' command displays whether\n"         \
-  "instruction tracing is on or off, and the address range (if any).\n"          \
-  "\n"                                                                           \
-  "The 't' command by itself does NOT activate instruction tracing.\n"           \
-  "Use the 't+' command to activate instruction tracing.  Use 't 0'\n"           \
+  "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"           \
+  "\n"                                                                          \
+  "Sets the instruction tracing address range (which is totally separate\n"     \
+  "from the instruction stepping and breaking address range).\n"                \
+  "\n"                                                                          \
+  "With or without an address range, the 't' command displays whether\n"        \
+  "instruction tracing is on or off, and the address range (if any).\n"         \
+  "\n"                                                                          \
+  "The 't' command by itself does NOT activate instruction tracing.\n"          \
+  "Use the 't+' command to activate instruction tracing.  Use 't 0'\n"          \
   "to remove the address range causing all addresses to be traced.\n"
 
 #define tquest_cmd_desc         "Query instruction tracing values"
 #define tquest_cmd_help         \
                                 \
-  "Format: \"t?\" displays whether instruction tracing is on or off\n"           \
+  "Format: \"t?\" displays whether instruction tracing is on or off\n"          \
   "and the address range if any.\n"
 
 #define tckd_cmd_desc           "Turn CKD_KEY tracing on/off"
@@ -1432,54 +1432,54 @@
 #define tplus_cmd_desc          "Turn on instruction tracing"
 #define tplus_cmd_help          \
                                 \
-  "Format: \"t+\" turns on instruction tracing. An address range can be\n"       \
-  "specified as for the \"t\" command, else the existing address range\n"        \
-  "is used. If there is no address range (or it was specified as 0) then\n"      \
+  "Format: \"t+\" turns on instruction tracing. An address range can be\n"      \
+  "specified as for the \"t\" command, else the existing address range\n"       \
+  "is used. If there is no address range (or it was specified as 0) then\n"     \
   "all instructions will be traced.\n"
 
 #define auto_trace_desc         "Automatic instruction tracing"
 #define auto_trace_help         \
                                 \
-  "Format:  \"t+-    [ BEG=<instrcount>   AMT=num ]\"\n"                         \
-  "\n"                                                                           \
-  "Automatically activates and deactivates instruction tracing based on\n"       \
-  "the values provided.\n"                                                       \
-  "\n"                                                                           \
-  "Once the system-wide instruction count value (displayed at the bottom\n"      \
-  "of the screen) becomes greater or equal to the specified 'BEG=' value\n"      \
-  "tracing is automatically activated (as if the 't+' command were given)\n"     \
-  "and remains active until either at least 'AMT' instructions are traced\n"     \
-  "or tracing is explicitly deactivated via the 't-' command.\n"                 \
-  "\n"                                                                           \
-  "Note that instruction counts reported by Hercules are approximate and\n"      \
-  "should not be relied on for accuracy.  Also note automatic tracing only\n"    \
-  "checks the instruction count approximately once every 257 instructions\n"     \
-  "or so and introduces a performance penalty when enabled.\n"                   \
-  "\n"                                                                           \
-  "Using either of the 't+' or 't-' commands will disable/reset automatic\n"     \
-  "tracing.  Enter the 't+-' command by itself (without any arguments) to\n"     \
+  "Format:  \"t+-    [ BEG=<instrcount>   AMT=num ]\"\n"                        \
+  "\n"                                                                          \
+  "Automatically activates and deactivates instruction tracing based on\n"      \
+  "the values provided.\n"                                                      \
+  "\n"                                                                          \
+  "Once the system-wide instruction count value (displayed at the bottom\n"     \
+  "of the screen) becomes greater or equal to the specified 'BEG=' value\n"     \
+  "tracing is automatically activated (as if the 't+' command were given)\n"    \
+  "and remains active until either at least 'AMT' instructions are traced\n"    \
+  "or tracing is explicitly deactivated via the 't-' command.\n"                \
+  "\n"                                                                          \
+  "Note that instruction counts reported by Hercules are approximate and\n"     \
+  "should not be relied on for accuracy.  Also note automatic tracing only\n"   \
+  "checks the instruction count approximately once every 257 instructions\n"    \
+  "or so and introduces a performance penalty when enabled.\n"                  \
+  "\n"                                                                          \
+  "Using either of the 't+' or 't-' commands will disable/reset automatic\n"    \
+  "tracing.  Enter the 't+-' command by itself (without any arguments) to\n"    \
   "display the current settings.\n"
 
 #define timerint_cmd_desc       "Display or set timers update interval"
 #define timerint_cmd_help       \
                                 \
-  "Specifies the internal timers update interval, in microseconds.\n"            \
-  "This parameter specifies how frequently Hercules's internal\n"                \
-  "timers-update thread updates the TOD Clock, CPU Timer, and other\n"           \
-  "architectural related clock/timer values. The default interval\n"             \
-  "is 50 microseconds, which strikes a reasonable balance between\n"             \
-  "clock accuracy and overall host performance. The minimum allowed\n"           \
-  "value is 1 microsecond and the maximum is 1000000 microseconds\n"             \
-  "(i.e. one second). Also note that due to host system limitations\n"           \
-  "and/or design, some hosts may end up rounding or coalescing such\n"           \
-  "short intervals to a longer millisecond interval instead.\n"                  \
-  "\n"                                                                           \
-  "CAUTION! While lower TIMERINT values may help increase the accuracy\n"        \
-  "of your guest's TOD Clock and CPU Timer values, it may also have\n"           \
-  "a SEVERE NEGATIVE IMPACT on host operating system performance. This\n"        \
-  "is especially true when a low TIMERINT value is coupled with a high\n"        \
-  "HERCPRIO and TODPRIO priority setting. You should exercise EXTREME\n"         \
-  "CAUTION when choosing your desired TIMERINT value in relationship\n"          \
+  "Specifies the internal timers update interval, in microseconds.\n"           \
+  "This parameter specifies how frequently Hercules's internal\n"               \
+  "timers-update thread updates the TOD Clock, CPU Timer, and other\n"          \
+  "architectural related clock/timer values. The default interval\n"            \
+  "is 50 microseconds, which strikes a reasonable balance between\n"            \
+  "clock accuracy and overall host performance. The minimum allowed\n"          \
+  "value is 1 microsecond and the maximum is 1000000 microseconds\n"            \
+  "(i.e. one second). Also note that due to host system limitations\n"          \
+  "and/or design, some hosts may end up rounding or coalescing such\n"          \
+  "short intervals to a longer millisecond interval instead.\n"                 \
+  "\n"                                                                          \
+  "CAUTION! While lower TIMERINT values may help increase the accuracy\n"       \
+  "of your guest's TOD Clock and CPU Timer values, it may also have\n"          \
+  "a SEVERE NEGATIVE IMPACT on host operating system performance. This\n"       \
+  "is especially true when a low TIMERINT value is coupled with a high\n"       \
+  "HERCPRIO and TODPRIO priority setting. You should exercise EXTREME\n"        \
+  "CAUTION when choosing your desired TIMERINT value in relationship\n"         \
   "to your chosen HERCPRIO and TODPRIO priority settings.\n"
 
 #define tlb_cmd_desc            "Display TLB tables"
@@ -1487,18 +1487,18 @@
 #define traceopt_cmd_desc       "Instruction and/or CCW trace display option"
 #define traceopt_cmd_help       \
                                 \
-  "Format: \"TRACEOPT [TRADITIONAL|REGSFIRST|NOREGS] [NOCH9OFLOW]\".\n"          \
-  "Determines how the registers are displayed during instruction tracing\n"      \
-  "and stepping and/or whether CCW tracing of printer channel-9 overflow\n"      \
-  "unit-checks should be suppressed. Entering the command with no arguments\n"   \
+  "Format: \"TRACEOPT [TRADITIONAL|REGSFIRST|NOREGS] [NOCH9OFLOW]\".\n"         \
+  "Determines how the registers are displayed during instruction tracing\n"     \
+  "and stepping and/or whether CCW tracing of printer channel-9 overflow\n"     \
+  "unit-checks should be suppressed. Entering the command with no arguments\n"  \
   "displays the current settings. The default is TRADITIONAL.\n"
 
 #define tt32_cmd_desc           "Control/query CTCI-WIN functionality"
 #define tt32_cmd_help           \
                                 \
-  "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n"                      \
-  "\n"                                                                           \
-  "Enables or disables global CTCI-WIN debug tracing\n"                          \
+  "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n"                     \
+  "\n"                                                                          \
+  "Enables or disables global CTCI-WIN debug tracing\n"                         \
   "or displays TunTap32 stats for the specified CTC device.\n"
 
 #define tzoffset_cmd_desc       "Set tzoffset parameter"
