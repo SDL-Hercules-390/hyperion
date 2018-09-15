@@ -541,21 +541,24 @@ static void AddDevnumFastLookup( DEVBLK *dev, U16 lcss, U16 devnum )
 {
     unsigned int Channel;
 
-    BYTE bAlreadyHadLock = try_obtain_lock( &sysblk.config );
+    int  have_config_lock  = have_lock( &sysblk.config );
 
-    if (sysblk.devnum_fl == NULL)
-        sysblk.devnum_fl = (DEVBLK***)
-            calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
+    if (!have_config_lock)
+        obtain_lock( &sysblk.config );
+    {
+        if (sysblk.devnum_fl == NULL)
+            sysblk.devnum_fl = (DEVBLK***)
+                calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
 
-    Channel = (devnum >> 8) | ((lcss & (FEATURE_LCSS_MAX-1)) << 8);
+        Channel = (devnum >> 8) | ((lcss & (FEATURE_LCSS_MAX-1)) << 8);
 
-    if (sysblk.devnum_fl[Channel] == NULL)
-        sysblk.devnum_fl[Channel] = (DEVBLK**)
-            calloc( 256, sizeof( DEVBLK* ));
+        if (sysblk.devnum_fl[Channel] == NULL)
+            sysblk.devnum_fl[Channel] = (DEVBLK**)
+                calloc( 256, sizeof( DEVBLK* ));
 
-    sysblk.devnum_fl[Channel][devnum & 0xff] = dev;
-
-    if (!bAlreadyHadLock)
+        sysblk.devnum_fl[Channel][devnum & 0xff] = dev;
+    }
+    if (!have_config_lock)
         release_lock( &sysblk.config );
 }
 
@@ -563,21 +566,24 @@ static void AddSubchanFastLookup( DEVBLK *dev, U16 ssid, U16 subchan )
 {
     unsigned int schw;
 
-    BYTE bAlreadyHadLock = try_obtain_lock( &sysblk.config );
+    int  have_config_lock  = have_lock( &sysblk.config );
 
-    if (sysblk.subchan_fl == NULL)
-        sysblk.subchan_fl = (DEVBLK***)
-            calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
+    if (!have_config_lock)
+        obtain_lock( &sysblk.config );
+    {
+        if (sysblk.subchan_fl == NULL)
+            sysblk.subchan_fl = (DEVBLK***)
+                calloc( 256 * FEATURE_LCSS_MAX, sizeof( DEVBLK** ));
 
-    schw = (subchan >> 8) | (SSID_TO_LCSS( ssid ) << 8);
+        schw = (subchan >> 8) | (SSID_TO_LCSS( ssid ) << 8);
 
-    if (sysblk.subchan_fl[schw] == NULL)
-        sysblk.subchan_fl[schw] = (DEVBLK**)
-            calloc( 256, sizeof( DEVBLK* ));
+        if (sysblk.subchan_fl[schw] == NULL)
+            sysblk.subchan_fl[schw] = (DEVBLK**)
+                calloc( 256, sizeof( DEVBLK* ));
 
-    sysblk.subchan_fl[schw][subchan & 0xff] = dev;
-
-    if (!bAlreadyHadLock)
+        sysblk.subchan_fl[schw][subchan & 0xff] = dev;
+    }
+    if (!have_config_lock)
         release_lock( &sysblk.config );
 }
 
