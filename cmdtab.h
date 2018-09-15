@@ -360,6 +360,15 @@
   "Format: \"delsym symbol\". Deletes symbol 'symbol'.\n"
 
 #define detach_cmd_desc         "Remove device"
+#define detach_cmd_help         \
+                                \
+  "Format: \"detach devn [FORCE]\"\n"                                           \
+  "Where 'devn' is the device address of the device to be removed from\n"       \
+  "the hardware configuration. Use the 'FORCE' option to forcibly remove\n"     \
+  "devices which are still in use (are currently 'busy' performing I/O).\n"     \
+  "Note that using the FORCE option is inherently DANGEROUS and can easily\n"   \
+  "cause Hercules to CRASH!\n"
+
 #define devinit_cmd_desc        "Reinitialize device"
 #define devinit_cmd_help        \
                                 \
@@ -1577,7 +1586,7 @@ COMMAND( "version",                 version_cmd,            SYSALL,             
 COMMAND( "attach",                  attach_cmd,             SYSCMD,             attach_cmd_desc,        attach_cmd_help     )
 COMMAND( "cpu",                     cpu_cmd,                SYSCMD,             cpu_cmd_desc,           cpu_cmd_help        )
 COMMAND( "define",                  define_cmd,             SYSCMD,             define_cmd_desc,        define_cmd_help     )
-COMMAND( "detach",                  detach_cmd,             SYSCMD,             detach_cmd_desc,        NULL                )
+COMMAND( "detach",                  detach_cmd,             SYSCMD,             detach_cmd_desc,        detach_cmd_help     )
 COMMAND( "devinit",                 devinit_cmd,            SYSCMD,             devinit_cmd_desc,       devinit_cmd_help    )
 COMMAND( "devlist",                 devlist_cmd,            SYSCMD,             devlist_cmd_desc,       devlist_cmd_help    )
 COMMAND( "fcb",                     fcb_cmd,                SYSCMD,             fcb_cmd_desc,           fcb_cmd_help        )

@@ -5459,13 +5459,16 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* detach command - remove device                                    */
 /*-------------------------------------------------------------------*/
-int detach_cmd(int argc, char *argv[], char *cmdline)
+int detach_cmd( int argc, char* argv[], char* cmdline )
 {
-U16  devnum;
-U16  lcss;
-int rc;
+    DEVBLK  *dev;
+    U16      lcss, devnum;
+    int      rc;
+    bool     force           = false;
+    bool     intlock_needed  = false;
 
-    UNREFERENCED(cmdline);
+    UPPER_ARGV_0( argv );
+    UNREFERENCED( cmdline );
 
     if (argc < 2)
     {
@@ -5473,13 +5476,99 @@ int rc;
         return -1;
     }
 
-    rc=parse_single_devnum(argv[1],&lcss,&devnum);
-    if (rc<0)
+    /* The 'FORCE' option allows busy devices to be detached.
+       PLEASE NOTE that doing so is inherently DANGEROUS and
+       can easily cause Hercules to CRASH!
+    */
+    if (argc > 2)
     {
+        if (argc > 3 || !(force = CMD( argv[2], FORCE, 5 )))
+        {
+            // "Invalid command usage. Type 'help %s' for assistance."
+            WRMSG( HHC02299, "E", argv[0] );
+            return -1;
+        }
+    }
+
+    if ((rc = parse_single_devnum( argv[1], &lcss, &devnum )) != 0)
+        return -1;  // (error message already issued)
+
+    /* Find the device block */
+    if (!(dev = find_device_by_devnum( lcss, devnum )))
+    {
+        // "%1d:%04X %s does not exist"
+        WRMSG( HHC01464, "E", lcss, devnum, "device" );
         return -1;
     }
 
-    rc = detach_device (lcss, devnum);
+    /* PROGRAMMING NOTE: intlock needs to be held in order to generate
+       a channel report, but since dev->lock is also obtained as part
+       of normal detach processing, we must obtain intlock FIRST to
+       prevent a deadlock with channel.c 'execute_ccw_chain'. (The two
+       locks MUST be obtained in the same sequence: intlock FIRST and
+       then dev->lock afterwards.)
+    */
+    /* Determine if a channel report will need to be generated */
+#if defined( _FEATURE_CHANNEL_SUBSYSTEM )
+#if defined( _370 )
+    if (sysblk.arch_mode != ARCH_370_IDX)
+#endif
+        intlock_needed = true;
+#endif
+
+    if (intlock_needed)
+        OBTAIN_INTLOCK( NULL );
+
+    /* Don't allow detaching devices which are still busy doing I/O.
+       For grouped devices this includes *ANY* device in the group
+       since all devices in the group will also be detached.
+    */
+    if (!force)
+    {
+        obtain_lock( &dev->lock );
+        {
+            /* Check if specified device is busy */
+            if (dev->busy)
+            {
+                release_lock( &dev->lock );
+                if (intlock_needed)
+                    RELEASE_INTLOCK( NULL );
+                // "%1d:%04X busy or interrupt pending"
+                WRMSG( HHC02231, "E", lcss, dev->devnum );
+                return -1;
+            }
+            /* Check if any device in the group is busy */
+            if (dev->group)
+            {
+                DEVGRP*  group    = dev->group;
+                DEVBLK*  memdev;
+                int  i;
+
+                for (i=0; i < group->acount; i++)
+                {
+                    if ((memdev = group->memdev[i])->busy)
+                    {
+                        release_lock( &dev->lock );
+                        if (intlock_needed)
+                            RELEASE_INTLOCK( NULL );
+                        // "%1d:%04X busy or interrupt pending"
+                        WRMSG( HHC02231, "E", lcss, memdev->devnum );
+                        return -1;
+                    }
+                }
+            }
+        }
+        release_lock( &dev->lock );
+    }
+
+    /* Note: 'detach_device' will call 'detach_devblk' which obtains
+       dev->lock and then issues the channel report if it's needed
+       (which requires that intlock be held).
+    */
+    rc = detach_device( lcss, devnum );
+
+    if (intlock_needed)
+        RELEASE_INTLOCK( NULL );
 
     return rc;
 }

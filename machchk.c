@@ -202,10 +202,13 @@ int queue_channel_report( U32* crwarray, U32 crwcount )
 void machine_check_crwpend()
 {
     /* Signal waiting CPUs that a Channel Report is pending */
-    OBTAIN_INTLOCK(NULL);
+    int  have_lock  = have_lock( &sysblk.intlock );
+    if (!have_lock)
+        OBTAIN_INTLOCK( NULL );
     ON_IC_CHANRPT;
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
-    RELEASE_INTLOCK(NULL);
+    if (!have_lock)
+        RELEASE_INTLOCK(NULL);
 
 } /* end function machine_check_crwpend */
 
