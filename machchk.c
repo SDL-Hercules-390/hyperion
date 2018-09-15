@@ -29,8 +29,7 @@
 #include "hercules.h"
 #include "opcode.h"
 
-#if !defined(_MACHCHK_C)
-
+#ifndef _MACHCHK_C
 #define _MACHCHK_C
 
 /*-------------------------------------------------------------------*/
@@ -242,7 +241,7 @@ U32 crw = 0;
 
 } /* end function get_next_channel_report_word */
 
-#endif /*!defined(_MACHCHK_C)*/
+#endif /* _MACHCHK_C */
 
 
 /*-------------------------------------------------------------------*/
@@ -312,6 +311,9 @@ int rc = 0;
 } /* end function present_mck_interrupt */
 
 
+/*-------------------------------------------------------------------*/
+/*                   sync_mck_interrupt                              */
+/*-------------------------------------------------------------------*/
 void ARCH_DEP(sync_mck_interrupt) (REGS *regs)
 {
 int     rc;                             /* Return code               */
@@ -407,20 +409,28 @@ RADR    fsta = 0;
 } /* end function sync_mck_interrupt */
 
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*         (all ARCH_DEP code should precede this point)             */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "machchk.c"
-#endif
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "machchk.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "machchk.c"
+  #endif
 
-#if !defined(NO_SIGABEND_HANDLER)
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "machchk.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*           (only NON-arch_dep code after this point)               */
+/*-------------------------------------------------------------------*/
+
+#if !defined( NO_SIGABEND_HANDLER )
 void sigabend_handler (int signo)
 {
 REGS *regs = NULL;
@@ -556,6 +566,6 @@ int i;
 
     longjmp (regs->progjmp, SIE_INTERCEPT_MCK);
 }
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
+#endif /* !defined (NO_SIGABEND_HANDLER ) */
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */
