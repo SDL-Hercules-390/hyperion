@@ -6212,7 +6212,7 @@ static void  signal_idx_event( OSA_GRP* grp )
 static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
     static const BYTE zeromac[IFHWADDRLEN] = {0};
-    char* tthwaddr;
+    char* tthwaddr = NULL;
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
