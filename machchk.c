@@ -431,140 +431,179 @@ RADR    fsta = 0;
 /*-------------------------------------------------------------------*/
 
 #if !defined( NO_SIGABEND_HANDLER )
-void sigabend_handler (int signo)
+
+void sigabend_handler( int signo )
 {
-REGS *regs = NULL;
-TID tid;
-int i;
+    REGS*  regs  = NULL;
+    TID    tid;
+    int    i;
 
     tid = thread_id();
 
-    if( signo == SIGUSR2 )
+    /* SIGUSR2... */
+
+    // FIXME: does anyone know what the purpose of SIGUSR2 is?!
+
+    if (SIGUSR2 == signo)
     {
-    DEVBLK *dev;
+        DEVBLK* dev;
+
+        /* Ignore the signal for certain threads */
         if (0
             || equal_threads( tid, sysblk.cnsltid )
             || equal_threads( tid, sysblk.socktid )
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
             || equal_threads( tid, sysblk.shrdtid )
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
             || equal_threads( tid, sysblk.httptid )
         )
             return;
+
+        /* Determine which device sent the signal */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
             if (0
                 || equal_threads( dev->tid, tid )
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
                 || equal_threads( dev->shrdtid, tid )
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
             )
                  break;
-        if( dev == NULL)
+        }
+
+        /* Issue message (maybe) and otherwise ignore signal */
+        if (!dev)
         {
             if (!sysblk.shutdown)
-                WRMSG(HHC00825, "E");
+                // "USR2 signal received for undetermined device"
+                WRMSG( HHC00825, "E" );
         }
         else
-            if(dev->ccwtrace)
-                WRMSG(HHC00826, "E", LCSS_DEVNUM);
+            if (dev->ccwtrace)
+                // "%1d:%04X: USR2 signal received"
+                WRMSG( HHC00826, "E", LCSS_DEVNUM );
         return;
     }
 
-    for (i = 0; i < sysblk.maxcpu; i++)
+    /* Signal is something OTHER than 'SIGUSR2' (such as SIGSEGV).
+       Determine if this is a CPU thread or not.
+    */
+    for (i=0; i < sysblk.maxcpu; i++)
     {
-        if ( equal_threads( sysblk.cputid[i], tid ) )
+        if (equal_threads( sysblk.cputid[i], tid ))
         {
             regs = sysblk.regs[i];
             break;
         }
     }
 
-    if (regs == NULL)
+    /* Do default handling if not a CPU thread */
+    if (!regs)
     {
-        signal(signo, SIG_DFL);
-        raise(signo);
+        signal( signo, SIG_DFL );
+        raise( signo );
         return;
     }
 
-    if(MACHMASK(&regs->psw))
+    /* Is the PSW enabled for Machine Checks? */
+    if (MACHMASK( &regs->psw ))
     {
-#if defined(_FEATURE_SIE)
-        WRMSG(HHC00822, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
+
+#if defined( _FEATURE_SIE )
+        // "Processor %s%02X: machine check due to host error: %s"
+        WRMSG( HHC00822, "I", regs->sie_active ? "IE" : PTYPSTR( regs->cpuad ),
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
-            strsignal(signo) );
-#else /*!defined(_FEATURE_SIE)*/
-        WRMSG(HHC00822, "I", PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
-#endif /*!defined(_FEATURE_SIE)*/
+            strsignal( signo ));
+#else
+        // "Processor %s%02X: machine check due to host error: %s"
+        WRMSG( HHC00822, "I", PTYPSTR( regs->cpuad ), regs->cpuad, strsignal( signo ));
+#endif
 
-        display_inst(
-#if defined(_FEATURE_SIE)
-                     regs->sie_active ? regs->guestregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                          regs,
-#if defined(_FEATURE_SIE)
-          regs->sie_active ? regs->guestregs->ip :
-#endif /*defined(_FEATURE_SIE)*/
-                                                   regs->ip);
+        /* Display the instruction where the Machine Check occurred */
+        display_inst
+        (
+#if defined( _FEATURE_SIE )
+            regs->sie_active ? regs->guestregs     :
+#endif
+                                                     regs,
+#if defined( _FEATURE_SIE )
+            regs->sie_active ? regs->guestregs->ip :
+#endif
+                                                     regs->ip
+        );
 
-        switch(regs->arch_mode) {
-#if defined(_370)
+        /* Present Machine Check to the guest */
+        switch (regs->arch_mode)
+        {
+#if defined( _370 )
             case ARCH_370_IDX:
-                s370_sync_mck_interrupt(regs);
+                s370_sync_mck_interrupt( regs );
                 break;
 #endif
-#if defined(_390)
+#if defined( _390 )
             case ARCH_390_IDX:
-                s390_sync_mck_interrupt(regs);
+                s390_sync_mck_interrupt( regs );
                 break;
 #endif
-#if defined(_900)
+#if defined( _900 )
             case ARCH_900_IDX:
-                z900_sync_mck_interrupt(regs);
+                z900_sync_mck_interrupt( regs );
                 break;
 #endif
         }
     }
-    else
+    else /* The PSW has Machine Checks masked off */
     {
-#if defined(_FEATURE_SIE)
-        WRMSG(HHC00823, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
+
+#if defined( _FEATURE_SIE )
+        // "Processor %s%02X: check-stop due to host error: %s"
+        WRMSG( HHC00823, "I", regs->sie_active ? "IE" : PTYPSTR( regs->cpuad ),
             regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
-            strsignal(signo));
-#else /*!defined(_FEATURE_SIE)*/
-        WRMSG(HHC00823, "I", PTYPSTR(regs->cpuad), regs->cpuad, strsignal(signo));
-#endif /*!defined(_FEATURE_SIE)*/
-        display_inst(
-#if defined(_FEATURE_SIE)
-                     regs->sie_active ? regs->guestregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                          regs,
-#if defined(_FEATURE_SIE)
-          regs->sie_active ? regs->guestregs->ip :
-#endif /*defined(_FEATURE_SIE)*/
-                                                   regs->ip);
+            strsignal( signo ));
+#else
+        // "Processor %s%02X: check-stop due to host error: %s"
+        WRMSG( HHC00823, "I", PTYPSTR( regs->cpuad ), regs->cpuad, strsignal( signo ));
+#endif
+
+        /* Display the instruction where the Machine Check occurred */
+        display_inst
+        (
+#if defined( _FEATURE_SIE )
+            regs->sie_active ? regs->guestregs     :
+#endif
+                                                     regs,
+#if defined( _FEATURE_SIE )
+            regs->sie_active ? regs->guestregs->ip :
+#endif
+                                                     regs->ip
+        );
+
+        /* Prepare for check-stopping the CPU */
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;
-        ON_IC_INTERRUPT(regs);
+        ON_IC_INTERRUPT( regs );
 
         /* Notify other CPU's by means of a malfuction alert if possible */
-        if (!try_obtain_lock(&sysblk.sigplock))
+        if (try_obtain_lock( &sysblk.sigplock ) == 0)
         {
-            if(!try_obtain_lock(&sysblk.intlock))
+            if (try_obtain_lock( &sysblk.intlock ) == 0)
             {
-                for (i = 0; i < sysblk.maxcpu; i++)
-                    if (i != regs->cpuad && IS_CPU_ONLINE(i))
+                for (i=0; i < sysblk.maxcpu; i++)
+                {
+                    if (i != regs->cpuad && IS_CPU_ONLINE( i ))
                     {
-                        ON_IC_MALFALT(sysblk.regs[i]);
-                        sysblk.regs[i]->malfcpu[regs->cpuad] = 1;
+                        ON_IC_MALFALT( sysblk.regs[i] );
+                        sysblk.regs[i]->malfcpu[ regs->cpuad ] = 1;
                     }
-                release_lock(&sysblk.intlock);
+                }
+                release_lock( &sysblk.intlock );
             }
-            release_lock(&sysblk.sigplock);
+            release_lock( &sysblk.sigplock );
         }
-
     }
 
-    longjmp (regs->progjmp, SIE_INTERCEPT_MCK);
+    /* Terminate SIE (if active) and check-stop the CPU */
+    longjmp( regs->progjmp, SIE_INTERCEPT_MCK );
 }
 #endif /* !defined (NO_SIGABEND_HANDLER ) */
 
