@@ -4712,7 +4712,11 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 
     err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
 
-    if ( MLVL( DEBUG ) && err != 0 )
+    if (1
+        && err != 0
+        && MLVL( DEBUG )
+        && MLVL( VERBOSE )
+    )
     {
         char msgbuf[MAX_PATH * 2];
         MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) );
