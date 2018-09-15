@@ -295,6 +295,7 @@ HT_DLL_IMPORT int  hthread_initialize_lock        ( LOCK* plk, const char* name,
 HT_DLL_IMPORT int  hthread_obtain_lock            ( LOCK* plk, const char* location );
 HT_DLL_IMPORT int  hthread_try_obtain_lock        ( LOCK* plk, const char* location );
 HT_DLL_IMPORT int  hthread_test_lock              ( LOCK* plk, const char* location );
+HT_DLL_IMPORT int  hthread_have_lock              ( LOCK* plk, const char* location );
 HT_DLL_IMPORT int  hthread_release_lock           ( LOCK* plk, const char* location );
 HT_DLL_IMPORT int  hthread_destroy_lock           ( LOCK* plk, const char* location );
 
@@ -334,6 +335,7 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* locatio
 #define obtain_lock( plk )                      hthread_obtain_lock( plk, PTT_LOC )
 #define try_obtain_lock( plk )                  hthread_try_obtain_lock( plk, PTT_LOC )
 #define test_lock( plk )                        hthread_test_lock( plk, PTT_LOC )
+#define have_lock( plk )                        hthread_have_lock( plk, PTT_LOC )
 #define release_lock(plk)                       hthread_release_lock( plk, PTT_LOC )
 #define destroy_lock(plk)                       hthread_destroy_lock( plk, PTT_LOC )
 

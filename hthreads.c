@@ -454,7 +454,16 @@ DLL_EXPORT int  hthread_try_obtain_lock( LOCK* plk, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/* Test if lock is held                                              */
+/* Test if *ANYONE* is holding given lock  (pseudo-boolean function) */
+/*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: this function ISN'T a boolean function but can  */
+/* be treated as such, with the following caveat: it only determines */
+/* if the given lock is held by anyone, but not necessarily by YOU!  */
+/* That is to say, if the function returns 0 (false), then it means  */
+/* the lock is NOT being held -- by ANYONE. If the function returns  */
+/* non-zero (true) however, then it only means the lock *is* being   */
+/* held -- by SOMEONE -- but that someone may NOT be you!  It might  */
+/* be held by someone OTHER than you!                                */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
 {
@@ -467,6 +476,18 @@ DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
         return rc;
     hthread_mutex_unlock( &ilk->lock );
     return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if *YOU* are holding a given lock        (boolean function) */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int  hthread_have_lock( LOCK* plk, const char* location )
+{
+    int rc;
+    ILOCK* ilk;
+    ilk = (ILOCK*) plk->ilk;
+    rc = hthread_equal_threads( hthread_self(), ilk->tid, location );
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
@@ -661,6 +682,7 @@ DLL_EXPORT int  hthread_wait_condition( COND* plc, LOCK* plk, const char* locati
     PTTRACE( "wait before", plk, plc, location, PTT_MAGIC );
     rc = hthread_cond_wait( plc, &ilk->lock );
     PTTRACE( "wait after", plk, plc, location, rc );
+    ilk->tid = hthread_thread_id( location );
     if (rc)
         loglock( ilk, rc, "wait_condition", location );
     return rc;
@@ -679,6 +701,7 @@ DLL_EXPORT int  hthread_timed_wait_condition( COND* plc, LOCK* plk,
     PTTRACE( "tw before", plk, plc, location, PTT_MAGIC );
     rc = hthread_cond_timedwait( plc, &ilk->lock, tm );
     PTTRACE( "tw after", plk, plc, location, rc );
+    ilk->tid = hthread_thread_id( location );
     if (rc && ETIMEDOUT != rc)
         loglock( ilk, rc, "timed_wait_condition", location );
     return rc;
@@ -851,7 +874,7 @@ DLL_EXPORT void hthread_exit_thread( void* rc, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/* Compare two thread IDs                                            */
+/* Compare two thread IDs                         (boolean function) */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location )
 {
