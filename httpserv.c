@@ -291,6 +291,11 @@ static char *http_unescape(char *buffer)
 {
     char *pointer = buffer;
 
+    while ( (pointer = strchr(pointer,'+')) )
+        *pointer = ' ';
+
+    pointer = buffer;
+
     while (pointer && *pointer && (pointer = strchr(pointer,'%')))
     {
         int highnibble = pointer[1];
