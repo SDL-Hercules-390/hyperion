@@ -16,7 +16,13 @@
 
 #include "hercules.h"
 #include "opcode.h"
+
+#if defined( USE_EXTERNAL_PACKAGES_DIR )
+#include "telnet.h"      // Need telnet_t
+#else
 #include "telnet/include/telnet.h"      // Need telnet_t
+#endif
+
 #include "stfl.h"                       // Need STFL_HERC_BY_SIZE
 
 /*-------------------------------------------------------------------*/

@@ -535,6 +535,8 @@ AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' a
 AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' is available] )
 AH_TEMPLATE( [PTHREAD_SET_NAME_ONLY],        [Define if 'pthread_setname_np()' takes only name argument] )
 
+AH_TEMPLATE( [USE_EXTERNAL_PACKAGES_DIR],    [*ix like only, windows used the hand copied things] )
+
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
 ###############################################################################
@@ -2038,6 +2040,7 @@ AC_ARG_ENABLE( extpkgs,
 
         if test -d "${hc_cv_extpkg_dir}"; then
           AC_MSG_NOTICE( [Using External Packages override directory ${hc_cv_extpkg_dir}] )
+          AC_DEFINE(USE_EXTERNAL_PACKAGES_DIR)
         else
           AC_MSG_RESULT( [ERROR: --enable-extpkgs directory not found: ${hc_cv_extpkg_dir}] )
           hc_error=yes
@@ -3111,6 +3114,9 @@ fi
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
 ###############################################################################
+extpkg_incdir="${hc_cv_extpkg_dir}/include"
+EXTPKG_INCDIR="${extpkg_incdir}"
+AC_SUBST(EXTPKG_INCDIR)
 
 extpkg_headers="${crypto_headers}     \
                 ${decnumber_headers}  \

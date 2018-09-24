@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS = foreign 1.5
 
 #------------------------------------------------------------------------------
-
+extpkg_incdir  = @EXTPKG_INCDIR@
 extpkg_headers = @EXTPKG_HEADERS@
 extpkg_ldadd   = @EXTPKG_LDADD@
 hqa_inc        = @HQA_INC@
@@ -21,6 +21,7 @@ ACLOCAL_AMFLAGS = \
 
 AM_CPPFLAGS =       \
   -I$(top_srcdir)   \
+  -I$(extpkg_incdir) \
   -I$(hqa_inc)
 
 #------------------------------------------------------------------------------
@@ -378,6 +379,7 @@ libhercu_la_SOURCES = \
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercu_la_LIBADD = \
+  $(extpkg_ldadd)    \
   $(ldadd)           \
   libhercs.la
 
