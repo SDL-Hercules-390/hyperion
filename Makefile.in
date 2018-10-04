@@ -243,7 +243,8 @@ libherct_la_OBJECTS = $(am_libherct_la_OBJECTS)
 libherct_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libherct_la_LDFLAGS) $(LDFLAGS) -o $@
-libhercu_la_DEPENDENCIES = $(am__DEPENDENCIES_1) libhercs.la
+libhercu_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	libhercs.la
 am__libhercu_la_SOURCES_DIST = codepage.c hdl.c hexdumpe.c hostinfo.c \
 	hscutl.c hscutl2.c hsocket.c hthreads.c logger.c logmsg.c \
 	memrchr.c parser.c pttrace.c version.c fthreads.c ltdl.c
@@ -558,6 +559,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 EXTPKG_HEADERS = @EXTPKG_HEADERS@
+EXTPKG_INCDIRS = @EXTPKG_INCDIRS@
 EXTPKG_LDADD = @EXTPKG_LDADD@
 F77 = @F77@
 FFLAGS = @FFLAGS@
@@ -655,6 +657,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign 1.5
 
 #------------------------------------------------------------------------------
+extpkg_incdirs = @EXTPKG_INCDIRS@
 extpkg_headers = @EXTPKG_HEADERS@
 extpkg_ldadd = @EXTPKG_LDADD@
 hqa_inc = @HQA_INC@
@@ -663,12 +666,12 @@ ldadd = @LIBS@
 
 #------------------------------------------------------------------------------
 ACLOCAL_AMFLAGS = \
-  -I autoconf     \
+  -I autoconf       \
   -I m4
 
 
 # Now simply pass those version defines on the command-line...
-AM_CPPFLAGS = -I$(top_srcdir) -I$(hqa_inc) -D \
+AM_CPPFLAGS = -I $(top_srcdir) -I $(hqa_inc) $(extpkg_incdirs) -D \
 	DYNAMIC_VERSION=\"$(DYNAMIC_VERSION)\" -D VERS_MAJ=$(VERS_MAJ) \
 	-D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D \
 	VERS_BLD=$(VERS_BLD)
@@ -944,6 +947,7 @@ libhercu_la_SOURCES = \
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD = \
+  $(extpkg_ldadd)    \
   $(ldadd)           \
   libhercs.la
 
@@ -1316,7 +1320,6 @@ noinst_HEADERS = \
   comm3705.h              \
   commadpt.h              \
   cpuint.h                \
-  crypto.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
   dasdblks.h              \
@@ -1344,6 +1347,7 @@ noinst_HEADERS = \
   hchan.h                 \
   hconsole.h              \
   hconsts.h               \
+  hcrypto.h               \
   hdiagf18.h              \
   hdl.h                   \
   herc_getopt.h           \

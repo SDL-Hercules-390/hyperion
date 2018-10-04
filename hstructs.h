@@ -16,8 +16,9 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "telnet/include/telnet.h"      // Need telnet_t
-#include "stfl.h"                       // Need STFL_HERC_BY_SIZE
+
+#include "telnet.h"         // Need telnet_t
+#include "stfl.h"           // Need STFL_HERC_BY_SIZE
 
 /*-------------------------------------------------------------------*/
 /*              Typedefs for CPU bitmap fields                       */

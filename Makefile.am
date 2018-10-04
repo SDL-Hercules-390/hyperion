@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS = foreign 1.5
 
 #------------------------------------------------------------------------------
-
+extpkg_incdirs = @EXTPKG_INCDIRS@
 extpkg_headers = @EXTPKG_HEADERS@
 extpkg_ldadd   = @EXTPKG_LDADD@
 hqa_inc        = @HQA_INC@
@@ -15,13 +15,15 @@ ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
 
-ACLOCAL_AMFLAGS = \
-  -I autoconf     \
+ACLOCAL_AMFLAGS =   \
+  -I autoconf       \
   -I m4
 
 AM_CPPFLAGS =       \
-  -I$(top_srcdir)   \
-  -I$(hqa_inc)
+  -I $(top_srcdir)  \
+  -I $(hqa_inc)
+
+AM_CPPFLAGS += $(extpkg_incdirs)
 
 #------------------------------------------------------------------------------
 # NOte! Due to inter-module dependencies the sequence
@@ -378,6 +380,7 @@ libhercu_la_SOURCES = \
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercu_la_LIBADD = \
+  $(extpkg_ldadd)    \
   $(ldadd)           \
   libhercs.la
 
@@ -781,7 +784,6 @@ noinst_HEADERS =          \
   comm3705.h              \
   commadpt.h              \
   cpuint.h                \
-  crypto.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
   dasdblks.h              \
@@ -809,6 +811,7 @@ noinst_HEADERS =          \
   hchan.h                 \
   hconsole.h              \
   hconsts.h               \
+  hcrypto.h               \
   hdiagf18.h              \
   hdl.h                   \
   herc_getopt.h           \

@@ -1,12 +1,12 @@
-/* CRYPTO.H     (C) Copyright "Fish" (David B. Trout), 2018          */
+/* HCRYPTO.H    (C) Copyright "Fish" (David B. Trout), 2018          */
 /*                  Cryptograhically Secure Random Number Generator  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-#ifndef _CRYPTO_H_
-#define _CRYPTO_H_
+#ifndef _HCRYPTO_H_
+#define _HCRYPTO_H_
 
 /*-------------------------------------------------------------------*/
 /*                        CRYPTO constants                           */
@@ -64,4 +64,4 @@ extern bool hopen_CSRNG();
 extern bool hclose_CSRNG();
 extern bool hget_random_bytes( BYTE* buf, size_t amt );
 
-#endif // _CRYPTO_H_
+#endif // _HCRYPTO_H_

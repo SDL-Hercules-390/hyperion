@@ -3112,9 +3112,14 @@ fi
 #          Pass values to other subdirectory Makefile.am files
 ###############################################################################
 
-extpkg_headers="${crypto_headers}     \
-                ${decnumber_headers}  \
-                ${softfloat_headers}  \
+extpkg_incdirs="-I ${crypto_incdir}     \
+                -I ${decnumber_incdir}  \
+                -I ${softfloat_incdir}  \
+                -I ${telnet_incdir}"
+
+extpkg_headers="${crypto_headers}       \
+                ${decnumber_headers}    \
+                ${softfloat_headers}    \
                 ${telnet_headers}"
 
 extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
@@ -3129,6 +3134,9 @@ extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
 ## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
 ## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
 ## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+EXTPKG_INCDIRS="${extpkg_incdirs}"
+AC_SUBST(EXTPKG_INCDIRS)
 
 EXTPKG_HEADERS="${extpkg_headers}"
 AC_SUBST(EXTPKG_HEADERS)

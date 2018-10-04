@@ -2356,9 +2356,6 @@
     <ClInclude Include="cpuint.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="crypto.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dat.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2423,6 +2420,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hconsts.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hcrypto.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hdiagf18.h">

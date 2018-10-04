@@ -21,10 +21,10 @@
 #include "inline.h"
 
 #if defined( FEATURE_042_DFP_FACILITY )
-#include "decNumber/include/decimal128.h"
-#include "decNumber/include/decimal64.h"
-#include "decNumber/include/decimal32.h"
-#include "decNumber/include/decPacked.h"
+#include "decimal128.h"
+#include "decimal64.h"
+#include "decimal32.h"
+#include "decPacked.h"
 #endif
 
 DISABLE_GCC_UNUSED_SET_WARNING;

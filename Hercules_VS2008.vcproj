@@ -1168,10 +1168,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\crypto.h"
-							>
-						</File>
-						<File
 							RelativePath=".\dat.h"
 							>
 						</File>
@@ -1257,6 +1253,10 @@
 						</File>
 						<File
 							RelativePath=".\hconsts.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hcrypto.h"
 							>
 						</File>
 						<File

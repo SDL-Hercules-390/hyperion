@@ -26,11 +26,11 @@
 
 #define CRYPTO_EXTPKG_MOD       // (exposes sha2.h internal functions)
 
-#include "crypto/include/crypto_version.h"
-#include "crypto/include/rijndael.h"
-#include "crypto/include/sha1.h"
-#include "crypto/include/sha2.h"
-#include "crypto/include/sshdes.h"
+#include "crypto_version.h"
+#include "rijndael.h"
+#include "sha1.h"
+#include "sha2.h"
+#include "sshdes.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 

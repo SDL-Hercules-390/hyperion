@@ -133,7 +133,9 @@
 #if !defined( WORDS_BIGENDIAN )     /* NOT building for BIG endian platform? */
   #define LITTLEENDIAN              /* Then #define LITTLEENDIAN macro       */
 #endif                              /* endif !defined( WORDS_BIGENDIAN )     */
-#include "SoftFloat/include/softfloat.h" /* Master SoftFloat #include header */
+
+#include "softfloat.h"              /* Master SoftFloat #include header      */
+
 /*****************************************************************************/
 
 /* Default QNaN per SA22-7832-10 page 9-3: plus sign, quiet, and payload of zero */

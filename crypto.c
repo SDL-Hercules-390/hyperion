@@ -13,7 +13,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "crypto.h"
+#include "hcrypto.h"                // CSRNG constants and functions
 
 //#define    WRAPPINGKEYS_DEBUG       // (#define for debugging)
 
