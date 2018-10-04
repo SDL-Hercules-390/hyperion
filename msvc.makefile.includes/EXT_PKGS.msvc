@@ -24,56 +24,48 @@ arch_suffix = 32d
 !ENDIF
 
 #----------------------------------------------------------------------
-#                     extpkg: External Packages
+#                         External Packages
 #----------------------------------------------------------------------
 
-#--------------
-#  decNumber
-#--------------
-
-decNumber_pkgname  =  decNumber
-decNumber_pkgdir   =  $(decNumber_pkgname)
-decNumber_libname  =  $(decNumber_pkgname)$(arch_suffix).lib
-decNumber_libdir   =  $(decNumber_pkgdir)\lib
-
-LIBS = $(LIBS) $(decNumber_libname)
-LIB  =  $(LIB);$(decNumber_libdir)
+crypto_pkgname     =              crypto
+crypto_pkgdir      =            $(crypto_pkgname)
+crypto_libname     =            $(crypto_pkgname)$(arch_suffix).lib
+crypto_libdir      =            $(crypto_pkgdir)\lib
+crypto_incdir      =            $(crypto_pkgdir)\include
+               
+LIBS               =    $(LIBS) $(crypto_libname)
+LIB                =     $(LIB);$(crypto_libdir)
+INCLUDE            = $(INCLUDE);$(crypto_incdir)
 
 
-#--------------
-#  SoftFloat
-#--------------
+decNumber_pkgname  =              decNumber
+decNumber_pkgdir   =            $(decNumber_pkgname)
+decNumber_libname  =            $(decNumber_pkgname)$(arch_suffix).lib
+decNumber_libdir   =            $(decNumber_pkgdir)\lib
+decNumber_incdir   =            $(decNumber_pkgdir)\include
 
-softfloat_pkgname  =  softfloat
-softfloat_pkgdir   =  $(softfloat_pkgname)
-softfloat_libname  =  $(softfloat_pkgname)$(arch_suffix).lib
-softfloat_libdir   =  $(softfloat_pkgdir)\lib
-
-LIBS = $(LIBS) $(softfloat_libname)
-LIB  =  $(LIB);$(softfloat_libdir)
+LIBS               =    $(LIBS) $(decNumber_libname)
+LIB                =     $(LIB);$(decNumber_libdir)
+INCLUDE            = $(INCLUDE);$(decNumber_incdir)
 
 
-#--------------
-#  telnet
-#--------------
+SoftFloat_pkgname  =              SoftFloat
+SoftFloat_pkgdir   =            $(SoftFloat_pkgname)
+SoftFloat_libname  =            $(SoftFloat_pkgname)$(arch_suffix).lib
+SoftFloat_libdir   =            $(SoftFloat_pkgdir)\lib
+SoftFloat_incdir   =            $(SoftFloat_pkgdir)\include
 
-telnet_pkgname  =  telnet
-telnet_pkgdir   =  $(telnet_pkgname)
-telnet_libname  =  $(telnet_pkgname)$(arch_suffix).lib
-telnet_libdir   =  $(telnet_pkgdir)\lib
-
-LIBS = $(LIBS) $(telnet_libname)
-LIB  =  $(LIB);$(telnet_libdir)
+LIBS               =    $(LIBS) $(SoftFloat_libname)
+LIB                =     $(LIB);$(SoftFloat_libdir)
+INCLUDE            = $(INCLUDE);$(SoftFloat_incdir)
 
 
-#--------------
-#  crypto
-#--------------
-
-crypto_pkgname  =  crypto
-crypto_pkgdir   =  $(crypto_pkgname)
-crypto_libname  =  $(crypto_pkgname)$(arch_suffix).lib
-crypto_libdir   =  $(crypto_pkgdir)\lib
-
-LIBS = $(LIBS) $(crypto_libname)
-LIB  =  $(LIB);$(crypto_libdir)
+telnet_pkgname     =              telnet
+telnet_pkgdir      =            $(telnet_pkgname)
+telnet_libname     =            $(telnet_pkgname)$(arch_suffix).lib
+telnet_libdir      =            $(telnet_pkgdir)\lib
+telnet_incdir      =            $(telnet_pkgdir)\include
+               
+LIBS               =    $(LIBS) $(telnet_libname)
+LIB                =     $(LIB);$(telnet_libdir)
+INCLUDE            = $(INCLUDE);$(telnet_incdir)

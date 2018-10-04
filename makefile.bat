@@ -25,25 +25,20 @@
   echo.
   echo %~nx0^(1^) : error C9999 : Help information is as follows:
   echo.
-  echo.
-  echo.
   echo                             %~nx0
-  echo.
   echo.
   echo  Initializes the Windows software development build envionment and invokes
   echo  nmake to build the desired 32 or 64-bit version of the Hercules emulator.
   echo.
-  echo.
   echo  Format:
-  echo.
   echo.
   echo    %~nx0  {build-type}  {makefile-name}  {num-cpu-engines}  \
   echo                  [-asm]                                            \
   echo                  [-title "custom build title"]                     \
   echo                  [-hqa {directory}]                                \
+  echo                  [-extpkg {directory}]                             \
   echo                  [-a^|clean]                                        \
   echo                  [{nmake-option}]
-  echo.
   echo.
   echo  Where:
   echo.
@@ -71,6 +66,14 @@
   echo    -hqa "directory"    To define the Hercules Quality Assurance directory
   echo                        containing your optional "hqa.h" and/or "HQA.msvc"
   echo                        build settings override files.
+  echo.
+  echo    -extpkg "directory" To define the base directory where the Hercules
+  echo                        External Packages are installed. Hercules will use
+  echo                        the 'include' and 'lib' subdirectories of this
+  echo                        directory to locate External Package header files
+  echo                        and lib files during the build process.  If not
+  echo                        specified the default is to use the header and lib
+  echo                        files that come with the Hercules repository.
   echo.
   echo    [-a^|clean]          Use '-a' to perform a full rebuild of all Hercules
   echo                        binaries, or 'clean' to delete all temporary work
@@ -237,10 +240,11 @@
 
   set "2shifts=yes"
 
-  if /i "%opt:~1%" == "a"     goto :makeall
-  if /i "%opt:~1%" == "hqa"   goto :hqa
-  if /i "%opt:~1%" == "asm"   goto :asm
-  if /i "%opt:~1%" == "title" goto :title
+  if /i "%opt:~1%" == "a"      goto :makeall
+  if /i "%opt:~1%" == "hqa"    goto :hqa
+  if /i "%opt:~1%" == "asm"    goto :asm
+  if /i "%opt:~1%" == "title"  goto :title
+  if /i "%opt:~1%" == "extpkg" goto :extpkg
 
   ::  Unrecognized options treated as extra nmake arguments...
 
@@ -262,7 +266,6 @@
   if not exist "%optval%\hqa.h" %return%
 
   set "HQA_DIR=%optval%"
-  set "rc=0"
   %return%
 
 :hqa_dir_notfound
@@ -281,6 +284,19 @@
 :title
 
   set CUSTOM_BUILD_STRING="%optval%"
+  %return%
+
+:extpkg
+
+  if not exist "%optval%" (
+    echo.
+    echo %~nx0^(1^) : error C9999 : extpkg directory not found: "%optval%"
+    set "rc=1"
+    %return%
+  )
+
+  set "INCLUDE=%INCLUDE%;%optval%\include"
+  set "LIB=%LIB%;%optval%\lib"
   %return%
 
 
