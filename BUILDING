@@ -42,6 +42,7 @@ The following package(s) is(are) optional but highly recommended:
     ----------------------------------
      zlib            ?                  (for ZLIB compression)
      libbz2          ?                  (for BZIP2 compression)
+     oorexx          ?                  (for REXX support)
 
 
 * If an optional package is not installed, the resulting build may lack
@@ -50,6 +51,12 @@ The following package(s) is(are) optional but highly recommended:
 All of these tools can be found at www.gnu.org in source code form, and
 are also widely available in packaged form (RPM, DEB, Solaris packages,
 etc.).
+
+Note that you will also need to build and install all of the Hercules
+External Packages for your CPU architecture before attempting to build
+Hercules if your CPU architecture is not x86 (or x86_64) or you have
+a non-mainstream Linux/Unix distribution. Refer the the README.EXTPKG
+document for more information.
 
 
                         -------------------
@@ -77,14 +84,17 @@ is what is meant by "configuring your building process".
 Here's the entire build process step-by-step:
 
 
-    To build Herc, first switch to the directory where the source files
-    are:
+    Switch to the directory where the source files are:
+
 
         cd hercules
 
+
     Configure your build options by entering the following command:
 
+
         ./configure  ...
+
 
     (Note: you may or may not wish to enter additional parameters
     to the configure command. See further below)
@@ -92,7 +102,9 @@ Here's the entire build process step-by-step:
     Then simply invoke your pre-configured build process by entering
     the following command:
 
+
         make
+
 
     That's it! The 'make' command should build Hercules for you. After
     it's been built, you may or may not wish to "install" it.
@@ -100,14 +112,18 @@ Here's the entire build process step-by-step:
     To "install" Hercules into the default package installation
     directory after building it, enter the following command:
 
+
         sudo make install
+
 
     That will copy the just built binaries to their proper place.
 
     To uninstall Hercules once it's been installed, simply enter the
     command:
 
+
         sudo make uninstall
+
 
     and the previously copied files will be removed (deleted).
 
