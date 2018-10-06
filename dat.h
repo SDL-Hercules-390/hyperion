@@ -2265,23 +2265,25 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Use the Prefixing logic of the SIE host (not the guest) */
         switch(regs->hostregs->arch_mode)
         {
-             case ARCH_390_IDX:
-		regs->hostregs->dat.aaddr = aaddr =
-		      s390_apply_prefixing (regs->hostregs->dat.raddr, regs->hostregs->PX);
-		apfra = s390_apply_prefixing(regs->hostregs->dat.rpfra, regs->hostregs->PX);
+            case ARCH_390_IDX:
+                regs->hostregs->dat.aaddr = aaddr =
+                        s390_apply_prefixing( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                apfra = s390_apply_prefixing( regs->hostregs->dat.rpfra, regs->hostregs->PX );
                 break;
-             case ARCH_900_IDX:
-		regs->hostregs->dat.aaddr = aaddr =
-		      z900_apply_prefixing (regs->hostregs->dat.raddr, regs->hostregs->PX);
-		apfra = z900_apply_prefixing (regs->hostregs->dat.rpfra, regs->hostregs->PX);
+            case ARCH_900_IDX:
+                regs->hostregs->dat.aaddr = aaddr =
+                        z900_apply_prefixing( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                apfra = z900_apply_prefixing( regs->hostregs->dat.rpfra, regs->hostregs->PX );
                 break;
-             /* No S/370 or any other SIE host exist */
-             default:
-             case ARCH_370_IDX:
-                 abort();
+            /* No S/370 or any other SIE host exist */
+            default:
+            case ARCH_370_IDX:
+                CRASH();
         }
-        if(regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
+
+        if (regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
             goto vabs_addr_excp;
+
         /* Take into account SIE guests with a 2K page scheme
            because the SIE host may be operating with a 4K page
            system */
