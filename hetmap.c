@@ -30,8 +30,6 @@
 #define UTILITY_NAME    "hetmap"
 #define UTILITY_DESC    "AWS, HET and FakeTape map program"
 
-#define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
-
 /*
 || Local Types
 */
@@ -61,7 +59,6 @@ typedef unsigned long long              UInt64;
 
 typedef unsigned char                   Boolean;
 
-
 /*
 || Local Defines
 */
@@ -80,8 +77,6 @@ typedef unsigned char                   Boolean;
  *
  */
 
-
-
 #define DO_FOREVER  while(1)
 
 /*      memset replacements
@@ -90,9 +85,8 @@ typedef unsigned char                   Boolean;
 #define ZERO_OUT(a, b)  memset((void*)(a), 0, (size_t)(b))
 #define TERMINATE(a)    a[sizeof(a)-1] = '\0'
 
-
 /*----------------------------------------------------------------------*
- *  •   Translate tables, ebcdic-ascii, ebcdic-printable.ascii,         *
+ *      Translate tables, ebcdic-ascii, ebcdic-printable.ascii,         *
  *      ascii-printable.ascii                                           *
  *—————————————————————————————————————————————————————————————————————-*/
 #define TranslateTables
@@ -160,7 +154,7 @@ ascii_to_printable_ascii[] = {
 #undef TranslateTables
 
 /*----------------------------------------------------------------------*
- *  •   prototypes                                                      *
+ *      prototypes                                                      *
  *—————————————————————————————————————————————————————————————————————-*/
 #define Prototypes
 int     main                            ( int, char * [] );
@@ -646,9 +640,8 @@ Print_Usage( const char* pgm )
     }
 }
 
-
 /*----------------------------------------------------------------------*
- *  •   prototypes                                                      *
+ *      prototypes                                                      *
  *—————————————————————————————————————————————————————————————————————-*/
 static Boolean
 Print_Standard_Labels (void )
@@ -966,9 +959,8 @@ Print_Standard_Labels (void )
 
 } /* end function Print_Standard_Labels */
 
-
 /*----------------------------------------------------------------------------*
- *  •   Print <= 1K of Data in Printable HEX, the ASCII Char, the EBCDIC Char *
+ *      Print <= 1K of Data in Printable HEX, the ASCII Char, the EBCDIC Char *
  *————————————————————————————————————————————————————————————————————------—-*/
 static SInt32
 Print_Block_Data    ( SInt32 prtlen )
@@ -1042,10 +1034,12 @@ Print_Block_Data    ( SInt32 prtlen )
         }
 
         printf ( "%04X    ", (int)B );
-        BLANK_OUT ( pAscii, bytes_per_line + 1 );
+
+        BLANK_OUT ( pAscii,  bytes_per_line + 1 );
         BLANK_OUT ( pEbcdic, bytes_per_line + 1 );
-        bcopy ( &pAsciiBuf[B], pAscii, Kl ); pAscii[bytes_per_line] = '\0';
-        bcopy ( &pEbcdicBuf[B], pEbcdic, Kl); pEbcdic[bytes_per_line] = '\0';
+
+        memcpy( pAscii,  &pAsciiBuf [B], Kl ); pAscii [ bytes_per_line ] = '\0';
+        memcpy( pEbcdic, &pEbcdicBuf[B], Kl ); pEbcdic[ bytes_per_line ] = '\0';
 
         for ( Cl = 4, J = 0; J < Kl; J++ )
         {
@@ -1062,5 +1056,3 @@ Print_Block_Data    ( SInt32 prtlen )
 
     return ( lAmt2Prt );
 }
-
-
