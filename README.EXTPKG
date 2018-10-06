@@ -98,7 +98,8 @@ Windows and that you need both the x86 and x64 builds of the external packages.
 
   1.  Download and install CMake.
   2.  Make a directory where all packages should be installed into.
-  3.  Download "ExtPkgs.cmd" and "ExtPkgs.cmd.ini" from the GitHub.
+  3.  Download "ExtPkgs.cmd" and "ExtPkgs.cmd.ini" from GitHub and
+      adjust "ExtPkgs.cmd.ini" for your system (e.g. "cpu = arm").
   4.  Use the 'ExtPkgs' command to clone, build and install all of
       the external packages at once, with one simple command.
   5.  Update your 'LIB' and 'INCLUDE' environment variables.
@@ -139,7 +140,9 @@ into the common \extpkgs installation directory.
    Place these files into your local 'bin' directory (or if you don't have
    such a directory, place them into your '\extpkgs' directory that you just
    created).
-   
+
+   Adjust the "ExtPkgs.cmd.ini" as needed for your system (e.g. "cpu = arm").
+
 
 4.  Now clone and build the external packages by making the package install
     directory your current directory and issuing the "ExtPkgs"(*) command
