@@ -2261,10 +2261,25 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         }
 
         /* Convert host real address to host absolute address */
-        regs->hostregs->dat.aaddr = aaddr =
-              APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
-        apfra = APPLY_PREFIXING(regs->hostregs->dat.rpfra, regs->hostregs->PX);
-
+        /* ISW 20181005 */
+        /* Use the Prefixing logic of the SIE host (not the guest) */
+        switch(regs->hostregs->arch_mode)
+        {
+             case ARCH_390_IDX:
+		regs->hostregs->dat.aaddr = aaddr =
+		      s390_apply_prefixing (regs->hostregs->dat.raddr, regs->hostregs->PX);
+		apfra = s390_apply_prefixing(regs->hostregs->dat.rpfra, regs->hostregs->PX);
+                break;
+             case ARCH_900_IDX:
+		regs->hostregs->dat.aaddr = aaddr =
+		      z900_apply_prefixing (regs->hostregs->dat.raddr, regs->hostregs->PX);
+		apfra = z900_apply_prefixing (regs->hostregs->dat.rpfra, regs->hostregs->PX);
+                break;
+             /* No S/370 or any other SIE host exist */
+             default:
+             case ARCH_370_IDX:
+                 abort();
+        }
         if(regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
             goto vabs_addr_excp;
         /* Take into account SIE guests with a 2K page scheme

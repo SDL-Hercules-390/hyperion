@@ -55,6 +55,7 @@ _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
 int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
         int acctype);
+static inline U64 s390_apply_prefixing(U64 raddr,U64 px);
 #endif
 
 #if defined( _FEATURE_ZSIE )
@@ -62,6 +63,7 @@ _LOGICAL_C_STATIC BYTE *z900_logical_to_main (U64 addr, int arn, REGS *regs,
         int acctype, BYTE akey);
 int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
         int acctype);
+static inline U64 z900_apply_prefixing(U64 raddr,U64 px);
 #endif
 
 _VSTORE_C_STATIC void ARCH_DEP(vstorec) (const void *src, BYTE len,
@@ -745,6 +747,11 @@ BYTE    *p;                             /* Mainstor pointer          */
     return std;
 
 } /* end function subspace_replace */
+
+static  inline RADR ARCH_DEP(apply_prefixing)(RADR addr,RADR px)
+{
+        return APPLY_PREFIXING(addr,px);
+}
 
 
 #include "dat.h"
