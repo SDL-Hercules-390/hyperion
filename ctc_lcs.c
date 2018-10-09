@@ -431,8 +431,10 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
 void LCS_Assist( PLCSPORT pLCSPORT )
 {
+#if defined( SIOCGIFHWADDR )
     MAC    mac  = { 0x01, 0x00, 0x5e, 0x00, 0x00, 0x01 };
     ifreq  ifr  = {0};
+#endif
 
     // We shall always support the following assists for the guest.
 
