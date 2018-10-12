@@ -1928,7 +1928,7 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
         LOCK             cckdiolock;    /* I/O lock                  */
         COND             cckdiocond;    /* I/O condition             */
 
-        S64              maxsize;       /* Maximum file size         */
+        U64              cckd_maxsize;  /* Maximum file size         */
 
         int              cckdwaiters;   /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */

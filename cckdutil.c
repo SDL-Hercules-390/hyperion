@@ -944,7 +944,7 @@ CCKD_EXT       *cckd;                   /* -> ckd extension          */
 int             fd;                     /* file descriptor           */
 struct stat     fst;                    /* file status information   */
 int             fdflags;                /* file descriptor flags     */
-S64             maxsize;                /* max cckd file size        */
+U64             cckd_maxsize;           /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
 int             f, i, j, l, n;          /* work integers             */
 int             L1idx, l2x;             /* l1, l2 table indexes      */
@@ -1009,7 +1009,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_fstat_error;
     gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
     hipos = fst.st_size;
-    maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
+    cckd_maxsize = 0xffffffffull;
     fdflags = get_file_accmode_flags(fd);
     ro = (fdflags & O_RDWR) == 0;
 
@@ -2298,7 +2298,7 @@ cdsk_fba_recover:
          * Set its `pos' to the maximum allowed value to ensure
          * there will be free space for the rebuilt l2 tables.
          */
-        spctab[s-1].spc_off = (U32)maxsize;
+        spctab[s-1].spc_off = (U32)cckd_maxsize;
 
         /* Build the free space */
         s = cdsk_build_free_space (spctab, s);
@@ -2543,7 +2543,7 @@ cdsk_fsperr_retry:
                     off = (off_t)spctab[i].spc_off;
 
             /* if no applicable space see if we can append to the file */
-            if (!off && maxsize - cdevhdr.cdh_size >= len)
+            if (!off && cckd_maxsize - cdevhdr.cdh_size >= len)
                 off = (off_t)cdevhdr.cdh_size;
 
             /* get free space buffer */

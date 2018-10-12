@@ -327,7 +327,7 @@ int             fdflags;                /* File flags                */
         cckd->fd[i] = -1;
         cckd->open[i] = CCKD_OPEN_NONE;
     }
-    cckd->maxsize = sizeof(off_t) > 4 ? 0xffffffffll : 0x7fffffffll;
+    cckd->cckd_maxsize = 0xffffffffull;
 
     /* call the chkdsk function */
     if (cckd_chkdsk (dev, 0) < 0)
@@ -2069,11 +2069,11 @@ int             len;                    /* Requested length          */
 cckd_get_space_atend:
 
         fpos = (off_t)cckd->cdevhdr[sfx].cdh_size;
-        if ((fpos + len) > cckd->maxsize)
+        if ((U64)fpos > (cckd->cckd_maxsize - len))
         {
             // "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"PRId64"M"
             WRMSG (HHC00304, "E", LCSS_DEVNUM, sfx, cckd_sf_name (dev, sfx),
-                (S64) (cckd->maxsize >> 20) + 1);
+                (S64) (cckd->cckd_maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].cdh_size += len;
@@ -2756,7 +2756,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
                  : (off_t)cckd->ifb[cckd->ifb[i].ifb_idxprv].ifb_offnxt;
 
         /* if no applicable space see if we can append to the file */
-        if (fpos == 0 && cckd->maxsize - cckd->cdevhdr[sfx].cdh_size >= n)
+        if (fpos == 0 && cckd->cckd_maxsize - cckd->cdevhdr[sfx].cdh_size >= n)
             fpos = (off_t)cckd->cdevhdr[sfx].cdh_size;
 
         if (fpos && (fsp = cckd_malloc (dev, "fsp", n)) == NULL)
