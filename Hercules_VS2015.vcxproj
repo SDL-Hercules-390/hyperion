@@ -944,6 +944,7 @@
     <ClInclude Include="archlvl.h" />
     <ClInclude Include="cache.h" />
     <ClInclude Include="ccfixme.h" />
+    <ClInclude Include="cckd.h" />
     <ClInclude Include="ccnowarn.h" />
     <ClInclude Include="chain.h" />
     <ClInclude Include="chsc.h" />
@@ -967,8 +968,8 @@
     <ClInclude Include="crypto\include\sha1.h" />
     <ClInclude Include="crypto\include\sha2.h" />
     <ClInclude Include="crypto\include\sshdes.h" />
-    <ClInclude Include="ctcadpt.h" />
     <ClInclude Include="ctc_ptp.h" />
+    <ClInclude Include="ctcadpt.h" />
     <ClInclude Include="dasdblks.h" />
     <ClInclude Include="dasdtab.h" />
     <ClInclude Include="dat.h" />

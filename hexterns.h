@@ -14,6 +14,7 @@
 #define _HEXTERNS_H
 
 #include "hercules.h"
+#include "cckd.h"
 
 #if !defined(HAVE_STRSIGNAL)
   const char* strsignal(int signo);    // (ours is in 'strsignal.c')

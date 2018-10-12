@@ -767,6 +767,7 @@ noinst_HEADERS =          \
   archlvl.h               \
   cache.h                 \
   ccfixme.h               \
+  cckd.h                  \
   ccnowarn.h              \
   chain.h                 \
   chsc.h                  \

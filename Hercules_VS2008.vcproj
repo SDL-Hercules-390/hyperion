@@ -491,6 +491,10 @@
 							Name="Header Files"
 							>
 							<File
+								RelativePath=".\cckd.h"
+								>
+							</File>
+							<File
 								RelativePath=".\dasdblks.h"
 								>
 							</File>
