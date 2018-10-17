@@ -1120,6 +1120,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\ccwarn.h"
+							>
+						</File>
+						<File
 							RelativePath=".\chain.h"
 							>
 						</File>

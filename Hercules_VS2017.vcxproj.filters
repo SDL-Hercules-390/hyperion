@@ -2320,6 +2320,9 @@
     <ClInclude Include="ccnowarn.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ccwarn.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="chain.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
