@@ -769,6 +769,7 @@ noinst_HEADERS =          \
   ccfixme.h               \
   cckd.h                  \
   ccnowarn.h              \
+  ccwarn.h                \
   chain.h                 \
   chsc.h                  \
   clock.h                 \
