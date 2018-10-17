@@ -208,8 +208,8 @@ or <code>'sf-* nomerge'</code>).
 A compressed DASD file has 6 types of spaces, a <em><u>device header</u></em>,
 a <em><u>compressed device header</u></em>, a <em><u>primary lookup table</u></em>,
 <em>secondary lookup tables</em>, track or block group <em>images</em>,
-and <em>free spaces</em>.  The first 3 types only occur once, at the
-beginning of the file in order.  The rest of the file is occupied by
+and <em>free spaces</em>.  The first 3 types only occur once, in order,
+at the very beginning of the file.  The rest of the file is occupied by
 the other 3 space types.
 <p>
 
@@ -405,8 +405,8 @@ The entry is indexed by the remainder of the track or block group number divided
 
 <p>
 
-Each L2 entry contains an unsigned 4 byte <i>offset</i> to the track or block group image
-(file offset to where the image begins),
+Each L2 entry contains an unsigned 4 byte <i>offset</i> to the <b>track or block group image</b>
+(<i>L2_trkoff</i>: file offset to where the image begins),
 
 an unsigned 2 byte track or block group <i>length</i> (the actual amount of data
 contained on the track or block group)
