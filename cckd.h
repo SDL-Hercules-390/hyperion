@@ -350,7 +350,7 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
         int              L1idx;         /* Active level 2 table index*/
         CCKD_L2ENT      *L2tab;         /* Active level 2 table      */
         int              L2_active;     /* Active level 2 cache entry*/
-        off_t            L2_bounds;     /* L2 tables boundary        */
+        U64              L2_bounds;     /* L2 tables boundary        */
 
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */

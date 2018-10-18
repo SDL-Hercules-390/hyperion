@@ -2090,7 +2090,7 @@ cckd_get_space_atend:
     {
         if (cckd->ifb[i].ifb_pending == 0
          && (len2 <= (int)cckd->ifb[i].ifb_len || len == (int)cckd->ifb[i].ifb_len)
-         && ((flags & CCKD_L2SPACE) || fpos >= cckd->L2_bounds))
+         && ((flags & CCKD_L2SPACE) || (U64)fpos >= cckd->L2_bounds))
             break;
         fpos = (off_t)cckd->ifb[i].ifb_offnxt;
     }
@@ -5000,7 +5000,7 @@ off_t           pos, fpos;              /* File offsets              */
     /* Find any level 2 table out of bounds */
     for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
         if (cckd->L1tab[sfx][i] != 0 && cckd->L1tab[sfx][i] != 0xffffffff
-         && cckd->L2_bounds - CCKD_L2TAB_SIZE < (off_t)cckd->L1tab[sfx][i])
+         && cckd->L2_bounds - CCKD_L2TAB_SIZE < (U64)cckd->L1tab[sfx][i])
             break;
 
     /* Return OK if no l2 tables out of bounds */
@@ -5011,7 +5011,7 @@ off_t           pos, fpos;              /* File offsets              */
     pos = CCKD_L1TAB_POS + (cckd->cdevhdr[sfx].num_L1tab * CCKD_L1ENT_SIZE);
     i = cckd->free_idx1st;
     fpos = (off_t)cckd->cdevhdr[sfx].free_off;
-    while (pos < cckd->L2_bounds)
+    while ((U64)pos < cckd->L2_bounds)
     {
         if (i >= 0 && pos == fpos)
         {
@@ -5055,7 +5055,7 @@ off_t           pos, fpos;              /* File offsets              */
         cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d",
                     i, (int)fpos, i >= 0 ? (int)cckd->ifb[i].ifb_len : -1,
                     i >= 0 ? cckd->ifb[i].ifb_pending : -1);
-        if (i < 0 || fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
+        if (i < 0 || (U64)fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
             goto cckd_gc_l2_exit;
 
         if ( cckd->ifb[i].ifb_len < CCKD_L2TAB_SIZE
@@ -5071,7 +5071,7 @@ off_t           pos, fpos;              /* File offsets              */
         else
         {
             for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
-                if (cckd->L2_bounds - CCKD_L2TAB_SIZE < (off_t)cckd->L1tab[sfx][i]
+                if (cckd->L2_bounds - CCKD_L2TAB_SIZE < (U64)cckd->L1tab[sfx][i]
                  && cckd->L1tab[sfx][i] != 0xffffffff)
                     break;
         }
