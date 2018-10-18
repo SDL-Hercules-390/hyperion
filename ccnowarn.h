@@ -1,18 +1,25 @@
-/* ccnowarn.h (C) Copyright "Fish" (David B. Trout), 2011            */
+/* CCNOWARN.H (C) Copyright "Fish" (David B. Trout), 2011            */
+/*             Suppress compiler warnings                            */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */
 /*             (http://www.hercules-390.org/herclic.html)            */
 /*             as modifications to Hercules.                         */
 
+/*  This header forces suppression of certain compiler warnings      */
+/*  that frequently occur all throughout most of Hercules.           */
+
 /*-------------------------------------------------------------------*/
 /* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros allow   */
 /* you to temporarily suppress certain harmless compiler warnings.   */
+/*                                                                   */
 /* Sample usage: DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )      */
 /* DISABLE_MSVC_WARNING( 4142 ) // "benign redefinition of type"     */
 /* Use the "_DISABLE" macro before the source statement which is     */
 /* causing the problem and the "ENABLE" macro shortly afterwards.    */
+/*                                                                   */
 /* PLEASE DO NOT GO OVERBOARD (overdo or overuse) THE SUPPRESSION    */
 /* OF WARNINGS! Most warnings are actually bugs waiting to happen.   */
+/*                                                                   */
 /* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros are     */
 /* only meant as a temporary measure until the warning itself can    */
 /* be properly investigated and resolved.                            */
