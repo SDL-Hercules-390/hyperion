@@ -1509,9 +1509,9 @@ struct DEVBLK {                         /* Device configuration block*/
         FBADEV *fbatab;                 /* Device table entry        */
         int     fbanumblk;              /* Number of blocks in device*/
         int     fbablksiz;              /* Physical block size       */
-        off_t   fbaorigin;              /* Device origin block number*/
-        off_t   fbarba;                 /* Relative byte offset      */
-        off_t   fbaend;                 /* Last RBA in file          */
+        U64     fbaorigin;              /* Device origin block number*/
+        U64     fbarba;                 /* Relative byte offset      */
+        U64     fbaend;                 /* Last RBA in file          */
         /* Values from define extent */
         u_int   fbaxtdef:1;             /* 1=Extent defined          */
         BYTE    fbamask;                /* Define extent file mask   */
@@ -1535,7 +1535,7 @@ struct DEVBLK {                         /* Device configuration block*/
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
         CKDCU  *ckdcu;                  /* Control unit entry        */
-        off_t   ckdtrkoff;              /* Track image file offset   */
+        U64     ckdtrkoff;              /* Track image file offset   */
         int     ckdcyls;                /* Number of cylinders       */
         int     ckdtrks;                /* Number of tracks          */
         int     ckdheads;               /* #of heads per cylinder    */
