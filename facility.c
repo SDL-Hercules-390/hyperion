@@ -3111,6 +3111,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B3B9, "convert_float_long_to_fixed_reg" );
     DIS_FAC_INS( B3BA, "convert_float_ext_to_fixed_reg" );
     DIS_FAC_INS( B91E, "compute_message_authentication_code" );
+    DIS_FAC_INS( B91F, "load_reversed_register" );
     DIS_FAC_INS( B926, "load_byte_register" );
     DIS_FAC_INS( B927, "load_halfword_register" );
     DIS_FAC_INS( B928, "perform_cryptographic_key_management_operation" );
@@ -3178,6 +3179,8 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( C804, "load_pair_disjoint" );
 
     DIS_FAC_INS( E312, "load_and_test" );
+    DIS_FAC_INS( E31E, "load_reversed" );
+    DIS_FAC_INS( E31F, "load_reversed_high" );
     DIS_FAC_INS( E336, "prefetch_data" );
     DIS_FAC_INS( E394, "load_logical_character" );
     DIS_FAC_INS( E395, "load_logical_halfword" );
