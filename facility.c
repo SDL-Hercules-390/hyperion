@@ -3180,7 +3180,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
 
     DIS_FAC_INS( E312, "load_and_test" );
     DIS_FAC_INS( E31E, "load_reversed" );
-    DIS_FAC_INS( E31F, "load_reversed_high" );
+    DIS_FAC_INS( E31F, "load_reversed_half" );
     DIS_FAC_INS( E336, "prefetch_data" );
     DIS_FAC_INS( E394, "load_logical_character" );
     DIS_FAC_INS( E395, "load_logical_halfword" );
