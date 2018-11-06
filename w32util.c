@@ -818,7 +818,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
 
     struct timespec rqtp;
 
-    if (unlikely( useconds < 0 || useconds >= MILLION ))
+    if (unlikely( useconds >= MILLION ))
     {
         errno = EINVAL;
         return -1;
@@ -3386,7 +3386,7 @@ DLL_EXPORT int w32_select
     // NOTE: we don't support returning the actual total number of handles
     // that are ready; instead, we return 1 as long as ANY handle is ready...
 
-    if ( dwWaitRetCode >= WAIT_OBJECT_0 && dwWaitRetCode < ( WAIT_OBJECT_0 + dwHandles ) )
+    if ( dwWaitRetCode < ( WAIT_OBJECT_0 + dwHandles ) )
         return 1;
 
     // Something went wrong...
