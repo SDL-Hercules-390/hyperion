@@ -276,6 +276,9 @@
     <ClCompile Include="hetupd.c">
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>
+    <ClCompile Include="maketape.c">
+      <Filter>Source Files\Utilities\tape</Filter>
+    </ClCompile>
     <ClCompile Include="tapecopy.c">
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>

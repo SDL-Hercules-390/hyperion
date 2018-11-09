@@ -48,9 +48,9 @@ bin_PROGRAMS = cckdcdsk$(EXEEXT) cckdcomp$(EXEEXT) cckddiag$(EXEEXT) \
 	dasdload$(EXEEXT) dasdls$(EXEEXT) dasdpdsu$(EXEEXT) \
 	dasdseq$(EXEEXT) dmap2hrc$(EXEEXT) hercules$(EXEEXT) \
 	hetget$(EXEEXT) hetinit$(EXEEXT) hetmap$(EXEEXT) \
-	hetupd$(EXEEXT) tapecopy$(EXEEXT) tapemap$(EXEEXT) \
-	tapesplt$(EXEEXT) vmfplc2$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2)
+	hetupd$(EXEEXT) maketape$(EXEEXT) tapecopy$(EXEEXT) \
+	tapemap$(EXEEXT) tapesplt$(EXEEXT) vmfplc2$(EXEEXT) \
+	$(am__EXEEXT_1) $(am__EXEEXT_2)
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(noinst_HEADERS) \
@@ -388,6 +388,12 @@ hetupd_DEPENDENCIES = $(am__DEPENDENCIES_3)
 hetupd_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hetupd_LDFLAGS) $(LDFLAGS) -o $@
+am_maketape_OBJECTS = maketape.$(OBJEXT)
+maketape_OBJECTS = $(am_maketape_OBJECTS)
+maketape_DEPENDENCIES = $(am__DEPENDENCIES_3)
+maketape_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(maketape_LDFLAGS) $(LDFLAGS) -o $@
 am_tapecopy_OBJECTS = tapecopy-tapecopy.$(OBJEXT) \
 	tapecopy-scsiutil.$(OBJEXT)
 tapecopy_OBJECTS = $(am_tapecopy_OBJECTS)
@@ -456,8 +462,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(dasdpdsu_SOURCES) $(dasdseq_SOURCES) $(dmap2hrc_SOURCES) \
 	$(hercifc_SOURCES) $(herclin_SOURCES) $(hercules_SOURCES) \
 	$(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) \
-	$(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) \
-	$(tapesplt_SOURCES) $(vmfplc2_SOURCES)
+	$(hetupd_SOURCES) $(maketape_SOURCES) $(tapecopy_SOURCES) \
+	$(tapemap_SOURCES) $(tapesplt_SOURCES) $(vmfplc2_SOURCES)
 DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt1052c_la_SOURCES) $(hdt1403_la_SOURCES) \
 	$(hdt2703_la_SOURCES) $(hdt2880_la_SOURCES) \
@@ -476,8 +482,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(dmap2hrc_SOURCES) $(am__hercifc_SOURCES_DIST) \
 	$(herclin_SOURCES) $(hercules_SOURCES) $(hetget_SOURCES) \
 	$(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) \
-	$(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES) \
-	$(vmfplc2_SOURCES)
+	$(maketape_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) \
+	$(tapesplt_SOURCES) $(vmfplc2_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -1119,6 +1125,9 @@ dasdpdsu_LDFLAGS = $(tools_LD_FLAGS)
 dasdseq_SOURCES = dasdseq.c
 dasdseq_LDADD = $(tools_ADDLIBS)
 dasdseq_LDFLAGS = $(tools_LD_FLAGS)
+maketape_SOURCES = maketape.c
+maketape_LDADD = $(tools_ADDLIBS)
+maketape_LDFLAGS = $(tools_LD_FLAGS)
 tapecopy_SOURCES = tapecopy.c scsiutil.c
 tapecopy_LDADD = $(tools_ADDLIBS)
 tapecopy_LDFLAGS = $(tools_LD_FLAGS)
@@ -1303,7 +1312,9 @@ noinst_HEADERS = \
   archlvl.h               \
   cache.h                 \
   ccfixme.h               \
+  cckd.h                  \
   ccnowarn.h              \
+  ccwarn.h                \
   chain.h                 \
   chsc.h                  \
   clock.h                 \
@@ -1692,6 +1703,9 @@ hetmap$(EXEEXT): $(hetmap_OBJECTS) $(hetmap_DEPENDENCIES)
 hetupd$(EXEEXT): $(hetupd_OBJECTS) $(hetupd_DEPENDENCIES) 
 	@rm -f hetupd$(EXEEXT)
 	$(AM_V_CCLD)$(hetupd_LINK) $(hetupd_OBJECTS) $(hetupd_LDADD) $(LIBS)
+maketape$(EXEEXT): $(maketape_OBJECTS) $(maketape_DEPENDENCIES) 
+	@rm -f maketape$(EXEEXT)
+	$(AM_V_CCLD)$(maketape_LINK) $(maketape_OBJECTS) $(maketape_LDADD) $(LIBS)
 tapecopy$(EXEEXT): $(tapecopy_OBJECTS) $(tapecopy_DEPENDENCIES) 
 	@rm -f tapecopy$(EXEEXT)
 	$(AM_V_CCLD)$(tapecopy_LINK) $(tapecopy_OBJECTS) $(tapecopy_LDADD) $(LIBS)
@@ -1826,6 +1840,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/losc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltdl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machchk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/maketape.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memrchr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mpc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netsupp.Plo@am__quote@

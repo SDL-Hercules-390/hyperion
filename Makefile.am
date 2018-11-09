@@ -226,6 +226,7 @@ bin_PROGRAMS = \
   hetinit      \
   hetmap       \
   hetupd       \
+  maketape     \
   tapecopy     \
   tapemap      \
   tapesplt     \
@@ -568,6 +569,10 @@ dasdpdsu_LDFLAGS   = $(tools_LD_FLAGS)
 dasdseq_SOURCES    = dasdseq.c
 dasdseq_LDADD      = $(tools_ADDLIBS)
 dasdseq_LDFLAGS    = $(tools_LD_FLAGS)
+
+maketape_SOURCES   = maketape.c
+maketape_LDADD     = $(tools_ADDLIBS)
+maketape_LDFLAGS   = $(tools_LD_FLAGS)
 
 tapecopy_SOURCES   = tapecopy.c scsiutil.c
 tapecopy_LDADD     = $(tools_ADDLIBS)

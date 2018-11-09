@@ -51,6 +51,7 @@ EXECUTABLES = \
     $(X)hetinit.exe  \
     $(X)hetmap.exe   \
     $(X)hetupd.exe   \
+    $(X)maketape.exe \
     $(X)tapecopy.exe \
     $(X)tapemap.exe  \
     $(X)tapesplt.exe \

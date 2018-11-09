@@ -317,6 +317,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\maketape.c"
+						>
+					</File>
+					<File
 						RelativePath=".\tapecopy.c"
 						>
 					</File>

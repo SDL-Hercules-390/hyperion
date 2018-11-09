@@ -396,6 +396,7 @@
     <ClCompile Include="losc.c" />
     <ClCompile Include="ltdl.c" />
     <ClCompile Include="machchk.c" />
+    <ClCompile Include="maketape.c" />
     <ClCompile Include="memrchr.c" />
     <ClCompile Include="mpc.c" />
     <ClCompile Include="netsupp.c" />

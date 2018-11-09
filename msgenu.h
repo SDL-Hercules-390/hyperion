@@ -2059,7 +2059,42 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
     "Usage: %s filename\n"
 #define HHC02760 "%s"
 #define HHC02761 "DCB Attributes used:  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d"
-//efine HHC02762 - HHC02799 (available)
+//efine HHC02762 (available)
+//efine HHC02763 (available)
+//efine HHC02764 (available)
+//efine HHC02765 (available)
+//efine HHC02766 (available)
+//efine HHC02767 (available)
+//efine HHC02768 (available)
+//efine HHC02769 (available)
+#define HHC02770 "Usage:  ARG: value  [ARG: value]  [OPTION] ...\n" \
+       "HHC02770I\n" \
+       "HHC02770I      INPUT:    <input file name>  |  @<file containing file list>\n" \
+       "HHC02770I      VOLSER:   <1 to 6 character volume serial number>\n" \
+       "HHC02770I      DATASET:  <1 to 17 character dataset label>\n" \
+       "HHC02770I      OUTPUT:   <output file name>\n" \
+       "HHC02770I\n" \
+       "HHC02770I    [ LRECL:    <record length>    ]\n" \
+       "HHC02770I    [ BLOCK:    <blocking factor>  ]\n" \
+       "HHC02770I    [ CODEPAGE: <code page>        ]\n" \
+       "HHC02770I\n" \
+       "HHC02770I    [ UNIQUE ]\n" \
+       "HHC02770I    [ BINARY ]\n" \
+       "HHC02770I    [ NLTAPE ]\n" \
+       "HHC02770I    [ ANSI   ]\n"
+#define HHC02771 "%s missing following %s parameter"
+#define HHC02772 "Error opening %s file '%s': %s"
+#define HHC02773 "Error opening %s file %i '%s': %s"
+#define HHC02774 "number of files in %s exceeds %d; excess ignored"
+#define HHC02775 "required %s omitted or not found"
+#define HHC02776 "Error writing %s to file' %s': %s"
+#define HHC02777 "Processing input from: '%s'"
+#define HHC02778 "Wrote %i blocks to AWSTAPE file: '%s' (Seq #%.4s Dataset:'%.17s')"
+#define HHC02779 "%s (C) copyright Jay Moseley, CCP 2000"
+#define HHC02780 "unsupported parameter: %s"
+#define HHC02781 "invalid %s parameter: %s"
+#define HHC02782 "LRECL %i and BLOCK %i exceeds maximum AWS blocksize of %i"
+//efine HHC02783 - HHC02799 (available)
 
 // mt_cmd
 #define HHC02800 "%1d:%04X %s complete"
