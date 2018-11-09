@@ -2520,7 +2520,7 @@ cdsk_fsperr_retry:
                     off = (off_t)spctab[i].spc_off;
 
             /* if no applicable space see if we can append to the file */
-            if (!off && cckd_maxsize - cdevhdr.cdh_size >= len)
+            if (!off && (cckd_maxsize - cdevhdr.cdh_size) >= (U64)len)
                 off = (off_t)cdevhdr.cdh_size;
 
             /* get free space buffer */

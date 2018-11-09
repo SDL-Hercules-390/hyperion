@@ -1497,7 +1497,7 @@ BYTE byte;
             break;
         case SR_DEV_FBA_ORIGIN:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if ((off_t)rc != dev->fbaorigin)
+            if ((U64)rc != dev->fbaorigin)
             {
                 // "%1d:%04X FBA file %s: FBA origin mismatch: %d, expected %d,"
                 WRMSG( HHC00513, "E", LCSS_DEVNUM,

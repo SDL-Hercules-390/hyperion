@@ -2756,7 +2756,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
                  : (off_t)cckd->ifb[cckd->ifb[i].ifb_idxprv].ifb_offnxt;
 
         /* if no applicable space see if we can append to the file */
-        if (fpos == 0 && cckd->cckd_maxsize - cckd->cdevhdr[sfx].cdh_size >= n)
+        if (fpos == 0 && (cckd->cckd_maxsize - cckd->cdevhdr[sfx].cdh_size) >= (U64)n)
             fpos = (off_t)cckd->cdevhdr[sfx].cdh_size;
 
         if (fpos && (fsp = cckd_malloc (dev, "fsp", n)) == NULL)
