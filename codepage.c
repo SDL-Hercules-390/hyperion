@@ -1062,12 +1062,21 @@ static CPCONV *codepage_conv = cpconv;
 DLL_EXPORT unsigned char *h2g_tab() { return codepage_conv->h2g; }
 DLL_EXPORT unsigned char *g2h_tab() { return codepage_conv->g2h; }
 
-DLL_EXPORT char * query_codepage(void)
+DLL_EXPORT const char* query_codepage()
 {
     return codepage_conv->name;
 }
 
-DLL_EXPORT void set_codepage(char *name)
+DLL_EXPORT bool valid_codepage_name( const char* name )
+{
+    const CPCONV* cp;
+    for(cp = cpconv; cp->name; cp++)
+        if (strcasecmp( name, cp->name ) == 0)
+            return true;
+    return false;
+}
+
+DLL_EXPORT void set_codepage( const char* name )
 {
     int dflt = FALSE;
 

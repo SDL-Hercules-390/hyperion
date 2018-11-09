@@ -4158,39 +4158,34 @@ int cp_updt_cmd(int argc, char *argv[], char *cmdline)
 /* codepage xxxxxxxx command      *** KEEP AFTER CP_UPDT_CMD ***     */
 /* Note: maint can never be a code page name                         */
 /*-------------------------------------------------------------------*/
-int codepage_cmd(int argc, char *argv[], char *cmdline)
+int codepage_cmd( int argc, char* argv[], char* cmdline )
 {
-    char   *cp;
-    int     rc = 0;
+    int rc = 0;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0( argv );
 
     /* passthru to cp_updt_cmd */
-    if ( argc >= 2 && CMD(argv[1],maint,1) )
+    if (argc >= 2 && CMD( argv[1], MAINT, 1 ))
     {
         argc--;
         argv++;
-        rc = cp_updt_cmd(argc, argv, NULL);
+        rc = cp_updt_cmd( argc, argv, NULL );
     }
-    else if ( argc == 2 )
+    else if (argc == 2 && valid_codepage_name( argv[1] ))
     {
-        /* Update codepage if operand is specified */
-        set_codepage(argv[1]);
+        /* Update codepage if valid operand is specified */
+        set_codepage( argv[1] );
     }
-    else if ( argc == 1 )
+    else if (argc == 1)
     {
-        cp = query_codepage();
-        if ( cp == NULL )
-        {
-            WRMSG( HHC01476, "I", "(NULL)" );
-        }
-        else
-        {
-            WRMSG( HHC01476, "I", cp );
-        }
+        const char* cp = query_codepage();
+        // "Codepage is %s"
+        WRMSG( HHC01476, "I", cp ? cp : "(NULL)" );
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
