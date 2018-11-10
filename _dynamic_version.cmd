@@ -596,7 +596,7 @@
 
   ::--------------------------------------------------------------
   ::  Make it PAINFULLY CLEAR this is a *SOFTDEVLABS* version
-  ::  of 4.0 Hyperion and not the original 4.0 Hyperion version,
+  ::  of 4.x Hyperion and not the original 4.0 Hyperion version,
   ::  by appending the string "-SDL" to the end of the "VERSION".
   ::--------------------------------------------------------------
 
