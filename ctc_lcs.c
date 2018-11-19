@@ -468,13 +468,14 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
     // Check if tuntap can do outbound checksum offloading for us.
 
+#if 0 /* Disable for now. TAP Checksum offload seems broken */
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_CSUM )
     if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) TUN_F_CSUM ) == 0)
     {
-        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
         pLCSPORT->fDoCkSumOffload = 0;    // (tuntap does it for us)
     }
     else
+#endif
 #endif
         pLCSPORT->fDoCkSumOffload = 1;    // (we must do it ourself)
 
@@ -484,17 +485,23 @@ void LCS_Assist( PLCSPORT pLCSPORT )
 
     // Check if tuntap can also do segmentation offloading for us.
 
+#if 0 /* Disable for now. TCP Segment Offload needs to be enabled by stack 
+         using LCS */
 #if defined( TUNSETOFFLOAD ) && defined( TUN_F_TSO4 ) && defined( TUN_F_UFO )
-    if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*)(TUN_F_TSO4 | TUN_F_UFO)) == 0)
+    /* Only do offload if doing TAP checksum offload */
+    if(pLCSPORT->fDoCkSumOffload==0)
     {
-        VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) 0 ) == 0);
-
-        pLCSPORT->sIPAssistsSupported |= LCS_IP_FRAG_REASSEMBLY;
-        pLCSPORT->sIPAssistsEnabled   |= LCS_IP_FRAG_REASSEMBLY;
-
-        // "CTC: lcs device port %2.2X: %s Large Send Offload enabled"
-        WRMSG( HHC00938, "I", pLCSPORT->bPort, "tuntap" );
+        if (TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*)(TUN_F_CSUM | TUN_F_TSO4 | TUN_F_UFO)) == 0)
+        {
+	    VERIFY( TUNTAP_IOCtl( pLCSPORT->fd, TUNSETOFFLOAD, (char*) TUN_F_CSUM ) == 0);
+	    pLCSPORT->sIPAssistsSupported |= LCS_IP_FRAG_REASSEMBLY;
+            /* Do Not ENABLE !! */
+	    // pLCSPORT->sIPAssistsEnabled   |= LCS_IP_FRAG_REASSEMBLY;
+	    // "CTC: lcs device port %2.2X: %s Large Send Offload supported"
+	    WRMSG( HHC00938, "I", pLCSPORT->bPort, "tuntap" );
+        }
     }
+#endif
 #endif
 }
 
@@ -1202,6 +1209,9 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     // Save the max buffer size parameter
     iOrigMaxFrameBufferSize = pLCSDEV->iMaxFrameBufferSize;
+    // If original is 0 set to compiled in buffer size
+    if(!iOrigMaxFrameBufferSize) iOrigMaxFrameBufferSize=(U16)sizeof(pLCSDEV->bFrameBuffer);
+
     FETCH_HW( pLCSDEV->iMaxFrameBufferSize, ((PLCSSTRTFRM)pCmdFrame)->hwBufferSize );
 
     // Make sure it doesn't exceed our compiled maximum
@@ -1210,20 +1220,24 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
         WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
                   pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize, "LCS",
+                  pLCSDEV->iMaxFrameBufferSize,
+                  "LCS",
                   (int)sizeof( pLCSDEV->bFrameBuffer ) );
         pLCSDEV->iMaxFrameBufferSize = iOrigMaxFrameBufferSize;
     }
-
-    // Make sure it's not smaller than the compiled minimum size
-    if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
+    else
     {
-        // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
-        WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
-                  pLCSDEV->pDEVBLK[1]->devnum,
-                  pLCSDEV->iMaxFrameBufferSize, "LCS",
-                  CTC_MIN_FRAME_BUFFER_SIZE );
-        pLCSDEV->iMaxFrameBufferSize = iOrigMaxFrameBufferSize;
+        // Make sure it's not smaller than the compiled minimum size
+        if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
+        {
+            // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
+            WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
+	              pLCSDEV->pDEVBLK[1]->devnum,
+                      pLCSDEV->iMaxFrameBufferSize,
+                      "LCS",
+                      CTC_MIN_FRAME_BUFFER_SIZE );
+            pLCSDEV->iMaxFrameBufferSize = iOrigMaxFrameBufferSize;
+        }
     }
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
