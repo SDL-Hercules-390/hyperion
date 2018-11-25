@@ -125,7 +125,7 @@ typedef struct udp_hdr      udp_hdr;
 #define                     udp_hdr_size        sizeof( udp_hdr )
 
 /*-------------------------------------------------------------------*/
-/*                           UDP header                              */
+/*                           ICMP header                             */
 /*-------------------------------------------------------------------*/
 struct icmp_hdr
 {
