@@ -1814,36 +1814,43 @@ int     aswitch;
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs->execflag = 0;
 
-    do {
-        if (INTERRUPT_PENDING( regs ))
-            ARCH_DEP( process_interrupt )( regs );
-
-        ip = INSTRUCTION_FETCH( regs, 0 );
-
-        EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
-
-        /* BHe: I have tried several settings. But 2 unrolled
-           executes gives (core i7 at my place) the best results.
-
-           Even a 'do { } while(0);' with several unrolled executes
-           and without the 'i' was slower.
-
-           That surprised me.
-        */
-        for (i=0; i < 128; i++)
+    while (1)
+    {
+        for (i=0; i < 16; i++)
         {
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-        }
-        regs->instcount += 1 + (i * 2);
+            if (INTERRUPT_PENDING( regs ))
+                ARCH_DEP( process_interrupt )( regs );
 
-        /* Update system-wide sysblk.instcount instruction counter */
-        UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+            ip = INSTRUCTION_FETCH( regs, 0 );
+            EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
+
+            regs->instcount   +=     1;
+            UPDATE_SYSBLK_INSTCOUNT( 1 );
+
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+            UNROLLED_EXECUTE( current_opcode_table, regs );
+
+            regs->instcount   +=     16;
+            UPDATE_SYSBLK_INSTCOUNT( 16 );
+        }
 
         /* Perform automatic instruction tracing if it's enabled */
         do_automatic_tracing();
     }
-    while (1);
 
     UNREACHABLE_CODE( return NULL );
 
