@@ -125,6 +125,19 @@ typedef struct udp_hdr      udp_hdr;
 #define                     udp_hdr_size        sizeof( udp_hdr )
 
 /*-------------------------------------------------------------------*/
+/*                           ICMP header                             */
+/*-------------------------------------------------------------------*/
+struct icmp_hdr
+{
+    BYTE   icmp_type;       // ICMP Frame type
+    BYTE   icmp_code;       // ICMP Frame code
+    U16    icmp_sum;        // ICMP checksum
+};
+
+typedef struct icmp_hdr     icmp_hdr;
+#define                     icmp_hdr_size       sizeof( icmp_hdr )
+
+/*-------------------------------------------------------------------*/
 /*                     TCP/UDP "Pseudo Header"                       */
 /*-------------------------------------------------------------------*/
 
