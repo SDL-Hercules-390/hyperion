@@ -316,6 +316,24 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
             }
             break;
 
+            case IPPROTO_ICMP:
+            {
+                icmp_hdr* pICMP = (icmp_hdr*) pPacket;
+
+                pIP->ip_sum  = 0;   // (start clean)
+                pICMP->icmp_sum = 0;   // (start clean)
+
+                // Handle upper ICMP layer first
+
+                // pICMP->icmp_sum = htons( PseudoHdrCheckSum( pIP ));
+                pICMP->icmp_sum = htons( InetCheckSum( (BYTE*) pICMP, (S32)( nPacketLen - nIPHdrLen )));
+
+                // Handle lower IP layer last
+
+                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+            }
+            break;
+
             default: // (some other protocol)
             {
                 // But since it IS an IP packet we need to
