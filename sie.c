@@ -1169,23 +1169,28 @@ static int ARCH_DEP( run_sie )( REGS* regs )
 
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
-                /* BHe: I have tried several settings. But 2 unrolled
-                   executes gives (core i7 at my place) the best results.
-
-                   Even a 'do { } while(0);' with several unrolled executes
-                   and without the 'i' was slower.
-
-                   That surprised me.
-                */
-                for (i=0; i < 128; i++)
+                for (i=0; i < 16; i++)
                 {
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
-                }
-                regs->instcount += 1 + (i * 2);
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                    UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
 
-                /* Update system-wide sysblk.instcount instruction counter */
-                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+                    regs->instcount   +=     16;
+                    UPDATE_SYSBLK_INSTCOUNT( 16 );
+                }
 
                 /* Perform automatic instruction tracing if it's enabled */
                 do_automatic_tracing();
