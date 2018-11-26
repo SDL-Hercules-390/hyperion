@@ -37,4 +37,4 @@ seems to be the only 'active' version of the Hercules emulator in existence.)
 
 
 ### To find out more about this particular version of Hercules 4.x Hyperion,
-follow this link: [Hercules 4.0 (Hyperion)](http://sdl-hercules-390.github.io/html/)
+follow this link: [Hercules 4.x (Hyperion)](http://sdl-hercules-390.github.io/html/)
