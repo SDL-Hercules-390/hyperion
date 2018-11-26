@@ -277,72 +277,74 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
         nPacketLen =  ntohs( pIP->ip_len );
         nIPHdrLen  =  pIP->ip_hl * sizeof( U32 );
         pPacket    =  (((BYTE*)pIP) + nIPHdrLen);
-
-        switch (pIP->ip_p)
+        if(pIP->ip_sum==0)    /* Only compute checksum if not already present */
         {
-            case IPPROTO_TCP:
+            switch (pIP->ip_p)
             {
-                tcp_hdr* pTCP = (tcp_hdr*) pPacket;
+                case IPPROTO_TCP:
+                {
+                    tcp_hdr* pTCP = (tcp_hdr*) pPacket;
 
-                pIP->ip_sum  = 0;   // (start clean)
-                pTCP->th_sum = 0;   // (start clean)
+                    pIP->ip_sum  = 0;   // (start clean)
+                    pTCP->th_sum = 0;   // (start clean)
 
-                // Handle upper TCP layer first
+                    // Handle upper TCP layer first
 
-                pTCP->th_sum = htons( PseudoHdrCheckSum( pIP ));
-                pTCP->th_sum = htons( InetCheckSum( (BYTE*) pTCP, (S32)( nPacketLen - nIPHdrLen )));
+                    pTCP->th_sum = htons( PseudoHdrCheckSum( pIP ));
+                    pTCP->th_sum = htons( InetCheckSum( (BYTE*) pTCP, (S32)( nPacketLen - nIPHdrLen )));
 
-                // Handle lower IP layer last
+                    // Handle lower IP layer last
 
-                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                }
+                break;
+
+                case IPPROTO_UDP:
+                {
+                    udp_hdr* pUDP = (udp_hdr*) pPacket;
+
+                    pIP->ip_sum  = 0;   // (start clean)
+                    pUDP->uh_sum = 0;   // (start clean)
+
+                    // Handle upper UDP layer first
+
+                    pUDP->uh_sum = htons( PseudoHdrCheckSum( pIP ));
+                    pUDP->uh_sum = htons( InetCheckSum( (BYTE*) pUDP, (S32) ntohs( pUDP->uh_ulen )));
+
+                    // Handle lower IP layer last
+
+                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                }
+                break;
+
+                case IPPROTO_ICMP:
+                {
+                    icmp_hdr* pICMP = (icmp_hdr*) pPacket;
+
+                    pIP->ip_sum  = 0;   // (start clean)
+                    pICMP->icmp_sum = 0;   // (start clean)
+
+                    // Handle upper ICMP layer first
+
+                    // pICMP->icmp_sum = htons( PseudoHdrCheckSum( pIP ));
+                    pICMP->icmp_sum = htons( InetCheckSum( (BYTE*) pICMP, (S32)( nPacketLen - nIPHdrLen )));
+
+                    // Handle lower IP layer last
+
+                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                }
+                break;
+
+                default: // (some other protocol)
+                {
+                    // But since it IS an IP packet we need to
+                    // still calculate the IP header checksum!
+
+                    pIP->ip_sum = 0;   // (start clean)
+                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                }
+                break;
             }
-            break;
-
-            case IPPROTO_UDP:
-            {
-                udp_hdr* pUDP = (udp_hdr*) pPacket;
-
-                pIP->ip_sum  = 0;   // (start clean)
-                pUDP->uh_sum = 0;   // (start clean)
-
-                // Handle upper UDP layer first
-
-                pUDP->uh_sum = htons( PseudoHdrCheckSum( pIP ));
-                pUDP->uh_sum = htons( InetCheckSum( (BYTE*) pUDP, (S32) ntohs( pUDP->uh_ulen )));
-
-                // Handle lower IP layer last
-
-                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
-            }
-            break;
-
-            case IPPROTO_ICMP:
-            {
-                icmp_hdr* pICMP = (icmp_hdr*) pPacket;
-
-                pIP->ip_sum  = 0;   // (start clean)
-                pICMP->icmp_sum = 0;   // (start clean)
-
-                // Handle upper ICMP layer first
-
-                // pICMP->icmp_sum = htons( PseudoHdrCheckSum( pIP ));
-                pICMP->icmp_sum = htons( InetCheckSum( (BYTE*) pICMP, (S32)( nPacketLen - nIPHdrLen )));
-
-                // Handle lower IP layer last
-
-                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
-            }
-            break;
-
-            default: // (some other protocol)
-            {
-                // But since it IS an IP packet we need to
-                // still calculate the IP header checksum!
-
-                pIP->ip_sum = 0;   // (start clean)
-                pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
-            }
-            break;
         }
 
         // Go on to the next IP packet...
