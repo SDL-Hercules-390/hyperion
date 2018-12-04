@@ -6,7 +6,7 @@
                               OVERVIEW
 
 
-This version of Hercules 4.0 Hyperion links with several "external package"
+This version of Hercules 4.x Hyperion links with several "external package"
 static libraries.
 
 Hercules comes distributed with pre-built external packages as part of its
@@ -25,7 +25,7 @@ those situations include (but are not limited to) the following:
      unusual non-mainstream *Nix platform (Apple Mac, Raspberry Pi, etc).
 
 Each package is maintained in its own unique source code repository separate
-from the Hercules emulator itself.  The Hercules 4.0 Hyperion repository only
+from the Hercules emulator itself.  The Hercules 4.x Hyperion repository only
 hosts default package static libraries (along with a few accompanying files)
 in separate external package subdirectories.  Each package's source code is
 kept in its own separate source code repository.  The Hercules repository
@@ -43,7 +43,7 @@ variable would be the "LIBRARY_PATH" variable.)  The same idea applies for the
 the "CPATH" variable): it should point to the external package installation
 directory's "include" subdirectory.
 
-Currently, there are four such external packages this Hercules 4.0 Hyperion
+Currently, there are four such external packages this Hercules 4.x Hyperion
 links with.  These packages are the "crypto", "decNumber", "SoftFloat", and
 "telnet" packages.  Each of these package names correspond to an existing
 subdirectory of Hyperion.  Over time additional Hercules functionality will
