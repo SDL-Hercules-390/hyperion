@@ -1808,49 +1808,53 @@ int     aswitch;
 
     RELEASE_INTLOCK(regs);
 
-    /* Establish longjmp destination for program check */
-    setjmp(regs->progjmp);
+    /* Establish longjmp destination for program check or
+       RETURN_INTCHECK, or SIE_INTERCEPT, or longjmp, etc.
+    */
+    if (setjmp( regs->progjmp ))
+    {
+        /* Our instruction execution loop further below didn't finish
+           due to a longjmp(progjmp) having been executed bringing us
+           to here, thereby causing the instruction counter to not be
+           properly updated. Thus, we need to update it here instead.
+       */
+        regs->instcount   +=     128;       /* (just an estimate) */
+        UPDATE_SYSBLK_INSTCOUNT( 128 );     /* (just an estimate) */
+    }
 
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs->execflag = 0;
 
-    while (1)
-    {
-        for (i=0; i < 16; i++)
+    do {
+        if (INTERRUPT_PENDING( regs ))
+            ARCH_DEP( process_interrupt )( regs );
+
+        ip = INSTRUCTION_FETCH( regs, 0 );
+
+        EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
+
+        /* BHe: I have tried several settings. But 2 unrolled
+           executes gives (core i7 at my place) the best results.
+
+           Even a 'do { } while(0);' with several unrolled executes
+           and without the 'i' was slower.
+
+           That surprised me.
+        */
+        for (i=0; i < 128; i++)
         {
-            if (INTERRUPT_PENDING( regs ))
-                ARCH_DEP( process_interrupt )( regs );
-
-            ip = INSTRUCTION_FETCH( regs, 0 );
-            EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
-
-            regs->instcount   +=     1;
-            UPDATE_SYSBLK_INSTCOUNT( 1 );
-
             UNROLLED_EXECUTE( current_opcode_table, regs );
             UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-            UNROLLED_EXECUTE( current_opcode_table, regs );
-
-            regs->instcount   +=     16;
-            UPDATE_SYSBLK_INSTCOUNT( 16 );
         }
+        regs->instcount += 1 + (i * 2);
+
+        /* Update system-wide sysblk.instcount instruction counter */
+        UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
 
         /* Perform automatic instruction tracing if it's enabled */
         do_automatic_tracing();
     }
+    while (1);
 
     UNREACHABLE_CODE( return NULL );
 
