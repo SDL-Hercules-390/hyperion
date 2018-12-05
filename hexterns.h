@@ -37,9 +37,8 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
   #define strnfilenamecmp  strncasecmp
 #endif
 
-/* Global data areas in module config.c */
+/* Global data areas in module hsys.c */
 HSYS_DLL_IMPORT SYSBLK   sysblk;        /* System control block      */
-CCKD_DLL_IMPORT CCKDBLK  cckdblk;       /* CCKD global block         */
 HSYS_DLL_IMPORT int      extgui;        /* true = extgui active      */
 
 /* Functions in module bldcfg.c */
@@ -273,15 +272,15 @@ int servc_hresume(void *file);
 
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
-int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
-void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+int ckd_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
+void ckd_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
-int ckddasd_close_device ( DEVBLK *dev );
-void ckddasd_query_device (DEVBLK *dev, char **devclass,
+int ckd_dasd_close_device ( DEVBLK *dev );
+void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);
-int ckddasd_hsuspend ( DEVBLK *dev, void *file );
-int ckddasd_hresume  ( DEVBLK *dev, void *file );
+int ckd_dasd_hsuspend ( DEVBLK *dev, void *file );
+int ckd_dasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module fbadasd.c */
 FBA_DLL_IMPORT void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
@@ -292,23 +291,27 @@ FBA_DLL_IMPORT void fbadasd_read_block
 FBA_DLL_IMPORT void fbadasd_write_block
       ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U32 *residual );
-int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
-void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+int fba_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
+void fba_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
-int fbadasd_close_device ( DEVBLK *dev );
-void fbadasd_query_device (DEVBLK *dev, char **devclass,
+int fba_dasd_close_device ( DEVBLK *dev );
+void fba_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer);
-int fbadasd_hsuspend ( DEVBLK *dev, void *file );
-int fbadasd_hresume  ( DEVBLK *dev, void *file );
+int fba_dasd_hsuspend ( DEVBLK *dev, void *file );
+int fba_dasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module cckddasd.c */
-DEVIF   cckddasd_init_handler;
-int     cckddasd_close_device (DEVBLK *);
+
+DEVIF   cckd_dasd_init_handler;
+int     cckd_dasd_close_device (DEVBLK *);
 int     cckd_read_track (DEVBLK *, int, BYTE *);
 int     cckd_update_track (DEVBLK *, int, int, BYTE *, int, BYTE *);
 int     cfba_read_block (DEVBLK *, int, BYTE *);
 int     cfba_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
+
+CCKD_DLL_IMPORT CCKDBLK cckdblk;
+
 CCKD_DLL_IMPORT void   *cckd_sf_add (void *);
 CCKD_DLL_IMPORT void   *cckd_sf_remove (void *);
 CCKD_DLL_IMPORT void   *cckd_sf_stats (void *);
@@ -328,7 +331,6 @@ CCDU_DLL_IMPORT void    cckd_swapend_free ( CCKD_FREEBLK* );
 CCDU_DLL_IMPORT int     cckd_endian ();
 CCDU_DLL_IMPORT int     cckd_comp (DEVBLK *);
 CCDU_DLL_IMPORT int     cckd_chkdsk (DEVBLK *, int);
-CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...) ATTR_PRINTF(3,4);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);

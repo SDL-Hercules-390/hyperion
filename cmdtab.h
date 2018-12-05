@@ -173,12 +173,38 @@
 #define bplus_cmd_desc          "Set breakpoint"
 #define cachestats_cmd_desc     "Cache stats command"
 
-#define cckd_cmd_desc           "cckd command"
+#define cckd_cmd_desc           "Compressed CKD command"
 #define cckd_cmd_help           \
                                 \
-  "The cckd statement is used to display current cckd processing\n"             \
-  "options and statistics, and to set new cckd options.\n"                      \
-  "Type \"cckd help\" for additional information.\n"
+  "The cckd command is used to display current cckd processing options\n"       \
+  "or statistics or to set new cckd processing options:\n"                      \
+                                                                         "\n"   \
+  " cckd  help         Display cckd help\n"                                     \
+  " cckd  stats        Display current cckd statistics\n"                       \
+  " cckd  opts         Display current cckd options\n"                          \
+  " cckd  opt=val,...  Set cckd option. Multiple options may be specified.\n"   \
+  "                    Each option must be separated from the next with a\n"    \
+  "                    single comma and no intervening blanks. The list of\n"   \
+  "                    supported cckd options are:\n"                           \
+                                                                         "\n"   \
+  "  comp=n        Override compression                  (-1,0,1,2)\n"          \
+  "  compparm=n    Override compression parm             (-1 ... 9)\n"          \
+  "  debug=n       Enable CCW tracing debug messages       (0 or 1)\n"          \
+  "  freepend=n    Set free pending cycles               (-1 ... 4)\n"          \
+  "  fsync=n       Enable fsync                            (0 or 1)\n"          \
+  "  gcint=n       Set garbage collector interval (sec)  ( 1 .. 60)\n"          \
+  "  gcparm=n      Set garbage collector parameter       (-8 ... 8)\n"          \
+  "  gcstart=n     Start garbage collector                 (0 or 1)\n"          \
+  "  linuxnull=n   Check for null linux tracks             (0 or 1)\n"          \
+  "  nosfd=n       Disable stats report at close           (0 or 1)\n"          \
+  "  nostress=n    Disable stress writes                   (0 or 1)\n"          \
+  "  ra=n          Set number readahead threads          ( 1 ... 9)\n"          \
+  "  raq=n         Set readahead queue size              ( 0 .. 16)\n"          \
+  "  rat=n         Set number tracks to read ahead       ( 0 .. 16)\n"          \
+  "  trace=n       Set trace table size              (0 ... 200000)\n"          \
+  "  wr=n          Set number writer threads             ( 1 ... 9)\n"          \
+                                                                         "\n"   \
+  "Refer to the Hercules CCKD documentation web page for more information.\n"
 
 #define cctape_cmd_desc         "Display a printer's current cctape"
 #define cctape_cmd_help         "Format: \"cctape <devnum>\""
@@ -1277,43 +1303,89 @@
   "system). 'yes' is equivalent to specifying a 5 second interval.\n"
 
 #define sfminus_cmd_desc        "Delete shadow file"
+#define sfminus_cmd_help        \
+                                \
+  "Format: \"sf- {*|dev} [MERGE|nomerge] [force]\".  Removes the active\n"      \
+  "shadow file for the device, where dev is the device number (*=all cckd\n"    \
+  "devices).\n"                                                                 \
+                                                                          "\n"  \
+  "If merge is specified (the default), then the contents of the current\n"     \
+  "file is merged into the previous file, the current file is removed, and\n"   \
+  "the previous file becomes the current file.  The previous file must be\n"    \
+  "able to be opened read-write.  If nomerge is specified then the contents\n"  \
+  "of the current shadow file is discarded and the previous file becomes the\n" \
+  "new current file.  However, if the previous file is read-only then a new\n"  \
+  "empty shadow file is then immediately re-added again and that new empty\n"   \
+  "shadow file then becomes the new current file.  The force option is re-\n"   \
+  "quired when doing a merge to the base file and the base file is read-only\n" \
+  "because the 'ro' option was specified on the device config statement.\n"     \
+                                                                          "\n"  \
+  "Note that because it is possible for this command to take a long time to\n"  \
+  "complete (when the default MERGE option is used) this command operates\n"    \
+  "asynchronously in a separate worker thread.\n"
+
 #define sfplus_cmd_desc         "Add shadow file"
+#define sfplus_cmd_help         \
+                                \
+  "Format: \"sf+ {*|dev}\".  Creates another shadow file for the device\n"      \
+  "where dev is the device number (*=all cckd devices).  Note that this\n"      \
+  "command operates asynchronously in a separate worker thread.\n"
+
 #define sfc_cmd_desc            "Compress shadow files"
+#define sfc_cmd_help            \
+                                \
+  "Format: \"sfc {*|dev}\". Compresses the active device or shadow file\n"      \
+  "where dev is the device number (*=all cckd devices). This command is\n"      \
+  "essentially identical to the 'cckdcomp' utility.  Note that because it's\n"  \
+  "possible for this command to take a long time to complete it operates\n"     \
+  "asynchronously in a separate worker thread.\n"
+
 #define sfd_cmd_desc            "Display shadow file stats"
+#define sfd_cmd_help            \
+                                \
+  "Format: \"sfd {*|dev}\".  Displays shadow file status and statistics\n"      \
+  "where dev is the device number (*=all cckd devices).  Note that this\n"      \
+  "command operates asynchronously in a separate worker thread.\n"
+
 #define sfk_cmd_desc            "Check shadow files"
 #define sfk_cmd_help            \
                                 \
-  "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"  \
-  "where xxxx is the device number (*=all cckd devices)\n"                      \
-  "and n is the optional check level (default is 2):\n"                         \
-  " -1 devhdr, cdevhdr, l1 table\n"                                             \
-  "  0 devhdr, cdevhdr, l1 table, l2 tables\n"                                  \
-  "  1 devhdr, cdevhdr, l1 table, l2 tables, free spaces\n"                     \
-  "  2 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs\n"            \
-  "  3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"            \
-  "  4 devhdr, cdevhdr. Build everything else from recovery\n"                  \
-  "You probably don't want to use `4' unless you have a backup and are\n"       \
-  "prepared to wait a long time.\n"
+  "Format: \"sfk {*|dev} [n]\". Performs a chkdsk on the active shadow file\n"  \
+  "where dev is the device number (*=all cckd devices) and n is an optional\n"  \
+  "check level (default is 2):\n"                                               \
+                                                                          "\n"  \
+  "   -1   devhdr, cdevhdr, l1 table.\n"                                        \
+  "    0   devhdr, cdevhdr, l1 table, l2 tables.\n"                             \
+  "    1   devhdr, cdevhdr, l1 table, l2 tables, free spaces.\n"                \
+  "    2   devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs.\n"       \
+  "    3   devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs.\n"       \
+  "    4   devhdr, cdevhdr. Build everything else from recovery.\n"             \
+                                                                          "\n"  \
+  "This command is essentially identical to the 'cckdcdsk' utility.\n"          \
+  "You probably don't want to use '4' unless you have a backup and are\n"       \
+  "prepared to wait a long time.  Note that because this command could\n"       \
+  "take a long time to complete it operates asynchronously in a separate\n"     \
+  "worker thread.\n"
 
 #define sh_cmd_desc             "Shell command"
 #if defined( _MSVC_ )
 #define sh_cmd_help             \
                                 \
-  "Format: \"sh command [args...]\" where 'command' is any valid shell\n"        \
-  "command or the special command 'startgui'. The entered command and any\n"     \
-  "arguments are passed as-is to the shell for processing and the results\n"     \
-  "are displayed on the Hercules console.\n"                                     \
-  "\n"                                                                           \
-  "The special startgui command MUST be used if the command being started\n"     \
-  "either directly or indirectly starts a Windows graphical user interface\n"    \
-  "(i.e. non-command-line) program such as notepad. Failure to use startgui\n"   \
-  "in such cases will hang Hercules until you close/exit notepad. Note that\n"   \
-  "starting a batch file which starts notepad still requires using startgui.\n"  \
-  "If 'foo.bat' does: \"start notepad\", then doing \"sh foo.bat\" will hang\n"  \
-  "Hercules until notepad exits just like doing \"sh start notepad\" will.\n"    \
-  "Use startgui instead: \"sh startgui notepad\", \"sh startgui foo.bat\".\n"    \
-  "\n"                                                                           \
-  "For security reasons execution of shell commands are disabled by default.\n"  \
+  "Format: \"sh command [args...]\" where 'command' is any valid shell\n"       \
+  "command or the special command 'startgui'. The entered command and any\n"    \
+  "arguments are passed as-is to the shell for processing and the results\n"    \
+  "are displayed on the Hercules console.\n"                                    \
+  "\n"                                                                          \
+  "The special startgui command MUST be used if the command being started\n"    \
+  "either directly or indirectly starts a Windows graphical user interface\n"   \
+  "(i.e. non-command-line) program such as notepad. Failure to use startgui\n"  \
+  "in such cases will hang Hercules until you close/exit notepad. Note that\n"  \
+  "starting a batch file which starts notepad still requires using startgui.\n" \
+  "If 'foo.bat' does: \"start notepad\", then doing \"sh foo.bat\" will hang\n" \
+  "Hercules until notepad exits just like doing \"sh start notepad\" will.\n"   \
+  "Use startgui instead: \"sh startgui notepad\", \"sh startgui foo.bat\".\n"   \
+  "\n"                                                                          \
+  "For security reasons execution of shell commands are disabled by default.\n" \
   "Enter 'help shcmdopt' for more information.\n"
 
 #else /* !defined( _MSVC ) */
@@ -1753,18 +1825,30 @@ COMMAND( "loaddev",                 lddev_cmd,              SYSCMD,             
 COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             dumpdev_cmd_desc,       dumpdev_cmd_help    )
 #endif
 #if !defined( _FW_REF )
+
+        // PROGRAMMING NOTE: the following "+/-" commands ("f+adr", "t+dev",
+        // etc) are directly routed by cmdtab.c's 'CallHercCmd' function.
+
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             NULL                )
 COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )
-COMMAND( "sf-dev",                  NULL,                   SYSCMDNOPER,        sfminus_cmd_desc,       NULL                )
-COMMAND( "sf+dev",                  NULL,                   SYSCMDNOPER,        sfplus_cmd_desc,        NULL                )
-COMMAND( "sfc",                     NULL,                   SYSCMDNOPER,        sfc_cmd_desc,           NULL                )
-COMMAND( "sfd",                     NULL,                   SYSCMDNOPER,        sfd_cmd_desc,           NULL                )
-COMMAND( "sfk",                     NULL,                   SYSCMDNOPER,        sfk_cmd_desc,           sfk_cmd_help        )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
 #if defined( OPTION_CKD_KEY_TRACING )
-COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL )
+COMMAND( "t{+/-}CKD",               NULL,                   SYSCMDNOPER,        tckd_cmd_desc,          NULL                )
 #endif
+        // PROGRAMMING NOTE: the following CCKD 'sf' shadow file commands
+        // are directly routed by the 'CallHercCmd' function in "cmdtab.c".
+
+        // PLEASE ALSO NOTE that, unlike most other Hercules commands, the
+        // below CCKD 'sf' shadow file commands are called ASYNCHRONOUSLY
+        // from a separate worker thread, and not synchronously like most
+        // other Hercules commands are!
+
+COMMAND( "sf-dev",                  NULL,                   SYSCMDNOPER,        sfminus_cmd_desc,       sfminus_cmd_help    )
+COMMAND( "sf+dev",                  NULL,                   SYSCMDNOPER,        sfplus_cmd_desc,        sfplus_cmd_help     )
+COMMAND( "sfc",                     NULL,                   SYSCMDNOPER,        sfc_cmd_desc,           sfc_cmd_help        )
+COMMAND( "sfd",                     NULL,                   SYSCMDNOPER,        sfd_cmd_desc,           sfd_cmd_help        )
+COMMAND( "sfk",                     NULL,                   SYSCMDNOPER,        sfk_cmd_desc,           sfk_cmd_help        )
 #endif
 
 #if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)

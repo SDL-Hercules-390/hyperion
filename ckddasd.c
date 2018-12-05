@@ -36,6 +36,7 @@
 #include "devtype.h"
 #include "sr.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
@@ -208,13 +209,10 @@
 static const BYTE   eighthex00[]    = {0x00,0x00,0x00,0x00,
                                        0x00,0x00,0x00,0x00};
 
-static const BYTE   eighthexFF[]    = {0xff,0xff,0xff,0xff,
-                                       0xff,0xff,0xff,0xff};
-
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
+int ckd_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int             rc;                     /* Return code               */
 struct stat     statbuf;                /* File information          */
@@ -418,14 +416,15 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Check the device header identifier */
-        if (!is_devhdrid_typ( devhdr.devhdrid, CKD32_CMP_OR_NML_TYP ))
+        dev->cckd64 = 0;
+        if (!is_dh_devid_typ( devhdr.dh_devid, CKD32_CMP_OR_NML_TYP ))
         {
             // "%1d:%04X CKD file %s: ckd header invalid"
             WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
-        if (is_devhdrid_typ( devhdr.devhdrid, CKD_C370_TYP ))
+        if (is_dh_devid_typ( devhdr.dh_devid, CKD_C370_TYP ))
         {
             cckd = 1;
 
@@ -438,10 +437,10 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Read the compressed device header */
-        if ( cckd )
+        if (cckd)
         {
             rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
-            if (rc < (int)CCKD_DEVHDR_SIZE)
+            if (rc < (int)                CCKD_DEVHDR_SIZE)
             {
                 if (rc < 0)
                 {
@@ -460,26 +459,19 @@ char           *strtok_str = NULL;      /* save last position        */
         }
 
         /* Extract fields from device header */
-        heads   = ((U32)(devhdr.heads[3]) << 24)
-                | ((U32)(devhdr.heads[2]) << 16)
-                | ((U32)(devhdr.heads[1]) << 8)
-                | (U32)(devhdr.heads[0]);
-        trksize = ((U32)(devhdr.trksize[3]) << 24)
-                | ((U32)(devhdr.trksize[2]) << 16)
-                | ((U32)(devhdr.trksize[1]) << 8)
-                | (U32)(devhdr.trksize[0]);
-        highcyl = ((U32)(devhdr.highcyl[1]) << 8)
-                | (U32)(devhdr.highcyl[0]);
+        FETCH_LE_FW( heads,   devhdr.dh_heads   );
+        FETCH_LE_FW( trksize, devhdr.dh_trksize );
+        FETCH_LE_HW( highcyl, devhdr.dh_highcyl );
 
         if (cckd == 0)
         {
             if (dev->dasdcopy == 0)
             {
-                trks = (statbuf.st_size - CKD_DEVHDR_SIZE) / trksize;
+                trks = (int)((statbuf.st_size - CKD_DEVHDR_SIZE) / trksize);
                 cyls = trks / heads;
                 if (fileseq == 1 && highcyl == cyls)
                 {
-                    devhdr.fileseq = 0;
+                    devhdr.dh_fileseq = 0;
                     highcyl = 0;
                 }
             }
@@ -492,11 +484,11 @@ char           *strtok_str = NULL;      /* save last position        */
                  */
                 cyls = highcyl - dev->ckdcyls + 1;
                 trks = cyls * heads;
-                if (devhdr.fileseq == 0xFF)
+                if (devhdr.dh_fileseq == 0xFF)
                 {
-                    devhdr.fileseq = fileseq == 1 ? 0 : fileseq;
+                    devhdr.dh_fileseq = (fileseq == 1 ? 0 : fileseq);
                     highcyl = 0;
-                    devhdr.highcyl[0] = devhdr.highcyl[1] = 0;
+                    store_hw( devhdr.dh_highcyl, 0 );
                     lseek (dev->fd, 0, SEEK_SET);
                     rc = write (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
                 }
@@ -504,28 +496,25 @@ char           *strtok_str = NULL;      /* save last position        */
         }
         else
         {
-            cyls = ((U32)(cdevhdr.cyls[3]) << 24)
-                 | ((U32)(cdevhdr.cyls[2]) << 16)
-                 | ((U32)(cdevhdr.cyls[1]) << 8)
-                 |  (U32)(cdevhdr.cyls[0]);
+            FETCH_LE_FW( cyls, cdevhdr.cdh_cyls );
             trks = cyls * heads;
         }
 
         /* Check for correct file sequence number */
-        if (devhdr.fileseq != fileseq
-            && !(devhdr.fileseq == 0 && fileseq == 1))
+        if (devhdr.dh_fileseq != fileseq
+            && !(devhdr.dh_fileseq == 0 && fileseq == 1))
         {
             // "%1d:%04X CKD file %s: ckd file out of sequence"
             WRMSG( HHC00408, "E", LCSS_DEVNUM, filename );
             return -1;
         }
 
-        if (devhdr.fileseq > 0)
+        if (devhdr.dh_fileseq > 0)
         {
             if (!dev->quiet)
                 // "%1d:%04X CKD file %s: seq %02d cyls %6d-%-6d"
                 WRMSG( HHC00409, "I", LCSS_DEVNUM,
-                       filename, devhdr.fileseq, dev->ckdcyls,
+                       filename, devhdr.dh_fileseq, dev->ckdcyls,
                        (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
 
@@ -630,7 +619,7 @@ char           *strtok_str = NULL;      /* save last position        */
     if (dev->ckdcu->devt == 0x3990)
         dev->ckd3990 = 1;
 
-    /* Build the devhdrid area */
+    /* Build the dh_devid area */
     dev->numdevid = dasd_build_ckd_devid (dev->ckdtab, dev->ckdcu,
                                           (BYTE *)&dev->devid);
 
@@ -652,15 +641,15 @@ char           *strtok_str = NULL;      /* save last position        */
     dev->devcache = TRUE;
 
     if (!cckd) return 0;
-    else return cckddasd_init_handler(dev, argc, argv);
+    else return cckd_dasd_init_handler(dev, argc, argv);
 
-} /* end function ckddasd_init_handler */
+} /* end function ckd_dasd_init_handler */
 
 
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void ckddasd_query_device (DEVBLK *dev, char **devclass,
+void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKD_EXT    *cckd;
@@ -696,7 +685,7 @@ void ckddasd_query_device (DEVBLK *dev, char **devclass,
                   dev->excps );
     }
 
-} /* end function ckddasd_query_device */
+} /* end function ckd_dasd_query_device */
 
 /*-------------------------------------------------------------------*/
 /* Release cache entries                                             */
@@ -716,11 +705,11 @@ DEVBLK         *dev = data;             /* -> device block           */
 }
 
 
-static int ckddasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat);
+static int ckd_dasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat);
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int ckddasd_close_device ( DEVBLK *dev )
+int ckd_dasd_close_device ( DEVBLK *dev )
 {
 int     i;                              /* Index                     */
 BYTE    unitstat;                       /* Unit Status               */
@@ -748,7 +737,7 @@ BYTE    unitstat;                       /* Unit Status               */
     dev->bufsize = 0;
 
     return 0;
-} /* end function ckddasd_close_device */
+} /* end function ckd_dasd_close_device */
 
 
 /*-------------------------------------------------------------------*/
@@ -779,24 +768,11 @@ int             trk;                    /* Track number              */
 } /* end function ckd_read_cchh */
 
 /*-------------------------------------------------------------------*/
-/* Return track image length                                         */
+/* Return adjusted track image length                                */
 /*-------------------------------------------------------------------*/
 int ckd_trklen (DEVBLK *dev, BYTE *buf)
 {
-int             sz;                     /* Size so far               */
-
-    for (sz = CKD_TRKHDR_SIZE;
-         memcmp (buf + sz, eighthexFF, 8) != 0; )
-    {
-        /* add length of count, key, and data fields */
-        sz += CKD_RECHDR_SIZE +
-                buf[sz+5] +
-                (buf[sz+6] << 8) + buf[sz+7];
-        if (sz > dev->ckdtrksz - 8) break;
-    }
-
-    /* add length for end-of-track indicator */
-    sz += CKD_RECHDR_SIZE;
+    int sz = ckd_tracklen( dev, buf );
 
     if (sz > dev->ckdtrksz)
         sz = dev->ckdtrksz;
@@ -808,12 +784,12 @@ int             sz;                     /* Size so far               */
 /* Read a track image                                                */
 /*-------------------------------------------------------------------*/
 static
-int ckddasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat)
+int ckd_dasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
 int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
-off_t           offset;                 /* File offsets              */
+U64             offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
 
@@ -841,9 +817,9 @@ CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
         dev->bufupd = 0;
 
         /* Seek to the old track image offset */
-        offset = (off_t)(dev->ckdtrkoff + dev->bufupdlo);
+        offset = (dev->ckdtrkoff + dev->bufupdlo);
         offset = lseek (dev->fd, offset, SEEK_SET);
-        if (offset < 0)
+        if ((S64)offset < 0)
         {
             /* Handle seek error condition */
             // "%1d:%04X CKD file %s: error in function %s: %s"
@@ -927,8 +903,8 @@ ckd_read_track_retry:
         dev->fd = dev->ckdfd[f];
 
         /* Calculate the track offset */
-        dev->ckdtrkoff = CKD_DEVHDR_SIZE +
-             (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+        dev->ckdtrkoff = (U64)(CKD_DEVHDR_SIZE +
+             ((U64)(trk - (f ? dev->ckdhitrk[f-1] : 0))) * dev->ckdtrksz);
 
         return 0;
      }
@@ -964,16 +940,16 @@ ckd_read_track_retry:
     dev->fd = dev->ckdfd[f];
 
     /* Calculate the track offset */
-    dev->ckdtrkoff = CKD_DEVHDR_SIZE +
-         (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+    dev->ckdtrkoff = (U64)(CKD_DEVHDR_SIZE +
+         ((U64)(trk - (f ? dev->ckdhitrk[f-1] : 0))) * dev->ckdtrksz);
 
     // "%1d:%04X CKD file %s: read trk %d reading file %d offset %"PRId64" len %d"
     LOGDEVTR( HHC00429, "I", dev->filename, trk, f+1, dev->ckdtrkoff, dev->ckdtrksz );
 
     /* Seek to the track image offset */
-    offset = (off_t)dev->ckdtrkoff;
+    offset = dev->ckdtrkoff;
     offset = lseek (dev->fd, offset, SEEK_SET);
-    if (offset < 0)
+    if ((S64)offset < 0)
     {
         /* Handle seek error condition */
         // "%1d:%04X CKD file %s: error in function %s: %s"
@@ -1011,10 +987,8 @@ ckd_read_track_retry:
     {
         trkhdr = (CKD_TRKHDR*)dev->buf;
         trkhdr->bin = 0;
-        trkhdr->cyl[0] = (cyl >> 8);
-        trkhdr->cyl[1] = (cyl & 0xFF);
-        trkhdr->head[0] = (head >> 8);
-        trkhdr->head[1] = (head & 0xFF);
+        store_hw( trkhdr->cyl,  cyl  );
+        store_hw( trkhdr->head, head );
         memset (dev->buf + CKD_TRKHDR_SIZE, 0xFF, 8);
     }
 
@@ -1025,11 +999,11 @@ ckd_read_track_retry:
         dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4] );
 
     trkhdr = (CKD_TRKHDR*)dev->buf;
-    if (trkhdr->bin != 0
-      || trkhdr->cyl[0] != (cyl >> 8)
-      || trkhdr->cyl[1] != (cyl & 0xFF)
-      || trkhdr->head[0] != (head >> 8)
-      || trkhdr->head[1] != (head & 0xFF))
+    if (0
+        || trkhdr->bin              != 0
+        || fetch_hw( trkhdr->cyl  ) != cyl
+        || fetch_hw( trkhdr->head ) != head
+    )
     {
         // "%1d:%04X CKD file %s: invalid track header for cyl %d head %d %02X %02X%02X %02X%02X"
         WRMSG( HHC00418, "E", LCSS_DEVNUM,
@@ -1061,7 +1035,7 @@ ckd_read_track_retry:
 /* Update a track image                                              */
 /*-------------------------------------------------------------------*/
 static
-int ckddasd_update_track (DEVBLK *dev, int trk, int off,
+int ckd_dasd_update_track (DEVBLK *dev, int trk, int off,
                       BYTE *buf, int len, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
@@ -1120,7 +1094,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* CKD start/resume channel program                                  */
 /*-------------------------------------------------------------------*/
-void ckddasd_start (DEVBLK *dev)
+void ckd_dasd_start (DEVBLK *dev)
 {
     /* Reset buffer offsets */
     dev->bufoff = 0;
@@ -1130,7 +1104,7 @@ void ckddasd_start (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* CKD end/suspend channel program                                   */
 /*-------------------------------------------------------------------*/
-void ckddasd_end (DEVBLK *dev)
+void ckd_dasd_end (DEVBLK *dev)
 {
 BYTE    unitstat;                       /* Unit Status               */
 
@@ -1141,7 +1115,7 @@ BYTE    unitstat;                       /* Unit Status               */
 /*-------------------------------------------------------------------*/
 /* Return used cylinders                                             */
 /*-------------------------------------------------------------------*/
-int ckddasd_used (DEVBLK *dev)
+int ckd_dasd_used (DEVBLK *dev)
 {
     return dev->ckdcyls;
 }
@@ -1192,56 +1166,59 @@ int ckddasd_used (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Hercules suspend                                                  */
 /*-------------------------------------------------------------------*/
-int ckddasd_hsuspend(DEVBLK *dev, void *file) {
+int ckd_dasd_hsuspend( DEVBLK* dev, void* file )
+{
     if (dev->bufcur >= 0)
     {
-        SR_WRITE_VALUE(file, SR_DEV_CKD_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
-        SR_WRITE_VALUE(file, SR_DEV_CKD_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
+        SR_WRITE_VALUE( file, SR_DEV_CKD_BUFCUR, dev->bufcur, sizeof( dev->bufcur ));
+        SR_WRITE_VALUE( file, SR_DEV_CKD_BUFOFF, dev->bufoff, sizeof( dev->bufoff ));
     }
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURCYL, dev->ckdcurcyl, sizeof(dev->ckdcurcyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURHEAD, dev->ckdcurhead, sizeof(dev->ckdcurhead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURREC, dev->ckdcurrec, sizeof(dev->ckdcurrec));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURKL, dev->ckdcurkl, sizeof(dev->ckdcurkl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_ORIENT, dev->ckdorient, sizeof(dev->ckdorient));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CUROPER, dev->ckdcuroper, sizeof(dev->ckdcuroper));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_CURDL, dev->ckdcurdl, sizeof(dev->ckdcurdl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_REM, dev->ckdrem, sizeof(dev->ckdrem));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_POS, dev->ckdpos, sizeof(dev->ckdpos));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBLKSZ, dev->ckdxblksz, sizeof(dev->ckdxblksz));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBCYL, dev->ckdxbcyl, sizeof(dev->ckdxbcyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBHEAD, dev->ckdxbhead, sizeof(dev->ckdxbhead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXECYL, dev->ckdxecyl, sizeof(dev->ckdxecyl));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXEHEAD, dev->ckdxehead, sizeof(dev->ckdxehead));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXFMASK, dev->ckdfmask, sizeof(dev->ckdfmask));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_DXGATTR, dev->ckdxgattr, sizeof(dev->ckdxgattr));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRTRANLF, dev->ckdltranlf, sizeof(dev->ckdltranlf));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LROPER, dev->ckdloper, sizeof(dev->ckdloper));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRAUX, dev->ckdlaux, sizeof(dev->ckdlaux));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LRCOUNT, dev->ckdlcount, sizeof(dev->ckdlcount));
-    SR_WRITE_VALUE(file, SR_DEV_CKD_3990, dev->ckd3990, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_XTDEF, dev->ckdxtdef, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SETFM, dev->ckdsetfm, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_LOCAT, dev->ckdlocat, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SPCNT, dev->ckdspcnt, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SEEK, dev->ckdseek, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SKCYL, dev->ckdskcyl, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_RECAL, dev->ckdrecal, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_RDIPL, dev->ckdrdipl, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_XMARK, dev->ckdxmark, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_HAEQ, dev->ckdhaeq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_IDEQ, dev->ckdideq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_KYEQ, dev->ckdkyeq, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_WCKD, dev->ckdwckd, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_TRKOF, dev->ckdtrkof, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_SSI, dev->ckdssi, 1);
-    SR_WRITE_VALUE(file, SR_DEV_CKD_WRHA, dev->ckdwrha, 1);
+
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CURCYL,   dev->ckdcurcyl,  sizeof( dev->ckdcurcyl  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CURHEAD,  dev->ckdcurhead, sizeof( dev->ckdcurhead ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CURREC,   dev->ckdcurrec,  sizeof( dev->ckdcurrec  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CURKL,    dev->ckdcurkl,   sizeof( dev->ckdcurkl   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_ORIENT,   dev->ckdorient,  sizeof( dev->ckdorient  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CUROPER,  dev->ckdcuroper, sizeof( dev->ckdcuroper ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_CURDL,    dev->ckdcurdl,   sizeof( dev->ckdcurdl   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_REM,      dev->ckdrem,     sizeof( dev->ckdrem     ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_POS,      dev->ckdpos,     sizeof( dev->ckdpos     ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXBLKSZ,  dev->ckdxblksz,  sizeof( dev->ckdxblksz  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXBCYL,   dev->ckdxbcyl,   sizeof( dev->ckdxbcyl   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXBHEAD,  dev->ckdxbhead,  sizeof( dev->ckdxbhead  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXECYL,   dev->ckdxecyl,   sizeof( dev->ckdxecyl   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXEHEAD,  dev->ckdxehead,  sizeof( dev->ckdxehead  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXFMASK,  dev->ckdfmask,   sizeof( dev->ckdfmask   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_DXGATTR,  dev->ckdxgattr,  sizeof( dev->ckdxgattr  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_LRTRANLF, dev->ckdltranlf, sizeof( dev->ckdltranlf ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_LROPER,   dev->ckdloper,   sizeof( dev->ckdloper   ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_LRAUX,    dev->ckdlaux,    sizeof( dev->ckdlaux    ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_LRCOUNT,  dev->ckdlcount,  sizeof( dev->ckdlcount  ));
+    SR_WRITE_VALUE( file, SR_DEV_CKD_3990,     dev->ckd3990,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_XTDEF,    dev->ckdxtdef,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_SETFM,    dev->ckdsetfm,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_LOCAT,    dev->ckdlocat,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_SPCNT,    dev->ckdspcnt,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_SEEK,     dev->ckdseek,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_SKCYL,    dev->ckdskcyl,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_RECAL,    dev->ckdrecal,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_RDIPL,    dev->ckdrdipl,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_XMARK,    dev->ckdxmark,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_HAEQ,     dev->ckdhaeq,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_IDEQ,     dev->ckdideq,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_KYEQ,     dev->ckdkyeq,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_WCKD,     dev->ckdwckd,                  1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_TRKOF,    dev->ckdtrkof,                 1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_SSI,      dev->ckdssi,                   1          );
+    SR_WRITE_VALUE( file, SR_DEV_CKD_WRHA,     dev->ckdwrha,                  1          );
+
     return 0;
 }
 
 /*-------------------------------------------------------------------*/
 /* Hercules resume                                                   */
 /*-------------------------------------------------------------------*/
-int ckddasd_hresume(DEVBLK *dev, void *file)
+int ckd_dasd_hresume(DEVBLK *dev, void *file)
 {
 u_int   rc;
 size_t  key, len;
@@ -1414,7 +1391,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     if (sense1 & SENSE1_IE)
     {
         if (dev->ckdtrkof)
-            dev->sense[3] = dev->ckdcuroper;
+            dev->sense[3] = (BYTE) dev->ckdcuroper;
         else
             dev->sense[3] = dev->ckdlcount;
     }
@@ -1504,8 +1481,8 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
         case 0x3375:               shift = 6;
         default:                   shift = 4;
        }
-        dev->sense[6] = ( (dev->ckdcurcyl >> 8) << shift )
-                        | (dev->ckdcurhead & 0x1F);
+        dev->sense[6] = (BYTE)(( (dev->ckdcurcyl >> 8) << shift )
+                        | (dev->ckdcurhead & 0x1F));
      }
     }
 
@@ -1518,11 +1495,9 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     case FORMAT_4: /* Data check */
     case FORMAT_5: /* Data check with displacement information */
         /* Sense bytes 8-12 contain the CCHHR of the record in error */
-        dev->sense[8] = dev->ckdcurcyl >> 8;
-        dev->sense[9] = dev->ckdcurcyl & 0xFF;
-        dev->sense[10] = dev->ckdcurhead >> 8;
-        dev->sense[11] = dev->ckdcurhead & 0xFF;
-        dev->sense[12] = dev->ckdcurrec;
+        store_hw( &dev->sense[ 8], (U16)dev->ckdcurcyl  );
+        store_hw( &dev->sense[10], (U16)dev->ckdcurhead );
+        dev->sense[12] = (BYTE) dev->ckdcurrec;
         break;
 
     } /* end switch(format) */
@@ -1531,8 +1506,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     dev->sense[27] = 0x80;
 
     /* Sense bytes 29-30 contain the cylinder address */
-    dev->sense[29] = dev->ckdcurcyl >> 8;
-    dev->sense[30] = dev->ckdcurcyl & 0xFF;
+    store_hw( &dev->sense[29], (U16)dev->ckdcurcyl  );
 
     /* Sense byte 31 contains the head address */
     dev->sense[31] = dev->ckdcurhead & 0xFF;
@@ -1729,7 +1703,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
             continue;
 
         /* Test for logical end of track and exit if not */
-        if (memcmp(rechdr, eighthexFF, 8) != 0)
+        if (memcmp( rechdr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0)
             break;
         dev->ckdorient = CKDORIENT_EOT;
 
@@ -1911,8 +1885,8 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset(&rechdr, 0, CKD_RECHDR_SIZE);
-    memcpy (&rechdr, buf, (len < CKD_RECHDR_SIZE) ?
+    memset( &rechdr, 0,          CKD_RECHDR_SIZE);
+    memcpy( &rechdr, buf, (len < CKD_RECHDR_SIZE) ?
                            len : CKD_RECHDR_SIZE);
 
     /* Extract the key length and data length */
@@ -1924,7 +1898,7 @@ int             ckdlen;                 /* Count+key+data length     */
 
     /* Check that there is enough space on the current track to
        contain the complete erase plus an end of track marker */
-    if (dev->bufoff + ckdlen + 8 >= dev->bufoffhi)
+    if (dev->bufoff + ckdlen + CKD_ENDTRK_SIZE >= dev->bufoffhi)
     {
         /* Unit check with invalid track format */
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -1933,7 +1907,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write)( dev, dev->bufcur, dev->bufoff, (BYTE*) &CKD_ENDTRK, CKD_ENDTRK_SIZE, unitstat );
     if (rc < 0) return -1;
 
     /* Return total count key and data size */
@@ -1955,10 +1929,10 @@ static int ckd_write_ckd ( DEVBLK *dev, BYTE *buf, int len,
 {
 int             rc;                     /* Return code               */
 CKD_RECHDR      rechdr;                 /* CKD record header         */
-int             recnum;                 /* Record number             */
-int             keylen;                 /* Key length                */
-int             datalen;                /* Data length               */
-int             ckdlen;                 /* Count+key+data length     */
+BYTE            recnum;                 /* Record number             */
+BYTE            keylen;                 /* Key length                */
+U16             datalen;                /* Data length               */
+U32             ckdlen;                 /* Count+key+data length     */
 
     /* If oriented to count or key field, skip key and data */
     if (dev->ckdorient == CKDORIENT_COUNT)
@@ -1967,19 +1941,19 @@ int             ckdlen;                 /* Count+key+data length     */
         dev->bufoff += dev->ckdcurdl;
 
     /* Copy the count field from the buffer */
-    memset( &rechdr, 0, CKD_RECHDR_SIZE );
+    memset( &rechdr, 0,          CKD_RECHDR_SIZE );
     memcpy( &rechdr, buf, (len < CKD_RECHDR_SIZE) ?
                            len : CKD_RECHDR_SIZE);
 
     /* Extract the record number, key length and data length */
-    recnum = rechdr.rec;
-    keylen = rechdr.klen;
-    datalen = (rechdr.dlen[0] << 8) + rechdr.dlen[1];
+    recnum  =            rechdr.rec;
+    keylen  =            rechdr.klen;
+    datalen =  fetch_hw( rechdr.dlen );
 
     /* Calculate total count key and data size */
     ckdlen = CKD_RECHDR_SIZE + keylen + datalen;
 
-    if (dev->bufoff + ckdlen + 8 >= dev->bufoffhi)
+    if ((int)(dev->bufoff + ckdlen + CKD_ENDTRK_SIZE) >= dev->bufoffhi)
     {
         /* Unit check with invalid track format */
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
@@ -1988,7 +1962,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Pad the I/O buffer with zeroes if necessary */
-    while (len < ckdlen) buf[len++] = '\0';
+    while (len < (int)ckdlen) buf[len++] = '\0';
 
     // "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
     LOGDEVTR( HHC00438, "I",  dev->filename,
@@ -2015,7 +1989,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write)( dev, dev->bufcur, dev->bufoff, (BYTE*) &CKD_ENDTRK, CKD_ENDTRK_SIZE, unitstat );
     if (rc < 0) return -1;
 
     /* Set the device orientation fields */
@@ -2121,7 +2095,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+void ckd_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
@@ -2132,9 +2106,9 @@ CKD_RECHDR      rechdr;                 /* CKD record header (count) */
 U32             size;                   /* Number of bytes available */
 U32             num;                    /* Number of bytes to move   */
 U32             offset;                 /* Offset into buf for I/O   */
-int             bin;                    /* Bin number                */
-int             cyl;                    /* Cylinder number           */
-int             head;                   /* Head number               */
+BYTE            bin;                    /* Bin number                */
+U16             cyl;                    /* Cylinder number           */
+U16             head;                   /* Head number               */
 BYTE            cchhr[5];               /* Search argument           */
 BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
@@ -2148,8 +2122,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         num = (count < dev->ckdrem) ? count : dev->ckdrem;
         *residual = count - num;
         if (count < dev->ckdrem) *more = 1;
-        dev->ckdrem -= num;
-        dev->ckdpos = num;
+        dev->ckdrem -= (U16)num;
+        dev->ckdpos  = (U16)num;
         *unitstat = CSW_CE | CSW_DE;
         return;
     }
@@ -2198,8 +2172,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdxblksz = 0;
         dev->ckdxbcyl = 0;
         dev->ckdxbhead = 0;
-        dev->ckdxecyl = dev->ckdcyls - 1;
-        dev->ckdxehead = dev->ckdheads - 1;
+        dev->ckdxecyl  = (U16)(dev->ckdcyls  - 1);
+        dev->ckdxehead = (U16)(dev->ckdheads - 1);
     }
 
     /* Reset index marker flag if sense or control command,
@@ -2293,8 +2267,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdrdipl = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return unit exception if data length is zero */
         if (dev->ckdcurdl == 0)
@@ -2428,8 +2402,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return unit exception if data length is zero */
         if (dev->ckdcurdl == 0)
@@ -2533,8 +2507,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return unit exception if data length is zero */
         if (dev->ckdcurdl == 0)
@@ -2597,8 +2571,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *iobuf &= 0x7F;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2681,8 +2655,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return unit exception if data length is zero */
         if (dev->ckdcurdl == 0)
@@ -2748,8 +2722,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         memcpy (iobuf, &trkhdr, CKD_TRKHDR_SIZE);
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -2910,8 +2884,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return unit exception if data length is zero */
         if (dev->ckdcurdl == 0)
@@ -2955,7 +2929,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             if (rc < 0) break;
 
             /* Exit if end of track marker was read */
-            if (memcmp (&rechdr, eighthexFF, 8) == 0)
+            if (memcmp( &rechdr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
                 break;
 
             /* Copy count field to I/O buffer */
@@ -2984,8 +2958,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (count < size) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3055,7 +3029,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 *(iobuf+size) &= 0x7F;
 
             /* Exit if end of track marker was read */
-            if (memcmp (&rechdr, eighthexFF, 8) == 0)
+            if (memcmp( &rechdr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
                 break;
 
             /* Read key field */
@@ -3076,8 +3050,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (count < size) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
-        dev->ckdrem = size - num;
-        dev->ckdpos = num;
+        dev->ckdrem = (U16)(size - num);
+        dev->ckdpos = (U16)(       num);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3221,8 +3195,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 /* Prepare subsystem statistics record */
                 memset (iobuf, 0, dev->ckdssdlen);
                 iobuf[1] = dev->devnum & 0xFF;
-                iobuf[94] = (myssid >> 8) & 0xff;
-                iobuf[95] = myssid & 0xff;
+                store_hw( &iobuf[94], myssid );
                 break;
 
             case 0x03:  /* Read attention message for this path-group for
@@ -3502,7 +3475,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* For Seek Head, use the current cylinder number */
         if (code == 0x1B)
-            cyl = dev->ckdcurcyl;
+            cyl = (U16) dev->ckdcurcyl;
 
         /* Command reject if seek address is invalid */
         if (bin != 0 || cyl >= dev->ckdcyls || head >= dev->ckdheads)
@@ -3772,7 +3745,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         else
             *unitstat = CSW_CE | CSW_DE;
 
-#ifdef OPTION_CKD_KEY_TRACING
+#if defined( OPTION_CKD_KEY_TRACING )
         /* If the search was successful, trace the first 8 bytes of
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
@@ -3784,7 +3757,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             // "%1d:%04X CKD file %s: search key %s"
             WRMSG( HHC00423, "I", LCSS_DEVNUM, dev->filename, module );
         }
-#endif /*OPTION_CKD_KEY_TRACING*/
+#endif /* defined( OPTION_CKD_KEY_TRACING ) */
 
         /* Set flag if entire key was equal for SEARCH KEY EQUAL */
         if (rc == 0 && num == (U32)dev->ckdcurkl && (code & 0x7F) == 0x29)
@@ -5292,11 +5265,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
         /* Check extent of last track to be read */
         lastcyl = cyl;
-        lasthead = head + j - 1;
+        lasthead = (U16)(head + j - 1);
         while (lasthead >= dev->ckdheads)
         {
             lastcyl++;
-            lasthead -= dev->ckdheads;
+            lasthead -= (U16) dev->ckdheads;
         }
         if ( EXTENT_CHECK(dev, lastcyl, lasthead) )
         {
@@ -5454,7 +5427,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (xblksz == 0)
             xblksz = dev->ckdtab->r0 + 8;
 
-        if(dev->ckdxtdef
+        if (dev->ckdxtdef
          && dev->ckdxblksz != xblksz )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -6066,22 +6039,22 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
     } /* end if(ckdlcount) */
 
-} /* end function ckddasd_execute_ccw */
+} /* end function ckd_dasd_execute_ccw */
 
-DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
-        &ckddasd_init_handler,         /* Device Initialization      */
-        &ckddasd_execute_ccw,          /* Device CCW execute         */
-        &ckddasd_close_device,         /* Device Close               */
-        &ckddasd_query_device,         /* Device Query               */
+DLL_EXPORT DEVHND ckd_dasd_device_hndinfo = {
+        &ckd_dasd_init_handler,        /* Device Initialization      */
+        &ckd_dasd_execute_ccw,         /* Device CCW execute         */
+        &ckd_dasd_close_device,        /* Device Close               */
+        &ckd_dasd_query_device,        /* Device Query               */
         NULL,                          /* Device Extended Query      */
-        &ckddasd_start,                /* Device Start channel pgm   */
-        &ckddasd_end,                  /* Device End channel pgm     */
-        &ckddasd_start,                /* Device Resume channel pgm  */
-        &ckddasd_end,                  /* Device Suspend channel pgm */
+        &ckd_dasd_start,               /* Device Start channel pgm   */
+        &ckd_dasd_end,                 /* Device End channel pgm     */
+        &ckd_dasd_start,               /* Device Resume channel pgm  */
+        &ckd_dasd_end,                 /* Device Suspend channel pgm */
         NULL,                          /* Device Halt channel pgm    */
-        &ckddasd_read_track,           /* Device Read                */
-        &ckddasd_update_track,         /* Device Write               */
-        &ckddasd_used,                 /* Device Query used          */
+        &ckd_dasd_read_track,          /* Device Read                */
+        &ckd_dasd_update_track,        /* Device Write               */
+        &ckd_dasd_used,                /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
@@ -6092,6 +6065,6 @@ DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
         NULL,                          /* QDIO set subchan ind       */
-        &ckddasd_hsuspend,             /* Hercules suspend           */
-        &ckddasd_hresume               /* Hercules resume            */
+        &ckd_dasd_hsuspend,            /* Hercules suspend           */
+        &ckd_dasd_hresume              /* Hercules resume            */
 };

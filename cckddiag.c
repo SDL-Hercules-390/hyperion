@@ -15,6 +15,7 @@
 #include "hstdinc.h"
 #include "hercules.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "cckddiag"
 #define UTILITY_DESC    "CCKD/CFBA diagnostic program"
@@ -22,6 +23,8 @@
 /*-------------------------------------------------------------------*/
 /* Exit codes                                                        */
 /*-------------------------------------------------------------------*/
+#define EXIT_ERROR_SYNTAX      -1
+#define EXIT_NORMAL_SUCCESS     0
 #define EXIT_SEEK_ERROR         1
 #define EXIT_READ_ERROR         2
 #define EXIT_NO_FBA_CCHH        3
@@ -29,6 +32,8 @@
 #define EXIT_NO_CKD_DASDTAB     5
 #define EXIT_NO_FBA_DASDTAB     6
 #define EXIT_DATA_NOTFOUND      7
+#define EXIT_OPEN_ERROR         8
+#define EXIT_WRONG_CCKD_TYPE    9
 
 /*-------------------------------------------------------------------*/
 /* CKD DASD record stats structure                                   */
@@ -44,8 +49,6 @@ typedef struct _CKD_RECSTAT {     /* CKD DASD record stats           */
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-
 static CCKD_L1ENT     *L1tab     = NULL;    /* Level 1 table pointer */
 static CCKD_L2ENT     *L2tab     = NULL;    /* Level 2 table pointer */
 static void           *tbuf      = NULL;    /* track header & data   */
@@ -55,13 +58,21 @@ static int             debug     = 0;       /* disable debug code    */
 static int             pausesnap = 0;       /* 1 = pause after snap  */
 
 /*-------------------------------------------------------------------*/
+/* Common ErrExit function                                           */
+/*-------------------------------------------------------------------*/
+static void ErrExit( int rc )
+{
+    exit( rc );     // common breakpoint location
+}
+
+/*-------------------------------------------------------------------*/
 /* print syntax                                                      */
 /*-------------------------------------------------------------------*/
-static int syntax(char *pgm)
+static void syntax(char *pgm)
 {
     // "Usage: %s ...
     WRMSG( HHC02600, "I", pgm );
-    return -1;
+    ErrExit( EXIT_ERROR_SYNTAX );
 }
 
 /*-------------------------------------------------------------------*/
@@ -88,7 +99,7 @@ static void *makbuf(int len, char *label)
         // "From %s: Storage allocation of size %d using %s failed"
         FWRMSG( stderr, HHC02602, "S", label, len, "malloc()" );
         clean();
-        exit( EXIT_MALLOC_FAILED );
+        ErrExit( EXIT_MALLOC_FAILED );
     }
     if (debug)
     {
@@ -114,16 +125,16 @@ static int readpos
 
     if (debug)
     {
-        // "READPOS seeking %d (0x%8.8X)"
-        WRMSG( HHC90401, "D", (int) offset, (unsigned int) offset );
+        // "READPOS seeking %"PRId64" (0x%16.16"PRIX64")"
+        WRMSG( HHC90401, "D", offset, offset );
     }
     if (lseek( fd, offset, SEEK_SET ) < 0)
     {
-        // "lseek() to pos 0x%08x error: %s"
+        // "lseek() to pos 0x%16.16"PRIx64" error: %s"
         FWRMSG( stderr, HHC02603, "S",
-            (unsigned int) offset, strerror( errno ));
+            offset, strerror( errno ));
         clean();
-        exit( EXIT_SEEK_ERROR );
+        ErrExit( EXIT_SEEK_ERROR );
     }
 
     if (debug)
@@ -153,7 +164,7 @@ static int readpos
         }
 
         clean();
-        exit( EXIT_READ_ERROR );
+        ErrExit( EXIT_READ_ERROR );
     }
     return 0;
 }
@@ -424,7 +435,7 @@ static void showtrkorblk
         {
             rh = (CKD_RECHDR*) bufp;
 
-            if (memcmp( (BYTE*) rh, &eighthexFF, 8 ) == 0)
+            if (memcmp( (BYTE*) rh, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             {
                 // "%s"
                 WRMSG( HHC02601, "I", "End of track" );
@@ -562,73 +573,73 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
         switch(argv[0][1])
         {
-            case 'v':  if (argv[0][2] != '\0') return syntax (pgm);
-                       return 0;
+            case 'v':  if (argv[0][2] != '\0') syntax (pgm);
+                       ErrExit( EXIT_NORMAL_SUCCESS );
 
-            case 'd':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'd':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_devhdr = true;
                        break;
 
-            case 'c':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'c':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_cdevhdr = true;
                        break;
 
-            case '1':  if (argv[0][2] != '\0') return syntax (pgm);
+            case '1':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_l1tab = true;
                        break;
 
-            case '2':  if (argv[0][2] != '\0') return syntax (pgm);
+            case '2':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_l2tab = true;
                        break;
 
-            case 'a':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'a':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_cchh = true;
 
                        argc--; argv++;
-                       op_cc = offtify(*argv);
+                       op_cc = (int) offtify(*argv);
 
                        argc--; argv++;
-                       op_hh = offtify(*argv);
+                       op_hh = (int) offtify(*argv);
                        break;
 
-            case 'r':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'r':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_tt = true;
 
                        argc--; argv++;
-                       op_tt = offtify(*argv);
+                       op_tt = (int) offtify(*argv);
                        break;
 
-            case 'o':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'o':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_offset = true;
 
                        argc--; argv++;
-                       op_offset = offtify(*argv);
+                       op_offset = (int) offtify(*argv);
 
                        argc--; argv++;
-                       op_length = offtify(*argv);
+                       op_length = (int) offtify(*argv);
                        break;
 
-            case 't':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 't':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_trkdata = true;
                        break;
 
-            case 'x':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'x':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_hexdump = true;
                        cmd_trkdata = true;
                        break;
 
-            case 'g':  if (argv[0][2] != '\0') return syntax (pgm);
+            case 'g':  if (argv[0][2] != '\0') syntax (pgm);
                        debug = 1;
                        break;
 
-            default:   return syntax (pgm);
+            default:   syntax (pgm);
         }
 
         argc--; argv++;
     }
 
     if (argc != 1)
-        return syntax (pgm);
+        syntax (pgm);
 
     printf("\n");
 
@@ -642,7 +653,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     {
         // "error opening file %s: %s"
         FWRMSG( stderr, HHC02607, "E", fn, strerror( errno ));
-        return -1;
+        ErrExit( EXIT_OPEN_ERROR );
     }
 
     /*---------------------------------------------------------------*/
@@ -662,32 +673,32 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     /* Determine CKD or FBA device type                              */
     /*---------------------------------------------------------------*/
-    if (is_devhdrid_typ( devhdr.devhdrid, CKD32_CMP_OR_SF_TYP ))
+    if (is_dh_devid_typ( devhdr.dh_devid, CKD32_CMP_OR_SF_TYP ))
     {
         ckddasd = true;
 
-        ckd = dasd_lookup( DASD_CKDDEV, NULL, devhdr.dvtyp, 0 );
+        ckd = dasd_lookup( DASD_CKDDEV, NULL, devhdr.dh_devtyp, 0 );
 
         if (!ckd)
         {
             // "DASD table entry not found for devtype 0x%2.2X"
-            FWRMSG( stderr, HHC02608, "S", devhdr.dvtyp );
+            FWRMSG( stderr, HHC02608, "S", devhdr.dh_devid );
             clean();
-            exit( EXIT_NO_CKD_DASDTAB );
+            ErrExit( EXIT_NO_CKD_DASDTAB );
         }
     }
-    else if (is_devhdrid_typ( devhdr.devhdrid, FBA32_CMP_OR_SF_TYP ))
+    else if (is_dh_devid_typ( devhdr.dh_devid, FBA32_CMP_OR_SF_TYP ))
     {
         ckddasd = false;
 
-        fba = dasd_lookup( DASD_FBADEV, NULL, devhdr.dvtyp, 0 );
+        fba = dasd_lookup( DASD_FBADEV, NULL, devhdr.dh_devtyp, 0 );
 
         if (!fba)
         {
             // "DASD table entry not found for devtype 0x%2.2X"
             FWRMSG( stderr, HHC02608, "S", DEFAULT_FBA_TYPE );
             clean();
-            exit( EXIT_NO_FBA_DASDTAB );
+            ErrExit( EXIT_NO_FBA_DASDTAB );
         }
     }
     else
@@ -695,7 +706,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "%s%s"
         FWRMSG( stderr, HHC02604, "E", "incorrect header id", "" );
         clean();
-        return -1;
+        ErrExit( EXIT_WRONG_CCKD_TYPE );
     }
 
     /*---------------------------------------------------------------*/
@@ -703,10 +714,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     if (ckddasd)
     {
-        heads = ((U32)(devhdr.heads[3]) << 24)
-              | ((U32)(devhdr.heads[2]) << 16)
-              | ((U32)(devhdr.heads[1]) << 8)
-              | (U32)(devhdr.heads[0]);
+        FETCH_LE_FW( heads, devhdr.dh_heads );
 
         if (debug)
         {
@@ -734,7 +742,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /* cckd_endian() returns 1 for big-endian machines               */
     /*---------------------------------------------------------------*/
     swapend = (cckd_endian() !=
-               ((cdevhdr.opts & CCKD_BIGENDIAN) != 0));
+               ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != 0));
 
     /*---------------------------------------------------------------*/
     /* display L1TAB - follows CDEVHDR                               */
@@ -743,7 +751,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /* swap num_L1tab if needed */
     num_L1tab = cdevhdr.num_L1tab;
     if (swapend)
-        num_L1tab = SWAP32( num_L1tab ); // CCKD64FIXME!
+        num_L1tab = SWAP32( num_L1tab );
 
     L1tab = makbuf( num_L1tab * CCKD_L1ENT_SIZE, "L1TAB" );
 
@@ -768,10 +776,10 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
         readpos(fd, bulk, op_offset, op_length);
 
-        // "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
+        // "%s offset %"PRId64" (0x%16.16"PRIX64"); length %d (0x%8.8X) bytes%s"
         printf("\n");
         WRMSG( HHC02613, "I", "IMAGE",
-            op_offset, op_offset, op_length, op_length, ":" );
+            (U64) op_offset, (U64) op_offset, op_length, op_length, ":" );
         data_dump( bulk, op_length );
         printf("\n");
 
@@ -787,7 +795,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "%s%s"
         FWRMSG( stderr, HHC02604, "S", "CCHH not supported for FBA", "" );
         clean();
-        exit( EXIT_NO_FBA_CCHH );
+        ErrExit( EXIT_NO_FBA_CCHH );
     }
 
     /*---------------------------------------------------------------*/
@@ -815,7 +823,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /*---------------------------------------------------------------*/
     if (!ckddasd && cmd_tt)
     {
-        int blkgrp = (trk = op_tt) / CFBA_BLKGRP_BLKS;
+        int blkgrp = (trk = op_tt) / CFBA_BLKS_PER_GRP;
 
         L1ndx = blkgrp / cdevhdr.num_L2tab;
         L2ndx = blkgrp % cdevhdr.num_L2tab;
@@ -829,7 +837,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "%s %d does not exist on this device"
         FWRMSG( stderr, HHC02617, "S", ckddasd ? "Track" : "Block", trk );
         clean();
-        exit( EXIT_DATA_NOTFOUND );
+        ErrExit( EXIT_DATA_NOTFOUND );
     }
 
     L2taboff = L1tab[ L1ndx ];
@@ -849,15 +857,20 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             // "Block %d; L1 index = %d, L2 index = %d"
             WRMSG( HHC02615, "I", trk, L1ndx, L2ndx );
 
-        // "L1 index %d = L2TAB offset %d (0x%8.8X)"
-        WRMSG( HHC02610, "I", L1ndx, (int) L2taboff, (int) L2taboff );
+        // "L1 index %d = L2TAB offset %"PRId64" (0x%16.16"PRIX64")"
+        WRMSG( HHC02610, "I", L1ndx, L2taboff, L2taboff );
 
-        if (!L2taboff)
+        // Programming Note: for whatever reason, base dasd image files
+        // use a L2_trkoff value of zero in their L1tab entry for non-
+        // existent tracks, whereas shadow files use a value of -1, so
+        // we need to check for both.
+
+        if (!L2taboff || L2taboff == ULONG_MAX)
         {
             // "L2tab for %s %d not found"
             FWRMSG( stderr, HHC02618, "S", ckddasd ? "track" : "block", trk );
             clean();
-            exit( EXIT_DATA_NOTFOUND );
+            ErrExit( EXIT_DATA_NOTFOUND );
         }
 
         L2tab = makbuf(cdevhdr.num_L2tab * CCKD_L2ENT_SIZE, "L2TAB");
@@ -886,12 +899,12 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         if (swapend)
         {
             trkhdroff = SWAP_OFF_T( trkhdroff );
-            imglen = SWAP32( imglen );
+            imglen    = SWAP32( imglen );
         }
 
-        // "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
+        // "%s offset %"PRId64" (0x%16.16"PRIX64"); length %d (0x%8.8X) bytes%s"
         WRMSG( HHC02613, "I", ckddasd ? "TRKHDR" : "BKGHDR",
-            (int) trkhdroff, (int) trkhdroff, imglen, imglen, "" );
+            trkhdroff, trkhdroff, imglen, imglen, "" );
 
         /* Verify device contains the requested track/block */
         if (!trkhdroff || !imglen)
@@ -899,7 +912,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             // "%s %d not found"
             FWRMSG( stderr, HHC02619, "S", ckddasd ? "Track" : "Block", trk );
             clean();
-            exit( EXIT_DATA_NOTFOUND );
+            ErrExit( EXIT_DATA_NOTFOUND );
         }
 
         tbuf = makbuf(imglen, ckddasd ? "TRKHDR+DATA" : "BKGHDR+DATA");
@@ -923,5 +936,5 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
     /* Close file, exit */
     clean();
-    return cckd_diag_rc;
+    ErrExit( cckd_diag_rc );
 }

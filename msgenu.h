@@ -389,7 +389,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00303 "%1d:%04X CCKD file: error in function %s: %s"
 #define HHC00304 "%1d:%04X CCKD file[%d] %s: get space error, size exceeds %"PRId64"M"
 #define HHC00305 "%1d:%04X CCKD file[%d] %s: device header id error"
-#define HHC00306 "%1d:%04X CCKD file[%d] %s: trklen error for %2.2x%2.2x%2.2x%2.2x%2.2x"
+#define HHC00306 "%1d:%04X CCKD file[%d] %s: trklen error for BCCHH = %2.2x%4.4x%4.4x"
 #define HHC00307 "%1d:%04X CCKD file[%d] %s: invalid byte 0 trk %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00308 "%1d:%04X CCKD file[%d] %s: invalid byte 0 blkgrp %d, buf %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00309 "%1d:%04X CCKD file[%d] %s: invalid %s hdr %s %d: %s compression unsupported"
@@ -416,15 +416,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00330 "%1d:%04X CCKD file: checking level %d..."
 #define HHC00331 "%1d:%04X CCKD file[%d] %s: shadow file check failed, sf command busy on device"
 #define HHC00332 "%1d:%04X CCKD file: display cckd statistics"
-#define HHC00333 "%1d:%04X           size free  nbr st   reads  writes l2reads    hits switches"
-#define HHC00334 "%1d:%04X                                                  readaheads   misses"
-#define HHC00335 "%1d:%04X --------------------------------------------------------------------"
-#define HHC00336 "%1d:%04X [*] %10.10"PRId64" %3.3"PRId64" %% %4.4d    %7.7d %7.7d %7.7d %7.7d  %7.7d"
-#define HHC00337 "%1d:%04X                                                     %7.7d  %7.7d"
+#define HHC00333 "%1d:%04X            size free  nbr st   reads  writes l2reads    hits switches"
+#define HHC00334 "%1d:%04X                                                   readaheads   misses"
+#define HHC00335 "%1d:%04X ---------------------------------------------------------------------"
+#define HHC00336 "%1d:%04X [*] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
+#define HHC00337 "%1d:%04X                                                      %7.7d  %7.7d"
 #define HHC00338 "%1d:%04X %s"
-#define HHC00339 "%1d:%04X [0] %10.10"PRId64" %3.3"PRId64" %% %4.4d %s %7.7d %7.7d %7.7d"
+#define HHC00339 "%1d:%04X [0] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
 #define HHC00340 "%1d:%04X %s"
-#define HHC00341 "%1d:%04X [%d] %10.10"PRId64" %3.3"PRId64" %% %4.4d %s %7.7d %7.7d %7.7d"
+#define HHC00341 "%1d:%04X [%d] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
 #define HHC00342 "%1d:%04X CCKD file[%d] %s: offset 0x%16.16"PRIx64" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] %s: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] %s: compression %s not supported"
@@ -445,24 +445,26 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00359 "%1d:%04X CCKD file %s: compress succesful, %"PRId64" bytes released"
 #define HHC00360 "%1d:%04X CCKD file %s: compress succesful, L2 tables relocated"
 #define HHC00361 "%1d:%04X CCKD file %s: dasd lookup error type %02X cylinders %d"
-#define HHC00362 "%1d:%04X CCKD file %s: bad %s %d, expecting %d"
+#define HHC00362 "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
 #define HHC00363 "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
 #define HHC00364 "%1d:%04X CCKD file %s: forcing check level %d"
-#define HHC00365 "%1d:%04X CCKD file %s: %s offset 0x%8.8"PRIX32" len %d is out of bounds"
-#define HHC00366 "%1d:%04X CCKD file %s: %s offset 0x%8.8"PRIX32" len %d overlaps %s offset 0x%"PRIX32
-#define HHC00367 "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %d, size %d"
+#define HHC00365 "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" is out of bounds"
+#define HHC00366 "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" overlaps %s offset 0x%"PRIX64
+#define HHC00367 "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
 #define HHC00368 "%1d:%04X CCKD file %s: free space errors detected"
 #define HHC00369 "%1d:%04X CCKD file %s: %s[%d] hdr error offset 0x%16.16"PRIX64": %2.2X%2.2X%2.2X%2.2X%2.2X"
 #define HHC00370 "%1d:%04X CCKD file %s: %s[%d] compressed using %s, not supported"
-#define HHC00371 "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %d validation error"
-#define HHC00372 "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %d"
-#define HHC00373 "%1d:%04X CCKD file %s: %d %s images recovered"
+#define HHC00371 "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
+#define HHC00372 "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
+#define HHC00373 "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
 #define HHC00374 "%1d:%04X CCKD file %s: not enough file space for recovery"
 #define HHC00375 "%1d:%04X CCKD file %s: recovery not completed: %s"
 #define HHC00376 "%1d:%04X CCKD file %s: free space not rebuilt, file opened read-only"
 #define HHC00377 "%1d:%04X CCKD file %s: free space rebuilt"
 #define HHC00378 "%1d:%04X CCKD file %s: error during swap"
-//efine HHC00379 - HHC00395 (available)
+#define HHC00379 "%1d:%04X CCKD file %s: starting %s level %d%s..."
+#define HHC00380 "%1d:%04X CCKD file %s: %s level %d complete; rc=%d"
+//efine HHC00381 - HHC00395 (available)
 #define HHC00396 "%1d:%04X %s"
 #define HHC00397 "CCKD file: internal cckd trace table is empty"
 #define HHC00398 "%s"
@@ -538,7 +540,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
-//efine HHC00469 - HHC00499 (available)
+#define HHC00469 "%1d:%04X CKD file %s: dasd image format unsupported or unrecognized"
+//efine HHC00470 - HHC00499 (available)
 
 // reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"
@@ -563,7 +566,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
 #define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
-//efine HHC00522 - HHC00599 (available)
+#define HHC00522 "%1d:%04X FBA file %s: dasd image format unsupported or unrecognized"
+//efine HHC00523 - HHC00599 (available)
 
 // reserve 006xx for sce dasd device related messages
 #define HHC00600 "SCE file %s: error in function %s: %s"
@@ -587,11 +591,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00709 "%1d:%04X Shared: error retrieving fba origin"
 #define HHC00710 "%1d:%04X Shared: error retrieving fba number blocks"
 #define HHC00711 "%1d:%04X Shared: error retrieving fba block size"
-#define HHC00712 "%1d:%04X Shared: file %s origin %d blks %d"
+#define HHC00712 "%1d:%04X Shared: file %s origin %"PRId64" blks %d"
 #define HHC00713 "%1d:%04X Shared: error during channel program start"
 #define HHC00714 "%1d:%04X Shared: error during channel program end"
 #define HHC00715 "%1d:%04X Shared: error reading track %d"
-#define HHC00716 "%1d:%04X Shared: error reading block group %d"
+//efine HHC00716 (available)
 #define HHC00717 "%1d:%04X Shared: error retrieving usage information"
 #define HHC00718 "%1d:%04X Shared: error writing track %d"
 #define HHC00719 "%1d:%04X Shared: remote error writing track %d %2.2X-%2.2X"
@@ -1520,14 +1524,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02414 "Input file is already in CKD format, use dasdcopy"
 #define HHC02415 "Unknown device type %04X at offset 00000000 in input file"
 #define HHC02416 "Unknown device type %04X"
-#define HHC02417 "Invalid track header at offset %08X"
+#define HHC02417 "Invalid track header at offset 0x%16.16"PRIX64
 #define HHC02418 "Expected CCHH %04X%04X, found CCHH %04X%04X"
-#define HHC02419 "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset %08X in file %s"
+#define HHC02419 "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset 0x%16.16"PRIX64" in file %s"
 #define HHC02420 "%u cylinders succesfully written to file %s"
 #define HHC02421 "Cylinder count %u is outside range %u-%u"
 #define HHC02422 "Converting %04X volume %s: %u cyls, %u trks/cyl, %u bytes/trk"
 #define HHC02423 "DASD operation completed"
-//efine HHC02424 - HHC02429 (available)
+#define HHC02424 "Dasd image file format unsupported or unrecognized: %s"
+//efine HHC02425 - HHC02429 (available)
 
 // dasdcopy.c
 #define HHC02430 "CKD lookup failed: device type %04X cyls %d"
@@ -1599,7 +1604,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02439I   -cyls n  size of output ckd file\n" \
        "HHC02439I   -a       output ckd file will have alt cyls\n" \
        "%s" \
-       "HHC02439I   -o type  output file type (CKD, CCKD, FBA, CFBA)"
+       "HHC02439I   -o type  output file type (%s)"
 
 // dasdinit.c
 //efine HHC02440 (available)
@@ -1610,7 +1615,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02445 "Invalid, unsupported or missing %s: %s"
 #define HHC02446 "Invalid number of arguments"
 #define HHC02447 "Option '-linux' is only supported fo device type 3390"
-#define HHC02448 "Usage: dasdinit [-options] filename devtype[-model] [volser] [size]\n" \
+#define HHC02448 "Usage: %s [-options] filename devtype[-model] [volser] [size]\n" \
        "HHC02448I Builds an empty dasd image file\n" \
        "HHC02448I options:\n" \
        "HHC02448I\n" \
@@ -1825,7 +1830,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02591 "File %s: total cylinders written was %d"
 #define HHC02592 "VTOC pointer [%02X%02X%02X%02X%02X] updated"
 #define HHC02593 "VOL1 record not readable or locatable"
-//efine HHC02594 (available)
+#define HHC02594 "Syntax error: %s"
 //efine HHC02595 (available)
 //efine HHC02596 (available)
 //efine HHC02597 (available)
@@ -1851,17 +1856,17 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02600I   -o oo ll  hex display data at offset oo of length ll"
 #define HHC02601 "%s" // action/info
 #define HHC02602 "From %s: Storage allocation of size %d using %s failed"
-#define HHC02603 "lseek() to pos 0x%08x error: %s"
+#define HHC02603 "lseek() to pos 0x%16.16"PRIx64" error: %s"
 #define HHC02604 "%s%s" // error
 #define HHC02605 "Track %d COUNT cyl[%04X/%d] head[%04X/%d] rec[%02X/%d] kl[%d] dl[%d]"
 #define HHC02606 "Track %d rec[%02X/%d] %s[%d]:"
 #define HHC02607 "error opening file %s: %s"
 #define HHC02608 "DASD table entry not found for devtype 0x%2.2X"
 #define HHC02609 "CC %d HH %d = reltrk %d; L1 index = %d, L2 index = %d"
-#define HHC02610 "L1 index %d = L2TAB offset %d (0x%8.8X)"
+#define HHC02610 "L1 index %d = L2TAB offset %"PRId64" (0x%16.16"PRIX64")"
 #define HHC02611 "L2 index %d = L2TAB entry: %d bytes:"
 #define HHC02612 "%sHDR %s %d:"
-#define HHC02613 "%s offset %d (0x%8.8X); length %d (0x%8.8X) bytes%s"
+#define HHC02613 "%s offset %"PRId64" (0x%16.16"PRIX64"); length %d (0x%8.8X) bytes%s"
 #define HHC02614 "%s - %d (decimal) bytes:"
 #define HHC02615 "Block %d; L1 index = %d, L2 index = %d"
 #define HHC02616 "Block %d:"
@@ -2420,7 +2425,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 /* cckddiag.c */
 #define HHC90400 "MAKBUF() malloc %s buffer of %d bytes at %p"
-#define HHC90401 "READPOS seeking %d (0x%8.8X)"
+#define HHC90401 "READPOS seeking %"PRId64" (0x%16.16"PRIX64")"
 #define HHC90402 "READPOS reading buf addr %p length %d (0x%X)"
 #define HHC90403 "SHOW%s Compressed %s header and data:"
 #define HHC90404 "SHOW%s Decompressed %s header and data:"

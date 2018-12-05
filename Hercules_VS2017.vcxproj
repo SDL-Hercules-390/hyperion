@@ -946,6 +946,7 @@
     <ClInclude Include="cache.h" />
     <ClInclude Include="ccfixme.h" />
     <ClInclude Include="cckd.h" />
+    <ClInclude Include="cckd64.h" />
     <ClInclude Include="ccnowarn.h" />
     <ClInclude Include="ccwarn.h" />
     <ClInclude Include="chain.h" />

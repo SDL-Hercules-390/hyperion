@@ -81,8 +81,6 @@ static char *secondload[] = {
         "IGG094",                       /* TSO (SVC94)               */
         NULL };                         /* End of list               */
 
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-
 static int process_dirblk( CIFBLK *cif, int noext, DSXTENT extent[],
                            BYTE *dirblk, MEMINFO memtab[], int *nmem );
 static int resolve_xctltab( CIFBLK *cif, int noext, DSXTENT extent[],
@@ -261,7 +259,7 @@ char            memnama[9];             /* Member name (ASCIIZ)      */
         dirent = (PDSDIR*)dirptr;
 
         /* Test for end of directory */
-        if (memcmp(dirent->pds2name, eighthexFF, 8) == 0)
+        if (memcmp( dirent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             return +1;
 
         /* Load the user data halfword count */

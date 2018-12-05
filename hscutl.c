@@ -1379,6 +1379,7 @@ int initialize_utility( int argc, char* argv[],
     memset( &sysblk, 0, sizeof( SYSBLK ));      // (must be first)
     hthreads_internal_init();                   // (must be second)
     SET_THREAD_NAME( exename );                 // (then other stuff)
+    sysblk.msglvl = DEFAULT_MLVL;
 
     initialize_detach_attr( DETACHED );
     initialize_join_attr( JOINABLE );

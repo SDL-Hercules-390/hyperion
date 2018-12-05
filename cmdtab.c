@@ -192,7 +192,7 @@ int i;
 /* Command processing helper functions                               */
 /*-------------------------------------------------------------------*/
 int  OnOffCommand   ( CMDFUNC_ARGS_PROTO );     /* (see hsccmd.c)    */
-int  ShadowFile_cmd ( CMDFUNC_ARGS_PROTO );     /* (see hsccmd.c)    */
+int  sf_cmd         ( CMDFUNC_ARGS_PROTO );     /* (see hsccmd.c)    */
 
 /*-------------------------------------------------------------------*/
 /* Background command processing structure                           */
@@ -380,7 +380,7 @@ BYTE    isdiag;
             || !strncasecmp( cmdline, "sfd", 3 )
             || !strncasecmp( cmdline, "sfk", 3 )
         )
-            rc = ShadowFile_cmd( CMDFUNC_ARGS );
+            rc = sf_cmd( CMDFUNC_ARGS );
         else
         /* "x+" and "x-" commands: turn switch on or off */
         if (0

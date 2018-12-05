@@ -33,6 +33,7 @@
 #include "hercules.h"
 #include "dasdblks.h"
 #include "opcode.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "dasdconv"
 #define UTILITY_DESC    "DASD CKD image conversion"
@@ -59,11 +60,10 @@ typedef struct _H30CKD_RECHDR {         /* Record header             */
 
 #define H30CKD_TRKHDR_SIZE      ((ssize_t)sizeof(H30CKD_TRKHDR))
 #define H30CKD_RECHDR_SIZE      ((ssize_t)sizeof(H30CKD_RECHDR))
-#define EXIT(rc)                delayed_exit(rc)   /* (use this macro to exit)   */
+#define EXIT(rc)    delayed_exit(rc)   /* (use this macro to exit)   */
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 BYTE twelvehex00[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 BYTE ebcdicvol1[] = {0xE5, 0xD6, 0xD3, 0xF1};
 BYTE gz_magic_id[] = {0x1F, 0x8B};
@@ -158,9 +158,9 @@ int             lfs = 0;                /* 1 = Build large file      */
 
     /* Use the device type to determine track characteristics */
     switch (devtype) {
-    case 0x2314: heads = 20; maxdlen = 7294; break;
+    case 0x2314: heads = 20; maxdlen =  7294; break;
     case 0x3330: heads = 19; maxdlen = 13030; break;
-    case 0x3340: heads = 12; maxdlen = 8368; break;
+    case 0x3340: heads = 12; maxdlen =  8368; break;
     case 0x3350: heads = 30; maxdlen = 19069; break;
     case 0x3375: heads = 12; maxdlen = 35616; break;
     case 0x3380: heads = 15; maxdlen = 47476; break;
@@ -505,11 +505,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                      H30CKD_TRKHDR_SIZE);
 
     /* Initialize the volume serial number */
-    strlcpy( (char*) volser, "(NONE)", 6+1 );
+    strlcpy( (char*) volser, "(NONE)", VOLSER_LEN+1 );
 
     /* Search for volume label in record 3 of first track */
     pbuf = itrkbuf + H30CKD_TRKHDR_SIZE;
-    len = itrklen - H30CKD_TRKHDR_SIZE;
+    len  = itrklen - H30CKD_TRKHDR_SIZE;
     while (1)
     {
         /* Find next input record */
@@ -524,15 +524,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (cyl == 0 && head == 0 && rec == 3)
         {
             /* Extract volser if it is a volume label */
-            if (klen == 4 && memcmp(kptr, ebcdicvol1, 4) == 0
-            && dlen == 80 && memcmp(dptr, ebcdicvol1, 4) == 0)
-                make_asciiz ((char *)volser, 7, dptr+4, 6);
+            if (klen ==  4 && memcmp( kptr, VOL1_KEY, VOL1_KEYLEN ) == 0
+            &&  dlen == 80 && memcmp( dptr, VOL1_KEY, VOL1_KEYLEN ) == 0)
+                make_asciiz( (char*) volser, VOLSER_LEN+1, dptr + VOL1_KEYLEN, VOLSER_LEN );
             break;
         }
     } /* end while */
 
     /* Set output variables and return the input file descriptor */
-    *devt = dt;
+    *devt  = dt;
     *vcyls = cyls - alts;
     *itrkl = itrklen;
     *itrkb = itrkbuf;
@@ -616,20 +616,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Create the device header */
-    memset(&devhdr, 0, CKD_DEVHDR_SIZE);
-    memcpy( devhdr.devhdrid, devhdrid_str( CKD_P370_TYP ), 8 );
-    devhdr.heads[3] = (heads >> 24) & 0xFF;
-    devhdr.heads[2] = (heads >> 16) & 0xFF;
-    devhdr.heads[1] = (heads >> 8) & 0xFF;
-    devhdr.heads[0] = heads & 0xFF;
-    devhdr.trksize[3] = (trksize >> 24) & 0xFF;
-    devhdr.trksize[2] = (trksize >> 16) & 0xFF;
-    devhdr.trksize[1] = (trksize >> 8) & 0xFF;
-    devhdr.trksize[0] = trksize & 0xFF;
-    devhdr.dvtyp = devtype & 0xFF;
-    devhdr.fileseq = fileseq;
-    devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
-    devhdr.highcyl[0] = highcyl & 0xFF;
+    memset( &devhdr, 0, CKD_DEVHDR_SIZE );
+    memcpy( devhdr.dh_devid, dh_devid_str( CKD_P370_TYP ), 8 );
+
+    STORE_LE_FW( devhdr.dh_heads,    heads   );
+    STORE_LE_FW( devhdr.dh_trksize,  trksize );
+                 devhdr.dh_devtyp   = devtype & 0xFF;
+                 devhdr.dh_fileseq = fileseq & 0xFF;
+    STORE_LE_HW( devhdr.dh_highcyl,  (U16) highcyl );
 
     /* Write the device header */
     rc = write (ofd, &devhdr, CKD_DEVHDR_SIZE);
@@ -671,8 +665,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             FETCH_HW (ihh, ith->head);
             if (ihc != cyl || ihh != head)
             {
-                // "Invalid track header at offset %08X"
-                FWRMSG( stderr, HHC02417, "E", offset );
+                // "Invalid track header at offset 0x%16.16"PRIX64
+                FWRMSG( stderr, HHC02417, "E", (U64)offset );
                 // "Expected CCHH %04X%04X, found CCHH %04X%04X"
                 FWRMSG( stderr, HHC02418, "E", cyl, head, ihc, ihh );
                 EXIT(8);
@@ -704,10 +698,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 /* Error if invalid record header detected */
                 if (rc > 1)
                 {
-                    // "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset %08X in file %s"
+                    // "Invalid record header (rc %d) at offset %04X in trk at CCHH %04X%04X at offset 0x%16.16"PRIX64" in file %s"
                     FWRMSG( stderr, HHC02419, "E",
                             rc, (unsigned int)(iptr-itrkbuf), cyl, head,
-                            offset, ifname );
+                            (U64)offset, ifname );
                     EXIT(9);
                 }
 
@@ -735,7 +729,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             } /* end while */
 
             /* Build the end of track marker */
-            memcpy (opos, eighthexFF, 8);
+            memcpy( opos, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
             /* Write the track to the file */
             rc = write (ofd, obuf, trksize);
@@ -810,10 +804,10 @@ int             rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* AWSCKD image track length */
 
     /* Compute the AWSCKD image track length */
-    trksize = sizeof(CKD_TRKHDR)
-                + sizeof(CKD_RECHDR) + rec0len
-                + sizeof(CKD_RECHDR) + maxdlen
-                + sizeof(eighthexFF);
+    trksize = CKD_TRKHDR_SIZE
+            + CKD_RECHDR_SIZE + rec0len
+            + CKD_RECHDR_SIZE + maxdlen
+            + CKD_ENDTRK_SIZE;
     trksize = ROUND_UP(trksize,512);
 
     /* Compute minimum and maximum number of cylinders */

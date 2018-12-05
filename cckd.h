@@ -25,35 +25,29 @@ typedef struct CCKD_EXT         CCKD_EXT;       // CCKD Extension block
 typedef struct SPCTAB           SPCTAB;         // Space table
 
 /*-------------------------------------------------------------------*/
-/*             Structure definitions for CKD headers                 */
+/*            Structure definitions for CKD headers                  */
+/*-------------------------------------------------------------------*/
+/*          NOTE: The dh_heads, dh_trksize and dh_highcyl            */
+/*          values are always kept in LITTLE endian format.          */
 /*-------------------------------------------------------------------*/
 struct CKD_DEVHDR                       /* Device header             */
 {
-        BYTE    devhdrid[8];            /* ASCII Device Header id;
+        BYTE    dh_devid[8];            /* ASCII Device Header id;
                                            see dasdblks.h for list   */
-
-        FWORD   heads;                  /* CKD: heads per cylinder
-                                           CFBA: number of sectors
-                                           (bytes in reverse order)  */
-
-        FWORD   trksize;                /* CKD: track size
-                                           CFBA: sector size
-                                           (bytes in reverse order)  */
-
-        BYTE    dvtyp;                  /* Low byte of hex device type
+        FWORD   dh_heads;               /* CKD: heads per cylinder
+                                           CFBA: number of sectors   */
+        FWORD   dh_trksize;             /* CKD: track size
+                                           CFBA: sector size         */
+        BYTE    dh_devtyp;              /* Low byte of hex device type
                                            (x80=3380, x90=3390, etc) */
-
-        BYTE    fileseq;                /* CKD: image file sequence no.
+        BYTE    dh_fileseq;             /* CKD: image file sequence no.
                                            (0=only file, 1=first file
                                            of multiple files)
                                            CFBA: 0 (not used)        */
-
-        HWORD   highcyl;                /* CKD: Highest cylinder number
+        HWORD   dh_highcyl;             /* CKD: Highest cylinder number
                                            on this file, or zero if this
                                            is the last or only file.
-                                           CFBA: zero (not used)
-                                           (bytes in reverse order)  */
-
+                                           CFBA: zero (not used)     */
         BYTE    resv[492];              /* Reserved                  */
 };
 
@@ -92,33 +86,30 @@ struct CKD_RECHDR {                     /* Record header             */
 #define CKD_NULLTRK_SIZE2       (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
 
 /*-------------------------------------------------------------------*/
-/*   Structure definitions for Compressed CCKD/CFBA devices          */
+/*     Structure definitions for Compressed CCKD/CFBA devices        */
+/*-------------------------------------------------------------------*/
+/*    NOTE: The num_L1tab, num_L2tab, cyls, cdh_size, cdh_used,      */
+/*    free_off, free_total, free_largest, free_num, free_imbed,      */
+/*    and cmp_parm fields are kept in LITTLE endian format.          */
 /*-------------------------------------------------------------------*/
 struct CCKD_DEVHDR                      /* Compress device header    */
 {
-/*  0 */BYTE             vrm[3];        /* Version Release Modifier  */
-/*  3 */BYTE             opts;          /* Options byte              */
-
+/*  0 */BYTE             cdh_vrm[3];    /* Version Release Modifier  */
+/*  3 */BYTE             cdh_opts;      /* Options byte              */
 /*  4 */S32              num_L1tab;     /* Number of L1tab entries   */
 /*  8 */S32              num_L2tab;     /* Number of L2tab entries   */
-
 /* 12 */U32              cdh_size;      /* File size                 */
 /* 16 */U32              cdh_used;      /* File used                 */
-
 /* 20 */U32              free_off;      /* Offset to free space      */
 /* 24 */U32              free_total;    /* Total free space          */
 /* 28 */U32              free_largest;  /* Largest free space        */
 /* 32 */S32              free_num;      /* Number free spaces        */
 /* 36 */U32              free_imbed;    /* Imbedded free space       */
-
-/* 40 */FWORD            cyls;          /* CCKD: Cylinders on device
+/* 40 */FWORD            cdh_cyls;      /* CCKD: Cylinders on device
                                            CFBA: Sectors   on device */
-
-/* 44 */BYTE             nullfmt;       /* Null track format         */
-
+/* 44 */BYTE             cdh_nullfmt;   /* Null track format         */
 /* 45 */BYTE             cmp_algo;      /* Compression algorithm     */
 /* 46 */S16              cmp_parm;      /* Compression parameter     */
-
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
 
@@ -126,11 +117,10 @@ struct CCKD_DEVHDR                      /* Compress device header    */
 #define CCKD_RELEASE           3
 #define CCKD_MODLVL            1
 
-#define CCKD_BIGENDIAN         2
-#define CCKD_SPERRS            32        /* Space errors detected    */
-#define CCKD_ORDWR             64        /* Opened read/write since
-                                            last chkdsk              */
-#define CCKD_OPENED            128
+#define CCKD_OPT_BIGEND        0x02  /* file in BIG endian format    */
+#define CCKD_OPT_SPERRS        0x20  /* Space errors detected        */
+#define CCKD_OPT_OPENRW        0x40  /* Opened R/W since last chkdsk */
+#define CCKD_OPT_OPENED        0x80
 
 #define CCKD_COMPRESS_NONE     0x00
 #define CCKD_COMPRESS_ZLIB     0x01
@@ -147,17 +137,30 @@ struct CCKD_DEVHDR                      /* Compress device header    */
 #define CCKD_STRESS_PARM2      2
 
 struct CCKD_L2ENT {                     /* Level 2 table entry       */
+
+/* NOTE: all fields are numeric and always in LITTLE endian format.  */
+
         U32              L2_trkoff;     /* Offset to track image     */
         U16              L2_len;        /* Track length              */
         U16              L2_size;       /* Track size  (size >= len) */
 };
 
 struct CCKD_FREEBLK {                   /* Free block (file)         */
+
+/* NOTE: all fields are numeric and always in LITTLE endian format.  */
+
         U32              fb_offnxt;     /* Offset to next free blk   */
         U32              fb_len;        /* Length this free blk      */
 };
 
 struct CCKD_IFREEBLK {                  /* Free block (internal)     */
+
+/* NOTE: because this control block is an INTERNAL control block     */
+/* which does not actually exist in the emulated dasd image file     */
+/* (i.e. it is only used internally), all of its fields are always   */
+/* in *HOST* endian format (little endian on little endian hosts     */
+/* and big endian on big endian hosts).                              */
+
         U32              ifb_offnxt;    /* Offset to next free blk   */
         U32              ifb_len;       /* Length this free blk      */
         int              ifb_idxprv;    /* Index to prev free blk    */
@@ -206,6 +209,7 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_MAX_RA            9        /* Max readahead threads     */
 #define CCKD_MAX_WRITER        9        /* Max writer threads        */
 #define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
+#define CCKD_DEF_TRACE         3        /* Def nbr trace entries     */
 #define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
@@ -224,20 +228,15 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_DEF_READAHEADS    2        /* Default nbr to read ahead */
 #define CCKD_DEF_FREEPEND     -1        /* Default freepend cycles   */
 
-#define CFBA_BLKGRP_BLKS       120      /* Number fba blocks / group */
-#define CFBA_BLKGRP_SIZE       61440    /* Size of a block group 60k */
-                                        /* Number of bytes in an fba
-                                           block group.  Probably
-                                           should be a multiple of 512
-                                           but has to be < 64K       */
-
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */
 /*-------------------------------------------------------------------*/
 struct CCKDBLK {                        /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
+#define CCKDBLK_ID      "CCKDBLK "      /* "CCKDBLK "                */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         unsigned int     batch:1,       /* 1=called in batch mode    */
+                         debug:1,       /* 1=CCW trace debug msgs    */
                          sfmerge:1,     /* 1=sf-* merge              */
                          sfforce:1;     /* 1=sf-* force              */
         int              sflevel;       /* sfk xxxx level            */
@@ -413,5 +412,11 @@ struct SPCTAB
 #define SPCTAB_BLKGRP   6               /* Space is blkgrp image     */
 #define SPCTAB_FREE     7               /* Space is free block       */
 #define SPCTAB_EOF      8               /* Space is end-of-file      */
+
+/*-------------------------------------------------------------------*/
+/*                 CCKD64 structs and definitions                    */
+/*-------------------------------------------------------------------*/
+
+#include "cckd64.h"      /* 64-bit CCKD64 structs/constants */
 
 #endif // _CCKD_H_

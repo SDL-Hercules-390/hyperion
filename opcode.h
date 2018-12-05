@@ -647,15 +647,35 @@ do { \
 /* which endianess Hercules was built for).                          */
 /*-------------------------------------------------------------------*/
 
-#define FETCH_HW(_value, _storage)   (_value) = fetch_hw(_storage)
-#define FETCH_FW(_value, _storage)   (_value) = fetch_fw(_storage)
-#define FETCH_F3(_value, _storage)   (_value) = fetch_f3(_storage)
-#define FETCH_DW(_value, _storage)   (_value) = fetch_dw(_storage)
+#define FETCH_HW( _val, _stor )     (_val) = fetch_hw( _stor )
+#define FETCH_FW( _val, _stor )     (_val) = fetch_fw( _stor )
+#define FETCH_F3( _val, _stor )     (_val) = fetch_f3( _stor )
+#define FETCH_DW( _val, _stor )     (_val) = fetch_dw( _stor )
 
-#define STORE_HW(_storage, _value)   store_hw(_storage, _value)
-#define STORE_FW(_storage, _value)   store_fw(_storage, _value)
-#define STORE_F3(_storage, _value)   store_f3(_storage, _value)
-#define STORE_DW(_storage, _value)   store_dw(_storage, _value)
+#define STORE_HW( _stor, _val )     store_hw( _stor, _val )
+#define STORE_FW( _stor, _val )     store_fw( _stor, _val )
+#define STORE_F3( _stor, _val )     store_f3( _stor, _val )
+#define STORE_DW( _stor, _val )     store_dw( _stor, _val )
+
+/*-------------------------------------------------------------------*/
+/*            CKD/CCKD header field FETCH/STORE macros               */
+/*-------------------------------------------------------------------*/
+/* The following macros fetch a value from a CCKD dasd header field  */
+/* into a local work variable or store a local work variable into    */
+/* a CCKD dasd header field (e.g. CKD_DEVHDR, CCKD_DEVHDR) doing an  */
+/* UNCONDITIONAL "SWAPxx()" in between to ensure the numeric value   */
+/* stored into, or fetched from, the CCKD header field is always in  */
+/* LITTLE endian format, accomplishing the complete opposite of the  */
+/* above "FETCH_FW/STORE_FW/etc" macros.                             */
+/*-------------------------------------------------------------------*/
+
+#define FETCH_LE_HW( _val, _stor )  (_val) = SWAP16( fetch_hw( _stor ))
+#define FETCH_LE_FW( _val, _stor )  (_val) = SWAP32( fetch_fw( _stor ))
+#define FETCH_LE_DW( _val, _stor )  (_val) = SWAP64( fetch_dw( _stor ))
+
+#define STORE_LE_HW( _stor, _val )  store_hw( _stor, SWAP16( _val ))
+#define STORE_LE_FW( _stor, _val )  store_fw( _stor, SWAP32( _val ))
+#define STORE_LE_DW( _stor, _val )  store_dw( _stor, SWAP64( _val ))
 
 #include "machdep.h"
 

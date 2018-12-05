@@ -41,9 +41,8 @@ struct DEVHND
     if (_class) *_class = _classname; \
     if (!_dev || !_class || !_buflen || !_buffer) return
 
-
-CKD_DLL_IMPORT  DEVHND  ckddasd_device_hndinfo;
-FBA_DLL_IMPORT  DEVHND  fbadasd_device_hndinfo;
+CKD_DLL_IMPORT  DEVHND  ckd_dasd_device_hndinfo;
+FBA_DLL_IMPORT  DEVHND  fba_dasd_device_hndinfo;
 
 extern          DEVHND  ctci_device_hndinfo;
 extern          DEVHND  ctce_device_hndinfo;

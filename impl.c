@@ -1013,8 +1013,8 @@ int     rc;
         &the_real_panel_display,
         &the_real_panel_command,
         &the_real_replace_opcode,
-        &ckddasd_device_hndinfo,
-        &fbadasd_device_hndinfo
+        &ckd_dasd_device_hndinfo,
+        &fba_dasd_device_hndinfo
     );
 
     if (rc != 0)

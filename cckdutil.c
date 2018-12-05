@@ -1,5 +1,5 @@
 /* CCKDUTIL.C   (C) Copyright Roger Bowler, 1999-2012                */
-/*       ESA/390 Compressed CKD Common routines                      */
+/*              CCKD (Compressed CKD) Common routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -18,6 +18,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 /*-------------------------------------------------------------------*/
 /* Internal functions                                                */
@@ -25,12 +26,10 @@
 static int  comp_spctab_sort(const void *a, const void *b);
 static int  cdsk_spctab_sort(const void *a, const void *b);
 static int  cdsk_build_free_space(SPCTAB *spctab, int s);
-static int  cdsk_valid_trk (int trk, BYTE *buf, int heads, int len);
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static BYTE  eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 static char *spaces[] = { "none", "devhdr", "cdevhdr", "l1",  "l2",
                           "trk",  "blkgrp", "free",    "eof" };
 static char *comps[]  = { "none", "zlib",   "bzip2" };
@@ -76,9 +75,9 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cswp_read_error;
-    swapend = (cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian();
+    swapend = (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian();
     cckd_swapend_chdr (&cdevhdr);
-    cdevhdr.opts |= CCKD_ORDWR;
+    cdevhdr.cdh_opts |= CCKD_OPT_OPENRW;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -190,38 +189,38 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* error exits */
 cswp_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                "fstat()", strerror(errno)));
+        FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                "fstat()", strerror( errno ));
     else
-        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-              "fstat()", strerror(errno));
+        WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+              "fstat()", strerror( errno ));
     goto cswp_error;
 
 cswp_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "lseek()", off, strerror(errno)));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "lseek()", off, strerror( errno ));
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "lseek()", off, strerror(errno));
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "lseek()", off, strerror( errno ));
     goto cswp_error;
 
 cswp_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto cswp_error;
 
 cswp_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto cswp_error;
 
 cswp_malloc_error:
@@ -229,11 +228,11 @@ cswp_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                    buf, strerror(errno)));
+            FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    buf, strerror( errno ));
         else
-             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                   buf, strerror(errno));
+             WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                   buf, strerror( errno ));
         goto cswp_error;
     }
 cswp_error:
@@ -247,18 +246,18 @@ cswp_error:
 DLL_EXPORT void cckd_swapend_chdr( CCKD_DEVHDR* cdevhdr )
 {
     /* fix the compressed ckd header */
-    cdevhdr->opts ^= CCKD_BIGENDIAN;
+    cdevhdr->cdh_opts ^= CCKD_OPT_BIGEND;
 
-    cdevhdr->num_L1tab    = SWAP32( cdevhdr->num_L1tab    ); // CCKD64FIXME!
-    cdevhdr->num_L2tab    = SWAP32( cdevhdr->num_L2tab    ); // CCKD64FIXME!
-    cdevhdr->cdh_size     = SWAP32( cdevhdr->cdh_size     ); // CCKD64FIXME!
-    cdevhdr->cdh_used     = SWAP32( cdevhdr->cdh_used     ); // CCKD64FIXME!
-    cdevhdr->free_off     = SWAP32( cdevhdr->free_off     ); // CCKD64FIXME!
-    cdevhdr->free_total   = SWAP32( cdevhdr->free_total   ); // CCKD64FIXME!
-    cdevhdr->free_largest = SWAP32( cdevhdr->free_largest ); // CCKD64FIXME!
-    cdevhdr->free_num     = SWAP32( cdevhdr->free_num     ); // CCKD64FIXME!
-    cdevhdr->free_imbed   = SWAP32( cdevhdr->free_imbed   ); // CCKD64FIXME!
-    cdevhdr->cmp_parm     = SWAP16( cdevhdr->cmp_parm     ); // CCKD64FIXME!
+    cdevhdr->num_L1tab    = SWAP32( cdevhdr->num_L1tab    );
+    cdevhdr->num_L2tab    = SWAP32( cdevhdr->num_L2tab    );
+    cdevhdr->cdh_size     = SWAP32( cdevhdr->cdh_size     );
+    cdevhdr->cdh_used     = SWAP32( cdevhdr->cdh_used     );
+    cdevhdr->free_off     = SWAP32( cdevhdr->free_off     );
+    cdevhdr->free_total   = SWAP32( cdevhdr->free_total   );
+    cdevhdr->free_largest = SWAP32( cdevhdr->free_largest );
+    cdevhdr->free_num     = SWAP32( cdevhdr->free_num     );
+    cdevhdr->free_imbed   = SWAP32( cdevhdr->free_imbed   );
+    cdevhdr->cmp_parm     = SWAP16( cdevhdr->cmp_parm     );
 }
 
 /*-------------------------------------------------------------------*/
@@ -268,7 +267,7 @@ DLL_EXPORT void cckd_swapend_l1( CCKD_L1ENT* l1, int n )
 {
     int  i;
     for (i = 0; i < n; i++)
-        l1[i] = SWAP32( l1[i] ); // CCKD64FIXME!
+        l1[i] = SWAP32( l1[i] );
 }
 
 /*-------------------------------------------------------------------*/
@@ -279,9 +278,9 @@ DLL_EXPORT void cckd_swapend_l2( CCKD_L2ENT* l2 )
     int  i;
     for (i = 0; i < 256; i++)
     {
-        l2[i].L2_trkoff = SWAP32( l2[i].L2_trkoff ); // CCKD64FIXME!
-        l2[i].L2_len    = SWAP16( l2[i].L2_len    ); // CCKD64FIXME!
-        l2[i].L2_size   = SWAP16( l2[i].L2_size   ); // CCKD64FIXME!
+        l2[i].L2_trkoff = SWAP32( l2[i].L2_trkoff );
+        l2[i].L2_len    = SWAP16( l2[i].L2_len    );
+        l2[i].L2_size   = SWAP16( l2[i].L2_size   );
     }
 }
 
@@ -290,8 +289,8 @@ DLL_EXPORT void cckd_swapend_l2( CCKD_L2ENT* l2 )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd_swapend_free( CCKD_FREEBLK* fb )
 {
-    fb->fb_offnxt = SWAP32( fb->fb_offnxt ); // CCKD64FIXME!
-    fb->fb_len    = SWAP32( fb->fb_len    ); // CCKD64FIXME!
+    fb->fb_offnxt = SWAP32( fb->fb_offnxt );
+    fb->fb_len    = SWAP32( fb->fb_len    );
 }
 
 /*-------------------------------------------------------------------*/
@@ -307,7 +306,7 @@ DLL_EXPORT int cckd_endian()
     u;
 
     u.l = 1;
-    return u.c[ sizeof( long ) - 1 ] == 1 ? CCKD_BIGENDIAN : 0;
+    return u.c[ sizeof( long ) - 1 ] == 1 ? CCKD_OPT_BIGEND : 0;
 }
 
 /*-------------------------------------------------------------------
@@ -329,8 +328,8 @@ U32             next;                   /* offset of next space      */
 int             s;                      /* space table index         */
 CKD_DEVHDR      devhdr;                 /* CKD device header         */
 CCKD_DEVHDR     cdevhdr;                /* CCKD device header        */
-CCKD_L1ENT     *l1=NULL;                /* ->L1tab table               */
-CCKD_L2ENT    **l2=NULL;                /* ->L2tab table array         */
+CCKD_L1ENT     *l1=NULL;                /* ->L1tab table             */
+CCKD_L2ENT    **l2=NULL;                /* ->L2tab table array       */
 SPCTAB         *spctab=NULL;            /* -> space table            */
 BYTE           *rbuf=NULL;              /* Relocation buffer         */
 BYTE           *p;                      /* -> relocation buffer      */
@@ -366,12 +365,13 @@ BYTE            buf[65536*4];           /* Buffer                    */
     if ((rc = read( fd, &devhdr, len )) != len)
         goto comp_read_error;
 
-    if (!(devhdrid_typ( devhdr.devhdrid ) & ANY32_CMP_OR_SF_TYP))
+    dev->cckd64 = 0;
+    if (!(dh_devid_typ( devhdr.dh_devid ) & ANY32_CMP_OR_SF_TYP))
     {
         // "%1d:%04X CCKD file %s: not a compressed dasd file"
         if (dev->batch)
-            fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
-                dev->devnum, dev->filename ));
+            FWRMSG( stdout, HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, dev->filename );
         else
             WRMSG( HHC00356, "E", LCSS_DEVNUM,
                 dev->filename );
@@ -394,13 +394,13 @@ comp_restart:
     /*---------------------------------------------------------------
      * Check the endianess of the file
      *---------------------------------------------------------------*/
-    if ((cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian())
+    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian())
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                    cckd_endian() ? "big-endian" : "little-endian"));
+            FWRMSG( stdout, HHC00357, "I", LCSS_DEVNUM, dev->filename,
+                    cckd_endian() ? "big-endian" : "little-endian");
         else
-            WRMSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
+            WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
                   cckd_endian() ? "big-endian" : "little-endian");
         if (cckd_swapend (dev) < 0)
             goto comp_error;
@@ -421,9 +421,9 @@ comp_restart:
      * Build empty l2 tables
      *---------------------------------------------------------------*/
     memset( &zero_l2, 0, CCKD_L2TAB_SIZE );
-    if (cdevhdr.nullfmt != 0)
+    if (cdevhdr.cdh_nullfmt != 0)
         for (i = 0; i < 256; i++)
-            zero_l2[i].L2_len = zero_l2[i].L2_size = cdevhdr.nullfmt;
+            zero_l2[i].L2_len = zero_l2[i].L2_size = cdevhdr.cdh_nullfmt;
     memset (&ff_l2, 0xff, CCKD_L2TAB_SIZE);
 
     /*---------------------------------------------------------------
@@ -470,7 +470,7 @@ comp_restart:
     s++;
     spctab[s].spc_typ = SPCTAB_EOF;
     spctab[s].spc_val = -1;
-    spctab[s].spc_off = fst.st_size;
+    spctab[s].spc_off = (U32)fst.st_size;
     spctab[s].spc_len =
     spctab[s].spc_siz = 0;
     s++;
@@ -558,15 +558,15 @@ comp_restart:
         if (spctab[i].spc_typ == SPCTAB_EOF)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00358, "I", LCSS_DEVNUM, dev->filename));
+                FWRMSG( stdout, HHC00358, "I", LCSS_DEVNUM, dev->filename);
             else
-                WRMSG(HHC00358, "I", LCSS_DEVNUM, dev->filename);
+                WRMSG( HHC00358, "I", LCSS_DEVNUM, dev->filename);
             goto comp_return_ok;
         }
     }
 
     /* file will be updated */
-    cdevhdr.opts |= CCKD_ORDWR;
+    cdevhdr.cdh_opts |= CCKD_OPT_OPENRW;
 
     /* calculate track size within the l2 area */
     for (i = rlen = 0; spctab[i].spc_off < l2area; i++)
@@ -720,9 +720,9 @@ comp_restart:
     cdevhdr.free_largest =
     cdevhdr.free_num =
     cdevhdr.free_imbed = 0;
-    cdevhdr.vrm[0] = CCKD_VERSION;
-    cdevhdr.vrm[1] = CCKD_RELEASE;
-    cdevhdr.vrm[2] = CCKD_MODLVL;
+    cdevhdr.cdh_vrm[0] = CCKD_VERSION;
+    cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
+    cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
     /*---------------------------------------------------------------
      * Update the lookup tables
@@ -780,17 +780,17 @@ comp_restart:
     {
         VERIFY(!ftruncate (fd, off));
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00359, "I", LCSS_DEVNUM, dev->filename,
-                    fst.st_size - off));
+            FWRMSG( stdout, HHC00359, "I", LCSS_DEVNUM, dev->filename,
+                    fst.st_size - off);
         else
-            WRMSG(HHC00359, "I", LCSS_DEVNUM, dev->filename, fst.st_size - off);
+            WRMSG( HHC00359, "I", LCSS_DEVNUM, dev->filename, fst.st_size - off);
     }
     else
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00360, "I", LCSS_DEVNUM, dev->filename));
+            FWRMSG( stdout, HHC00360, "I", LCSS_DEVNUM, dev->filename);
         else
-            WRMSG(HHC00360, "I", LCSS_DEVNUM, dev->filename);
+            WRMSG( HHC00360, "I", LCSS_DEVNUM, dev->filename);
     }
 
     /*---------------------------------------------------------------
@@ -824,38 +824,38 @@ comp_return:
 
 comp_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                "fstat()", strerror(errno)));
+        FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                "fstat()", strerror( errno ));
     else
-        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-              "fstat()", strerror(errno));
+        WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+              "fstat()", strerror( errno ));
     goto comp_error;
 
 comp_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "lseek()", off, strerror(errno)));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "lseek()", off, strerror( errno ));
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "lseek()", off, strerror(errno));
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "lseek()", off, strerror( errno ));
     goto comp_error;
 
 comp_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto comp_error;
 
 comp_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto comp_error;
 
 comp_malloc_error:
@@ -863,11 +863,11 @@ comp_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                    buf, strerror(errno)));
+            FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    buf, strerror( errno ));
         else
-            WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                  buf, strerror(errno));
+            WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                  buf, strerror( errno ));
         goto comp_error;
     }
 comp_calloc_error:
@@ -875,11 +875,11 @@ comp_calloc_error:
         char buf[64];
         MSGBUF( buf, "calloc(%d)", n * len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                    buf, strerror(errno)));
+            FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    buf, strerror( errno ));
         else
-            WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                  buf, strerror(errno));
+            WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                  buf, strerror( errno ));
         goto comp_error;
     }
 comp_error:
@@ -985,7 +985,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if ( fstat (fd, &fst) < 0 )
         goto cdsk_fstat_error;
     gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
-    hipos = fst.st_size;
+    hipos = (U32)fst.st_size;
     cckd_maxsize = 0xffffffffull;
     fdflags = get_file_accmode_flags(fd);
     ro = (fdflags & O_RDWR) == 0;
@@ -1018,7 +1018,8 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Device header checks */
-    imgtyp = devhdrid_typ( devhdr.devhdrid );
+    dev->cckd64 = 0;
+    imgtyp = dh_devid_typ( devhdr.dh_devid );
 
          if (imgtyp & CKD32_CMP_OR_SF_TYP) ckddasd = 1;
     else if (imgtyp & FBA32_CMP_OR_SF_TYP) fbadasd = 1;
@@ -1026,8 +1027,8 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         // "%1d:%04X CCKD file %s: not a compressed dasd file"
         if (dev->batch)
-            fprintf( stdout, MSG( HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
-                dev->devnum, dev->filename ));
+            FWRMSG( stdout, HHC00356, "E", SSID_TO_LCSS( dev->ssid ),
+                dev->devnum, dev->filename );
         else
             WRMSG( HHC00356, "E", LCSS_DEVNUM,
                 dev->filename );
@@ -1049,15 +1050,15 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Endianess check */
-    if ((cdevhdr.opts & CCKD_BIGENDIAN) != cckd_endian())
+    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian())
     {
         if (!ro)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                        cckd_endian() ? "big-endian" : "little-endian"));
+                FWRMSG( stdout, HHC00357, "I", LCSS_DEVNUM, dev->filename,
+                        cckd_endian() ? "big-endian" : "little-endian");
             else
-                WRMSG(HHC00357, "I", LCSS_DEVNUM, dev->filename,
+                WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
                       cckd_endian() ? "big-endian" : "little-endian");
             if (cckd_swapend (dev) < 0)
                 goto cdsk_error;
@@ -1074,47 +1075,41 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         CKDDEV *ckd;
 
-        heads = (devhdr.heads[3] << 24)
-              + (devhdr.heads[2] << 16)
-              + (devhdr.heads[1] <<  8)
-              + (devhdr.heads[0]);
-        cyls  = (cdevhdr.cyls[3] << 24)
-              + (cdevhdr.cyls[2] << 16)
-              + (cdevhdr.cyls[1] <<  8)
-              + (cdevhdr.cyls[0]);
-        trks  = heads * cyls;
-        trksz = (devhdr.trksize[3] << 24)
-              + (devhdr.trksize[2] << 16)
-              + (devhdr.trksize[1] <<  8)
-              + (devhdr.trksize[0]);
+        FETCH_LE_FW( heads,  devhdr.dh_heads   );
+        FETCH_LE_FW( cyls,  cdevhdr.cdh_cyls   );
+        FETCH_LE_FW( trksz,  devhdr.dh_trksize );
+
+        trks = heads * cyls;
 
         /* ckd dasd lookup */
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dh_devtyp, 0);
         if (ckd == NULL)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00361, "E", LCSS_DEVNUM, dev->filename,
-                        devhdr.dvtyp, cyls));
+                FWRMSG( stdout, HHC00361, "E", LCSS_DEVNUM, dev->filename,
+                        devhdr.dh_devid, cyls);
             else
-                WRMSG(HHC00361, "E", LCSS_DEVNUM, dev->filename,
-                      devhdr.dvtyp, cyls);
+                WRMSG( HHC00361, "E", LCSS_DEVNUM, dev->filename,
+                      devhdr.dh_devid, cyls);
              goto cdsk_error;
         }
 
         /* track size check */
-        n = sizeof(CKD_TRKHDR)
-          + sizeof(CKD_RECHDR) + 8        /* r0 length */
-          + sizeof(CKD_RECHDR) + ckd->r1  /* max data length */
-          + sizeof(eighthexFF);
+        n = CKD_TRKHDR_SIZE
+          + CKD_RECHDR_SIZE + CKD_R0_DLEN
+          + CKD_RECHDR_SIZE + ckd->r1       /* max data length */
+          + CKD_ENDTRK_SIZE;
         n = ((n+511)/512)*512;
         if ((int)trksz != n)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                        "track size", trksz, n));
+                // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+                FWRMSG( stdout, HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                        "track size", (S64)trksz, (S64)n );
             else
-                WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                      "track size", trksz, n);
+                // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+                WRMSG( HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                      "track size", (S64)trksz, (S64)n );
              goto cdsk_error;
         }
 
@@ -1122,11 +1117,13 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (heads != ckd->heads)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                        "number of heads", heads, ckd->heads));
+                // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+                FWRMSG( stdout, HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                        "number of heads", (S64)heads, (S64)ckd->heads );
             else
-                WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                      "number of heads", heads, ckd->heads);
+                // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+                WRMSG( HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                      "number of heads", (S64)heads, (S64)ckd->heads );
              goto cdsk_error;
         }
     } /* if (ckddasd) */
@@ -1135,16 +1132,16 @@ BYTE            buf[4*65536];           /* buffer                    */
     else
     {
         /* Note: cyls & heads are setup for ckd type hdr checks */
-        blks = (cdevhdr.cyls[3] << 24)
-             + (cdevhdr.cyls[2] << 16)
-             + (cdevhdr.cyls[1] <<  8)
-             + (cdevhdr.cyls[0]);
-        trks = blks / CFBA_BLKGRP_BLKS;
-        if (blks % CFBA_BLKGRP_BLKS) trks++;
-        trksz = CFBA_BLKGRP_SIZE + CKD_TRKHDR_SIZE;
+        FETCH_LE_FW( blks, cdevhdr.cdh_cyls );
+
+        trks = blks / CFBA_BLKS_PER_GRP;
+        if (   blks % CFBA_BLKS_PER_GRP ) trks++;
+
+        trksz = CKD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE;
         heads = 65536;
+
         cyls = trks / heads;
-        if (trks % heads) cyls++;
+        if (   trks % heads) cyls++;
     }
 
     /* fba variables */
@@ -1158,33 +1155,37 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (cdevhdr.num_L1tab != n && cdevhdr.num_L1tab != n + 1)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                    "num_L1tab", cdevhdr.num_L1tab, n));
+            // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+            FWRMSG( stdout, HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                    "num_L1tab", (S64)cdevhdr.num_L1tab, (S64)n );
         else
-            WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                  "num_L1tab", cdevhdr.num_L1tab, n);
+            // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+            WRMSG( HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                  "num_L1tab", (S64)cdevhdr.num_L1tab, (S64)n );
         goto cdsk_error;
     }
     l1size = cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
     if (CCKD_L1TAB_POS + l1size > fst.st_size)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                    "file length to contain L1 table", (int)fst.st_size, (int)CCKD_L1TAB_POS + l1size));
+            // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+            FWRMSG( stdout, HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                    "file length to contain L1 table", (S64)fst.st_size, (S64)CCKD_L1TAB_POS + l1size );
         else
-            WRMSG(HHC00362, "E", LCSS_DEVNUM, dev->filename,
-                  "file length to contain L1 table", (int)fst.st_size, (int)CCKD_L1TAB_POS + l1size);
+            // "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
+            WRMSG( HHC00362, "E", LCSS_DEVNUM, dev->filename,
+                  "file length to contain L1 table", (S64)fst.st_size, (S64)CCKD_L1TAB_POS + l1size );
         goto cdsk_error;
     }
 
     /* check level 2 if SPERRS bit on */
-    if (!ro && level < 2 && (cdevhdr.opts & CCKD_SPERRS))
+    if (!ro && level < 2 && (cdevhdr.cdh_opts & CCKD_OPT_SPERRS))
     {
         level = 2;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
+            FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         else
-            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
+            WRMSG( HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* cdevhdr inconsistencies check */
@@ -1204,44 +1205,44 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (hdrerr != 0)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr));
+            FWRMSG( stdout, HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
         else
-            WRMSG(HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
+            WRMSG( HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
         if (level < 1)
         {
             level = 1;
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
+                FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
             else
-                WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
+                WRMSG( HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         }
     }
 
     /* Additional checking if not properly closed */
-    if (level < 1 && (cdevhdr.opts & CCKD_OPENED))
+    if (level < 1 && (cdevhdr.cdh_opts & CCKD_OPT_OPENED))
     {
         level = 1;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
+            FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         else
-            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
+            WRMSG( HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* Additional checking if last opened for read/write */
-    if (level < 0 && (cdevhdr.opts & CCKD_ORDWR))
+    if (level < 0 && (cdevhdr.cdh_opts & CCKD_OPT_OPENRW))
         level = 0;
 
     /* Set check level -1 */
     if (level == 0 && !dev->batch && !hdrerr
-     && (cdevhdr.opts & (CCKD_OPENED|CCKD_SPERRS)) == 0
-     && ((cdevhdr.opts & (CCKD_ORDWR)) == 0 || ro))
+     && (cdevhdr.cdh_opts & (CCKD_OPT_OPENED | CCKD_OPT_SPERRS)) == 0
+     && ((cdevhdr.cdh_opts & (CCKD_OPT_OPENRW)) == 0 || ro))
         level = -1;
 
     /* Build empty l2 table */
     memset (&empty_l2, shadow, CCKD_L2TAB_SIZE);
-    if (shadow == 0 && cdevhdr.nullfmt != 0)
+    if (shadow == 0 && cdevhdr.cdh_nullfmt != 0)
         for (i = 0; i < 256; i++)
-            empty_l2[i].L2_len = empty_l2[i].L2_size = cdevhdr.nullfmt;
+            empty_l2[i].L2_len = empty_l2[i].L2_size = cdevhdr.cdh_nullfmt;
 
     /*---------------------------------------------------------------
      * read the level 1 table
@@ -1410,7 +1411,7 @@ BYTE            buf[4*65536];           /* buffer                    */
      *---------------------------------------------------------------*/
 
     lopos = CCKD_L1TAB_POS + l1size;
-    hipos = fst.st_size;
+    hipos = (U32)fst.st_size;
 
     /* Make adjustment if new format free space is at the end */
     len = spctab[s-1].spc_off - (spctab[s-2].spc_off + spctab[s-2].spc_siz);
@@ -1472,20 +1473,24 @@ BYTE            buf[4*65536];           /* buffer                    */
             if (!valid)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00365, "W", LCSS_DEVNUM, dev->filename,
-                            space1, spctab[i].spc_off, spctab[i].spc_siz));
+                    // "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" is out of bounds"
+                    FWRMSG( stdout, HHC00365, "W", LCSS_DEVNUM, dev->filename,
+                            space1, (U64)spctab[i].spc_off, (U64)spctab[i].spc_siz);
                 else
-                    WRMSG(HHC00365, "W", LCSS_DEVNUM, dev->filename,
-                          space1, spctab[i].spc_off, spctab[i].spc_siz);
+                    // "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" is out of bounds"
+                    WRMSG( HHC00365, "W", LCSS_DEVNUM, dev->filename,
+                          space1, (U64)spctab[i].spc_off, (U64)spctab[i].spc_siz);
             }
             else
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00366, "W", LCSS_DEVNUM, dev->filename,
-                            space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off));
+                    // "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" overlaps %s offset 0x%"PRIX64
+                    FWRMSG( stdout, HHC00366, "W", LCSS_DEVNUM, dev->filename,
+                            space1, (U64)spctab[i].spc_off, (U64)spctab[i].spc_siz, space2, (U64)spctab[i+1].spc_off);
                 else
-                    WRMSG(HHC00366, "W", LCSS_DEVNUM, dev->filename,
-                          space1, spctab[i].spc_off, spctab[i].spc_siz, space2, spctab[i+1].spc_off);
+                    // "%1d:%04X CCKD file %s: %s offset 0x%16.16"PRIX64" len %"PRId64" overlaps %s offset 0x%"PRIX64
+                    WRMSG( HHC00366, "W", LCSS_DEVNUM, dev->filename,
+                          space1, (U64)spctab[i].spc_off, (U64)spctab[i].spc_siz, space2, (U64)spctab[i+1].spc_off );
             }
 
             /* setup recovery */
@@ -1518,11 +1523,13 @@ BYTE            buf[4*65536];           /* buffer                    */
 
             /* issue error message */
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                        spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz));
+                // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
+                FWRMSG( stdout, HHC00367, "W", LCSS_DEVNUM, dev->filename,
+                        spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
             else
-                WRMSG(HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                      spaces[trktyp], spctab[i].spc_val, spctab[i].spc_len, spctab[i].spc_siz);
+                // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
+                WRMSG( HHC00367, "W", LCSS_DEVNUM, dev->filename,
+                      spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
 
             /* setup recovery */
             rcvtab[spctab[i].spc_val] = 1;
@@ -1540,9 +1547,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     {
         level = 3;
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level));
+            FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
         else
-            WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
+            WRMSG( HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
     }
 
     /* Rebuild free space if any errors */
@@ -1561,7 +1568,7 @@ BYTE            buf[4*65536];           /* buffer                    */
      *---------------------------------------------------------------*/
 
     lopos = CCKD_L1TAB_POS + l1size;
-    hipos = fst.st_size;
+    hipos = (U32)fst.st_size;
 
     if (level >= 1 && !fsperr)
     {
@@ -1626,7 +1633,7 @@ BYTE            buf[4*65536];           /* buffer                    */
                     spctab[s].spc_len =
                     spctab[s].spc_siz = freeblk.fb_len;
                     s++;
-                    lopos = off + freeblk.fb_len;
+                    lopos = (U32)(off + freeblk.fb_len);
                     off = (off_t)freeblk.fb_offnxt;
                 }
                 if (i >= cdevhdr.free_num && freeblk.fb_offnxt == 0)
@@ -1648,9 +1655,9 @@ BYTE            buf[4*65536];           /* buffer                    */
     if (fsperr)
     {
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00368, "W", LCSS_DEVNUM, dev->filename));
+            FWRMSG( stdout, HHC00368, "W", LCSS_DEVNUM, dev->filename);
         else
-            WRMSG(HHC00368, "W", LCSS_DEVNUM, dev->filename);
+            WRMSG( HHC00368, "W", LCSS_DEVNUM, dev->filename);
     }
 
     /*---------------------------------------------------------------
@@ -1686,11 +1693,11 @@ cdsk_space_check:
              || trk != spctab[i].spc_val)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00369, "W", LCSS_DEVNUM, dev->filename,
+                    FWRMSG( stdout, HHC00369, "W", LCSS_DEVNUM, dev->filename,
                             spaces[trktyp], spctab[i].spc_val, off,
-                            buf[0],buf[1],buf[2],buf[3],buf[4]));
+                            buf[0],buf[1],buf[2],buf[3],buf[4]);
                 else
-                    WRMSG(HHC00369, "W", LCSS_DEVNUM, dev->filename,
+                    WRMSG( HHC00369, "W", LCSS_DEVNUM, dev->filename,
                           spaces[trktyp], spctab[i].spc_val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
@@ -1703,10 +1710,10 @@ cdsk_space_check:
                 {
                     level = 3;
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00364, "W", LCSS_DEVNUM,
-                                dev->filename, level));
+                        FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM,
+                                dev->filename, level);
                     else
-                        WRMSG(HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
+                        WRMSG( HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
                     goto cdsk_space_check;
                 }
                 continue;
@@ -1717,10 +1724,10 @@ cdsk_space_check:
             {
                 comperrs = 1;
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00370, "W", LCSS_DEVNUM, dev->filename,
-                            spaces[trktyp], trk, comps[compmask[comp]]));
+                    FWRMSG( stdout, HHC00370, "W", LCSS_DEVNUM, dev->filename,
+                            spaces[trktyp], trk, comps[compmask[comp]]);
                 else
-                    WRMSG(HHC00370, "W", LCSS_DEVNUM, dev->filename,
+                    WRMSG( HHC00370, "W", LCSS_DEVNUM, dev->filename,
                           spaces[trktyp], trk, comps[compmask[comp]]);
                 continue;
             }
@@ -1731,11 +1738,13 @@ cdsk_space_check:
                 if (!cdsk_valid_trk (trk, buf, heads, len))
                 {
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off, len));
+                        // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
+                        FWRMSG( stdout, HHC00371, "W", LCSS_DEVNUM, dev->filename,
+                                spaces[trktyp], trk, off, (S64)len);
                     else
-                        WRMSG(HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off, len);
+                        // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
+                        WRMSG( HHC00371, "W", LCSS_DEVNUM, dev->filename,
+                              spaces[trktyp], trk, off, (S64)len);
 
                     /* recover this track */
                     rcvtab[trk] = recovery = 1;
@@ -1767,7 +1776,7 @@ cdsk_recovery:
          */
         qsort (spctab, s, sizeof(SPCTAB), cdsk_spctab_sort);
         while (spctab[s-1].spc_typ == SPCTAB_NONE) s--;
-        spctab[s-1].spc_off = fst.st_size;
+        spctab[s-1].spc_off = (U32)fst.st_size;
 
         /* count number tracks to be recovered */
         for (i = n = 0; i < trks; i++)
@@ -1937,11 +1946,13 @@ cdsk_recovery:
 
 cdsk_ckd_recover:
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off + i, l));
+                        // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
+                        FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
+                                spaces[trktyp], trk, off + i, (S64)l);
                     else
-                        WRMSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off + i, l);
+                        // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
+                        WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
+                              spaces[trktyp], trk, off + i, (S64)l);
                     n--;
                     rcvtab[trk] = 2;
 
@@ -2165,11 +2176,13 @@ cdsk_ckd_recover:
 
 cdsk_fba_recover:
                     if(dev->batch)
-                        fprintf(stdout, MSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], blkgrp, off + i, l));
+                        // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
+                        FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
+                                spaces[trktyp], blkgrp, off + i, (S64)l);
                     else
-                        WRMSG(HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], blkgrp, off + i, l);
+                        // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
+                        WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
+                              spaces[trktyp], blkgrp, off + i, (S64)l);
                     n--;
                     rcvtab[blkgrp] = 2;
 
@@ -2205,11 +2218,13 @@ cdsk_fba_recover:
                 n++;
 
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                    n, spaces[trktyp]));
+            // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
+            FWRMSG( stdout, HHC00373, "I", LCSS_DEVNUM, dev->filename,
+                    (S64)n, spaces[trktyp]);
         else
-            WRMSG(HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                  n, spaces[trktyp]);
+            // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
+            WRMSG( HHC00373, "I", LCSS_DEVNUM, dev->filename,
+                  (S64)n, spaces[trktyp]);
 
         /*-----------------------------------------------------------
          * Phase 2 -- rebuild affected l2 tables
@@ -2295,9 +2310,9 @@ cdsk_fba_recover:
             if (spctab[j].spc_typ == SPCTAB_EOF)
             {
                 if(dev->batch)
-                    fprintf(stdout, MSG(HHC00374, "E", LCSS_DEVNUM, dev->filename));
+                    FWRMSG( stdout, HHC00374, "E", LCSS_DEVNUM, dev->filename);
                 else
-                    WRMSG(HHC00374, "E", LCSS_DEVNUM, dev->filename);
+                    WRMSG( HHC00374, "E", LCSS_DEVNUM, dev->filename);
                 goto cdsk_error;
             }
 
@@ -2324,20 +2339,20 @@ cdsk_fba_recover:
         if (ro)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
-                        "file opened read-only"));
+                FWRMSG( stdout, HHC00375, "W", LCSS_DEVNUM, dev->filename,
+                        "file opened read-only");
             else
-                WRMSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
+                WRMSG( HHC00375, "W", LCSS_DEVNUM, dev->filename,
                       "file opened read-only");
               goto cdsk_error;
         }
         if (comperrs)
         {
             if(dev->batch)
-                fprintf(stdout, MSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
-                        "missing compression"));
+                FWRMSG( stdout, HHC00375, "W", LCSS_DEVNUM, dev->filename,
+                        "missing compression");
             else
-                WRMSG(HHC00375, "W", LCSS_DEVNUM, dev->filename,
+                WRMSG( HHC00375, "W", LCSS_DEVNUM, dev->filename,
                       "missing compression");
             goto cdsk_error;
         }
@@ -2392,9 +2407,9 @@ cdsk_fba_recover:
     if (fsperr && ro)
     {
         if(dev->batch)
-              fprintf(stdout, MSG(HHC00376, "W", LCSS_DEVNUM, dev->filename));
+              FWRMSG( stdout, HHC00376, "W", LCSS_DEVNUM, dev->filename);
           else
-              WRMSG(HHC00376, "W", LCSS_DEVNUM, dev->filename);
+              WRMSG( HHC00376, "W", LCSS_DEVNUM, dev->filename);
     }
     else if (fsperr)
     {
@@ -2481,9 +2496,9 @@ cdsk_fsperr_retry:
          * Phase 2 -- rebuild free space statistics
          *-----------------------------------------------------------*/
 
-        cdevhdr.vrm[0] = CCKD_VERSION;
-        cdevhdr.vrm[1] = CCKD_RELEASE;
-        cdevhdr.vrm[2] = CCKD_MODLVL;
+        cdevhdr.cdh_vrm[0] = CCKD_VERSION;
+        cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
+        cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
         cdevhdr.cdh_size        = cdevhdr.cdh_used         = cdevhdr.free_off =
         cdevhdr.free_total  = cdevhdr.free_largest =
@@ -2515,7 +2530,7 @@ cdsk_fsperr_retry:
             len = (cdevhdr.free_num+1) * CCKD_FREEBLK_SIZE;
 
             /* look for existing free space to fit new format free space */
-            for (i = off = 0; !off && spctab[i].spc_typ != SPCTAB_EOF; i++)
+            for (i=0, off=0; !off && spctab[i].spc_typ != SPCTAB_EOF; i++)
                 if (spctab[i].spc_typ == SPCTAB_FREE && len <= (int)spctab[i].spc_siz)
                     off = (off_t)spctab[i].spc_off;
 
@@ -2603,9 +2618,9 @@ cdsk_fsperr_retry:
         rc = ftruncate (fd, off);
 
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00377, "I", LCSS_DEVNUM, dev->filename));
+            FWRMSG( stdout, HHC00377, "I", LCSS_DEVNUM, dev->filename);
         else
-            WRMSG(HHC00377, "I", LCSS_DEVNUM, dev->filename);
+            WRMSG( HHC00377, "I", LCSS_DEVNUM, dev->filename);
 
     } /* if (fsperr) */
 
@@ -2617,14 +2632,14 @@ cdsk_return_ok:
 
     rc = recovery ? 2 : fsperr ? 1 : 0;
 
-    if (!ro && (cdevhdr.opts & (CCKD_ORDWR|CCKD_OPENED|CCKD_SPERRS)))
+    if (!ro && (cdevhdr.cdh_opts & (CCKD_OPT_OPENRW | CCKD_OPT_OPENED | CCKD_OPT_SPERRS)))
     {
-        cdevhdr.opts &= ~(CCKD_OPENED|CCKD_SPERRS);
+        cdevhdr.cdh_opts &= ~(CCKD_OPT_OPENED | CCKD_OPT_SPERRS);
 
         /* Set version.release.modlvl */
-        cdevhdr.vrm[0] = CCKD_VERSION;
-        cdevhdr.vrm[1] = CCKD_RELEASE;
-        cdevhdr.vrm[2] = CCKD_MODLVL;
+        cdevhdr.cdh_vrm[0] = CCKD_VERSION;
+        cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
+        cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
         off = CCKD_DEVHDR_POS;
         if (lseek (fd, CCKD_DEVHDR_POS, SEEK_SET) >= 0)
@@ -2657,38 +2672,38 @@ cdsk_return:
 
 cdsk_fstat_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                "fstat()", strerror(errno)));
+        FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                "fstat()", strerror( errno ));
     else
-        WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-              "fstat()", strerror(errno));
+        WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+              "fstat()", strerror( errno ));
     goto cdsk_error;
 
 cdsk_lseek_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "lseek()", off, strerror(errno)));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "lseek()", off, strerror( errno ));
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "lseek()", off, strerror(errno));
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "lseek()", off, strerror( errno ));
     goto cdsk_error;
 
 cdsk_read_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "read()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "read()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "read()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto cdsk_error;
 
 cdsk_write_error:
     if(dev->batch)
-        fprintf(stdout, MSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-                "write()", off, rc < 0 ? strerror(errno) : "incomplete"));
+        FWRMSG( stdout, HHC00355, "E", LCSS_DEVNUM, dev->filename,
+                "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     else
-        WRMSG(HHC00355, "E", LCSS_DEVNUM, dev->filename,
-              "write()", off, rc < 0 ? strerror(errno) : "incomplete");
+        WRMSG( HHC00355, "E", LCSS_DEVNUM, dev->filename,
+              "write()", off, rc < 0 ? strerror( errno ) : "incomplete");
     goto cdsk_error;
 
 cdsk_malloc_error:
@@ -2696,11 +2711,11 @@ cdsk_malloc_error:
         char buf[64];
         MSGBUF( buf, "malloc(%d)", len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                    buf, strerror(errno)));
+            FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    buf, strerror( errno ));
         else
-             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                   buf, strerror(errno));
+             WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                   buf, strerror( errno ));
     }
     goto cdsk_error;
 
@@ -2709,11 +2724,11 @@ cdsk_calloc_error:
         char buf[64];
         MSGBUF( buf, "calloc(%d)", n * len);
         if(dev->batch)
-            fprintf(stdout, MSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                    buf, strerror(errno)));
+            FWRMSG( stdout, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    buf, strerror( errno ));
         else
-             WRMSG(HHC00354, "E", LCSS_DEVNUM, dev->filename,
-                   buf, strerror(errno));
+             WRMSG( HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                   buf, strerror( errno ));
     }
     goto cdsk_error;
 
@@ -2765,18 +2780,20 @@ int i;
 }
 
 /*-------------------------------------------------------------------*/
-/* Validate a track image                                            */
+/* Validate a CCKD track image or FBA block group                    */
 /*                                                                   */
-/* If `len' is negative and compression is CCKD_COMPRESS_NONE then   */
-/* `len' indicates a buffer size containing the track image and the  */
-/* value returned is the actual track image length                   */
+/* If 'len' is negative and compression is CCKD_COMPRESS_NONE then   */
+/* 'len' indicates a buffer size containing the track image and the  */
+/* value returned is the actual track length. Returns 0 on error.    */
 /*-------------------------------------------------------------------*/
-static int cdsk_valid_trk (int trk, BYTE *buf, int heads, int len)
+int cdsk_valid_trk( int trk, BYTE* buf, int heads, int len )
 {
-int             i;                      /* Index                     */
-int             len2;                   /* Positive `len'            */
-int             kl, dl;                 /* Key/Data lengths          */
+CKD_TRKHDR      ha;                     /* Home Address              */
+CKD_RECHDR      rn;                     /* Record-n (r0, r1 ... rn)  */
+int             i;                      /* Buffer index              */
+int             len2;                   /* Positive 'len'            */
 BYTE           *bufp;                   /* Buffer pointer            */
+BYTE            cmp;                    /* Compression indicator     */
 int             bufl;                   /* Buffer length             */
 #if defined( HAVE_ZLIB )
 uLongf          zlen;
@@ -2786,17 +2803,21 @@ unsigned int    bz2len;
 #endif
 #if defined( HAVE_ZLIB ) || defined( CCKD_BZIP2 )
 int             rc;                     /* Return code               */
-BYTE            buf2[65536];            /* Uncompressed buffer       */
+BYTE            buf2[64*1024];          /* Uncompressed buffer       */
 #endif
 
     /* Negative len only allowed for comp none */
     len2 = len > 0 ? len : -len;
 
-    if (len2 < CKD_TRKHDR_SIZE + 8)
-        return 0;
+    if (len2 < CKD_MIN_TRKSIZE)
+        return 0; // (error: WAY too small!)
 
-    /* Uncompress the track/block image */
-    switch (buf[0]) {
+    /* Save Home Address */
+    memcpy( &ha, buf, CKD_TRKHDR_SIZE );
+    cmp = ha.bin;
+
+    /* Uncompress (inflate or expand) the track/block image... */
+    switch (cmp) {
 
     case CCKD_COMPRESS_NONE:
         bufp = buf;
@@ -2806,66 +2827,124 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
 #if defined( HAVE_ZLIB )
     case CCKD_COMPRESS_ZLIB:
         if (len < 0) return 0;
-        bufp = (BYTE *)buf2;
-        memcpy (buf2, buf, CKD_TRKHDR_SIZE);
-        zlen = sizeof(buf2) - CKD_TRKHDR_SIZE;
-        rc = uncompress (buf2 + CKD_TRKHDR_SIZE, &zlen,
-                         buf + CKD_TRKHDR_SIZE, len - CKD_TRKHDR_SIZE);
-        if (rc != Z_OK)
-            return 0;
-        bufl = (int)zlen + CKD_TRKHDR_SIZE;
+        bufp = (BYTE*) buf2;
+        memcpy( buf2, &ha,      CKD_TRKHDR_SIZE );
+        zlen = sizeof( buf2 ) - CKD_TRKHDR_SIZE;
+        rc = uncompress( buf2 + CKD_TRKHDR_SIZE, &zlen,
+                         buf  + CKD_TRKHDR_SIZE,
+                         len  - CKD_TRKHDR_SIZE ); if (rc != Z_OK) return 0;
+        bufl =     (int) zlen + CKD_TRKHDR_SIZE;
         break;
 #endif
 
 #if defined( CCKD_BZIP2 )
     case CCKD_COMPRESS_BZIP2:
         if (len < 0) return 0;
-        bufp = (BYTE *)buf2;
-        memcpy (buf2, buf, CKD_TRKHDR_SIZE);
-        bz2len = sizeof(buf2) - CKD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( (char *)&buf2[CKD_TRKHDR_SIZE], &bz2len,
-                         (char *)&buf[CKD_TRKHDR_SIZE], len - CKD_TRKHDR_SIZE, 0, 0);
-        if (rc != BZ_OK)
-            return 0;
-        bufl = (int)bz2len + CKD_TRKHDR_SIZE;
+        bufp = (BYTE*) buf2;
+        memcpy( buf2, &ha,                                CKD_TRKHDR_SIZE );
+        bz2len =                         sizeof(  buf2) - CKD_TRKHDR_SIZE;
+        rc = BZ2_bzBuffToBuffDecompress( (char*) &buf2[   CKD_TRKHDR_SIZE ], &bz2len,
+                                         (char*) &buf [   CKD_TRKHDR_SIZE ],
+                                                  len -   CKD_TRKHDR_SIZE, 0, 0 ); if (rc != BZ_OK) return 0;
+        bufl =                           (int) bz2len +   CKD_TRKHDR_SIZE;
         break;
 #endif
 
     default:
-        return 0;
+        return 0; // (error: unsupported compression algorithm!)
 
-    } /* switch (buf[0]) */
+    } /* end switch (cmp) */
 
-    /* fba check */
+    /* FBA check */
     if (heads == 65536)
     {
-        if (bufl != CFBA_BLKGRP_SIZE + CKD_TRKHDR_SIZE)
-            return 0;
-        else
-            return len > 0 ? len : bufl;
+        if (bufl != CKD_TRKHDR_SIZE + CFBA_BLKGRP_SIZE)
+            return 0; // (error: bad block group size!)
+
+        /* FBA devices don't have record headers or end-of-track
+           records either, so there's nothing else to validate.
+           Just return the length of this "track" (block group).
+        */
+        return len > 0 ? len : bufl;
     }
-    /* Check length */
-    if (bufl <= 5 + 8 + 8 + 8 + 8) return 0;
+
+    /* Validate length */
+    if (bufl <= CKD_NULLTRK_SIZE0)
+        return 0; // (error: too small!)
+
     /* Check ha */
-    if (fetch_hw(bufp + 1) != trk / heads
-     || fetch_hw(bufp + 3) != trk % heads)
-        return 0;
-    /* Check r0 */
-    if (fetch_hw(bufp + 1) != fetch_hw(bufp + 5)
-     || fetch_hw(bufp + 3) != fetch_hw(bufp + 7)
-     || bufp[9] != 0       || bufp[10] != 0
-     || fetch_hw(bufp +11) != 8)
-        return 0;
-    /* Check user records */
-    for (i = 21; i < bufl - 8; i += 8 + kl + dl)
+    if (0
+        || fetch_hw( ha.cyl  ) != trk / heads
+        || fetch_hw( ha.head ) != trk % heads
+    )
+        return 0; // (error: bad home address record!)
+
+    /* Get past ha to r0 count */
+    bufp += CKD_TRKHDR_SIZE;
+
+    /* Save r0 count */
+    memcpy( &rn, bufp, CKD_R0_SIZE );
+
+    /* Validate r0 count */
+    if (0
+        || fetch_hw( rn.cyl  ) != fetch_hw( ha.cyl  )
+        || fetch_hw( rn.head ) != fetch_hw( ha.head )
+        || rn.rec  != 0
+        || rn.klen != 0
+        || fetch_hw( rn.dlen ) != CKD_R0_DLEN
+    )
+        return 0; // (error: bad r0 count!) */)
+
+    /* Get past r0 count + data to r1 count */
+    bufp += (CKD_R0_SIZE + CKD_R0_DLEN);
+
+    /* Check user records r1 ... rn */
+    for
+    (
+        /* Buffer index to r1 count */
+        i = CKD_TRKHDR_SIZE + (CKD_R0_SIZE + CKD_R0_DLEN);
+
+        /* While possible user records remain... */
+        i < bufl - CKD_ENDTRK_SIZE;
+
+        /* Increment buffer index by rn count + key + data */
+        i += len2,
+
+        /* Get past this record to the next possible user record */
+        bufp += len2
+    )
     {
-        if (fetch_hw(bufp + i + 2) >= heads || bufp[i + 4] == 0)
-            break;
-        kl = bufp[i + 5];
-        dl = fetch_hw(bufp + i + 6);
+        /* Save rn count field */
+        memcpy( &rn, bufp, CKD_RECHDR_SIZE );
+
+        /* PROGRAMMING NOTE: the CKD record CC, HH and R count fields
+           are NOT required to match the actual CC and HH of the Home
+           Address record! They can be any value the user wants, as
+           long as they're valid: the HH value MUST be < the number
+           number of heads the device supports, and the R field can't
+           be 0 (there's only be one r0 and we already processed it).
+        */
+        if (0
+            || fetch_hw( rn.head ) >= heads
+            || rn.rec == 0
+        )
+            break; // (error: bad rn count!)
+
+        /* Calculate buffer index to the next possible user record */
+        len2 = CKD_RECHDR_SIZE + rn.klen + fetch_hw( rn.dlen );
     }
-    if (len < 0) bufl = i + 8;
-    if (i != bufl - 8 || memcmp(bufp + i, eighthexFF, 8))
-        return 0;
-    return len > 0 ? len : bufl;
+
+    /* Include length of end-of-track record too if requested */
+    if (len < 0)
+        bufl = i + CKD_ENDTRK_SIZE;
+
+    /* Validate track length and existence of EOT record */
+    if (0
+        || i != (bufl - CKD_ENDTRK_SIZE)
+        || memcmp( bufp, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0
+    )
+        return 0; // (error: missing end-of-track!)
+
+    return len > 0 ? len : bufl;  // (success: return track length)
+
 } /* end function cdsk_valid_trk */

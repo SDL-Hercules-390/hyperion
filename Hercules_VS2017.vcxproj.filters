@@ -2272,6 +2272,9 @@
     <ClInclude Include="cckd.h">
       <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cckd64.h">
+      <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="dasdblks.h">
       <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
     </ClInclude>

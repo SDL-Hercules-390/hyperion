@@ -302,6 +302,7 @@ static void cache_allocbuf(int ix, int i, int len);
 /*-------------------------------------------------------------------*/
 /* Device buffer definitions                                         */
 /*-------------------------------------------------------------------*/
+
 #define   CCKD_CACHE_ACTIVE  0x80000000 /* Active entry              */
 #define   CCKD_CACHE_READING 0x40000000 /* Entry being read          */
 #define   CCKD_CACHE_WRITING 0x20000000 /* Entry being written       */
@@ -325,49 +326,59 @@ static void cache_allocbuf(int ix, int i, int len);
 #define   DEVBUF_TYPE_SCKD    (DEVBUF_TYPE_SHARED|DEVBUF_TYPE_CKD)
 #define   DEVBUF_TYPE_SFBA    (DEVBUF_TYPE_SHARED|DEVBUF_TYPE_FBA)
 
+/*-------------------------------------------------------------------*/
+
 #define CCKD_CACHE_GETKEY(_ix, _devnum, _trk) \
 do { \
-  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
-  (_trk) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF    ); \
+  (_trk)    = (U32)((cache_getkey(CACHE_DEVBUF,(_ix))      ) & 0xFFFFFFFF); \
 } while (0)
-#define CCKD_CACHE_SETKEY(_devnum, _trk) \
-  ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
 
 #define CKD_CACHE_GETKEY(_ix, _devnum, _trk) \
 { \
-  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
-  (_trk) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF   ); \
+  (_trk)    = (U32)((cache_getkey(CACHE_DEVBUF,(_ix))      )& 0xFFFFFFFF); \
 }
-#define CKD_CACHE_SETKEY(_devnum, _trk) \
-  ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
 
 #define FBA_CACHE_GETKEY(_ix, _devnum, _blkgrp) \
 { \
-  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
-  (_blkgrp) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF    ); \
+  (_blkgrp) = (U32)((cache_getkey(CACHE_DEVBUF,(_ix))      ) & 0xFFFFFFFF); \
 }
-#define FBA_CACHE_SETKEY(_devnum, _blkgrp) \
-  ((U64)(((U64)(_devnum) << 32) | (U64)(_blkgrp)))
 
 #define SHRD_CACHE_GETKEY(_ix, _devnum, _trk) \
 { \
-  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
-  (_trk) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF    ); \
+  (_trk)    = (U32)((cache_getkey(CACHE_DEVBUF,(_ix))      ) & 0xFFFFFFFF); \
 }
+
+/*-------------------------------------------------------------------*/
+
+#define CCKD_CACHE_SETKEY(_devnum, _trk) \
+  ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
+
+#define CKD_CACHE_SETKEY(_devnum, _trk) \
+  ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
+
+#define FBA_CACHE_SETKEY(_devnum, _blkgrp) \
+  ((U64)(((U64)(_devnum) << 32) | (U64)(_blkgrp)))
+
 #define SHRD_CACHE_SETKEY(_devnum, _trk) \
   ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
 
 /*-------------------------------------------------------------------*/
 /* L2 definitions                                                    */
 /*-------------------------------------------------------------------*/
+
 #define   L2_CACHE_ACTIVE    0x80000000 /* Active entry              */
 
 #define L2_CACHE_GETKEY(_ix, _sfx, _devnum, _trk) \
 do { \
-  (_sfx) = (U16)((cache_getkey(CACHE_L2,(_ix)) >> 48) & 0xFFFF); \
-  (_devnum) = (U16)((cache_getkey(CACHE_L2,(_ix)) >> 32) & 0xFFFF); \
-  (_trk) = (U32)(cache_getkey(CACHE_L2,(_ix)) & 0xFFFFFFFF); \
+  (_sfx)    = (U16)((cache_getkey(CACHE_L2,(_ix)) >> 48) & 0xFFFF    ); \
+  (_devnum) = (U16)((cache_getkey(CACHE_L2,(_ix)) >> 32) & 0xFFFF    ); \
+  (_trk)    = (U32)((cache_getkey(CACHE_L2,(_ix))      ) & 0xFFFFFFFF); \
 } while (0)
+
 #define L2_CACHE_SETKEY(_sfx, _devnum, _trk) \
   ((U64)(((U64)(_sfx) << 48) | ((U64)(_devnum) << 32) | (U64)(_trk)))
 

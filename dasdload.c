@@ -19,9 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "dasdload"
 #define UTILITY_DESC    "Build DASD from TSO XMIT files"
@@ -43,14 +43,6 @@
 #define XMINFF          info_msg
 #define XMERR           printf
 #define XMERRF          printf
-
-#define R0_DATALEN      8
-#define IPL1_KEYLEN     4
-#define IPL1_DATALEN    24
-#define IPL2_KEYLEN     4
-#define IPL2_DATALEN    144
-#define VOL1_KEYLEN     4
-#define VOL1_DATALEN    80
 
 #define EBCDIC_END      "\xC5\xD5\xC4"
 #define EBCDIC_TXT      "\xE3\xE7\xE3"
@@ -110,21 +102,8 @@ typedef struct _TTRCONV {
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-BYTE twelvehex00[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+BYTE twelvehex00[]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 BYTE cvol_low_key[] = {0, 0, 0, 0, 0, 0, 0, 1};
-BYTE iplpsw[8] =    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-BYTE iplccw1[8] =   {0x06, 0x00, 0x3A, 0x98, 0x60, 0x00, 0x00, 0x60};
-BYTE iplccw2[8] =   {0x08, 0x00, 0x3A, 0x98, 0x00, 0x00, 0x00, 0x00};
-BYTE ipl2data[] =   {0x07, 0x00, 0x3A, 0xB8, 0x40, 0x00, 0x00, 0x06,
-                     0x31, 0x00, 0x3A, 0xBE, 0x40, 0x00, 0x00, 0x05,
-                     0x08, 0x00, 0x3A, 0xA0, 0x00, 0x00, 0x00, 0x00,
-                     0x06, 0x00, 0x00, 0x00, 0x20, 0x00, 0x7f, 0xff,
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /*BBCCHH*/
-                     0x00, 0x00, 0x00, 0x00, 0x04}; /*CCHHR*/
-BYTE noiplpsw[8] =  {0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
-BYTE noiplccw1[8] = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
-BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /* Information message level: 0=None, 1=File name, 2=File information,
    3=Member information, 4=Text units, record headers, 5=Dump data */
@@ -482,29 +461,24 @@ init_track (int trklen, BYTE *trkbuf, int cyl, int head, int *usedv)
     memset (trkbuf, 0, trklen);
 
     /* Build the home address in the track buffer */
-    trkhdr = (CKD_TRKHDR*)trkbuf;
+    trkhdr = (CKD_TRKHDR*) trkbuf;
     trkhdr->bin = 0;
-    trkhdr->cyl[0] = (cyl >> 8) & 0xFF;
-    trkhdr->cyl[1] = cyl & 0xFF;
-    trkhdr->head[0] = (head >> 8) & 0xFF;
-    trkhdr->head[1] = head & 0xFF;
+    store_hw( trkhdr->cyl,  cyl  );
+    store_hw( trkhdr->head, head );
 
     /* Build a standard record zero in the track buffer */
-    rechdr = (CKD_RECHDR*)(trkbuf + CKD_TRKHDR_SIZE);
-    rechdr->cyl[0] = (cyl >> 8) & 0xFF;
-    rechdr->cyl[1] = cyl & 0xFF;
-    rechdr->head[0] = (head >> 8) & 0xFF;
-    rechdr->head[1] = head & 0xFF;
-    rechdr->rec = 0;
-    rechdr->klen = 0;
-    rechdr->dlen[0] = (R0_DATALEN >> 8) & 0xFF;
-    rechdr->dlen[1] = R0_DATALEN & 0xFF;
+    rechdr = (CKD_RECHDR*) (trkbuf + CKD_TRKHDR_SIZE);
+    store_hw( rechdr->cyl,  cyl  );
+    store_hw( rechdr->head, head );
+              rechdr->rec  = 0;
+              rechdr->klen = 0;
+    store_hw( rechdr->dlen, CKD_R0_DLEN );
 
     /* Set number of bytes used in track buffer */
-    *usedv = CKD_TRKHDR_SIZE + CKD_RECHDR_SIZE + R0_DATALEN;
+    *usedv = CKD_TRKHDR_SIZE + CKD_RECHDR_SIZE + CKD_R0_DLEN;
 
     /* Build end of track marker at end of buffer */
-    memcpy (trkbuf + *usedv, eighthexFF, 8);
+    memcpy( trkbuf + *usedv, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
 } /* end function init_track */
 
@@ -537,7 +511,7 @@ int             rc;                     /* Return code               */
         *usedv = CKD_TRKHDR_SIZE;
 
     /* Build end of track marker at end of buffer */
-    memcpy (cif->trkbuf + *usedv, eighthexFF, 8);
+    memcpy( cif->trkbuf + *usedv, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
     cif->trkmodif = 1;
 
     /* Reset values for next track */
@@ -553,7 +527,7 @@ int             rc;                     /* Return code               */
     /* Read the next track */
     if (*cyl < (int)cif->devblk.ckdcyls)
     {
-        rc = read_track (cif, *cyl, *head);
+        rc = read_track( cif, *cyl, (U8) *head );
         if (rc < 0) return -1;
     }
 
@@ -586,10 +560,10 @@ int             rc;                     /* Return code               */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-write_block (CIFBLK *cif, char *ofname, DATABLK *blk, int keylen,
-            int datalen, U16 devtype, int heads, int trklen,
-            int maxtrk, int *usedv, int *usedr,
-            int *trkbal, int *reltrk, int *cyl, int *head, int *rec)
+write_block( CIFBLK *cif, char *ofname, DATABLK *blk, int keylen,
+             int datalen, U16 devtype, int heads, int trklen,
+             int maxtrk, int *usedv, int *usedr,
+             int *trkbal, int *reltrk, int *cyl, int *head, int *rec )
 {
 int             rc;                     /* Return code               */
 int             cc;                     /* Capacity calculation code */
@@ -598,17 +572,17 @@ CKD_RECHDR     *rechdr;                 /* -> Record header          */
     UNREFERENCED(devtype);
 
     /* Determine whether record will fit on current track */
-    cc = capacity_calc (cif, *usedr, keylen, datalen,
+    cc = capacity_calc( cif, *usedr, keylen, datalen,
                         usedr, trkbal, NULL, NULL, NULL, NULL, NULL,
-                        NULL, NULL, NULL, NULL, NULL);
+                        NULL, NULL, NULL, NULL, NULL );
     if (cc < 0) return -1;
 
     /* Move to next track if record will not fit */
     if (cc > 0 && *usedr > 0)
     {
         /* Write current track to output file */
-        rc = write_track (cif, ofname, heads, trklen,
-                          usedv, reltrk, cyl, head);
+        rc = write_track( cif, ofname, heads, trklen,
+                          usedv, reltrk, cyl, head );
         if (rc < 0) return -1;
 
         /* Clear bytes used and record number for new track */
@@ -616,9 +590,9 @@ CKD_RECHDR     *rechdr;                 /* -> Record header          */
         *rec = 0;
 
         /* Determine whether record will fit on new track */
-        cc = capacity_calc (cif, *usedr, keylen, datalen,
+        cc = capacity_calc( cif, *usedr, keylen, datalen,
                             usedr, trkbal, NULL, NULL, NULL, NULL,
-                            NULL, NULL, NULL, NULL, NULL, NULL);
+                            NULL, NULL, NULL, NULL, NULL, NULL );
         if (cc < 0) return -1;
 
     } /* end if */
@@ -640,9 +614,7 @@ CKD_RECHDR     *rechdr;                 /* -> Record header          */
 
     /* Build home address and record 0 if new track */
     if (*usedv == 0)
-    {
-        init_track (trklen, cif->trkbuf, *cyl, *head, usedv);
-    }
+        init_track( trklen, cif->trkbuf, *cyl, *head, usedv );
 
     /* Double check that record will not exceed virtual track size */
     if (*usedv + CKD_RECHDR_SIZE + keylen + datalen + 8 > trklen)
@@ -655,16 +627,13 @@ CKD_RECHDR     *rechdr;                 /* -> Record header          */
     /* Add data block to virtual track buffer */
     (*rec)++;
     rechdr = (CKD_RECHDR*)(cif->trkbuf + *usedv);
-    rechdr->cyl[0] = (*cyl >> 8) & 0xFF;
-    rechdr->cyl[1] = *cyl & 0xFF;
-    rechdr->head[0] = (*head >> 8) & 0xFF;
-    rechdr->head[1] = *head & 0xFF;
-    rechdr->rec = *rec;
-    rechdr->klen = keylen;
-    rechdr->dlen[0] = (datalen >> 8) & 0xFF;
-    rechdr->dlen[1] = datalen & 0xFF;
+    store_hw( rechdr->cyl,   (U16)  *cyl  );
+    store_hw( rechdr->head,  (U16)  *head );
+              rechdr->rec  = (BYTE) *rec;
+              rechdr->klen = (BYTE)  keylen;
+    store_hw( rechdr->dlen,  (U16)   datalen );
     *usedv += CKD_RECHDR_SIZE;
-    memcpy (cif->trkbuf + *usedv, blk->kdarea, keylen + datalen);
+    memcpy( cif->trkbuf + *usedv, blk->kdarea, keylen + datalen );
     *usedv += keylen + datalen;
     cif->trkmodif = 1;
 
@@ -694,10 +663,10 @@ CKD_RECHDR     *rechdr;                 /* -> Record header          */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-write_track_zero (CIFBLK *cif, char *ofname, char *volser, U16 devtype,
+write_track_zero( CIFBLK *cif, char *ofname, char *volser, U16 devtype,
             int heads, int trklen, char *iplfnm,
             int *reltrk, int *outcyl, int *outhead,
-            int flagECmode, int flagMachinecheck)
+            int flagECmode, int flagMachinecheck )
 {
 int             rc;                     /* Return code               */
 int             outusedv = 0;           /* Output bytes used on track
@@ -714,77 +683,79 @@ int             maxtrks = 1;            /* Maximum track count       */
 DATABLK        *datablk;                /* -> data block             */
 BYTE            buf[32768];             /* Buffer for data block     */
 
-    /* For 2311 the IPL text will not fit on track 0 record 4,
-       so adjust the IPL2 so that it loads from track 1 record 1 */
+    /* For 2311, the complete IPL text doesn't fit on track 0 record 4
+       so the IPL2 text is adjusted further below to load from track 1
+       record 1 thus requiring us to use 2 tracks instead of just 1. */
     if (devtype == 0x2311)
-    {
-        memcpy (ipl2data + 32, "\x00\x00\x00\x00\x00\x01", 6);
-        memcpy (ipl2data + 38, "\x00\x00\x00\x01\x01", 5);
         maxtrks = 2;
-    }
 
     /* Read track 0 */
-    rc = read_track (cif, 0, 0);
+    rc = read_track( cif, 0, 0 );
     if (rc < 0) return -1;
 
     /* Initialize the track buffer */
     *outcyl = 0; *outhead = 0;
-    init_track (trklen, cif->trkbuf, *outcyl, *outhead, &outusedv);
+    init_track( trklen, cif->trkbuf, *outcyl, *outhead, &outusedv );
     cif->trkmodif = 1;
 
     /* Build the IPL1 record */
-    memset (buf, 0, sizeof(buf));
-    datablk = (DATABLK*)buf;
-    convert_to_ebcdic (datablk->kdarea, 4, "IPL1");
+    memset( buf, 0, sizeof( buf ));
+    datablk = (DATABLK*) buf;
+    memcpy( datablk->kdarea, IPL1_KEY, IPL1_KEYLEN ); // "IPL1"
 
     /* Build IPL PSW and CCWs in IPL1 record */
     if (iplfnm != NULL)
     {
         /* Copy model IPL PSW and CCWs for IPLable volume */
-        memcpy (datablk->kdarea+4, iplpsw, 8);
-        memcpy (datablk->kdarea+12, iplccw1, 8);
-        memcpy (datablk->kdarea+20, iplccw2, 8);
+        memcpy( datablk->kdarea +  4, iplpsw,  8 );
+        memcpy( datablk->kdarea + 12, iplccw1, 8 );
+        memcpy( datablk->kdarea + 20, iplccw2, 8 );
     }
     else
     {
         /* Copy model IPL PSW and CCWs for non-IPLable volume */
-        memcpy (datablk->kdarea+4, noiplpsw, 8);
-        memcpy (datablk->kdarea+12, noiplccw1, 8);
-        memcpy (datablk->kdarea+20, noiplccw2, 8);
+        memcpy( datablk->kdarea +  4, noiplpsw,  8 );
+        memcpy( datablk->kdarea + 12, noiplccw1, 8 );
+        memcpy( datablk->kdarea + 20, noiplccw2, 8 );
 
         /* Set EC mode flag in wait PSW if requested */
         if (flagECmode)
-        {
             *(datablk->kdarea+5) = 0x08 | *(datablk->kdarea+5);
-        }
 
         /* Set machine-check-enabled mask in PSW if requested */
         if (flagMachinecheck)
-        {
             *(datablk->kdarea+5) = 0x04 | *(datablk->kdarea+5);
-        }
     }
 
-    keylen = IPL1_KEYLEN;
+    keylen  = IPL1_KEYLEN;
     datalen = IPL1_DATALEN;
 
-    rc = write_block (cif, ofname, datablk, keylen, datalen,
+    rc = write_block( cif, ofname, datablk, keylen, datalen,
                 devtype, heads, trklen, maxtrks,
                 &outusedv, &outusedr, &outtrkbr,
-                &outtrk, outcyl, outhead, &outrec);
+                &outtrk, outcyl, outhead, &outrec );
     if (rc < 0) return -1;
 
     /* Build the IPL2 record */
     memset (buf, 0, sizeof(buf));
     datablk = (DATABLK*)buf;
-    convert_to_ebcdic (datablk->kdarea, 4, "IPL2");
+    memcpy( datablk->kdarea, IPL2_KEY, IPL2_KEYLEN ); // "IPL2"
 
     if (iplfnm != NULL)
     {
-        memcpy (datablk->kdarea+4, ipl2data, sizeof(ipl2data));
+        /* For 2311 the IPL text won't fit on only track 0 record 4,
+           so adjust the IPL2 so that it loads from track 1 record 1 */
+        if (devtype == 0x2311)
+        {
+            memcpy( datablk->kdarea + IPL2_KEYLEN, ipl2data, 32 );
+            memcpy( datablk->kdarea + IPL2_KEYLEN + 32, "\x00\x00\x00\x00\x00\x01", 6 ); // BBCCHH
+            memcpy( datablk->kdarea + IPL2_KEYLEN + 38, "\x00\x00\x00\x01\x01",     5 ); // CCHHR
+        }
+        else
+            memcpy( datablk->kdarea + IPL2_KEYLEN, ipl2data, 43 );
     }
 
-    keylen = IPL2_KEYLEN;
+    keylen  = IPL2_KEYLEN;
     datalen = IPL2_DATALEN;
 
     rc = write_block (cif, ofname, datablk, keylen, datalen,
@@ -794,42 +765,40 @@ BYTE            buf[32768];             /* Buffer for data block     */
     if (rc < 0) return -1;
 
     /* Build the VOL1 record */
-    memset (buf, 0x40, sizeof(buf));
-    datablk = (DATABLK*)buf;
-    convert_to_ebcdic (datablk->kdarea, 4, "VOL1");
-    convert_to_ebcdic (datablk->kdarea+4, 4, "VOL1");
-    convert_to_ebcdic (datablk->kdarea+8, 6, volser);
-    memset(datablk->kdarea+15, 0, 5);
-    convert_to_ebcdic (datablk->kdarea+45, 8, "HERCULES");
-    keylen = VOL1_KEYLEN;
+    memset( buf, 0x40, sizeof( buf ));
+    datablk = (DATABLK*) buf;
+    memcpy( datablk->kdarea, VOL1_KEY, VOL1_KEYLEN );
+    build_vol1( datablk->kdarea + VOL1_KEYLEN, volser, HERC_OWNERA, true );
+
+    keylen  = VOL1_KEYLEN;
     datalen = VOL1_DATALEN;
 
-    rc = write_block (cif, ofname, datablk, keylen, datalen,
+    rc = write_block( cif, ofname, datablk, keylen, datalen,
                 devtype, heads, trklen, maxtrks,
                 &outusedv, &outusedr, &outtrkbr,
-                &outtrk, outcyl, outhead, &outrec);
+                &outtrk, outcyl, outhead, &outrec );
     if (rc < 0) return -1;
 
     /* Build the IPL text from the object file */
     if (iplfnm != NULL)
     {
-        memset (buf, 0, sizeof(buf));
-        datalen = read_ipl_text (iplfnm, buf+12, sizeof(buf)-12);
+        memset( buf, 0, sizeof( buf ));
+        datalen = read_ipl_text( iplfnm, buf + 12, sizeof( buf ) - 12 );
         if (datalen < 0) return -1;
 
-        datablk = (DATABLK*)buf;
+        datablk = (DATABLK*) buf;
         keylen = 0;
 
-        rc = write_block (cif, ofname, datablk, keylen, datalen,
+        rc = write_block( cif, ofname, datablk, keylen, datalen,
                     devtype, heads, trklen, maxtrks,
                     &outusedv, &outusedr, &outtrkbr,
-                    &outtrk, outcyl, outhead, &outrec);
+                    &outtrk, outcyl, outhead, &outrec );
         if (rc < 0) return -1;
     }
 
     /* Write track zero to the output file */
-    rc = write_track (cif, ofname, heads, trklen,
-                    &outusedv, reltrk, outcyl, outhead);
+    rc = write_track( cif, ofname, heads, trklen,
+                    &outusedv, reltrk, outcyl, outhead );
     if (rc < 0) return -1;
 
     return 0;
@@ -873,7 +842,7 @@ CKD_RECHDR      rechdr;                 /* Record header             */
     curhead = cif->curhead;
 
     /* Read the requested track */
-    rc = read_track (cif, cyl, head);
+    rc = read_track( cif, cyl, (U8) head );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02513, "E", ofname, cyl, cyl, head, head ) );
@@ -885,11 +854,11 @@ CKD_RECHDR      rechdr;                 /* Record header             */
     offset = CKD_TRKHDR_SIZE;
 
     /* Validate the track header */
-    if (trkhdr.bin != 0
-        || trkhdr.cyl[0] != (cyl >> 8)
-        || trkhdr.cyl[1] != (cyl & 0xFF)
-        || trkhdr.head[0] != (head >> 8)
-        || trkhdr.head[1] != (head & 0xFF))
+    if (0
+        ||           trkhdr.bin    != 0
+        || fetch_hw( trkhdr.cyl  ) != cyl
+        || fetch_hw( trkhdr.head ) != head
+    )
     {
         XMERRF ( MSG( HHC02514, "E", ofname, cyl, cyl, head, head,
                                      trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
@@ -905,7 +874,7 @@ CKD_RECHDR      rechdr;                 /* Record header             */
         offset += CKD_RECHDR_SIZE;
 
         /* Check for end of track */
-        if (memcmp(&rechdr, eighthexFF, 8) == 0)
+        if (memcmp( &rechdr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
         {
             XMERRF ( MSG( HHC02515, "E", ofname, cyl, cyl, head, head, rec, rec ) );
             return -1;
@@ -936,7 +905,7 @@ CKD_RECHDR      rechdr;                 /* Record header             */
     cif->trkmodif = 1;
 
     /* Restore original track */
-    rc = read_track (cif, curcyl, curhead);
+    rc = read_track( cif, curcyl, (U8) curhead );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02513, "E", ofname, curcyl, curcyl, curhead, curhead ) );
@@ -1021,53 +990,41 @@ time_t          timeval;                /* Current time value        */
     convert_to_ebcdic (f1dscb->ds1dsnam, 44, dsname);
     f1dscb->ds1fmtid = 0xF1;
     convert_to_ebcdic (f1dscb->ds1dssn, 6, volser);
-    f1dscb->ds1volsq[0] = 0;
-    f1dscb->ds1volsq[1] = 1;
-    f1dscb->ds1credt[0] = tmptr->tm_year;
+    store_hw( f1dscb->ds1volsq, 1 );
+    f1dscb->ds1credt[0] = (BYTE) tmptr->tm_year;
     f1dscb->ds1credt[1] = (tmptr->tm_yday >> 8) & 0xFF;
     f1dscb->ds1credt[2] = tmptr->tm_yday & 0xFF;
     f1dscb->ds1expdt[0] = 0;
     f1dscb->ds1expdt[1] = 0;
     f1dscb->ds1expdt[2] = 0;
     f1dscb->ds1noepv = 1;
-    f1dscb->ds1bodbd = dirblu;
+    f1dscb->ds1bodbd = (BYTE) dirblu;
     convert_to_ebcdic (f1dscb->ds1syscd, 13, "HERCULES");
     f1dscb->ds1dsorg[0] = dsorg;
     f1dscb->ds1dsorg[1] = 0;
     f1dscb->ds1recfm = recfm;
     f1dscb->ds1optcd = 0;
-    f1dscb->ds1blkl[0] = (blksz >> 8) & 0xFF;
-    f1dscb->ds1blkl[1] = blksz & 0xFF;
-    f1dscb->ds1lrecl[0] = (lrecl >> 8) & 0xFF;
-    f1dscb->ds1lrecl[1] = lrecl & 0xFF;
-    f1dscb->ds1keyl = keyln;
-    f1dscb->ds1rkp[0] = 0;
-    f1dscb->ds1rkp[1] = 0;
+    store_hw( f1dscb->ds1blkl,  blksz );
+    store_hw( f1dscb->ds1lrecl, lrecl );
+    f1dscb->ds1keyl = (BYTE) keyln;
+    store_hw( f1dscb->ds1rkp, 0 );
     f1dscb->ds1dsind = DS1DSIND_LASTVOL;
     if ((blksz & 0x07) == 0)
         f1dscb->ds1dsind |= DS1DSIND_BLKSIZ8;
+    store_fw( f1dscb->ds1scalo, spsec );
     f1dscb->ds1scalo[0] =
         (units == 'C' ? DS1SCALO_UNITS_CYL : DS1SCALO_UNITS_TRK);
-    f1dscb->ds1scalo[1] = (spsec >> 16) & 0xFF;
-    f1dscb->ds1scalo[2] = (spsec >> 8) & 0xFF;
-    f1dscb->ds1scalo[3] = spsec & 0xFF;
     f1dscb->ds1lstar[0] = (lasttrk >> 8) & 0xFF;
     f1dscb->ds1lstar[1] = lasttrk & 0xFF;
-    f1dscb->ds1lstar[2] = lastrec;
-    f1dscb->ds1trbal[0] = (trkbal >> 8) & 0xFF;
-    f1dscb->ds1trbal[1] = trkbal & 0xFF;
+    f1dscb->ds1lstar[2] = (BYTE) lastrec;
+    store_hw( f1dscb->ds1trbal, trkbal );
     f1dscb->ds1ext1.xttype =
         (units == 'C' ? XTTYPE_CYLBOUND : XTTYPE_DATA);
     f1dscb->ds1ext1.xtseqn = 0;
-    f1dscb->ds1ext1.xtbcyl[0] = (bcyl >> 8) & 0xFF;
-    f1dscb->ds1ext1.xtbcyl[1] = bcyl & 0xFF;
-    f1dscb->ds1ext1.xtbtrk[0] = (bhead >> 8) & 0xFF;
-    f1dscb->ds1ext1.xtbtrk[1] = bhead & 0xFF;
-    f1dscb->ds1ext1.xtecyl[0] = (ecyl >> 8) & 0xFF;
-    f1dscb->ds1ext1.xtecyl[1] = ecyl & 0xFF;
-    f1dscb->ds1ext1.xtetrk[0] = (ehead >> 8) & 0xFF;
-    f1dscb->ds1ext1.xtetrk[1] = ehead & 0xFF;
-
+    store_hw( f1dscb->ds1ext1.xtbcyl, bcyl );
+    store_hw( f1dscb->ds1ext1.xtbtrk, bhead );
+    store_hw( f1dscb->ds1ext1.xtecyl, ecyl );
+    store_hw( f1dscb->ds1ext1.xtetrk, ehead );
     return 0;
 } /* end function build_format1_dscb */
 
@@ -1146,22 +1103,19 @@ int             tolfact;                /* Device tolerance          */
     f4dscb->ds4hcchh[1] = numcyls & 0xFF;
     f4dscb->ds4hcchh[2] = 0;
     f4dscb->ds4hcchh[3] = 0;
-    f4dscb->ds4noatk[0] = 0;
-    f4dscb->ds4noatk[1] = 0;
+    store_hw( f4dscb->ds4noatk, 0 );
     f4dscb->ds4vtoci = DS4VTOCI_DOS;
     f4dscb->ds4noext = 1;
     f4dscb->ds4devsz[0] = (numcyls >> 8) & 0xFF;
     f4dscb->ds4devsz[1] = numcyls & 0xFF;
     f4dscb->ds4devsz[2] = (numheads >> 8) & 0xFF;
     f4dscb->ds4devsz[3] = numheads & 0xFF;
-    f4dscb->ds4devtk[0] = (physlen >> 8) & 0xFF;
-    f4dscb->ds4devtk[1] = physlen & 0xFF;
+    store_hw( f4dscb->ds4devtk, physlen );
     f4dscb->ds4devi = kbconst;
     f4dscb->ds4devl = lbconst;
     f4dscb->ds4devk = nkconst;
     f4dscb->ds4devfg = devflag;
-    f4dscb->ds4devtl[0] = (tolfact >> 8) & 0xFF;
-    f4dscb->ds4devtl[1] = tolfact & 0xFF;
+    store_hw( f4dscb->ds4devtl, tolfact );
     f4dscb->ds4devdt = numdscb;
     f4dscb->ds4devdb = numdblk;
 
@@ -1320,7 +1274,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     }
 
     /* Read the first track of the VTOC */
-    rc = read_track (cif, outcyl, outhead);
+    rc = read_track( cif, outcyl, (U8) outhead );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02530, "E", "VTOC", outcyl, outcyl, outhead, outhead ) );
@@ -1339,7 +1293,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     f4dscb->ds4hpchr[1] = highcyl & 0xFF;
     f4dscb->ds4hpchr[2] = (highhead >> 8) & 0xFF;
     f4dscb->ds4hpchr[3] = highhead & 0xFF;
-    f4dscb->ds4hpchr[4] = highrec;
+    f4dscb->ds4hpchr[4] = (BYTE) highrec;
 
     /* Build the VTOC start CCHHR */
     volvtoc[0] = (outcyl >> 8) & 0xFF;
@@ -1355,8 +1309,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     numf0dscb = (numtrks * dscbpertrk) - numdscb;
 
     /* Update the format 0 DSCB count in the format 4 DSCB */
-    f4dscb->ds4dsrec[0] = (numf0dscb >> 8) & 0xFF;
-    f4dscb->ds4dsrec[1] = numf0dscb & 0xFF;
+    store_hw( f4dscb->ds4dsrec, numf0dscb );
 
     /* Calculate the CCHH of the last track of the VTOC */
     abstrk = (outcyl * heads) + outhead;
@@ -1368,14 +1321,10 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     f4dscb->ds4vtoce.xttype =
         (endhead == heads - 1 ? XTTYPE_CYLBOUND : XTTYPE_DATA);
     f4dscb->ds4vtoce.xtseqn = 0;
-    f4dscb->ds4vtoce.xtbcyl[0] = (outcyl >> 8) & 0xFF;
-    f4dscb->ds4vtoce.xtbcyl[1] = outcyl & 0xFF;
-    f4dscb->ds4vtoce.xtbtrk[0] = (outhead >> 8) & 0xFF;
-    f4dscb->ds4vtoce.xtbtrk[1] = outhead & 0xFF;
-    f4dscb->ds4vtoce.xtecyl[0] = (endcyl >> 8) & 0xFF;
-    f4dscb->ds4vtoce.xtecyl[1] = endcyl & 0xFF;
-    f4dscb->ds4vtoce.xtetrk[0] = (endhead >> 8) & 0xFF;
-    f4dscb->ds4vtoce.xtetrk[1] = endhead & 0xFF;
+    store_hw( f4dscb->ds4vtoce.xtbcyl, outcyl );
+    store_hw( f4dscb->ds4vtoce.xtbtrk, outhead );
+    store_hw( f4dscb->ds4vtoce.xtecyl, endcyl );
+    store_hw( f4dscb->ds4vtoce.xtetrk, endhead );
 
     /* Calculate the mimimum volume size */
     if (prealloc)
@@ -1459,7 +1408,7 @@ char            dsnama[45];             /* Dataset name (ASCIIZ)     */
     if (prealloc)
     {
         /* Read the original track again */
-        rc = read_track (cif, curcyl, curhead);
+        rc = read_track( cif, curcyl, (U8) curhead );
         if (rc < 0)
         {
             XMERRF ( MSG( HHC02530, "E", "track", curcyl, curcyl, curhead, curhead ) );
@@ -1895,13 +1844,13 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
             memcpy (turecfm, fieldptr[0], fieldlen[0]);
             break;
         case INMLRECL:
-            tulrecl = make_int (fieldptr[0], fieldlen[0]);
+            tulrecl = (U16) make_int (fieldptr[0], fieldlen[0]);
             break;
         case INMBLKSZ:
-            tublksz = make_int (fieldptr[0], fieldlen[0]);
+            tublksz = (U16) make_int (fieldptr[0], fieldlen[0]);
             break;
         case INMTYPE:
-            tukeyln = make_int (fieldptr[0], fieldlen[0]);
+            tukeyln = (BYTE) make_int (fieldptr[0], fieldlen[0]);
             break;
         case INMDIR:
             tudirct = make_int (fieldptr[0], fieldlen[0]);
@@ -1935,7 +1884,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
         *lrecl = tulrecl;
         *blksz = tublksz;
         *keyln = tukeyln;
-        *dirnm = tudirct;
+        *dirnm = (U16) tudirct;
     }
 
     return 0;
@@ -2042,8 +1991,8 @@ U16     heads;                          /* Number of tracks/cylinder */
             copyr1->ucbtype[2], copyr1->ucbtype[3],
             dasd_name(copyr1->ucbtype) ) );
 
-    cyls = (copyr1->cyls[0] << 8) | copyr1->cyls[1];
-    heads = (copyr1->heads[0] << 8) | copyr1->heads[1];
+    cyls  = fetch_hw( copyr1->cyls  );
+    heads = fetch_hw( copyr1->heads );
 
     XMINFF (2, MSG( HHC02552, "I", cyls, cyls, heads, heads ) );
 
@@ -2180,11 +2129,9 @@ char            hex[49];                /* Character work areas      */
     dirblka[dirblkn] = blkp;
 
     /* Update the CCHHR in the copy of the directory block */
-    blkp->cyl[0] = (cyl >> 8) & 0xFF;
-    blkp->cyl[1] = cyl & 0xFF;
-    blkp->head[0] = (head >> 8) & 0xFF;
-    blkp->head[1] = head & 0xFF;
-    blkp->rec = rec;
+    store_hw( blkp->cyl,  cyl  );
+    store_hw( blkp->head, head );
+              blkp->rec = rec;
 
     /* Load number of bytes in directory block */
     dirptr = xbuf->kdarea + 8;
@@ -2209,7 +2156,7 @@ char            hex[49];                /* Character work areas      */
         dirent = (PDSDIR*)dirptr;
 
         /* Test for end of directory */
-        if (memcmp(dirent->pds2name, eighthexFF, 8) == 0)
+        if (memcmp( dirent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             break;
 
         /* Extract the member name */
@@ -2360,7 +2307,7 @@ BYTE            notelist[1024];         /* Note list                 */
     curhead = cif->curhead;
 
     /* Seek to start of track header */
-    rc = read_track (cif, cyl, head);
+    rc = read_track( cif, cyl, (U8) head );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02547, "E", ofname, cyl, cyl, head, head ) );
@@ -2372,11 +2319,11 @@ BYTE            notelist[1024];         /* Note list                 */
     offset = CKD_TRKHDR_SIZE;
 
     /* Validate the track header */
-    if (trkhdr.bin != 0
-        || trkhdr.cyl[0] != (cyl >> 8)
-        || trkhdr.cyl[1] != (cyl & 0xFF)
-        || trkhdr.head[0] != (head >> 8)
-        || trkhdr.head[1] != (head & 0xFF))
+    if (0
+        ||           trkhdr.bin    != 0
+        || fetch_hw( trkhdr.cyl  ) != cyl
+        || fetch_hw( trkhdr.head ) != head
+    )
     {
         XMERRF ( MSG( HHC02548, "E", ofname, cyl, cyl, head, head,
                                      trkhdr.bin, trkhdr.cyl[0], trkhdr.cyl[1],
@@ -2392,7 +2339,7 @@ BYTE            notelist[1024];         /* Note list                 */
         offset += CKD_RECHDR_SIZE;
 
         /* Check for end of track */
-        if (memcmp(&rechdr, eighthexFF, 8) == 0)
+        if (memcmp( &rechdr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
         {
             XMERRF ( MSG( HHC02549, "E", ofname, cyl, cyl, head, head, rec, rec ) );
             return -1;
@@ -2438,7 +2385,7 @@ BYTE            notelist[1024];         /* Note list                 */
     cif->trkmodif = 1;
 
     /* Restore original file position */
-    rc = read_track (cif, curcyl, curhead);
+    rc = read_track( cif, curcyl, (U8) curhead );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02547, "E", ofname, curcyl, curcyl, curhead, curhead ) );
@@ -2506,7 +2453,7 @@ char            memname[9];             /* Member name (ASCIIZ)      */
         dirent = (PDSDIR*)dirptr;
 
         /* Test for end of directory */
-        if (memcmp(dirent->pds2name, eighthexFF, 8) == 0)
+        if (memcmp( dirent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             break;
 
         /* Extract the member name */
@@ -2827,10 +2774,10 @@ char            pathname[MAX_PATH];     /* xfname in host path format*/
                 /* Add an entry to the TTR conversion table */
                 ttrtab[numttr].origttr[0] = (blktrk >> 8) & 0xFF;
                 ttrtab[numttr].origttr[1] = blktrk & 0xFF;
-                ttrtab[numttr].origttr[2] = blkrec;
+                ttrtab[numttr].origttr[2] = (BYTE) blkrec;
                 ttrtab[numttr].outpttr[0] = (outtrk >> 8) & 0xFF;
                 ttrtab[numttr].outpttr[1] = outtrk & 0xFF;
-                ttrtab[numttr].outpttr[2] = outrec;
+                ttrtab[numttr].outpttr[2] = (BYTE) outrec;
                 numttr++;
             }
 
@@ -2977,7 +2924,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     memset (datablk.kdarea, 0, keylen + datalen);
 
     /* The key field contains all X'FF' */
-    memcpy (datablk.kdarea, eighthexFF, 8);
+    memcpy( datablk.kdarea, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
     /* The first entry begins after the 2 byte count field */
     bytes = 2;
@@ -3000,7 +2947,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     /* Set the TTR of the last block of the catalog */
     catent->pds2usrd[0] = ((extsize - 1) >> 8) & 0xFF;
     catent->pds2usrd[1] = (extsize - 1) & 0xFF;
-    catent->pds2usrd[2] = blkptrk;
+    catent->pds2usrd[2] = (BYTE) blkptrk;
     catent->pds2usrd[3] = 0;
 
     /* Set the TTR of the first unused block (X'000003') */
@@ -3034,15 +2981,14 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Set the last entry in block marker */
-    memcpy (catent->pds2name, eighthexFF, 8);
+    memcpy( catent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
     /* Increment bytes used by the last entry marker */
     bytes += 12;
     catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Set the number of bytes used in this block */
-    datablk.kdarea[keylen+0] = (bytes >> 8) & 0xFF;
-    datablk.kdarea[keylen+1] = bytes & 0xFF;
+    store_hw( &datablk.kdarea[ keylen+0 ], bytes );
 
     /* Write the volume index block to the output file */
     rc = write_block (cif, ofname, &datablk, keylen, datalen,
@@ -3065,7 +3011,7 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     memset (datablk.kdarea, 0, keylen + datalen);
 
     /* The key field contains all X'FF' */
-    memcpy (datablk.kdarea, eighthexFF, 8);
+    memcpy( datablk.kdarea, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
     /* The first entry begins after the 2 byte count field */
     bytes = 2;
@@ -3144,15 +3090,14 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
     catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Set the last entry in block marker */
-    memcpy (catent->pds2name, eighthexFF, 8);
+    memcpy( catent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
     /* Increment bytes used by the last entry marker */
     bytes += 12;
     catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Set the number of bytes used in this block */
-    datablk.kdarea[keylen+0] = (bytes >> 8) & 0xFF;
-    datablk.kdarea[keylen+1] = bytes & 0xFF;
+    store_hw( &datablk.kdarea[ keylen+0 ], bytes );
 
     /* Write the index block to the output file */
     rc = write_block (cif, ofname, &datablk, keylen, datalen,
@@ -3293,41 +3238,38 @@ DATABLK         datablk;                /* Data block                */
     }
 
     /* Initialize the DIP header record */
-    diphdr = (DIPHDR*)(datablk.kdarea);
-    memset (diphdr, 0, sizeof(DIPHDR));
-    diphdr->recid[0] = 0xFF;
-    diphdr->recid[1] = 0xFF;
-    diphdr->bcyl[0] = (outcyl >> 8) & 0xFF;
-    diphdr->bcyl[1] = outcyl & 0xFF;
-    diphdr->btrk[0] = (outhead >> 8) & 0xFF;
-    diphdr->btrk[1] = outhead & 0xFF;
-    diphdr->ecyl[0] = (endcyl >> 8) & 0xFF;
-    diphdr->ecyl[1] = endcyl & 0xFF;
-    diphdr->etrk[0] = (endhead >> 8) & 0xFF;
-    diphdr->etrk[1] = endhead & 0xFF;
+    diphdr = (DIPHDR*) (datablk.kdarea);
+    memset( diphdr, 0, sizeof( DIPHDR ));
+
+    store_hw( diphdr->recid, 0xFFFF );
+    store_hw( diphdr->bcyl, outcyl  );
+    store_hw( diphdr->btrk, outhead );
+    store_hw( diphdr->ecyl, endcyl  );
+    store_hw( diphdr->etrk, endhead );
+
     diphdr->restart[2] = (outcyl >> 8) & 0xFF;
     diphdr->restart[3] = outcyl & 0xFF;
     diphdr->restart[4] = (outhead >> 8) & 0xFF;
     diphdr->restart[5] = outhead & 0xFF;
     diphdr->restart[6] = 1;
-    diphdr->trkbal[0] = (remlen >> 8) & 0xFF;
-    diphdr->trkbal[1] = remlen & 0xFF;
-    diphdr->trklen[0] = (physlen >> 8) & 0xFF;
-    diphdr->trklen[1] = physlen & 0xFF;
+
+    store_hw( diphdr->trkbal, remlen  );
+    store_hw( diphdr->trklen, physlen );
+
     diphdr->reused[2] = (outcyl >> 8) & 0xFF;
     diphdr->reused[3] = outcyl & 0xFF;
     diphdr->reused[4] = (outhead >> 8) & 0xFF;
     diphdr->reused[5] = outhead & 0xFF;
     diphdr->reused[6] = 1;
-    diphdr->lasthead[0] = (lasthead >> 8) & 0xFF;
-    diphdr->lasthead[1] = lasthead & 0xFF;
-    diphdr->trklen90[0] = (trklen90 >> 8) & 0xFF;
-    diphdr->trklen90[1] = trklen90 & 0xFF;
-    diphdr->devcode = (ucbtype_code(devtype) & 0x0F) | 0xF0;
-    diphdr->cchh90[0] = (cyl90 >> 8) & 0xFF;
-    diphdr->cchh90[1] = cyl90 & 0xFF;
+
+    store_hw( diphdr->lasthead, lasthead );
+    store_hw( diphdr->trklen90, trklen90 );
+
+    diphdr->devcode = (ucbtype_code (devtype ) & 0x0F) | 0xF0;
+    diphdr->cchh90[0] = (cyl90  >> 8) & 0xFF;
+    diphdr->cchh90[1] =  cyl90        & 0xFF;
     diphdr->cchh90[2] = (head90 >> 8) & 0xFF;
-    diphdr->cchh90[3] = head90 & 0xFF;
+    diphdr->cchh90[3] =  head90       & 0xFF;
     diphdr->endid = 0xFF;
 
     /* Write the data block to the output file */
@@ -3447,10 +3389,10 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
         close (sfd);
         return -1;
     }
-    size = st.st_size;
+    size = (int) st.st_size;
 
     /* Read the first track */
-    rc = read_track (cif, *nxtcyl, *nxthead);
+    rc = read_track( cif, *nxtcyl, (U8) *nxthead );
     if (rc < 0)
     {
         XMERRF ( MSG( HHC02547, "E", ofname, *nxtcyl, *nxtcyl, *nxthead, *nxthead ) );
@@ -3569,11 +3511,10 @@ DATABLK         datablk;                /* Data block                */
         keylen = 8;
         datalen = 256;
         outdblu = 14;
-        memset (datablk.kdarea, 0, keylen + datalen);
-        memcpy (datablk.kdarea, eighthexFF, 8);
-        datablk.kdarea[keylen] = (outdblu >> 8);
-        datablk.kdarea[keylen+1] = outdblu & 0xFF;
-        memcpy (datablk.kdarea + keylen + 2, eighthexFF, 8);
+        memset( datablk.kdarea, 0, keylen + datalen);
+        memcpy( datablk.kdarea, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
+        store_hw( &datablk.kdarea[ keylen+0 ], outdblu );
+        memcpy( datablk.kdarea + keylen + 2, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
 
         /* Write directory blocks to output dataset */
         for (i = 0; i < dirblks; i++)
@@ -4239,10 +4180,10 @@ int             fsflag = 0;             /* 1=Free space message sent */
     XMINFF (0, MSG( HHC02591, "I", ofname, outcyl ) );
 
     /* Update the VTOC pointer in the volume label */
-    offset = CKD_TRKHDR_SIZE + CKD_RECHDR_SIZE + 8
+    offset = CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN
            + CKD_RECHDR_SIZE + IPL1_KEYLEN + IPL1_DATALEN
            + CKD_RECHDR_SIZE + IPL2_KEYLEN + IPL2_DATALEN
-           + CKD_RECHDR_SIZE + VOL1_KEYLEN + 11;
+           + CKD_RECHDR_SIZE + VOL1_KEYLEN + offsetof( VOL1_CKD, vtoc_CC );
 
     XMINFF (5, MSG( HHC02592, "I", volvtoc[0], volvtoc[1], volvtoc[2], volvtoc[3], volvtoc[4] ) );
 
@@ -4420,11 +4361,11 @@ char           *strtok_str = NULL;      /* last token position       */
         reqcyls = devcyls;
 
     /* Calculate the track size of the virtual device */
-    outtrklv = sizeof(CKD_TRKHDR)
-                + sizeof(CKD_RECHDR) + R0_DATALEN
-                + sizeof(CKD_RECHDR) + outmaxdl
-                + sizeof(eighthexFF);
-    outtrklv = ROUND_UP(outtrklv,512);
+    outtrklv = CKD_TRKHDR_SIZE
+             + CKD_R0_SIZE     + CKD_R0_DLEN
+             + CKD_RECHDR_SIZE + outmaxdl
+             + CKD_ENDTRK_SIZE;
+    outtrklv = ROUND_UP( outtrklv, 512 );
 
     /* Display progress message */
     XMINFF (0, MSG( HHC02520, "I", devtype, volser, outheads, outtrklv ) );
@@ -4444,6 +4385,13 @@ char           *strtok_str = NULL;      /* last token position       */
     if (!cif)
     {
         XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd_image()" ) );
+        return -1;
+    }
+
+    if (cif->devblk.cckd64 != 0)
+    {
+        // "Dasd image file format unsupported or unrecognized: %s"
+        XMERRF ( MSG( HHC02424, "E", ofname ) );
         return -1;
     }
 

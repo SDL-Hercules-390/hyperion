@@ -296,8 +296,8 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
 
     while (*count > 0 && (ptr[0] || ptr[1] || ptr[2] || ptr[3] || ptr[4]))
     {
-/*debug*/fprintf(stderr, "*** %d %.2x%.2x %.2x%.2x %.2x\n",
-/*debug*/        *count, ptr[0], ptr[1], ptr[2], ptr[3], ptr[4]);
+//*debug*/fprintf(stderr, "*** %d %.2x%.2x %.2x%.2x %.2x\n",
+//*debug*/        *count, ptr[0], ptr[1], ptr[2], ptr[3], ptr[4]);
 
         if (!cifx)
         {

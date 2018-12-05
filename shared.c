@@ -56,8 +56,6 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 DEVHND  shared_ckd_device_hndinfo;
 DEVHND  shared_fba_device_hndinfo;
 
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-
 /*-------------------------------------------------------------------
  * Update notify - called by device handlers for sharable devices
  *-------------------------------------------------------------------*/
@@ -574,7 +572,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    WRMSG (HHC00712, "I", LCSS_DEVNUM, dev->filename, (int)dev->fbaorigin, dev->fbanumblk);
+    WRMSG (HHC00712, "I", LCSS_DEVNUM, dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
 
@@ -881,7 +879,7 @@ static int shared_ckd_trklen (DEVBLK *dev, BYTE *buf)
 int             sz;                     /* Size so far               */
 
     for (sz = CKD_TRKHDR_SIZE;
-         memcmp (buf + sz, &eighthexFF, 8) != 0; )
+         memcmp( buf + sz, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0; )
     {
         /* add length of count, key, and data fields */
         sz += CKD_RECHDR_SIZE +
@@ -2809,9 +2807,9 @@ DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
 
 DEVHND shared_ckd_device_hndinfo = {
         &shared_ckd_init,              /* Device Initialization      */
-        &ckddasd_execute_ccw,          /* Device CCW execute         */
+        &ckd_dasd_execute_ccw,         /* Device CCW execute         */
         &shared_ckd_close,             /* Device Close               */
-        &ckddasd_query_device,         /* Device Query               */
+        &ckd_dasd_query_device,        /* Device Query               */
         NULL,                          /* Device Extended Query      */
         &shared_start,                 /* Device Start channel pgm   */
         &shared_end,                   /* Device End channel pgm     */
@@ -2831,15 +2829,15 @@ DEVHND shared_ckd_device_hndinfo = {
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
         NULL,                          /* QDIO set subchan ind       */
-        &ckddasd_hsuspend,             /* Hercules suspend           */
-        &ckddasd_hresume               /* Hercules resume            */
+        &ckd_dasd_hsuspend,            /* Hercules suspend           */
+        &ckd_dasd_hresume              /* Hercules resume            */
 };
 
 DEVHND shared_fba_device_hndinfo = {
         &shared_fba_init,              /* Device Initialization      */
-        &fbadasd_execute_ccw,          /* Device CCW execute         */
+        &fba_dasd_execute_ccw,         /* Device CCW execute         */
         &shared_fba_close,             /* Device Close               */
-        &fbadasd_query_device,         /* Device Query               */
+        &fba_dasd_query_device,        /* Device Query               */
         NULL,                          /* Device Extended Query      */
         &shared_start,                 /* Device Start channel pgm   */
         &shared_end,                   /* Device End channel pgm     */
@@ -2859,8 +2857,8 @@ DEVHND shared_fba_device_hndinfo = {
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
         NULL,                          /* QDIO set subchan ind       */
-        &fbadasd_hsuspend,             /* Hercules suspend           */
-        &fbadasd_hresume               /* Hercules resume            */
+        &fba_dasd_hsuspend,            /* Hercules suspend           */
+        &fba_dasd_hresume              /* Hercules resume            */
 };
 
 #else // !defined( OPTION_SHARED_DEVICES )

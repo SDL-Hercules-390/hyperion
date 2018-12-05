@@ -1,5 +1,5 @@
 /* CCKDSWAP.C   (C) Copyright Roger Bowler, 1999-2012                */
-/*       Swap the `endianess' of a compressed CKD file.              */
+/*              Swap the 'endianess' of a CCKD file.                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -12,6 +12,7 @@
 #include "hstdinc.h"
 #include "hercules.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "cckdswap"
 #define UTILITY_DESC    "Swap 'endianess' of a CCKD file"
@@ -85,13 +86,15 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             continue;
         }
 
-        if (!is_devhdrid_typ( devhdr.devhdrid, ANY32_CMP_OR_SF_TYP ))
+        if (!is_dh_devid_typ( devhdr.dh_devid, ANY32_CMP_OR_SF_TYP ))
         {
             // "%1d:%04X CCKD file %s: not a compressed dasd file"
             FWRMSG( stderr, HHC00356, "E", LCSS_DEVNUM, dev->filename );
             close( dev->fd );
             continue;
         }
+
+        dev->cckd64 = 0;
 
         /* read the compressed CKD device header */
         if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
@@ -103,7 +106,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* Check the OPENED bit */
-        if (!force && (cdevhdr.opts & CCKD_OPENED))
+        if (!force && (cdevhdr.cdh_opts & CCKD_OPT_OPENED))
         {
             FWRMSG( stderr, HHC00352, "E", LCSS_DEVNUM, dev->filename );
             close (dev->fd);
@@ -111,7 +114,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* get the byte order of the file */
-        bigend = (cdevhdr.opts & CCKD_BIGENDIAN);
+        bigend = (cdevhdr.cdh_opts & CCKD_OPT_BIGEND);
 
         /* call chkdsk */
         if (cckd_chkdsk (dev, level) < 0)
@@ -138,7 +141,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* swap the byte order of the file if chkdsk didn't do it for us */
-        if (bigend == (cdevhdr.opts & CCKD_BIGENDIAN))
+        if (bigend == (cdevhdr.cdh_opts & CCKD_OPT_BIGEND))
         {
             WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
                     cckd_endian() ? "big-endian" : "little-endian" );

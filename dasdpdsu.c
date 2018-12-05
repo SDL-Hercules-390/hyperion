@@ -35,7 +35,6 @@ static int process_dirblk( CIFBLK *, int, DSXTENT *, BYTE * );
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 /*-------------------------------------------------------------------*/
 /* DASDPDSU main entry point                                         */
@@ -332,7 +331,7 @@ char            memname[9];             /* Member name (ASCIIZ)      */
         dirent = (PDSDIR*)dirptr;
 
         /* Test for end of directory */
-        if (memcmp(dirent->pds2name, eighthexFF, 8) == 0)
+        if (memcmp( dirent->pds2name, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             return +1;
 
         /* Extract the member name */

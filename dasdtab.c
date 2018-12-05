@@ -603,15 +603,12 @@ BYTE buf[44];
 /*-------------------------------------------------------------------*/
 int dasd_build_fba_devid (FBADEV *fba, BYTE *devid)
 {
-
     memset( devid, 0, 256 );
 
     devid[0] = 0xff;
-    devid[1] = (fba->cu >> 8) & 0xff;
-    devid[2] = fba->cu & 0xff;
+    store_hw( &devid[1], fba->cu );
     devid[3] = 0x01;                  /* assume model is 1 */
-    devid[4] = (fba->devt >> 8) & 0xff;
-    devid[5] = fba->devt & 0xff;
+    store_hw( &devid[4], fba->devt );
     devid[6] = fba->model;
 
     return 7;
@@ -622,41 +619,25 @@ int dasd_build_fba_devid (FBADEV *fba, BYTE *devid)
 /*-------------------------------------------------------------------*/
 int dasd_build_fba_devchar (FBADEV *fba, BYTE *devchar, int blks)
 {
-
     memset( devchar, 0, 64 );
 
-    devchar[0]  = 0x30;                     // operation modes
-    devchar[1]  = 0x08;                     // features
-    devchar[2]  = fba->devclass;            // device class
-    devchar[3]  = fba->type;                // unit type
-    devchar[4]  = (fba->size >> 8) & 0xff;  // block size
-    devchar[5]  = fba->size & 0xff;
-    devchar[6]  = (fba->bpg >> 24) & 0xff;  // blks per cyclical group
-    devchar[7]  = (fba->bpg >> 16) & 0xff;
-    devchar[8]  = (fba->bpg >> 8) & 0xff;
-    devchar[9]  = fba->bpg & 0xff;
-    devchar[10] = (fba->bpp >> 24) & 0xff;  // blks per access position
-    devchar[11] = (fba->bpp >> 16) & 0xff;
-    devchar[12] = (fba->bpp >> 8) & 0xff;
-    devchar[13] = fba->bpp & 0xff;
-    devchar[14] = (blks >> 24) & 0xff;      // blks under movable heads
-    devchar[15] = (blks >> 16) & 0xff;
-    devchar[16] = (blks >> 8) & 0xff;
-    devchar[17] = blks & 0xff;
-    devchar[18] = 0;                        // blks under fixed heads
-    devchar[19] = 0;
-    devchar[20] = 0;
-    devchar[21] = 0;
-    devchar[22] = 0;                        // blks in alternate area
-    devchar[23] = 0;
-    devchar[24] = 0;                        // blks in CE+SA areas
-    devchar[25] = 0;
-    devchar[26] = 0;                        // cyclic period in ms
-    devchar[27] = 0;
-    devchar[28] = 0;                        // min time to change access
-    devchar[29] = 0;                        //   position in ms
-    devchar[30] = 0;                        // max to change access
-    devchar[31] = 0;                        //   position in ms
+    devchar[0]  = 0x30;                         // operation modes
+    devchar[1]  = 0x08;                         // features
+    devchar[2]  = fba->devclass;                // device class
+    devchar[3]  = fba->type;                    // unit type
+
+    store_hw( &devchar[ 4], (U16) fba->size );  // block size
+
+    store_fw( &devchar[ 6],       fba->bpg );   // blks per cyclical group
+    store_fw( &devchar[10],       fba->bpp );   // blks per access position
+    store_fw( &devchar[14],         blks );     // blks under movable heads
+
+    store_fw( &devchar[18],          0 );       // blks under fixed heads
+    store_hw( &devchar[22],          0 );       // blks in alternate area
+    store_hw( &devchar[24],          0 );       // blks in CE+SA areas
+    store_hw( &devchar[26],          0 );       // cyclic period in ms
+    store_hw( &devchar[28],          0 );       // min time to change access position in ms
+    store_hw( &devchar[30],          0 );       // max time to change access position in ms
 
     return 32;
 }

@@ -1801,22 +1801,19 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
     char*   p;
     int     rc = -1;
     char*   strtok_str = NULL;
-    if ( argc != 2 || cmdline == NULL || (int)strlen(cmdline) < 5 )
-    {
+    bool    bVerbose = MLVL( VERBOSE ) ? true : false;
+
+    if (0
+        || argc != 2
+        || !cmdline
+        || strlen( cmdline ) < 5
+        || !(p = strtok_r( cmdline + 4, " \t", &strtok_str ))
+    )
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
-    }
     else
-    {
-        p = strtok_r(cmdline+4, " \t", &strtok_str );
-        if ( p == NULL )
-        {
-            WRMSG( HHC02299, "E", argv[0] );
-        }
-        else
-        {
-            rc = cckd_command( p, MLVL(VERBOSE) ? 1 : 0 );
-        }
-    }
+        rc = cckd_command( p, bVerbose );
+
     return rc;
 }
 
@@ -5778,17 +5775,18 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* k command - print out cckd internal trace                         */
 /*-------------------------------------------------------------------*/
-int k_cmd(int argc, char *argv[], char *cmdline)
+int k_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 1 )
+    if (argc > 1)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    cckd_print_itrace ();
+    cckd_print_itrace();
 
     return 0;
 }
@@ -5895,24 +5893,26 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* sf commands - shadow file add/remove/set/compress/display         */
 /*-------------------------------------------------------------------*/
-int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
+int sf_cmd( int argc, char* argv[], char* cmdline )
 {
-char    action;                         /* Action character `+-cd'   */
-char   *devascii;                       /* -> Device name            */
-DEVBLK *dev;                            /* -> Device block           */
-U16     devnum;                         /* Device number             */
-U16     lcss;                           /* Logical CSS               */
-int     flag = 1;                       /* sf- flag (default merge)  */
-int     level = 2;                      /* sfk level (default 2)     */
-TID     tid;                            /* sf command thread id      */
-char    c;                              /* work for sscan            */
-int     rc;
+char     action;                        /* Action character `+-cd'   */
+char*    devascii;                      /* -> Device name            */
+DEVBLK*  dev;                           /* -> Device block           */
+U16      devnum;                        /* Device number             */
+U16      lcss;                          /* Logical CSS               */
+int      flag = 1;                      /* sf- flag (default merge)  */
+int      level = 2;                     /* sfk level (default 2)     */
+TID      tid;                           /* sf command thread id      */
+char     c;                             /* work for sscan            */
+int      rc;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if (strlen(argv[0]) < 3 || strchr ("+-cdk", argv[0][2]) == NULL)
+    if (strlen( argv[0] ) < 3 || !strchr( "+-cdk", argv[0][2] ))
     {
-        WRMSG(HHC02205, "E", argv[0], ": must be 'sf+', 'sf-', 'sfc', 'sfk' or 'sfd'");
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[0],
+            ": must be 'sf+', 'sf-', 'sfc', 'sfk' or 'sfd'" );
         return -1;
     }
 
@@ -5921,79 +5921,95 @@ int     rc;
      * device name either follows the action character or is the
      * next operand
      */
-    if (strlen(argv[0]) > 3)
+    if (strlen( argv[0] ) > 3)
         devascii = argv[0] + 3;
     else
     {
-        argv++; argc--;
-        if (argc <= 0 || (devascii = argv[0]) == NULL)
+        argv++;  argc--;
+
+        if (argc <= 0 || !(devascii = argv[0]))
         {
+            // HHC02201 "Device number missing"
             missing_devnum();
             return -1;
         }
     }
 
-    /* device name can be `*' meaning all cckd devices */
-    if (strcmp (devascii, "*") == 0)
+    /* device name can be '*' meaning all cckd devices */
+    if (strcmp( devascii, "*" ) == 0)
     {
-        for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+        /* Verify that at least one cckd device exists in the configuration */
+        for (dev = sysblk.firstdev; dev && !dev->cckd_ext; dev = dev->nextdev);
             /* nothing */
-        if (!dev)
+
+        if (!dev)       // (did we find any cckd devices?)
         {
-            WRMSG(HHC02216, "E");
+            // "Empty list"
+            WRMSG( HHC02216, "E" );
             return -1;
         }
         dev = NULL;
     }
     else
     {
-        if (parse_single_devnum(devascii,&lcss,&devnum) < 0)
+        if (parse_single_devnum( devascii, &lcss, &devnum ) < 0)
             return -1;
-        if ((dev = find_device_by_devnum (lcss,devnum)) == NULL)
+
+        if (!(dev = find_device_by_devnum ( lcss, devnum )))
         {
             // HHC02200 "%1d:%04X device not found"
-            rc = devnotfound_msg(lcss,devnum);
+            rc = devnotfound_msg( lcss, devnum );
             return rc;
         }
-        if (dev->cckd_ext == NULL)
+
+        if (!dev->cckd_ext)
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "cckd device" );
+            // "%1d:%04X device is not a %s"
+            WRMSG( HHC02209, "E", lcss, devnum, "cckd device" );
             return -1;
         }
     }
 
-    /* For `sf-' the operand can be `nomerge', `merge' or `force' */
+    /* For 'sf-' the operand can be 'nomerge', 'merge' or 'force' */
     if (action == '-' && argc > 1)
     {
-        if ( CMD(argv[1],nomerge,5) )
-            flag = 0;
-        else if ( CMD(argv[1],merge,3) )
-            flag = 1;
-        else if ( CMD(argv[1],force,5) )
-            flag = 2;
+             if (CMD( argv[1], NOMERGE, 5 )) flag = 0;
+        else if (CMD( argv[1], MERGE,   3 )) flag = 1;
+        else if (CMD( argv[1], FORCE,   5 )) flag = 2;
         else
         {
-            WRMSG(HHC02205, "E", argv[1], ": operand must be `merge', `nomerge' or `force'");
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1],
+                ": operand must be 'merge', 'nomerge' or 'force'" );
             return -1;
         }
-        argv++; argc--;
+
+        argv++;  argc--;
     }
 
-    /* For `sfk' the operand is an integer -1 .. 4 */
+    /* For 'sfk' the operand is an integer -1 .. 4 */
     if (action == 'k' && argc > 1)
     {
-        if (sscanf(argv[1], "%d%c", &level, &c) != 1 || level < -1 || level > 4)
+        if (0
+            || sscanf( argv[1], "%d%c", &level, &c ) != 1
+            || level < -1
+            || level >  4
+        )
         {
-              WRMSG(HHC02205, "E", argv[1], ": operand must be a number -1 .. 4");
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1],
+                ": operand must be a number -1 .. 4" );
             return -1;
         }
-        argv++; argc--;
+
+        argv++;  argc--;
     }
 
     /* No other operands allowed */
     if (argc > 1)
     {
-        WRMSG(HHC02205, "E", argv[1], "" );
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
         return -1;
     }
 
@@ -6002,14 +6018,15 @@ int     rc;
     {
         if (dev)
         {
-            CCKD_EXT *cckd = dev->cckd_ext;
-            cckd->sfmerge = flag == 1;
-            cckd->sfforce = flag == 2;
+            CCKD_EXT*  cckd   = dev->cckd_ext;
+
+            cckd->sfmerge = (flag == 1);
+            cckd->sfforce = (flag == 2);
         }
         else
         {
-            cckdblk.sfmerge = flag == 1;
-            cckdblk.sfforce = flag == 2;
+            cckdblk.sfmerge = (flag == 1);
+            cckdblk.sfforce = (flag == 2);
         }
     }
     /* Set sfk level in either cckdblk or the cckd extension */
@@ -6017,7 +6034,8 @@ int     rc;
     {
         if (dev)
         {
-            CCKD_EXT *cckd = dev->cckd_ext;
+            CCKD_EXT*  cckd   = dev->cckd_ext;
+
             cckd->sflevel = level;
         }
         else
@@ -6025,22 +6043,13 @@ int     rc;
     }
 
     /* Process the command */
-    switch (action) {
-        case '+': if (create_thread(&tid, DETACHED, cckd_sf_add, dev, "sf+ command"))
-                      cckd_sf_add(dev);
-                  break;
-        case '-': if (create_thread(&tid, DETACHED, cckd_sf_remove, dev, "sf- command"))
-                      cckd_sf_remove(dev);
-                  break;
-        case 'c': if (create_thread(&tid, DETACHED, cckd_sf_comp, dev, "sfc command"))
-                      cckd_sf_comp(dev);
-                  break;
-        case 'd': if (create_thread(&tid, DETACHED, cckd_sf_stats, dev, "sfd command"))
-                      cckd_sf_stats(dev);
-                  break;
-        case 'k': if (create_thread(&tid, DETACHED, cckd_sf_chk, dev, "sfk command"))
-                      cckd_sf_chk(dev);
-                  break;
+    switch (action)
+    {
+        case '+': if (create_thread( &tid, DETACHED, cckd_sf_add,    dev, "sf+ command" )) cckd_sf_add   ( dev ); break;
+        case '-': if (create_thread( &tid, DETACHED, cckd_sf_remove, dev, "sf- command" )) cckd_sf_remove( dev ); break;
+        case 'c': if (create_thread( &tid, DETACHED, cckd_sf_comp,   dev, "sfc command" )) cckd_sf_comp  ( dev ); break;
+        case 'd': if (create_thread( &tid, DETACHED, cckd_sf_stats,  dev, "sfd command" )) cckd_sf_stats ( dev ); break;
+        case 'k': if (create_thread( &tid, DETACHED, cckd_sf_chk,    dev, "sfk command" )) cckd_sf_chk   ( dev ); break;
     }
 
     return 0;

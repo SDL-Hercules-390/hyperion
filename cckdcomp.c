@@ -1,7 +1,6 @@
 /* CCKDCOMP.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright Greg Smith, 2002-2012                  */
-/*       Perform chkdsk for a Compressed CKD Direct Access Storage   */
-/*       Device file.                                                */
+/*              CCKD Compression Utility                             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -13,6 +12,8 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
+#include "dasdblks.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "cckdcomp"
 #define UTILITY_DESC    "CCKD compress program"
@@ -30,6 +31,7 @@ int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 int             level=-1;               /* Level for chkdsk          */
 int             force=0;                /* 1=Compress if OPENED set  */
+CKD_DEVHDR      devhdr;                 /* CKD device header         */
 CCKD_DEVHDR     cdevhdr;                /* Compressed CKD device hdr */
 DEVBLK          devblk;                 /* DEVBLK                    */
 DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
@@ -68,16 +70,43 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         dev->fd = HOPEN (dev->filename, O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {
+            // "%1d:%04X CCKD file %s: error in function %s: %s"
             FWRMSG( stderr, HHC00354, "E", LCSS_DEVNUM, dev->filename,
                     "open()", strerror( errno ));
             continue;
         }
 
-        /* Check CCKD_OPENED bit if -f not specified */
+        /* Read the device header */
+        rc = read (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
+        if (rc < (int)CKD_DEVHDR_SIZE)
+        {
+            const char* emsg = "CKD header incomplete";
+            if (rc < 0)
+                emsg = strerror( errno );
+
+            // "%1d:%04X CCKD file %s: error in function %s: %s"
+            FWRMSG( stderr, HHC00354, "E", LCSS_DEVNUM, dev->filename,
+                    "read()", emsg );
+            close( dev->fd );
+            continue;
+        }
+
+        /* Check the device header identifier */
+        if (!is_dh_devid_typ( devhdr.dh_devid, ANY32_CMP_OR_SF_TYP ))
+        {
+            // "Dasd image file format unsupported or unrecognized: %s"
+            FWRMSG( stderr, HHC02424, "E", dev->filename );
+            close( dev->fd );
+            continue;
+        }
+        dev->cckd64 = 0;
+
+        /* Check CCKD_OPT_OPENED bit if -f not specified */
         if (!force)
         {
             if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
             {
+                // "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
                 FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                         "lseek()", (U64)CCKD_DEVHDR_POS, strerror( errno ));
                 close (dev->fd);
@@ -85,13 +114,15 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             }
             if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
             {
+                // "%1d:%04X CCKD file %s: error in function %s at offset 0x%16.16"PRIX64": %s"
                 FWRMSG( stderr, HHC00355, "E", LCSS_DEVNUM, dev->filename,
                         "read()", (U64)CCKD_DEVHDR_POS, rc < 0 ? strerror( errno ) : "incomplete" );
                 close (dev->fd);
                 continue;
             }
-            if (cdevhdr.opts & CCKD_OPENED)
+            if (cdevhdr.cdh_opts & CCKD_OPT_OPENED)
             {
+                // "%1d:%04X CCKD file %s: opened bit is on, use -f"
                 FWRMSG( stderr, HHC00352, "E", LCSS_DEVNUM, dev->filename );
                 close (dev->fd);
                 continue;

@@ -57,12 +57,12 @@
 #include "hstdinc.h"
 #include "hercules.h"
 #include "dasdblks.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "dasdinit"
 #define UTILITY_DESC    "DASD image file creation program"
 
-static void argexit ( int code, char *m );
-
+static void argexit( int code, char* m, const char* pgm );
 
 /*-------------------------------------------------------------------*/
 /* DASDINIT program main entry point                                 */
@@ -96,7 +96,7 @@ int     rc;                             /* Return code               */
 
     /* Display help if needed or requested */
     if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))
-        argexit(-1, NULL);
+        argexit( -1, NULL, pgm );
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)
@@ -123,24 +123,24 @@ int     rc;                             /* Return code               */
             flagECmode = 0;
         else if (strcmp("m", &argv[1][1]) == 0)
             flagMachinecheck = 1;
-        else argexit(0, argv[1]);
+        else argexit( 0, argv[1], pgm );
     }
 
     /* Check remaining number of arguments */
     if (argc < (rawflag ? 3 : 4) || argc > (rawflag ? 4 : 5))
-        argexit(5, NULL);
+        argexit( 5, NULL, pgm );
 
     /* The first argument is the file name */
     if (argv[1] == NULL || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(fname)-1)
-        argexit(1, argv[1]);
+        argexit( 1, argv[1], pgm );
 
     STRLCPY( fname, argv[1] );
 
     /* The second argument is the device type.
        Model number may also be specified */
     if (argv[2] == NULL)
-        argexit(2, argv[2]);
+        argexit( 2, argv[2], pgm );
     ckd = dasd_lookup (DASD_CKDDEV, argv[2], 0, 0);
     if (ckd != NULL)
     {
@@ -166,7 +166,7 @@ int     rc;                             /* Return code               */
 
     if (!type)
         /* Specified model not found */
-        argexit(2, argv[2]);
+        argexit( 2, argv[2], pgm );
 
     /* If -r option specified, then there is not volume serial
        argument and volume size argument is actually argument
@@ -180,7 +180,7 @@ int     rc;                             /* Return code               */
         /* The third argument is the volume serial number */
         if (argv[3] == NULL || strlen(argv[3]) == 0
             || strlen(argv[3]) > sizeof(volser)-1)
-            argexit(3, argv[3]);
+            argexit( 3, argv[3], pgm );
 
         STRLCPY( volser, argv[3] );
         string_to_upper (volser);
@@ -190,18 +190,18 @@ int     rc;                             /* Return code               */
     if (argc > volsize_argnum)
     {
         if (argc > (volsize_argnum+1))
-            argexit(5, NULL);
+            argexit( 5, NULL, pgm );
 
         if (!argv[volsize_argnum] || strlen(argv[volsize_argnum]) == 0
             || sscanf(argv[volsize_argnum], "%u%c", &size, &c) != 1)
-            argexit(4, argv[volsize_argnum]);
+            argexit( 4, argv[volsize_argnum], pgm );
 
         altcylflag = 0;
     }
 
     /* `-linux' only supported for 3390 device type */
     if (nullfmt == CKD_NULLTRK_FMT2 && devtype != 0x3390)
-        argexit(6, NULL);
+        argexit( 6, NULL, pgm );
 
     if (altcylflag)
         size += altsize;
@@ -231,8 +231,7 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
-static void
-argexit ( int code, char *m )
+static void argexit( int code, char* m, const char* pgm )
 {
     // HHC02445: "Invalid, unsupported or missing %s: %s"
 
@@ -279,7 +278,7 @@ argexit ( int code, char *m )
          if (sizeof(off_t) > 4)
             buflfs = "HHC02448I   -lfs      build a large (uncompressed) dasd file (if supported)\n";
 
-            WRMSG( HHC02448, "I", bufz, bufbz, buflfs );
+            WRMSG( HHC02448, "I", pgm, bufz, bufbz, buflfs );
         }
         break;
     }

@@ -11,11 +11,11 @@
 /* It also contains function prototypes for the DASD utilities.      */
 /*-------------------------------------------------------------------*/
 
-
 #include "hercules.h"
 
-//  Forward references...
-
+/*-------------------------------------------------------------------*/
+/* typedef forward references                                        */
+/*-------------------------------------------------------------------*/
 typedef  struct  VOL1_CKD       VOL1_CKD;       // VOL1 layout for CKD
 typedef  struct  VOL1_FBA       VOL1_FBA;       // VOL1 layout for FBA
 
@@ -37,30 +37,64 @@ typedef  struct  DATABLK        DATABLK;        // IEBCOPY unload data rec
 #define  MAX_TRACKS   32767
 
 /*-------------------------------------------------------------------*/
+/*  VOL1 label and IPL text constants                                */
+/*-------------------------------------------------------------------*/
+static const BYTE VOL1_KEYA[4]  = {'V', 'O', 'L', '1' };   /* ASCII  "VOL1" */
+static const BYTE VOL1_KEY[4]   = {0xE5,0xD6,0xD3,0xF1};   /* EBCDIC "VOL1" */
+static const BYTE IPL1_KEY[4]   = {0xC9,0xD7,0xD3,0xF1};   /* EBCDIC "IPL1" */
+static const BYTE IPL2_KEY[4]   = {0xC9,0xD7,0xD3,0xF2};   /* EBCDIC "IPL2" */
+
+#define HERC_OWNERA "** HERCULES **"  /* (ASCII, 14-bytes, centered) */
+
+#define VOL1_KEYLEN       4
+#define IPL1_KEYLEN       4
+#define IPL2_KEYLEN       4
+
+#define VOLSER_LEN        6
+#define VOL1_DATALEN     80
+#define IPL1_DATALEN     24
+#define IPL2_DATALEN    144
+
+static const BYTE   iplpsw [8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const BYTE   iplccw1[8] = {0x06, 0x00, 0x3A, 0x98, 0x60, 0x00, 0x00, 0x60};
+static const BYTE   iplccw2[8] = {0x08, 0x00, 0x3A, 0x98, 0x00, 0x00, 0x00, 0x00};
+
+static const BYTE noiplpsw [8] = {0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+static const BYTE noiplccw1[8] = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static const BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+static const BYTE ipl2data[43] = {0x07, 0x00, 0x3A, 0xB8, 0x40, 0x00, 0x00, 0x06,
+                                  0x31, 0x00, 0x3A, 0xBE, 0x40, 0x00, 0x00, 0x05,
+                                  0x08, 0x00, 0x3A, 0xA0, 0x00, 0x00, 0x00, 0x00,
+                                  0x06, 0x00, 0x00, 0x00, 0x20, 0x00, 0x7f, 0xff,
+                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // BBCCHH
+                                  0x00, 0x00, 0x00, 0x00, 0x04};      // CCHHR
+
+/*-------------------------------------------------------------------*/
 /* Layout of a standard VOL1 label for CKD dasd                      */
 /*-------------------------------------------------------------------*/
 struct VOL1_CKD
 {
     /* VOL1 label format for CKD devices:
 
-      Dec  Len   Type      Description
-       0    4    EBCDIC    Always "VOL1"
-       4    6    EBCDIC    Volume Serial number
-      10    1    Hex       Security byte (X'C0')
-      11    5    Hex       CCHHR of the VTOC
-      16   21    Reserved  EBCDIC X'40' spaces
-      37   14    EBCDIC    Owner code for LVTOC listing
-      51   29    Reserved  EBCDIC X'40' spaces
+      Dec    Len     Type         Description
+       0      4      EBCDIC       Always "VOL1"
+       4      6      EBCDIC       Volume Serial number
+      10      1      Hex          Security byte (X'C0')
+      11      5      Hex          CCHHR of the VTOC
+      16     21      Reserved     EBCDIC X'40' spaces
+      37     14      EBCDIC       Owner code for LVTOC listing
+      51     29      Reserved     EBCDIC X'40' spaces
     */
-    BYTE   vol1[4];     // Always "VOL1"
-    BYTE   volser[6];   // Volume Serial number
-    BYTE   security;    // Security byte (X'C0')
-    HWORD  vtoc_CC;     // CCHHR of the VTOC
-    HWORD  vtoc_HH;     // CCHHR of the VTOC
-    BYTE   vtoc_R;      // CCHHR of the VTOC
-    BYTE   rsrvd3[21];  // EBCDIC X'40' spaces
-    BYTE   owner[14];   // Owner code for LVTOC listing
-    BYTE   rsrvd4[29];  // EBCDIC X'40' spaces
+    BYTE   vol1[ IPL1_KEYLEN ];   // Always "VOL1"
+    BYTE   volser[ VOLSER_LEN ];  // Volume Serial number
+    BYTE   security;              // Security byte (X'C0')
+    HWORD  vtoc_CC;               // CCHHR of the VTOC
+    HWORD  vtoc_HH;               // CCHHR of the VTOC
+    BYTE   vtoc_R;                // CCHHR of the VTOC
+    BYTE   rsrvd3[21];            // EBCDIC X'40' spaces
+    BYTE   owner[14];             // Owner code for LVTOC listing
+    BYTE   rsrvd4[29];            // EBCDIC X'40' spaces
 };
 
 /*-------------------------------------------------------------------*/
@@ -70,31 +104,31 @@ struct VOL1_FBA
 {
     /* VOL1 label format for FBA devices:
 
-      Dec  Len   Type      Description
-       0    4    EBCDIC    Always "VOL1"
-       4    6    EBCDIC    Volume Serial number
-      10    1    Hex       Security byte (X'C0')
-      11    5    Unsigned  Sector number of the VTOC
-      16    5    Reserved  EBCDIC X'40' spaces
-      21    4    Unsigned  VTOC Control Interval size
-      25    4    Unsigned  VTOC sectors per Control Interval
-      29    4    Unsigned  VTOC DSCB slots per Control Interval
-      33    4    Reserved  EBCDIC X'40' spaces
-      37   14    EBCDIC    Volume Owner and Address
-      51   29    Reserved  EBCDIC X'40' spaces
+      Dec    Len     Type         Description
+       0      4      EBCDIC       Always "VOL1"
+       4      6      EBCDIC       Volume Serial number
+      10      1      Hex          Security byte (X'C0')
+      11      5      Unsigned     Sector number of the VTOC
+      16      5      Reserved     EBCDIC X'40' spaces
+      21      4      Unsigned     VTOC Control Interval size
+      25      4      Unsigned     VTOC sectors per Control Interval
+      29      4      Unsigned     VTOC DSCB slots per Control Interval
+      33      4      Reserved     EBCDIC X'40' spaces
+      37     14      EBCDIC       Volume Owner and Address
+      51     29      Reserved     EBCDIC X'40' spaces
     */
-    BYTE   vol1[4];     // Always "VOL1"
-    BYTE   volser[6];   // Volume Serial number
-    BYTE   security;    // Security byte (X'C0')
-    BYTE   rsrvd1;      // X'00'
-    FWORD  vtoc_block;  // Sector number of the VTOC
-    BYTE   rsrvd2[5];   // EBCDIC X'40' spaces
-    FWORD  vtoc_cisz;   // VTOC Control Interval size (bytes)
-    FWORD  vtoc_seci;   // VTOC sectors per Control Interval
-    FWORD  vtoc_slci;   // VTOC DSCB slots per Control Interval
-    BYTE   rsrvd3[4];   // EBCDIC X'40' spaces
-    BYTE   owner[14];   // Owner code for LVTOC listing
-    BYTE   rsrvd4[29];  // EBCDIC X'40' spaces
+    BYTE   vol1[ IPL1_KEYLEN ];   // Always "VOL1"
+    BYTE   volser[ VOLSER_LEN ];  // Volume Serial number
+    BYTE   security;              // Security byte (X'C0')
+    BYTE   rsrvd1;                // X'00'
+    FWORD  vtoc_block;            // Sector number of the VTOC
+    BYTE   rsrvd2[5];             // EBCDIC X'40' spaces
+    FWORD  vtoc_cisz;             // VTOC Control Interval size (bytes)
+    FWORD  vtoc_seci;             // VTOC sectors per Control Interval
+    FWORD  vtoc_slci;             // VTOC DSCB slots per Control Interval
+    BYTE   rsrvd3[4];             // EBCDIC X'40' spaces
+    BYTE   owner[14];             // Owner code for LVTOC listing
+    BYTE   rsrvd4[29];            // EBCDIC X'40' spaces
 };
 
 /*-------------------------------------------------------------------*/
@@ -404,6 +438,9 @@ struct CIFBLK {                         /* CKD image file descriptor */
 /* Functions in module dasdutil.c                                    */
 /*-------------------------------------------------------------------*/
 
+CCKD_DLL_IMPORT DEVHND  cckd_dasd_device_hndinfo;
+CCKD_DLL_IMPORT DEVHND  cfba_dasd_device_hndinfo;
+
 DUT_DLL_IMPORT void string_to_upper (char *source);
 DUT_DLL_IMPORT void string_to_lower (char *source);
 DUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source );
@@ -429,11 +466,8 @@ DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 head
 #define IMAGE_OPEN_DASDCOPY 0x00000001
 #define IMAGE_OPEN_QUIET    0x00000002  /* (no msgs) */
 
-DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
-        int option);
-
-DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
-        int option);
+DUT_DLL_IMPORT CIFBLK*   open_ckd_image   (char *fname, char *sfname, int omode, int option);
+DUT_DLL_IMPORT CIFBLK*   open_fba_image   (char *fname, char *sfname, int omode, int option);
 
 DUT_DLL_IMPORT int  close_ckd_image (CIFBLK *cif);
 
@@ -447,22 +481,28 @@ DUT_DLL_IMPORT int  capacity_calc (CIFBLK *cif, int used, int keylen, int datale
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
 
-DUT_DLL_IMPORT int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
-        U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
-        int nullfmt, int rawflag, int flagECmode, int flagMachinecheck);
+DUT_DLL_IMPORT   int create_ckd  ( char *fname, U16 devtype, U32 heads, U32 maxdlen,
+        U32 volcyls, char *volser, BYTE comp, BYTE lfs, BYTE dasdcopy,
+        BYTE nullfmt, BYTE rawflag, BYTE flagECmode, BYTE flagMachinecheck );
 
-DUT_DLL_IMPORT int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
-        char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag);
+DUT_DLL_IMPORT   int create_fba  ( char *fname, U16 devtype, U32 sectsz, U32 sectors,
+        char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag );
 
-int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
+int create_compressed_fba  ( char *fname, U16 devtype, U32 sectsz,
         U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy,
-        int rawflag);
+        int rawflag );
 
 int get_verbose_util(void);
 
-DUT_DLL_IMPORT void set_verbose_util(int v);
+DUT_DLL_IMPORT void set_verbose_util( bool v );
+DUT_DLL_IMPORT bool is_verbose_util();
+DUT_DLL_IMPORT int  next_util_devnum();
 
 DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
+
+DUT_DLL_IMPORT int ckd_tracklen( DEVBLK* dev, BYTE* buf );
+
+int cdsk_valid_trk( int trk, BYTE* buf, int heads, int len );
 
 #define DEFAULT_FBA_TYPE    0x3370
 
@@ -572,12 +612,8 @@ DUT_DLL_IMPORT int valid_dsname( const char *pszdsname );
 
 /*-------------------------------------------------------------------*/
 
-DUT_DLL_IMPORT const char*  devhdrid_str( U32 typmsk );
-DUT_DLL_IMPORT U32          devhdrid_typ( BYTE* devhdrid );
-DUT_DLL_IMPORT bool      is_devhdrid_typ( BYTE* devhdrid, U32 typmsk );
-
-/*-------------------------------------------------------------------*/
-
-#define CCKD_DEP( _func )       (dev->cckd64?_func:_func##64)
+DUT_DLL_IMPORT const char*  dh_devid_str( U32 typmsk );
+DUT_DLL_IMPORT U32          dh_devid_typ( BYTE* dh_devid );
+DUT_DLL_IMPORT bool      is_dh_devid_typ( BYTE* dh_devid, U32 typmsk );
 
 /*-------------------------------------------------------------------*/

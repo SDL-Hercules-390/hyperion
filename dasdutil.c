@@ -18,11 +18,7 @@
 #include "dasdblks.h"
 #include "devtype.h"
 #include "opcode.h"
-
-/*-------------------------------------------------------------------*/
-/* External references         (defined in ckddasd.c)                */
-/*-------------------------------------------------------------------*/
-extern DEVHND ckddasd_device_hndinfo;
+#include "ccwarn.h"
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -31,12 +27,8 @@ extern DEVHND ckddasd_device_hndinfo;
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static int verbose = 0;                /* Be chatty about reads etc. */
-static BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-static BYTE iplpsw[8]    = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x0F};
-static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
-static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-static int  nextnum = 0;
+static bool verbose = false;           /* Be chatty about reads etc. */
+static int  nextnum = 0;               /* Next CIFBLK->devblk.devnum */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
@@ -101,16 +93,14 @@ int             len;                    /* Result length             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void build_vol1( void* buf, const char* volser, const char* owner, bool ckddasd )
 {
-#define HERC_OWNER  "** HERCULES **"    // (14-bytes, centered)
-
     if (!owner)
-        owner = HERC_OWNER;
+        owner = HERC_OWNERA;
 
     if (ckddasd)
     {
         VOL1_CKD*  ckd  = buf;
 
-        convert_to_ebcdic( ckd->vol1,   sizeof( ckd->vol1   ), "VOL1" );
+        memcpy( ckd->vol1, VOL1_KEY, sizeof( ckd->vol1 ));
         convert_to_ebcdic( ckd->volser, sizeof( ckd->volser ), volser );
         convert_to_ebcdic( ckd->owner,  sizeof( ckd->owner  ), owner  );
 
@@ -127,7 +117,7 @@ DLL_EXPORT void build_vol1( void* buf, const char* volser, const char* owner, bo
     {
         VOL1_FBA*  fba  = buf;
 
-        convert_to_ebcdic( fba->vol1,   sizeof( fba->vol1   ), "VOL1" );
+        memcpy( fba->vol1, VOL1_KEY, sizeof( fba->vol1 ));
         convert_to_ebcdic( fba->volser, sizeof( fba->volser ), volser );
         convert_to_ebcdic( fba->owner,  sizeof( fba->owner  ), owner  );
 
@@ -278,29 +268,29 @@ BYTE            unitstat;               /* Unit status               */
     if (cif->trkmodif)
     {
         cif->trkmodif = 0;
-        if (verbose) /* Issue progress message */
-            fprintf (stdout, MSG(HHC00445, "I", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, cif->curcyl, cif->curhead));
+        if (is_verbose_util()) /* Issue progress message */
+            FWRMSG( stdout, HHC00445, "I", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, cif->curcyl, cif->curhead );
         trk = (cif->curcyl * cif->heads) + cif->curhead;
         rc = (dev->hnd->write)(dev, trk, 0, NULL, cif->trksz, &unitstat);
         if (rc < 0)
         {
-            fprintf (stderr, MSG(HHC00446, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, unitstat));
+            FWRMSG( stderr, HHC00446, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, unitstat );
             return -1;
         }
     }
 
-    if (verbose) /* Issue progress message */
-        fprintf (stdout, MSG(HHC00447, "I", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, cyl, head));
+    if (is_verbose_util()) /* Issue progress message */
+        FWRMSG( stdout, HHC00447, "I", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, cyl, head );
 
     trk = (cyl * cif->heads) + head;
     rc = (dev->hnd->read)(dev, trk, &unitstat);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC00448, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, unitstat));
+        FWRMSG( stderr, HHC00448, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, unitstat );
         return -1;
     }
 
@@ -347,7 +337,7 @@ U16             dl;                     /* Data length               */
     while (1)
     {
         /* Exit with record not found if end of track */
-        if (memcmp(ptr, eighthexFF, 8) == 0)
+        if (memcmp( ptr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
             return +1;
 
         /* Extract key length and data length from count field */
@@ -360,13 +350,13 @@ U16             dl;                     /* Data length               */
             break;
 
         /* Issue progress message */
-//      fprintf (stdout,
-//              "Skipping CCHHR=%2.2X%2.2X%2.2X%2.2X"
-//              "%2.2X KL=%2.2X DL=%2.2X%2.2X\n",
-//              rechdr->cyl[0], rechdr->cyl[1],
-//              rechdr->head[0], rechdr->head[1],
-//              rechdr->rec, rechdr->klen,
-//              rechdr->dlen[0], rechdr->dlen[1]);
+//      FLOGMSG( stdout,
+//               "Skipping CCHHR=%2.2X%2.2X%2.2X%2.2X"
+//               "%2.2X KL=%2.2X DL=%2.2X%2.2X\n",
+//               rechdr->cyl[0], rechdr->cyl[1],
+//               rechdr->head[0], rechdr->head[1],
+//               rechdr->rec, rechdr->klen,
+//               rechdr->dlen[0], rechdr->dlen[1] );
 
         /* Point past count key and data to next block */
         ptr += CKD_RECHDR_SIZE + kl + dl;
@@ -417,10 +407,10 @@ U16             dl;                     /* Data length               */
     ecyl = (extent[cext].xtecyl[0] << 8) | extent[cext].xtecyl[1];
     ehead = (extent[cext].xtetrk[0] << 8) | extent[cext].xtetrk[1];
 
-    if (verbose)
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00449, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, cif->fname, cext, ccyl, chead, ecyl, ehead));
+       FWRMSG( stdout, HHC00449, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, cif->fname, cext, ccyl, chead, ecyl, ehead );
     }
 
     while (1)
@@ -436,7 +426,7 @@ U16             dl;                     /* Data length               */
         while (1)
         {
             /* Exit loop at end of track */
-            if (memcmp(ptr, eighthexFF, 8) == 0)
+            if (memcmp( ptr, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) == 0)
                 break;
 
             /* Extract key length and data length from count field */
@@ -455,13 +445,13 @@ U16             dl;                     /* Data length               */
             }
 
             /* Issue progress message */
-//          fprintf (stdout,
-//                  "Skipping CCHHR=%2.2X%2.2X%2.2X%2.2X"
-//                  "%2.2X KL=%2.2X DL=%2.2X%2.2X\n",
-//                  rechdr->cyl[0], rechdr->cyl[1],
-//                  rechdr->head[0], rechdr->head[1],
-//                  rechdr->rec, rechdr->klen,
-//                  rechdr->dlen[0], rechdr->dlen[1]);
+//          FLOGMSG( stdout,
+//                   "Skipping CCHHR=%2.2X%2.2X%2.2X%2.2X"
+//                   "%2.2X KL=%2.2X DL=%2.2X%2.2X\n",
+//                   rechdr->cyl[0], rechdr->cyl[1],
+//                   rechdr->head[0], rechdr->head[1],
+//                   rechdr->rec, rechdr->klen,
+//                   rechdr->dlen[0], rechdr->dlen[1] );
 
             /* Point past count key and data to next block */
             ptr += CKD_RECHDR_SIZE + kl + dl;
@@ -488,10 +478,10 @@ U16             dl;                     /* Data length               */
         ecyl = (extent[cext].xtecyl[0] << 8) | extent[cext].xtecyl[1];
         ehead = (extent[cext].xtetrk[0] << 8) | extent[cext].xtetrk[1];
 
-       if (verbose)
+       if (is_verbose_util())
        {
-           fprintf (stdout, MSG(HHC00449, "I", SSID_TO_LCSS(cif->devblk.ssid),
-               cif->devblk.devnum, cif->fname, cext, ccyl, chead, ecyl, ehead));
+           FWRMSG( stdout, HHC00449, "I", SSID_TO_LCSS(cif->devblk.ssid),
+               cif->devblk.devnum, cif->fname, cext, ccyl, chead, ecyl, ehead );
        }
 
     } /* end while */
@@ -550,7 +540,7 @@ u_int           extsize;                /* Extent size in tracks     */
 
     } /* end for(i) */
 
-    fprintf (stderr, MSG(HHC00450, "E", tt));
+    FWRMSG( stderr, HHC00450, "E", tt );
     return -1;
 
 } /* end function convert_tt */
@@ -591,13 +581,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         char buf[40];
         MSGBUF(buf, "calloc(1,%d)", (int)sizeof(CIFBLK));
-        fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname, buf, strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, fname, buf, strerror( errno ));
         return NULL;
     }
 
     /* Initialize the devblk */
     dev = &cif->devblk;
+    dev->cckd64 = 0;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->fd = -1;
     dev->batch = 1;
@@ -644,7 +635,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             s = strchr (s, '.');
             if (s != NULL)
             {
-                i = s - fname;
+                i = (int)(s - fname);
                 if (i > 2 && fname[i-2] == '_')
                     suffix = sfxname + i - 1;
                 else
@@ -666,8 +657,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         if (fd < 0 && rmtdev == NULL)
         {
-            fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, "open()", strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, "open()", strerror( errno ));
             free (cif);
             return NULL;
         }
@@ -678,12 +669,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
        and set the device type */
     if (fd >= 0)
     {
-
         iLen = read(fd, &devhdr, CKD_DEVHDR_SIZE);
         if (iLen < 0)
         {
-            fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, "read()", strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, "read()", strerror( errno ));
             close (fd);
             free (cif);
             return NULL;
@@ -693,22 +683,22 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         /* Error if no device header or not CKD non-shadow type */
         if (0
             || iLen < CKD_DEVHDR_SIZE
-            || !(devhdrid_typ( devhdr.devhdrid ) & CKD32_CMP_OR_NML_TYP)
+            || !(dh_devid_typ( devhdr.dh_devid ) & CKD32_CMP_OR_NML_TYP)
         )
         {
             // "%1d:%04X CKD file %s: ckd header invalid"
-            fprintf( stderr, MSG( HHC00406, "E", SSID_TO_LCSS( cif->devblk.ssid ),
-                cif->devblk.devnum, cif->fname ));
+            FWRMSG( stderr, HHC00406, "E", SSID_TO_LCSS( cif->devblk.ssid ),
+                cif->devblk.devnum, cif->fname );
             free( cif );
             return NULL;
         }
 
         /* Set the device type */
-        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dvtyp, 0);
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dh_devtyp, 0);
         if (ckd == NULL)
         {
-            fprintf(stderr, MSG(HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, devhdr.dvtyp));
+            FWRMSG( stderr, HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, devhdr.dh_devid );
             free (cif);
             return NULL;
         }
@@ -718,12 +708,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Set the device handlers */
-    dev->hnd = &ckddasd_device_hndinfo;
+    dev->hnd = &ckd_dasd_device_hndinfo;
 
     /* Set the device number */
-    dev->devnum = ++nextnum;
+    dev->devnum = next_util_devnum();
 
-    /* Build arguments for ckddasd_init_handler */
+    /* Build arguments for ckd_dasd_init_handler */
     argv[0] = sfxname;
     argc++;
     if (sfname != NULL)
@@ -736,8 +726,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname));
+        FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname );
         free (cif);
         return NULL;
     }
@@ -751,14 +741,12 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Extract the number of heads and the track size */
     cif->heads = dev->ckdheads;
-    cif->trksz = ((U32)(devhdr.trksize[3]) << 24)
-                | ((U32)(devhdr.trksize[2]) << 16)
-                | ((U32)(devhdr.trksize[1]) << 8)
-                | (U32)(devhdr.trksize[0]);
-    if (verbose)
+    FETCH_LE_FW( cif->trksz, devhdr.dh_trksize );
+
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00453, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, cif->fname, cif->heads, cif->trksz));
+       FWRMSG( stdout, HHC00453, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, cif->fname, cif->heads, cif->trksz );
     }
 
     /* Indicate that the track buffer is empty */
@@ -790,15 +778,15 @@ BYTE            unitstat;               /* Unit status               */
     /* Write the last track if modified */
     if (cif->trkmodif)
     {
-        if (verbose) /* Issue progress message */
-            fprintf (stdout, MSG(HHC00445, "I", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, cif->curcyl, cif->curhead));
+        if (is_verbose_util()) /* Issue progress message */
+            FWRMSG( stdout, HHC00445, "I", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, cif->curcyl, cif->curhead );
         trk = (cif->curcyl * cif->heads) + cif->curhead;
         rc = (dev->hnd->write)(dev, trk, 0, NULL, cif->trksz, &unitstat);
         if (rc < 0)
         {
-            fprintf (stderr, MSG(HHC00446, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, unitstat));
+            FWRMSG( stderr, HHC00446, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, unitstat );
         }
     }
 
@@ -843,13 +831,14 @@ int             argc=0;                 /*  device open              */
     {
         char buf[40];
         MSGBUF(buf, "calloc(1,%d)", (int)sizeof(CIFBLK));
-        fprintf (stderr, MSG(HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname, buf, strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, fname, buf, strerror( errno ));
         return NULL;
     }
 
     /* Initialize the devblk */
     dev = &cif->devblk;
+    dev->cckd64 = 0;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
@@ -859,20 +848,20 @@ int             argc=0;                 /*  device open              */
     fba = dasd_lookup (DASD_FBADEV, NULL, DEFAULT_FBA_TYPE, 0);
     if (fba == NULL)
     {
-        fprintf(stderr, MSG(HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname, DEFAULT_FBA_TYPE));
+        FWRMSG( stderr, HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, fname, DEFAULT_FBA_TYPE );
         free (cif);
         return NULL;
     }
     dev->devtype = fba->devt;
 
     /* Set the device handlers */
-    dev->hnd = &fbadasd_device_hndinfo;
+    dev->hnd = &fba_dasd_device_hndinfo;
 
     /* Set the device number */
-    dev->devnum = ++nextnum;
+    dev->devnum = next_util_devnum();
 
-    /* Build arguments for fbadasd_init_handler */
+    /* Build arguments for fba_dasd_init_handler */
     argv[0] = fname;
     argc++;
     if (sfname != NULL)
@@ -885,8 +874,8 @@ int             argc=0;                 /*  device open              */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname));
+        FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, fname );
         free (cif);
         return NULL;
     }
@@ -898,10 +887,10 @@ int             argc=0;                 /*  device open              */
     /* Extract the number of sectors and the sector size */
     cif->heads = dev->fbanumblk;
     cif->trksz = dev->fbablksiz;
-    if (verbose)
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00454, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, fname, cif->heads, cif->trksz));
+       FWRMSG( stdout, HHC00454, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, fname, cif->heads, cif->trksz );
     }
 
     /* Indicate that the track buffer is empty */
@@ -947,8 +936,8 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
     if (rc < 0) return -1;
     if (rc > 0)
     {
-        fprintf (stderr, MSG(HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, "VOL1"));
+        FWRMSG( stderr, HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, "VOL1" );
         return -1;
     }
 
@@ -958,10 +947,10 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
     head = (vol1data[13] << 8) | vol1data[14];
     rec = vol1data[15];
 
-    if (verbose)
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00456, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, cif->fname, volser, cyl, head, rec));
+       FWRMSG( stdout, HHC00456, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, cif->fname, volser, cyl, head, rec );
     }
 
     /* Read the format 4 DSCB */
@@ -970,19 +959,19 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
     if (rc < 0) return -1;
     if (rc > 0)
     {
-        fprintf (stderr, MSG(HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, "F4DSCB"));
+        FWRMSG( stderr, HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, "F4DSCB" );
         return -1;
     }
 
-    if (verbose)
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00457, "I", SSID_TO_LCSS(cif->devblk.ssid),
+       FWRMSG( stdout, HHC00457, "I", SSID_TO_LCSS(cif->devblk.ssid),
            cif->devblk.devnum, cif->fname,
            f4dscb->ds4vtoce.xtbcyl[0], f4dscb->ds4vtoce.xtbcyl[1],
            f4dscb->ds4vtoce.xtbtrk[0], f4dscb->ds4vtoce.xtbtrk[1],
            f4dscb->ds4vtoce.xtecyl[0], f4dscb->ds4vtoce.xtecyl[1],
-           f4dscb->ds4vtoce.xtetrk[0], f4dscb->ds4vtoce.xtetrk[1]));
+           f4dscb->ds4vtoce.xtetrk[0], f4dscb->ds4vtoce.xtetrk[1] );
     }
 
     /* Search for the requested dataset in the VTOC */
@@ -992,15 +981,15 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
     if (rc < 0) return -1;
     if (rc > 0)
     {
-        fprintf (stderr, MSG(HHC00458, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, dsnama));
+        FWRMSG( stderr, HHC00458, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, dsnama );
         return -1;
     }
 
-    if (verbose)
+    if (is_verbose_util())
     {
-       fprintf (stdout, MSG(HHC00459, "I", SSID_TO_LCSS(cif->devblk.ssid),
-           cif->devblk.devnum, cif->fname, dsnama, cyl, head, rec));
+       FWRMSG( stdout, HHC00459, "I", SSID_TO_LCSS(cif->devblk.ssid),
+           cif->devblk.devnum, cif->fname, dsnama, cyl, head, rec );
     }
 
     /* Read the format 1 DSCB */
@@ -1009,8 +998,8 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
     if (rc < 0) return -1;
     if (rc > 0)
     {
-        fprintf (stderr, MSG(HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname, "F1DSCB"));
+        FWRMSG( stderr, HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
+            cif->devblk.devnum, cif->fname, "F1DSCB" );
         return -1;
     }
 
@@ -1032,8 +1021,8 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
         if (rc < 0) return -1;
         if (rc > 0)
         {
-            fprintf (stderr, MSG(HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, "F3DSCB"));
+            FWRMSG( stderr, HHC00455, "E", SSID_TO_LCSS(cif->devblk.ssid),
+                cif->devblk.devnum, cif->fname, "F3DSCB" );
             return -1;
         }
 
@@ -1113,7 +1102,7 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
     ckd = cif->devblk.ckdtab;
     trklen = ckd->len;
     maxlen = ckd->r1;
-    heads = ckd->heads;
+    heads = (U8)ckd->heads;
     cyls = ckd->cyls;
 
     switch (ckd->formula) {
@@ -1261,7 +1250,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, 0);
     if (ckdtab == NULL)
     {
-        fprintf (stderr, MSG(HHC00415, "E", 0, 0, fname, devtype));
+        FWRMSG( stderr, HHC00415, "E", 0, 0, fname, devtype );
         return -1;
     }
 
@@ -1297,38 +1286,30 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
-        fprintf (stderr, MSG(HHC00404,"E", 0, 0, fname, "open()", strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname, "open()", strerror( errno ));
         return -1;
     }
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
 
-    if (comp == 0xff) memcpy( devhdr.devhdrid, devhdrid_str( CKD_P370_TYP ), 8 );
-    else              memcpy( devhdr.devhdrid, devhdrid_str( CKD_C370_TYP ), 8 );
+    if (comp == 0xff) memcpy( devhdr.dh_devid, dh_devid_str( CKD_P370_TYP ), 8 );
+    else              memcpy( devhdr.dh_devid, dh_devid_str( CKD_C370_TYP ), 8 );
 
-    devhdr.heads[3]   = (heads >> 24) & 0xFF;
-    devhdr.heads[2]   = (heads >> 16) & 0xFF;
-    devhdr.heads[1]   = (heads >>  8) & 0xFF;
-    devhdr.heads[0]   =  heads        & 0xFF;
+    STORE_LE_FW( devhdr.dh_heads,   heads   );
+    STORE_LE_FW( devhdr.dh_trksize, trksize );
 
-    devhdr.trksize[3] = (trksize >> 24) & 0xFF;
-    devhdr.trksize[2] = (trksize >> 16) & 0xFF;
-    devhdr.trksize[1] = (trksize >>  8) & 0xFF;
-    devhdr.trksize[0] =  trksize        & 0xFF;
+    devhdr.dh_devtyp  = devtype & 0xFF;
+    devhdr.dh_fileseq = fileseq;
 
-    devhdr.dvtyp      = devtype & 0xFF;
-    devhdr.fileseq    = fileseq;
-
-    devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
-    devhdr.highcyl[0] =  highcyl       & 0xFF;
+    STORE_LE_HW( devhdr.dh_highcyl, highcyl );
 
     /* Write the device header */
     rc = write (fd, &devhdr, CKD_DEVHDR_SIZE);
     if (rc < (int)CKD_DEVHDR_SIZE)
     {
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, "write()",
-                errno ? strerror(errno) : "incomplete"));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname, "write()",
+                errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -1336,34 +1317,31 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (comp != 0xff)
     {
         /* Create the compressed device header */
-        memset(&cdevhdr, 0, CCKD_DEVHDR_SIZE);
+        memset( &cdevhdr, 0, CCKD_DEVHDR_SIZE );
 
-        cdevhdr.vrm[0]    = CCKD_VERSION;
-        cdevhdr.vrm[1]    = CCKD_RELEASE;
-        cdevhdr.vrm[2]    = CCKD_MODLVL;
+        cdevhdr.cdh_vrm[0] = CCKD_VERSION;
+        cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
+        cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
         if (cckd_endian())
-            cdevhdr.opts |= CCKD_BIGENDIAN;
+            cdevhdr.cdh_opts |= CCKD_OPT_BIGEND;
 
-        cdevhdr.opts     |= CCKD_ORDWR;
+        cdevhdr.cdh_opts     |= CCKD_OPT_OPENRW;
         cdevhdr.num_L1tab = (volcyls * heads + 255) / 256;
         cdevhdr.num_L2tab = 256;
 
-        cdevhdr.cyls[3]   = (volcyls >> 24) & 0xFF;
-        cdevhdr.cyls[2]   = (volcyls >> 16) & 0xFF;
-        cdevhdr.cyls[1]   = (volcyls >>  8) & 0xFF;
-        cdevhdr.cyls[0]   =  volcyls        & 0xFF;
+        STORE_LE_FW( cdevhdr.cdh_cyls, volcyls );
 
-        cdevhdr.cmp_algo  = comp;
-        cdevhdr.cmp_parm  = -1;
-        cdevhdr.nullfmt   = nullfmt;
+        cdevhdr.cmp_algo    = comp;
+        cdevhdr.cmp_parm    = -1;
+        cdevhdr.cdh_nullfmt = nullfmt;
 
         /* Write the compressed device header */
         rc = write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
-        if (rc < (int)CCKD_DEVHDR_SIZE)
+        if (rc < (int)            CCKD_DEVHDR_SIZE)
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                    "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
 
@@ -1373,17 +1351,17 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         {
             char buf[40];
             MSGBUF( buf, "calloc(%d,%d)", (int)cdevhdr.num_L1tab, (int)CCKD_L1ENT_SIZE);
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname, buf, strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname, buf, strerror( errno ));
             return -1;
         }
         l1[0] = CCKD_L1TAB_POS + cdevhdr.num_L1tab * CCKD_L1ENT_SIZE;
 
         /* Write the primary lookup table */
         rc = write (fd, l1, cdevhdr.num_L1tab * CCKD_L1ENT_SIZE);
-        if (rc < (int)(cdevhdr.num_L1tab * CCKD_L1ENT_SIZE))
+        if (rc < (int)     (cdevhdr.num_L1tab * CCKD_L1ENT_SIZE))
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                    "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
 
@@ -1392,10 +1370,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
         /* Write the seondary lookup table */
         rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-        if (rc < (int)CCKD_L2TAB_SIZE)
+        if (rc < (int)       CCKD_L2TAB_SIZE)
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                    "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
 
@@ -1413,7 +1391,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 if (extgui)
                     fprintf (stderr, "CYL=%u\n", cyl);
                 else
-                    fprintf (stderr, "Writing cylinder %u\r", cyl);
+                    FWRMSG( stderr, "Writing cylinder %u\r", cyl );
             }
 
             for (head = 0; head < heads; head++)
@@ -1458,9 +1436,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     pos += keylen;
 
                     /* Copy model IPL PSW and CCWs */
-                    memcpy (pos, iplpsw, 8);
-                    memcpy (pos+8, iplccw1, 8);
-                    memcpy (pos+16, iplccw2, 8);
+                    memcpy (pos, noiplpsw, 8);
+                    memcpy (pos+8, noiplccw1, 8);
+                    memcpy (pos+16, noiplccw2, 8);
 
                     /* Set EC mode flag in wait PSW if requested */
                     if (flagECmode)
@@ -1669,7 +1647,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 }
 
                 /* End-of-track marker */
-                memcpy (pos, eighthexFF, 8);
+                memcpy( pos, &CKD_ENDTRK, CKD_ENDTRK_SIZE );
                 pos += 8;
 
                 /* Calculate length to write */
@@ -1687,8 +1665,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 rc = write (fd, buf, len);
                 if (rc != (int)len)
                 {
-                    fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+                    FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                            "write()", errno ? strerror( errno ) : "incomplete" );
                     return -1;
                 }
 
@@ -1717,15 +1695,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rcoff = lseek (fd, CKD_DEVHDR_SIZE, SEEK_SET);
         if (rcoff == -1)
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "lseek()", strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                    "lseek()", strerror( errno ));
             return -1;
         }
         rc = write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
-        if (rc < (int)CCKD_DEVHDR_SIZE)
+        if (rc < (int)            CCKD_DEVHDR_SIZE)
         {
-          fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+          FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                  "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
 
@@ -1733,15 +1711,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rcoff = lseek (fd, (off_t)l1[0], SEEK_SET);
         if (rcoff == -1)
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "lseek()", strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                    "lseek()", strerror( errno ));
             return -1;
         }
         rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-        if (rc < (int)CCKD_L2TAB_SIZE)
+        if (rc < (int)       CCKD_L2TAB_SIZE)
         {
-          fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "write()", errno ? strerror(errno) : "incomplete"));
+          FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                  "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
         rc = ftruncate(fd, (off_t)cdevhdr.cdh_size);
@@ -1754,14 +1732,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = close (fd);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "close()", strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "close()", strerror( errno ));
         return -1;
     }
 
     /* Display completion message */
-    fprintf (stderr, MSG(HHC00460, "I", 0, 0, fname,
-             cyl - start, "cylinders"));
+    FWRMSG( stderr, HHC00460, "I", 0, 0, fname,
+            cyl - start, "cylinders" );
     return 0;
 
 } /* end function create_ckd_file */
@@ -1795,9 +1773,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int
 create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
-           U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
-           int nullfmt, int rawflag,
-           int flagECmode, int flagMachinecheck)
+           U32 volcyls, char *volser, BYTE comp, BYTE lfs, BYTE dasdcopy,
+           BYTE nullfmt, BYTE rawflag,
+           BYTE flagECmode, BYTE flagMachinecheck)
 {
 int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
@@ -1817,11 +1795,11 @@ u_int           rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* DASD image track length   */
 
     /* Compute the DASD image track length */
-    trksize = sizeof(CKD_TRKHDR)
-                + sizeof(CKD_RECHDR) + rec0len
-                + sizeof(CKD_RECHDR) + maxdlen
-                + sizeof(eighthexFF);
-    trksize = ROUND_UP(trksize,512);
+    trksize = CKD_TRKHDR_SIZE
+            + CKD_RECHDR_SIZE + rec0len
+            + CKD_RECHDR_SIZE + maxdlen
+            + CKD_ENDTRK_SIZE;
+    trksize = ROUND_UP( trksize, 512 );
 
     /* Compute minimum and maximum number of cylinders */
     cylsize = trksize * heads;
@@ -1837,7 +1815,7 @@ U32             trksize;                /* DASD image track length   */
     if (maxcyls > 65536)
     {
         maxcyls = 65536;
-        fprintf( stderr, MSG(HHC00467, "I", "cylinders", maxcyls) );
+        FWRMSG( stderr, HHC00467, "I", "cylinders", maxcyls );
     }
 
     /* Check for valid number of cylinders */
@@ -1858,7 +1836,7 @@ U32             trksize;                /* DASD image track length   */
 #endif
             char   *pszopt;
 
-            fprintf( stderr, MSG(HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES) );
+            FWRMSG( stderr, HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES );
 
             if ( strlen(pszcomp) > 0 )
                 pszopt = "related options";
@@ -1866,11 +1844,11 @@ U32             trksize;                /* DASD image track length   */
                 pszopt = "option";
 
             MSGBUF(msgbuf, "-lfs%s %s", pszcomp, pszopt );
-            fprintf( stderr, MSG(HHC00468, "I", msgbuf) );
+            FWRMSG( stderr, HHC00468, "I", msgbuf );
         }
 
-        fprintf (stderr, MSG(HHC00461, "E", 0, 0, fname,
-                "cylinder", volcyls, mincyls, maxcyls));
+        FWRMSG( stderr, HHC00461, "E", 0, 0, fname,
+                "cylinder", volcyls, mincyls, maxcyls );
         return -1;
     }
 
@@ -1880,14 +1858,14 @@ U32             trksize;                /* DASD image track length   */
     {
         char buf[40];
         MSGBUF( buf, "malloc(%u)", trksize);
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                buf, strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                buf, strerror( errno ));
         return -1;
     }
 
     /* Display progress message */
-    fprintf( stderr, MSG(HHC00462, "I", 0, 0, fname,
-            devtype, rawflag ? "" : volser, volcyls, heads, trksize));
+    FWRMSG( stderr, HHC00462, "I", 0, 0, fname,
+            devtype, rawflag ? "" : volser, volcyls, heads, trksize );
 
     /* Copy the unsuffixed DASD image file name */
     STRLCPY( sfname, fname );
@@ -1907,7 +1885,7 @@ U32             trksize;                /* DASD image track length   */
         s = strchr (s, '.');
         if (s != NULL)
         {
-            i = s - fname;
+            i = (int)(s - fname);
             if (i > 2 && fname[i-2] == '_')
                 suffix = sfname + i - 1;
             else
@@ -2001,10 +1979,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (sectors < minsect || (!lfs && sectors > maxsect))
     {
         if (!lfs)
-            fprintf( stderr, MSG(HHC00521, "I", maxsect, "sectors") );
+            FWRMSG( stderr, HHC00521, "I", maxsect, "sectors" );
 
-        fprintf (stderr, MSG(HHC00461, "E", 0, 0, fname,
-                "sector", sectors, minsect, maxsect));
+        FWRMSG( stderr, HHC00461, "E", 0, 0, fname,
+                "sector", sectors, minsect, maxsect );
         return -1;
     }
 
@@ -2014,14 +1992,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     {
         char buf[40];
         MSGBUF( buf, "malloc(%u)", sectsz);
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                buf, strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                buf, strerror( errno ));
         return -1;
     }
 
     /* Display progress message */
-    fprintf (stderr, MSG(HHC00463, "I", 0, 0, fname,
-            devtype, rawflag ? "" : volser, sectors, sectsz));
+    FWRMSG( stderr, HHC00463, "I", 0, 0, fname,
+            devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* if `dasdcopy' > 1 then we can replace the existing file */
     if (dasdcopy > 1) x = 0;
@@ -2032,8 +2010,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                "open()", strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "open()", strerror( errno ));
         return -1;
     }
 
@@ -2044,8 +2022,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = ftruncate (fd, sz);
         if (rc < 0)
         {
-            fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                "ftruncate()", strerror(errno)));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "ftruncate()", strerror( errno ));
             return -1;
         }
     }
@@ -2070,15 +2048,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 if (extgui)
                     fprintf (stderr, "BLK=%u\n", sectnum);
                 else
-                    fprintf (stderr, "Writing sector %u\r", sectnum);
+                    FWRMSG( stderr, "Writing sector %u\r", sectnum );
             }
 
             /* Write the sector to the file */
             rc = write (fd, buf, sectsz);
             if (rc < (int)sectsz)
             {
-                fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                         "write()", errno ? strerror(errno) : "incomplete"));
+                FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                        "write()", errno ? strerror( errno ) : "incomplete" );
                 return -1;
             }
         } /* end for(sectnum) */
@@ -2088,8 +2066,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = close (fd);
     if (rc < 0)
     {
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                                 "close()", strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "close()", strerror( errno ));
         return -1;
     }
 
@@ -2097,7 +2075,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     free (buf);
 
     /* Display completion message */
-    fprintf (stderr, MSG(HHC00460, "I", 0, 0, fname, sectors, "sectors"));
+    FWRMSG( stderr, HHC00460, "I", 0, 0, fname, sectors, "sectors" );
 
     return 0;
 } /* end function create_fba */
@@ -2140,15 +2118,15 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     UNREFERENCED( lfs );
 
     /* Calculate the size of the level 1 table */
-    blkgrps = (sectors / CFBA_BLKGRP_BLKS) + 1;
+    blkgrps = (sectors / CFBA_BLKS_PER_GRP) + 1;
     num_L1tab = (blkgrps + 255) / 256;
     l1tabsz = num_L1tab * CCKD_L1ENT_SIZE;
 
     if (l1tabsz > 65536)
     {
         // "%1d:%04X CKD file %s: file size too large: %"PRIu64" [%d]"
-        fprintf( stderr, MSG( HHC00464, "E", 0, 0, fname,
-                 (U64)(sectors * sectsz), num_L1tab));
+        FWRMSG( stderr, HHC00464, "E", 0, 0, fname,
+                (U64)(sectors * sectsz), num_L1tab );
         return -1;
     }
 
@@ -2174,74 +2152,63 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if (fd < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "open()", strerror( errno )));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "open()", strerror( errno ));
         return -1;
     }
 
     /* Display progress message */
     // "%1d:%04X CKD file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
-    fprintf( stderr, MSG( HHC00465, "I", 0, 0, fname,
-        devtype, rawflag ? "" : volser, sectors, sectsz ));
+    FWRMSG( stderr, HHC00465, "I", 0, 0, fname,
+        devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
-    memcpy(  devhdr.devhdrid, devhdrid_str( FBA_C370_TYP ), 8 );
+    memcpy(  devhdr.dh_devid, dh_devid_str( FBA_C370_TYP ), 8 );
 
-    devhdr.heads[3]   = (sectors >> 24) & 0xFF;
-    devhdr.heads[2]   = (sectors >> 16) & 0xFF;
-    devhdr.heads[1]   = (sectors >>  8) & 0xFF;
-    devhdr.heads[0]   =  sectors        & 0xFF;
+    STORE_LE_FW( devhdr.dh_heads,   sectors );
+    STORE_LE_FW( devhdr.dh_trksize, sectsz  );
 
-    devhdr.trksize[3] = (sectsz >> 24) & 0xFF;
-    devhdr.trksize[2] = (sectsz >> 16) & 0xFF;
-    devhdr.trksize[1] = (sectsz >>  8) & 0xFF;
-    devhdr.trksize[0] =  sectsz        & 0xFF;
+    devhdr.dh_devtyp  = devtype & 0xFF;
+    devhdr.dh_fileseq = 0;
 
-    devhdr.dvtyp      = devtype & 0xFF;
-    devhdr.fileseq    = 0;
-
-    devhdr.highcyl[1] = 0;
-    devhdr.highcyl[0] = 0;
+    STORE_LE_HW( devhdr.dh_highcyl, 0 );
 
     /* Write the device header */
     rc = write( fd, &devhdr, CKD_DEVHDR_SIZE );
     if (rc < (int) CKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
     /* Build and Write the compressed device header */
     memset( &cdevhdr, 0, CCKD_DEVHDR_SIZE );
 
-    cdevhdr.vrm[0]    = CCKD_VERSION;
-    cdevhdr.vrm[1]    = CCKD_RELEASE;
-    cdevhdr.vrm[2]    = CCKD_MODLVL;
+    cdevhdr.cdh_vrm[0] = CCKD_VERSION;
+    cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
+    cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
     if (cckd_endian())
-        cdevhdr.opts |= CCKD_BIGENDIAN;
+        cdevhdr.cdh_opts |= CCKD_OPT_BIGEND;
 
-    cdevhdr.opts     |= CCKD_ORDWR;
+    cdevhdr.cdh_opts     |= CCKD_OPT_OPENRW;
     cdevhdr.num_L1tab = num_L1tab;
     cdevhdr.num_L2tab = 256;
 
-    cdevhdr.cyls[3]   = (sectors >> 24) & 0xFF;
-    cdevhdr.cyls[2]   = (sectors >> 16) & 0xFF;
-    cdevhdr.cyls[1]   = (sectors >>  8) & 0xFF;
-    cdevhdr.cyls[0]   =  sectors        & 0xFF;
+    STORE_LE_FW( cdevhdr.cdh_cyls, sectors );
 
     cdevhdr.cmp_algo  = comp;
     cdevhdr.cmp_parm  = -1;
 
-    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE );
-    if (rc < (int) CCKD_DEVHDR_SIZE)
+    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+    if (rc < (int)            CCKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -2253,8 +2220,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if (rc < l1tabsz)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -2262,12 +2229,12 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     memset( &l2, 0, CCKD_L2TAB_SIZE );
     l2[0].L2_trkoff = CKD_DEVHDR_SIZE + CCKD_DEVHDR_SIZE
         + l1tabsz + CCKD_L2TAB_SIZE;
-    rc = write( fd, &l2, CCKD_L2TAB_SIZE );
-    if (rc < (int) CCKD_L2TAB_SIZE)
+    rc = write( fd, &l2, CCKD_L2TAB_SIZE);
+    if (rc < (int)       CCKD_L2TAB_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -2306,8 +2273,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
         if (rc < (int) FBA_BKGHDR_SIZE)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
-            fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-                "write()", errno ? strerror( errno ) : "incomplete" ));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
 
@@ -2316,8 +2283,8 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
         if (rc < (int) len2)
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
-            fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-                "write()", errno ? strerror( errno ) : "incomplete" ));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
     }
@@ -2334,14 +2301,14 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
         if (rc < (int)(FBA_BKGHDR_SIZE + len2))
         {
             // "%1d:%04X CKD file %s: error in function %s: %s"
-            fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-                "write()", errno ? strerror( errno ) : "incomplete" ));
+            FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "write()", errno ? strerror( errno ) : "incomplete" );
             return -1;
         }
     }
 
     /* Update the L2 table entry for this block group */
-    l2[0].L2_len = l2[0].L2_size = FBA_BKGHDR_SIZE + len2;
+    l2[0].L2_len = l2[0].L2_size = (U16)(FBA_BKGHDR_SIZE + len2);
 
     /* Update compressed device header too */
     cdevhdr.cdh_size = cdevhdr.cdh_used = CKD_DEVHDR_SIZE +
@@ -2352,16 +2319,16 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if ((rcoff = lseek( fd, CKD_DEVHDR_SIZE, SEEK_SET )) < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf (stderr, MSG(HHC00404, "E", 0, 0, fname,
-                         "lseek()", strerror(errno)));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+                "lseek()", strerror( errno ));
         return -1;
     }
-    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE );
-    if (rc < (int) CCKD_DEVHDR_SIZE)
+    rc = write( fd, &cdevhdr, CCKD_DEVHDR_SIZE);
+    if (rc < (int)            CCKD_DEVHDR_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -2369,16 +2336,16 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if ((rcoff = lseek( fd, CKD_DEVHDR_SIZE + CCKD_DEVHDR_SIZE + l1tabsz, SEEK_SET )) < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "lseek()", strerror( errno )));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "lseek()", strerror( errno ));
         return -1;
     }
-    rc = write( fd, &l2, CCKD_L2TAB_SIZE );
-    if (rc < (int) CCKD_L2TAB_SIZE)
+    rc = write( fd, &l2, CCKD_L2TAB_SIZE);
+    if (rc < (int)       CCKD_L2TAB_SIZE)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "write()", errno ? strerror( errno ) : "incomplete" ));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "write()", errno ? strerror( errno ) : "incomplete" );
         return -1;
     }
 
@@ -2386,28 +2353,22 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     if ((rc = close( fd )) < 0)
     {
         // "%1d:%04X CKD file %s: error in function %s: %s"
-        fprintf( stderr, MSG( HHC00404, "E", 0, 0, fname,
-            "close()", strerror( errno )));
+        FWRMSG( stderr, HHC00404, "E", 0, 0, fname,
+            "close()", strerror( errno ));
         return -1;
     }
 
     /* Display completion message */
     // "%1d:%04X CKD file %s: %u %s successfully written"
-    fprintf( stderr, MSG( HHC00460, "I", 0, 0, fname,
-        sectors, "sectors" ));
+    FWRMSG( stderr, HHC00460, "I", 0, 0, fname,
+        sectors, "sectors" );
     return 0;
 } /* end function create_compressed_fba */
 
 
-int get_verbose_util(void)
-{
-    return verbose;
-}
-
-DLL_EXPORT void set_verbose_util(int v)
-{
-    verbose = v;
-}
+DLL_EXPORT void set_verbose_util( bool v ) {        verbose = v; }
+DLL_EXPORT int  is_verbose_util()          { return verbose;     }
+DLL_EXPORT int  next_util_devnum()         { return nextnum++;   }
 
 DLL_EXPORT int valid_dsname( const char *pszdsname )
 {
@@ -2442,10 +2403,39 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
 }
 
 /*-------------------------------------------------------------------*/
+/* Return track image length                                         */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int ckd_tracklen( DEVBLK* dev, BYTE* buf )
+{
+int          sz;                        /* Size so far               */
+CKD_RECHDR*  rechdr;                    /* Pointer to record header  */
+
+    sz = CKD_TRKHDR_SIZE;
+
+    while (1
+        && memcmp( buf + sz, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0
+        && sz <= dev->ckdtrksz      -     CKD_ENDTRK_SIZE
+    )
+    {
+        /* add length of count, key, and data fields */
+        rechdr = (CKD_RECHDR*) (buf + sz);
+
+        sz += CKD_RECHDR_SIZE
+           +  rechdr->klen
+           +  fetch_hw( rechdr->dlen );
+    }
+
+    /* add length for end-of-track indicator */
+    sz += CKD_ENDTRK_SIZE;
+
+    return sz;
+}
+
+/*-------------------------------------------------------------------*/
 /* Dasd image file classification functions                          */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT const char* devhdrid_str( U32 typmsk )
+DLL_EXPORT const char* dh_devid_str( U32 typmsk )
 {
 #define RETURN_DEVHDRID_STR( typ )      \
                                         \
@@ -2471,11 +2461,11 @@ DLL_EXPORT const char* devhdrid_str( U32 typmsk )
     return NULL;
 }
 
-DLL_EXPORT U32 devhdrid_typ( BYTE* devhdrid )
+DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
 {
 #define RETURN_DEVHDRID_TYP( typ )          \
                                             \
-    if (memcmp( devhdrid, #typ, 8 ) == 0)   \
+    if (memcmp( dh_devid, #typ, 8 ) == 0)   \
         return typ ## _TYP
 
     RETURN_DEVHDRID_TYP( CKD_P370 );    // "CKD_P370" (P=Normal)
@@ -2497,13 +2487,13 @@ DLL_EXPORT U32 devhdrid_typ( BYTE* devhdrid )
     return 0;
 }
 
-DLL_EXPORT bool is_devhdrid_typ( BYTE* devhdrid, U32 typmsk )
+DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
 {
 #define RETURN_IS_DEVHDRID( typ )               \
                                                 \
     if (1                                       \
         && typmsk & typ ## _TYP                 \
-        && memcmp( devhdrid, #typ, 8 ) == 0     \
+        && memcmp( dh_devid, #typ, 8 ) == 0     \
     )                                           \
         return true
 

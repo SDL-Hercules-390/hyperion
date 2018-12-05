@@ -23,6 +23,7 @@
 #include "hercules.h"
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "sr.h"
+#include "ccwarn.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -61,7 +62,7 @@ static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat);
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
+int fba_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
@@ -132,7 +133,7 @@ char   *strtok_str = NULL;              /* save last position        */
 
     /* Read the first block to see if it's compressed */
     rc = read (dev->fd, &devhdr, CKD_DEVHDR_SIZE);
-    if (rc < (int)CKD_DEVHDR_SIZE)
+    if (rc < (int)               CKD_DEVHDR_SIZE)
     {
         /* Handle read error condition */
         if (rc < 0)
@@ -149,13 +150,15 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Processing for compressed fba dasd */
-    if (is_devhdrid_typ( devhdr.devhdrid, FBA_C370_TYP ))
+    if (is_dh_devid_typ( devhdr.dh_devid, FBA_C370_TYP ))
     {
+        dev->cckd64 = 0;
+
         cfba = 1;
 
         /* Read the compressed device header */
         rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE);
-        if (rc < (int)CKD_DEVHDR_SIZE)
+        if (rc < (int)                CCKD_DEVHDR_SIZE)
         {
             /* Handle read error condition */
             if (rc < 0)
@@ -174,10 +177,7 @@ char   *strtok_str = NULL;              /* save last position        */
         /* Set block size, device origin, and device size in blocks */
         dev->fbablksiz = 512;
         dev->fbaorigin = 0;
-        dev->fbanumblk = ((U32)(cdevhdr.cyls[3]) << 24)
-                       | ((U32)(cdevhdr.cyls[2]) << 16)
-                       | ((U32)(cdevhdr.cyls[1]) << 8)
-                       |  (U32)(cdevhdr.cyls[0]);
+        FETCH_LE_FW( dev->fbanumblk, cdevhdr.cdh_cyls );
 
         /* process the remaining arguments */
         for (i = 1; i < argc; i++)
@@ -204,8 +204,10 @@ char   *strtok_str = NULL;              /* save last position        */
     }
 
     /* Processing for regular fba dasd */
-    else
+    else if (is_dh_devid_typ( devhdr.dh_devid, FBA_P370_TYP ))
     {
+        dev->cckd64 = 0;
+
         /* Determine the device size */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
@@ -243,7 +245,7 @@ char   *strtok_str = NULL;              /* save last position        */
             /* Set block size, device origin, and device size in blocks */
             dev->fbablksiz = 512;
             dev->fbaorigin = 0;
-            dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
+            dev->fbanumblk = (int)(statbuf.st_size / dev->fbablksiz);
         }
 
         /* The second argument is the device origin block number */
@@ -277,6 +279,15 @@ char   *strtok_str = NULL;              /* save last position        */
             dev->fbanumblk = numblks;
         }
     }
+    else
+    {
+        // "%1d:%04X FBA file %s: dasd image format unsupported or unrecognized"
+        WRMSG( HHC00522, "E", LCSS_DEVNUM, dev->filename );
+        close (dev->fd);
+        dev->fd = -1;
+        return -1;
+    }
+
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
     if (!dev->quiet)
@@ -298,7 +309,7 @@ char   *strtok_str = NULL;              /* save last position        */
         return -1;
     }
 
-    /* Build the devhdrid area */
+    /* Build the dh_devid area */
     dev->numdevid = dasd_build_fba_devid (dev->fbatab,(BYTE *)&dev->devid);
 
     /* Build the devchar area */
@@ -313,15 +324,15 @@ char   *strtok_str = NULL;              /* save last position        */
 
     /* Call the compressed init handler if compressed fba */
     if (cfba)
-        return cckddasd_init_handler (dev, argc, argv);
+        return cckd_dasd_init_handler (dev, argc, argv);
 
     return 0;
-} /* end function fbadasd_init_handler */
+} /* end function fba_dasd_init_handler */
 
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void fbadasd_query_device (DEVBLK *dev, char **devclass,
+void fba_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
     CCKD_EXT    *cckd;
@@ -346,7 +357,7 @@ void fbadasd_query_device (DEVBLK *dev, char **devclass,
                   dev->excps);
     }
 
-} /* end function fbadasd_query_device */
+} /* end function fba_dasd_query_device */
 
 /*-------------------------------------------------------------------*/
 /* Calculate length of an FBA block group                            */
@@ -355,11 +366,12 @@ static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 {
 off_t   offset;                         /* Offset of block group     */
 
-    offset = blkgrp * FBA_BLKGRP_SIZE;
+    offset = blkgrp *          FBA_BLKGRP_SIZE;
+
     if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
         return (int)(dev->fbaend - offset);
     else
-        return FBA_BLKGRP_SIZE;
+        return                 FBA_BLKGRP_SIZE;
 }
 
 /*-------------------------------------------------------------------*/
@@ -384,7 +396,7 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    blkgrp = (int)(dev->fbarba / FBA_BLKGRP_SIZE);
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
@@ -448,7 +460,7 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    blkgrp = (int)(dev->fbarba / FBA_BLKGRP_SIZE);
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
@@ -489,7 +501,7 @@ int     copylen;                        /* Length left to copy       */
 /* FBA read block group exit                                         */
 /*-------------------------------------------------------------------*/
 static
-int fbadasd_read_blkgrp (DEVBLK *dev, int blkgrp, BYTE *unitstat)
+int fba_dasd_read_blkgrp (DEVBLK *dev, int blkgrp, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
 int             i, o;                   /* Cache indexes             */
@@ -658,13 +670,13 @@ fba_read_blkgrp_retry:
 
     return 0;
 
-} /* end function fbadasd_read_blkgrp */
+} /* end function fba_dasd_read_blkgrp */
 
 /*-------------------------------------------------------------------*/
 /* FBA update block group exit                                       */
 /*-------------------------------------------------------------------*/
 static
-int fbadasd_update_blkgrp (DEVBLK *dev, int blkgrp, int off,
+int fba_dasd_update_blkgrp (DEVBLK *dev, int blkgrp, int off,
                           BYTE *buf, int len, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
@@ -697,13 +709,13 @@ int             rc;                     /* Return code               */
     }
 
     return len;
-} /* end function fbadasd_update_blkgrp */
+} /* end function fba_dasd_update_blkgrp */
 
 /*-------------------------------------------------------------------*/
 /* Channel program end exit                                          */
 /*-------------------------------------------------------------------*/
 static
-void fbadasd_end (DEVBLK *dev)
+void fba_dasd_end (DEVBLK *dev)
 {
 BYTE            unitstat;
 
@@ -730,7 +742,7 @@ DEVBLK         *dev = data;             /* -> device block           */
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int fbadasd_close_device ( DEVBLK *dev )
+int fba_dasd_close_device ( DEVBLK *dev )
 {
 BYTE            unitstat;
 
@@ -750,13 +762,13 @@ BYTE            unitstat;
     dev->bufsize = 0;
 
     return 0;
-} /* end function fbadasd_close_device */
+} /* end function fba_dasd_close_device */
 
 /*-------------------------------------------------------------------*/
 /* Return used blocks                                                */
 /*-------------------------------------------------------------------*/
 static
-int fbadasd_used (DEVBLK *dev)
+int fba_dasd_used (DEVBLK *dev)
 {
     return dev->fbanumblk;
 }
@@ -764,7 +776,7 @@ int fbadasd_used (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+void fba_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual )
 {
@@ -1307,7 +1319,7 @@ int     repcnt;                         /* Replication count         */
 
     } /* end switch(code) */
 
-} /* end function fbadasd_execute_ccw */
+} /* end function fba_dasd_execute_ccw */
 
 /*-------------------------------------------------------------------*/
 /* Read Standard Block (used by Diagnose instructions)               */
@@ -1453,32 +1465,35 @@ int     blkfactor;                      /* Number of device blocks
 /*-------------------------------------------------------------------*/
 /* Hercules suspend                                                  */
 /*-------------------------------------------------------------------*/
-int fbadasd_hsuspend(DEVBLK *dev, void *file) {
+int fba_dasd_hsuspend(DEVBLK *dev, void *file)
+{
     if (dev->bufcur >= 0)
     {
-        SR_WRITE_VALUE(file, SR_DEV_FBA_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
-        SR_WRITE_VALUE(file, SR_DEV_FBA_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
+        SR_WRITE_VALUE( file, SR_DEV_FBA_BUFCUR, dev->bufcur, sizeof( dev->bufcur ));
+        SR_WRITE_VALUE( file, SR_DEV_FBA_BUFOFF, dev->bufoff, sizeof( dev->bufoff ));
     }
-    SR_WRITE_VALUE(file, SR_DEV_FBA_ORIGIN, dev->fbaorigin, sizeof(dev->fbaorigin));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_NUMBLK, dev->fbanumblk, sizeof(dev->fbanumblk));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_RBA, dev->fbarba, sizeof(dev->fbarba));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_END, dev->fbaend, sizeof(dev->fbaend));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXBLKN, dev->fbaxblkn, sizeof(dev->fbaxblkn));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXFIRST, dev->fbaxfirst, sizeof(dev->fbaxfirst));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_DXLAST, dev->fbaxlast, sizeof(dev->fbaxlast));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_LCBLK, dev->fbalcblk, sizeof(dev->fbalcblk));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_LCNUM, dev->fbalcnum, sizeof(dev->fbalcnum));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_BLKSIZ, dev->fbablksiz, sizeof(dev->fbablksiz));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_XTDEF, dev->fbaxtdef, 1);
-    SR_WRITE_VALUE(file, SR_DEV_FBA_OPER, dev->fbaoper, sizeof(dev->fbaoper));
-    SR_WRITE_VALUE(file, SR_DEV_FBA_MASK, dev->fbamask, sizeof(dev->fbamask));
+
+    SR_WRITE_VALUE( file, SR_DEV_FBA_ORIGIN,  dev->fbaorigin, sizeof( dev->fbaorigin ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_NUMBLK,  dev->fbanumblk, sizeof( dev->fbanumblk ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_RBA,     dev->fbarba,    sizeof( dev->fbarba    ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_END,     dev->fbaend,    sizeof( dev->fbaend    ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_DXBLKN,  dev->fbaxblkn,  sizeof( dev->fbaxblkn  ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_DXFIRST, dev->fbaxfirst, sizeof( dev->fbaxfirst ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_DXLAST,  dev->fbaxlast,  sizeof( dev->fbaxlast  ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_LCBLK,   dev->fbalcblk,  sizeof( dev->fbalcblk  ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_LCNUM,   dev->fbalcnum,  sizeof( dev->fbalcnum  ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_BLKSIZ,  dev->fbablksiz, sizeof( dev->fbablksiz ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_XTDEF,   dev->fbaxtdef,                   1      );
+    SR_WRITE_VALUE( file, SR_DEV_FBA_OPER,    dev->fbaoper,   sizeof( dev->fbaoper   ));
+    SR_WRITE_VALUE( file, SR_DEV_FBA_MASK,    dev->fbamask,   sizeof( dev->fbamask   ));
+
     return 0;
 }
 
 /*-------------------------------------------------------------------*/
 /* Hercules resume                                                   */
 /*-------------------------------------------------------------------*/
-int fbadasd_hresume(DEVBLK *dev, void *file)
+int fba_dasd_hresume(DEVBLK *dev, void *file)
 {
 int     rc;
 size_t  key, len;
@@ -1564,20 +1579,20 @@ BYTE byte;
     return 0;
 }
 
-DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
-        &fbadasd_init_handler,         /* Device Initialization      */
-        &fbadasd_execute_ccw,          /* Device CCW execute         */
-        &fbadasd_close_device,         /* Device Close               */
-        &fbadasd_query_device,         /* Device Query               */
+DLL_EXPORT DEVHND fba_dasd_device_hndinfo = {
+        &fba_dasd_init_handler,        /* Device Initialization      */
+        &fba_dasd_execute_ccw,         /* Device CCW execute         */
+        &fba_dasd_close_device,        /* Device Close               */
+        &fba_dasd_query_device,        /* Device Query               */
         NULL,                          /* Device Extended Query      */
         NULL,                          /* Device Start channel pgm   */
-        &fbadasd_end,                  /* Device End channel pgm     */
+        &fba_dasd_end,                 /* Device End channel pgm     */
         NULL,                          /* Device Resume channel pgm  */
-        &fbadasd_end,                  /* Device Suspend channel pgm */
+        &fba_dasd_end,                 /* Device Suspend channel pgm */
         NULL,                          /* Device Halt channel pgm    */
-        &fbadasd_read_blkgrp,          /* Device Read                */
-        &fbadasd_update_blkgrp,        /* Device Write               */
-        &fbadasd_used,                 /* Device Query used          */
+        &fba_dasd_read_blkgrp,         /* Device Read                */
+        &fba_dasd_update_blkgrp,       /* Device Write               */
+        &fba_dasd_used,                /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
@@ -1588,6 +1603,6 @@ DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
         NULL,                          /* Signal Adapter Output Mult */
         NULL,                          /* QDIO subsys desc           */
         NULL,                          /* QDIO set subchan ind       */
-        &fbadasd_hsuspend,             /* Hercules suspend           */
-        &fbadasd_hresume               /* Hercules resume            */
+        &fba_dasd_hsuspend,            /* Hercules suspend           */
+        &fba_dasd_hresume              /* Hercules resume            */
 };

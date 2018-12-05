@@ -26,20 +26,16 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "dasdblks.h"
 #include "devtype.h"
 #include "opcode.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "dasdcopy"
 #define UTILITY_DESC    "DASD copy/convert"
 
-#define FBA_SETOR_SIZE          512
-#define FBA_BLKS_PER_GRP        120
-#define FBA_BLKGRP_SIZE         (FBA_BLKS_PER_GRP * FBA_SETOR_SIZE)
-
-int syntax( const char* pgm );
+int syntax( const char* pgm, const char* msgfmt, ... );
 void status (int, int);
 int nulltrk(BYTE *, int, int, int);
 
@@ -47,9 +43,10 @@ int nulltrk(BYTE *, int, int, int);
 #define CCKD     0x02
 #define FBA      0x04
 #define CFBA     0x08
-#define CKDMASK  0x03
-#define FBAMASK  0x0c
-#define COMPMASK 0x0a
+
+#define CKDMASK  (CKD  | CCKD ) // 0x03
+#define FBAMASK  (FBA  | CFBA ) // 0x0c
+#define COMPMASK (CCKD | CFBA ) // 0x0a
 
 /*-------------------------------------------------------------------*/
 /* Copy a dasd file to another dasd file                             */
@@ -77,7 +74,7 @@ FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
 U32             imgtyp;                 /* Dasd file image type      */
-size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
+U64             fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKD_NULLTRK_FMT0; /* Null track format     */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
@@ -110,7 +107,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (argv[0][0] != '-') break;
         if (strcmp(argv[0], "-h") == 0)
         {
-            syntax( pgm );
+            syntax( pgm, NULL );
             return 0;
         }
         else if (strcmp(argv[0], "-q") == 0
@@ -132,14 +129,16 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                || strcmp(argv[0], "-cyls") == 0) && cyls < 0)
         {
             if (argc < 2 || (cyls = atoi(argv[1])) < 0)
-                return syntax( pgm );
+                return syntax( pgm, "invalid %s argument: %s",
+                    "-cyls", argc < 2 ? "(missing)" : argv[1] );
             argc--; argv++;
         }
         else if ((strcmp(argv[0], "-blk") == 0
                || strcmp(argv[0], "-blks") == 0) && blks < 0)
         {
             if (argc < 2 || (blks = atoi(argv[1])) < 0)
-                return syntax( pgm );
+                return syntax( pgm, "invalid %s argument: %s",
+                    "-blks", argc < 2 ? "(missing)" : argv[1] );
             argc--; argv++;
         }
         else if (strcmp(argv[0], "-a") == 0
@@ -150,33 +149,43 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             lfs = 1;
         else if (out == 0 && strcmp(argv[0], "-o") == 0)
         {
-            if (argc < 2 || out != 0) return syntax( pgm );
-            if (strcasecmp(argv[1], "ckd") == 0)
-                out = CKD;
-            else if (strcasecmp(argv[1], "cckd") == 0)
-                out = CCKD;
-            else if (strcasecmp(argv[1], "fba") == 0)
-                out = FBA;
-            else if (strcasecmp(argv[1], "cfba") == 0)
-                out = CFBA;
+            if (argc < 2)
+                return syntax( pgm, "invalid %s argument: %s",
+                    "-o", "(missing)" );
+            if (out != 0)
+                return syntax( pgm, "invalid %s argument: %s",
+                    "-o", "already previously specified" );
+
+                 if (strcasecmp( argv[1], "ckd"  ) == 0) out = CKD;
+            else if (strcasecmp( argv[1], "cckd" ) == 0) out = CCKD;
+            else if (strcasecmp( argv[1], "fba"  ) == 0) out = FBA;
+            else if (strcasecmp( argv[1], "cfba" ) == 0) out = CFBA;
             else
-                return syntax( pgm );
+                return syntax( pgm, "invalid %s argument: %s",
+                    "-o", argv[1] );
+
             argc--; argv++;
         }
         else
-            return syntax( pgm );
+            return syntax( pgm, "unrecognized/unsupported option: %s",
+                argv[0] );
     }
 
     /* Get the file names:
        input-file [sf=shadow-file] output-file   */
-    if (argc < 2 || argc > 3) return syntax( pgm );
+    if (argc < 2)
+        return syntax( pgm, "%s", "missing input-file specification" );
+    if (argc > 3)
+        return syntax( pgm, "extraneous parameter: %s", argv[2] );
     ifile = argv[0];
     if (argc < 3)
         ofile = argv[1];
     else
     {
-        if (strlen(argv[1]) < 4 || memcmp(argv[1], "sf=", 3))
-            return syntax( pgm );
+        if (strlen(argv[1]) < 4 || memcmp(argv[1], "sf=", 3) != 0)
+            return syntax( pgm, "invalid shadow file specification: %s",
+                argv[1] );
+
         sfile = argv[1];
         ofile = argv[2];
     }
@@ -202,12 +211,19 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             return -1;
         }
 
-        imgtyp = devhdrid_typ( buf );
+        imgtyp = dh_devid_typ( buf );
 
              if (imgtyp & CKD_P370_TYP) in = CKD;
         else if (imgtyp & CKD_C370_TYP) in = CCKD;
         else if (imgtyp & FBA_P370_TYP) in = FBA;
-        else                            in = CFBA;
+        else if (imgtyp & FBA_C370_TYP) in = CFBA;
+        else
+        {
+            // "Dasd image file format unsupported or unrecognized: %s"
+            FWRMSG( stderr, HHC02424, "E", ifile );
+            close( fd );
+            return syntax( pgm, NULL );
+        }
 
         close( fd );
     }
@@ -217,18 +233,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (out == 0)
     {
         switch (in) {
-        case CKD:  if (!lfs) out = CCKD;
-                   else out = CKD;
-                   break;
+        case CKD:  if (!lfs)        out = CCKD;
+                   else             out = CKD;  break;
         case CCKD: if (comp == 255) out = CKD;
-                   else out = CCKD;
-                   break;
-        case FBA:  if (!lfs) out = CFBA;
-                   else out = FBA;
-                   break;
+                   else             out = CCKD; break;
+        case FBA:  if (!lfs)        out = CFBA;
+                   else             out = FBA;  break;
         case CFBA: if (comp == 255) out = FBA;
-                   else out = CFBA;
-                   break;
+                   else             out = CFBA; break;
         }
     }
 
@@ -240,24 +252,45 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         comp = CCKD_COMPRESS_NONE;
 #endif
 
-    /* Perform sanity checks on the options */
-    if ((in & CKDMASK) && !(out & CKDMASK)) return syntax( pgm );
-    if ((in & FBAMASK) && !(out & FBAMASK)) return syntax( pgm );
-    if (sfile && !(in & COMPMASK))          return syntax( pgm );
-    if (comp != 255 && !(out & COMPMASK))   return syntax( pgm );
-    if (lfs && (out & COMPMASK))            return syntax( pgm );
-    if (cyls >= 0 && !(in & CKDMASK))       return syntax( pgm );
-    if (blks >= 0 && !(in & FBAMASK))       return syntax( pgm );
-    if (!(in & CKDMASK) && alt)             return syntax( pgm );
+    /* Perform sanity checks on the options... */
+
+    if (sfile && !(in & COMPMASK))        return syntax( pgm, "%s",
+        "shadow files invalid if input not compressed" );
+
+    if (comp != 255 && !(out & COMPMASK)) return syntax( pgm, "%s",
+        "compress type invalid for uncompressed output" );
+
+    if (lfs && (out & COMPMASK))          return syntax( pgm, "%s",
+        "-lfs invalid if output is compressed" );
+
+    if (cyls >= 0 && (in & FBAMASK ))     return syntax( pgm, "%s",
+        "-cyls invalid for fba input" );
+
+    if (blks >= 0 && (in & CKDMASK ))     return syntax( pgm, "%s",
+        "-blks invalid for ckd input" );
+
+    if (alt && (in & FBAMASK ))           return syntax( pgm, "%s",
+        "-a invalid for fba input" );
+
+    if (0
+        || (in & CKDMASK) && !(out & CKDMASK )
+        || (in & FBAMASK) && !(out & FBAMASK )
+    )
+        return syntax( pgm, "%s",
+            "cannot copy ckd to fba or vice versa" );
 
     /* Set the type of processing (ckd or fba) */
     ckddasd = (in & CKDMASK);
 
     /* Open the input file */
     if (ckddasd)
+    {
         icif = open_ckd_image (ifile, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
-    else
+    }
+    else // fba
+    {
         icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
+    }
     if (icif == NULL)
     {
         // "Failed opening %s"
@@ -286,7 +319,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         max = idev->ckdtrks;
         if (max < n && out == CCKD) n = max;
     }
-    else
+    else // fba
     {
         fba_bytes_remaining = idev->fbanumblk * idev->fbablksiz;
         if (blks < 0) blks = idev->fbanumblk;
@@ -299,21 +332,29 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             close_image_file (icif);
             return -1;
         }
+
         n = blks;
         max = idev->fbanumblk;
-        if (max < n && out == CFBA) n = max;
-        n = (n + FBA_BLKS_PER_GRP - 1) / FBA_BLKS_PER_GRP;
-        max = (max + FBA_BLKS_PER_GRP - 1) / FBA_BLKS_PER_GRP;
+
+        if (max < n && out == CFBA)
+            n = max;
+
+        n =   (n   + CFBA_BLKS_PER_GRP - 1) / CFBA_BLKS_PER_GRP;
+        max = (max + CFBA_BLKS_PER_GRP - 1) / CFBA_BLKS_PER_GRP;
     }
 
     /* Create the output file */
     if (ckddasd)
+    {
         rc = create_ckd(ofile, idev->devtype, idev->ckdheads,
                         ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt, 0,
                         1, 0);
-    else
+    }
+    else // fba
+    {
         rc = create_fba(ofile, idev->devtype, fba->size,
                         blks, "", comp, lfs, 1+r, 0);
+    }
     if (rc < 0)
     {
         // "Failed creating %s"
@@ -324,9 +365,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the output file */
     if (ckddasd)
+    {
         ocif = open_ckd_image (ofile, NULL, O_RDWR|O_BINARY, IMAGE_OPEN_DASDCOPY);
-    else
+    }
+    else // fba
+    {
         ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, IMAGE_OPEN_DASDCOPY);
+    }
     if (ocif == NULL)
     {
         // "Failed opening %s"
@@ -364,7 +409,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 rc = (idev->hnd->read)(idev, i, &unitstat);
             else
             {
-                memset (idev->buf, 0, FBA_BLKGRP_SIZE);
+                memset (idev->buf, 0, CFBA_BLKGRP_SIZE);
                 rc = 0;
             }
         }
@@ -377,7 +422,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if (ckddasd)
                 nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
             else
-                memset (idev->buf, 0, FBA_BLKGRP_SIZE);
+                memset (idev->buf, 0, CFBA_BLKGRP_SIZE);
             if (!quiet)
             {
                 if (!extgui)
@@ -386,7 +431,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             }
         }
 
-        /* Write the track or block just read */
+        /* Write the track or block just read... */
+
+        /* IMPORTANT PROGRAMMING NOTE: please note that the output
+           file's track is written directly from the INPUT's device
+           buffer. This means when we are done, we must close the
+           output file first, which flushes the output of the last
+           track that was written, which as explained, requires that
+           the INPUT file's device buffer to still be valid.
+        */
         if (ckddasd)
         {
             rc = (odev->hnd->write)(odev, i, 0, idev->buf,
@@ -394,11 +447,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
         else
         {
-            if (fba_bytes_remaining >= (size_t)idev->buflen)
+            if (fba_bytes_remaining >= (U64)idev->buflen)
             {
                 rc = (odev->hnd->write)(odev,  i, 0, idev->buf,
                           idev->buflen, &unitstat);
-                fba_bytes_remaining -= (size_t)idev->buflen;
+                fba_bytes_remaining -= (U64)idev->buflen;
             }
             else
             {
@@ -421,7 +474,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (!quiet) status (i+1, n);
     }
 
-    close_image_file(icif); close_image_file(ocif);
+    /* IMPORTANT PROGRAMMING NOTE: please note that the output
+       file's track is written directly from the INPUT's device
+       buffer. This means when we are done, we must close the
+       output file first, which flushes the output of the last
+       track that was written, which as explained, requires that
+       the INPUT file's device buffer to still be valid.
+    */
+    close_image_file( ocif );   /* Close output file FIRST! */
+    close_image_file( icif );   /* Close input file SECOND! */
 
     if (!extgui)
         if (!quiet)
@@ -444,7 +505,6 @@ U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE            r;                      /* Record number             */
 BYTE           *pos;                    /* -> Next position in buffer*/
-    static BYTE eighthexFF[]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
     /* cylinder and head calculations */
     cyl = trk / heads;
@@ -453,20 +513,20 @@ BYTE           *pos;                    /* -> Next position in buffer*/
     /* Build the track header */
     trkhdr = (CKD_TRKHDR*)buf;
     trkhdr->bin = 0;
-    store_hw(&trkhdr->cyl, cyl);
-    store_hw(&trkhdr->head, head);
+    store_hw(&trkhdr->cyl,  (U16) cyl);
+    store_hw(&trkhdr->head, (U16) head);
     pos = buf + CKD_TRKHDR_SIZE;
 
     /* Build record zero */
     r = 0;
     rechdr = (CKD_RECHDR*)pos;
     pos += CKD_RECHDR_SIZE;
-    store_hw(&rechdr->cyl, cyl);
-    store_hw(&rechdr->head, head);
+    store_hw(&rechdr->cyl,  (U16) cyl);
+    store_hw(&rechdr->head, (U16) head);
     rechdr->rec = r;
     rechdr->klen = 0;
-    store_hw(&rechdr->dlen, 8);
-    pos += 8;
+    store_hw(&rechdr->dlen, CKD_R0_DLEN);
+    pos +=                  CKD_R0_DLEN;
     r++;
 
     /* Specific null track formatting */
@@ -475,8 +535,8 @@ BYTE           *pos;                    /* -> Next position in buffer*/
         rechdr = (CKD_RECHDR*)pos;
         pos += CKD_RECHDR_SIZE;
 
-        store_hw(&rechdr->cyl, cyl);
-        store_hw(&rechdr->head, head);
+        store_hw(&rechdr->cyl,  (U16) cyl);
+        store_hw(&rechdr->head, (U16) head);
         rechdr->rec = r;
         rechdr->klen = 0;
         store_hw(&rechdr->dlen, 0);
@@ -489,20 +549,19 @@ BYTE           *pos;                    /* -> Next position in buffer*/
             rechdr = (CKD_RECHDR*)pos;
             pos += CKD_RECHDR_SIZE;
 
-            store_hw(&rechdr->cyl, cyl);
-            store_hw(&rechdr->head, head);
+            store_hw(&rechdr->cyl,  (U16) cyl);
+            store_hw(&rechdr->head, (U16) head);
             rechdr->rec = r;
             rechdr->klen = 0;
-            store_hw(&rechdr->dlen, 4096);
+            store_hw(&rechdr->dlen, CKD_NULL_FMT2_DLEN );
             r++;
-
-            pos += 4096;
+            pos +=                  CKD_NULL_FMT2_DLEN;
         }
     }
 
     /* Build the end of track marker */
-    memcpy (pos, eighthexFF, 8);
-    pos += 8;
+    memcpy (pos, &CKD_ENDTRK, CKD_ENDTRK_SIZE);
+    pos +=                    CKD_ENDTRK_SIZE;
 
     return 0;
 }
@@ -510,19 +569,46 @@ BYTE           *pos;                    /* -> Next position in buffer*/
 /*-------------------------------------------------------------------*/
 /* Display command syntax                                            */
 /*-------------------------------------------------------------------*/
-int syntax( const char* pgm )
+int syntax( const char* pgm, const char* msgfmt, ... )
 {
     int zlib  = 0;
     int bzip2 = 0;
     int lfs   = 0;
 
-    char zbuf[80];
-    char bzbuf[80];
+    char zbuf  [80];
+    char bzbuf [80];
     char lfsbuf[80];
 
-    zbuf[0] = 0;
-    bzbuf[0] = 0;
+    zbuf  [0] = 0;
+    bzbuf [0] = 0;
     lfsbuf[0] = 0;
+
+    /* Show them their syntax error... */
+    if (msgfmt)
+    {
+        const int  chunksize  = 128;
+        int        rc         = -1;
+        int        buffsize   =  0;
+        char*      msgbuf     = NULL;
+        va_list    vargs;
+
+        do
+        {
+            if (msgbuf) free( msgbuf );
+            if (!(msgbuf = malloc( buffsize += chunksize )))
+                BREAK_INTO_DEBUGGER();
+
+            va_end(   vargs );
+            va_start( vargs, msgfmt );
+
+            rc = vsnprintf( msgbuf, buffsize, msgfmt, vargs );
+        }
+        while (rc < 0 || rc >= buffsize);
+
+        // "Syntax error: %s"
+        FWRMSG( stderr, HHC02594, "E", msgbuf );
+        free( msgbuf );
+    }
 
 #ifdef CCKD_COMPRESS_ZLIB
     zlib = 1;
@@ -545,6 +631,7 @@ int syntax( const char* pgm )
 #define BZ_HELP    "  -bz2     compress using bzip2"
 #define LFS_HELP   "  -lfs     create single large output file"
 
+    /* Display help information... */
     if (strcasecmp( pgm,                   "ckd2cckd"    ) == 0)
     {
         if (zlib)  MSGBUF(  zbuf, "%s%s\n", HHC02435I,  Z_HELP );
@@ -572,12 +659,13 @@ int syntax( const char* pgm )
         if (zlib)  MSGBUF(   zbuf, "%s%s\n", HHC02439I,   Z_HELP );
         if (bzip2) MSGBUF(  bzbuf, "%s%s\n", HHC02439I,  BZ_HELP );
         if (lfs)   MSGBUF( lfsbuf, "%s%s\n", HHC02439I, LFS_HELP );
-        WRMSG(                               HHC02439, "I", pgm, zbuf, bzbuf, lfsbuf );
+        WRMSG(                               HHC02439, "I", pgm, zbuf, bzbuf, lfsbuf,
+            "CKD, CCKD, FBA, CFBA" );
     }
 
     return -1;
 
-} /* end function syntax */
+}
 
 /*-------------------------------------------------------------------*/
 /* Display progress status                                           */
@@ -599,4 +687,4 @@ void status (int i, int n)
 //          return;
         printf ("\r%c %3d%% %7d", indic[i%4], (int)((i*100.0)/n), i);
     }
-} /* end function status */
+}
