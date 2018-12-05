@@ -241,7 +241,7 @@ U16  CheckSum ( const BYTE* pBuffer, S32 nBytes )
 
     FoldSum32( &nSum );
 
-    return (U16) SWAP32( nSum );    // (UN-complemented!)
+    return (U16) nSum;      // (UN-complemented!)
 }
 
 /*-------------------------------------------------------------------*/
@@ -277,7 +277,10 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
         nPacketLen =  ntohs( pIP->ip_len );
         nIPHdrLen  =  pIP->ip_hl * sizeof( U32 );
         pPacket    =  (((BYTE*)pIP) + nIPHdrLen);
-        if(pIP->ip_sum==0)    /* Only compute checksum if not already present */
+
+        /* Only compute checksum if not already present */
+
+        if (!pIP->ip_sum)
         {
             switch (pIP->ip_p)
             {
@@ -290,12 +293,12 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
 
                     // Handle upper TCP layer first
 
-                    pTCP->th_sum = htons( PseudoHdrCheckSum( pIP ));
-                    pTCP->th_sum = htons( InetCheckSum( (BYTE*) pTCP, (S32)( nPacketLen - nIPHdrLen )));
+                    pTCP->th_sum = PseudoHdrCheckSum( pIP );
+                    pTCP->th_sum = InetCheckSum( (BYTE*) pTCP, (S32)( nPacketLen - nIPHdrLen ));
 
                     // Handle lower IP layer last
 
-                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                    pIP->ip_sum = InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen );
                 }
                 break;
 
@@ -308,12 +311,12 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
 
                     // Handle upper UDP layer first
 
-                    pUDP->uh_sum = htons( PseudoHdrCheckSum( pIP ));
-                    pUDP->uh_sum = htons( InetCheckSum( (BYTE*) pUDP, (S32) ntohs( pUDP->uh_ulen )));
+                    pUDP->uh_sum = PseudoHdrCheckSum( pIP );
+                    pUDP->uh_sum = InetCheckSum( (BYTE*) pUDP, (S32) ntohs( pUDP->uh_ulen ));
 
                     // Handle lower IP layer last
 
-                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                    pIP->ip_sum = InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen );
                 }
                 break;
 
@@ -321,17 +324,17 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
                 {
                     icmp_hdr* pICMP = (icmp_hdr*) pPacket;
 
-                    pIP->ip_sum  = 0;   // (start clean)
+                    pIP->ip_sum     = 0;   // (start clean)
                     pICMP->icmp_sum = 0;   // (start clean)
 
                     // Handle upper ICMP layer first
 
-                    // pICMP->icmp_sum = htons( PseudoHdrCheckSum( pIP ));
-                    pICMP->icmp_sum = htons( InetCheckSum( (BYTE*) pICMP, (S32)( nPacketLen - nIPHdrLen )));
+                    // pICMP->icmp_sum = PseudoHdrCheckSum( pIP );
+                    pICMP->icmp_sum = InetCheckSum( (BYTE*) pICMP, (S32)( nPacketLen - nIPHdrLen ));
 
                     // Handle lower IP layer last
 
-                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                    pIP->ip_sum = InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen );
                 }
                 break;
 
@@ -341,7 +344,7 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
                     // still calculate the IP header checksum!
 
                     pIP->ip_sum = 0;   // (start clean)
-                    pIP->ip_sum = htons( InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen ));
+                    pIP->ip_sum = InetCheckSum( (BYTE*) pIP, (S32) nIPHdrLen );
                 }
                 break;
             }
