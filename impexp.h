@@ -54,6 +54,18 @@
 
 /*-------------------------------------------------------------------*/
 
+#ifndef    _CCKDDASD64_C_
+  #ifndef  _HDASD_DLL_
+    #define CCKD64_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define CCKD64_DLL_IMPORT       extern
+  #endif
+#else
+  #define   CCKD64_DLL_IMPORT       DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
 #ifndef    _CCKDUTIL_C_
   #ifndef  _HDASD_DLL_
     #define CCDU_DLL_IMPORT         DLL_IMPORT
@@ -66,6 +78,18 @@
 
 /*-------------------------------------------------------------------*/
 
+#ifndef    _CCKDUTIL64_C_
+  #ifndef  _HDASD_DLL_
+    #define CCDU64_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define CCDU64_DLL_IMPORT       extern
+  #endif
+#else
+  #define   CCDU64_DLL_IMPORT       DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
 #ifndef    _CKDDASD_C_
   #ifndef  _HDASD_DLL_
     #define CKD_DLL_IMPORT          DLL_IMPORT
@@ -74,6 +98,18 @@
   #endif
 #else
   #define   CKD_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _CKDDASD64_C_
+  #ifndef  _HDASD_DLL_
+    #define CKD64_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define CKD64_DLL_IMPORT        extern
+  #endif
+#else
+  #define   CKD64_DLL_IMPORT        DLL_EXPORT
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -102,6 +138,18 @@
 
 /*-------------------------------------------------------------------*/
 
+#ifndef    _DASDUTIL64_C_
+  #ifndef  _HDASD_DLL_
+    #define DUT64_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define DUT64_DLL_IMPORT        extern
+  #endif
+#else
+  #define   DUT64_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
 #ifndef    _FBADASD_C_
   #ifndef  _HDASD_DLL_
     #define FBA_DLL_IMPORT          DLL_IMPORT
@@ -110,6 +158,18 @@
   #endif
 #else
   #define   FBA_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#ifndef    _FBADASD64_C_
+  #ifndef  _HDASD_DLL_
+    #define FBA64_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define FBA64_DLL_IMPORT        extern
+  #endif
+#else
+  #define   FBA64_DLL_IMPORT        DLL_EXPORT
 #endif
 
 /*-------------------------------------------------------------------*/

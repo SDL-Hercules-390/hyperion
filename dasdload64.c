@@ -1,4 +1,4 @@
-/* DASDLOAD.C   (C) Copyright Roger Bowler, 1999-2012                */
+/* DASDLOAD64.C (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Hercules DASD Utilities: DASD image loader           */
 /*                                                                   */
@@ -24,8 +24,8 @@
 #include "ccwarn.h"
 #include "cckddasd.h"   // (need cckdblk)
 
-#define UTILITY_NAME    "dasdload"
-#define UTILITY_DESC    "Build DASD from TSO XMIT files"
+#define UTILITY_NAME    "dasdload64"
+#define UTILITY_DESC    "Build 64-bit DASD from TSO XMIT files"
 
 /*-------------------------------------------------------------------*/
 /* Internal table sizes                                              */
@@ -4210,7 +4210,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
 } /* end function process_control_file */
 
 /*-------------------------------------------------------------------*/
-/* DASDLOAD main entry point                                         */
+/* DASDLOAD64 main entry point                                       */
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
@@ -4373,23 +4373,23 @@ char           *strtok_str = NULL;      /* last token position       */
 
     /* Create the output file */
     EXTGUIMSG( "REQCYLS=%d\n", reqcyls );
-    rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp, lfs, 0, 0, 0, 1, 0 );
+    rc = create_ckd64( ofname, devtype, outheads, outmaxdl, reqcyls,
+                       volser, comp, (BYTE) lfs, 0, 0, 0, 1, 0 );
     if (rc < 0)
     {
-        XMERRF ( MSG( HHC02504, "E", ofname, "create_ckd()" ) );
+        XMERRF ( MSG( HHC02504, "E", ofname, "create_ckd64()" ) );
         return -1;
     }
 
     /* Open the output file */
-    cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY, IMAGE_OPEN_NORMAL);
+    cif = open_ckd64_image (ofname, NULL, O_RDWR | O_BINARY, IMAGE_OPEN_NORMAL);
     if (!cif)
     {
         XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd_image()" ) );
         return -1;
     }
 
-    if (cif->devblk.cckd64 != 0)
+    if (cif->devblk.cckd64 != 1)
     {
         // "Dasd image file format unsupported or unrecognized: %s"
         XMERRF ( MSG( HHC02424, "E", ofname ) );

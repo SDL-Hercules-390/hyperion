@@ -541,7 +541,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
 #define HHC00469 "%1d:%04X CKD file %s: dasd image format unsupported or unrecognized"
-//efine HHC00470 - HHC00499 (available)
+#define HHC00470 "%1d:%04X CKD64 file %s: cyls %d heads %d tracks %d trklen %d"
+#define HHC00471 "%1d:%04X CKD64 file %s: %u %s successfully written"
+#define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
+#define HHC00473 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+#define HHC00474 "%1d:%04X CKD64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+//efine HHC00475 - HHC00499 (available)
 
 // reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"

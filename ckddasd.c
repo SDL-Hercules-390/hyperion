@@ -36,6 +36,7 @@
 #include "devtype.h"
 #include "sr.h"
 #include "dasdblks.h"
+#include "cckddasd.h"
 #include "ccwarn.h"
 
 /*-------------------------------------------------------------------*/
@@ -419,6 +420,14 @@ char           *strtok_str = NULL;      /* save last position        */
         dev->cckd64 = 0;
         if (!is_dh_devid_typ( devhdr.dh_devid, CKD32_CMP_OR_NML_TYP ))
         {
+            if (is_dh_devid_typ( devhdr.dh_devid, CKD64_CMP_OR_NML_TYP ))
+            {
+                dev->cckd64 = 1;
+                close( dev->fd );
+                dev->fd = -1;
+                return ckd64_dasd_init_handler( dev, argc, argv );
+            }
+
             // "%1d:%04X CKD file %s: ckd header invalid"
             WRMSG( HHC00406, "E", LCSS_DEVNUM, filename );
             return -1;
@@ -662,7 +671,8 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         if ( dev->ckdnumfd > 1)
         {
-            snprintf( buffer, buflen, "%s [%d cyls] [%d segs] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s%s [%d cyls] [%d segs] IO[%"PRIu64"]",
+                      dev->cckd64 ? "*64* " : "",
                       dev->filename,
                       dev->ckdcyls,
                       dev->ckdnumfd,
@@ -670,7 +680,8 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
         }
         else
         {
-            snprintf( buffer, buflen, "%s [%d cyls] IO[%"PRIu64"]",
+            snprintf( buffer, buflen, "%s%s [%d cyls] IO[%"PRIu64"]",
+                      dev->cckd64 ? "*64* " : "",
                       dev->filename,
                       dev->ckdcyls,
                       dev->excps );
@@ -678,7 +689,8 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
     }
     else
     {
-        snprintf( buffer, buflen, "%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
+                  dev->cckd64 ? "*64* " : "",
                   dev->filename,
                   dev->ckdcyls,
                   cckd->sfn,

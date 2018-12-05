@@ -686,6 +686,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             || !(dh_devid_typ( devhdr.dh_devid ) & CKD32_CMP_OR_NML_TYP)
         )
         {
+            if (dh_devid_typ( devhdr.dh_devid ) & CKD64_CMP_OR_NML_TYP)
+            {
+                dev->cckd64 = 1;
+                free( cif );
+                return open_ckd64_image( fname, sfname, omode, option );
+            }
+
             // "%1d:%04X CKD file %s: ckd header invalid"
             FWRMSG( stderr, HHC00406, "E", SSID_TO_LCSS( cif->devblk.ssid ),
                 cif->devblk.devnum, cif->fname );

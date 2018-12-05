@@ -12,13 +12,18 @@ hsys_OBJ = \
     $(O)hsys.obj
 
 hdasd_OBJ = \
-    $(O)cache.obj    \
-    $(O)cckddasd.obj \
-    $(O)cckdutil.obj \
-    $(O)ckddasd.obj  \
-    $(O)dasdtab.obj  \
-    $(O)dasdutil.obj \
-    $(O)fbadasd.obj  \
+    $(O)cache.obj      \
+    $(O)cckddasd.obj   \
+    $(O)cckdutil.obj   \
+    $(O)ckddasd.obj    \
+    $(O)cckddasd64.obj \
+    $(O)cckdutil64.obj \
+    $(O)ckddasd64.obj  \
+    $(O)dasdtab.obj    \
+    $(O)dasdutil.obj   \
+    $(O)fbadasd.obj    \
+    $(O)dasdutil64.obj \
+    $(O)fbadasd64.obj  \
     $(O)shared.obj
 
 htape_OBJ = \

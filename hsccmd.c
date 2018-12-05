@@ -64,6 +64,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "ctcadpt.h"
 #include "ctc_ptp.h"
 #include "qeth.h"
+#include "cckddasd.h"
 
 // (forward references, etc)
 

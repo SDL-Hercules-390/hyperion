@@ -23,6 +23,7 @@
 #include "hercules.h"
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "sr.h"
+#include "cckddasd.h"
 #include "ccwarn.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
@@ -281,6 +282,14 @@ char   *strtok_str = NULL;              /* save last position        */
     }
     else
     {
+        if (is_dh_devid_typ( devhdr.dh_devid, FBA64_CMP_OR_NML_TYP ))
+        {
+            dev->cckd64 = 1;
+            close( dev->fd );
+            dev->fd = -1;
+            return fba64_dasd_init_handler( dev, argc, argv );
+        }
+
         // "%1d:%04X FBA file %s: dasd image format unsupported or unrecognized"
         WRMSG( HHC00522, "E", LCSS_DEVNUM, dev->filename );
         close (dev->fd);
@@ -343,14 +352,16 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
 
     if (!cckd)
     {
-        snprintf( buffer, buflen, "%s [%"PRId64",%d] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s%s [%"PRId64",%d] IO[%"PRIu64"]",
+                  dev->cckd64 ? "*64* " : "",
                   dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
     else
     {
-        snprintf( buffer, buflen, "%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
+        snprintf( buffer, buflen, "%s%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
+                  dev->cckd64 ? "*64* " : "",
                   dev->filename,
                   dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,

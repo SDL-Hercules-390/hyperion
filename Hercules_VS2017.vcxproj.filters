@@ -237,6 +237,18 @@
     <ClCompile Include="cckdswap.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="cckdcdsk64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="cckdcomp64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="cckddiag64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="cckdswap64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
     <ClCompile Include="dasdcat.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
@@ -249,10 +261,22 @@
     <ClCompile Include="dasdinit.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="dasdconv64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdcopy64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdinit64.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
     <ClCompile Include="dasdisup.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
     <ClCompile Include="dasdload.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdload64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
     <ClCompile Include="dasdls.c">
@@ -351,6 +375,15 @@
     <ClCompile Include="ckddasd.c">
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cckddasd64.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cckdutil64.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ckddasd64.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="dasdtab.c">
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
@@ -358,6 +391,12 @@
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="fbadasd.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dasdutil64.c">
+      <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbadasd64.c">
       <Filter>Source Files\Hercules\Devices\Dasd\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="shared.c">
@@ -2273,6 +2312,9 @@
       <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cckd64.h">
+      <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cckddasd.h">
       <Filter>Source Files\Hercules\Devices\Dasd\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dasdblks.h">

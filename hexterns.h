@@ -272,7 +272,8 @@ int servc_hresume(void *file);
 
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
-int ckd_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
+int ckd_dasd_init_handler   ( DEVBLK *dev, int argc, char *argv[]);
+int ckd64_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void ckd_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
@@ -291,7 +292,8 @@ FBA_DLL_IMPORT void fbadasd_read_block
 FBA_DLL_IMPORT void fbadasd_write_block
       ( DEVBLK *dev, int blknum, int blksize, int blkfactor,
         BYTE *iobuf, BYTE *unitstat, U32 *residual );
-int fba_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
+int fba_dasd_init_handler   ( DEVBLK *dev, int argc, char *argv[]);
+int fba64_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void fba_dasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual );
@@ -301,7 +303,7 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
 int fba_dasd_hsuspend ( DEVBLK *dev, void *file );
 int fba_dasd_hresume  ( DEVBLK *dev, void *file );
 
-/* Functions in module cckddasd.c */
+/* Functions in module cckddasd.c/cckddasd64.c */
 
 DEVIF   cckd_dasd_init_handler;
 int     cckd_dasd_close_device (DEVBLK *);
@@ -310,27 +312,31 @@ int     cckd_update_track (DEVBLK *, int, int, BYTE *, int, BYTE *);
 int     cfba_read_block (DEVBLK *, int, BYTE *);
 int     cfba_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 
-CCKD_DLL_IMPORT CCKDBLK cckdblk;
+DEVIF   cckd64_dasd_init_handler;
+int     cckd64_dasd_close_device (DEVBLK *);
+int     cckd64_read_track (DEVBLK *, int, BYTE *);
+int     cckd64_update_track (DEVBLK *, int, int, BYTE *, int, BYTE *);
+int     cfba64_read_block (DEVBLK *, int, BYTE *);
+int     cfba64_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 
-CCKD_DLL_IMPORT void   *cckd_sf_add (void *);
-CCKD_DLL_IMPORT void   *cckd_sf_remove (void *);
-CCKD_DLL_IMPORT void   *cckd_sf_stats (void *);
-CCKD_DLL_IMPORT void   *cckd_sf_comp (void *);
-CCKD_DLL_IMPORT void   *cckd_sf_chk (void *);
-CCKD_DLL_IMPORT int     cckd_command(char *, int);
-CCKD_DLL_IMPORT void    cckd_print_itrace ();
-CCKD_DLL_IMPORT void    cckd_sf_parse_sfn( DEVBLK* dev, char* sfn );
+/* Functions in module cckdutil.c/cckdutil64.c */
+CCDU_DLL_IMPORT   int   cckd_swapend (DEVBLK *);
+CCDU_DLL_IMPORT   void  cckd_swapend_chdr ( CCKD_DEVHDR* );
+CCDU_DLL_IMPORT   void  cckd_swapend_l1   ( CCKD_L1ENT*, int );
+CCDU_DLL_IMPORT   void  cckd_swapend_l2   ( CCKD_L2ENT* );
+CCDU_DLL_IMPORT   void  cckd_swapend_free ( CCKD_FREEBLK* );
 
-/* Functions in module cckdutil.c */
-CCDU_DLL_IMPORT int     cckd_swapend (DEVBLK *);
-CCDU_DLL_IMPORT void    cckd_swapend_chdr ( CCKD_DEVHDR* );
-CCDU_DLL_IMPORT void    cckd_swapend_l1   ( CCKD_L1ENT*, int );
-CCDU_DLL_IMPORT void    cckd_swapend_l2   ( CCKD_L2ENT* );
-CCDU_DLL_IMPORT void    cckd_swapend_free ( CCKD_FREEBLK* );
+CCDU64_DLL_IMPORT int   cckd64_swapend (DEVBLK *);
+CCDU64_DLL_IMPORT void  cckd64_swapend_chdr ( CCKD64_DEVHDR* );
+CCDU64_DLL_IMPORT void  cckd64_swapend_l1   ( CCKD64_L1ENT*, int );
+CCDU64_DLL_IMPORT void  cckd64_swapend_l2   ( CCKD64_L2ENT* );
+CCDU64_DLL_IMPORT void  cckd64_swapend_free ( CCKD64_FREEBLK* );
+CCDU64_DLL_IMPORT int   cckd64_comp (DEVBLK *);
+CCDU64_DLL_IMPORT int   cckd64_chkdsk (DEVBLK *, int);
 
-CCDU_DLL_IMPORT int     cckd_endian ();
-CCDU_DLL_IMPORT int     cckd_comp (DEVBLK *);
-CCDU_DLL_IMPORT int     cckd_chkdsk (DEVBLK *, int);
+CCDU_DLL_IMPORT   int   cckd_endian ();
+CCDU_DLL_IMPORT   int   cckd_comp (DEVBLK *);
+CCDU_DLL_IMPORT   int   cckd_chkdsk (DEVBLK *, int);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);

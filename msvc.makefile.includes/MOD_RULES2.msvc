@@ -159,11 +159,23 @@ $(X)cckddiag.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)cckdswap.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
+$(X)cckdcdsk64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)cckdcomp64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)cckddiag64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)cckdswap64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
 $(X)dasdcat.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)dasdconv64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)dasdcopy64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)ckd2cckd.exe: $(X)dasdcopy.exe
     copy /b /v /y $(X)dasdcopy.exe $(X)ckd2cckd.exe > NUL
@@ -177,11 +189,27 @@ $(X)fba2cfba.exe: $(X)dasdcopy.exe
 $(X)cfba2fba.exe: $(X)dasdcopy.exe
     copy /b /v /y $(X)dasdcopy.exe $(X)cfba2fba.exe > NUL
 
+$(X)ckd2cckd64.exe: $(X)dasdcopy64.exe
+    copy /b /v /y $(X)dasdcopy64.exe $(X)ckd2cckd64.exe > NUL
+
+$(X)cckd642ckd.exe: $(X)dasdcopy64.exe
+    copy /b /v /y $(X)dasdcopy64.exe $(X)cckd642ckd.exe > NUL
+
+$(X)fba2cfba64.exe: $(X)dasdcopy64.exe
+    copy /b /v /y $(X)dasdcopy64.exe $(X)fba2cfba64.exe > NUL
+
+$(X)cfba642fba.exe: $(X)dasdcopy64.exe
+    copy /b /v /y $(X)dasdcopy64.exe $(X)cfba642fba.exe > NUL
+
 $(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)dasdinit64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdisup.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdload.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
+$(X)dasdload64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
 $(X)dasdls.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 

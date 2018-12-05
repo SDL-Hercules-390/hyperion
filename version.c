@@ -676,6 +676,7 @@ static const char *build_info[] = {
 #endif
 
     "Without National Language Support",
+    "With    CCKD64 Support",
 
 /*-------------------------------------------------------------------*/
 /*                 Machine dependent assists:                        */

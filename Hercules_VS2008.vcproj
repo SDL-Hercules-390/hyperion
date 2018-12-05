@@ -249,7 +249,15 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cckdcdsk64.c"
+						>
+					</File>
+					<File
 						RelativePath=".\cckdcomp.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckdcomp64.c"
 						>
 					</File>
 					<File
@@ -257,7 +265,15 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cckddiag64.c"
+						>
+					</File>
+					<File
 						RelativePath=".\cckdswap.c"
+						>
+					</File>
+					<File
+						RelativePath=".\cckdswap64.c"
 						>
 					</File>
 					<File
@@ -269,11 +285,23 @@
 						>
 					</File>
 					<File
+						RelativePath=".\dasdconv64.c"
+						>
+					</File>
+					<File
 						RelativePath=".\dasdcopy.c"
 						>
 					</File>
 					<File
+						RelativePath=".\dasdcopy64.c"
+						>
+					</File>
+					<File
 						RelativePath=".\dasdinit.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdinit64.c"
 						>
 					</File>
 					<File
@@ -282,6 +310,10 @@
 					</File>
 					<File
 						RelativePath=".\dasdload.c"
+						>
+					</File>
+					<File
+						RelativePath=".\dasdload64.c"
 						>
 					</File>
 					<File
@@ -499,6 +531,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\cckd64.h"
+								>
+							</File>
+							<File
+								RelativePath=".\cckddasd.h"
+								>
+							</File>
+							<File
 								RelativePath=".\dasdblks.h"
 								>
 							</File>
@@ -523,11 +563,23 @@
 								>
 							</File>
 							<File
+								RelativePath=".\cckddasd64.c"
+								>
+							</File>
+							<File
 								RelativePath=".\cckdutil.c"
 								>
 							</File>
 							<File
+								RelativePath=".\cckdutil64.c"
+								>
+							</File>
+							<File
 								RelativePath=".\ckddasd.c"
+								>
+							</File>
+							<File
+								RelativePath=".\ckddasd64.c"
 								>
 							</File>
 							<File
@@ -539,7 +591,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\dasdutil64.c"
+								>
+							</File>
+							<File
 								RelativePath=".\fbadasd.c"
+								>
+							</File>
+							<File
+								RelativePath=".\fbadasd64.c"
 								>
 							</File>
 							<File

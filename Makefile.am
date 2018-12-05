@@ -211,12 +211,20 @@ bin_PROGRAMS = \
   cckdcomp     \
   cckddiag     \
   cckdswap     \
+  cckdcdsk64   \
+  cckdcomp64   \
+  cckddiag64   \
+  cckdswap64   \
   dasdcat      \
   dasdconv     \
   dasdcopy     \
   dasdinit     \
+  dasdconv64   \
+  dasdcopy64   \
+  dasdinit64   \
   dasdisup     \
   dasdload     \
+  dasdload64   \
   dasdls       \
   dasdpdsu     \
   dasdseq      \
@@ -344,9 +352,14 @@ libhercd_la_SOURCES = \
   cckddasd.c          \
   cckdutil.c          \
   ckddasd.c           \
+  cckddasd64.c        \
+  cckdutil64.c        \
+  ckddasd64.c         \
   dasdtab.c           \
   dasdutil.c          \
   fbadasd.c           \
+  dasdutil64.c        \
+  fbadasd64.c         \
   shared.c
 
 libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -542,6 +555,10 @@ dasdinit_SOURCES   = dasdinit.c
 dasdinit_LDADD     = $(tools_ADDLIBS)
 dasdinit_LDFLAGS   = $(tools_LD_FLAGS)
 
+dasdinit64_SOURCES = dasdinit64.c
+dasdinit64_LDADD   = $(tools_ADDLIBS)
+dasdinit64_LDFLAGS = $(tools_LD_FLAGS)
+
 dasdisup_SOURCES   = dasdisup.c
 dasdisup_LDADD     = $(tools_ADDLIBS)
 dasdisup_LDFLAGS   = $(tools_LD_FLAGS)
@@ -550,9 +567,17 @@ dasdload_SOURCES   = dasdload.c
 dasdload_LDADD     = $(tools_ADDLIBS)
 dasdload_LDFLAGS   = $(tools_LD_FLAGS)
 
+dasdload64_SOURCES = dasdload64.c
+dasdload64_LDADD   = $(tools_ADDLIBS)
+dasdload64_LDFLAGS = $(tools_LD_FLAGS)
+
 dasdconv_SOURCES   = dasdconv.c
 dasdconv_LDADD     = $(tools_ADDLIBS)
 dasdconv_LDFLAGS   = $(tools_LD_FLAGS)
+
+dasdconv64_SOURCES = dasdconv64.c
+dasdconv64_LDADD   = $(tools_ADDLIBS)
+dasdconv64_LDFLAGS = $(tools_LD_FLAGS)
 
 dasdls_SOURCES     = dasdls.c
 dasdls_LDADD       = $(tools_ADDLIBS)
@@ -606,6 +631,26 @@ dasdcopy_LDFLAGS   = $(tools_LD_FLAGS)
 cckdswap_SOURCES   = cckdswap.c
 cckdswap_LDADD     = $(tools_ADDLIBS)
 cckdswap_LDFLAGS   = $(tools_LD_FLAGS)
+
+cckdcdsk64_SOURCES = cckdcdsk64.c
+cckdcdsk64_LDADD   = $(tools_ADDLIBS)
+cckdcdsk64_LDFLAGS = $(tools_LD_FLAGS)
+
+cckdcomp64_SOURCES = cckdcomp64.c
+cckdcomp64_LDADD   = $(tools_ADDLIBS)
+cckdcomp64_LDFLAGS = $(tools_LD_FLAGS)
+
+cckddiag64_SOURCES = cckddiag64.c
+cckddiag64_LDADD   = $(tools_ADDLIBS)
+cckddiag64_LDFLAGS = $(tools_LD_FLAGS)
+
+dasdcopy64_SOURCES = dasdcopy64.c
+dasdcopy64_LDADD   = $(tools_ADDLIBS)
+dasdcopy64_LDFLAGS = $(tools_LD_FLAGS)
+
+cckdswap64_SOURCES = cckdswap64.c
+cckdswap64_LDADD   = $(tools_ADDLIBS)
+cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
 
 hetget_SOURCES     = hetget.c
 hetget_LDADD       = $(tools_ADDLIBS)
@@ -774,6 +819,7 @@ noinst_HEADERS =          \
   ccfixme.h               \
   cckd.h                  \
   cckd64.h                \
+  cckddasd.h              \
   ccnowarn.h              \
   ccwarn.h                \
   chain.h                 \
@@ -910,13 +956,18 @@ noinst_HEADERS =          \
 ###############################################################################
 
 
-cckd:                 \
+cckd:                   \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
 	cckdswap$(EXEEXT)   \
+	cckdcdsk64$(EXEEXT) \
+	cckdcomp64$(EXEEXT) \
+	cckddiag64$(EXEEXT) \
+	cckdswap64$(EXEEXT) \
 	cckd2ckd$(EXEEXT)   \
-	dasdcopy$(EXEEXT)
+	dasdcopy$(EXEEXT)   \
+	dasdcopy64$(EXEEXT)
 
 tar: dist
 
@@ -937,6 +988,14 @@ install-exec-hook:
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
 	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) fba2cfba64$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) ckd2cckd64$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) cfba642fba$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) cckd642ckd$(EXEEXT))
 if SETUID_HERCIFC
 	chown root $(DESTDIR)$(bindir)/hercifc
 if HERCIFC_GROUPSET
@@ -958,6 +1017,10 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
 	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
 	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/fba2cfba64$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd64$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cfba642fba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cckd642ckd$(EXEEXT)
 
 %.s: %.c
 	$(COMPILE) -S $<

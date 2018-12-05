@@ -466,8 +466,10 @@ DUT_DLL_IMPORT int  convert_tt (u_int tt, u_int noext, DSXTENT extent[], U8 head
 #define IMAGE_OPEN_DASDCOPY 0x00000001
 #define IMAGE_OPEN_QUIET    0x00000002  /* (no msgs) */
 
-DUT_DLL_IMPORT CIFBLK*   open_ckd_image   (char *fname, char *sfname, int omode, int option);
-DUT_DLL_IMPORT CIFBLK*   open_fba_image   (char *fname, char *sfname, int omode, int option);
+DUT_DLL_IMPORT   CIFBLK* open_ckd_image   (char *fname, char *sfname, int omode, int option);
+DUT_DLL_IMPORT   CIFBLK* open_fba_image   (char *fname, char *sfname, int omode, int option);
+DUT64_DLL_IMPORT CIFBLK* open_ckd64_image (char *fname, char *sfname, int omode, int option);
+DUT64_DLL_IMPORT CIFBLK* open_fba64_image (char *fname, char *sfname, int omode, int option);
 
 DUT_DLL_IMPORT int  close_ckd_image (CIFBLK *cif);
 
@@ -484,11 +486,19 @@ DUT_DLL_IMPORT int  capacity_calc (CIFBLK *cif, int used, int keylen, int datale
 DUT_DLL_IMPORT   int create_ckd  ( char *fname, U16 devtype, U32 heads, U32 maxdlen,
         U32 volcyls, char *volser, BYTE comp, BYTE lfs, BYTE dasdcopy,
         BYTE nullfmt, BYTE rawflag, BYTE flagECmode, BYTE flagMachinecheck );
+DUT64_DLL_IMPORT int create_ckd64( char *fname, U16 devtype, U32 heads, U32 maxdlen,
+        U32 volcyls, char *volser, BYTE comp, BYTE lfs, BYTE dasdcopy,
+        BYTE nullfmt, BYTE rawflag, BYTE flagECmode, BYTE flagMachinecheck );
 
 DUT_DLL_IMPORT   int create_fba  ( char *fname, U16 devtype, U32 sectsz, U32 sectors,
         char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag );
+DUT64_DLL_IMPORT int create_fba64( char *fname, U16 devtype, U32 sectsz, U32 sectors,
+        char *volser, BYTE comp, int lfs, int dasdcopy, int rawflag );
 
 int create_compressed_fba  ( char *fname, U16 devtype, U32 sectsz,
+        U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy,
+        int rawflag );
+int create_compressed_fba64( char *fname, U16 devtype, U32 sectsz,
         U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy,
         int rawflag );
 
