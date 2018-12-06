@@ -671,7 +671,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         if (!ckd)
         {
             // "DASD table entry not found for devtype 0x%2.2X"
-            FWRMSG( stderr, HHC02608, "S", devhdr.dh_devid );
+            FWRMSG( stderr, HHC02608, "S", devhdr.dh_devtyp );
             clean();
             ErrExit( EXIT_NO_CKD_DASDTAB );
         }

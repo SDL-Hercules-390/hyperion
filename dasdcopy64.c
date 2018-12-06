@@ -291,8 +291,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         "-a invalid for fba input" );
 
     if (0
-        || (in & CKDMASK) && !(out & CKDMASK )
-        || (in & FBAMASK) && !(out & FBAMASK )
+        || ((in & CKDMASK) && !(out & CKDMASK ))
+        || ((in & FBAMASK) && !(out & FBAMASK ))
     )
         return syntax( pgm, "%s",
             "cannot copy ckd to fba or vice versa" );

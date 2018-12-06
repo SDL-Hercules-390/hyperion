@@ -2973,7 +2973,6 @@ U16             cyl;                    /* Cylinder                  */
 U16             head;                   /* Head                      */
 int             t;                      /* Calculated track          */
 BYTE            badcomp=0;              /* 1=Unsupported compression */
-static char    *comp[] = {"none", "zlib", "bzip2"};
 
     cckd = dev->cckd_ext;
 

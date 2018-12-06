@@ -4857,12 +4857,6 @@ CCKD_EXT       *cckd;                   /* -> cckd extension         */
 struct timeval  tv_now;                 /* Time-of-day (as timeval)  */
 time_t          tt_now;                 /* Time-of-day (as time_t)   */
 struct timespec tm;                     /* Time-of-day to wait       */
-int             gctab[5]= {             /* default gcol parameters   */
-                           4096,        /* critical  50%   - 100%    */
-                           2048,        /* severe    25%   -  50%    */
-                           1024,        /* moderate  12.5% -  25%    */
-                            512,        /* light      6.3% -  12.5%  */
-                            256};       /* none       0%   -   6.3%  */
 
     UNREFERENCED( arg );
 

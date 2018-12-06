@@ -179,8 +179,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.dh_devtyp, 0);
         if (ckd == NULL)
         {
+            // "%1d:%04X CKD file %s: DASD table entry not found for devtype 0x%2.2X"
             FWRMSG( stderr, HHC00451, "E", SSID_TO_LCSS(cif->devblk.ssid),
-                cif->devblk.devnum, cif->fname, devhdr.dh_devid );
+                cif->devblk.devnum, cif->fname, devhdr.dh_devtyp );
             free (cif);
             return NULL;
         }
@@ -547,9 +548,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if (cyl && !(cyl % 10))
             {
                 if (extgui)
-                    fprintf (stderr, "CYL=%u\n", cyl);
+                    fprintf( stderr, "CYL=%u\n", cyl );
                 else
-                    FWRMSG( stderr, "Writing cylinder %u\r", cyl );
+                    fprintf( stderr, "Writing cylinder %u\r", cyl );
             }
 
             for (head = 0; head < heads; head++)
@@ -1196,9 +1197,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             if ((sectnum % 100) == 0)
             {
                 if (extgui)
-                    fprintf (stderr, "BLK=%u\n", sectnum);
+                    fprintf( stderr, "BLK=%u\n", sectnum );
                 else
-                    FWRMSG( stderr, "Writing sector %u\r", sectnum );
+                    fprintf( stderr, "Writing sector %u\r", sectnum );
             }
 
             /* Write the sector to the file */

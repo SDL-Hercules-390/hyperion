@@ -682,7 +682,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         if (!ckd)
         {
             // "DASD table entry not found for devtype 0x%2.2X"
-            FWRMSG( stderr, HHC02608, "S", devhdr.dh_devid );
+            FWRMSG( stderr, HHC02608, "S", devhdr.dh_devtyp );
             clean();
             ErrExit( EXIT_NO_CKD_DASDTAB );
         }
@@ -865,7 +865,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // existent tracks, whereas shadow files use a value of -1, so
         // we need to check for both.
 
-        if (!L2taboff || L2taboff == ULONG_MAX)
+        if (!L2taboff || ((U64)L2taboff == ULONG_MAX))
         {
             // "L2tab for %s %d not found"
             FWRMSG( stderr, HHC02618, "S", ckddasd ? "track" : "block", trk );

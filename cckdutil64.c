@@ -1086,11 +1086,13 @@ BYTE            buf[4*65536];           /* buffer                    */
         if (ckd == NULL)
         {
             if(dev->batch)
+                // "%1d:%04X CCKD file %s: dasd lookup error type %02X cylinders %d"
                 FWRMSG( stdout, HHC00361, "E", LCSS_DEVNUM, dev->filename,
-                        devhdr.dh_devid, cyls );
+                        devhdr.dh_devtyp, cyls );
             else
+                // "%1d:%04X CCKD file %s: dasd lookup error type %02X cylinders %d"
                 WRMSG( HHC00361, "E", LCSS_DEVNUM, dev->filename,
-                       devhdr.dh_devid, cyls );
+                       devhdr.dh_devtyp, cyls );
              goto cdsk_error;
         }
 
