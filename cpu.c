@@ -1818,8 +1818,11 @@ int     aswitch;
            to here, thereby causing the instruction counter to not be
            properly updated. Thus, we need to update it here instead.
        */
-        regs->instcount   +=     128;       /* (just an estimate) */
-        UPDATE_SYSBLK_INSTCOUNT( 128 );     /* (just an estimate) */
+        regs->instcount   +=     128;      /* (just an estimate) */
+        UPDATE_SYSBLK_INSTCOUNT( 128 );    /* (just an estimate) */
+
+        /* Perform automatic instruction tracing if it's enabled */
+        do_automatic_tracing();
     }
 
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
@@ -1846,9 +1849,7 @@ int     aswitch;
             UNROLLED_EXECUTE( current_opcode_table, regs );
             UNROLLED_EXECUTE( current_opcode_table, regs );
         }
-        regs->instcount += 1 + (i * 2);
-
-        /* Update system-wide sysblk.instcount instruction counter */
+        regs->instcount   +=     1 + (i * 2);
         UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
 
         /* Perform automatic instruction tracing if it's enabled */
