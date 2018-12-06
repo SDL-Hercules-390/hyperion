@@ -2374,7 +2374,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 
 
 DLL_EXPORT void set_verbose_util( bool v ) {        verbose = v; }
-DLL_EXPORT int  is_verbose_util()          { return verbose;     }
+DLL_EXPORT bool is_verbose_util()          { return verbose;     }
 DLL_EXPORT int  next_util_devnum()         { return nextnum++;   }
 
 DLL_EXPORT int valid_dsname( const char *pszdsname )
