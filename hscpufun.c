@@ -484,6 +484,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         char*  orig_loadparm;
         U16    devnum;
         BYTE   c;
+        char   save_ch;
 
         /* Save the LOADPARM in case of error */
         orig_loadparm = strdup( str_loadparm() );
@@ -496,6 +497,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         if ((cdev = strchr( argv[1], ':' )))
         {
             clcss = argv[1];
+            save_ch = *cdev;
             *cdev = '\0';
             cdev++;
         }
@@ -510,6 +512,8 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         if (sscanf( cdev, "%hx%c", &devnum, &c ) != 1)
         {
             free( orig_loadparm );
+            if (cdev != argv[1])
+                *--cdev = save_ch;
             rc = load_hmc( argv[1], sysblk.pcpu, clear );
         }
         else
