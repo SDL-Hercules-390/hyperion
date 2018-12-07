@@ -550,10 +550,6 @@
 								RelativePath=".\shared.h"
 								>
 							</File>
-							<File
-								RelativePath=".\cckd64.h"
-								>
-							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"
