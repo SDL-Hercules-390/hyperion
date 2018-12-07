@@ -1,0 +1,4 @@
+# CBUC test 'stop' thread...
+# This script is designed to run in a separate thread!
+pause $(testdur)    # Sleep for desired number of seconds
+r 500=FF            # And then force our test to stop

@@ -3255,6 +3255,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CBUC.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\CCW-ILS.core"
 						>
 					</File>
@@ -4130,6 +4134,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CBUC.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CCW-ILS.tst"
 							>
 						</File>
@@ -4305,6 +4313,10 @@
 							Name="subtst"
 							>
 							<File
+								RelativePath=".\tests\CBUC.subtst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\cmd-abs-2K.subtst"
 								>
 							</File>
@@ -4454,6 +4466,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CBUC.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CCW-ILS.asm"
 							>
 						</File>
@@ -4594,6 +4610,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\bfp-023-threads.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CBUC.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CBUC.pdf"
 								>
 							</File>
 							<File

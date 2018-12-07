@@ -814,6 +814,12 @@
     <None Include="tests\bfp-023-threads.core" />
     <None Include="tests\bfp-023-threads.list" />
     <None Include="tests\bfp-023-threads.sptst" />
+    <None Include="tests\CBUC.asm" />
+    <None Include="tests\CBUC.core" />
+    <None Include="tests\CBUC.list" />
+    <None Include="tests\CBUC.pdf" />
+    <None Include="tests\CBUC.subtst" />
+    <None Include="tests\CBUC.tst" />
     <None Include="tests\CCW-ILS.asm" />
     <None Include="tests\CCWILS.3390-1.comp-z" />
     <None Include="tests\CCW-ILS.core" />
