@@ -1200,85 +1200,255 @@ the <b>cckd</b> command explained below.
 <hr noshade>
 <p><h2><a NAME="utilities">Utilities</a></h2>
 
+<p>
+
 <a NAME="ckd2cckd">
 <a NAME="cckd2ckd">
 <a NAME="fba2cfba">
 <a NAME="cfba2fba">
+<a NAME="ckd2cckd64">
+<a NAME="cckd642ckd">
+<a NAME="fba2cfba64">
+<a NAME="cfba642fba">
 <table>
-<tr><td valign="top"><b>ckd2cckd &nbsp;</b><br><b>cckd2ckd &nbsp;</b><br>
-                     <b>fba2cfba &nbsp;</b><br><b>cfba2fba &nbsp;</b></td>
-    <td valign="top">These utilities are deprecated.  Use the <b>dasdcopy</b> utility instead</td>
+    <tr>
+        <td valign="top"><b>ckd2cckd &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cckd2ckd &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>fba2cfba &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cfba2fba &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>ckd2cckd64 &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cckd642ckd &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>fba2cfba64 &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cfba642fba &nbsp;</b></td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">These utilities are deprecated. Use the below
+                         <b>dasdcopy</b> / <b>dasdcopy64</b> utility instead.</td>
+    </tr>
 </table>
 
-<p>
+<p><br>
+
+<a NAME="dasdcopy">
+<table>
+    <tr>
+        <td valign="top"><b>dasdcopy &nbsp;</b></td>
+        <td valign="top"><em>[-options] ifile [sf=sfile] ofile</em></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>dasdcopy64 &nbsp;</b></td>
+        <td valign="top"><em>[-options] ifile [sf=sfile] ofile</em></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">Copy / convert dasd image files from one type to another.</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">
+        <table>
+            <tr>
+                <td valign="top"><b>-q &nbsp;</b></td>
+                <td valign="top">quiet mode (don't display status)</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-r &nbsp;</b></td>
+                <td valign="top">replace the output file if it exists</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-z &nbsp;</b></td>
+                <td valign="top">compress using zlib (default)</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-bz2 &nbsp;</b></td>
+                <td valign="top">compress using bzip2</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-0 &nbsp;</b></td>
+                <td valign="top">don't compress output</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-blks n &nbsp;</b></td>
+                <td valign="top">size of output fba file</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-cyls n &nbsp;</b></td>
+                <td valign="top">size of output ckd file</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-a &nbsp;</b></td>
+                <td valign="top">output ckd file will have alt cyls</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-lfs &nbsp;</b></td>
+                <td valign="top">create single large output file</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-o type &nbsp;</b></td>
+                <td valign="top">output file type: CKD, CCKD, FBA, CFBA. &nbsp; <i>(dasdcopy/dasdcopy64)</i><br>
+                                 output file type: CKD64, CCKD64, FBA64, CFBA64. &nbsp; <i>(dasdcopy64)</i></td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+</table>
+
+<p><br>
 
 <a NAME="cckdcdsk">
 <table>
-<tr><td valign="top"><b>cckdcdsk &nbsp;</b></td>
-    <td valign="top"><em>[-v] [-f] [-ro] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">Check the integrity of one or more compressed files.
-                     Recover damaged files.</td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">
-    <table>
-    <tr><td valign="top"><b>-v &nbsp;</b></td>
-        <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp;</b></td>
-        <td valign="top">Perform check even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-ro &nbsp;</b></td>
-        <td valign="top">Open the file(s) <i>read-only</i>. The file will not be updated.</td>
-    <tr><td valign="top"><b>-level &nbsp;</b></td>
-        <td valign="top">A number 1 .. 4 indicating the level of checking.<br>
-                         <b>1</b> Minimal checking (default)<br>
-                         <b>2</b> Medium checking. All track headers will be read.<br>
-                         <b>3</b> Maximal checking. All track images will be read and uncompressed.<br>
-                         <b>4</b> Recover everything</td>
-    </table>
-    </td>
+    <tr>
+        <td valign="top"><b>cckdcdsk &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-ro] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cckdcdsk64 &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-ro] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">Check the integrity and repair / recover one or more damaged compressed files.</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">
+            <table>
+                <tr>
+                    <td valign="top"><b>-v &nbsp;</b></td>
+                    <td valign="top">Display version and exit.</td>
+                </tr>
+                <tr>
+                    <td valign="top"><b>-f &nbsp;</b></td>
+                    <td valign="top">Perform check even if the <em>OPENED</em> bit is on.</td>
+                </tr>
+                <tr>
+                    <td valign="top"><b>-ro &nbsp;</b></td>
+                    <td valign="top">Open the file(s) <i>read-only</i>. The file will not be repaired.</td>
+                </tr>
+                <tr>
+                    <td valign="top"><b>-level &nbsp;</b></td>
+                    <td valign="top">A number 1 .. 4 indicating the level of checking / recovery:<br>
+                                         <b>1</b> &nbsp; Minimal checking (default)<br>
+                                         <b>2</b> &nbsp; Medium checking. All track headers will be read.<br>
+                                         <b>3</b> &nbsp; Maximal checking. All track images will be read and uncompressed.<br>
+                                         <b>4</b> &nbsp; Recover everything</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 </table>
 
-<p>
+<p><br>
 
 <a NAME="cckdcomp">
 <table>
-<tr><td valign="top"><b>cckdcomp &nbsp;</b></td>
-    <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">Remove all free space from a compressed file or files.</td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">
-    <table>
-    <tr><td valign="top"><b>-v &nbsp;</b></td>
-        <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp;</b></td>
-        <td valign="top">Perform compress even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-level &nbsp;</b></td>
-        <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
-    </table>
-    </td>
+    <tr>
+        <td valign="top"><b>cckdcomp &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cckdcomp64 &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">Remove all free space from a compressed file or files.</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">
+        <table>
+            <tr>
+                <td valign="top"><b>-v &nbsp;</b></td>
+                <td valign="top">Display version and exit.</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-f &nbsp;</b></td>
+                <td valign="top">Perform compress even if the <em>OPENED</em> bit is on.</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-level &nbsp;</b></td>
+                <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
 </table>
 
-<p>
+<p><br>
 
 <a NAME="cckdswap">
 <table>
-<tr><td valign="top"><b>cckdswap &nbsp;</b></td>
-    <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">Change the <i>endianess</i> or <i>byte-order</i> of a
-                     compressed file or files</td>
-<tr><td valign="top"> &nbsp; </td>
-    <td valign="top">
-    <table>
-    <tr><td valign="top"><b>-v &nbsp;</b></td>
-        <td valign="top">Display version and exit.</td>
-    <tr><td valign="top"><b>-f &nbsp;</b></td>
-        <td valign="top">Perform swap even if the <em>OPENED</em> bit is on.</td>
-    <tr><td valign="top"><b>-level &nbsp;</b></td>
-        <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
-    </table>
-    </td>
+    <tr>
+        <td valign="top"><b>cckdswap &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td valign="top"><b>cckdswap64 &nbsp;</b></td>
+        <td valign="top"><em>[-v] [-f] [-level] filename1 [filename2 ...]</em></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">Change the <i>endianess</i> or <i>byte-order</i> of a compressed file or files</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top"> &nbsp; </td>
+        <td valign="top">
+        <table>
+            <tr>
+                <td valign="top"><b>-v &nbsp;</b></td>
+            <td valign="top">Display version and exit.</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-f &nbsp;</b></td>
+                <td valign="top">Perform swap even if the <em>OPENED</em> bit is on.</td>
+            </tr>
+            <tr>
+                <td valign="top"><b>-level &nbsp;</b></td>
+                <td valign="top">A number 1 .. 3 indicating the <a href="#cckdcdsk">chkdsk</a> level.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
 </table>
 
 <hr noshade>

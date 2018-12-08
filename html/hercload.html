@@ -40,6 +40,7 @@ different CD-ROM packages:
 <dt><b>The OS/390 and z/OS Application Development CD (ADCD)</b>
 <dd>available only to members of IBM PartnerWorld for Developers,
 and
+<p>
 <dt><b>The OS/390 and z/OS DemoPkg</b>
 <dd>available only to IBM employees and qualified IBM Business Partners.
 </dl>
@@ -63,150 +64,140 @@ at the address given on their web page.
 Different rules apply to the OS/390 and z/OS
 DemoPkg CD which is available only to IBM employees and business
 partners.  If you fall into this category then you probably know
-what the rules are -- I don't :-(
+what the rules are -- I don't. &nbsp; <tt> :-( </tt>
 
 <p><hr><a name="loading"></a>
 <h2>Creating, formatting, and loading DASD volumes</h2>
 
 <h4>Creating an empty DASD volume</h4>
 <p>
-The dasdinit program must first be run from the Unix shell prompt to
+The dasdinit / dasdinit64 program must first be run from the Unix shell prompt to
 create a file containing an empty DASD volume.
 <p>
-The format of the dasdinit command is:
-<p><br>
+The format of the dasdinit / dasdinit64 command is:
+<br><br>
 <pre>
-HHC01413I Hercules utility 'dasdinit' - DASD image file creation program; version 3.07-svn-7593
-HHC01414I (C) Copyright 1999-2011 by Roger Bowler, Jan Jaeger, and others
-HHC02448I Usage: dasdinit [-options] filename devtype[-model] [volser] [size]
-
-Builds an empty dasd image file:
-
-  dasdinit [-options] filename devtype[-model] [volser] [size]
-
-where:
-
-  -v         display version info and help
-  -z         build compressed dasd image file using zlib
-  -bz2       build compressed dasd image file using bzip2
-  -0         build compressed dasd image file with no compression
-  -lfs       create only one very large output file (if supported)
-  -a         build dasd image file that includes alternate cylinders
-             (option ignored if size is manually specified)
-  -r         build 'raw' dasd image file  (no VOL1 or IPL track)
-  -b         make wait PSW in IPL1 record a BC-mode PSW
-             (default is EC-mode PSW)
-  -m         enable wait PSW in IPL1 record for machine checks
-             (default is disabled for machine checks)
-  -linux     null track images will look like linux dasdfmt'ed images
-             (3390 device type only)
-
-  filename   name of dasd image file to be created
-
-  devtype    CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
-             FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336
-
-  model      device model (implies size) (opt)
-
-  volser     volume serial number (1-6 characters)
-             (specified only if '-r' option not used)
-
-  size       number of CKD cylinders or 512-byte FBA sectors
-             (required if model not specified else optional)
+    Usage: dasdinit [-options] filename devtype[-model] [volser] [size]
+    Builds an empty dasd image file
+    options:
+    
+      -z        build compressed dasd image file using zlib
+      -bz2      build compressed dasd image file using bzip2
+      -0        build compressed dasd image file with no compression
+      -lfs      build a large (uncompressed) dasd file (if supported)
+      -a        build dasd image file that includes alternate cylinders
+                (option ignored if size is manually specified)
+      -r        build 'raw' dasd image file
+                (no VOL1 or IPL track)
+      -b        make wait PSW in IPL1 record a BC-mode PSW
+                (default is EC-mode PSW)
+      -m        enable wait PSW in IPL1 record for machine checks
+                (default is disabled for machine checks)
+      -linux    null track images will look like linux dasdfmt'ed images
+                (3390 device type only)
+    
+      filename  name of dasd image file to be created
+      devtype   CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
+                FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336
+    
+      model     device model (implies size) (opt)
+      volser    volume serial number (1-6 characters)
+                (specified only if '-r' option not used)
+      size      number of CKD cylinders or 512-byte FBA sectors
+                (required if model not specified else optional)
 </pre>
-<p>
+
+<p><br>
 Note that the defaults for the wait PSW written to the IPL1 record have changed
 from earlier releases of Hercules.  In the past, the wait PSW created by dasdinit
 was a BC-mode PSW enabled for machine check interrupts.  The current default for
 the wait PSW is EC-mode, disabled for machine checks.  To obtain the earlier
 behavior, run dasdinit with the "-b" and "-m" flags.
 </p>
-<br>
-<p>
 <a NAME="models">
 The current list of device types and models supported is:
 </p>
-<p><br>
 <pre>
+
               CKD DEVICES
 
-                             alt
-        devtype-model  cyls  cyls
+                               alt
+        devtype-model    cyls  cyls
 
-        2311           [*]
-        2311-1         200    2
-
-        2314           [*]
-        2314-1         200    3
-
-        3330           [*]
-        3330-1         404    7
-        3330-2         808    7
-        3330-11        808    7
-
-        3340           [*]
-        3340-1         348    1
-        3340-35        348    1
-        3340-2         696    2
-        3340-70        696    2
-
-        3350           [*]
-        3350-1         555    5
-
-        3375           [*]
-        3375-1         959    1
-
-        3380           [*]
-        3380-1         885    1
-        3380-A         885    1
-        3380-B         885    1
-        3380-D         885    1
-        3380-J         885    1
-        3380-2        1770    2
-        3380-E        1770    2
-        3380-3        2655    3
-        3380-K        2655    3
-        EMC3380K+     3339    3
-        EMC3380K++    3993    3
-
-        3390           [*]
-        3390-1        1113    1
-        3390-2        2226    1
-        3390-3        3339    1
-        3390-9       10017    3
-        3390-27      32760    3
-        3390-54      65520    3
-
-        9345           [*]
-        9345-1        1440    0
-        9345-2        2156    0
+        2311              [<b>*</b>]
+        2311-1            200   2
+                      
+        2314              [<b>*</b>]
+        2314-1            200   3
+                      
+        3330              [<b>*</b>]
+        3330-1            404   7
+        3330-2            808   7
+        3330-11           808   7
+                      
+        3340              [<b>*</b>]
+        3340-1            348   1
+        3340-35           348   1
+        3340-2            696   2
+        3340-70           696   2
+                      
+        3350              [<b>*</b>]
+        3350-1            555   5
+                      
+        3375              [<b>*</b>]
+        3375-1            959   1
+                      
+        3380              [<b>*</b>]
+        3380-1            885   1
+        3380-A            885   1
+        3380-B            885   1
+        3380-D            885   1
+        3380-J            885   1
+        3380-2           1770   2
+        3380-E           1770   2
+        3380-3           2655   3
+        3380-K           2655   3
+        EMC3380K+        3339   3
+        EMC3380K++       3993   3
+                      
+        3390              [<b>*</b>]
+        3390-1           1113   1
+        3390-2           2226   1
+        3390-3           3339   1
+        3390-9          10017   3
+        3390-27         32760   3
+        3390-54         65520   3
+                      
+        9345              [<b>*</b>]
+        9345-1           1440   0
+        9345-2           2156   0
 
 
              FBA DEVICES
 
         devtype-model  blocks
 
-        3310              [*]
+        3310              [<b>*</b>]
         3310-1         125664
 
-        3370              [*]
+        3370              [<b>*</b>]
         3370-Al        558000
         3370-B1        558000
         3370-A2        712752
         3370-B2        712752
 
-        9313              [*]
+        9313              [<b>*</b>]
         9313-1         246240
 
-        9332              [*]
+        9332              [<b>*</b>]
         9332-200       360036
         9332-400       360036
         9332-600       554800
 
-        9335              [*]
+        9335              [<b>*</b>]
         9335-1         804714
 
-        9336              [*]
+        9336              [<b>*</b>]
         9336-10        920115
         9336-20       1672881
         9336-25       1672881
@@ -214,15 +205,14 @@ The current list of device types and models supported is:
         0671-08        513072
         0671           574560
         0671-04        624456
+
+    [<b>*</b>] size may be specified else size defaults to the first listed model.
 </pre>
-<p>
-[<b>*</b>] size may be specified else size defaults to the
-           first listed model.
 <p>
 <h4>Volumes exceeding 2GB</h4>
 <p>
-For CKD volumes which exceed 2GB, such as the 3390-3, and the
-<b>-lfs</b> parameter is not specified, the DASDINIT
+For CKD volumes which exceed 2GB, such as the 3390-3, and for
+which the <b>-lfs</b> parameter is not specified, the DASDINIT / DASDINIT64
 program will create multiple files by appending the characters
 <b>_1</b>, <b>_2</b>, <b>_3</b> etc.
 to the file name specified on the command line.  These characters
@@ -233,11 +223,14 @@ to the end of the name. Each file contains a whole number of cylinders.
 logical volume. Specify the full name of just the first file in the
 Hercules configuration file (e.g. "<i>filename</i>_1").
 <p>
-The DASDINIT program cannot create FBA volumes exceeding 2GB
+If the <b>-lfs</b> option <i>is</i> specified however, then the output file is
+a single large file which can be as large as your system supports.
+<p>
+The DASDINIT / DASDINIT64 program cannot create FBA volumes exceeding 2GB
 unless the <b>-lfs</b> parameter is specified and <i>large file size</i>
 is supported on your platform..
 
-<h5>Examples</h5>
+<h4>Examples</h4>
 <p>
 To create a 3330 model 1 CKD volume consisting of 404 cylinders
 (plus 7 alternate cylinders too)
@@ -269,17 +262,17 @@ of 3339 cylinders with volume serial number WORK03:
     dasdinit triple.a88 3390-3 work03
 </pre>
 <p>
-Because this volume exceeds 2GB, DASDINIT will create two files
+Because this volume exceeds 2GB, DASDINIT / DASDINIT64 will create two files
 with <b><i>triple_1.a88</b></i> containing cylinders 0-2518 and
-<b><i>triple_2.a88</b></i> containing cylinders 2519-3339.  If you
-specify
+<b><i>triple_2.a88</b></i> containing cylinders 2519-3339.  However, if you
+instead specify the <tt>-lfs</tt> option:
 <pre>
     dasdinit -lfs triple.a88 3390-3 work03
 </pre>
 <p>
-then DASDINIT will create a single file <b><i>triple.a88</i></b>
+then DASDINIT /DASDINIT64 will create a single file <b><i>triple.a88</i></b>
 containing all the cylinders.  Your platform must support <i>large
-file size</i> to specify the <b>-lfs</b> option.
+file sizes</i> to specify the <b>-lfs</b> option.
 
 <h4>Formatting the empty DASD volume</h4>
 <p>
@@ -288,59 +281,66 @@ such as standalone IBCDASDI or ICKDSF.
 <p>
 Here is an example of the IBCDASDI control statements required
 to initialize a 3330 volume:
-<pre><code>
-WORK01 JOB  'INITIALIZE 3330 WORK VOLUME'
-       MSG   TODEV=1052,TOADDR=009
-       DADEF TODEV=3330,TOADDR=151,IPL=NO,VOLID=WORK01,BYPASS=YES
-       VLD   NEWVOLID=WORK01,OWNERID=HERCULES
-       VTOCD STRTADR=1,EXTENT=5
-       END
-</code></pre>
+<pre>
+    WORK01 JOB  'INITIALIZE 3330 WORK VOLUME'
+           MSG   TODEV=1052,TOADDR=009
+           DADEF TODEV=3330,TOADDR=151,IPL=NO,VOLID=WORK01,BYPASS=YES
+           VLD   NEWVOLID=WORK01,OWNERID=HERCULES
+           VTOCD STRTADR=1,EXTENT=5
+           END
+</pre>
 <p>
 To run IBCDASDI, place the above statements in a file called
 <b><i>init3330.txt</i></b> and start Hercules in S/370 mode with
 a configuration file containing these statements:
-<pre><code>
-CPUSERIAL 001234
-CPUMODEL 3145
-MAINSIZE 2
-CNSLPORT 1052
-ARCHMODE S/370
-0009   1052
-000A   1442    ibcdasdi.rdr
-000C   1442    init3330.txt
-0151   3330    work01.151
-</code></pre>
+<pre>
+    CPUSERIAL  001234
+    CPUMODEL   3145
+    MAINSIZE   2
+    CNSLPORT   1052
+    ARCHLVL    S/370
+
+    0009   1052
+    000A   1442    ibcdasdi.rdr
+    000C   1442    init3330.txt
+    0151   3330    work01.151
+</pre>
 <p>
 After IPLing from card reader device 00A, connect a telnet client
-to port 1052, and press enter.  At the IBCDASDI prompt, enter:
-<pre><code>input=1442 00c</code></pre>
+to port 1052, and press enter.  At the IBCDASDI prompt, enter the command:
+<pre>
+    input=1442 00c
+</pre>
 
 <h4>Loading the new DASD volume</h4>
 <p>
-Next you need to create a full volume dump file on your mainframe
-and convert it to AWSTAPE format using the <b><i>tapeconv.jcl</i></b>
-job in the Hercules source directory.  The AWSTAPE file can then
-be downloaded in binary format to your PC where it can be defined
-as a virtual tape drive in the Hercules configuration file.
+Next, you need to create a full volume dump file of your chosen
+<i>mainframe</i> dasd volume (converting it to AWSTAPE format) by
+using the <b><i>tapeconv.jcl</i></b> job in the Hercules source
+directory. You would run this JCL on your <i>mainframe</i>.
 <p>
-A standalone program can now be IPLed into Hercules to restore the
-volume image from the virtual tape onto the formatted virtual DASD
+The resulting AWSTAPE mainframe file can then be downloaded in binary format
+to your PC where Hercules is running, where it can then be defined as a
+Hercules virtual tape drive in your Hercules configuration file.
+<p>
+A standalone program could then be IPLed on Hercules to restore the
+volume image from the virtual tape onto the formatted Hercules DASD
 volume.
 
 <p><hr><a name="PDS"></a>
 <h2>Building a DASD volume from unloaded PDS files</h2>
+<h3>dasdload / dasdload64</h3>
 <p>
-The dasdload program can be run from the Unix shell prompt to
-create a new DASD image file and load it with data from unloaded
+The dasdload program can be run from the Unix shell prompt
+to create a new DASD image file and load it with data from unloaded
 PDS files.
 <p>
-The format of the dasdload command is:
-<p><code>dasdload <i>[options]</i> <em>ctlfile outfile msglevel</em></code>
+The format of the dasdload / dasdload64 command is:
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdload <i>[options]</i> <em>ctlfile outfile msglevel</em></code>
 <p>
-where
+where <em>[options]</em> can be:
+<blockquote>
 <dl>
-    <dt><em>[options]</em>
     <dt><code><i>-z</i></code>
     <dd>Build compressed dasd image file using zlib.
     <dt><code><i>-bz2</i></code>
@@ -359,7 +359,7 @@ where
     <dd>For a volume without IPL text, make the wait PSW written to the IPL1
         record enabled for machine checks.  The default is to make the wait
         PSW disabled for machine checks.</dd>
-    <dt><code><em>ctlname</em></code>
+    <dt><code><em>ctlfile</em></code>
     <dd>is the name of the control file which specifies the datasets
         that are to be loaded onto the newly-created volume
     <dt><code><em>outfile</em></code>
@@ -368,10 +368,11 @@ where
     <dd>is a number from 0 to 5 which controls the level of detail
         of the messages issued during the load.
 </dl>
+</blockquote>
 
 <p>
-Note that the dasdload defaults for the wait PSW written to the IPL1 record have
-changed from earlier releases of Hercules.  In the past, the wait PSW created by dasdload
+<b>Note</b> that dasdload's default for the wait PSW written to the IPL1 record
+<i>have changed from earlier releases of Hercules</i>.  In the past, the wait PSW created by dasdload
 on volumes without IPL text was a BC-mode PSW enabled for machine check interrupts.
 The current default for the wait PSW is EC-mode, disabled for machine checks.  To obtain
 the earlier behavior, run dasdload with the "-b" and "-m" flags.
@@ -379,21 +380,22 @@ the earlier behavior, run dasdload with the "-b" and "-m" flags.
 
 <h4>Control file</h4>
 <p>
-The control file required by the dasdload program is an ASCII text
+The control file required by the dasdload /dasdload64 program is an ASCII text
 file consisting of a <em>volume statement</em> followed by one
 <em>dataset statement</em> for each dataset to be created.
 <p>
 The format of the volume statement is:
-<p><code><em>volser devtype</em>[-<em>model</em>] [<em>cyls</em> [<em>ipltext</em>] ]</code>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code><em>volser devtype</em>[-<em>model</em>] [<em>cyls</em> [<em>ipltext</em>] ]</code>
 <p>where:
+<blockquote>
 <dl>
 <dt><code><em>volser</em></code>
 <dd>is the volume serial number for the newly-created volume
 <dt><code><em>devtype</em></code>
 <dd>is the emulated device type (2311, 2314, 3330, 3340, 3350, 3375,
     3380, or 3390) for the new volume.  FBA device types are not supported
-    by the dasdload program.  Model may be specified like
-    <a href="#models">dasdinit</a> above.
+    by the dasdload / dasdload64 program.  Model may be specified like
+    <a href="#models">dasdinit / dasdinit64</a> above.
 <dt><code><em>cyls</em></code>
 <dd>is the size of the new volume in cylinders.
     If <code><em>cyls</em></code> is coded as <code>*</code>
@@ -406,11 +408,13 @@ The format of the volume statement is:
     fixed length 80-byte EBCDIC records in the same format as
     expected by IBCDASDI or ICKDSF.
 </dl>
+</blockquote>
 <p>
 The format of a dataset statement is:
-<p><code><em>dsname method units pri sec dir dsorg recfm
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code><em>dsname method units pri sec dir dsorg recfm
 lrecl blksize keylen</em></code>
 <p>where:
+<blockquote>
 <dl>
 <dt><code><em>dsname</em></code>
 <dd>is the dataset name
@@ -462,6 +466,7 @@ lrecl blksize keylen</em></code>
 <dt><code><em>keylen</em></code>
 <dd>is the key length
 </dl>
+</blockquote>
 <p>All parameters except dsname and method are optional.
 Defaults of zero are supplied for DCB parameters.  For datasets
 loaded with the XMIT method, the DCB parameters are taken from
@@ -472,66 +477,74 @@ If CYL is specified without any primary quantity then the default
 space allocation is 1 cylinder or the minimum number of cylinders
 required to load the dataset, whichever is larger.
 
-<h4>Examples</h4>
+<h4>Example 1:</h4>
 <p>
-<b>[1]</b> To create a 2314 volume in a file called <b><i>sysres.230</i></b>
+To create a 2314 volume in a file called <b><i>sysres.230</i></b>
 using the control file <b><i>sysres.plf</i></b> with message level 2:
-<pre><code>dasdload sysres.plf sysres.230 2</pre></code>
+<pre>
+    dasdload sysres.plf sysres.230 2
+</pre>
 
 <p>
 An example control file is shown below:
-<code><pre>#
-# Pack layout file for MFT system residence volume
-#
-sysres 2314 * ieaipl00.rdr
-sys1.parmlib    xmit    /cdrom/os360/reslibs/parmlib.xmi
-sys1.imagelib   xmit    /cdrom/os360/reslibs/imagelib.xmi
-sysctlg         cvol    trk 1 0 0       ps f 256 256 8
-sysvtoc         vtoc    trk 5
-sys1.logrec     dip     trk 1 0 0
-sys1.nucleus    xmit    /cdrom/os360/reslibs/nucleus.xmi cyl
-sys1.svclib     xmit    /cdrom/os360/reslibs/svclib.xmi cyl
-sys1.sysjobqe   empty   cyl 2 0 0       da f 176 176 0
-sys1.dump       empty   cyl 10 0 0      ps u 0 3625 0
-</pre></code>
+<pre>
+    #
+    # Pack layout file for MFT system residence volume
+    #
+    sysres 2314 * ieaipl00.rdr
+    sys1.parmlib    xmit    /cdrom/os360/reslibs/parmlib.xmi
+    sys1.imagelib   xmit    /cdrom/os360/reslibs/imagelib.xmi
+    sysctlg         cvol    trk 1 0 0       ps f 256 256 8
+    sysvtoc         vtoc    trk 5
+    sys1.logrec     dip     trk 1 0 0
+    sys1.nucleus    xmit    /cdrom/os360/reslibs/nucleus.xmi cyl
+    sys1.svclib     xmit    /cdrom/os360/reslibs/svclib.xmi cyl
+    sys1.sysjobqe   empty   cyl 2 0 0       da f 176 176 0
+    sys1.dump       empty   cyl 10 0 0      ps u 0 3625 0
+</pre>
 
 <p>
-<b>[2]</b> To create a compressed 3390-3 volume in a file called
+<h4>Example 2:</h4>
+To create a compressed 3390-3 volume in a file called
 <b><i>linux.500</i></b> containing a bootable linux system for
 linux/390 installation using the control file <b><i>linux.prm</i></b>:
-<pre><code>dasdload -z linux.prm linux.500</pre></code>
-
+<pre>
+    dasdload -z linux.prm linux.500
+</pre>
 <p>
 An example control file is shown below:
-<code><pre>
-#
-# Build a bootable linux disk
-#   [Note: the dataset names (sys1.linux. ...) are hard-coded in
-#          linuxipl.obj and cannot be changed without rebuilding it]
-#
-linux  3390-3 * linuxipl.obj
-sys1.linux.parmfile    SEQ images/redhat.prm trk   1 0 0 ps fb 1024 1024
-sys1.linux.tapeipl.ikr SEQ images/kernel.img trk 200 0 0 ps fb 1024 1024
-sys1.linux.initrd      SEQ images/initrd.img trk 200 0 0 ps fb 1024 1024
-</pre></code>
+<pre>
+    #
+    #   Build a bootable linux disk
+    #
+    #   [Note: the dataset names (sys1.linux...) are hard-coded in
+    #    linuxipl.obj and cannot be changed without rebuilding it]
+    #
+    linux  3390-3 * linuxipl.obj
+    sys1.linux.parmfile    SEQ images/redhat.prm trk   1 0 0 ps fb 1024 1024
+    sys1.linux.tapeipl.ikr SEQ images/kernel.img trk 200 0 0 ps fb 1024 1024
+    sys1.linux.initrd      SEQ images/initrd.img trk 200 0 0 ps fb 1024 1024
+</pre>
 
-
-<h3>Fixing the XCTL tables in SVCLIB</h3>
+<h2>Fixing the XCTL tables in SVCLIB</h2>
+<h3>DASDISUP: &nbsp; IEHIOSUP</h3>
 <p>
 On an OS/360 system, the Open/Close/EOV modules in SYS1.SVCLIB have
 XCTL tables embedded within them.  These tables contain TTRs
 pointing to other modules, and these TTRs need to be adjusted after
 loading SVCLIB to DASD.  OS/360 provides a program called IEHIOSUP
-to perform this function, but the catch is that you can't run
+to perform this function, but the catch-22 situation is that you can't run
 IEHIOSUP until you have the system up and running, and you can't IPL
-until you have fixed the XCTL tables.
-To solve this problem, Hercules provides a program called dasdisup
-which can be run from the Unix command line after running dasdload.
+until you have fixed the XCTL tables!
+<p>
+To solve this dilemma, Hercules provides a program called dasdisup
+which can be run from the Unix command line after running dasdload / dasdload64.
 <p>
 The format of the dasdisup command is:
-<p><code>dasdisup <em>outfile [sf=shadow-file-name]</em></code>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdisup <em>outfile [sf=shadow-file-name]</em></code>
 <p>
 where
+<blockquote>
 <dl>
     <dt><code><em>outfile</em></code>
     <dd>is the name of the DASD image file to be updated
@@ -539,9 +552,10 @@ where
     <dd>(optional) is the name of the associated shadow file
         as specified in the Hercules config file
 </dl>
+</blockquote>
 <p>
-<em>Note: do not use this procedure except on OS/360 IPL volumes;
-other operating systems do not have XCTL tables.</em>
+<em><b>Note:</b> do <u>not</u> use this procedure except on OS/360 IPL volumes!
+Other operating systems do not have XCTL tables!</em>
 
 <p><hr><a name="utilities"></a>
 <h2>Other DASD utilities</h2>
@@ -549,28 +563,42 @@ other operating systems do not have XCTL tables.</em>
 These programs can be used to extract data from CKD DASD images
 by means of commands issued at the Unix shell prompt.
 
-<h3>DASDLS - List datasets on volume</h3>
+<h3>DASDLS: &nbsp; List datasets on volume</h3>
 <p>
-DASDLS, written by Malcolm Beattie, is a command to let you list the
-names of the datasets contained in disk images.
+DASDLS, written by Malcolm Beattie and enhanced by others, is a command
+to let you list the names of the datasets contained in disk images.
 <p>
 The command format is:
-<br><code>
-dasdls <em>ckdfile [sf=shadow-file-name] ...</em>
-</code></br>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdls [-option [-option ... ]] ckdfile [sf=sfile]  [...]</em></code>
+<p>
 where <em>ckdfile</em> is the name of a Unix file containing a CKD volume
-and <em>shadow-file-name</em> (optional) is the name of the associated
-shadow file.
+and <em>sfile</em> (optional) is the name of the associated shadow file.
+<p>
+<em>-option</em> can be:
+<blockquote>
+<dl>
+    <dt><code><i>-hdr</i></code><dd>show column headers
+    <dt><code><i>-dsnl [=n]</i></code><dd>restrict dsname width
+    <dt><code><i>-info</i></code><dd>show F1 info
+    <dt><code><i>-caldt</i></code><dd>calendar date format
+    <dt><code><i>-refdt</i></code><dd>show last-reference date
+    <dt><code><i>-expdt</i></code><dd>show expiry date
+    <dt><code><i>-yroffs [=n]</i></code><dd>year offset
+</dl>
+</blockquote>
+<p>
+<b>Note:</b> Multiple images can be processed in the same run,
+but options must be specified ahead of each image.
+<p>
 
-<h3>DASDCAT - Display PDS members</h3>
+<h3>DASDCAT: &nbsp; Display PDS members</h3>
 <p>
 DASDCAT, written by Malcolm Beattie, is a command to let you read
 datasets from disk images.
 <p>
 The command format is:
-<br><code>
-dasdcat -i <em>ckdfile [sf=shadow-file-name] dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em>
-</code><br>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdcat -i <em>ckdfile [sf=shadow-file-name] dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em></code>
+<p>
 where <em>ckdfile</em> is the name of a Unix file containing a CKD volume,
 <em>shadow-file-name</em> (optional) is the name of the associated shadow file,
 and <em>dsname</em> can be a plain (non-partitioned) dataset name
@@ -599,54 +627,58 @@ where <em>memname</em> can be:
     distinguished from contents.
 </ul>
 
-<h5>Examples</h5>
-<pre><code>
-% dasdcat -i mvtres.350 sf= mvtres_1.350 'sys1.parmlib/?'
-ieabld00
-ieaige00
-ieaigg00
-ieaigg01
-iearsv00
-ikjprm00
-lnklst00
-presres
-smfdeflt
-% dasdcat -i mvtres.350 sys1.parmlib/smfdeflt:c
- OPT=2, SYSTEM,JOB AND STEP DATA COLLECTION
- EXT=YES, USER EXITS ARE TO BE TAKEN
- JWT=15, MAXIMUM CONTINUOUS WAIT TIME IS 15 MINS.PER STEP
- BUF=400, A MINIMUM 400 BYTE BUFFER IS DEFINED
- SID=6A, SYSTEM ID IS 6A
- MDL=65, MODEL IS MOD 65
- OPI=YES, PERMIT OPERATOR INTERVENTION
- MAN=ALL, RECORD USER AND SYSTEM RECORDS
- PRM=(,282,NL) SYS1.MAN ALLOCATED TO NON-LABELED TAPE
-% dasdcat -i mvtres.350 sys1.help/\*:c
-> Member ACCOUNT
-| )S SUBCOMMANDS -
-| ADD/A,CHANGE/C,DELETE/D,LIST/L,LISTIDS/LISTI,HELP/H,END
-| )F FUNCTION -
-| THE ACCOUNT COMMAND PROCESSOR INVOKES THE CONVERSATIONAL PROGRAMS
-...
-> Member ALLOC
-| )F FUNCTION -
-| THE ALLOCATE COMMAND DYNAMICALLY DEFINES AND ALLOCATES A DATA SET
-| WITH OR WITHOUT AN ATTRIBUTE LIST OF DCB PARAMETERS
-| )X SYNTAX -
-| ALLOCATE DATASET('DSNAME'/*) FILE('DDNAME')
-...
-</code></pre>
+<h4>Examples:</h4>
+<pre>
+    % dasdcat -i mvtres.350 sf= mvtres_1.350 'sys1.parmlib/?'
 
-<h3>DASDPDSU - Unload PDS members</h3>
+    ieabld00
+    ieaige00
+    ieaigg00
+    ieaigg01
+    iearsv00
+    ikjprm00
+    lnklst00
+    presres
+    smfdeflt
+
+    % dasdcat -i mvtres.350 sys1.parmlib/smfdeflt:c
+
+     OPT=2, SYSTEM,JOB AND STEP DATA COLLECTION
+     EXT=YES, USER EXITS ARE TO BE TAKEN
+     JWT=15, MAXIMUM CONTINUOUS WAIT TIME IS 15 MINS.PER STEP
+     BUF=400, A MINIMUM 400 BYTE BUFFER IS DEFINED
+     SID=6A, SYSTEM ID IS 6A
+     MDL=65, MODEL IS MOD 65
+     OPI=YES, PERMIT OPERATOR INTERVENTION
+     MAN=ALL, RECORD USER AND SYSTEM RECORDS
+     PRM=(,282,NL) SYS1.MAN ALLOCATED TO NON-LABELED TAPE
+
+    % dasdcat -i mvtres.350 sys1.help/\*:c
+
+    > Member ACCOUNT
+    | )S SUBCOMMANDS -
+    | ADD/A,CHANGE/C,DELETE/D,LIST/L,LISTIDS/LISTI,HELP/H,END
+    | )F FUNCTION -
+    | THE ACCOUNT COMMAND PROCESSOR INVOKES THE CONVERSATIONAL PROGRAMS
+    ...
+    > Member ALLOC
+    | )F FUNCTION -
+    | THE ALLOCATE COMMAND DYNAMICALLY DEFINES AND ALLOCATES A DATA SET
+    | WITH OR WITHOUT AN ATTRIBUTE LIST OF DCB PARAMETERS
+    | )X SYNTAX -
+    | ALLOCATE DATASET('DSNAME'/*) FILE('DDNAME')
+    ...
+</pre>
+
+<h3>DASDPDSU: &nbsp; Unload PDS members</h3>
 <p>
 DASDPDSU is a command which unloads PDS members from a disk image
 and copies each member to a file <em>memname</em>.mac in the current
 working directory.
 <p>
 The command format is:
-<br><code>
-dasdpdsu <em>ckdfile [sf=shadow-file-name] pdsname</em> [ascii]
-</code></br>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdpdsu <em>ckdfile [sf=shadow-file-name] pdsname</em> [ascii]</code>
+<p>
 where <em>ckdfile</em> is the name of a Unix file containing a CKD
 volume, <em>shadow-file-name</em> (optional) is the name of the associated
 shadow file, and <em>pdsname</em> is the name of a PDS on that volume.

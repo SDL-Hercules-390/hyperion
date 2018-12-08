@@ -14,6 +14,60 @@ Hercules: Release Notes
 
 <hr noshade>
 
+<h2>Release notes for the SDL version of Hercules 4.2 Hyperion</h2>
+<p>
+<dl>
+
+
+  <dt>CCKD64 Support
+  <dd>
+  <p>
+    Version 4.2 of SDL Hercules Hyperion introduces support for very large
+    <b>CCKD (Compressed CKD)</b> dasd image files, called <b>CCKD64</b>.
+    <p>
+    The designed maximum file size that the original default implementation
+    of CCKD supported was (and still is) 4GB.  If a compressed CCKD dasd image
+    file (or any of its associated shadow files) reaches a file size of 4GB,
+    unrecoverable I/O errors occur since 4GB was (and still is) the architected
+    maximum size that a CCKD dasd (or any of its shadows) can be. (This is
+    caused by the use of 32-bit file offset values being used in the original
+    design of the CCKD file format.)
+    <p>
+    With the introduction of <b>CCKD64</b> support however, the new CCKD64 file
+    format uses 64-bit file offset values, thus allowing CCKD64 format compressed
+    dasd image files (and their associated shadow files) to grow up to the
+    theoretical maximum of 18EB in size. The <i>actual</i> maximum size that any
+    operating system file can be however, is limited by the operating system itself
+    as well as the format of the file system that the file resides on.  On Windows
+    systems using NTFS volumes, the actual maximum supported file size is 16TB.
+    <p>
+    In order to take advantage of the new CCKD64 file format, existing dasd image
+    files must first be converted to the new format using the new '<b>dasdcopy64</b>'
+    utility or else brand new fresh dasd image files must be created using the
+    new '<b>dasdinit64</b>' utility.
+    <p>
+    In addition to dasdcopy64 and dasdinit64, there is a corresponding
+    <b>CCKD64</b> version of the dasdcomp utility called dasdcomp64,
+    a cckd64 version of the cckdcdsk utility called cckdcdsk64,
+    a cckd64 version of the cckddiag utility called cckddiag64, 
+    a cckd64 version of the cckdswap utility called cckdswap64, 
+    a cckd64 version of the dasdconv utility called dasdconv64, 
+    and a cckd64 version of the dasdload utility called dasdload64.
+    <p>
+    The existing dasdcat, dasdisup, dasdls, dasdpdsu and dasdseq utilities
+    do not have corresponding 'cckd64' versions. However, all of them do
+    indeed support the new 'cckd64' file format in addition to the existing
+    'cckd' file format. They just don't have separate executable names ending
+    in '64'. They can all be used with either new or old format dasd image files.
+  </p>
+
+
+</dl>
+
+<!-- --------------------------------------------------------------------------------- -->
+
+<hr>
+
 <h2>Release notes for the SDL version of Hercules 4.1 Hyperion</h2>
 <p>
 <dl>
