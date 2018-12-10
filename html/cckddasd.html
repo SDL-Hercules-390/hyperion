@@ -127,16 +127,10 @@ erroneously placed immediately before the <i>first</i> period of the
 filename instead of the last period. In newer versions of Hyperion
 this has been corrected to place the number immediately before the
 <i>last</i> period, as it was originally intended.
+<p>
 
-<p>
-There can be up to 8 shadow files in use at any time for an
-emulated dasd device.  The base file is designated file<b>[0]</b> and
-the shadow files are file<b>[1]</b> to file<b>[8]</b>.
-The <em>highest</em> numbered file in use at a given time is the <em>current</em>
-file, where all writes will occur.  Track reads start with the <em>current</em>
-file and proceed down until a file is found that actually contains the track
-image.
-<p>
+<p><h3>The Advantage of Shadow Files</a></h3>
+
 A shadow file contains all the changes made to the emulated dasd
 since it was created, until the next shadow file is created.  The moment
 of the shadow file's creation can be thought of as a <em>snapshot</em>
@@ -148,18 +142,46 @@ Using shadow files, you can keep the base file on a read-only device
 such as cdrom, or change the base file attributes to read-only,
 ensuring that this file can never be corrupted.
 <p>
+With the use of shadow files you can reconfigure your guest
+without worrying about whether the new settings might render
+your guest unusable. Simply create a new shadow file <i><u>before</u></i>
+you do your reconfiguration. If something goes wrong, simply exit Hercules
+and then delete that set of shadow files. You'll be right back to where
+you were <i>before</i> you made your changes! Then you can simply try again.
+Once you are satisfied that your changes are good, you can then do a
+"<code>sf-*</code>" backwards merge (see further below) to "commit" your changes.
+<p>
+There can be up to 8 shadow files in use at any time for an
+emulated dasd device.  The base file is designated file<b>[0]</b> and
+the shadow files are file<b>[1]</b> to file<b>[8]</b>.
+The <em>highest</em> numbered file in use at a given time is the <em>current</em>
+file, where all writes will occur.  Track reads start with the <em>current</em>
+file and proceed down until a file is found that actually contains the track
+image.
+<p>
 Hercules console commands are provided to add a new shadow file, remove
 the current shadow file (with or without backward merge), compress the
-curent shadow file, and display the shadow file status and statistics:<br><br>
-
-<table>
+curent shadow file, and display the shadow file status and statistics:
+<blockquote>
+<table width=90%>
+<tr><td colspan="4"> &nbsp; </td></tr>
+<tr><td align="left"><b>sfd</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">Display shadow file status and statistics</td>
+</tr>
+<tr><td align="left"><b>sfc</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">Compress the current file</td>
+</tr>
 <tr><td align="left"><b>sf+</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
     <td align="left">Create a new shadow file</td>
+</tr>
+<tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left" valign="top"><b>sf-</b></td>
     <td align="left" valign="top"><font size=-1>unit</font></td>
-    <td align="left" valign="top"<font size=-1><b>merge</b><br><em>nomerge<br>force</em></font></td>
-    <td align="left" valign="top">Remove a shadow file.  If <em>merge</em> is
+    <td align="left" valign="top"<font size=-1><b>merge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b><br><em>nomerge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>force&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></font></td>
+    <td align="left" valign="top">Remove a shadow file.<br>If <em>merge</em> is
                      specified or defaulted, then the contents of the current
                      file is merged into the previous file, the current file
                      is removed, and the previous file becomes the current file.
@@ -173,31 +195,29 @@ curent shadow file, and display the shadow file status and statistics:<br><br>
                      the base file and the base file is read-only because the
                      <em>ro</em> option was specified on the device config statement.
                      </td>
-<tr><td align="left"><b>sfc</b></td>
-    <td align="left" colspan="2"><font size=-1>unit</font></td>
-    <td align="left">Compress the current file</td>
+</tr>
+<tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left" valign="top"><b>sfk</b></td>
     <td align="left" valign="top"><font size=-1>unit</font></td>
     <td align="left" valign="top"<font size=-1><i>level</i></font></td>
-    <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.
-                     Level is a number -1 ... 4, the default is <b>2</b>.  The levels are:<br>
-                     -1 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table <br>
-                     &nbsp; 0 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables <br>
-                     &nbsp; 1 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces <br>
-                     &nbsp; 2 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkhdrs <br>
-                     &nbsp; 3 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkimgs <br>
-                     &nbsp; 4 &nbsp;&nbsp;&nbsp; devhdr, cdevhdr. Build everything else from recovery
+    <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.<br>
+                     Level is a number from -1 ... 4, with the default level being <b>2</b>:<br>
+                     &nbsp; &nbsp;&nbsp; -1 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table. <br>
+                     &nbsp; &nbsp; &nbsp; 0 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables. <br>
+                     &nbsp; &nbsp; &nbsp; 1 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces. <br>
+                     &nbsp; &nbsp; &nbsp; <b>2</b> &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkhdrs. &nbsp;<i>(default)</i> <br>
+                     &nbsp; &nbsp; &nbsp; 3 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table, L2 tables, free spaces, trkimgs. <br>
+                     &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, build everything else from recovery.
                      </td>
-<tr><td align="left"><b>sfd</b></td>
-    <td align="left" colspan="2"><font size=-1>unit</font></td>
-    <td align="left">Display shadow file status and statistics</td>
+</tr>
 </table>
-<br>
-<b><font size=-1>Note</font></b>.  You can use <b>*</b> in place of unit
-address to apply the command to all compressed dasd (e.g. <code>'sf+*'</code>,
-or <code>'sf-* nomerge'</code>).
 
 <p>
+You can use <b>*</b> in place of 'unit'
+in any of the above commands to apply the command to <i>all</i> compressed dasd.
+(<code>sf+*</code>,<code>sf-*</code>,<code>sfc*</code>,<code>sfk*</code>,<code>sfd*</code>)
+
+</blockquote>
 
 <!-- ---------------------------------------------------------------------------------- -->
 
