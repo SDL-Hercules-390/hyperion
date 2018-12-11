@@ -71,12 +71,10 @@ int     startblk;                       /* Device origin block number*/
 int     numblks;                        /* Device block count        */
 BYTE    c;                              /* Character work area       */
 char   *cu = NULL;                      /* Specified control unit    */
-char   *kw = NULL;                      /* Argument keyword          */
 int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
 CKD_DEVHDR      devhdr;                 /* Device header             */
 CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
-char   *strtok_str = NULL;              /* save last position        */
 
     /* For re-initialisation, close the existing file, if any */
     if (dev->fd >= 0)
@@ -193,8 +191,7 @@ char   *strtok_str = NULL;              /* save last position        */
             if (strlen (argv[i]) > 3
              && memcmp("cu=", argv[i], 3) == 0)   /* support for cu= added but  */
             {                                     /* is ignored for the present */
-                kw = strtok_r (argv[i], "=", &strtok_str);
-                cu = strtok_r (NULL, " \t", &strtok_str);
+                cu = argv[i]+3;
                 continue;
             }
 

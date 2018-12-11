@@ -60,7 +60,6 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char            filename[FILENAME_MAX]; /* work area for display     */
-char           *strtok_str = NULL;      /* save last position        */
 
     dev->rcd = &dasd_build_ckd_config_data;
 
@@ -175,8 +174,7 @@ char           *strtok_str = NULL;      /* save last position        */
         if (strlen (argv[i]) > 3
          && memcmp("cu=", argv[i], 3) == 0)
         {
-            cu = strtok_r (argv[i], "=", &strtok_str);
-            cu = strtok_r (NULL, " \t", &strtok_str);
+            cu = argv[i]+3;
             continue;
         }
 
