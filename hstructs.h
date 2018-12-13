@@ -876,7 +876,7 @@ struct SYSBLK {
 #if defined(_DEBUG) || defined(DEBUG)
   #define  DEFAULT_MLVL     (MLVL_VERBOSE | MLVL_DEBUG)
 #else
-  #define  DEFAULT_MLVL     (MLVL_VERBOSE)
+  #define  DEFAULT_MLVL     (MLVL_VERBOSE | MLVL_EMSGLOC)
 #endif
 
         BLOCK_TRAILER;                  /* eye-end                   */
