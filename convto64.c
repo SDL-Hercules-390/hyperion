@@ -390,7 +390,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
             oL1tab[i] = 0;
             continue;
         }
-        if (iL1tab[i] == (U32) ULONG_MAX)
+        if (iL1tab[i] == UINT_MAX)
         {
             oL1tab[i] = ULLONG_MAX;
             continue;
@@ -419,7 +419,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
     {
         if (0
             || iL1tab[i] == 0
-            || iL1tab[i] == (U32) ULONG_MAX
+            || iL1tab[i] == UINT_MAX
         )
             continue;   /* (skip L2 tables that don't exist) */
 
@@ -583,7 +583,7 @@ int process_L2_tab( int trkblk, int ifd, CCKD_L2ENT*   iL2,
             continue;
         }
 
-        if (iL2[i].L2_trkoff == (U32) ULONG_MAX)
+        if (iL2[i].L2_trkoff == UINT_MAX)
         {
             oL2[i].L2_trkoff = ULLONG_MAX;
             continue;
