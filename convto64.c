@@ -151,8 +151,8 @@ int             rc;                     /* Return code               */
 char            pathname[MAX_PATH];     /* file path in host format  */
 U32             imgtyp;                 /* Dasd image format         */
 U32             size;                   /* Work: I/O size            */
-S64             savepos;                /* Work: saved file position */
-S64             newpos;                 /* Work: lseek return code   */
+off_t           savepos;                /* Work: saved file position */
+off_t           newpos;                 /* Work: lseek return code   */
 
 CKD_DEVHDR      devhdr;                 /* Device header             */
 
@@ -390,7 +390,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
             oL1tab[i] = 0;
             continue;
         }
-        if (iL1tab[i] == ULONG_MAX)
+        if (iL1tab[i] == (U32) ULONG_MAX)
         {
             oL1tab[i] = ULLONG_MAX;
             continue;
@@ -419,7 +419,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
     {
         if (0
             || iL1tab[i] == 0
-            || iL1tab[i] == ULONG_MAX
+            || iL1tab[i] == (U32) ULONG_MAX
         )
             continue;   /* (skip L2 tables that don't exist) */
 
@@ -427,7 +427,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
            We'll re-write it with the correct values after
            it's been processed.
         */
-        if ((oL1tab[i] = lseek( ofd, 0, SEEK_CUR )) < 0)
+        if ((off_t)(oL1tab[i] = lseek( ofd, 0, SEEK_CUR )) < 0)
         {
             // "Error in function %s: %s"
             FWRMSG( stderr, HHC02412, "E", "lseek()", strerror( errno ));
@@ -583,7 +583,7 @@ int process_L2_tab( int trkblk, int ifd, CCKD_L2ENT*   iL2,
             continue;
         }
 
-        if (iL2[i].L2_trkoff == ULONG_MAX)
+        if (iL2[i].L2_trkoff == (U32) ULONG_MAX)
         {
             oL2[i].L2_trkoff = ULLONG_MAX;
             continue;
@@ -613,7 +613,7 @@ int process_L2_tab( int trkblk, int ifd, CCKD_L2ENT*   iL2,
         }
 
         /* Retrieve the current output file position */
-        if ((oL2[i].L2_trkoff = lseek( ofd, 0, SEEK_CUR )) < 0)
+        if ((off_t)(oL2[i].L2_trkoff = lseek( ofd, 0, SEEK_CUR )) < 0)
         {
             // "Error in function %s: %s"
             FWRMSG( stderr, HHC02412, "E", "lseek()", strerror( errno ));
