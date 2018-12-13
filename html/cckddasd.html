@@ -17,12 +17,13 @@ Hercules: Compressed Dasd Emulation
 <li><a href="#shadowfiles">        Shadow Files       </a>
 <li><a href="#filestructure">      File Structure     </a>
 <li><a href="#howitworks">         How It Works       </a>
-<li><a href="#cckdcommand">        The CCKD Command (and initialization statement)   </a>
+<li><a href="#cckdcommand">        Tuning options     </a>
 <li><a href="#utilities">          Utilities          </a>
 </ul>
 
+<a name="introduction">
 <hr noshade>
-<h2><a NAME="introduction">Introduction</a></h2>
+<h2>Introduction</h2>
 <p>
 Using compressed DASD files you can significantly reduce the file space
 required for emulated DASD files and possibly gain a performance boost
@@ -65,9 +66,10 @@ emulated volumes using compressed DASD files.  However, compressed files
 are more sensitive to failures and corruption may occur.
 
 <p>
-<hr noshade>
 
-<p><h2><a NAME="shadowfiles">Shadow Files</a></h2>
+<a NAME="shadowfiles"></a>
+<hr noshade>
+<p><h2>Shadow Files</h2>
 
 <p>
 
@@ -221,8 +223,9 @@ in any of the above commands to apply the command to <i>all</i> compressed dasd.
 
 <!-- ---------------------------------------------------------------------------------- -->
 
+<a name="filestructure"></a>
 <hr noshade>
-<p><h2><a NAME="filestructure">Compressed DASD File Structure</a></h2>
+<p><h2>Compressed DASD File Structure</h2>
 
 <p>
 A compressed DASD file has 6 types of spaces, a <em><u>device header</u></em>,
@@ -872,8 +875,9 @@ The free space chain is maintained in storage while the file is opened.
 
 <p>
 
+<a name="howitworks"></a>
 <hr noshade>
-<p><h2><a NAME="howitworks">How It Works</a></h2>
+<p><h2>How It Works</h2>
 
 <h3>Reading</h3>
 <p>
@@ -958,8 +962,9 @@ Another function performed by space recovery is to relocate <em>L2</em> (seconda
 lookup) tables towards the beginning of the file.  This simplifies <i>chkdsk</i>
 recovery and enables the chkdsk function to complete more quickly during initialization.
 
+<a name=cckdcommand></a>
 <hr noshade>
-<p><h2><a name=cckdcommand>The cckd command and initialization statement</a></h2>
+<p><h2>Runtime tuning options</h2>
 
 <p>
 The <b>cckd</b> command and initialization statement can be used to
@@ -1028,12 +1033,12 @@ the <b>cckd</b> command explained below.
     </td>
 
 <tr><td valign="top"><b>debug=</b>n</td><td> &nbsp; </td>
-    <td>Enables or disables <em>debug</em>.  When debug is enabled, then
-        CCKD trace messages are displayed when CCW tracing is enabled.
+    <td>Enables or disables debug tracing.  When enabled, additional CCKD trace
+        messages are displayed when CCW tracing is enabled for a CCKD dasd device.
         <p>
-        The default is <b>0</b> (no cckd tracing mesages).
+        The default is <b>0</b> (disable CCKD trace mesages).
         <p>
-        You can specify <b>0</b> (disable debug) or <b>1</b> (enable debug).
+        You can specify <b>0</b> (disable debug tracing) or <b>1</b> (enable debug tracing).
         <br /><br />
     </td>
 
@@ -1217,19 +1222,12 @@ the <b>cckd</b> command explained below.
 </table>
 <p>
 
+<a name="utilities">
 <hr noshade>
-<p><h2><a NAME="utilities">Utilities</a></h2>
+<p><h2>Utilities</h2>
 
 <p>
 
-<a NAME="ckd2cckd">
-<a NAME="cckd2ckd">
-<a NAME="fba2cfba">
-<a NAME="cfba2fba">
-<a NAME="ckd2cckd64">
-<a NAME="cckd642ckd">
-<a NAME="fba2cfba64">
-<a NAME="cfba642fba">
 <table>
     <tr>
         <td valign="top"><b>ckd2cckd &nbsp;</b></td>
@@ -1264,7 +1262,6 @@ the <b>cckd</b> command explained below.
 
 <p><br>
 
-<a NAME="dasdcopy">
 <table>
     <tr>
         <td valign="top"><b>dasdcopy &nbsp;</b></td>
@@ -1336,7 +1333,6 @@ the <b>cckd</b> command explained below.
 
 <p><br>
 
-<a NAME="cckdcdsk">
 <table>
     <tr>
         <td valign="top"><b>cckdcdsk &nbsp;</b></td>
@@ -1387,7 +1383,6 @@ the <b>cckd</b> command explained below.
 
 <p><br>
 
-<a NAME="cckdcomp">
 <table>
     <tr>
         <td valign="top"><b>cckdcomp &nbsp;</b></td>
@@ -1430,7 +1425,6 @@ the <b>cckd</b> command explained below.
 
 <p><br>
 
-<a NAME="cckdswap">
 <table>
     <tr>
         <td valign="top"><b>cckdswap &nbsp;</b></td>

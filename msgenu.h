@@ -2136,7 +2136,21 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02916 "%s COMM: No acceptable terminal types"
 //efine HHC02917 - HHC02949 (available)
 
-// range 02950 - 02999 available
+// convto64
+#define HHC02950 "Usage: %s [-q] [-v] infile outfile\n" \
+       "HHC02950I   infile    input file\n" \
+       "HHC02950I   outfile   output file\n" \
+       "HHC02950I options:\n" \
+       "HHC02950I   -q     Minimal progress messages\n" \
+       "HHC02950I   -v     Report every track copied"
+#define HHC02951 "Gathering L2 tables..."
+#define HHC02952 "Copying L2 tables and associated track data..."
+#define HHC02953 "Copying %s %d - %d ..."
+#define HHC02954 "Writing cckd64 compressed device header..."
+#define HHC02955 "Writing L1 table..."
+#define HHC02956 "Copying %s %d data..."
+//efine HHC02957 - HHC02999 (available)
+
 // range 03000 - 03099 available
 // range 03100 - 03199 available
 // range 03200 - 03299 available

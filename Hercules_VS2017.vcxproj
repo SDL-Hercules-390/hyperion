@@ -298,6 +298,7 @@
     <ClCompile Include="cckddasd64.c" />
     <ClCompile Include="cckddiag64.c" />
     <ClCompile Include="cckdswap64.c" />
+    <ClCompile Include="convto64.c" />
     <ClCompile Include="cckdutil64.c" />
     <ClCompile Include="cgibin.c" />
     <ClCompile Include="channel.c" />

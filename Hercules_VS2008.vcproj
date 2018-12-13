@@ -277,6 +277,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\convto64.c"
+						>
+					</File>
+					<File
 						RelativePath=".\dasdcat.c"
 						>
 					</File>

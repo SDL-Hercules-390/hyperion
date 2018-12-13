@@ -215,6 +215,7 @@ bin_PROGRAMS = \
   cckdcomp64   \
   cckddiag64   \
   cckdswap64   \
+  convto64     \
   dasdcat      \
   dasdconv     \
   dasdcopy     \
@@ -652,6 +653,10 @@ cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD   = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
 
+cconto64_SOURCES   = convto64.c
+convto64_LDADD     = $(tools_ADDLIBS)
+convto64_LDFLAGS   = $(tools_LD_FLAGS)
+
 hetget_SOURCES     = hetget.c
 hetget_LDADD       = $(tools_ADDLIBS)
 hetget_LDFLAGS     = $(tools_LD_FLAGS)
@@ -956,7 +961,7 @@ noinst_HEADERS =          \
 ###############################################################################
 
 
-cckd:                   \
+cckd:                 \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
@@ -965,6 +970,7 @@ cckd:                   \
 	cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) \
 	cckdswap64$(EXEEXT) \
+	convto64$(EXEEXT)   \
 	cckd2ckd$(EXEEXT)   \
 	dasdcopy$(EXEEXT)   \
 	dasdcopy64$(EXEEXT)
