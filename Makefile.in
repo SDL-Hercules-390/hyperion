@@ -44,16 +44,16 @@ host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = cckdcdsk$(EXEEXT) cckdcomp$(EXEEXT) cckddiag$(EXEEXT) \
 	cckdswap$(EXEEXT) cckdcdsk64$(EXEEXT) cckdcomp64$(EXEEXT) \
-	cckddiag64$(EXEEXT) cckdswap64$(EXEEXT) dasdcat$(EXEEXT) \
-	dasdconv$(EXEEXT) dasdcopy$(EXEEXT) dasdinit$(EXEEXT) \
-	dasdconv64$(EXEEXT) dasdcopy64$(EXEEXT) dasdinit64$(EXEEXT) \
-	dasdisup$(EXEEXT) dasdload$(EXEEXT) dasdload64$(EXEEXT) \
-	dasdls$(EXEEXT) dasdpdsu$(EXEEXT) dasdseq$(EXEEXT) \
-	dmap2hrc$(EXEEXT) hercules$(EXEEXT) hetget$(EXEEXT) \
-	hetinit$(EXEEXT) hetmap$(EXEEXT) hetupd$(EXEEXT) \
-	maketape$(EXEEXT) tapecopy$(EXEEXT) tapemap$(EXEEXT) \
-	tapesplt$(EXEEXT) vmfplc2$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2)
+	cckddiag64$(EXEEXT) cckdswap64$(EXEEXT) convto64$(EXEEXT) \
+	dasdcat$(EXEEXT) dasdconv$(EXEEXT) dasdcopy$(EXEEXT) \
+	dasdinit$(EXEEXT) dasdconv64$(EXEEXT) dasdcopy64$(EXEEXT) \
+	dasdinit64$(EXEEXT) dasdisup$(EXEEXT) dasdload$(EXEEXT) \
+	dasdload64$(EXEEXT) dasdls$(EXEEXT) dasdpdsu$(EXEEXT) \
+	dasdseq$(EXEEXT) dmap2hrc$(EXEEXT) hercules$(EXEEXT) \
+	hetget$(EXEEXT) hetinit$(EXEEXT) hetmap$(EXEEXT) \
+	hetupd$(EXEEXT) maketape$(EXEEXT) tapecopy$(EXEEXT) \
+	tapemap$(EXEEXT) tapesplt$(EXEEXT) vmfplc2$(EXEEXT) \
+	$(am__EXEEXT_1) $(am__EXEEXT_2)
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(noinst_HEADERS) \
@@ -315,6 +315,12 @@ cckdswap64_DEPENDENCIES = $(am__DEPENDENCIES_3)
 cckdswap64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cckdswap64_LDFLAGS) $(LDFLAGS) -o $@
+convto64_SOURCES = convto64.c
+convto64_OBJECTS = convto64.$(OBJEXT)
+convto64_DEPENDENCIES = $(am__DEPENDENCIES_3)
+convto64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(convto64_LDFLAGS) $(LDFLAGS) -o $@
 am_dasdcat_OBJECTS = dasdcat.$(OBJEXT)
 dasdcat_OBJECTS = $(am_dasdcat_OBJECTS)
 dasdcat_DEPENDENCIES = $(am__DEPENDENCIES_3)
@@ -511,8 +517,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdswap_SOURCES) \
-	$(cckdswap64_SOURCES) $(dasdcat_SOURCES) $(dasdconv_SOURCES) \
-	$(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
+	$(cckdswap64_SOURCES) convto64.c $(dasdcat_SOURCES) \
+	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
 	$(dasdcopy64_SOURCES) $(dasdinit_SOURCES) \
 	$(dasdinit64_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
 	$(dasdload64_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) \
@@ -535,8 +541,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdswap_SOURCES) \
-	$(cckdswap64_SOURCES) $(dasdcat_SOURCES) $(dasdconv_SOURCES) \
-	$(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
+	$(cckdswap64_SOURCES) convto64.c $(dasdcat_SOURCES) \
+	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
 	$(dasdcopy64_SOURCES) $(dasdinit_SOURCES) \
 	$(dasdinit64_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
 	$(dasdload64_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) \
@@ -1244,6 +1250,9 @@ dasdcopy64_LDFLAGS = $(tools_LD_FLAGS)
 cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
+cconto64_SOURCES = convto64.c
+convto64_LDADD = $(tools_ADDLIBS)
+convto64_LDFLAGS = $(tools_LD_FLAGS)
 hetget_SOURCES = hetget.c
 hetget_LDADD = $(tools_ADDLIBS)
 hetget_LDFLAGS = $(tools_LD_FLAGS)
@@ -1757,6 +1766,9 @@ cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES)
 cckdswap64$(EXEEXT): $(cckdswap64_OBJECTS) $(cckdswap64_DEPENDENCIES) 
 	@rm -f cckdswap64$(EXEEXT)
 	$(AM_V_CCLD)$(cckdswap64_LINK) $(cckdswap64_OBJECTS) $(cckdswap64_LDADD) $(LIBS)
+convto64$(EXEEXT): $(convto64_OBJECTS) $(convto64_DEPENDENCIES) 
+	@rm -f convto64$(EXEEXT)
+	$(AM_V_CCLD)$(convto64_LINK) $(convto64_OBJECTS) $(convto64_LDADD) $(LIBS)
 dasdcat$(EXEEXT): $(dasdcat_OBJECTS) $(dasdcat_DEPENDENCIES) 
 	@rm -f dasdcat$(EXEEXT)
 	$(AM_V_CCLD)$(dasdcat_LINK) $(dasdcat_OBJECTS) $(dasdcat_LDADD) $(LIBS)
@@ -1883,6 +1895,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/control.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convto64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctc_ctci.Plo@am__quote@
@@ -2561,7 +2574,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
 #
 ###############################################################################
 
-cckd:                   \
+cckd:                 \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
@@ -2570,6 +2583,7 @@ cckd:                   \
 	cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) \
 	cckdswap64$(EXEEXT) \
+	convto64$(EXEEXT)   \
 	cckd2ckd$(EXEEXT)   \
 	dasdcopy$(EXEEXT)   \
 	dasdcopy64$(EXEEXT)
